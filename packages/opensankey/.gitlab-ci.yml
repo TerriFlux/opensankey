@@ -1,0 +1,171 @@
+stages:
+    - install_dependencies
+    - build
+    - test
+    - deploy
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+
+install_dependencies:
+  stage: install_dependencies
+  tags:
+    - dev, test, prod
+  cache: 
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - opensankey/client/node_modules/
+  script:
+    - cd opensankey/client
+    - echo $CI_COMMIT_REF_SLUG
+    - echo $CI_PROJECT_DIR
+    - npm install
+  only:
+    changes:
+      - opensankey/client/package.json
+
+build:
+  stage: build
+  tags:
+    - dev, test, prod
+  cache: 
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - opensankey/client/node_modules/
+    policy: pull
+  script:
+    - source /home/gitlab-runner/gitlab/bin/activate
+    - echo $CI_PROJECT_DIR
+    - export NODE_ENV=production
+    - cd opensankey/client
+    - CI= npm run build
+    - mv node_modules ../../..
+    - cd ../..
+    - pip install .
+    - mv ../node_modules opensankey/client
+
+test:
+  stage: test
+  tags:
+    - dev, test, prod
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - source /home/gitlab-runner/gitlab/bin/activate
+    - echo $CI_PROJECT_DIR
+    - cd ..
+    - pip install OpenSankey
+    - python -m unittest discover opensankey.tests
+    - cd opensankey
+    - flake8 --exit-zero
+  dependencies:
+    - build
+
+dev.terriflux.fr:
+  stage: deploy
+  tags:
+    - dev
+  environment:
+    name: dev
+  only:
+    - master
+  cache: 
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - /home/ubuntu/dev_terriflux/opensankey/opensankey/client/node_modules/
+    policy: pull
+  before_script:
+    - sudo systemctl stop dev_terriflux || true
+  script:
+    - cd /home/ubuntu/dev_terriflux
+    - source dev_terriflux/bin/activate
+    - cd opensankey
+    - git pull
+    - git checkout opensankey/server/views.py
+    - cd opensankey/client
+    - npm install
+    - CI= npm run build
+    - export NODE_ENV=production
+#   - CI= sudo npm run dist
+#   - CI= npm link .
+    - mv node_modules ../../..
+    - cd ../..
+    - pip install .
+    - mv ../node_modules opensankey/client
+    - cd ..
+    - sudo systemctl restart dev_terriflux
+  dependencies:
+    - test
+
+test.terriflux.fr:
+  stage: deploy
+  tags:
+    - test
+  environment:
+    name: test
+  only:
+    - test_terriflux
+  except:
+    - tags
+  before_script:
+    - sudo systemctl stop test_terriflux || true
+  script:
+    - cd /home/ubuntu/test_terriflux
+    - source test_terriflux/bin/activate
+    - cd opensankey
+    - git pull
+    - git checkout opensankey/server/views.py
+    - cd opensankey/client
+    - npm install
+    - CI= npm run build
+    - export NODE_ENV=production
+    - mv node_modules ../../..
+    - cd ../..
+    - pip install .
+    - mv ../node_modules opensankey/client
+    - cd ..
+    - sudo systemctl restart test_terriflux
+  dependencies:
+    - test
+
+prod.terriflux.fr:
+  stage: deploy
+  tags:
+    - dev
+  environment:
+    name: dev
+  only:
+    - terriflux
+  before_script:
+    - sudo systemctl stop terriflux || true
+  script:
+    - cd /home/ubuntu/terriflux
+    - source terrifluxenv/bin/activate
+    - cd opensankey
+    - git pull
+    - git checkout opensankey/server/views.py
+    - cd opensankey/client
+    - npm install
+    - CI= npm run build
+    - export NODE_ENV=production
+#   - CI= sudo npm run dist
+#   - CI= npm link .
+    - mv node_modules ../../..
+    - cd ../..
+    - pip install .
+    - mv ../node_modules opensankey/client
+    - cd ..
+    - sudo systemctl restart terriflux
+  dependencies:
+    - test

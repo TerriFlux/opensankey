@@ -1,0 +1,68 @@
+{
+  "name": "su-model-sankey",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.com:greel/su-model.git"
+  },
+  "author": "Alapetite Julien",
+  "version": "1.0.0",
+  "description": "Sankey Tools",
+  "license": "MIT",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "dist": "babel src/lib --out-dir dist --copy-files --ignore __tests__,spec.js,test.js,__snapshots__",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "lint": "eslint --fix --ext .js,.jsx,.tsx ."
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "proxy": "http://localhost:5000/",
+  "dependencies": {
+    "@babel/cli": "^7.13.16",
+    "@popperjs/core": "^2.9.2",
+    "acorn": "^8.2.2",
+    "bootstrap": "^4.6.0",
+    "d3": "^6.7.0",
+    "file-saver": "^2.0.5",
+    "html-react-parser": "^1.2.7",
+    "react": "^17.0.2",
+    "react-bootstrap": "^1.5.2",
+    "react-color": "^2.19.3",
+    "react-dom": "^17.0.2",
+    "react-scripts": "^4.0.3",
+    "typescript": "^4.3.5",
+    "@types/d3": "^7.0.0",
+    "@types/react-dom": "^17.0.9"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.3",
+    "eslint": "^7.25.0",
+    "eslint-plugin-mocha": "^8.1.0",
+    "eslint-plugin-react": "^7.23.2",
+    "jquery": "^3.6.0",
+    "popper.js": "^1.16.1"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+openpyxl
+scs
+pandas
+flask
+parameterized
