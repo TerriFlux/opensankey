@@ -14,7 +14,6 @@ import json
 import time
 
 from . import parser_excel
-from . import nodes_position
 
 try:
     from . import opensankey
