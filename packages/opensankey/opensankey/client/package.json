@@ -1,5 +1,5 @@
 {
-  "name": "su-model-sankey",
+  "name": "open-sankey",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "repository": {
