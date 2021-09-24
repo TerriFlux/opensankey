@@ -26,31 +26,6 @@
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
-    <script>
-      window.SankeyToolsStatic = {{static_site}}
-      if (window.SankeyToolsStatic ) {
-        window.sankey = {}
-        window.sankey.sankey_data_file = "{{url_for('flaskfilemanager.userfile', filename=filename)}}"
-        window.sankey.excel = "{{excel}}"
-        window.sankey.flask_header = "{{header}}"
-        window.sankey.flask_logo = "{{url_for('flaskfilemanager.userfile', filename=logo)}}" 
-        window.sankey.logo_width = "{{logo_width}}" 
-        window.sankey.legend_average = "{{legend_average}}"
-        window.sankey.legend_uncert = "{{legend_uncert}}"
-        {% if help_text is defined %}            
-          window.sankey.help_text = "{{help_text|safe}}"
-        {% endif  %}
-        {% if welcome_text is defined %}            
-          window.sankey.welcome_text = "{{welcome_text|safe}}"
-        {% endif  %}
-        {% if sous_filieres is defined %}     
-          window.sankey.sous_filieres = {{sous_filieres|safe}}
-        {% endif  %}
-        {% if units is defined %}   
-          window.sankey.units = {{units|safe}}
-        {% endif  %}        
-      }
-    </script>
     <div id="react-container"></div>
   </body>
 
