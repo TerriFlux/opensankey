@@ -7,13 +7,6 @@ import json
 from parameterized import parameterized
 
 try:
-    import sankeytools.server.nodes_position as nodes_position
-except Exception:
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    parentdir = os.path.dirname(currentdir)
-    sys.path.insert(0, parentdir)
-    from sankeytools.server import nodes_position
-try:
     import sankeytools.server.parser_excel as parser_excel
 except Exception:
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
