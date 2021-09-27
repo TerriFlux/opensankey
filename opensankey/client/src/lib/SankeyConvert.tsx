@@ -1,6 +1,12 @@
 import { SankeyData, SankeyLink } from './types'
 import { normalize_name } from './SankeyUtils'
 
+interface OldSankeyLink {
+  visible?: boolean
+  label_visible?: boolean
+  text_same_color?:boolean | string
+}
+
 export const convert_data = (
   data: SankeyData 
 ) : void => {
@@ -99,10 +105,10 @@ export const convert_data = (
           if (!('agregated_data_value' in l )) {
             l.agregated_data_value = l.data_value                
           }
-          if (!('visible' in (l as any))) {
+          if (!('visible' in (l as OldSankeyLink) )) {
             l.visible = true                
           }
-          if (!('label_visible' in (l as any))) {
+          if (!('label_visible' in (l as OldSankeyLink))) {
             l.label_visible = true                
           }
           if ( l.type === 'short_link_arrow') {
@@ -126,12 +132,12 @@ export const convert_data = (
             }
             l.curved = true
             l.curvature = 1
-            if ((l as any).text_same_color === true ) {
+            if ((l as OldSankeyLink).text_same_color === true ) {
               l.text_color = l.color
             } else {
               l.text_color = 'white'
             } 
-            delete (l as any).text_same_color
+            delete (l as OldSankeyLink).text_same_color
             if ( target_node.x < source_node.x ) {
               l.recycling = true
             }            
@@ -153,11 +159,11 @@ export const convert_data = (
               }
             }
           }     
-          if (!('text_color' in l) || (l as any).text_same_color === false ) {
+          if (!('text_color' in l) || (l as OldSankeyLink).text_same_color === false ) {
             l.text_color = 'black'
-          } else if ((l as any).text_same_color === true ) {
+          } else if ((l as OldSankeyLink).text_same_color === true ) {
             l.text_color = l.color
-          } else if ((l as any).text_same_color === 'same_color') {
+          } else if ((l as OldSankeyLink).text_same_color === 'same_color') {
             l.text_color = l.color
           } 
         }

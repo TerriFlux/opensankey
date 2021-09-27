@@ -281,7 +281,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     units_names: string[],
-    display_style: { sector_italic?: any; product_italic?: any; sector_bold?: any; product_bold?: any; font_size?: number; sector_uppercase?: any; product_uppercase?: any; trade_close?: any; filter?: any; filter_label?: number | undefined },
+    display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
     flux_types: string[],
     dragged: Element,
     event: { dx: number; dy: number }
@@ -370,7 +370,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
             })
           const target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(link.target_name))[0]
           if (link.arrow) {
-            const node_select = d3.select('#ggg_node'+target_node.id) as d3.Selection<d3.BaseType,SankeyNode,HTMLElement,any>
+            const node_select = d3.select('#ggg_node'+target_node.id) as d3.Selection<d3.BaseType,SankeyNode,HTMLElement,SankeyNode>
             drawArrows(target_node,nodes,links,display_style,flux_types,node_select)
           }
           for (let i=0;i<target_node.input_links.length;i++) {
@@ -409,7 +409,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     dragged: SVGPathElement | null,
-    event: d3.D3DragEvent<any,any,any>
+    event: d3.D3DragEvent<Element,SankeyLink,unknown>
   ) => {
     const id = +d3.select(dragged).attr('id').substring(4)
     //let p = d3.pointer(event)
@@ -475,7 +475,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           swap(node.input_links,target_order,target_order-1)
         }  
       }
-      const node_select = d3.select('#ggg_node'+node.id) as d3.Selection<d3.BaseType,SankeyNode,HTMLElement, any>
+      const node_select = d3.select('#ggg_node'+node.id) as d3.Selection<d3.BaseType,SankeyNode,HTMLElement, SankeyNode>
       drawArrows(node,nodes,links,display_style,flux_types,node_select)
     }
   }
@@ -485,11 +485,11 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     units_names: string[],
-    display_style: { font_size: string; filter: number; filter_label: number },
+    display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     dragged: Element,
     handle_type: string,
-    the_event: d3.D3DragEvent<any,any,any>
+    the_event: d3.D3DragEvent<Element,unknown,unknown>
   ) => {
     const { width, height } = data
 
@@ -668,7 +668,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     units_names: string[],
-    display_style: { font_size: string; filter: number; filter_label: number },
+    display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     shift_name: string,
     position: string
@@ -701,7 +701,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     units_names: string[],
-    display_style: { font_size: string; filter: number; filter_label: number },
+    display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     xs: number,
     ys: number,
@@ -742,8 +742,8 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
   const drawLinkText = (
     link_id: number,
     links: SankeyLink[],
-    link_value: any,
-    display_style: { font_size: string; filter: number; filter_label: number },
+    link_value: number,
+    display_style: { font_size: number; filter: number; filter_label: number },
     xs: number,
     ys: number,
     xt: number,
@@ -795,7 +795,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       'end' : ['95%','end']    
     }
     if (d.label_position === 'frozen' && d.x_label || !d.label_on_path || d.label_on_path === undefined) {
-      (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement,SankeyLink, HTMLElement, any>)
+      (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement,SankeyLink, HTMLElement, SankeyLink>)
         .attr('x',d => {
           if (d.label_position === 'frozen' && d.x_label) {
             return d.x_label
@@ -815,7 +815,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         .text( d=> link_text(d,link_value,display_style))
         .attr( 'visibility', d.label_visible ? 'visible' : 'hidden')
     } else {
-      (d3.select('#link_value' + link_id)as d3.Selection<SVGSVGElement,SankeyLink, HTMLElement, any>)
+      (d3.select('#link_value' + link_id)as d3.Selection<SVGSVGElement,SankeyLink, HTMLElement, SankeyLink>)
         .attr('startOffset',positions[d.label_position][0])
         .attr('text-anchor',positions[d.label_position][1])
         .text( d=> link_text(d,link_value,display_style))
@@ -1305,7 +1305,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     units_names: string[],
-    display_style: any,
+    display_style: { font_size: number ; filter : number;filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     flux_types: string[],
     d: SankeyLink,
     link_id: number,
@@ -1482,7 +1482,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     dragged: Element,
-    event: d3.D3DragEvent<any,any,any>
+    event: d3.D3DragEvent<Element,unknown,unknown>
   ) =>{
     const old_x = +d3.select(dragged).attr('x'),
       old_y = +d3.select(dragged).attr('y'),
@@ -1629,7 +1629,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           return true
         }
       ).each( function(n) {
-        const selection = (d3.select(this) as unknown ) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, any>
+        const selection = (d3.select(this) as unknown ) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
         drawArrows(n,nodes,links[region_name],display_style,flux_types,selection)
       })
 
@@ -1790,9 +1790,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     n: SankeyNode,
     nodes: SankeyNode[],
     links: SankeyLink[],
-    display_style: { font_size?: number ; filter? : number;filter_label?: number; sector_italic?: any; product_italic?: any; sector_bold?: any; product_bold?: any; sector_uppercase?: any; product_uppercase?: any },
+    display_style: { font_size: number ; filter? : number;filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     flux_types: string[],
-    selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, any>
+    selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
   ) => {
     let cum_v_left = 0
     let cum_h_top = 0

@@ -109,7 +109,7 @@ export const isExport = (
 export const link_text = (
   d: SankeyLink,
   link_value: number,
-  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: any }
+  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }
 ) => {
   const str_display = String(d.display_value)
   // Test free variables

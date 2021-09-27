@@ -148,7 +148,8 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
               <Form.Group as={Row} >
                 <FormLabel column sm={2}>Layout</FormLabel>
                 <Col sm={6}>
-                  <Form.File 
+                  <Form.Control
+                    type="file" 
                     style={{ 'marginTop' : '11px'}}
                     onChange={(evt : React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
                   />

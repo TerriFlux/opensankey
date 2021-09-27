@@ -163,9 +163,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <Form.Group as={Row} >
                     <FormLabel column sm={2}>Couleur:</FormLabel>
                     <Col sm={10}>
-                      <FormControl
-                        type="textarea"
-                        value={link.color}
+                      <Form.Control
+                        type="color"
+                        defaultValue={link.color}
                         onChange = {
                           evt => {
                             selected_links.forEach(
