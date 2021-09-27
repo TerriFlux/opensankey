@@ -1,5 +1,5 @@
-import React, { FormEventHandler, FunctionComponent } from 'react'
-import { Modal,Row,FormControl,Form,Col,FormLabel,FormCheck,Tabs, Tab } from 'react-bootstrap'
+import React, { FunctionComponent } from 'react'
+import { Modal,Row,Form,Col,FormLabel,FormCheck,Tabs,Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes,{InferProps} from 'prop-types'
 
