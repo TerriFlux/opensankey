@@ -14,7 +14,7 @@ const SankeyNodeEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_show_node,default_node,selected_node,show}) => {
+const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_show_node,default_node,selected_node,show,children}) => {
   const { links,nodes} = data
   if (selected_node === -1) {
     selected_node = 0
@@ -74,42 +74,46 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <Col sm={12}>
-                      <FormCheck  inline  
+                    <Col>
+                      <FormCheck  
                         type='checkbox'
                         label='Label visible'
                         checked = {node.label_visible || node.label_visible === undefined }
-                        onChange = {(evt) =>  
-                          ((node.label_visible = evt.target.checked) || true )&&
-                            set_data({...data})
-                        }
+                        onChange = {evt =>  {
+                          nodes[selected_node].label_visible = evt.target.checked
+                          set_data({...data})
+                        }}
                       />
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <FormLabel column sm={3}>Type</FormLabel>
-                    <FormCheck
-                      inline  
-                      value="product" 
-                      type='radio'
-                      label='Produit'
-                      checked = {node.type === 'product'}
-                      onChange = {(evt) =>  
-                        (nodes[selected_node].type = evt.target.value) &&
+                    <Col>
+                      <FormLabel>Type</FormLabel>
+                    </Col>
+                    <Col>
+                      <FormCheck  
+                        value="product" 
+                        type='radio'
+                        label='Produit'
+                        checked = {node.type === 'product'}
+                        onChange = {(evt) =>  
+                          (nodes[selected_node].type = evt.target.value) &&
                           set_data({...data})
-                      }
-                    />
-                    <FormCheck
-                      inline  
-                      value="sector"  
-                      type='radio'
-                      label='Secteur'
-                      checked = {node.type === 'sector'}
-                      onChange = {(evt) =>  
-                        (nodes[selected_node].type = evt.target.value) &&
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck 
+                        value="sector"  
+                        type='radio'
+                        label='Secteur'
+                        checked = {node.type === 'sector'}
+                        onChange = {(evt) =>  
+                          (nodes[selected_node].type = evt.target.value) &&
                           set_data({...data})
-                      }
-                    />
+                        }
+                      />
+                    </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
                     <Col sm={12}>
@@ -136,6 +140,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       </Form.Group> */}
                 </Form>
               </Tab>
+              {children}
               {/* <Tab eventKey="node_tooltip" title="Tooltip">
                 <Form >
                   <Row>

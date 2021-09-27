@@ -1,15 +1,37 @@
 import { SankeyData, SankeyLink } from './types'
 import { normalize_name } from './SankeyUtils'
 
-interface OldSankeyLink {
+interface ConvertSankeyNode {
+  orientation? : string
+}
+interface ConvertSankeyLink {
   visible?: boolean
   label_visible?: boolean
   text_same_color?:boolean | string
+  frozen? : boolean,
+  link_reverse? : boolean,
+  display_unit? : string,
+  type? : string
+  tooltip_text? : string
+  data_value?: number
+  agregated_data_value?: number
+  conv? : number[]
+  natural_unit?: string
+}
+interface ConvertSankeyData {
+  units_names : string[]
+  display_style: {
+    trade_close? : boolean
+  }
+  show_uncert? : boolean
+  sankey_type? : string
 }
 
+
 export const convert_data = (
-  data: SankeyData 
+  data_to_convert: SankeyData
 ) : void => {
+  const data = data_to_convert as SankeyData & ConvertSankeyData
   const {display_style,nodes,links,node_width,units_names} = data
   const region_names = Object.keys(links)
 
@@ -60,6 +82,7 @@ export const convert_data = (
       links[cur_region_name].forEach(
         (l) => 
         { 
+          const l_convert = l as ConvertSankeyLink
           l.value = +l.value
           if ( flux_max < l.value) {
             flux_max = l.value
@@ -71,9 +94,9 @@ export const convert_data = (
           }
           if ( !('orientation' in l)) {
             (l as SankeyLink).orientation = 'hh'
-            if ( source_node.orientation === 'horizontal' && target_node.orientation === 'vertical' ) {
+            if ( (source_node as ConvertSankeyNode).orientation === 'horizontal' && (target_node as ConvertSankeyNode).orientation === 'vertical' ) {
               (l as SankeyLink).orientation = 'vh'
-            } else if ( source_node.orientation === 'vertical' && target_node.orientation === 'horizontal' ) {
+            } else if ( (source_node as ConvertSankeyNode).orientation  === 'vertical' && (target_node as ConvertSankeyNode).orientation === 'horizontal' ) {
               (l as SankeyLink).orientation = 'hv'
             }
           }
@@ -86,58 +109,58 @@ export const convert_data = (
           if (!('label_on_path' in l)) {
             (l as SankeyLink).label_on_path = true
           }
-          if ( l.frozen) {
+          if ( l_convert.frozen) {
             l.label_position = 'frozen'
           }
           if ( 'frozen' in l ) {
-            delete l.frozen
+            delete l_convert.frozen
           }
           if ( 'link_reverse' in l ) {
-            delete l.link_reverse
+            delete l_convert.link_reverse
           }
-          if ( 'tooltip_text' in l ) {
-            delete l.tooltip_text
+          if ( 'tooltip_text' in l_convert ) {
+            delete l_convert.tooltip_text
           }
-          if ( 'display_unit' in l ) {
-            l.natural_unit = l.display_unit
-            delete l.display_unit
+          if ( 'display_unit' in l_convert ) {
+            l_convert.natural_unit = l_convert.display_unit
+            delete l_convert.display_unit
           }
-          if (!('agregated_data_value' in l )) {
-            l.agregated_data_value = l.data_value                
+          if (!('agregated_data_value' in l_convert )) {
+            l_convert.agregated_data_value = l_convert.data_value                
           }
-          if (!('visible' in (l as OldSankeyLink) )) {
+          if (!('visible' in l_convert )) {
             l.visible = true                
           }
-          if (!('label_visible' in (l as OldSankeyLink))) {
+          if (!('label_visible' in l_convert)) {
             l.label_visible = true                
           }
-          if ( l.type === 'short_link_arrow') {
+          if ( l_convert.type === 'short_link_arrow') {
             l.curved = false
             l.arrow = true
-          } else if ( l.type === 'bezier_link_arrow') {
+          } else if ( l_convert.type === 'bezier_link_arrow') {
             l.curved = true
             l.arrow = true              
-          } else if ( l.type === 'bezier_link_classic') {
+          } else if ( l_convert.type === 'bezier_link_classic') {
             l.curved = true
             l.arrow = false              
           }
           if ( 'type' in l) {
-            delete l.type
+            delete l_convert.type
           }
           if (data.version === '0.1' ) { 
-            const unit_index = l.natural_unit ? units_names.indexOf(l.natural_unit) : -1
-            if ( l.conv && unit_index !== -1 ) {
-              const natural_conv = l.conv[unit_index]
-              l.conv.splice(1, 0, natural_conv)
+            const unit_index = l_convert.natural_unit ? units_names.indexOf(l_convert.natural_unit) : -1
+            if ( l_convert.conv && unit_index !== -1 ) {
+              const natural_conv = l_convert.conv[unit_index]
+              l_convert.conv.splice(1, 0, natural_conv)
             }
             l.curved = true
             l.curvature = 1
-            if ((l as OldSankeyLink).text_same_color === true ) {
+            if (l_convert.text_same_color === true ) {
               l.text_color = l.color
             } else {
               l.text_color = 'white'
             } 
-            delete (l as OldSankeyLink).text_same_color
+            delete l_convert.text_same_color
             if ( target_node.x < source_node.x ) {
               l.recycling = true
             }            
@@ -150,20 +173,20 @@ export const convert_data = (
             }              
           } 
           if ( data.version === '0.1' ||  data.version === '0.2') {
-            if ( l.natural_unit ) {
-              if (l.natural_unit.includes('tonne')) {
-                l.natural_unit = l.natural_unit.replace('tonne','t')
-                if (l.natural_unit === 'k t') {
-                  l.natural_unit = 'kt'
+            if ( l_convert.natural_unit ) {
+              if (l_convert.natural_unit.includes('tonne')) {
+                l_convert.natural_unit = l_convert.natural_unit.replace('tonne','t')
+                if (l_convert.natural_unit === 'k t') {
+                  l_convert.natural_unit = 'kt'
                 }
               }
             }
           }     
-          if (!('text_color' in l) || (l as OldSankeyLink).text_same_color === false ) {
+          if (!('text_color' in l) || l_convert.text_same_color === false ) {
             l.text_color = 'black'
-          } else if ((l as OldSankeyLink).text_same_color === true ) {
+          } else if (l_convert.text_same_color === true ) {
             l.text_color = l.color
-          } else if ((l as OldSankeyLink).text_same_color === 'same_color') {
+          } else if (l_convert.text_same_color === 'same_color') {
             l.text_color = l.color
           } 
         }
@@ -171,7 +194,7 @@ export const convert_data = (
     }
   )
   if ( 'sankey_type' in data ){
-    delete data.sankey_type
+    delete (data as ConvertSankeyData).sankey_type
   }
   // if ( 'max_vertical_offset' in data ){
   //   delete data.max_vertical_offset

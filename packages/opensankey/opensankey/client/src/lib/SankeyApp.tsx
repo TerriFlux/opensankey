@@ -3,7 +3,7 @@ import { Col,Row} from 'react-bootstrap'
 import PropTypes,{InferProps} from 'prop-types'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
-import { SankeyData, SankeyDataPropTypes } from './types'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeySettingsEdition from './SankeySettingsEdition'
@@ -58,6 +58,61 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
     set_show_node(true)
   }
   
+  const link_visible = (l : SankeyLink) => {
+    (l.visible && (l.value >= Math.max(data.display_style.filter,data.display_style.filter_label) ) ) ? 'visible' : 'hidden'
+  }
+
+  const node_visible = (n : SankeyNode) => {
+    const [total_input_offset,total_output_offset] = SankeyUtils.computeTotalOffsets(n,data.links[data.region_name],false)
+    if ( !flux_types.includes('null_data') && total_input_offset === 0 && total_output_offset === 0  ) {
+      return 'hidden'
+    }
+    // if ( !flux_types.includes('unbounded') ) {
+    //   return 'visible'
+    // }          
+    if (n.label_visible === undefined || n.label_visible ){
+      return 'visible'
+    }
+    else {
+      return 'hidden'
+    }
+  }
+
+  const test_link_value = (
+    nodes: SankeyNode[],
+    d: SankeyLink,
+    flux_types: string[]
+  ) => {
+    const link_default_width = 5
+    const source_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.source_name))[0]
+    const target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.target_name))[0]
+    // Sanity check
+    if (source_node === undefined || target_node === undefined ) {
+      return
+    }
+    const str_display = String(d.display_value)
+    let link_value = d.value
+    if ( d.value === 0 && !flux_types.includes('null_data') && 
+       (!str_display.includes('[') ) ) {
+      return
+    }
+    if ( flux_types.includes('computed_data') ) {
+      if (d.value === 0) {
+        link_value = link_default_width  
+      } 
+      if ( !flux_types.includes('unbounded') && d.unbounded) {
+        return undefined
+      } 
+    } else {
+      return undefined
+    }
+
+    if (link_value === undefined ) {
+      return undefined
+    }
+    return link_value
+  }
+
   const select_link = (i : number) => {
     set_selected_link(i)
     set_show_link(true)
@@ -194,19 +249,19 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
     const region_names = Object.keys(links)
 
     // specific to filiere paille
-    if ((new_subchain[0] === 'Usages' || 
-        new_subchain[0] === 'Logistique' ||
-        new_subchain[0] === 'Energie' ||
-        new_subchain[0] === 'Autres') && sankey_data.old_user_scale === undefined
-    ) {
-      sankey_data.old_user_scale = sankey_data.user_scale
-      sankey_data.user_scale = sankey_data.user_scale/4
-      nodes.forEach((n)=>n.x -= 800)
-    } else if (sankey_data.old_user_scale  && new_subchain.includes('Champs')) {
-      sankey_data.old_user_scale = undefined
-      sankey_data.user_scale = sankey_data.user_scale*4
-      nodes.forEach((n)=>n.x += 800)      
-    }
+    // if ((new_subchain[0] === 'Usages' || 
+    //     new_subchain[0] === 'Logistique' ||
+    //     new_subchain[0] === 'Energie' ||
+    //     new_subchain[0] === 'Autres') && sankey_data.old_user_scale === undefined
+    // ) {
+    //   sankey_data.old_user_scale = sankey_data.user_scale
+    //   sankey_data.user_scale = sankey_data.user_scale/4
+    //   nodes.forEach((n)=>n.x -= 800)
+    // } else if (sankey_data.old_user_scale  && new_subchain.includes('Champs')) {
+    //   sankey_data.old_user_scale = undefined
+    //   sankey_data.user_scale = sankey_data.user_scale*4
+    //   nodes.forEach((n)=>n.x += 800)      
+    // }
 
     // Use a relevant scale
     nodes.forEach( node => {
@@ -251,31 +306,32 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
   return (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <Menu data={data} set_data={set_data} delete_node={delete_node} />
-      { !data.static_sankey ? (
-        <Row>            
-          <Col sm={11} style={{ 'color':'black'}} >
-            <SankeyEdition 
-              data={data} 
-              set_selected_node={set_selected_node} 
-              set_selected_link={set_selected_link} 
-              set_show_link={set_show_link} 
-              set_show_graphic_attributes={set_show_graphic_attributes} 
-              default_link={default_link} 
-              default_node={default_node} 
-              set_data={set_data}/>
-          </Col>
-        </Row>
-      ) : (<div/>)}
+      <Row>            
+        <Col sm={11} style={{ 'color':'black'}} >
+          <SankeyEdition 
+            data={data} 
+            set_selected_node={set_selected_node} 
+            set_selected_link={set_selected_link} 
+            set_show_link={set_show_link} 
+            set_show_graphic_attributes={set_show_graphic_attributes} 
+            default_link={default_link} 
+            default_node={default_node} 
+            set_data={set_data}/>
+        </Col>
+      </Row>
       <SankeyDraw 
         data={data}
         flux_types={flux_types}
-        select_link={select_link}
-        linkContextMenu={linkContextMenu}
         select_node={select_node}
         nodeContextMenu={nodeContextMenu}
+        node_visible={node_visible}
+        select_link={select_link}
+        linkContextMenu={linkContextMenu}
         link_color ={l => l.color }
         node_color = {n => n.color }
         link_text = {SankeyUtils.link_text }
+        link_visible = {link_visible}
+        test_link_value = {test_link_value}
       />
       <SankeyNodeEdition 
         show={show_node}

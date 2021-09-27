@@ -7,13 +7,13 @@
     "url": "git@gitlab.com:greel/su-model.git"
   },
   "author": "Alapetite Julien",
-  "version": "1.0.0",
-  "description": "Sankey Tools",
+  "version": "0.9.0",
+  "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "dist": "babel src/lib --out-dir dist --copy-files --ignore __tests__,spec.js,test.js,__snapshots__",
+    "dist": "babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "eslint --fix --ext .js,.jsx,.tsx ."

@@ -9,23 +9,35 @@ window.d3 = d3
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   flux_types: PropTypes.array.isRequired,
-  select_link: PropTypes.func.isRequired,
-  linkContextMenu: PropTypes.func.isRequired,
+
   select_node: PropTypes.func.isRequired,
   nodeContextMenu: PropTypes.func.isRequired,
-  link_color: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
-  link_text: PropTypes.func.isRequired
+  node_visible: PropTypes.func.isRequired,
+
+  select_link: PropTypes.func.isRequired,
+  linkContextMenu: PropTypes.func.isRequired,
+  link_color: PropTypes.func.isRequired,
+  link_text: PropTypes.func.isRequired,
+  link_visible: PropTypes.func.isRequired,
+  test_link_value: PropTypes.func.isRequired
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 
 const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
-  data,flux_types,
-  select_link,linkContextMenu,
-  select_node,nodeContextMenu,
-  link_color,node_color,
-  link_text
+  data,
+  flux_types,
+  select_node,
+  nodeContextMenu,
+  node_color,
+  node_visible,
+  select_link,
+  linkContextMenu,
+  link_color,
+  link_text,
+  link_visible,
+  test_link_value
 }) => {
   const default_node_size = data.node_width
   const default_handle_size = 10
@@ -42,7 +54,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     static_sankey: boolean,
     remove_previous_links=false
   ) => {
-    const {nodes,links,units_names,display_style,region_name} = data
+    const {nodes,links,display_style,region_name} = data
     if ( remove_previous_links ) {
       d3.select('#g_links').selectAll('.gg_links').remove()
     }
@@ -108,7 +120,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
               d3.select('#link' + i).attr('d', 
                 () => {
                   return drawCurve(
-                    nodes,links[region_name],units_names,display_style,
+                    nodes,links[region_name],display_style,
                     flux_types,link,i,
                     error_msg
                   )
@@ -150,16 +162,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link_value')
       .attr('style','font-weight: bold;font-family:Arial; font-size:'+display_style.font_size+'px;')
       .attr('fill',d => d.text_color)
-      .attr('visibility',d => {
-        if (d.data && (d.agregated_data_value && d.agregated_data_value.length === 0) ) {
-          return 'hidden'
-        } else if (d.visible && (d.value >= Math.max(display_style.filter,display_style.filter_label) ) ) {
-          return 'visible'
-        } else {
-          return 'hidden'
-        }
-      })
-
+      .attr('visibility',d => link_visible(d))
 
     select2
       .attr('href', d =>'#link' + links[region_name].indexOf(d))
@@ -167,15 +170,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link_value')
       .attr('style','font-weight: bold;font-family:Arial; font-size:'+display_style.font_size+'px;')
       .attr('fill',d => d.text_color)
-      .attr('visibility',d => {
-        if (d.data && (d.agregated_data_value && d.agregated_data_value.length === 0) || d.value === 0 ) {
-          return 'hidden'
-        } else if (d.visible && (d.value >= Math.max(display_style.filter,display_style.filter_label) || d.source_name.includes('(I') || d.target_name.includes('(E)'|| d.target_name.includes('(E1)') ) )) {
-          return 'visible'
-        } else {
-          return 'hidden'
-        }
-      })
+      .attr('visibility',d => link_visible(d))
 
     if (!static_sankey) {
       select2.call(d3.drag<SVGTextElement,SankeyLink>()
@@ -249,7 +244,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     paths.attr('d', (d,i) => {
       setNodesHeight(nodes,links[region_name],d,flux_types)
       return drawCurve(
-        nodes,links[region_name],units_names,display_style,
+        nodes,links[region_name],display_style,
         flux_types,d,i,error_msg
       )
     })
@@ -280,7 +275,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
   const drag_node = (
     nodes: SankeyNode[],
     links: SankeyLink[],
-    units_names: string[],
     display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
     flux_types: string[],
     dragged: Element,
@@ -363,7 +357,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#link' + i)
             .attr('d', () => {
               return drawCurve(
-                nodes,links,units_names,display_style,
+                nodes,links,display_style,
                 flux_types,link,i,
                 error_msg
               )
@@ -377,7 +371,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#link' + i)
               .attr('d', () => {
                 return drawCurve(
-                  nodes,links,units_names,display_style,
+                  nodes,links,display_style,
                   flux_types,links[i],i,
                   error_msg
                 )
@@ -387,7 +381,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#link' + i)
               .attr('d', () => {
                 return drawCurve(
-                  nodes,links,units_names,display_style,
+                  nodes,links,display_style,
                   flux_types,links[i],i,
                   error_msg
                 )
@@ -484,7 +478,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     link_id: number,
     nodes: SankeyNode[],
     links: SankeyLink[],
-    units_names: string[],
     display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     dragged: Element,
@@ -546,7 +539,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     d3.select('#link' +link_id).attr('d',()=>{
       let error_msg
       return drawCurve(
-        nodes,links,units_names,display_style,
+        nodes,links,display_style,
         flux_types,d,link_id,error_msg
       )
     })
@@ -586,88 +579,10 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     }    
   }
 
-  const test_link_value = (
-    nodes: SankeyNode[],
-    d: SankeyLink,
-    flux_types: string[]
-  ) => {
-    const source_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.source_name))[0]
-    const target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.target_name))[0]
-    // Sanity check
-    if (source_node === undefined || target_node === undefined ) {
-      return
-    }
-    const str_display = String(d.display_value)
-    let link_value = d.value
-    if ( d.value === 0 && !flux_types.includes('null_data') && 
-       (!str_display.includes('[') ) ) {
-      return
-    }
-    if ( d.data && 
-            (d.agregated_data_value && d.agregated_data_value.length === 0) && d.value===0 ||
-        d.value === 0 && !str_display.includes('[')
-    ) {
-      if (flux_types.includes('null_data')) {
-        link_value = link_default_width
-      } else {
-        return undefined
-      }
-    } else if ( d.data && (d.agregated_data_value && d.agregated_data_value.length !== 0)  ) {
-      if ( !flux_types.includes('unbounded') && d.unbounded) {
-        return undefined
-      }
-      if (flux_types.includes('initial_data')) {
-        if (d.display_value === 'default') {
-          if ( Array.isArray(d.agregated_data_value) ) {
-            link_value = Number(d.agregated_data_value[0])
-          } else {
-            link_value = Number(d.agregated_data_value)
-          }
-        } else {
-          d.tmp_display_value = d.display_value
-          d.display_value = String(d.agregated_data_value[0])
-        }
-      } else if (flux_types.includes('adjusted_data')) {
-        if ( d.tmp_display_value ) {
-          d.display_value = d.tmp_display_value
-          d.tmp_display_value = undefined
-        }
-        link_value = d.value       
-      } else if (!d.unbounded) {
-        return undefined
-      }
-      // if ( d.unbounded ) {
-      //   link_value = link_default_width
-      // }
-    } else if ( flux_types.includes('computed_data') ) {
-      if (d.value === 0) {
-        link_value = link_default_width  
-      } 
-      if ( !flux_types.includes('unbounded') && d.unbounded) {
-        return undefined
-      }
-      // } else if ( flux_types.includes('unbounded') ) {
-      //   if (d.unbounded) {
-      //     link_value = link_default_width             
-      //   } else {
-      //     return undefined
-      //   }
-      // } 
-    } else {
-      return undefined
-    }
-
-    if (link_value === undefined ) {
-      return undefined
-    }
-    return link_value
-  }
-
   const add_shift_handle = (
     link_id: number,
     nodes: SankeyNode[],
     links: SankeyLink[],
-    units_names: string[],
     display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     shift_name: string,
@@ -688,7 +603,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       .call(d3.drag<SVGRectElement,unknown>()
         .subject(Object).on('drag', function(event) {
           drag_handle(
-            link_id,nodes,links,units_names,display_style,
+            link_id,nodes,links,display_style,
             flux_types,
             this,position,event
           )
@@ -700,7 +615,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     link_id: number,
     nodes: SankeyNode[],
     links: SankeyLink[],
-    units_names: string[],
     display_style: { font_size: number; filter: number; filter_label: number },
     flux_types: string[],
     xs: number,
@@ -725,7 +639,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       const selection = d3.select('#'+shift_handles[i][0] + link_id)
       if ( selection.empty() ) { // if the handle do not exist, create it
         add_shift_handle(
-          link_id,nodes,links,units_names,display_style,flux_types,shift_handles[i][0],shift_handles[i][1]
+          link_id,nodes,links,display_style,flux_types,shift_handles[i][0],shift_handles[i][1]
         )
       }
     }
@@ -1304,7 +1218,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
   const drawCurve = (
     nodes: SankeyNode[],
     links: SankeyLink[],
-    units_names: string[],
     display_style: { font_size: number ; filter : number;filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     flux_types: string[],
     d: SankeyLink,
@@ -1329,7 +1242,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     if ( d.orientation === 'hh' ||  d.orientation === 'vv' ) {
       add_shift_handles(
         link_id,nodes,links,
-        units_names,display_style,flux_types,xs,ys,xt,yt
+        display_style,flux_types,xs,ys,xt,yt
       )
     }
 
@@ -1512,7 +1425,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     static_sankey: boolean,
     remove_previous_nodes=false
   ) => {
-    const {nodes,links,units_names,display_style,region_name} = data
+    const {nodes,links,display_style,region_name} = data
     if ( remove_previous_nodes ) { 
       d3.selectAll('.gg_nodes').remove()
     }       
@@ -1535,7 +1448,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         .subject(Object).on('drag', function(event) {
           drag_node(
             nodes,links[region_name],
-            units_names,display_style,
+            display_style,
             flux_types,
             this,event
           )
@@ -1584,7 +1497,8 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     })
       .attr('fill', d => node_color(d) )
       .attr('fill-opacity',d => {
-        if ( !flux_types.includes('null_data') && (d as SankeyNode).total_input_offset === 0 && (d as SankeyNode).total_output_offset === 0) {
+        const [total_input_offset,total_output_offset] = computeTotalOffsets((d as SankeyNode),data.links[data.region_name],false)
+        if ( !flux_types.includes('null_data') && total_input_offset === 0 && total_output_offset === 0) {
           return 0
         }
         if ((d as SankeyNode).visible === undefined || (d as SankeyNode).visible ){
@@ -1653,31 +1567,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           return -6
         }
       })
-      .attr('visibility',d => {
-        const [total_input_offset,total_output_offset] = computeTotalOffsets(d,links[region_name],false)
-        if ( !flux_types.includes('null_data') && total_input_offset === 0 && total_output_offset === 0  ) {
-          return 'hidden'
-        }
-        if ( !flux_types.includes('unbounded') && (d.name.includes('(I') || isExport(d)) ) {
-          if (d.name.includes('(I')) {
-            if (d.output_links.length >  0 && links[region_name][d.output_links[0]].unbounded ) {
-              return 'hidden'              
-            }
-          }
-          if (isExport(d)) {
-            if (d.input_links.length >  0 && links[region_name][d.input_links[0]].unbounded ) {
-              return 'hidden'              
-            }
-          }
-          return 'visible'
-        }          
-        if (d.label_visible === undefined || d.label_visible ){
-          return 'visible'
-        }
-        else {
-          return 'hidden'
-        }
-      })
+      .attr('visibility',n => node_visible(n))
       .attr('style',d => {
         const font = d.type === 'product' ? 'Arial' : 'Calibri' 
         const font_style = 
@@ -1774,7 +1664,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
               if (el) {
                 drag_node(
                   nodes,links[region_name],
-                  units_names,display_style,
+                  display_style,
                   flux_types,
                   el,
                   event
@@ -1882,8 +1772,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     .domain([0,100])
     .range([0,100])
 
-  const link_default_width = 5
-
   // ALT KEY INTERACTION: MOVE LABELS
   alt_key_pressed = false
   window.focus()
@@ -1906,12 +1794,12 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     add_nodes_auto(
       data,
       flux_types,
-      data.static_sankey,true
+      false,true
     )
     add_links(
       data,
       flux_types,
-      data.static_sankey,true
+      false,true
     )
     localStorage.setItem('data',JSON.stringify(data))
   })

@@ -241,7 +241,7 @@ export const explore_branch = (
   node_id: number, 
   current_length: number, 
   visited_nodes: number[],
-  trade_sectors: string[],
+  //trade_sectors: string[],
   region_name: string,
   links : { [region_name:string]:SankeyLink[]}  
 ) => {
@@ -256,14 +256,16 @@ export const explore_branch = (
   let no_input_link = true
   let highest_branch_length = current_length
   links[region_name].forEach((link)=> {
-    if (link.target === node_id && !trade_sectors.includes(link.source_name) ) {
+    if (link.target === node_id ) {
+    //if (link.target === node_id && !trade_sectors.includes(link.source_name) ) {
       //if (link.target === node_id ) {
       // if the node has never been visited, continue to explore the branch, otherwise stop (for recycling flows).
       if (visited_nodes.indexOf(node_id)===-1){
         no_input_link = false
         const new_visited_nodes = visited_nodes.slice()
         new_visited_nodes.push(node_id)
-        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,trade_sectors,region_name,links) : 0
+        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,region_name,links) : 0
+        //const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,trade_sectors,region_name,links) : 0
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
@@ -290,7 +292,7 @@ export const arrangeNodes = (data:SankeyData) => {
 
 export const compute_auto_sankey = (
   data: SankeyData,
-  trade_sectors: string[], 
+  //trade_sectors: string[], 
   positions = true
 ) => {
   const {nodes,links} = data
@@ -330,7 +332,8 @@ export const compute_auto_sankey = (
   })
   const horizontal_indices : number[] = []
   nodes.forEach((node)=>{
-    const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
+    const horizontal_index = explore_branch(node.id, 0, [],region_name,links)
+    //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
     horizontal_indices.push(horizontal_index)
     //set_horizontal_indices.add(horizontal_index)
     if (horizontal_index > max_horizontal_index) {
@@ -338,7 +341,8 @@ export const compute_auto_sankey = (
     }
   })
   links[region_name].forEach(l=>{
-    if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  && !trade_sectors.includes(l.source_name)) {
+    if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  ) {
+    //if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  && !trade_sectors.includes(l.source_name)) {
       l.recycling = true
     }
     delete l.source
@@ -576,7 +580,7 @@ export const updateLayout = (
         link.source_name = node_source.name
         link.target_name = node_target.name      
       }
-      const {x_label,y_label,type,label_position,label_visible,recycling,curved,curvature,arrow} = link_layout
+      const {x_label,y_label,label_position,label_visible,recycling,curved,curvature,arrow} = link_layout
       link.curvature = curvature
       link.curved = curved
       link.arrow = arrow
@@ -585,7 +589,7 @@ export const updateLayout = (
       link.label_visible = label_visible
       link.x_label = x_label
       link.y_label = y_label
-      link.type = type
+      //link.type = type
       link.recycling = recycling
 
       if ( link_layout.vert_shift  ) {
@@ -595,7 +599,7 @@ export const updateLayout = (
       }
     }
   }
-  data.animation_tooltips = new_layout.animation_tooltips
+  //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
   if ( 'height' in new_layout ) {
     data.height = new_layout.height
