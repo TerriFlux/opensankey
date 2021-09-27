@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FormEventHandler, FunctionComponent } from 'react'
 import { Modal,Row,FormControl,Form,Col,FormLabel,FormCheck,Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes,{InferProps} from 'prop-types'
@@ -17,11 +17,11 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   {data, set_data, set_show_link, default_link, selected_link, show}
 ) => {
-  const source_change = (changeEvent : React.ChangeEvent) => {
+  const source_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes,links,region_name } = data
     const link = links[region_name][selected_link]
     const previous_node = nodes.filter(n=>n.name === link.source_name)[0]
-    const node = nodes.filter(n=>n.name === (changeEvent.target as HTMLInputElement).value)[0]
+    const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
 
     const region_names = Object.keys(data.links)
     region_names.forEach( reg_name => links[reg_name][selected_link].source_name = node.name )   
@@ -35,11 +35,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     set_data({...data})
   }
 
-  const target_change = (changeEvent : React.ChangeEvent) => {
+  const target_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links, region_name } = data
     const link = links[region_name][selected_link]
     const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
-    const node = nodes.filter(n=>n.name === (changeEvent.target as HTMLInputElement).value)[0]
+    const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
     const region_names = Object.keys(data.links)
     region_names.forEach( reg_name => links[reg_name][selected_link].target_name = node.name )   
 
@@ -90,30 +90,35 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Tab eventKey="flux_data" title="Données">
                 <br></br>
                 <Form >
-                  <Form.Group as={Row} >
-                    <FormLabel column sm={3}>Source</FormLabel>
-                    <Col sm={9}>
-                      <Form.Group controlId="formControlsSelect">
-                        <FormControl as="select" onChange={source_change}>
-                          {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
-                        </FormControl>
-                      </Form.Group>
+                  <Row>
+                    <Col>
+                      <FormLabel>Source</FormLabel>
                     </Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <FormLabel column sm={3}>Cible</FormLabel>
-                    <Col sm={9}>
-                      <Form.Group controlId="formControlsSelect">
-                        <FormControl as="select" onChange={target_change}>
-                          {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
-                        </FormControl>
-                      </Form.Group>
+                    <Col>
+                      <Form.Select onChange={source_change}>
+                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
+                      </Form.Select>
                     </Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <FormLabel column sm={3} >Valeur</FormLabel>
-                    <Col sm={9}>
-                      <FormControl
+                  </Row>
+                  <br></br>
+                  <Row>
+                    <Col>
+                      <FormLabel>Cible</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Select onChange={target_change}>
+                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
+                      </Form.Select>
+                    </Col>
+                  </Row>
+                  <br></br>
+                  <Row>
+                    <Col>
+                      <FormLabel>Valeur</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Control
+                        type='text'
                         value = {link.value}
                         onChange = {
                           (evt) => {
@@ -123,11 +128,15 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         }
                       />
                     </Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <FormLabel column sm={3} >Affichage</FormLabel>
-                    <Col sm={9}>
-                      <FormControl
+                  </Row>
+                  <br></br>
+                  <Row >
+                    <Col>
+                      <FormLabel>Affichage</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Control
+                        type='text'
                         value = {link.display_value}
                         onChange = {
                           (evt) => { 
@@ -137,7 +146,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         }
                       />
                     </Col>
-                  </Form.Group>
+                  </Row>
                 </Form>
               </Tab>
               <Tab eventKey="flux_attributes" title="Apparence">
