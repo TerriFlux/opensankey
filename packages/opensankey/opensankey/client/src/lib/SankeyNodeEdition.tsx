@@ -63,7 +63,8 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                   <Form.Group as={Row} >
                     <FormLabel column sm={2}>Couleur</FormLabel>
                     <Col sm={8}>
-                      <FormControl
+                      <Form.Control
+                        type='color'
                         value={node.color}
                         onChange = {(evt) =>  
                           (nodes[selected_node].color = evt.target.value) &&
