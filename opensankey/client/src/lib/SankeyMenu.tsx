@@ -128,7 +128,8 @@ const Menu : FunctionComponent<MenuTypes> = (
         convert_data(data)
         const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
         data['region_names'] = keys
-        const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
+        //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
+        const nodes_to_delete = compute_auto_sankey(data,true)
         if (nodes_to_delete !== undefined) {
           nodes_to_delete.forEach(
             n =>  delete_node(n)
@@ -175,7 +176,7 @@ const Menu : FunctionComponent<MenuTypes> = (
       method: 'POST',
       body: form_data
     }
-    const callback = (server_data : SankeyData) => {
+    const callback = (server_data : SankeyData & { error : string}) => {
       const error = server_data['error']
       if (error && error.length != 0 ) {
         alert(error)
@@ -190,13 +191,14 @@ const Menu : FunctionComponent<MenuTypes> = (
       const keys = Object.keys(server_data.links)
       data.region_names = keys
       data.use_flux_types = true
-      if (data.trade !==null && data.trade !==undefined) {
-        data.trade_sectors = data.trade.split(',')
-      } else {
-        data.trade_sectors = ['International']
-      }
+      // if (data.trade !==null && data.trade !==undefined) {
+      //   data.trade_sectors = data.trade.split(',')
+      // } else {
+      //   data.trade_sectors = ['International']
+      // }
 
-      compute_auto_sankey(data, data.trade_sectors, true)
+      //compute_auto_sankey(data, data.trade_sectors, true)
+      compute_auto_sankey(data, true)
       set_data({...data})
     }
     fetch(url, fetchData).then(response=> {
@@ -304,10 +306,10 @@ const Menu : FunctionComponent<MenuTypes> = (
       clickSavePDF()
     } else if (eventKey === 'reinitialization' ) {
       reinitialization()
-    } else if (eventKey === 'static_sankey' ) {
-      data.static_sankey = !data.static_sankey
-      set_data({...data})
-      //setState({})
+    // } else if (eventKey === 'static_sankey' ) {
+    //   data.static_sankey = !data.static_sankey
+    //   set_data({...data})
+    //   //setState({})
     } else if (eventKey === 'exemple2' ) {
       uploadExemple('pommes_poires.xlsx')
     } else if (eventKey === 'exemple3' ) {

@@ -38,18 +38,14 @@ export const find_node = (
 export const computeTotalOffsets = (
   node: SankeyNode,
   links: SankeyLink[],
-  data_displayed: boolean
-) =>{
+  unused: unknown
+) => {
   let total_output_offset = 0
   node.output_links.forEach(
     (id) => {
       const link = links[id]
-      if (data_displayed && link.data && link.agregated_data_value) {
-        total_output_offset += +link.agregated_data_value
-      } else {
-        if ( link.visible || link.visible === undefined ) {
-          total_output_offset += +link.value
-        }
+      if ( link.visible || link.visible === undefined ) {
+        total_output_offset += +link.value
       }
     }
   )
@@ -57,13 +53,9 @@ export const computeTotalOffsets = (
   node.input_links.forEach(
     (id) => {
       const link = links[id]
-      if (data_displayed && link.data && link.agregated_data_value) {
-        total_input_offset += +link.agregated_data_value
-      } else {
-        if ( link.visible || link.visible === undefined ) {
-          total_input_offset += +links[id].value
-        }          
-      }
+      if ( link.visible || link.visible === undefined ) {
+        total_input_offset += +links[id].value
+      }          
     }
   )
   return [total_input_offset,total_output_offset]
@@ -116,15 +108,15 @@ export const link_text = (
   if (str_display.includes('[') ) {
     return ''
   }    
-  let unit_name = ''
-  let the_link_value = toPrecision(link_value)
-  if ( display_style.unit ) {
-    if ( d.natural_unit ) {
-      unit_name = d.natural_unit
-      the_link_value = toPrecision(link_value * (d.conv ? d.conv[1] : 1) )
-    }
-  }
+  //let unit_name = ''
+  const the_link_value = toPrecision(link_value)
+  // if ( display_style.unit ) {
+  //   if ( d.natural_unit ) {
+  //     unit_name = d.natural_unit
+  //     the_link_value = toPrecision(link_value * (d.conv ? d.conv[1] : 1) )
+  //   }
+  // }
 
 
-  return the_link_value + ' ' + unit_name
+  return the_link_value
 }

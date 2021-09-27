@@ -27,22 +27,16 @@ declare const window: Window &
 window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : window.SankeyToolsStatic
 
 const data : SankeyData = {
-  version: '0.3',
-  file_path: 'sankey_diagram.json',
+  version: '0.4',
   node_width: 10,
   user_scale: 100,
   height: 1500,
   width: 2150,
 
-  periods: false,
-
   nodes: [],
   links: {
     'no_region': []
   },
-
-  animation_tooltips: {},
-  show_uncert: true,
 
   display_style : {
     font_size         : 11,
@@ -55,23 +49,17 @@ const data : SankeyData = {
     unit              : false,
     filter            : 0,
     filter_label      : 0,
-    global_curvature  : 0.5,
-    trade_close       : true
+    global_curvature  : 0.5
   },
-
-  static_sankey  : window.SankeyToolsStatic,
 
   subchains : [],
   use_flux_types : false,
-  region_names : [],
-  tooltip_names : [],
 
-  tooltips: [],
-  units_names: [],
   region_name: 'no_region',
-  default_tooltip: true
+  region_names: ['no_region']
 }
-let initial_flux_types = ['null_data','computed_data','adjusted_data']
+
+const initial_flux_types = ['null_data','computed_data','adjusted_data']
 const json_data = localStorage.getItem('data')
 if (json_data !== null) {
   const new_data = JSON.parse(json_data)
@@ -81,11 +69,6 @@ if (json_data !== null) {
   const region_names : string[] = Object.keys(data.links)
   if (!region_names.includes(data.region_name)) {
     data.region_name = region_names[0]
-  }
- 
-  data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
-  if (window.SankeyToolsStatic) {
-    initial_flux_types = ['computed_data','adjusted_data']
   }
 }
  

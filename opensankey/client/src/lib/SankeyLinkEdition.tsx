@@ -144,8 +144,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <br></br>
                 <Form >
                   <Form.Group as={Row} >
-                    <Col sm={12}>
-                      <FormCheck inline
+                    <Col>
+                      <FormCheck
                         type='checkbox'
                         label='Visible'
                         checked = {selected_links[0].visible || selected_links[0].visible === undefined}
@@ -161,8 +161,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <FormLabel column sm={2}>Couleur:</FormLabel>
-                    <Col sm={10}>
+                    <Col>
+                      <FormLabel >Couleur:</FormLabel>
+                    </Col>
+                    <Col>
                       <Form.Control
                         type="color"
                         defaultValue={link.color}
@@ -178,10 +180,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <FormLabel column sm={2}>Courbure</FormLabel>
-                    <Col sm={8}>
-                      <Form.Control
-                        type="range" 
+                    <Col>
+                      <FormLabel >Courbure</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Range
                         min="0" max="1" step="0.1"
                         value={link.curvature}
                         onChange = {
@@ -197,49 +200,54 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col sm={2}>{link.curvature}</Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <FormLabel column sm={2}>Type:</FormLabel>
-                    <FormCheck
-                      inline
-                      type='checkbox'
-                      label='Courbe'
-                      checked = {link.curved}
-                      onChange = {
-                        evt =>  {
-                          selected_links.forEach(
-                            l => l.curved = evt.target.checked
-                          )
-                          set_data({...data})
+                    <Col>
+                      <FormLabel>Type:</FormLabel>
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Courbe'
+                        checked = {link.curved}
+                        onChange = {
+                          evt =>  {
+                            selected_links.forEach(
+                              l => l.curved = evt.target.checked
+                            )
+                            set_data({...data})
+                          }
                         }
-                      }
-                    />
-                    <FormCheck
-                      inline
-                      type='checkbox'
-                      label='Flêche'
-                      checked = {link.arrow}
-                      onChange = {
-                        evt =>  {
-                          selected_links.forEach(
-                            l => l.arrow = evt.target.checked
-                          )
-                          set_data({...data})
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Flêche'
+                        checked = {link.arrow}
+                        onChange = {
+                          evt =>  {
+                            selected_links.forEach(
+                              l => l.arrow = evt.target.checked
+                            )
+                            set_data({...data})
+                          }
                         }
-                      }
-                    />
-                    <FormCheck 
-                      inline
-                      type='checkbox'
-                      label='Recyclage'
-                      checked = {link.recycling ? link.recycling : undefined}
-                      onChange = {
-                        evt =>  {
-                          selected_links.forEach(
-                            l => l.recycling = evt.target.checked
-                          )
-                          set_data({...data})
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck 
+                        type='checkbox'
+                        label='Recyclage'
+                        checked = {link.recycling ? link.recycling : undefined}
+                        onChange = {
+                          evt =>  {
+                            selected_links.forEach(
+                              l => l.recycling = evt.target.checked
+                            )
+                            set_data({...data})
+                          }
                         }
-                      }
-                    />
+                      />
+                    </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
                     <Col sm={12}>
@@ -314,7 +322,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Tab eventKey="label" title="Label">
                 <br/>
                 <Form.Group as={Row} >
-                  <Col sm={12}>
+                  <Col>
                     <FormCheck
                       value='black'
                       type='radio'
@@ -330,7 +338,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     />
                   </Col>
-                  <Col sm={12}>
+                  <Col>
                     <FormCheck
                       value='white'
                       type='radio'
@@ -346,7 +354,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     />
                   </Col>
-                  <Col sm={12}>
+                  <Col>
                     <FormCheck
                       value='same_color'
                       type='radio'
@@ -363,85 +371,92 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     />
                   </Col>
                 </Form.Group>
+                <Form.Group >
+                  <FormCheck
+                    type='checkbox'
+                    label='Label visible'
+                    checked = {link.label_visible || link.label_visible === undefined }
+                    onChange = {
+                      evt => {
+                        selected_links.forEach(                              
+                          l => l.label_visible = evt.target.checked
+                        )
+                        set_data({...data})
+                      }
+                    }
+                  />
+                </Form.Group>
                 <Form.Group as={Row} >
-                  <Col sm={12}>
-                    <FormCheck
-                      type='checkbox'
-                      label='Label visible'
-                      checked = {link.label_visible || link.label_visible === undefined }
+                  <Col>
+                    <FormLabel>Position:</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value ='beginning'
+                      type='radio'
+                      label='Début'
+                      checked = {link.label_position === 'beginning'}
                       onChange = {
                         evt => {
                           selected_links.forEach(                              
-                            l => l.label_visible = evt.target.checked
+                            l => l.label_position = evt.target.value
                           )
                           set_data({...data})
                         }
                       }
                     />
                   </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <FormLabel column sm={2}>Position:</FormLabel>
-                  <FormCheck inline
-                    value ='beginning'
-                    type='radio'
-                    label='Début'
-                    checked = {link.label_position === 'beginning'}
-                    onChange = {
-                      evt => {
-                        selected_links.forEach(                              
-                          l => l.label_position = evt.target.value
-                        )
-                        set_data({...data})
+                  <Col>
+                    <Form.Check
+                      value ='middle'
+                      type='radio'
+                      label='Milieu'
+                      checked = {link.label_position === 'middle'}
+                      onChange = {
+                        evt => {
+                          selected_links.forEach(                              
+                            l => l.label_position = evt.target.value
+                          )
+                          set_data({...data})
+                        }
                       }
-                    }
-                  />
-                  <FormCheck inline
-                    value ='middle'
-                    type='radio'
-                    label='Milieu'
-                    checked = {link.label_position === 'middle'}
-                    onChange = {
-                      evt => {
-                        selected_links.forEach(                              
-                          l => l.label_position = evt.target.value
-                        )
-                        set_data({...data})
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value ='end'
+                      type='radio'
+                      label='Fin'
+                      checked = {link.label_position === 'end'}
+                      onChange = {
+                        evt => {
+                          selected_links.forEach(                              
+                            l => l.label_position = evt.target.value
+                          )
+                          set_data({...data})
+                        }
                       }
-                    }
-                  />
-                  <FormCheck inline
-                    value ='end'
-                    type='radio'
-                    label='Fin'
-                    checked = {link.label_position === 'end'}
-                    onChange = {
-                      evt => {
-                        selected_links.forEach(                              
-                          l => l.label_position = evt.target.value
-                        )
-                        set_data({...data})
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      value ='frozen'
+                      type='radio'
+                      label='Figé'
+                      checked = {link.label_position === 'frozen'}
+                      onChange = {
+                        evt => {
+                          selected_links.forEach(                              
+                            l => l.label_position = evt.target.value
+                          )
+                          set_data({...data})
+                        }
                       }
-                    }
-                  />
-                  <FormCheck inline
-                    value ='frozen'
-                    type='radio'
-                    label='Figé'
-                    checked = {link.label_position === 'frozen'}
-                    onChange = {
-                      evt => {
-                        selected_links.forEach(                              
-                          l => l.label_position = evt.target.value
-                        )
-                        set_data({...data})
-                      }
-                    }
-                  />
+                    />
+                  </Col>
                 </Form.Group> 
                 <Form.Group>
-                  <FormLabel column sm={2}></FormLabel>
-                  <FormCheck inline
+                  <FormCheck
                     type='checkbox'
                     label='Attaché au flux'
                     disabled = {link.label_position === 'frozen'}
