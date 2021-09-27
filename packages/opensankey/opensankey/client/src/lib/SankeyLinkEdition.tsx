@@ -2,7 +2,6 @@ import React, { FunctionComponent } from 'react'
 import { Modal,Row,FormControl,Form,Col,FormLabel,FormCheck,Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes,{InferProps} from 'prop-types'
-import * as SankeyTooltip from './SankeyTooltip'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -70,10 +69,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     selected_links[0] = default_link()
     link = selected_links[0]
   }
-
-  let link_tooltip_text = (!link.tooltip_text || link.tooltip_text === '') ? SankeyTooltip.default_link_tooltip(data,link) : link.tooltip_text
-
-  link_tooltip_text = link_tooltip_text.split('\\n').join('\n')
 
   let max_link_value = 0
   links[data.region_name].forEach( link => {
@@ -461,27 +456,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     }
                   />  
                 </Form.Group>              
-              </Tab>
-              <Tab eventKey="flux_tooltip" title="Tooltip">
-                <Form >
-                  <Row>
-                    <FormLabel column sm={1}>Tooltip:</FormLabel>
-                    <Col sm={11}>
-                      <FormControl
-                        as="textarea"
-                        rows={10}
-                        value = {link_tooltip_text}
-                        onChange={
-                          (evt) => 
-                          {
-                            link.tooltip_text = evt.target.value.split('\n').join('\\n') 
-                            set_data({...data})
-                          }
-                        } 
-                      />
-                    </Col>  
-                  </Row>
-                </Form>
               </Tab>
             </Tabs>
           </Col>
