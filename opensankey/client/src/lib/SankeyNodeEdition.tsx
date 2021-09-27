@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react'
 import { Modal,Row,FormControl,Form,FormLabel,Col,FormCheck,Tabs, Tab } from 'react-bootstrap'
 import PropTypes,{InferProps} from 'prop-types'
-import { default_node_tooltip } from './SankeyTooltip'
 import { SankeyDataPropTypes } from './types'
 
 const SankeyNodeEditionPropTypes = {
@@ -24,8 +23,6 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
   if (node === undefined) {
     node = default_node()
   }
-  let node_tooltip_text = (!node.tooltip_text || node.tooltip_text === '') ? default_node_tooltip(data,node) : node.tooltip_text
-  node_tooltip_text = node_tooltip_text.split('\\n').join('\n')
 
   const keys = Object.keys(links)
   if (!keys.includes(data.region_name)) {
@@ -138,7 +135,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       </Form.Group> */}
                 </Form>
               </Tab>
-              <Tab eventKey="node_tooltip" title="Tooltip">
+              {/* <Tab eventKey="node_tooltip" title="Tooltip">
                 <Form >
                   <Row>
                     <FormLabel column sm={1}>Tooltip:</FormLabel>
@@ -158,7 +155,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                     </Col>  
                   </Row>
                 </Form>
-              </Tab>
+              </Tab> */}
             </Tabs>
           </Col>
         </Row>

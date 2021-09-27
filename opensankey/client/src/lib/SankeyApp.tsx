@@ -22,24 +22,6 @@ const SankeyAppPropTypes = {
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-  sankey: {
-    sankey_data_file:RequestInfo
-    sous_filieres : { [ key : string ] : string }
-    units: string[],
-    flask_logo? : string,
-    flask_header? : string,
-    logo_width? : number,
-    legend_average : string,
-    legend_uncert : string,
-    welcome_text? : string,
-    help_text : string
-    excel : string
-  }
-}
-
 const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subchain,initial_flux_types}) => {
   const [show_node,set_show_node] = useState(false)
   const [show_link,set_show_link] = useState(false)
@@ -49,7 +31,6 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
   const [selected_link,set_selected_link] = useState(0)
   const [selected_node,set_selected_node] = useState(0)
   const [data,set_data] = useState<SankeyData>(sankey_data)
-  const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : undefined)
   const [subchain,set_subchain] =  useState(initial_subchain)
   const [flux_types] = useState(initial_flux_types)
   
@@ -270,19 +251,7 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
 
   return (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
-      { !window.SankeyToolsStatic ? (
-        <Menu data={data} set_data={set_data} delete_node={delete_node} />
-      ) : (<></>)}
-      {/* { (data.static_sankey && window.sankey) ? (
-        <Row style={{ 'backgroundColor' : 'WhiteSmoke'}}>
-          <Col sm={2} style={{ 'marginLeft' : '10px', 'marginTop' : '10px' }}>
-            { main_color === 'old_color' ? (
-              <img src={window.sankey.legend_average} width='300' alt=""></img>
-            ) : (
-              <img src={window.sankey.legend_uncert} width='300' alt=""></img>
-            )}
-          </Col>    
-        </Row>) : (<div/>)} */}
+      <Menu data={data} set_data={set_data} delete_node={delete_node} />
       { !data.static_sankey ? (
         <Row>            
           <Col sm={11} style={{ 'color':'black'}} >
@@ -347,30 +316,6 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data,initial_subc
         delete_link={delete_link} 
         closeLinkContextMenu={closeLinkContextMenu} 
         selected_link={selected_link} />
-
-      <Modal 
-        bsSize="large" 
-        show={welcome_text !== undefined} 
-        onHide={()=>{
-          set_welcome_text(undefined)
-        }}
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-        <Modal.Header closeButton>
-          <Modal.Title>Lisez Moi</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {welcome_text ? parse(welcome_text) : ''}
-          <Button 
-            onClick={()=>{
-              set_welcome_text(undefined)
-            }}
-          >J&apos;ai lu</Button>
-        </Modal.Body>
-      </Modal>
     </div>
   )
 }

@@ -3,7 +3,6 @@ import React ,{ FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode,SankeyLink,SankeyData,SankeyDataPropTypes } from './types'
 import PropTypes,{InferProps} from 'prop-types'
 import { computeTotalOffsets,isExport } from './SankeyUtils'
-import { add_tooltips } from './SankeyTooltip'
 import * as SankeyShapes from './SankeyShapes'
 window.d3 = d3
 
@@ -125,8 +124,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         linkContextMenu(id)
       })
     }
-
-    add_tooltips(data,(gg_links as unknown as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement,  any>),'link',links[region_name],(d3.select('#g_links').node() as SVGGElement))
 
     // link value
     const select  = gg_links
@@ -1787,8 +1784,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           })
         )
     }
-
-    add_tooltips(data,(gg_nodes as unknown as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement,  any>),'node',nodes,(d3.select('#g_links').node() as SVGGElement))
   }
 
   const drawArrows = (
