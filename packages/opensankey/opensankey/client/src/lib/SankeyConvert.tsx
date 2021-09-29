@@ -32,6 +32,15 @@ export const convert_data = (
   data_to_convert: SankeyData
 ) : void => {
   const data = data_to_convert as SankeyData & ConvertSankeyData
+  if ( !data.display_style ) {
+    (data.display_style as any) = {}
+  }
+  if (Array.isArray(data.links) ) {
+    const the_links = data.links
+    data.links = {
+      'no_region': the_links
+    }
+  }
   const {display_style,nodes,links,node_width,units_names} = data
   const region_names = Object.keys(links)
 
@@ -67,13 +76,6 @@ export const convert_data = (
 
   if (data.node_width===undefined) {
     data.node_width = 10
-  }
-
-  if (Array.isArray(data.links) ) {
-    const the_links = data.links
-    data.links = {
-      'no_region': the_links
-    }
   }
 
   let flux_max = 0
