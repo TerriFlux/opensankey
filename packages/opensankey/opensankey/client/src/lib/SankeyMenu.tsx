@@ -9,13 +9,16 @@ import FileSaver from 'file-saver'
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  delete_node: PropTypes.func.isRequired
+  delete_node: PropTypes.func.isRequired,
+  open_menu: PropTypes.element,
+  save_menu: PropTypes.element,
+  edition_menu: PropTypes.element
 }
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu : FunctionComponent<MenuTypes> = (
-  {data,set_data,delete_node}
+  {data,set_data,delete_node,open_menu,save_menu,edition_menu}
 ) => {
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -328,10 +331,12 @@ const Menu : FunctionComponent<MenuTypes> = (
                 <Dropdown.Item eventKey="uploadJSON" >JSON</Dropdown.Item>
                 <form><input type="file" name="" ref={_load_json} style={{ display: 'none' }} onChange={uploadJSONImpl} /></form>
                 <Dropdown.Item eventKey="uploadExcel" >Excel</Dropdown.Item>
+                {open_menu}
               </NavDropdown>
               <NavDropdown id= 'enregistrer' title="Enregistrer" >
                 <Dropdown.Item eventKey="clickSaveDiagram" >Tout</Dropdown.Item>
                 <Dropdown.Item eventKey="clickSaveDiagramRegion" >Région courante</Dropdown.Item>
+                {save_menu}
               </NavDropdown>
               <NavDropdown id='exporter' title="Exporter" >
                 <Dropdown.Item eventKey="clickSaveSVG" >Exporter SVG</Dropdown.Item>
@@ -339,7 +344,8 @@ const Menu : FunctionComponent<MenuTypes> = (
               </NavDropdown>
             </NavDropdown>
             <NavDropdown id='edition' title="Edition" >
-              <Dropdown.Item eventKey="reinitialization" >Réinitialiser</Dropdown.Item>    
+              <Dropdown.Item eventKey="reinitialization" >Réinitialiser</Dropdown.Item>
+              {edition_menu}  
             </NavDropdown >
             <NavDropdown title="Aide" id="help">
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
