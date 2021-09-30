@@ -46,7 +46,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                     <Col sm={8}>
                       <FormControl
                         value={node.name}
-                        onChange = {(evt) =>  {
+                        onChange = {evt =>  {
                           keys.forEach(region_name=>{
                             const source_links = links[region_name].filter(l=>l.source_name===nodes[selected_node].name)
                             const target_links = links[region_name].filter(l=>l.target_name===nodes[selected_node].name)
@@ -66,10 +66,10 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       <Form.Control
                         type='color'
                         value={node.color}
-                        onChange = {(evt) =>  
-                          (nodes[selected_node].color = evt.target.value) &&
-                            set_data({...data})
-                        }
+                        onChange = {evt => { 
+                          nodes[selected_node].color = evt.target.value
+                          set_data({...data})
+                        }}
                       />
                     </Col>
                   </Form.Group>
@@ -96,10 +96,10 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                         type='radio'
                         label='Produit'
                         checked = {node.type === 'product'}
-                        onChange = {(evt) =>  
-                          (nodes[selected_node].type = evt.target.value) &&
+                        onChange = {evt => {
+                          nodes[selected_node].type = evt.target.value
                           set_data({...data})
-                        }
+                        }}
                       />
                     </Col>
                     <Col>
@@ -108,10 +108,10 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                         type='radio'
                         label='Secteur'
                         checked = {node.type === 'sector'}
-                        onChange = {(evt) =>  
-                          (nodes[selected_node].type = evt.target.value) &&
+                        onChange = {evt => {
+                          nodes[selected_node].type = evt.target.value
                           set_data({...data})
-                        }
+                        }}
                       />
                     </Col>
                   </Form.Group>
@@ -121,10 +121,10 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                         type='checkbox'
                         label='Visible'
                         checked = {node.visible || node.visible === undefined}
-                        onChange = {(evt) =>  
-                          ((node.visible = evt.target.checked) || true) && 
-                            set_data({...data})
-                        }
+                        onChange = {evt => { 
+                          node.visible = evt.target.checked
+                          set_data({...data})
+                        }}
                       />
                     </Col>
                   </Form.Group>
@@ -151,7 +151,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                         rows={10}
                         value = {node_tooltip_text}
                         onChange={
-                          (evt) => 
+                          evt => 
                           {
                             node.tooltip_text = evt.target.value.split('\n').join('\\n') 
                             set_data({...data})

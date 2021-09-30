@@ -72,7 +72,10 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                     type="text" 
                     value={user_scale}
                     onChange={evt => set_user_scale(+evt.target.value )}
-                    onBlur={() => (data.user_scale = user_scale ) && (set_data({...data})) } 
+                    onBlur={() => {
+                      data.user_scale = user_scale 
+                      set_data({...data})
+                    }} 
                   />
                   <FormControl.Feedback />
                   <Form.Text>    (valeur pour 100px)</Form.Text>
@@ -87,7 +90,10 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                     type="text" 
                     value={height}
                     onChange={evt => set_height(+evt.target.value)}
-                    onBlur={() => (data.height = height ) && (set_data({...data})) } 
+                    onBlur={() => {
+                      data.height = height 
+                      set_data({...data})
+                    }}
                   />
                 </Col>
               </Form.Group>
@@ -100,7 +106,10 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                     type="text" 
                     value={width}
                     onChange={evt => set_width(+evt.target.value)}
-                    onBlur={() => (data.width = width ) && (set_data({...data})) } 
+                    onBlur={() => {
+                      data.width = width 
+                      set_data({...data})
+                    }}
                   />
                 </Col>
               </Form.Group>
@@ -249,7 +258,11 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                   <Form.Range
                     min="11" max="20"
                     value={display_style.font_size}
-                    onChange={evt => (display_style.font_size = +evt.target.value) && set_data({...data})} />
+                    onChange={evt => {
+                      display_style.font_size = +evt.target.value
+                      set_data({...data})
+                    }}
+                  />
                 </Col>
                 <Col>{display_style.font_size}</Col>
               </Form.Group>
@@ -383,7 +396,11 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                     min="0" 
                     max={max_link_value}
                     value={display_style.filter_label}
-                    onChange={evt => ((display_style.filter_label=+evt.target.value) || true) && set_data({...data}) }/>
+                    onChange={evt => {
+                      display_style.filter_label=+evt.target.value 
+                      set_data({...data}) 
+                    }}
+                  />
                 </Col>
                 <Col>{display_style.filter_label}</Col>
               </Form.Group>
@@ -592,7 +609,11 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                   <Form.Range
                     min="11" max="20"
                     value={display_style.font_size}
-                    onChange={evt => (display_style.font_size = +evt.target.value) && set_data({...data})} />
+                    onChange={evt => {
+                      display_style.font_size = +evt.target.value
+                      set_data({...data})
+                    }}
+                  />
                 </Col>
                 <Col >{display_style.font_size}</Col>
               </Form.Group>
