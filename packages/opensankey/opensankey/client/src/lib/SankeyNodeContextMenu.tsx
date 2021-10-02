@@ -3,18 +3,18 @@ import { Button,Modal,ButtonGroup } from 'react-bootstrap'
 import PropTypes,{InferProps} from 'prop-types'
 import { reorganize_input_links } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
+import { delete_link, delete_node } from './SankeyUtils'
 
 const SankeyNodeContextMenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
   closeNodeContextMenu: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
-  delete_node: PropTypes.func.isRequired,
-  delete_link: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired
 }
 
 type  SankeyNodeContextMenuTypes = InferProps<typeof SankeyNodeContextMenuPropTypes>
-const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({data,show,selected_node,delete_node,delete_link,closeNodeContextMenu}) => {
+const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({data,set_data,show,selected_node,closeNodeContextMenu}) => {
   //const {data} = parent.state 
   const { links,nodes} = data
   return (
@@ -51,7 +51,8 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
             style={{ 'marginBottom' : '3px'}} 
             onClick={
               ()=> {
-                delete_node(selected_node)
+                delete_node(data,selected_node)
+                set_data({...data})
                 closeNodeContextMenu()  
               }
             }
@@ -62,9 +63,9 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
             onClick = {
               () =>  {
                 while (nodes[selected_node].input_links.length > 0) {
-                  delete_link(nodes[selected_node].input_links[0])
+                  delete_link(data,nodes[selected_node].input_links[0])
                 }
-                //parent.setState({data})
+                set_data({...data})
               }
             }
           >Supprimer flux entrant</Button>
@@ -73,9 +74,9 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
             onClick = {
               () =>  {
                 while (nodes[selected_node].output_links.length > 0) {
-                  delete_link(nodes[selected_node].output_links[0])
+                  delete_link(data,nodes[selected_node].output_links[0])
                 }
-                //parent.setState({data})
+                set_data({...data})
               }
             }
           >Supprimer flux sortant</Button>

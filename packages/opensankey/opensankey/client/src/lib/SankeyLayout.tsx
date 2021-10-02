@@ -3,6 +3,11 @@ import { find_link,find_node,normalize_name,isExport } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import * as d3 from 'd3'
 
+interface ExtendedSankeyLink {
+  target? : number
+  source? : number
+}
+
 export const  reorganize_node_input_links = (
   node : SankeyNode,
   nodes : SankeyNode[],
@@ -243,7 +248,7 @@ export const explore_branch = (
   visited_nodes: number[],
   //trade_sectors: string[],
   region_name: string,
-  links : { [region_name:string]:SankeyLink[]}  
+  links : { [region_name:string]:(SankeyLink& ExtendedSankeyLink)[] }  
 ) => {
   //const {links} = this.state.data
   //let {region_name } = this.state
@@ -296,6 +301,7 @@ export const compute_auto_sankey = (
   positions = true
 ) => {
   const {nodes,links} = data
+  const extended_links = links as { [region_name:string]:(SankeyLink& ExtendedSankeyLink)[] }
   //sankey.update_scale(data.user_scale)
   const region_names = Object.keys(links)
   const region_name = region_names[0]
@@ -324,7 +330,7 @@ export const compute_auto_sankey = (
   data.user_scale = max_node_value
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
-  links[region_name].forEach(l=>{
+  extended_links[region_name].forEach(l=>{
     let n = nodes.filter(n=>normalize_name(n.name) === normalize_name(l.source_name))[0]
     l.source = n.id
     n = nodes.filter(n=>normalize_name(n.name) === normalize_name(l.target_name))[0]
@@ -332,7 +338,7 @@ export const compute_auto_sankey = (
   })
   const horizontal_indices : number[] = []
   nodes.forEach((node)=>{
-    const horizontal_index = explore_branch(node.id, 0, [],region_name,links)
+    const horizontal_index = explore_branch(node.id, 0, [],region_name,extended_links)
     //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
     horizontal_indices.push(horizontal_index)
     //set_horizontal_indices.add(horizontal_index)
@@ -340,7 +346,7 @@ export const compute_auto_sankey = (
       max_horizontal_index = horizontal_index
     }
   })
-  links[region_name].forEach(l=>{
+  extended_links[region_name].forEach(l=>{
     if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  ) {
     //if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  && !trade_sectors.includes(l.source_name)) {
       l.recycling = true

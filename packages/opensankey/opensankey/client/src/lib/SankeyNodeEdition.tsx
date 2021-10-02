@@ -1,21 +1,23 @@
-import React, { FunctionComponent } from 'react'
-import { Modal,Row,FormControl,Form,FormLabel,Col,FormCheck,Tabs, Tab } from 'react-bootstrap'
+import React, { FunctionComponent, useState } from 'react'
+import { Modal,Row,FormControl,Form,FormLabel,Col,FormCheck,Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes,{InferProps} from 'prop-types'
 import { SankeyDataPropTypes } from './types'
+import { default_node } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   set_show_node: PropTypes.func.isRequired,
-  default_node:  PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired,
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_show_node,default_node,selected_node,show,children}) => {
-  const { links,nodes} = data
+const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_show_node,selected_node,show,children}) => {
+  const [tag_group_id,  set_tag_group_id]   = useState(0)
+  
+  const { links,nodes, tags} = data
   if (selected_node === -1) {
     selected_node = 0
   }
@@ -28,6 +30,14 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
   if (!keys.includes(data.region_name)) {
     data.region_name = keys[0]
   }
+  
+  if (tags.length > 0 ) {
+    const tag_group_name = tags[tag_group_id].tags_group_name
+    if (!node.tags[tag_group_name]) {
+      node.tags[tag_group_name] = []
+    }
+  }
+  const tags_visible = tags.length > 0
 
   return (
     <Modal size="lg" show={show} onHide={()=>set_show_node(false)}>
@@ -128,18 +138,76 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       />
                     </Col>
                   </Form.Group>
-                  {/* <Form.Group as={Row} >
-                        <FormLabel column sm={3} >Tags</FormLabel>
-                        <Col sm={9}>
-                          <Form.Control as="select" multiple htmlSize={3} onChange={group_value_change}>
-                            {subchains.map((value,i) => { return(
-                              <option key={i.toString()} selected={node.subchain !== undefined && node.subchain.includes(value)}>{value}</option>
-                            )})}
-                          </Form.Control>
-                        </Col>                        
-                      </Form.Group> */}
                 </Form>
               </Tab>
+              <Tab eventKey="tags" title="Tags" >
+                <br></br>
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormLabel >Tag Groupe:</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select 
+                      onChange={
+                        (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
+                      { tags.map( 
+                        (tags_group,i) => 
+                          <option 
+                            key={i} 
+                            value={i} 
+                            selected={tag_group_id === i} >
+                            {tags_group.tags_group_name}
+                          </option>)}
+                    </Form.Select>
+                  </Col> 
+                </Form.Group>
+                <Form.Group as={Row} >     
+                  <Table striped bordered hover>
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Appartenance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tags_visible ? (tags[tag_group_id].tags_group.map(
+                        (tag,i) => { return(
+                          <tr key={i.toString()}>
+                            <td><FormLabel>{tag}</FormLabel></td>
+                            <td> 
+                              <FormCheck 
+                                name={'element_visible'+i.toString()} 
+                                defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}  
+                                id={i.toString()}
+                                type='checkbox' 
+                                onChange={
+                                  (evt : React.ChangeEvent) => {
+                                    const {tags} = data
+                                    const new_nb_element = evt.target as HTMLInputElement
+                                    const id = +new_nb_element.id
+                                    const name = tags[tag_group_id].tags_group[id] 
+                                    const visible = new_nb_element.checked
+                                    const tag_group_name = tags[tag_group_id].tags_group_name
+                                    if (visible) {
+                                      if (!node.tags[tag_group_name]) {
+                                        node.tags[tag_group_name] = []
+                                      }
+                                      node.tags[tag_group_name].push(name)
+                                    } else {
+                                      node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
+                                    }
+                                    set_data({...data})
+                                    //setSelectedTags(data,selected_tags) 
+                                  }
+                                }/>
+                            </td>
+                          </tr>
+                        )})) : (<></>)}
+                    </tbody>
+                  </Table>
+                </Form.Group>
+              </Tab>
+              
               {children}
               {/* <Tab eventKey="node_tooltip" title="Tooltip">
                 <Form >

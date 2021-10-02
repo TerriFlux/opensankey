@@ -1,16 +1,19 @@
 import React,{ FunctionComponent } from 'react'
 import { Button,Modal,ButtonGroup } from 'react-bootstrap'
 import PropTypes,{InferProps} from 'prop-types'
+import { delete_link } from './SankeyUtils'
+import { SankeyDataPropTypes } from './types'
 
 const SankeyLinkContextMenuPropTypes = {
-  delete_link: PropTypes.func.isRequired,
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
   closeLinkContextMenu: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired
 }
 
 type SankeyLinkContextMenuTypes = InferProps<typeof SankeyLinkContextMenuPropTypes>
-const SankeyLinkContextMenu : FunctionComponent<SankeyLinkContextMenuTypes> = ({delete_link,closeLinkContextMenu,selected_link,show}) => {
+const SankeyLinkContextMenu : FunctionComponent<SankeyLinkContextMenuTypes> = ({data,set_data,closeLinkContextMenu,selected_link,show}) => {
   return (
     <Modal size="sm"  show={show} onHide={closeLinkContextMenu}>
       <Modal.Header closeButton>
@@ -22,7 +25,8 @@ const SankeyLinkContextMenu : FunctionComponent<SankeyLinkContextMenuTypes> = ({
             size="sm" 
             onClick={
               ()=> {
-                delete_link(selected_link)
+                delete_link(data,selected_link)
+                set_data({...data})
                 closeLinkContextMenu()
               }
             }

@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react'
 import { Button,Row,Col,ButtonGroup } from 'react-bootstrap'
 import { SankeyNode,SankeyLink,SankeyDataPropTypes } from './types'
 import PropTypes,{InferProps} from 'prop-types'
+import { default_link, default_node } from './SankeyUtils'
 
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -9,13 +10,11 @@ const SankeyEditionPropTypes = {
   set_selected_node: PropTypes.func.isRequired,
   set_selected_link: PropTypes.func.isRequired,
   set_show_link: PropTypes.func.isRequired,
-  set_show_graphic_attributes: PropTypes.func.isRequired,
-  default_link: PropTypes.func.isRequired,
-  default_node: PropTypes.func.isRequired
+  set_show_graphic_attributes: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
-const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_selected_node,set_selected_link,set_show_link,set_show_graphic_attributes,default_link,default_node}) => {
+const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_selected_node,set_selected_link,set_show_link,set_show_graphic_attributes}) => {
   const add_new_node = () => {
     const { nodes } = data
 
@@ -79,3 +78,4 @@ const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,se
 SankeyEdition.propTypes = SankeyEditionPropTypes
 
 export default SankeyEdition
+

@@ -2,12 +2,12 @@ import React, { FunctionComponent } from 'react'
 import { Modal,Row,Form,Col,FormLabel,FormCheck,Tabs,Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes,{InferProps} from 'prop-types'
+import { default_link } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   set_show_link: PropTypes.func.isRequired,
-  default_link: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired
 }
@@ -15,7 +15,7 @@ const SankeyLinkEditionPropTypes = {
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  {data, set_data, set_show_link, default_link, selected_link, show}
+  {data, set_data, set_show_link, selected_link, show}
 ) => {
   const source_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes,links,region_name } = data

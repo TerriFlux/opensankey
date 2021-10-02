@@ -2,7 +2,8 @@ import { SankeyData, SankeyLink } from './types'
 import { normalize_name } from './SankeyUtils'
 
 interface ConvertSankeyNode {
-  orientation? : string
+  orientation? : string,
+  subchain? : string[]
 }
 interface ConvertSankeyLink {
   visible?: boolean
@@ -24,7 +25,9 @@ interface ConvertSankeyData {
     trade_close? : boolean
   }
   show_uncert? : boolean
-  sankey_type? : string
+  sankey_type? : string,
+  flux_types? : string[],
+  subchains? : string[]
 }
 
 
@@ -77,6 +80,36 @@ export const convert_data = (
   if (data.node_width===undefined) {
     data.node_width = 10
   }
+
+  if (data.flux_types) {
+    data.tags.push({
+      tags_group_name: 'flux_types',
+      tags_group:      ['null_data','initial_data','computed_data','adjusted_data','unbounded']
+    })
+    data.selected_tags['flux_types'] = ['null_data','computed_data','adjusted_data']
+    delete data.flux_types
+  }
+  if (data.subchains) {
+    data.tags.push({
+      tags_group_name: 'SubChain',
+      tags_group:      data.subchains
+    })
+    delete data.subchains
+  }
+  nodes.forEach(
+    n => {
+      const n_convert = n as ConvertSankeyNode
+      if (!n.tags) {
+        n.tags = {}
+      }
+      if (n_convert.subchain) {
+        n.tags['Subchain'] = n_convert.subchain
+      }
+      if (n.label_visible === undefined) {
+        n.label_visible = true
+      }
+    }
+  )
 
   let flux_max = 0
   region_names.forEach(
