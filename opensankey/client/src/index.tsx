@@ -52,38 +52,28 @@ const data : SankeyData = {
     global_curvature  : 0.5
   },
 
-  subchains : [],
-  use_flux_types : false,
+  tags : [],
+  selected_tags : {},
 
   region_name: 'no_region',
   region_names: ['no_region']
 }
 
-const initial_flux_types = ['null_data','computed_data','adjusted_data']
 const json_data = localStorage.getItem('data')
 if (json_data !== null) {
   const new_data = JSON.parse(json_data)
   convert_data(new_data)
-  //const old_static_sankey = data.static_sankey
   Object.assign(data, new_data)
   const region_names : string[] = Object.keys(data.links)
   if (!region_names.includes(data.region_name)) {
     data.region_name = region_names[0]
   }
 }
- 
-let initial_subchain = ['All']
-const stored = localStorage.getItem('subchain')
-const subchain_stored = stored ? JSON.parse(stored) : undefined
-if (subchain_stored) {
-  initial_subchain = subchain_stored
-}
+
 
 render(
   <SankeyApp 
     sankey_data={data} 
-    initial_subchain={initial_subchain} 
-    initial_flux_types={initial_flux_types} 
   />,
   document.getElementById('react-container')
 )

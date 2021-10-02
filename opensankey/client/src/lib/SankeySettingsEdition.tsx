@@ -3,13 +3,12 @@ import { Button,Modal,Row,FormControl,Form,Col,FormLabel,FormCheck,Tabs, Tab,Tab
 import PropTypes,{InferProps} from 'prop-types'
 import { arrangeNodes, updateLayout } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
+import { setSelectedTags } from './SankeyUtils'
 
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  subchain: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   set_data: PropTypes.func.isRequired,
   set_show_graphic_attributes: PropTypes.func.isRequired,
-  setSubChain: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
   set_current_filter: PropTypes.func.isRequired
 }
@@ -17,7 +16,7 @@ const SankeySettingsEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
 const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
-  data,subchain,set_data,set_show_graphic_attributes,setSubChain,show,set_current_filter
+  data,set_data,set_show_graphic_attributes,show,set_current_filter,children
 }) => {
   let file_layout: Blob[] | undefined
   
@@ -26,9 +25,10 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale]  = useState(data.user_scale)
   const [height,     set_height]      = useState(data.height)
   const [width,      set_width]       = useState(data.width)
-  const [,          set_node_hspace] = useState(100)
+  const [,           set_node_hspace] = useState(100)
+  const [tag_group_id,  set_tag_group_id]   = useState(0)
 
-  const { display_style,subchains,links,nodes} = data
+  const { display_style,tags,links,nodes,selected_tags} = data
   const region_names = Object.keys(data.links)
   const {node_width} = data
   const { filter } = display_style
@@ -45,7 +45,13 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
   })
   max_link_value +=1
 
-  const nb_partition_elements = subchains.length
+  if ( tags[tag_group_id] ) {
+    const tag_group_name = tags[tag_group_id].tags_group_name
+    if (!selected_tags[tag_group_name]) {
+      selected_tags[tag_group_name] = []
+    }
+  }
+  // const nb_partition_elements = tags.length
   // const units = ['tMS','t','m3']
   // const nb_units = units.length
 
@@ -454,11 +460,7 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                       region_names.forEach(
                         reg_name=> {
                           display_style.global_curvature= Number(evt.target.value)  
-                          data.links[reg_name].forEach(l=>{
-                            if (!l.source_name.includes('(I)') && !l.target_name.includes('(E)') ) {
-                              l.curvature = +evt.target.value
-                            }
-                          })
+                          data.links[reg_name].forEach( l => l.curvature = +evt.target.value )
                           set_data({...data})
                         }
                       )
@@ -619,26 +621,108 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
               </Form.Group>
             </Form>            
           </Tab>
-          <Tab eventKey="partitions" title="Tags" >
-            <br></br>
+          <Tab eventKey="tags_groups" title="Tags Groups" >
             <Form.Group as={Row} >
-              <FormLabel >Nb éléments:</FormLabel>
+              <Col>
+                <FormLabel >Nb tags groupes:</FormLabel> 
+              </Col>
               <Col>
                 <FormControl
                   type="text" 
-                  value={nb_partition_elements}
+                  value={Object.keys(tags).length}
                   onChange={
                     (evt : React.ChangeEvent) => {
-                      const {subchains} = data
-                      const new_nb_element = Number((evt.target as HTMLInputElement).value)
-                      const length = subchains.length
-                      if (subchains.length < new_nb_element ) {
+                      const {tags} = data
+                      const new_nb_element = +(evt.target as HTMLInputElement).value
+                      const length = tags.length
+                      if (tags.length < new_nb_element ) {
                         for (let i=length;i<new_nb_element;i++) {
-                          subchains.push('Element '+ i )
+                          tags[i] = {
+                            tags_group_name: 'Tag Group '+ i,
+                            tags_group: []
+                          }
                         }
                       } else {
                         for (let i=new_nb_element;i<length;i++) {
-                          subchains.pop()
+                          delete tags[i]
+                        }      
+                      }
+                      set_data({...data})
+                    }
+                  } 
+                />
+              </Col>              
+            </Form.Group>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tags.map(
+                  (tags_group,i) => { return(
+                    <tr key={i.toString()}>
+                      <td>
+                        <FormControl 
+                          id={i.toString()}
+                          type="text"
+                          value={tags_group.tags_group_name}
+                          onChange={
+                            (evt : React.ChangeEvent) => {
+                              const {tags} = data
+                              const new_name = (evt.target as HTMLInputElement).value
+                              tags[i].tags_group_name = new_name
+                              set_data({...data}) 
+                            }
+                          }/>
+                      </td>
+                    </tr>
+                  )}) }
+              </tbody>
+            </Table>   
+          </Tab>  
+          <Tab eventKey="tags" title="Tags" >
+            <br></br>
+            <Form.Group as={Row} >
+              <Col>
+                <FormLabel >Tag Groupe:</FormLabel>
+              </Col>
+              <Col>
+                <Form.Select 
+                  onChange={
+                    (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
+                  { tags.map( 
+                    (tags_group,i) => 
+                      <option 
+                        key={i} 
+                        value={i} 
+                        selected={tag_group_id === i} >
+                        {tags_group.tags_group_name}
+                      </option>)}
+                </Form.Select>
+              </Col> 
+            </Form.Group>
+            <Form.Group as={Row} >     
+              <Col>
+                <FormLabel >Nb éléments:</FormLabel>
+              </Col>
+              <Col>
+                <FormControl
+                  type="text" 
+                  value={tags.length > 0 ? tags[tag_group_id].tags_group.length : 0}
+                  onChange={
+                    (evt : React.ChangeEvent) => {
+                      const {tags} = data
+                      const new_nb_element = Number((evt.target as HTMLInputElement).value)
+                      const length = tags[tag_group_id].tags_group.length
+                      if (tags[tag_group_id].tags_group.length < new_nb_element ) {
+                        for (let i=length;i<new_nb_element;i++) {
+                          tags[tag_group_id].tags_group.push('Element '+ i )
+                        }
+                      } else {
+                        for (let i=new_nb_element;i<length;i++) {
+                          tags[tag_group_id].tags_group.pop()
                         }      
                       }
                       set_data({...data})    
@@ -656,112 +740,58 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {subchains.map(
-                    (value,i) => { return(
+                  {tags.length > 0 ? (tags[tag_group_id].tags_group.map(
+                    (tag,i) => { return(
                       <tr key={i.toString()}>
                         <td><FormControl 
                           id={i.toString()}
                           type="text"
-                          value={value}
+                          value={tag}
                           onChange={
                             (evt : React.ChangeEvent) => {
-                              const {subchains} = data
+                              const {tags} = data
                               const new_nb_element = evt.target as HTMLInputElement
                               const id = +new_nb_element.id
                               const name = new_nb_element.value
-                              subchains[id] = name
+                              tags[tag_group_id].tags_group[id] = name
                               set_data({...data}) 
                             }
                           }/></td>
                         <td> 
                           <FormCheck 
                             name={'element_visible'+i.toString()} 
-                            defaultChecked={subchain.includes(value)}  
+                            defaultChecked={selected_tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}  
                             id={i.toString()}
                             type='checkbox' 
                             onChange={
                               (evt : React.ChangeEvent) => {
-                                const {subchains} = data
+                                const {selected_tags,tags} = data
                                 const new_nb_element = evt.target as HTMLInputElement
                                 const id = +new_nb_element.id
-                                const name = subchains[id] 
+                                const name = tags[tag_group_id].tags_group[id] 
                                 const visible = new_nb_element.checked
-                                let new_subchains = []
+                                const tag_group_name = tags[tag_group_id].tags_group_name
                                 if (visible) {
-                                  new_subchains = subchains
-                                } else {
-                                  for (let i=0;i<subchain.length;i++) {
-                                    if (subchain[i] === name) {
-                                      continue
-                                    }
-                                    new_subchains.push(subchain[i])
+                                  if (!selected_tags[tag_group_name]) {
+                                    selected_tags[tag_group_name] = []
                                   }
+                                  selected_tags[tag_group_name].push(name)
+                                } else {
+                                  selected_tags[tag_group_name].splice(selected_tags[tag_group_name].indexOf(name))
                                 }
-                                setSubChain(new_subchains) 
+                                set_data({...data})
+                                setSelectedTags(data,selected_tags) 
                               }
                             }/>
                         </td>
                         <td></td>
                       </tr>
-                    )})}
+                    )})) : (<></>)}
                 </tbody>
               </Table>
             </Form.Group>
           </Tab>
-          {/* <Tab eventKey="units" title="Unités" >
-            <br></br>
-            <Form.Group as={Row} >
-              <FormLabel column sm={2}>Nb unités:</FormLabel>
-              <Col sm={2}>
-                <FormControl
-                  type="text" value={nb_units}
-                  //onChange={this.set_nb_units} 
-                />
-              </Col>
-
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Unité naturelle</th>
-                    <th>Coefficient de conversion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {units.map(
-                    (value,i) => { return(
-                      <tr key={i.toString()}>
-                        <td>
-                          <FormControl 
-                            id={i.toString()}
-                            type="text"
-                            value={value}
-                            //onChange={this.set_unit_name}
-                          />
-                        </td>
-                        <td> 
-                          <FormCheck 
-                            name={'element_visible'+i.toString()} 
-                            defaultChecked={subchain.includes(value)}  
-                            id={i.toString()}
-                            type='checkbox' 
-                            //onChange={this.set_natural_unit}
-                          />
-                        </td>
-                        <td>
-                          <FormControl 
-                            id={i.toString()}
-                            type="text"
-                            value={value}
-                            //onChange={this.set_unit_coeff}
-                          />
-                        </td>
-                      </tr>
-                    )})}
-                </tbody>
-              </Table>
-            </Form.Group>
-          </Tab> */}
+          {children}
         </Tabs>
       </Modal.Body>
     </Modal>

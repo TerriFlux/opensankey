@@ -5,11 +5,11 @@ import {SankeyData, SankeyDataPropTypes} from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
+import { delete_node } from './SankeyUtils'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  delete_node: PropTypes.func.isRequired,
   open_menu: PropTypes.element,
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element
@@ -18,7 +18,7 @@ const MenuPropTypes = {
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu : FunctionComponent<MenuTypes> = (
-  {data,set_data,delete_node,open_menu,save_menu,edition_menu}
+  {data,set_data,open_menu,save_menu,edition_menu}
 ) => {
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -135,7 +135,7 @@ const Menu : FunctionComponent<MenuTypes> = (
         const nodes_to_delete = compute_auto_sankey(data,true)
         if (nodes_to_delete !== undefined) {
           nodes_to_delete.forEach(
-            n =>  delete_node(n)
+            n =>  delete_node(data,n)
           )
         }
         set_data({...data})
@@ -193,7 +193,6 @@ const Menu : FunctionComponent<MenuTypes> = (
       convert_data(data)
       const keys = Object.keys(server_data.links)
       data.region_names = keys
-      data.use_flux_types = true
       // if (data.trade !==null && data.trade !==undefined) {
       //   data.trade_sectors = data.trade.split(',')
       // } else {
@@ -281,10 +280,11 @@ const Menu : FunctionComponent<MenuTypes> = (
         trade_close: true
       },
 
+      tags: {},
+      selected_tags: {},
+
       static_sankey  : false,
 
-      subchains : [],
-      use_flux_types : false,
       region_names : []
     }
     set_data({...data})
