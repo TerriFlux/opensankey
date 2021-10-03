@@ -9,15 +9,14 @@ export const normalize_name = (name: string) =>{
 export const find_link = ( 
   source_name: string, 
   target_name: string,
-  region_name: string, 
-  links: { [region_name: string]: SankeyLink[] } 
+  links: SankeyLink[]
 ) =>{
-  for (let i=0; i<links[region_name].length; i++) {
-    const link = links[region_name][i]
+  for (let i=0; i<links.length; i++) {
+    const link = links[i]
     if ( normalize_name(link.source_name) === normalize_name(source_name) && 
          normalize_name(link.target_name) === normalize_name(target_name) 
     ) {
-      return [links[region_name][i],i]
+      return [links[i],i]
     }
   }
   return undefined
@@ -101,7 +100,7 @@ export const isExport = (
 export const link_text = (
   d: SankeyLink,
   link_value: number
-  /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/
+  /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/,
 ) => {
   const str_display = String(d.display_value)
   if (str_display !== 'default' ) {
@@ -111,7 +110,37 @@ export const link_text = (
   return the_link_value
 }
 
-export const default_node = () => {
+export const default_sankey_data = () : SankeyData => {
+  return {
+    version: '0.4',
+
+    nodes: [],
+    links: [],
+    user_scale : 100,
+    height: 1500,
+    width: 2150,
+    node_width: 10,
+
+    display_style : {
+      font_size: 11,
+      sector_uppercase: true,
+      sector_bold: true,
+      sector_italic: false,
+      product_uppercase: false,
+      product_bold: false,
+      product_italic: true,
+      unit: false,
+      filter: 0,
+      filter_label: 0,
+      global_curvature: 0.5
+    },
+
+    tags: [],
+    selected_tags: {}
+  }
+}
+
+export const default_node = () : SankeyNode =>  {
   return {
     id           : 0,
     name         : '',
@@ -127,26 +156,26 @@ export const default_node = () => {
   }
 }
 
-export const default_link = () => {
+export const default_link = () : SankeyLink => {
   return {
     source_name     : '',
     target_name     : '',
-    value           : 10,
-    display_value   : 'default',
+    value           : [10],
+    display_value   : ['default'],
     color           : 'darkgrey',
     curved          : false,
     arrow           : true,
-    text_color : 'black',
+    text_color      : 'black',
     label_position  : 'middle',
     curvature       : 0.5,
     label_visible   : true,
     label_on_path   : true,
     orientation     : 'hh',
     visible         : true,
-    data            : false,
     left_horiz_shift : 0,
     right_horiz_shift : 0,
-    vert_shift : 0
+    vert_shift : 0,
+    tags: {} 
   }
 }
 
@@ -156,10 +185,8 @@ export const delete_link = (
 ) => {
   
   const { links,nodes} = data
-  const region_names = Object.keys(links)
-  region_names.forEach(
-    reg_name => links[reg_name].splice(deleted_link_id,1)
-  )
+  links.splice(deleted_link_id,1)
+
   nodes.forEach(node => {
     for (let i = node.input_links.length - 1; i >= 0; i--) {
       const link_id = node.input_links[i]
@@ -193,20 +220,17 @@ export const delete_node = (
 ) => {
   
   const {nodes, links} = data
-  const region_names = Object.keys(links)
-  if (!region_names.includes(data.region_name)) {
-    data.region_name = region_names[0]
-  }
+
   // delete links originating from / going to the deleted node
   let i=0
-  while (i < links[data.region_name].length) {
-    if (links[data.region_name][i].source_name === nodes[node_id].name) {
+  while (i < links.length) {
+    if (links[i].source_name === nodes[node_id].name) {
       console.log('link'+i)
       console.log(1)
       delete_link(data,i)
       i -= 1
     }
-    else if (links[data.region_name][i].target_name === nodes[node_id].name) {
+    else if (links[i].target_name === nodes[node_id].name) {
       console.log('link'+i)
       console.log(2)
       delete_link(data,i)
@@ -239,7 +263,6 @@ export const setSelectedTags = (
 ) => {  
     
   const {nodes, links} = sankey_data
-  const region_names = Object.keys(links)
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
@@ -261,28 +284,42 @@ export const setSelectedTags = (
     node.label_visible = true 
     const node_tags = node.tags
     for (const tag_group in new_tags) {
+      if ( !node_tags[tag_group] ) {
+        continue
+      }
       for (let i=0; i< new_tags[tag_group].length; i++) {
-        if (!new_tags[tag_group].includes(node_tags[tag_group][i])) {
-          node.visible = false
-          node.label_visible = false
+        let found = false
+        for (let j=0; j< node_tags[tag_group].length; j++) {
+          if ( new_tags[tag_group].includes(node_tags[tag_group][j])) {
+            found = true
+            break
+          }
         }
+        node.visible = found
+        node.label_visible = found
       }
     }
   })
 
-  region_names.forEach(region_name =>{
-    links[region_name].forEach((link)=>{
-      const source_node = nodes.filter(n=>normalize_name(n.name)===normalize_name(link.source_name))[0]
-      const target_node = nodes.filter(n=>normalize_name(n.name)===normalize_name(link.target_name))[0]
-      if (source_node.visible  && target_node.visible ) {
-        link.visible = true
-        link.label_visible = true
-      } else {
-        link.visible = false
-        link.label_visible = false        
+  links.forEach( link => {
+    link.visible = true
+    link.label_visible = true 
+    const link_tags = link.tags
+    for (const tag_group in new_tags) {
+      if ( !link_tags[tag_group] ) {
+        continue
       }
-    })
+      for (let i=0; i< new_tags[tag_group].length; i++) {
+        let found = false
+        for (let j=0; j< link_tags[tag_group].length; j++) {
+          if ( new_tags[tag_group].includes(link_tags[tag_group][j])) {
+            found = true
+            break
+          }
+        }
+        link.visible = found
+        link.label_visible = found
+      }
+    }
   })
-  // localStorage.setItem('data',JSON.stringify(sankey_data))
-  // set_data({...sankey_data})
 }

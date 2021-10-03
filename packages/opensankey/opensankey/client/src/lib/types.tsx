@@ -45,8 +45,8 @@ export const SankeyLinkPropTypes = {
   visible               : PropTypes.bool.isRequired,
 
   // value
-  value                 : PropTypes.number.isRequired,
-  display_value         : PropTypes.string.isRequired,
+  value                 : PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  display_value         : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   // geometry
   x_label              : PropTypes.number,
@@ -56,6 +56,8 @@ export const SankeyLinkPropTypes = {
   vert_shift : PropTypes.number.isRequired,
   curvature : PropTypes.number.isRequired,
   curved : PropTypes.bool.isRequired,
+
+  tags : PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
@@ -68,9 +70,8 @@ export const SankeyDataPropTypes = {
   width: PropTypes.number.isRequired,
 
   nodes : PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-  links : PropTypes.objectOf(PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired).isRequired,
+  links : PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
-  region_name : PropTypes.string.isRequired,
 
   display_style : PropTypes.shape({
     font_size: PropTypes.number.isRequired,
@@ -93,7 +94,6 @@ export const SankeyDataPropTypes = {
     }).isRequired
   ).isRequired,
   selected_tags : PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
-  region_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>

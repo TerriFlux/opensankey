@@ -25,11 +25,6 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
   if (node === undefined) {
     node = default_node()
   }
-
-  const keys = Object.keys(links)
-  if (!keys.includes(data.region_name)) {
-    data.region_name = keys[0]
-  }
   
   if (tags.length > 0 ) {
     const tag_group_name = tags[tag_group_id].tags_group_name
@@ -57,12 +52,10 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       <FormControl
                         value={node.name}
                         onChange = {evt =>  {
-                          keys.forEach(region_name=>{
-                            const source_links = links[region_name].filter(l=>l.source_name===nodes[selected_node].name)
-                            const target_links = links[region_name].filter(l=>l.target_name===nodes[selected_node].name)
-                            source_links.forEach(l=>l.source_name = evt.target.value)
-                            target_links.forEach(l=>l.target_name = evt.target.value)
-                          })
+                          const source_links = links.filter( l => l.source_name===nodes[selected_node].name)
+                          const target_links = links.filter( l => l.target_name===nodes[selected_node].name)
+                          source_links.forEach( l => l.source_name = evt.target.value)
+                          target_links.forEach( l => l.target_name = evt.target.value)
                           nodes[selected_node].name = evt.target.value
                           set_data({...data})
                         }}
@@ -88,7 +81,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       <FormCheck  
                         type='checkbox'
                         label='Label visible'
-                        checked = {node.label_visible || node.label_visible === undefined }
+                        checked = {node.label_visible}
                         onChange = {evt =>  {
                           nodes[selected_node].label_visible = evt.target.checked
                           set_data({...data})
@@ -130,7 +123,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                       <FormCheck inline
                         type='checkbox'
                         label='Visible'
-                        checked = {node.visible || node.visible === undefined}
+                        checked = {node.visible}
                         onChange = {evt => { 
                           node.visible = evt.target.checked
                           set_data({...data})

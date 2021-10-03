@@ -50,16 +50,22 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
   const default_horiz_shift = 50
   const min_thickness = 1
 
-  const[handles_visible] = useState([...new Array(data.links[data.region_name].length).fill(false)])
+  const[handles_visible] = useState([...new Array(data.links.length).fill(false)])
 
   let alt_key_pressed = false
+
+  let region_index = 0
+  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group.length > 1 ) {
+    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  }
 
   const add_links = (
     data : SankeyData,
     static_sankey: boolean,
     remove_previous_links=false
   ) => {
-    const {nodes,links,display_style,region_name} = data
+    const {nodes,links,display_style} = data
     if ( remove_previous_links ) {
       d3.select('#g_links').selectAll('.gg_links').remove()
     }
@@ -71,7 +77,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     const gg_links = d3
       .select('#g_links')
       .selectAll('.gg_links')
-      .data(links[region_name])
+      .data(links)
       .enter()
       .append('g')
       .attr('id',(d,i) => 'gg_link' + i)
@@ -87,7 +93,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       const doubleClick = (id : number) => {
         handles_visible[id] = !handles_visible[id]
         let shift_handles
-        if ( links[region_name][id].recycling) {
+        if ( links[id].recycling) {
           shift_handles = ['#vert_shift','#left_horiz_shift','#right_horiz_shift']
         } else {
           shift_handles = ['#left_horiz_shift','#right_horiz_shift']         
@@ -111,7 +117,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         firing = true
-        const i = links[region_name].indexOf(d)
+        const i = links.indexOf(d)
         setTimeout(()=>{
           firingFunc(i)
           firingFunc = singleClick
@@ -122,13 +128,13 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       paths.call(d3.drag<SVGPathElement,SankeyLink>()
         .subject(Object)
         .on('drag', function(event) {
-          drag_link(nodes,links[region_name],display_style,data.selected_tags,this,event)
-          links[region_name].forEach(
+          drag_link(nodes,links,display_style,data.selected_tags,this,event)
+          links.forEach(
             (link:SankeyLink,i:number) => {
               d3.select('#link' + i).attr('d', 
                 () => {
                   return drawCurve(
-                    nodes,links[region_name],display_style,
+                    nodes,links,display_style,
                     data.selected_tags,link,i,
                     error_msg
                   )
@@ -140,7 +146,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       )
       paths.on('contextmenu', (event,d) => {
         event.preventDefault()
-        const id = links[region_name].indexOf(d)
+        const id = links.indexOf(d)
         linkContextMenu(id)
       })
     }
@@ -156,16 +162,16 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       .append('text')
 
     select
-      .attr('href', d =>'#link' + links[region_name].indexOf(d))
-      .attr('id',   d =>'link_value' + links[region_name].indexOf(d))
+      .attr('href', d =>'#link' + links.indexOf(d))
+      .attr('id',   d =>'link_value' + links.indexOf(d))
       .attr('class', 'link_value')
       .attr('style','font-weight: bold;font-family:Arial; font-size:'+display_style.font_size+'px;')
       .attr('fill',d => d.text_color)
       .attr('visibility',d => link_visible(d))
 
     select2
-      .attr('href', d =>'#link' + links[region_name].indexOf(d))
-      .attr('id',   d =>'link_value' + links[region_name].indexOf(d))
+      .attr('href', d =>'#link' + links.indexOf(d))
+      .attr('id',   d =>'link_value' + links.indexOf(d))
       .attr('class', 'link_value')
       .attr('style','font-weight: bold;font-family:Arial; font-size:'+display_style.font_size+'px;')
       .attr('fill',d => d.text_color)
@@ -175,14 +181,14 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       select2.call(d3.drag<SVGTextElement,SankeyLink>()
         .subject(Object).on('drag', function(event) {
           if (alt_key_pressed) {
-            drag_text(nodes,links[region_name],this,event)
+            drag_text(nodes,links,this,event)
           }
         })
       )
         .on('click',(event,d) => {
           const source_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.source_name))[0]
           const target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(d.target_name))[0]
-          const id = links[region_name].indexOf(d)
+          const id = links.indexOf(d)
           select_link(id)
           // if classic link
           if (d.orientation==='hh' && source_node.x < target_node.x) {
@@ -194,10 +200,10 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       select2.call(d3.drag<SVGTextElement,SankeyLink>()
         .subject(Object).on('drag', function(event) {
           if (alt_key_pressed) {
-            drag_text(nodes,links[region_name],this,event)
+            drag_text(nodes,links,this,event)
           } else {
             const link_to_drag = 'link' + d3.select(this).attr('id').substring(4)
-            drag_link(nodes,links[region_name],display_style,data.selected_tags,(d3.select(link_to_drag) .node() as SVGPathElement),event)
+            drag_link(nodes,links,display_style,data.selected_tags,(d3.select(link_to_drag) .node() as SVGPathElement),event)
           }
         })
       )            
@@ -209,7 +215,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         return 'link' + i
       })
       .attr('fill','none')
-      .attr('stroke-opacity',d => d.visible && d.value >= display_style.filter ? 0.95 : 0)
+      .attr('stroke-opacity',d => d.visible && d.value[region_index] >= display_style.filter ? 0.95 : 0)
       .attr('stroke-width', d => {   
         const link_value = test_link_value(nodes,d,data.selected_tags)  
         return scale(Math.max(inv_scale(min_thickness),link_value ? link_value : 0))
@@ -225,18 +231,18 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mouseover', function(event,d) {
-        if (d.visible && d.value >= display_style.filter){
+        if (d.visible && d.value[region_index] >= display_style.filter){
           return d3.select(this).attr('stroke-opacity','0.5')            
         }
       }).on('mouseout', function(event,d){
-        if (d.visible && d.value >= display_style.filter){
+        if (d.visible && d.value[region_index] >= display_style.filter){
           return d3.select(this).attr('stroke-opacity','0.95')            
         }
       })
     paths.attr('d', (d,i) => {
-      setNodesHeight(nodes,links[region_name],d,data.selected_tags)
+      setNodesHeight(nodes,links,d,data.selected_tags)
       return drawCurve(
-        nodes,links[region_name],display_style,
+        nodes,links,display_style,
         data.selected_tags,d,i,error_msg
       )
     })
@@ -374,19 +380,19 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         if ( i > source_order) {
           break
         }
-        output_offset += links[link_id].value
+        output_offset += links[link_id].value[region_index]
       }
       const number_of_links = node.output_links.length
       const value = links[id].value
       if (links[id].orientation === 'hh') {
-        if (source_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
+        if (source_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value[region_index])) {
           swap(node.output_links,source_order,source_order+1)
         }
         if (source_order > 0 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
           swap(node.output_links,source_order,source_order-1)
         }
       } else if (links[id].orientation === 'vv') {
-        if (source_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
+        if (source_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value[region_index])) {
           swap(node.output_links,source_order,source_order+1)
         }
         if (source_order > 0 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(output_offset)) {
@@ -402,19 +408,19 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         if ( i > target_order) {
           break
         }
-        input_offset += links[link_id].value
+        input_offset += links[link_id].value[region_index]
       }
       const number_of_links = node.input_links.length
       const value = links[id].value
       if ( links[id].orientation === 'hh') {
-        if (target_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
+        if (target_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value[region_index])) {
           swap(node.input_links,target_order,target_order+1)
         } 
         if (target_order > 0 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
           swap(node.input_links,target_order,target_order-1)
         }  
       } else if (links[id].orientation === 'vv') {
-        if (target_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
+        if (target_order < number_of_links - 1 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value[region_index])) {
           swap(node.input_links,target_order,target_order+1)
         } 
         if (target_order > 0 && d3.pointer(event,(d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(input_offset)) {
@@ -468,20 +474,20 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         return
       }
     } else if (handle_type === 'vert'){
-      //if (d.vert_shift + event.dy > -0.5 * scale(d.value) && new_y < height - scale(d.value)/2) {
-      if (new_y < height - scale(d.value)/2) {
+      //if (d.vert_shift + event.dy > -0.5 * scale(d.value[region_index]) && new_y < height - scale(d.value[region_index])/2) {
+      if (new_y < height - scale(d.value[region_index])/2) {
         d.vert_shift += the_event.dy
       } else {
         return
       }
     } else if (handle_type === 'left'){
-      if (d.left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(d.value)/2) {
+      if (d.left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(d.value[region_index])/2) {
         d.left_horiz_shift += the_event.dx
       } else {
         return
       }
     } else if (handle_type === 'right'){
-      if (d.right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(d.value)/2) {
+      if (d.right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(d.value[region_index])/2) {
         d.right_horiz_shift += the_event.dx
       } else {
         return
@@ -790,7 +796,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         } catch {
           return
         }
-        if ( links[id].visible || links[id].visible === undefined ) {
+        if ( links[id].visible ) {
           if ( links[id].orientation === 'hh' ) {
             if ( target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
               right_flux.push(id)
@@ -828,7 +834,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         } catch {
           return 
         }
-        if ( links[id].visible || links[id].visible === undefined ) {
+        if ( links[id].visible ) {
           if (links[id].orientation === 'vv') {
             if ( source_node.y < node.y ) {
               // flux goes down
@@ -1181,15 +1187,10 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         .attr('x', node_x_label)
     }
     d3.select('#link' + l_id).attr('d', d => {
-      let region_name = data.region_name
-      const keys = Object.keys(data.links)
-      if (!keys.includes(region_name)) {
-        region_name = keys[0]
-      }
       let error_msg
       return drawCurve(
         data.nodes,
-        data.links[region_name],
+        data.links,
         data.display_style,
         data.selected_tags,
         d as SankeyLink,
@@ -1234,7 +1235,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    drawLinkText(link_id,links,link_value,display_style,xs,ys,xt,yt)
+    if ( link_value > display_style.filter_label ) {
+      drawLinkText(link_id,links,link_value,display_style,xs,ys,xt,yt)
+    }
 
     if (d.orientation === 'vh' && !d.recycling) {
       return SankeyShapes.bezier_link_classic_hv(
@@ -1315,9 +1318,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       if (! links[lid].vert_shift){
         links[lid].vert_shift = 0
       }
-      const x_left = xt - default_horiz_shift + links[lid].left_horiz_shift - scale(links[lid].value) // x14 
-      const x_right = xs + default_horiz_shift + links[lid].right_horiz_shift + scale(links[lid].value) // x2 
-      const y_vert = Math.max(ys,yt) + scale(2*links[lid].value) + links[lid].vert_shift // y8 
+      const x_left = xt - default_horiz_shift + links[lid].left_horiz_shift - scale(links[lid].value[region_index]) // x14 
+      const x_right = xs + default_horiz_shift + links[lid].right_horiz_shift + scale(links[lid].value[region_index]) // x2 
+      const y_vert = Math.max(ys,yt) + scale(2*links[lid].value[region_index]) + links[lid].vert_shift // y8 
       const vert = 'translate(' + (x_left + (x_right-x_left)/2 - default_handle_size/2) + ', ' + (y_vert - default_handle_size/2) + ')'
       const left = 'translate(' + (x_left - default_handle_size/2)  + ' ,' + (yt + (y_vert-yt)/2 - default_handle_size/2) + ')'
       const right = 'translate(' + (x_right - default_handle_size/2) + ' ,' + (ys + (y_vert-ys)/2 - default_handle_size/2) + ')'
@@ -1333,9 +1336,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       if (! links[lid].vert_shift){
         links[lid].vert_shift = 0
       }
-      const y_left = yt - default_horiz_shift + links[lid].left_horiz_shift - scale(links[lid].value) // x14 
-      const y_right = ys + default_horiz_shift + links[lid].right_horiz_shift + scale(links[lid].value) // x2 
-      const x_vert = Math.max(xs,xt) + scale(2*links[lid].value) + links[lid].vert_shift // y8 
+      const y_left = yt - default_horiz_shift + links[lid].left_horiz_shift - scale(links[lid].value[region_index]) // x14 
+      const y_right = ys + default_horiz_shift + links[lid].right_horiz_shift + scale(links[lid].value[region_index]) // x2 
+      const x_vert = Math.max(xs,xt) + scale(2*links[lid].value[region_index]) + links[lid].vert_shift // y8 
       const vert = 'translate(' + (x_vert - default_handle_size/2) + ', ' + (y_left + (y_right-y_left)/2 - default_handle_size/2) + ')'
       const left = 'translate(' + (xt + (x_vert-xt)/2 - default_handle_size/2) + ' ,' + (y_left - default_handle_size/2)  +   ')'
       const right = 'translate(' + (xs + (x_vert-xs)/2 - default_handle_size/2) + ' ,' + (y_right - default_handle_size/2)   + ')'
@@ -1412,7 +1415,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     static_sankey: boolean,
     remove_previous_nodes=false
   ) => {
-    const {nodes,links,display_style,region_name} = data
+    const {nodes,links,display_style} = data
     if ( remove_previous_nodes ) { 
       d3.selectAll('.gg_nodes').remove()
     }       
@@ -1434,7 +1437,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       ggg_nodes.call(d3.drag<SVGGElement,SankeyNode>()
         .subject(Object).on('drag', function(event) {
           drag_node(
-            nodes,links[region_name],
+            nodes,links,
             display_style,
             data.selected_tags,
             this,event
@@ -1500,7 +1503,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       .filter(n => node_arrow_visible(n))
       .each( function(n) {
         const selection = (d3.select(this) as unknown ) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n,nodes,links[region_name],display_style,data.selected_tags,selection)
+        drawArrows(n,nodes,links,display_style,data.selected_tags,selection)
       })
 
 
@@ -1598,14 +1601,14 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
         .call(d3.drag<SVGTextElement,SankeyNode>()
           .subject(Object).on('drag', function(event) {
             if (alt_key_pressed === true) {
-              drag_text(nodes,links[region_name],this,event)
+              drag_text(nodes,links,this,event)
             }
             else {
               const node_to_drag = 'ggg_node' + d3.select(this).attr('id').substring(4,6)
               const el = document.getElementById(node_to_drag)
               if (el) {
                 drag_node(
-                  nodes,links[region_name],
+                  nodes,links,
                   display_style,
                   data.selected_tags,
                   el,
@@ -1640,6 +1643,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
 
     for (let i=0;i<n.input_links.length;i++) {
       const l = links[n.input_links[i]]
+      if (!l.visible) {
+        continue
+      }
       const link_value = test_link_value(nodes,l,selected_tags)
       if ( link_value === undefined ) {
         continue
