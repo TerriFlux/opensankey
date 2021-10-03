@@ -28,28 +28,22 @@ const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,se
   }
 
   const add_new_link = () => {
-    //const {data} = parent.state
     const {nodes,links} =data
 
     if (nodes.length < 2) {
       return
     }
-    const region_names = Object.keys(data.links)
     const link : SankeyLink = default_link()
-    const link_pos = links[region_names[0]].length
+    const link_pos = links.length
 
-    region_names.forEach(
-      region_name => {
-        links[region_name].push(link)
-        link.source_name = nodes[0].name    
-        link.target_name = nodes[1].name
-      }
-    )
+    links.push(link)
+    link.source_name = nodes[0].name    
+    link.target_name = nodes[1].name
 
     nodes[0].output_links.push(link_pos)
     nodes[1].input_links.push(link_pos)
 
-    set_selected_link(links[region_names[0]].length-1)
+    set_selected_link(links.length-1)
     set_data({...data})
     set_show_link(true)
   }

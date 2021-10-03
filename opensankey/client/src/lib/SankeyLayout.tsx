@@ -11,17 +11,15 @@ interface ExtendedSankeyLink {
 export const  reorganize_node_input_links = (
   node : SankeyNode,
   nodes : SankeyNode[],
-  links : { [region_name:string]:SankeyLink[]}
+  links : SankeyLink[]
 ) => {
-  const region_names = Object.keys(links)
-  const region_name = region_names[0]
-  const input_links = links[region_name].filter(
+  const input_links = links.filter(
     l=>l.target_name===node.name
   )
   const input_links_indices: number[] = []
   input_links.forEach(
     ol => {
-      const idx = links[region_name].indexOf(ol)
+      const idx = links.indexOf(ol)
       input_links_indices.push(idx)
     }
   )
@@ -30,13 +28,13 @@ export const  reorganize_node_input_links = (
   node.input_links.sort( (l1,l2)=> {
     const l1_index = node.input_links.indexOf(l1)
     const l2_index = node.input_links.indexOf(l2)
-    const link1 = links[region_name][node.input_links[l1_index]]
-    const link2 = links[region_name][node.input_links[l2_index]]
+    const link1 = links[node.input_links[l1_index]]
+    const link2 = links[node.input_links[l2_index]]
     if (link1 === undefined || link2 === undefined ) {
       return 1
     } 
-    const n1_name = links[region_name][node.input_links[l1_index]].source_name
-    const n2_name = links[region_name][node.input_links[l2_index]].source_name
+    const n1_name = links[node.input_links[l1_index]].source_name
+    const n2_name = links[node.input_links[l2_index]].source_name
     if ( n1_name !== n2_name) {
       const n1 = find_node(n1_name,nodes)
       const n2 = find_node(n2_name,nodes)
@@ -64,18 +62,16 @@ export const  reorganize_node_input_links = (
 export const reorganize_node_output_links = (
   node : SankeyNode,
   nodes : SankeyNode[],
-  links : { [region_name:string]:SankeyLink[]}
+  links : SankeyLink[]
 ) => {
-  const region_names = Object.keys(links)
-  const region_name = region_names[0]
-  const output_links = links[region_name].filter(
+  const output_links = links.filter(
     l=>l.source_name===node.name
   )
   const output_links_indices: number[] = []
 
   output_links.forEach(
     ol => {
-      const idx = links[region_name].indexOf(ol)
+      const idx = links.indexOf(ol)
       output_links_indices.push(idx)
     }
   )
@@ -84,13 +80,13 @@ export const reorganize_node_output_links = (
   node.output_links.sort((l1,l2)=> {
     const l1_index = node.output_links.indexOf(l1)
     const l2_index = node.output_links.indexOf(l2)
-    const link1 = links[region_name][node.output_links[l1_index]]
-    const link2 = links[region_name][node.output_links[l2_index]]
+    const link1 = links[node.output_links[l1_index]]
+    const link2 = links[node.output_links[l2_index]]
     if (link1 === undefined || link2 === undefined ) {
       return 1
     }            
-    const n1_name = links[region_name][node.output_links[l1_index]].target_name
-    const n2_name = links[region_name][node.output_links[l2_index]].target_name
+    const n1_name = links[node.output_links[l1_index]].target_name
+    const n2_name = links[node.output_links[l2_index]].target_name
     if ( n1_name !== n2_name) {
       const n1 = find_node(n1_name,nodes)
       const n2 = find_node(n2_name,nodes)
@@ -120,7 +116,7 @@ export const reorganize_input_links = (
   input: boolean,
   output: boolean,
   nodes : SankeyNode[],
-  links : { [region_name:string]:SankeyLink[]}
+  links : SankeyLink[]
 ) => {
   const node = nodes[node_id]
 
@@ -137,42 +133,33 @@ export const reorganize_input_links = (
 
 export const reorder_links = (
   nodes : SankeyNode[],
-  links : { [region_name:string]:SankeyLink[]} 
+  links : SankeyLink[] 
 ) => {
-  //const {nodes,links} = this.state.data
-  const region_names = Object.keys(links)
-  region_names.forEach(
-    cur_region_name => { 
-      const prev_link = links[cur_region_name]
-      const new_links = prev_link.sort(
-        (l1, l2) => {
-          //var s1 = that.normalize_name(l1.source_name+l1.target_name)
-          //var s2 = that.normalize_name(l2.source_name+l2.target_name)
-          const node1 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l1.source_name))[0]
-          const node2 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l2.source_name))[0]
-          if ( node1.x < node2.x ) {
-            return -1
-          } else {
-            return 1
-          }
-        }
-      )
-      links[cur_region_name] = new_links
+  const prev_link = links
+  const new_links = prev_link.sort(
+    (l1, l2) => {
+      //var s1 = that.normalize_name(l1.source_name+l1.target_name)
+      //var s2 = that.normalize_name(l2.source_name+l2.target_name)
+      const node1 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l1.source_name))[0]
+      const node2 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l2.source_name))[0]
+      if ( node1.x < node2.x ) {
+        return -1
+      } else {
+        return 1
+      }
     }
   )
+  links = new_links
 }
 
 export const compute_default_input_output_links = (
   nodes : SankeyNode[],
-  links : { [region_name:string]:SankeyLink[]}   
+  links : SankeyLink[]   
 ) => {
-  const region_names = Object.keys(links)
-  const region_name = region_names[0]
-
   nodes.forEach(node => {
     node.input_links = []
     node.output_links = []
-    links[region_name].forEach((link,link_id)=>{
+    links.forEach((link,link_id)=>{
       if (link.target_name === node.name) {
         node.input_links.push(link_id)
       }
@@ -189,8 +176,8 @@ export const apply_input_output_links = (
   data: SankeyData
 ) => {
   const {nodes,links} = data
-  const region_names = Object.keys(links)
-  const region_name = region_names[0]
+
+
   ref_nodes.forEach(
     (ref_node) => 
     { 
@@ -208,7 +195,6 @@ export const apply_input_output_links = (
           const link_and_idx = find_link(
             ref_link.source_name,
             ref_link.target_name,
-            region_name,
             links
           )
           if (link_and_idx === undefined) {
@@ -228,7 +214,6 @@ export const apply_input_output_links = (
           const link_and_idx = find_link(
             ref_link.source_name,
             ref_link.target_name,
-            region_name,
             links
           )
           if (link_and_idx === undefined) {
@@ -247,20 +232,11 @@ export const explore_branch = (
   current_length: number, 
   visited_nodes: number[],
   //trade_sectors: string[],
-  region_name: string,
-  links : { [region_name:string]:(SankeyLink& ExtendedSankeyLink)[] }  
+  links : (SankeyLink& ExtendedSankeyLink)[]  
 ) => {
-  //const {links} = this.state.data
-  //let {region_name } = this.state
-    
-  //const normalized_node_name = this.normalize_name(node_name)
-  const keys = Object.keys(links)
-  if (!keys.includes(region_name)) {
-    region_name = keys[0]
-  }
   let no_input_link = true
   let highest_branch_length = current_length
-  links[region_name].forEach((link)=> {
+  links.forEach( link => {
     if (link.target === node_id ) {
     //if (link.target === node_id && !trade_sectors.includes(link.source_name) ) {
       //if (link.target === node_id ) {
@@ -269,7 +245,7 @@ export const explore_branch = (
         no_input_link = false
         const new_visited_nodes = visited_nodes.slice()
         new_visited_nodes.push(node_id)
-        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,region_name,links) : 0
+        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,links) : 0
         //const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,trade_sectors,region_name,links) : 0
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
@@ -301,11 +277,15 @@ export const compute_auto_sankey = (
   positions = true
 ) => {
   const {nodes,links} = data
-  const extended_links = links as { [region_name:string]:(SankeyLink& ExtendedSankeyLink)[] }
-  //sankey.update_scale(data.user_scale)
-  const region_names = Object.keys(links)
-  const region_name = region_names[0]
 
+  let region_indices = [0]
+  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group.length > 1 ) {
+    region_indices = [...Array(tags_group[0].tags_group.length).keys()]
+  }
+
+  const extended_links = links as (SankeyLink& ExtendedSankeyLink)[]
+  //sankey.update_scale(data.user_scale)
   // var alerte = false
   // var message = ''
   let max_node_value = 0
@@ -322,15 +302,15 @@ export const compute_auto_sankey = (
   }
 
   // Use a relevant scale
-  region_names.forEach((region_name) => {
-    links[region_name].forEach((link) =>{
-      max_node_value = link.value > max_node_value ? link.value : max_node_value
-    })
+  links.forEach( link => {
+    region_indices.forEach( i => 
+      max_node_value = link.value[i] > max_node_value ? link.value[i] : max_node_value
+    )
   })
   data.user_scale = max_node_value
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
-  extended_links[region_name].forEach(l=>{
+  extended_links.forEach( l => {
     let n = nodes.filter(n=>normalize_name(n.name) === normalize_name(l.source_name))[0]
     l.source = n.id
     n = nodes.filter(n=>normalize_name(n.name) === normalize_name(l.target_name))[0]
@@ -338,7 +318,7 @@ export const compute_auto_sankey = (
   })
   const horizontal_indices : number[] = []
   nodes.forEach((node)=>{
-    const horizontal_index = explore_branch(node.id, 0, [],region_name,extended_links)
+    const horizontal_index = explore_branch(node.id, 0, [],extended_links)
     //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
     horizontal_indices.push(horizontal_index)
     //set_horizontal_indices.add(horizontal_index)
@@ -346,7 +326,7 @@ export const compute_auto_sankey = (
       max_horizontal_index = horizontal_index
     }
   })
-  extended_links[region_name].forEach(l=>{
+  extended_links.forEach( l => {
     if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  ) {
     //if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  && !trade_sectors.includes(l.source_name)) {
       l.recycling = true
@@ -401,11 +381,11 @@ export const compute_auto_sankey = (
     the_nodes.forEach( (node,id) => {
       let total_output_offset = 0
       node.output_links.forEach(
-        (id) => total_output_offset += +links[region_name][id].value
+        (id) => total_output_offset += +links[id].value
       )
       let total_input_offset = 0
       node.input_links.forEach(
-        (id) => total_input_offset += +links[region_name][id].value
+        (id) => total_input_offset += +links[id].value
       )
       if (id === 0) {
         node.y = 200//0.2 * height;
@@ -504,7 +484,7 @@ export const compute_auto_sankey = (
 
 export const reorganize_all_input_output_links = (
   nodes : SankeyNode[],
-  links : {[region_name:string]: SankeyLink[]}
+  links : SankeyLink[]
 ) => {
   nodes.forEach((node)=>{
     reorganize_node_input_links(node,nodes,links)
@@ -514,14 +494,9 @@ export const reorganize_all_input_output_links = (
 
 export const updateLayout = (
   data: SankeyData,
-  region_name: string,
   new_layout: SankeyData
 ) => {
   const { nodes, links } = data
-  let layout_region_name = Object.keys(new_layout.links)[0]
-  if ( region_name in Object.keys(new_layout.links) ) {
-    layout_region_name = region_name
-  }
   convert_data(new_layout)
 
   let max_vertical_offset = 0
@@ -554,57 +529,51 @@ export const updateLayout = (
   }
   apply_input_output_links(
     new_layout.nodes,
-    new_layout.links[layout_region_name],
+    new_layout.links,
     data
   )
 
-  const keys = Object.keys(data.links)
-  for (const idx in keys) {
-    const the_region_name = keys[idx]
-    if ( the_region_name in new_layout.links) {
-      layout_region_name = the_region_name        
-    }
-    for (let i = 0; i<new_layout.links[layout_region_name].length; i++) {
-      const link_layout = new_layout.links[layout_region_name][i]
-      const link_and_idx = find_link(
-        link_layout.source_name,
-        link_layout.target_name,
-        the_region_name,
-        links
-      )
-      if (link_and_idx === undefined) {
-        continue
-      }
-      const link = link_and_idx[0] as SankeyLink
-      // if ( link_layout.display_value !== 'default' && 
-      //     !String(link_layout.display_value).includes('[') ) {
-      //   link.value = link_layout.value
-      // }
-      const node_source =  find_node(link_layout.source_name,nodes)
-      const node_target =  find_node(link_layout.target_name,nodes)
-      if (node_source && node_target) {
-        link.source_name = node_source.name
-        link.target_name = node_target.name      
-      }
-      const {x_label,y_label,label_position,label_visible,recycling,curved,curvature,arrow} = link_layout
-      link.curvature = curvature
-      link.curved = curved
-      link.arrow = arrow
-      link.text_color = link_layout.text_color
-      link.label_position = label_position
-      link.label_visible = label_visible
-      link.x_label = x_label
-      link.y_label = y_label
-      //link.type = type
-      link.recycling = recycling
 
-      if ( link_layout.vert_shift  ) {
-        link.left_horiz_shift = link_layout.left_horiz_shift
-        link.right_horiz_shift = link_layout.right_horiz_shift
-        link.vert_shift = link_layout.vert_shift
-      }
+  for (let i = 0; i<new_layout.links.length; i++) {
+    const link_layout = new_layout.links[i]
+    const link_and_idx = find_link(
+      link_layout.source_name,
+      link_layout.target_name,
+      links
+    )
+    if (link_and_idx === undefined) {
+      continue
+    }
+    const link = link_and_idx[0] as SankeyLink
+    // if ( link_layout.display_value !== 'default' && 
+    //     !String(link_layout.display_value).includes('[') ) {
+    //   link.value = link_layout.value
+    // }
+    const node_source =  find_node(link_layout.source_name,nodes)
+    const node_target =  find_node(link_layout.target_name,nodes)
+    if (node_source && node_target) {
+      link.source_name = node_source.name
+      link.target_name = node_target.name      
+    }
+    const {x_label,y_label,label_position,label_visible,recycling,curved,curvature,arrow} = link_layout
+    link.curvature = curvature
+    link.curved = curved
+    link.arrow = arrow
+    link.text_color = link_layout.text_color
+    link.label_position = label_position
+    link.label_visible = label_visible
+    link.x_label = x_label
+    link.y_label = y_label
+    //link.type = type
+    link.recycling = recycling
+
+    if ( link_layout.vert_shift  ) {
+      link.left_horiz_shift = link_layout.left_horiz_shift
+      link.right_horiz_shift = link_layout.right_horiz_shift
+      link.vert_shift = link_layout.vert_shift
     }
   }
+
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
   if ( 'height' in new_layout ) {

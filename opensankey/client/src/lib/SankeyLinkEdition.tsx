@@ -1,5 +1,5 @@
-import React, { FunctionComponent } from 'react'
-import { Modal,Row,Form,Col,FormLabel,FormCheck,Tabs,Tab } from 'react-bootstrap'
+import React, { FunctionComponent, useState } from 'react'
+import { Modal,Row,Form,Col,FormLabel,FormCheck,Tabs,Tab, Table } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes,{InferProps} from 'prop-types'
 import { default_link } from './SankeyUtils'
@@ -17,14 +17,15 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   {data, set_data, set_show_link, selected_link, show}
 ) => {
+  const [tag_group_id,  set_tag_group_id]   = useState(0)
+
   const source_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes,links,region_name } = data
-    const link = links[region_name][selected_link]
+    const { nodes,links } = data
+    const link = links[selected_link]
     const previous_node = nodes.filter(n=>n.name === link.source_name)[0]
     const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
 
-    const region_names = Object.keys(data.links)
-    region_names.forEach( reg_name => links[reg_name][selected_link].source_name = node.name )   
+    links[selected_link].source_name = node.name
 
     // Remove link from old source
     const link_pos = previous_node.output_links.indexOf(selected_link)
@@ -36,12 +37,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const target_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes, links, region_name } = data
-    const link = links[region_name][selected_link]
+    const { nodes, links } = data
+    const link = links[selected_link]
     const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
     const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
-    const region_names = Object.keys(data.links)
-    region_names.forEach( reg_name => links[reg_name][selected_link].target_name = node.name )   
+    links[selected_link].target_name = node.name
 
     // Remove link from old target
     const link_pos = previous_node.input_links.indexOf(selected_link)
@@ -52,32 +52,28 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     set_data({...data})
   }
 
-  const { links,nodes} = data
+  const { links,nodes,tags} = data
   if (selected_link === -1) {
     selected_link = 0
   }
-  const keys = Object.keys(links)
-  if (!keys.includes(data.region_name)) {
-    data.region_name = keys[0]
-  }
   const selected_links : SankeyLink[] = []
-  const the_link = links[data.region_name][selected_link]
+  const the_link = links[selected_link]
   selected_links.push(the_link)
 
-  let link = links[data.region_name][selected_link]
+  let link = links[selected_link]
   if (selected_links[0] === undefined) {
     selected_links[0] = default_link()
     link = selected_links[0]
   }
 
-  let max_link_value = 0
-  links[data.region_name].forEach( link => {
-    if (link.value > max_link_value) {
-      max_link_value = link.value
-    }
-  })
-  max_link_value +=1
+  let region_index = 0
+  const tags_group_region = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group_region.length > 1 ) {
+    region_index = tags_group_region[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  }
 
+  const tags_visible = tags.length > 0
+  
   return (
     <Modal size="lg" show={show} onHide={(()=>set_show_link(false))}>
       <Modal.Header closeButton>
@@ -119,10 +115,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value = {link.value}
+                        value = {link.value[region_index]}
                         onChange = {
                           (evt) => {
-                            links[data.region_name][selected_link].value = +evt.target.value
+                            links[selected_link].value[region_index] = +evt.target.value
                             set_data({...data})
                           }
                         }
@@ -140,7 +136,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         value = {link.display_value}
                         onChange = {
                           (evt) => { 
-                            links[data.region_name][selected_link].display_value = evt.target.value
+                            links[selected_link].display_value[region_index] = evt.target.value
                             set_data({...data})
                           }
                         }
@@ -480,6 +476,76 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     }
                   />  
                 </Form.Group>              
+              </Tab>
+              <Tab eventKey="tags" title="Tags" >
+                <br></br>
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormLabel >Tag Groupe:</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select 
+                      onChange={
+                        (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
+                      { tags.map( 
+                        (tags_group,i) => 
+                          <option 
+                            key={i} 
+                            value={i} 
+                            selected={tag_group_id === i} >
+                            {tags_group.tags_group_name}
+                          </option>)}
+                    </Form.Select>
+                  </Col> 
+                </Form.Group>
+                <Form.Group as={Row} >     
+                  <Table striped bordered hover>
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Appartenance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tags_visible ? (tags[tag_group_id].tags_group.map(
+                        (tag,tag_id) => { 
+                          const link_tag_groups = link.tags[tags[tag_group_id].tags_group_name]
+                          const checked = link_tag_groups ? link_tag_groups.includes(tags[tag_group_id].tags_group[tag_id]) : true
+                          return(
+                            <tr key={tag_id.toString()}>
+                              <td><FormLabel>{tag}</FormLabel></td>
+                              <td> 
+                                <FormCheck 
+                                  name={'element_visible'+tag_id.toString()} 
+                                  defaultChecked={checked}  
+                                  id={tag_id.toString()}
+                                  type='checkbox' 
+                                  onChange={
+                                    (evt : React.ChangeEvent) => {
+                                      const {tags} = data
+                                      const new_nb_element = evt.target as HTMLInputElement
+                                      const id = +new_nb_element.id
+                                      const name = tags[tag_group_id].tags_group[id] 
+                                      const visible = new_nb_element.checked
+                                      const tag_group_name = tags[tag_group_id].tags_group_name
+                                      if (visible) {
+                                        if (!link.tags[tag_group_name]) {
+                                          link.tags[tag_group_name] = []
+                                        }
+                                        link.tags[tag_group_name].push(name)
+                                      } else {
+                                        link.tags[tag_group_name].splice(link.tags[tag_group_name].indexOf(name))
+                                      }
+                                      set_data({...data})
+                                    //setSelectedTags(data,selected_tags) 
+                                    }
+                                  }/>
+                              </td>
+                            </tr>
+                          )})) : (<></>)}
+                    </tbody>
+                  </Table>
+                </Form.Group>
               </Tab>
             </Tabs>
           </Col>
