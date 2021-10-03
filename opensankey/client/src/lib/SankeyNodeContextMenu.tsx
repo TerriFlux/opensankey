@@ -30,7 +30,6 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
             onClick={
               ()=> {
                 reorganize_input_links(selected_node,true,false,nodes,links)
-                //parent.setState({data})
                 closeNodeContextMenu()  
               }
             }
@@ -41,7 +40,6 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
             onClick={
               ()=> {
                 reorganize_input_links(selected_node,false,true,nodes,links)
-                //setState({data})
                 closeNodeContextMenu()  
               }
             }

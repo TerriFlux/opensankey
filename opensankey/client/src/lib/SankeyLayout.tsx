@@ -126,9 +126,6 @@ export const reorganize_input_links = (
   if ( output ) {
     reorganize_node_output_links(node,nodes,links)
   }
-  // this.setState({
-  //   data: data
-  // })
 }
 
 export const reorder_links = (
@@ -138,8 +135,6 @@ export const reorder_links = (
   const prev_link = links
   const new_links = prev_link.sort(
     (l1, l2) => {
-      //var s1 = that.normalize_name(l1.source_name+l1.target_name)
-      //var s2 = that.normalize_name(l2.source_name+l2.target_name)
       const node1 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l1.source_name))[0]
       const node2 = nodes.filter(n=>normalize_name(n.name)===normalize_name(l2.source_name))[0]
       if ( node1.x < node2.x ) {
