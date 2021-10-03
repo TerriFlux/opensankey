@@ -272,28 +272,30 @@ export const convert_data = (
           l.tags['Exchanges'] = ['Other']
         }
       }
-      if ( !l.tags['flux_types']) {
-        if (l_convert.data) {
-          l.tags['flux_types'] = ['initial_data','computed_data']
-          delete  l_convert.data
-        } else {
-          l.tags['flux_types'] = ['adjusted_data']
-        }
-        if (l_convert.unbounded) {
-          l.tags['flux_types'] = ['unbounded']
-          delete l_convert.unbounded
-        } 
-        if (l_convert.value === 0) {
-          l.tags['flux_types'] = ['null_data']
-        }
+      if (data.tags.filter(tag => tag.tags_group_name === 'flux_types').length > 0) {
+        if ( !l.tags['flux_types']) {
+          if (l_convert.data) {
+            l.tags['flux_types'] = ['initial_data','computed_data']
+            delete  l_convert.data
+          } else {
+            l.tags['flux_types'] = ['adjusted_data']
+          }
+          if (l_convert.unbounded) {
+            l.tags['flux_types'] = ['unbounded']
+            delete l_convert.unbounded
+          } 
+          if (l_convert.value === 0) {
+            l.tags['flux_types'] = ['null_data']
+          }
 
-        source_node.tags['flux_types'] = source_node.tags['flux_types'] ? [...new Set(
-          [...source_node.tags['flux_types'],...l.tags['flux_types']]
-        )] : [...l.tags['flux_types']]
+          source_node.tags['flux_types'] = source_node.tags['flux_types'] ? [...new Set(
+            [...source_node.tags['flux_types'],...l.tags['flux_types']]
+          )] : [...l.tags['flux_types']]
 
-        target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
-          [...target_node.tags['flux_types'],...l.tags['flux_types']]
-        )] : [...l.tags['flux_types']]
+          target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
+            [...target_node.tags['flux_types'],...l.tags['flux_types']]
+          )] : [...l.tags['flux_types']]
+        }
       }
     }
   )

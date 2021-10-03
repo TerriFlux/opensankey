@@ -133,73 +133,74 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                   </Form.Group>
                 </Form>
               </Tab>
-              <Tab eventKey="tags" title="Tags" >
-                <br></br>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel >Tag Groupe:</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Select 
-                      onChange={
-                        (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
-                      { tags.map( 
-                        (tags_group,i) => 
-                          <option 
-                            key={i} 
-                            value={i} 
-                            selected={tag_group_id === i} >
-                            {tags_group.tags_group_name}
-                          </option>)}
-                    </Form.Select>
-                  </Col> 
-                </Form.Group>
-                <Form.Group as={Row} >     
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>Nom</th>
-                        <th>Appartenance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tags_visible ? (tags[tag_group_id].tags_group.map(
-                        (tag,i) => { return(
-                          <tr key={i.toString()}>
-                            <td><FormLabel>{tag}</FormLabel></td>
-                            <td> 
-                              <FormCheck 
-                                name={'element_visible'+i.toString()} 
-                                defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}  
-                                id={i.toString()}
-                                type='checkbox' 
-                                onChange={
-                                  (evt : React.ChangeEvent) => {
-                                    const {tags} = data
-                                    const new_nb_element = evt.target as HTMLInputElement
-                                    const id = +new_nb_element.id
-                                    const name = tags[tag_group_id].tags_group[id] 
-                                    const visible = new_nb_element.checked
-                                    const tag_group_name = tags[tag_group_id].tags_group_name
-                                    if (visible) {
-                                      if (!node.tags[tag_group_name]) {
-                                        node.tags[tag_group_name] = []
+              {Object.keys(tags).length ? (
+                <Tab eventKey="tags" title="Tags" >
+                  <br></br>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Tag Groupe:</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Select 
+                        onChange={
+                          (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
+                        { tags.map( 
+                          (tags_group,i) => 
+                            <option 
+                              key={i} 
+                              value={i} 
+                              selected={tag_group_id === i} >
+                              {tags_group.tags_group_name}
+                            </option>)}
+                      </Form.Select>
+                    </Col> 
+                  </Form.Group>
+                  <Form.Group as={Row} >     
+                    <Table striped bordered hover>
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Appartenance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tags_visible ? (tags[tag_group_id].tags_group.map(
+                          (tag,i) => { return(
+                            <tr key={i.toString()}>
+                              <td><FormLabel>{tag}</FormLabel></td>
+                              <td> 
+                                <FormCheck 
+                                  name={'element_visible'+i.toString()} 
+                                  defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}  
+                                  id={i.toString()}
+                                  type='checkbox' 
+                                  onChange={
+                                    (evt : React.ChangeEvent) => {
+                                      const {tags} = data
+                                      const new_nb_element = evt.target as HTMLInputElement
+                                      const id = +new_nb_element.id
+                                      const name = tags[tag_group_id].tags_group[id] 
+                                      const visible = new_nb_element.checked
+                                      const tag_group_name = tags[tag_group_id].tags_group_name
+                                      if (visible) {
+                                        if (!node.tags[tag_group_name]) {
+                                          node.tags[tag_group_name] = []
+                                        }
+                                        node.tags[tag_group_name].push(name)
+                                      } else {
+                                        node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
                                       }
-                                      node.tags[tag_group_name].push(name)
-                                    } else {
-                                      node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
-                                    }
-                                    set_data({...data})
+                                      set_data({...data})
                                     //setSelectedTags(data,selected_tags) 
-                                  }
-                                }/>
-                            </td>
-                          </tr>
-                        )})) : (<></>)}
-                    </tbody>
-                  </Table>
-                </Form.Group>
-              </Tab>
+                                    }
+                                  }/>
+                              </td>
+                            </tr>
+                          )})) : (<></>)}
+                      </tbody>
+                    </Table>
+                  </Form.Group>
+                </Tab>) : (<></>)}
               
               {children}
               {/* <Tab eventKey="node_tooltip" title="Tooltip">
