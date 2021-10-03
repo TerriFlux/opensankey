@@ -303,14 +303,14 @@ export const convert_data = (
   if ( 'sankey_type' in data ){
     delete (data as ConvertSankeyData).sankey_type
   }
-  // if ( 'max_vertical_offset' in data ){
-  //   delete data.max_vertical_offset
-  // }
+
   if (display_style.filter_label === undefined ) {
     display_style.filter_label = flux_max/10      
   }
+
   if ( data.version === '0.1' ) {
     units_names.splice(1, 0, 'natural')
   }
+  
   data.version = '0.4'
 }
