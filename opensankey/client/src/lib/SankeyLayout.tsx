@@ -511,6 +511,7 @@ export const updateLayout = (
   region_name: string,
   new_layout: SankeyData
 ) => {
+  convert_data(new_layout)
   const { nodes, links } = data
   let layout_region_name = Object.keys(new_layout.links)[0]
   if ( region_name in Object.keys(new_layout.links) ) {
