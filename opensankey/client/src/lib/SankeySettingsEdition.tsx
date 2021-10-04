@@ -3,13 +3,12 @@ import { Button,Modal,Row,FormControl,Form,Col,FormLabel,FormCheck,Tabs, Tab,Tab
 import PropTypes,{InferProps} from 'prop-types'
 import { arrangeNodes, updateLayout } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
+import { setSelectedTags } from './SankeyUtils'
 
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  subchain: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   set_data: PropTypes.func.isRequired,
   set_show_graphic_attributes: PropTypes.func.isRequired,
-  setSubChain: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
   set_current_filter: PropTypes.func.isRequired
 }
@@ -17,7 +16,7 @@ const SankeySettingsEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
 const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
-  data,subchain,set_data,set_show_graphic_attributes,setSubChain,show,set_current_filter
+  data,set_data,set_show_graphic_attributes,show,set_current_filter,children
 }) => {
   let file_layout: Blob[] | undefined
   
@@ -26,26 +25,33 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale]  = useState(data.user_scale)
   const [height,     set_height]      = useState(data.height)
   const [width,      set_width]       = useState(data.width)
-  const [,          set_node_hspace] = useState(100)
+  const [,           set_node_hspace] = useState(100)
+  const [tag_group_id,  set_tag_group_id]   = useState(0)
 
-  const { display_style,subchains,links,nodes} = data
-  const region_names = Object.keys(data.links)
-  const {node_width} = data
+  const { display_style,tags,links,nodes,selected_tags,node_width} = data
   const { filter } = display_style
-  const keys = Object.keys(links)
-  if (!keys.includes(data.region_name)) {
-    data.region_name = keys[0]
+
+  let region_index = 0
+  const tags_group = tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group.length > 1 ) {
+    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
   }
 
   let max_link_value = 0
-  links[data.region_name].forEach(link=>{
-    if (link.value > max_link_value) {
-      max_link_value = link.value
+  links.forEach( link => {
+    if (link.value[region_index] > max_link_value) {
+      max_link_value = link.value[region_index]
     }
   })
   max_link_value +=1
 
-  const nb_partition_elements = subchains.length
+  if ( tags[tag_group_id] ) {
+    const tag_group_name = tags[tag_group_id].tags_group_name
+    if (!selected_tags[tag_group_name]) {
+      selected_tags[tag_group_name] = []
+    }
+  }
+  // const nb_partition_elements = tags.length
   // const units = ['tMS','t','m3']
   // const nb_units = units.length
 
@@ -64,50 +70,67 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
             <br></br>
             <Form>
               <Form.Group as={Row} >
-                <FormLabel column sm={2} >Echelle</FormLabel>
-                <Col sm={10}>
+                <Col>
+                  <FormLabel >Echelle</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
                     value={user_scale}
                     onChange={evt => set_user_scale(+evt.target.value )}
-                    onBlur={() => (data.user_scale = user_scale ) && (set_data({...data})) } 
+                    onBlur={() => {
+                      data.user_scale = user_scale 
+                      set_data({...data})
+                    }} 
                   />
                   <FormControl.Feedback />
                   <Form.Text>    (valeur pour 100px)</Form.Text>
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Hauteur</FormLabel>
-                <Col sm={10}>
+                <Col>
+                  <FormLabel >Hauteur</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
                     value={height}
-                    onChange={(evt) => set_height(+evt.target.value)}
-                    onBlur={() => (data.height = height ) && (set_data({...data})) } 
+                    onChange={evt => set_height(+evt.target.value)}
+                    onBlur={() => {
+                      data.height = height 
+                      set_data({...data})
+                    }}
                   />
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Largeur</FormLabel>
-                <Col sm={10}>
+                <Col>
+                  <FormLabel>Largeur</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
                     value={width}
-                    onChange={(evt) => set_width(+evt.target.value)}
-                    onBlur={() => (data.width = width ) && (set_data({...data})) } 
+                    onChange={evt => set_width(+evt.target.value)}
+                    onBlur={() => {
+                      data.width = width 
+                      set_data({...data})
+                    }}
                   />
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Shift horizontal</FormLabel>
-                <Col sm={6}>
+                <Col>
+                  <FormLabel>Shift horizontal</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
                     value={shift_left}
                     onChange={evt => set_shift_left(+evt.target.value)}
                   />
                 </Col>
-                <Col sm={4}>
+                <Col >
                   <Button
                     size="sm" 
                     onClick={
@@ -120,15 +143,17 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Shift vertical</FormLabel>
-                <Col sm={6}>
+                <Col>
+                  <FormLabel>Shift vertical</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
                     value={shift_top}
                     onChange={evt => set_shift_top(+evt.target.value)}
                   />
                 </Col>
-                <Col sm={4}>
+                <Col>
                   <Button 
                     size="sm" 
                     onClick={
@@ -146,15 +171,16 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
             <br></br>
             <Form >                
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Layout</FormLabel>
-                <Col sm={6}>
+                <Col>
+                  <FormLabel>Layout</FormLabel>
+                </Col>
+                <Col>
                   <Form.Control
                     type="file" 
-                    style={{ 'marginTop' : '11px'}}
                     onChange={(evt : React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
                   />
                 </Col>
-                <Col sm={4}>
+                <Col>
                   <Button 
                     size="sm" 
                     onClick={
@@ -170,7 +196,7 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                               if (result) {
                                 result = String(result).split('<br>').join('\\\\n')
                                 const new_layout = JSON.parse(result)
-                                updateLayout(data,data.region_name,new_layout)
+                                updateLayout(data,new_layout)
                                 set_data({...data})
                               }
                             }
@@ -183,14 +209,16 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Espacement H</FormLabel>
-                <Col sm={6}>
+                <Col>
+                  <FormLabel>Espacement H</FormLabel>
+                </Col>
+                <Col>
                   <FormControl
                     type="text" 
-                    onChange={(evt) => set_node_hspace(+evt.target.value)}
+                    onChange={evt => set_node_hspace(+evt.target.value)}
                   />
                 </Col>
-                <Col sm={4}>
+                <Col>
                   <Button 
                     size="sm" 
                     onClick={()=>arrangeNodes(data)}
@@ -212,11 +240,11 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
             <br></br>
             <Form >
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Taille minimum</FormLabel>
-                <Col sm={8}>
-                  <Form.Control
-                    style={{ 'marginTop' : '11px'}}
-                    type="range" 
+                <Col>
+                  <FormLabel >Taille minimum</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
                     min="0" max="100"
                     value={node_width}
                     onChange={
@@ -226,95 +254,115 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                       } 
                     }/>
                 </Col>
-                <Col sm={2} style={{ 'marginTop' : '11px'}}>{node_width}</Col>
+                <Col>{node_width}</Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Taille police</FormLabel>
-                <Col sm={8}>
-                  <Form.Control
-                    style={{ 'marginTop' : '11px'}}
-                    type="range" 
+                <Col>
+                  <FormLabel >Taille police</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
                     min="11" max="20"
                     value={display_style.font_size}
-                    onChange={(evt) => (display_style.font_size = +evt.target.value) && set_data({...data})} />
+                    onChange={evt => {
+                      display_style.font_size = +evt.target.value
+                      set_data({...data})
+                    }}
+                  />
                 </Col>
-                <Col sm={2} style={{ 'marginTop' : '11px'}}>{display_style.font_size}</Col>
+                <Col>{display_style.font_size}</Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Secteurs</FormLabel>
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Bold'
-                  checked = {display_style.sector_bold }
-                  onChange = {
-                    (evt) => {  
-                      display_style.sector_bold = evt.target.checked
-                      set_data({...data})
+                <Col>
+                  <FormLabel >Secteurs</FormLabel>
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Bold'
+                    checked = {display_style.sector_bold }
+                    onChange = {
+                      evt => {  
+                        display_style.sector_bold = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Upper'
-                  checked = {display_style.sector_uppercase }
-                  onChange = {
-                    (evt) => {  
-                      display_style.sector_uppercase = evt.target.checked
-                      set_data({...data})
+                  />
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Upper'
+                    checked = {display_style.sector_uppercase }
+                    onChange = {
+                      evt => {  
+                        display_style.sector_uppercase = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Italic'
-                  checked = {display_style.sector_italic }
-                  onChange = {
-                    (evt) => {  
-                      display_style.sector_italic = evt.target.checked
-                      set_data({...data})
+                  />
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Italic'
+                    checked = {display_style.sector_italic }
+                    onChange = {
+                      evt => {  
+                        display_style.sector_italic = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
+                  />
+                </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Produits</FormLabel>
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Bold'
-                  checked = {display_style.product_bold }
-                  onChange = {
-                    (evt) => {  
-                      display_style.product_bold = evt.target.checked
-                      set_data({...data})
+                <Col>
+                  <FormLabel >Produits</FormLabel>
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Bold'
+                    checked = {display_style.product_bold }
+                    onChange = {
+                      evt => {  
+                        display_style.product_bold = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Upper'
-                  checked = {display_style.product_uppercase }
-                  onChange = {
-                    (evt) => {  
-                      display_style.product_uppercase = evt.target.checked
-                      set_data({...data})
+                  />
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Upper'
+                    checked = {display_style.product_uppercase }
+                    onChange = {
+                      evt => {  
+                        display_style.product_uppercase = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
-                <FormCheck  inline  
-                  type='checkbox'
-                  label='Italic'
-                  checked = {display_style.product_italic }
-                  onChange = {
-                    (evt) => {  
-                      display_style.product_italic = evt.target.checked
-                      set_data({...data})
+                  />
+                </Col>
+                <Col>
+                  <FormCheck  
+                    type='checkbox'
+                    label='Italic'
+                    checked = {display_style.product_italic }
+                    onChange = {
+                      evt => {  
+                        display_style.product_italic = evt.target.checked
+                        set_data({...data})
+                      }
                     }
-                  }
-                />
+                  />
+                </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <Col sm={4}>
-                  <Button  style={{ 'marginLeft' : '10px'}}
+                <Col>
+                  <Button 
                     size="sm" 
                     onClick={
                       () => {
@@ -333,200 +381,185 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
             <br></br>
             <Form >
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Filtre</FormLabel>
-                <Col sm={8}>
-                  <FormControl
-                    //ref = {this._filter}
-                    type="range" min="0" max={max_link_value}
+                <Col>
+                  <FormLabel >Filtre</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
+                    min="0" 
+                    max={max_link_value}
                     value={filter}
-                    onChange={(evt) => set_current_filter(Number(evt.target.value)) }/>
+                    onChange={evt => set_current_filter(Number(evt.target.value)) }/>
                 </Col>
-                <Col sm={2}>{filter}</Col>
+                <Col>{filter}</Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Filtre label</FormLabel>
-                <Col sm={8}>
-                  <FormControl
-                    //ref = {this._filter}
-                    type="range" min="0" max={max_link_value}
+                <Col>
+                  <FormLabel>Filtre label</FormLabel>
+                </Col>
+                <Col >
+                  <Form.Range
+                    min="0" 
+                    max={max_link_value}
                     value={display_style.filter_label}
-                    onChange={(evt) => ((display_style.filter_label=+evt.target.value) || true) && set_data({...data}) }/>
-                </Col>
-                <Col sm={2}>{display_style.filter_label}</Col>
-              </Form.Group>
-              <Form.Group as={Row} >
-                <FormLabel column sm={2}>Type :</FormLabel>
-                <FormCheck inline 
-                  type='checkbox'
-                  label='Courbe'
-                  onChange={(evt) => {
-                    region_names.forEach(
-                      reg_name=> {
-                        data.links[reg_name].forEach(
-                          l => l.curved = evt.target.checked
-                        )
-                      }
-                    )
-                    set_data({...data})
-                  }}
-                />
-                <FormCheck inline 
-                  type='checkbox'
-                  label='Flêche'
-                  onChange={(evt) => {
-                    region_names.forEach(
-                      reg_name=> {
-                        data.links[reg_name].forEach(
-                          l => l.arrow = evt.target.checked
-                        )
-                      }
-                    )
-                    set_data({...data})
-                  }}
-                />
-              </Form.Group>
-              <Form.Group as={Row} >
-                <FormLabel column sm={2}>Courbure</FormLabel>
-                <Col sm={8}>
-                  <Form.Control
-                    type="range" 
-                    min="0" max="1" step="0.1"
-                    value={display_style.global_curvature}
-                    onChange={(evt) => {
-                      region_names.forEach(
-                        reg_name=> {
-                          display_style.global_curvature= Number(evt.target.value)  
-                          data.links[reg_name].forEach(l=>{
-                            if (!l.source_name.includes('(I)') && !l.target_name.includes('(E)') ) {
-                              l.curvature = +evt.target.value
-                            }
-                          })
-                          set_data({...data})
-                        }
-                      )
+                    onChange={evt => {
+                      display_style.filter_label=+evt.target.value 
+                      set_data({...data}) 
                     }}
                   />
                 </Col>
-                <Col sm={2}>{display_style.global_curvature}</Col>
+                <Col>{display_style.filter_label}</Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Label:</FormLabel>
-                <FormCheck inline 
-                  name="label" 
-                  label='Début'
-                  value="beginning" 
-                  type='radio'
-                  onChange={
-                    (evt) => {
-                      data.links[data.region_name].forEach(
-                        l => l.label_position = evt.target.value
+
+                <Col>
+                  <FormLabel >Type :</FormLabel>
+                </Col>
+                <Col >
+                  <FormCheck 
+                    type='checkbox'
+                    label='Courbe'
+                    onChange={evt => {
+                      data.links.filter(l=>l.visible).forEach(
+                        l => l.curved = evt.target.checked
+                      )
+                      set_data({...data})
+                    }}
+                  />
+                </Col>
+                <Col >
+                  <FormCheck 
+                    type='checkbox'
+                    label='Flêche'
+                    onChange={evt => {
+                      data.links.filter(l=>l.visible).forEach(
+                        l => l.arrow = evt.target.checked
+                      )
+                      set_data({...data})
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Courbure</FormLabel>
+                </Col>
+                <Col >
+                  <Form.Range
+                    min="0" max="1" step="0.1"
+                    value={display_style.global_curvature}
+                    onChange={evt => {
+                      display_style.global_curvature= +evt.target.value
+                      data.links.filter(l=>l.visible).forEach( l => l.curvature = +evt.target.value )
+                      set_data({...data})
+                    }}
+                  />
+                </Col>
+                <Col>{display_style.global_curvature}</Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Label:</FormLabel>
+                </Col>
+                <Col >
+                  <FormCheck 
+                    name="label" 
+                    label='Début'
+                    value="beginning" 
+                    type='radio'
+                    onChange={
+                      evt => {
+                        data.links.filter(l=>l.visible).forEach(
+                          l => l.label_position = evt.target.value
+                        )
+                        set_data({...data}) 
+                      }
+                    }
+                  />
+                </Col>
+                <Col >
+                  <FormCheck
+                    name="label" 
+                    label='Milieu'
+                    value="middle" 
+                    type='radio'
+                    onChange={evt => {
+                      data.links.filter(l=>l.visible).forEach(
+                        l=>l.label_position = evt.target.value
                       )
                       set_data({...data}) 
-                    }
-                  }
-                />
-                <FormCheck inline
-                  name="label" 
-                  label='Milieu'
-                  value="middle" 
-                  type='radio'
-                  onChange={(evt) => {
-                    region_names.forEach(
-                      reg_name => {
-                        data.links[reg_name].forEach(
-                          l=>l.label_position = evt.target.value
-                        )
-                      }
-                    )
-                    set_data({...data}) 
-                  }}
-                />
-                <FormCheck inline
-                  name="label" 
-                  label='Fin' 
-                  value="end" 
-                  type='radio'
-                  onChange={(evt) => {
-                    region_names.forEach(
-                      reg_name => {
-                        data.links[reg_name].forEach(
-                          l=>l.label_position = evt.target.value
-                        )
-                      }
-                    )
-                    set_data({...data}) 
-                  }}
-                />
+                    }}
+                  />
+                </Col>
+                <Col >
+                  <FormCheck
+                    name="label" 
+                    label='Fin' 
+                    value="end" 
+                    type='radio'
+                    onChange={evt => {
+                      data.links.filter(l=>l.visible).forEach(
+                        l=>l.label_position = evt.target.value
+                      )
+                      set_data({...data}) 
+                    }}
+                  />
+                </Col>
               </Form.Group>
               <Form.Group>
-                <FormLabel column sm={2}></FormLabel>
-                <FormCheck inline
-                  type='checkbox'
-                  label='Attaché au flux'
-                  onChange={(evt) => {
-                    region_names.forEach(
-                      reg_name => {
-                        data.links[reg_name].forEach(
-                          l=>l.label_on_path = evt.target.checked
-                        )
-                      }
-                    )
-                    set_data({...data}) 
-                  }}
-                />  
+                <Col>
+                  <FormCheck
+                    type='checkbox'
+                    label='Attaché au flux'
+                    onChange={evt => {
+                      data.links.filter(l=>l.visible).forEach(
+                        l=>l.label_on_path = evt.target.checked
+                      )
+                      set_data({...data}) 
+                    }}
+                  />  
+                </Col >
               </Form.Group> 
               <Form.Group as={Row} >
-                <Col sm={12}>
+                <Col>
                   <FormCheck
                     value='black'
                     type='radio'
                     label='Label en noir'
                     onChange = {
                       () =>  {
-                        region_names.forEach(
-                          reg_name => {
-                            data.links[reg_name].forEach(
-                              l => l.text_color = 'black'
-                            )
-                          }
+                        data.links.filter(l=>l.visible).forEach(
+                          l => l.text_color = 'black'
                         )
                         set_data({...data})
                       }
                     }
                   />
                 </Col>
-                <Col sm={12}>
+                <Col>
                   <FormCheck
                     value='white'
                     type='radio'
                     label='Label blanc'
                     onChange = {
                       () =>  {
-                        region_names.forEach(
-                          reg_name => {
-                            data.links[reg_name].forEach(
-                              l => l.text_color = 'white'
-                            )
-                          }
+                        data.links.filter(l=>l.visible).forEach(
+                          l => l.text_color = 'white'
                         )
                         set_data({...data})
                       }
                     }
                   />
                 </Col>
-                <Col sm={12}>
+                <Col>
                   <FormCheck
                     value='same_color'
                     type='radio'
                     label='Label en couleur'
                     onChange = {
                       () =>  {
-                        region_names.forEach(
-                          reg_name => {
-                            data.links[reg_name].forEach(
-                              l => l.text_color = l.color
-                            )
-                          }
+                        data.links.filter(l=>l.visible).forEach(
+                          l => l.text_color = l.color
                         )
                         set_data({...data})
                       }
@@ -535,39 +568,125 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                 </Col>
               </Form.Group> 
               <Form.Group as={Row} >
-                <FormLabel column sm={2}>Taille police</FormLabel>
-                <Col sm={8}>
-                  <Form.Control
-                    style={{ 'marginTop' : '11px'}}
-                    type="range" 
+                <Col>
+                  <FormLabel >Taille police</FormLabel>
+                </Col>
+                <Col >
+                  <Form.Range
                     min="11" max="20"
                     value={display_style.font_size}
-                    onChange={(evt) => (display_style.font_size = +evt.target.value) && set_data({...data})} />
+                    onChange={evt => {
+                      display_style.font_size = +evt.target.value
+                      set_data({...data})
+                    }}
+                  />
                 </Col>
-                <Col sm={2} style={{ 'marginTop' : '11px'}}>{display_style.font_size}</Col>
+                <Col >{display_style.font_size}</Col>
               </Form.Group>
             </Form>            
           </Tab>
-          <Tab eventKey="partitions" title="Tags" >
-            <br></br>
+          <Tab eventKey="tags_groups" title="Tags Groups" >
             <Form.Group as={Row} >
-              <FormLabel column sm={2}>Nb éléments:</FormLabel>
-              <Col sm={2}>
+              <Col>
+                <FormLabel >Nb tags groupes:</FormLabel> 
+              </Col>
+              <Col>
                 <FormControl
                   type="text" 
-                  value={nb_partition_elements}
+                  value={Object.keys(tags).length}
                   onChange={
                     (evt : React.ChangeEvent) => {
-                      const {subchains} = data
-                      const new_nb_element = Number((evt.target as HTMLInputElement).value)
-                      const length = subchains.length
-                      if (subchains.length < new_nb_element ) {
+                      const {tags} = data
+                      const new_nb_element = +(evt.target as HTMLInputElement).value
+                      const length = tags.length
+                      if (tags.length < new_nb_element ) {
                         for (let i=length;i<new_nb_element;i++) {
-                          subchains.push('Element '+ i )
+                          tags[i] = {
+                            tags_group_name: 'Tag Group '+ i,
+                            tags_group: []
+                          }
                         }
                       } else {
                         for (let i=new_nb_element;i<length;i++) {
-                          subchains.pop()
+                          delete tags[i]
+                        }      
+                      }
+                      set_data({...data})
+                    }
+                  } 
+                />
+              </Col>              
+            </Form.Group>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tags.map(
+                  (tags_group,i) => { return(
+                    <tr key={i.toString()}>
+                      <td>
+                        <FormControl 
+                          id={i.toString()}
+                          type="text"
+                          value={tags_group.tags_group_name}
+                          onChange={
+                            (evt : React.ChangeEvent) => {
+                              const {tags} = data
+                              const new_name = (evt.target as HTMLInputElement).value
+                              tags[i].tags_group_name = new_name
+                              set_data({...data}) 
+                            }
+                          }/>
+                      </td>
+                    </tr>
+                  )}) }
+              </tbody>
+            </Table>   
+          </Tab>  
+          <Tab eventKey="tags" title="Tags" >
+            <br></br>
+            <Form.Group as={Row} >
+              <Col>
+                <FormLabel >Tag Groupe:</FormLabel>
+              </Col>
+              <Col>
+                <Form.Select 
+                  onChange={
+                    (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
+                  { tags.map( 
+                    (tags_group,i) => 
+                      <option 
+                        key={i} 
+                        value={i} 
+                        selected={tag_group_id === i} >
+                        {tags_group.tags_group_name}
+                      </option>)}
+                </Form.Select>
+              </Col> 
+            </Form.Group>
+            <Form.Group as={Row} >     
+              <Col>
+                <FormLabel >Nb éléments:</FormLabel>
+              </Col>
+              <Col>
+                <FormControl
+                  type="text" 
+                  value={tags.length > 0 ? tags[tag_group_id].tags_group.length : 0}
+                  onChange={
+                    (evt : React.ChangeEvent) => {
+                      const {tags} = data
+                      const new_nb_element = Number((evt.target as HTMLInputElement).value)
+                      const length = tags[tag_group_id].tags_group.length
+                      if (tags[tag_group_id].tags_group.length < new_nb_element ) {
+                        for (let i=length;i<new_nb_element;i++) {
+                          tags[tag_group_id].tags_group.push('Element '+ i )
+                        }
+                      } else {
+                        for (let i=new_nb_element;i<length;i++) {
+                          tags[tag_group_id].tags_group.pop()
                         }      
                       }
                       set_data({...data})    
@@ -585,112 +704,58 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {subchains.map(
-                    (value,i) => { return(
+                  {tags.length > 0 ? (tags[tag_group_id].tags_group.map(
+                    (tag,i) => { return(
                       <tr key={i.toString()}>
                         <td><FormControl 
                           id={i.toString()}
                           type="text"
-                          value={value}
+                          value={tag}
                           onChange={
                             (evt : React.ChangeEvent) => {
-                              const {subchains} = data
+                              const {tags} = data
                               const new_nb_element = evt.target as HTMLInputElement
                               const id = +new_nb_element.id
                               const name = new_nb_element.value
-                              subchains[id] = name
+                              tags[tag_group_id].tags_group[id] = name
                               set_data({...data}) 
                             }
                           }/></td>
                         <td> 
                           <FormCheck 
                             name={'element_visible'+i.toString()} 
-                            defaultChecked={subchain.includes(value)}  
+                            defaultChecked={selected_tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}  
                             id={i.toString()}
                             type='checkbox' 
                             onChange={
                               (evt : React.ChangeEvent) => {
-                                const {subchains} = data
+                                const {selected_tags,tags} = data
                                 const new_nb_element = evt.target as HTMLInputElement
                                 const id = +new_nb_element.id
-                                const name = subchains[id] 
+                                const name = tags[tag_group_id].tags_group[id] 
                                 const visible = new_nb_element.checked
-                                let new_subchains = []
+                                const tag_group_name = tags[tag_group_id].tags_group_name
                                 if (visible) {
-                                  new_subchains = subchains
-                                } else {
-                                  for (let i=0;i<subchain.length;i++) {
-                                    if (subchain[i] === name) {
-                                      continue
-                                    }
-                                    new_subchains.push(subchain[i])
+                                  if (!selected_tags[tag_group_name]) {
+                                    selected_tags[tag_group_name] = []
                                   }
+                                  selected_tags[tag_group_name].push(name)
+                                } else {
+                                  selected_tags[tag_group_name].splice(selected_tags[tag_group_name].indexOf(name),1)
                                 }
-                                setSubChain(new_subchains) 
+                                setSelectedTags(data,selected_tags) 
+                                set_data({...data})
                               }
                             }/>
                         </td>
                         <td></td>
                       </tr>
-                    )})}
+                    )})) : (<></>)}
                 </tbody>
               </Table>
             </Form.Group>
           </Tab>
-          {/* <Tab eventKey="units" title="Unités" >
-            <br></br>
-            <Form.Group as={Row} >
-              <FormLabel column sm={2}>Nb unités:</FormLabel>
-              <Col sm={2}>
-                <FormControl
-                  type="text" value={nb_units}
-                  //onChange={this.set_nb_units} 
-                />
-              </Col>
-
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Unité naturelle</th>
-                    <th>Coefficient de conversion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {units.map(
-                    (value,i) => { return(
-                      <tr key={i.toString()}>
-                        <td>
-                          <FormControl 
-                            id={i.toString()}
-                            type="text"
-                            value={value}
-                            //onChange={this.set_unit_name}
-                          />
-                        </td>
-                        <td> 
-                          <FormCheck 
-                            name={'element_visible'+i.toString()} 
-                            defaultChecked={subchain.includes(value)}  
-                            id={i.toString()}
-                            type='checkbox' 
-                            //onChange={this.set_natural_unit}
-                          />
-                        </td>
-                        <td>
-                          <FormControl 
-                            id={i.toString()}
-                            type="text"
-                            value={value}
-                            //onChange={this.set_unit_coeff}
-                          />
-                        </td>
-                      </tr>
-                    )})}
-                </tbody>
-              </Table>
-            </Form.Group>
-          </Tab> */}
+          {children}
         </Tabs>
       </Modal.Body>
     </Modal>

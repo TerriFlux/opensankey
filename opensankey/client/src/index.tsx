@@ -5,7 +5,7 @@ import { render } from 'react-dom'
 
 import SankeyApp from './lib/SankeyApp'
 import { convert_data } from './lib/SankeyConvert'
-import { SankeyData } from './lib/types'
+import { default_sankey_data } from './lib/SankeyUtils'
 
 window.React = React
 
@@ -26,64 +26,21 @@ declare const window: Window &
 
 window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : window.SankeyToolsStatic
 
-const data : SankeyData = {
-  version: '0.4',
-  node_width: 10,
-  user_scale: 100,
-  height: 1500,
-  width: 2150,
+const data  = default_sankey_data()
 
-  nodes: [],
-  links: {
-    'no_region': []
-  },
-
-  display_style : {
-    font_size         : 11,
-    sector_uppercase  : false,
-    sector_bold       : false,
-    sector_italic     : false,
-    product_uppercase : false,
-    product_bold      : false,
-    product_italic    : false,
-    unit              : false,
-    filter            : 0,
-    filter_label      : 0,
-    global_curvature  : 0.5
-  },
-
-  subchains : [],
-  use_flux_types : false,
-
-  region_name: 'no_region',
-  region_names: ['no_region']
-}
-
-const initial_flux_types = ['null_data','computed_data','adjusted_data']
 const json_data = localStorage.getItem('data')
 if (json_data !== null) {
   const new_data = JSON.parse(json_data)
   convert_data(new_data)
-  //const old_static_sankey = data.static_sankey
+  data.tags = []
+  data.selected_tags = {}
   Object.assign(data, new_data)
-  const region_names : string[] = Object.keys(data.links)
-  if (!region_names.includes(data.region_name)) {
-    data.region_name = region_names[0]
-  }
 }
- 
-let initial_subchain = ['All']
-const stored = localStorage.getItem('subchain')
-const subchain_stored = stored ? JSON.parse(stored) : undefined
-if (subchain_stored) {
-  initial_subchain = subchain_stored
-}
+
 
 render(
   <SankeyApp 
     sankey_data={data} 
-    initial_subchain={initial_subchain} 
-    initial_flux_types={initial_flux_types} 
   />,
   document.getElementById('react-container')
 )

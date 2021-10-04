@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react'
 import { Button,Row,Col,ButtonGroup } from 'react-bootstrap'
 import { SankeyNode,SankeyLink,SankeyDataPropTypes } from './types'
 import PropTypes,{InferProps} from 'prop-types'
+import { default_link, default_node } from './SankeyUtils'
 
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -9,13 +10,11 @@ const SankeyEditionPropTypes = {
   set_selected_node: PropTypes.func.isRequired,
   set_selected_link: PropTypes.func.isRequired,
   set_show_link: PropTypes.func.isRequired,
-  set_show_graphic_attributes: PropTypes.func.isRequired,
-  default_link: PropTypes.func.isRequired,
-  default_node: PropTypes.func.isRequired
+  set_show_graphic_attributes: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
-const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_selected_node,set_selected_link,set_show_link,set_show_graphic_attributes,default_link,default_node}) => {
+const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_selected_node,set_selected_link,set_show_link,set_show_graphic_attributes}) => {
   const add_new_node = () => {
     const { nodes } = data
 
@@ -29,28 +28,22 @@ const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,se
   }
 
   const add_new_link = () => {
-    //const {data} = parent.state
     const {nodes,links} =data
 
     if (nodes.length < 2) {
       return
     }
-    const region_names = Object.keys(data.links)
     const link : SankeyLink = default_link()
-    const link_pos = links[region_names[0]].length
+    const link_pos = links.length
 
-    region_names.forEach(
-      region_name => {
-        links[region_name].push(link)
-        link.source_name = nodes[0].name    
-        link.target_name = nodes[1].name
-      }
-    )
+    links.push(link)
+    link.source_name = nodes[0].name    
+    link.target_name = nodes[1].name
 
     nodes[0].output_links.push(link_pos)
     nodes[1].input_links.push(link_pos)
 
-    set_selected_link(links[region_names[0]].length-1)
+    set_selected_link(links.length-1)
     set_data({...data})
     set_show_link(true)
   }
@@ -79,3 +72,4 @@ const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,se
 SankeyEdition.propTypes = SankeyEditionPropTypes
 
 export default SankeyEdition
+

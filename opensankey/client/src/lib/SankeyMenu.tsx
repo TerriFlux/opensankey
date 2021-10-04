@@ -5,11 +5,11 @@ import {SankeyData, SankeyDataPropTypes} from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
+import { default_sankey_data, delete_node } from './SankeyUtils'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  delete_node: PropTypes.func.isRequired,
   open_menu: PropTypes.element,
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element
@@ -18,7 +18,7 @@ const MenuPropTypes = {
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu : FunctionComponent<MenuTypes> = (
-  {data,set_data,delete_node,open_menu,save_menu,edition_menu}
+  {data,set_data,open_menu,save_menu,edition_menu}
 ) => {
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -26,13 +26,8 @@ const Menu : FunctionComponent<MenuTypes> = (
   const [processing]                                  = useState(false)
   const [show_excel_dialog,    set_show_excel_dialog] = useState(false)
 
-  const clickSaveDiagram = (current_region : boolean) => {
-    const { region_name } = data
+  const clickSaveDiagram = () => {
     const data_to_save = {...data}
-    if ( current_region) {
-      data_to_save.links = {}
-      data_to_save.links[region_name] =  data.links[region_name]
-    }
     const str_data = JSON.stringify(data_to_save, null, 3)
     const blob = new Blob([str_data], {type: 'text/plain;charset=utf-8'})
     FileSaver.saveAs(blob, 'sankey_diagram.json')
@@ -129,13 +124,13 @@ const Menu : FunctionComponent<MenuTypes> = (
       callback = (server_data : SankeyData) => {
         Object.assign(data, server_data)
         convert_data(data)
-        const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
-        data['region_names'] = keys
+        // const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
+        // data['region_names'] = keys
         //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
         const nodes_to_delete = compute_auto_sankey(data,true)
         if (nodes_to_delete !== undefined) {
           nodes_to_delete.forEach(
-            n =>  delete_node(n)
+            n =>  delete_node(data,n)
           )
         }
         set_data({...data})
@@ -191,9 +186,7 @@ const Menu : FunctionComponent<MenuTypes> = (
       Object.assign(data, server_data)
       //delete data.display_style.filter_label
       convert_data(data)
-      const keys = Object.keys(server_data.links)
-      data.region_names = keys
-      data.use_flux_types = true
+      //data.region_names = keys
       // if (data.trade !==null && data.trade !==undefined) {
       //   data.trade_sectors = data.trade.split(',')
       // } else {
@@ -232,12 +225,8 @@ const Menu : FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        if (Array.isArray(new_data.links) ) {
-          const the_links = new_data.links
-          new_data.links = {
-            'no_region': the_links
-          }
-        }
+        data.tags = []
+        data.selected_tags = {}
         Object.assign(data, new_data)
         convert_data(data)
         set_data({...data})
@@ -247,46 +236,7 @@ const Menu : FunctionComponent<MenuTypes> = (
   }
 
   const reinitialization = () => {
-    const data = {
-      version: '0.3',
-      file_path: '',
-      periods : false,
-      show_uncert: false,
-      region_name: 'no_region',
-      animation_tooltips: '',
-      default_tooltip: true,
-      tooltip_names: [],
-      tooltips: [],
-
-      nodes: [],
-      links: {'no_region':[]},
-      units_names: [],
-      user_scale : 100,
-      height: 1500,
-      width: 2150,
-      node_width: 10,
-
-      display_style : {
-        font_size: 11,
-        sector_uppercase: true,
-        sector_bold: true,
-        sector_italic: false,
-        product_uppercase: false,
-        product_bold: false,
-        product_italic: true,
-        unit: false,
-        filter: 0,
-        filter_label: 0,
-        global_curvature: 0.5,
-        trade_close: true
-      },
-
-      static_sankey  : false,
-
-      subchains : [],
-      use_flux_types : false,
-      region_names : []
-    }
+    const data = default_sankey_data()
     set_data({...data})
   }
 
@@ -300,9 +250,7 @@ const Menu : FunctionComponent<MenuTypes> = (
     } else if (eventKey === 'uploadExcel' ) {
       uploadExcel()
     } else if (eventKey === 'clickSaveDiagram' ) {
-      clickSaveDiagram(false)
-    } else if (eventKey === 'clickSaveDiagramRegion' ) {
-      clickSaveDiagram(true)
+      clickSaveDiagram()
     } else if (eventKey === 'clickSaveSVG' ) {
       clickSaveSVG()
     } else if (eventKey === 'clickSavePDF' ) {
@@ -334,8 +282,7 @@ const Menu : FunctionComponent<MenuTypes> = (
                 {open_menu}
               </NavDropdown>
               <NavDropdown id= 'enregistrer' title="Enregistrer" >
-                <Dropdown.Item eventKey="clickSaveDiagram" >Tout</Dropdown.Item>
-                <Dropdown.Item eventKey="clickSaveDiagramRegion" >Région courante</Dropdown.Item>
+                <Dropdown.Item eventKey="clickSaveDiagram" >JSON</Dropdown.Item>
                 {save_menu}
               </NavDropdown>
               <NavDropdown id='exporter' title="Exporter" >
