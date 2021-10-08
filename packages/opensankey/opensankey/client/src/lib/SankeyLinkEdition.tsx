@@ -18,36 +18,48 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   {data, set_data, set_show_link, selected_link, show}
 ) => {
   const [tag_group_id,  set_tag_group_id]   = useState(0)
+  const [duplicate,  set_duplicate]   = useState(false)
 
   const source_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes,links } = data
-    const link = links[selected_link]
-    const previous_node = nodes.filter(n=>n.name === link.source_name)[0]
-    const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
-
-    links[selected_link].source_name = node.name
-
-    // Remove link from old source
-    const link_pos = previous_node.output_links.indexOf(selected_link)
-    previous_node.output_links.splice(link_pos,1)
-    // Add link to new source
-    node.output_links.push(selected_link)
+    const { nodes, links } = data
+    let link = links[selected_link]
+    if ( duplicate ) {
+      link = {...links[selected_link]}
+      links.push(link)
+      selected_link = links.length - 1 
+      const target_node = nodes.filter(n=>n.name === link.target_name)[0]
+      target_node.input_links.push(selected_link)
+    } else {
+      const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
+      const link_pos = previous_node.output_links.indexOf(selected_link)
+      previous_node.output_links.splice(link_pos,1)
+    }
+    
+    const source_node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
+    link.source_name = source_node.name
+    source_node.output_links.push(selected_link)
 
     set_data({...data})
   }
 
   const target_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links } = data
-    const link = links[selected_link]
-    const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
-    const node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
-    links[selected_link].target_name = node.name
+    let link = links[selected_link]
+    if ( duplicate ) {
+      link = {...links[selected_link]}
+      links.push(link)
+      selected_link = links.length - 1 
+      const source_node = nodes.filter(n=>n.name === link.source_name)[0]
+      source_node.output_links.push(selected_link)
+    } else {
+      const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
+      const link_pos = previous_node.input_links.indexOf(selected_link)
+      previous_node.input_links.splice(link_pos,1)
+    }
 
-    // Remove link from old target
-    const link_pos = previous_node.input_links.indexOf(selected_link)
-    previous_node.input_links.splice(link_pos,1)
-    // Add link to new source
-    node.input_links.push(selected_link)
+    const target_node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
+    link.target_name = target_node.name
+    target_node.input_links.push(selected_link)
 
     set_data({...data})
   }
@@ -143,6 +155,18 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       />
                     </Col>
                   </Row>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Dupliquer'
+                        checked = {duplicate}
+                        onChange = {
+                          evt => set_duplicate(evt.target.checked)
+                        }
+                      />
+                    </Col>
+                  </Form.Group>                  
                 </Form>
               </Tab>
               <Tab eventKey="flux_attributes" title="Apparence">
