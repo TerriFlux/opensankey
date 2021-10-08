@@ -1235,7 +1235,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    if ( link_value > display_style.filter_label ) {
+    if ( link_value > display_style.filter_label && d.visible ) {
       drawLinkText(link_id,links,link_value,display_style,xs,ys,xt,yt)
     }
 
