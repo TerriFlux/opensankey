@@ -69,6 +69,7 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
           >Supprimer flux entrant</Button>
           <Button 
             size="sm" 
+            style={{ 'marginBottom' : '3px'}} 
             onClick = {
               () =>  {
                 while (nodes[selected_node].output_links.length > 0) {
@@ -78,6 +79,86 @@ const  SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({
               }
             }
           >Supprimer flux sortant</Button>
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px'}} 
+            onClick = {
+              () =>  {
+                const node_name = nodes[selected_node].name
+                const desagregate_nodes = nodes.filter( n => n.parent_name === node_name )
+                desagregate_nodes.forEach(n => {
+                  // show desagregated nodes and input and output links if source and target nodes are visible
+                  n.label_visible = true
+                  n.visible = true
+                  n.input_links.forEach(
+                    l_idx => {
+                      const source_name = links[l_idx].source_name
+                      const source_node = nodes.filter( n => n.name === source_name )[0]
+                      links[l_idx].visible = source_node.visible
+                    }
+                  )
+                  n.output_links.forEach(
+                    l_idx => {
+                      const target_name = links[l_idx].target_name
+                      const target_node = nodes.filter( n => n.name === target_name )[0]
+                      links[l_idx].visible = target_node.visible
+                    }
+                  )
+                })
+                // Hides agregated nodes
+                nodes[selected_node].label_visible = false
+                nodes[selected_node].visible = false
+                nodes[selected_node].input_links.forEach(
+                  l_idx => links[l_idx].visible = false
+                )
+                nodes[selected_node].output_links.forEach(
+                  l_idx => links[l_idx].visible = false
+                )
+                set_data({...data})
+              }
+            }
+          >Désagrégation</Button>
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px'}} 
+            onClick = {
+              () =>  {
+                const agregated_node = nodes.filter( n => n.name === nodes[selected_node].parent_name )[0]
+                if (!agregated_node) {
+                  return
+                }
+                const desagregate_nodes = nodes.filter( n => n.parent_name === agregated_node.name )
+                desagregate_nodes.forEach(n => {
+                  n.label_visible = false
+                  n.visible = false
+                  n.input_links.forEach(
+                    l_idx => links[l_idx].visible = false
+                  )
+                  n.output_links.forEach(
+                    l_idx => links[l_idx].visible = false
+                  )
+                })
+                // show agregated node
+                agregated_node.label_visible = true
+                agregated_node.visible = true
+                agregated_node.input_links.forEach(
+                  l_idx => {
+                    const source_name = links[l_idx].source_name
+                    const source_node = nodes.filter( n => n.name === source_name )[0]
+                    links[l_idx].visible = source_node.visible
+                  }
+                )
+                agregated_node.output_links.forEach(
+                  l_idx => {
+                    const target_name = links[l_idx].target_name
+                    const target_node = nodes.filter( n => n.name === target_name )[0]
+                    links[l_idx].visible = target_node.visible
+                  }
+                )
+                set_data({...data})
+              }
+            }
+          >Agrégation</Button>
         </ButtonGroup>
       </Modal.Body>
     </Modal>
