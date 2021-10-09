@@ -38,7 +38,8 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data}) => {
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <Menu 
         data={data} 
-        set_data={set_data} 
+        set_data={set_data}
+        app_name='Open-Sankey'
       />
       <Row>            
         <Col sm={11} style={{ 'color':'black'}} >

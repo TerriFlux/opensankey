@@ -3,6 +3,7 @@ import React ,{ FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode,SankeyLink,SankeyData,SankeyDataPropTypes } from './types'
 import PropTypes,{InferProps} from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
+import { compute_total_offsets } from './SankeyUtils'
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
@@ -697,7 +698,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     links: SankeyLink[],
     selected_tags: {[tag_group : string] : string[] }
   ) => {
-    const res = compute_total_offsets(n,nodes,links,selected_tags)
+    const res = compute_total_offsets(n,nodes,links,selected_tags,test_link_value)
 
     const [total_offset_height_left,total_offset_height_right,total_offset_width_top,total_offset_width_bottom] = res
 
@@ -735,9 +736,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       source_node = filter_nodes[0]      
     }
 
-    let res = compute_total_offsets(source_node,nodes,links,selected_tags)
+    let res = compute_total_offsets(source_node,nodes,links,selected_tags,test_link_value)
     const [s_total_offset_height_left,s_total_offset_height_right,s_total_offset_width_top,s_total_offset_width_bottom] = res
-    res = compute_total_offsets(target_node,nodes,links,selected_tags)
+    res = compute_total_offsets(target_node,nodes,links,selected_tags,test_link_value)
     const [t_total_offset_height_left,t_total_offset_height_right,t_total_offset_width_top,t_total_offset_width_bottom] = res
 
     // Hauteur des noeuds
@@ -772,192 +773,6 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
-  const compute_total_offsets = (
-    node: SankeyNode,
-    nodes: SankeyNode[],
-    links: SankeyLink[],
-    selected_tags: {[tag_group : string] : string[]},
-    link_id=-1
-  ) => {
-    let offset_height_left = 0
-    let offset_height_right = 0
-    let offset_width_top = 0
-    let offset_width_bottom = 0
-
-    const left_flux   : number[] = []
-    const right_flux  : number[] = []
-    const top_flux    : number[] = []
-    const bottom_flux : number[] = [] 
-    node.output_links.forEach(
-      (id) => {
-        let target_node
-        try {
-          target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(links[id].target_name))[0]
-        } catch {
-          return
-        }
-        if ( links[id].visible ) {
-          if ( links[id].orientation === 'hh' ) {
-            if ( target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
-              right_flux.push(id)
-            } else {
-              left_flux.push(id)             
-            }
-          } else if (links[id].orientation === 'vv' ) {
-            if ( target_node.y > node.y ) {
-              bottom_flux.push(id)
-            } else {
-              top_flux.push(id)
-            }
-          } else if (links[id].orientation === 'hv' ) {
-            if ( target_node.x > node.x ) {
-              right_flux.push(id)
-            } else {
-              left_flux.push(id)                
-            }
-          } else if (links[id].orientation === 'vh' ) {
-            if ( target_node.y > node.y ) {
-              bottom_flux.push(id)
-            } else {
-              top_flux.push(id)
-            }
-          } 
-        }
-      }
-    )
-
-    node.input_links.forEach(
-      (id) => {
-        let source_node
-        try {
-          source_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(links[id].source_name))[0]
-        } catch {
-          return 
-        }
-        if ( links[id].visible ) {
-          if (links[id].orientation === 'vv') {
-            if ( source_node.y < node.y ) {
-              // flux goes down
-              top_flux.push(id)
-            } else {
-              // flux goes up
-              bottom_flux.push(id)
-            }
-          } else if (links[id].orientation === 'hh') {
-            if ( source_node.x >= node.x && links[id].recycling || source_node.x < node.x && !links[id].recycling) {
-              // flux goes right
-              left_flux.push(id)
-            } else {
-              // flux goes left
-              right_flux.push(id)         
-            }
-          } else if (links[id].orientation === 'hv') {
-            if ( source_node.y < node.y  ) {
-              // flux goes right
-              top_flux.push(id)
-            } else {
-              // flux goes left
-              bottom_flux.push(id)         
-            }
-          } else if (links[id].orientation === 'vh') {
-            if ( source_node.x < node.x ) {
-              // flux goes right
-              left_flux.push(id)
-            } else {
-              // flux goes left
-              right_flux.push(id)         
-            }
-          }
-        }
-      }        
-    )
-    
-    let top_order = -1
-    if (link_id != -1) {
-      top_order = top_flux.indexOf(link_id)
-    }
-    top_flux.forEach(
-      (id,i) => {
-        if ( top_order !== -1 && (i > top_order || i===0 )) {
-          return
-        }
-        let the_id = id
-        if ( top_order !== -1 ) {
-          the_id = top_flux[i-1]
-        }
-        const v = test_link_value(nodes,links[the_id],selected_tags)
-        if (v=== undefined) {
-          return
-        }
-        offset_width_top += +v
-      }
-    )
-    let bottom_order = -1
-    if (link_id != -1) {
-      bottom_order = bottom_flux.indexOf(link_id)
-    }
-    bottom_flux.forEach(
-      (id,i) => {
-        if ( bottom_order !== -1 && (i > bottom_order || i===0 )) {
-          return
-        }
-        let the_id = id
-        if ( bottom_order !== -1 ) {
-          the_id = bottom_flux[i-1]
-        }
-        const v = test_link_value(nodes,links[the_id],selected_tags)
-        if (v=== undefined) {
-          return
-        }
-        offset_width_bottom += +v
-      }
-    )
-
-    let left_order = -1
-    if (link_id != -1) {
-      left_order = left_flux.indexOf(link_id)
-    }
-    left_flux.forEach(
-      (id,i) => {
-        if ( left_order !== -1 && (i > left_order || i===0 )) {
-          return
-        }
-        let the_id = id
-        if ( left_order !== -1 ) {
-          the_id = left_flux[i-1]
-        }
-        const v = test_link_value(nodes,links[the_id],selected_tags)
-        if (v=== undefined) {
-          return
-        }
-        offset_height_left += +v
-      }
-    )
-
-    let right_order = -1
-    if (link_id != -1) {
-      right_order = right_flux.indexOf(link_id)
-    }
-    right_flux.forEach(
-      (id,i) => {
-        if ( right_order !== -1 && (i > right_order || i===0 )) {
-          return
-        }
-        let the_id = id
-        if ( right_order !== -1 ) {
-          the_id = right_flux[i-1]
-        }
-        const v = test_link_value(nodes,links[the_id],selected_tags)
-        if (v=== undefined) {
-          return
-        }
-        offset_height_right += +v
-      }
-    )
-
-    return [offset_height_left,offset_height_right,offset_width_top,offset_width_bottom]
-  }
-
   const compute_end_points = (
     source_node: SankeyNode,
     target_node: SankeyNode,
@@ -974,10 +789,10 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     if ( link_value === undefined ) {
       return [0,0,0,0]
     }
-    let res = compute_total_offsets(source_node,nodes,links,selected_tags)
+    let res = compute_total_offsets(source_node,nodes,links,selected_tags,test_link_value)
     const[s_total_offset_height_left,s_total_offset_height_right,s_total_offset_width_top,s_total_offset_width_bottom] = res
 
-    res = compute_total_offsets(target_node,nodes,links,selected_tags)
+    res = compute_total_offsets(target_node,nodes,links,selected_tags,test_link_value)
     const[t_total_offset_height_left,t_total_offset_height_right,t_total_offset_width_top,t_total_offset_width_bottom] = res
 
 
@@ -994,9 +809,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(3),t_total_offset_height_left,t_total_offset_height_right
     )
 
-    res = compute_total_offsets(source_node,nodes,links,selected_tags,link_id)
+    res = compute_total_offsets(source_node,nodes,links,selected_tags,test_link_value,link_id)
     const [s_offset_height_left,s_offset_height_right,s_offset_width_top,s_offset_width_bottom] = res
-    res = compute_total_offsets(target_node,nodes,links,selected_tags,link_id)
+    res = compute_total_offsets(target_node,nodes,links,selected_tags,test_link_value,link_id)
     const [t_offset_height_left,t_offset_height_right,t_offset_width_top,t_offset_width_bottom] = res
 
     const delta_s_width_bottom = Math.max(0,(node_size_s_width  - s_total_offset_width_bottom)/2)
@@ -1638,7 +1453,7 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     const tmp = selection.selectAll('path')
     tmp.remove()
 
-    const res = compute_total_offsets(n,nodes,links,selected_tags)
+    const res = compute_total_offsets(n,nodes,links,selected_tags,test_link_value)
     const [total_height_left,total_height_right,total_width_top,total_width_bottom] = res
 
     for (let i=0;i<n.input_links.length;i++) {

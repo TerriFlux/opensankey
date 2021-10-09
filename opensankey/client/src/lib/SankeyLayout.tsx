@@ -1,5 +1,5 @@
 import { SankeyNode,SankeyLink, SankeyData, } from './types'
-import { find_link,find_node,normalize_name,isExport } from './SankeyUtils'
+import { find_link,find_node,normalize_name } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import * as d3 from 'd3'
 
@@ -496,7 +496,7 @@ export const updateLayout = (
 
   let max_vertical_offset = 0
   const compute_offset = (node : SankeyNode) => {
-    if ( node.name.includes('(I') || isExport(node) ) {
+    if ( node.tags['Exchanges'].includes('Importations') || node.tags['Exchanges'].includes('Exportations') ) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
@@ -514,7 +514,7 @@ export const updateLayout = (
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y
-    if ( !isExport(node) && node.y + 200 > max_vertical_offset ) {
+    if ( !node.tags['Exchanges'].includes('Exportations') && node.y + 200 > max_vertical_offset ) {
       max_vertical_offset = node.y  + 200    
     }
     //node.color = node_layout.color

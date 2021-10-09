@@ -15,7 +15,7 @@ const SankeyLinkEditionPropTypes = {
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  {data, set_data, set_show_link, selected_link, show}
+  {data, set_data, set_show_link, selected_link, show, children}
 ) => {
   const [tag_group_id,  set_tag_group_id]   = useState(0)
   const [duplicate,  set_duplicate]   = useState(false)
@@ -562,7 +562,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                                           link.tags[tag_group_name].splice(link.tags[tag_group_name].indexOf(name))
                                         }
                                         set_data({...data})
-                                        //setSelectedTags(data,selected_tags) 
                                       }
                                     }/>
                                 </td>
@@ -572,6 +571,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Table>
                   </Form.Group>
                 </Tab>) : (<></>)}
+              {children}
             </Tabs>
           </Col>
         </Row>

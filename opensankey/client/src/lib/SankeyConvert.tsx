@@ -129,10 +129,16 @@ export const convert_data = (
       if (n.name.includes('(I')) {
         import_export = true
         n.tags['Exchanges'] = ['Importations']
+        if ( !links[n.output_links[0]].tags) {
+          links[n.output_links[0]].tags = {}
+        }
         links[n.output_links[0]].tags['Exchanges'] = ['Importations']
       } else if (n.name.includes('(E')) {
         import_export = true
         n.tags['Exchanges'] = ['Exportations']
+        if ( !links[n.input_links[0]].tags) {
+          links[n.input_links[0]].tags = {}
+        }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
       } else {
         n.tags['Exchanges'] = ['Other']        
