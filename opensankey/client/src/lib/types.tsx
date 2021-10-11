@@ -17,11 +17,14 @@ export const SankeyNodePropTypes = {
 
   type : PropTypes.oneOf(['product','sector']),
   subchain : PropTypes.string,
-  color : PropTypes.string.isRequired
+  color : PropTypes.string.isRequired,
+
+  object : PropTypes.node
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
 export const SankeyLinkPropTypes = {
+  id :  PropTypes.string,
   target : PropTypes.number,
   source : PropTypes.number,
 
@@ -29,7 +32,11 @@ export const SankeyLinkPropTypes = {
   orientation : PropTypes.string.isRequired,
 
   source_name : PropTypes.string.isRequired,
+  source_node_id : PropTypes.string.isRequired,
+
   target_name : PropTypes.string.isRequired,
+  target_node_id : PropTypes.string.isRequired,  
+  
   curvature : PropTypes.number.isRequired,
   curved : PropTypes.bool.isRequired,
 
@@ -54,7 +61,7 @@ export const SankeyLinkPropTypes = {
 
   x_label              : PropTypes.number,
   y_label              : PropTypes.number,
-
+  totalLength         : PropTypes.number,
   arrow                 : PropTypes.bool.isRequired,
 }
 
