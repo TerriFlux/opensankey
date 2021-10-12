@@ -583,6 +583,24 @@ const SankeySettingsEdition : FunctionComponent<SankeyEditionTypes> = ({
                 </Col>
                 <Col >{display_style.font_size}</Col>
               </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <Button 
+                    size="sm" 
+                    onClick={
+                      () => {
+                        links.forEach(
+                          link=> {
+                            link.visible = true
+                            link.label_visible = true
+                          }
+                        ) 
+                        set_data({...data})
+                      }
+                    }
+                  >Reset visible</Button>
+                </Col>
+              </Form.Group> 
             </Form>            
           </Tab>
           <Tab eventKey="tags_groups" title="Tags Groups" >

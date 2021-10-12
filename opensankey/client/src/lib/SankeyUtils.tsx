@@ -34,30 +34,191 @@ export const find_node = (
   return undefined
 }
 
-export const computeTotalOffsets = (
+export const compute_total_offsets = (
   node: SankeyNode,
+  nodes: SankeyNode[],
   links: SankeyLink[],
-  _: unknown
+  selected_tags: {[tag_group : string] : string[]},
+  test_link_value: ( nodes: SankeyNode[], d: SankeyLink, selected_tags: {[tag_group : string] : string[]} ) => string,
+  link_id=-1
 ) => {
-  let total_output_offset = 0
+  let offset_height_left = 0
+  let offset_height_right = 0
+  let offset_width_top = 0
+  let offset_width_bottom = 0
+
+  const left_flux   : number[] = []
+  const right_flux  : number[] = []
+  const top_flux    : number[] = []
+  const bottom_flux : number[] = [] 
   node.output_links.forEach(
     (id) => {
-      const link = links[id]
-      if ( link.visible || link.visible === undefined ) {
-        total_output_offset += +link.value
+      let target_node
+      try {
+        target_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+      } catch {
+        return
+      }
+      if ( links[id].visible ) {
+        if ( links[id].orientation === 'hh' ) {
+          if ( target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
+            right_flux.push(id)
+          } else {
+            left_flux.push(id)             
+          }
+        } else if (links[id].orientation === 'vv' ) {
+          if ( target_node.y > node.y ) {
+            bottom_flux.push(id)
+          } else {
+            top_flux.push(id)
+          }
+        } else if (links[id].orientation === 'hv' ) {
+          if ( target_node.x > node.x ) {
+            right_flux.push(id)
+          } else {
+            left_flux.push(id)                
+          }
+        } else if (links[id].orientation === 'vh' ) {
+          if ( target_node.y > node.y ) {
+            bottom_flux.push(id)
+          } else {
+            top_flux.push(id)
+          }
+        } 
       }
     }
   )
-  let total_input_offset = 0
+
   node.input_links.forEach(
     (id) => {
-      const link = links[id]
-      if ( link.visible || link.visible === undefined ) {
-        total_input_offset += +links[id].value
-      }          
+      let source_node
+      try {
+        source_node = nodes.filter(n=> normalize_name(n.name) === normalize_name(links[id].source_name))[0]
+      } catch {
+        return 
+      }
+      if ( links[id].visible ) {
+        if (links[id].orientation === 'vv') {
+          if ( source_node.y < node.y ) {
+            // flux goes down
+            top_flux.push(id)
+          } else {
+            // flux goes up
+            bottom_flux.push(id)
+          }
+        } else if (links[id].orientation === 'hh') {
+          if ( source_node.x >= node.x && links[id].recycling || source_node.x < node.x && !links[id].recycling) {
+            // flux goes right
+            left_flux.push(id)
+          } else {
+            // flux goes left
+            right_flux.push(id)         
+          }
+        } else if (links[id].orientation === 'hv') {
+          if ( source_node.y < node.y  ) {
+            // flux goes right
+            top_flux.push(id)
+          } else {
+            // flux goes left
+            bottom_flux.push(id)         
+          }
+        } else if (links[id].orientation === 'vh') {
+          if ( source_node.x < node.x ) {
+            // flux goes right
+            left_flux.push(id)
+          } else {
+            // flux goes left
+            right_flux.push(id)         
+          }
+        }
+      }
+    }        
+  )
+  
+  let top_order = -1
+  if (link_id != -1) {
+    top_order = top_flux.indexOf(link_id)
+  }
+  top_flux.forEach(
+    (id,i) => {
+      if ( top_order !== -1 && (i > top_order || i===0 )) {
+        return
+      }
+      let the_id = id
+      if ( top_order !== -1 ) {
+        the_id = top_flux[i-1]
+      }
+      const v = test_link_value(nodes,links[the_id],selected_tags)
+      if (v=== undefined) {
+        return
+      }
+      offset_width_top += +v
     }
   )
-  return [total_input_offset,total_output_offset]
+  let bottom_order = -1
+  if (link_id != -1) {
+    bottom_order = bottom_flux.indexOf(link_id)
+  }
+  bottom_flux.forEach(
+    (id,i) => {
+      if ( bottom_order !== -1 && (i > bottom_order || i===0 )) {
+        return
+      }
+      let the_id = id
+      if ( bottom_order !== -1 ) {
+        the_id = bottom_flux[i-1]
+      }
+      const v = test_link_value(nodes,links[the_id],selected_tags)
+      if (v=== undefined) {
+        return
+      }
+      offset_width_bottom += +v
+    }
+  )
+
+  let left_order = -1
+  if (link_id != -1) {
+    left_order = left_flux.indexOf(link_id)
+  }
+  left_flux.forEach(
+    (id,i) => {
+      if ( left_order !== -1 && (i > left_order || i===0 )) {
+        return
+      }
+      let the_id = id
+      if ( left_order !== -1 ) {
+        the_id = left_flux[i-1]
+      }
+      const v = test_link_value(nodes,links[the_id],selected_tags)
+      if (v=== undefined) {
+        return
+      }
+      offset_height_left += +v
+    }
+  )
+
+  let right_order = -1
+  if (link_id != -1) {
+    right_order = right_flux.indexOf(link_id)
+  }
+  right_flux.forEach(
+    (id,i) => {
+      if ( right_order !== -1 && (i > right_order || i===0 )) {
+        return
+      }
+      let the_id = id
+      if ( right_order !== -1 ) {
+        the_id = right_flux[i-1]
+      }
+      const v = test_link_value(nodes,links[the_id],selected_tags)
+      if (v=== undefined) {
+        return
+      }
+      offset_height_right += +v
+    }
+  )
+
+  return [offset_height_left,offset_height_right,offset_width_top,offset_width_bottom]
 }
 
 export const toPrecision = (
@@ -86,15 +247,6 @@ export const cloneSelection = (
       }
     }
   })
-}
-
-export const isExport = (
-  node : SankeyNode
-) => {
-  if (node.name.includes('(E') && !node.name.includes('(EA)')) {
-    return true
-  }
-  return false
 }
 
 export const link_text = (

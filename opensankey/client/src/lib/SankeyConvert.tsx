@@ -132,10 +132,16 @@ export const convert_data = (
       if (n.name.includes('(I')) {
         import_export = true
         n.tags['Exchanges'] = ['Importations']
+        if ( !links[n.output_links[0]].tags) {
+          links[n.output_links[0]].tags = {}
+        }
         links[n.output_links[0]].tags['Exchanges'] = ['Importations']
       } else if (n.name.includes('(E')) {
         import_export = true
         n.tags['Exchanges'] = ['Exportations']
+        if ( !links[n.input_links[0]].tags) {
+          links[n.input_links[0]].tags = {}
+        }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
       } else {
         n.tags['Exchanges'] = ['Other']        
@@ -306,14 +312,14 @@ export const convert_data = (
   if ( 'sankey_type' in data ){
     delete (data as ConvertSankeyData).sankey_type
   }
-  // if ( 'max_vertical_offset' in data ){
-  //   delete data.max_vertical_offset
-  // }
+
   if (display_style.filter_label === undefined ) {
     display_style.filter_label = flux_max/10      
   }
+
   if ( data.version === '0.1' ) {
     units_names.splice(1, 0, 'natural')
   }
+  
   data.version = '0.4'
 }

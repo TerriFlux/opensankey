@@ -8,17 +8,19 @@ import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node } from './SankeyUtils'
 
 const MenuPropTypes = {
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  open_menu: PropTypes.element,
-  save_menu: PropTypes.element,
-  edition_menu: PropTypes.element
+  data         : PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data     : PropTypes.func.isRequired,
+  open_menu    : PropTypes.element,
+  save_menu    : PropTypes.element,
+  edition_menu : PropTypes.element,
+  right_menu   : PropTypes.element,
+  app_name     : PropTypes.string.isRequired
 }
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu : FunctionComponent<MenuTypes> = (
-  {data,set_data,open_menu,save_menu,edition_menu}
+  {data,set_data,open_menu,save_menu,edition_menu,right_menu,app_name}
 ) => {
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -272,7 +274,7 @@ const Menu : FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' expand="lg" >
         <Container>
-          <Navbar.Brand href="#">Open-Sankey</Navbar.Brand>
+          <Navbar.Brand href="#">{app_name}</Navbar.Brand>
           <Nav onSelect={handleSelect}>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -302,6 +304,7 @@ const Menu : FunctionComponent<MenuTypes> = (
               </NavDropdown>
             </NavDropdown>            
           </Nav>
+          {right_menu}
         </Container>
       </Navbar>
 
