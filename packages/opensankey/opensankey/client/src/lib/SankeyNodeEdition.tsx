@@ -191,7 +191,6 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                                         node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
                                       }
                                       set_data({...data})
-                                    //setSelectedTags(data,selected_tags) 
                                     }
                                   }/>
                               </td>
@@ -203,27 +202,7 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                 </Tab>) : (<></>)}
               
               {children}
-              {/* <Tab eventKey="node_tooltip" title="Tooltip">
-                <Form >
-                  <Row>
-                    <FormLabel column sm={1}>Tooltip:</FormLabel>
-                    <Col sm={11}>
-                      <FormControl
-                        as="textarea"
-                        rows={10}
-                        value = {node_tooltip_text}
-                        onChange={
-                          evt => 
-                          {
-                            node.tooltip_text = evt.target.value.split('\n').join('\\n') 
-                            set_data({...data})
-                          }
-                        } 
-                      />
-                    </Col>  
-                  </Row>
-                </Form>
-              </Tab> */}
+
             </Tabs>
           </Col>
         </Row>
