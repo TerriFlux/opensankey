@@ -571,6 +571,25 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Table>
                   </Form.Group>
                 </Tab>) : (<></>)}
+              <Tab eventKey="flux_tooltip" title="Tooltip">
+                <Form >
+                  <Row>
+                    <FormLabel column sm={1}>Tooltip:</FormLabel>
+                    <Col sm={11}>
+                      <Form.Control
+                        as="textarea"
+                        rows={10}
+                        value = {link.tooltip_text ? link.tooltip_text : ''}
+                        onChange={ evt => 
+                        {
+                          link.tooltip_text = evt.target.value.split('\n').join('\\n') 
+                          set_data({...data})
+                        }} 
+                      />
+                    </Col>  
+                  </Row>
+                </Form>
+              </Tab>
               {children}
             </Tabs>
           </Col>

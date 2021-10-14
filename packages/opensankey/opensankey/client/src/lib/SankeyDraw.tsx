@@ -4,6 +4,7 @@ import { SankeyNode,SankeyLink,SankeyData,SankeyDataPropTypes } from './types'
 import PropTypes,{InferProps} from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
+import { add_tooltips } from './SankeyTooltip'
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
@@ -24,7 +25,9 @@ const SankeyDrawPropTypes = {
   link_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
-  more_processing: PropTypes.func.isRequired
+  more_processing: PropTypes.func.isRequired,
+  node_tooltip: PropTypes.func.isRequired,
+  link_tooltip: PropTypes.func.isRequired
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -44,7 +47,9 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
   link_text,
   link_visible,
   test_link_value,
-  more_processing
+  more_processing,
+  node_tooltip,
+  link_tooltip
 }) => {
   const default_node_size = data.node_width
   const default_handle_size = 10
@@ -1561,6 +1566,26 @@ const SankeyDraw : FunctionComponent<SankeyDrawTypes> = ({
     add_links(
       data,
       false,true
+    )
+    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement,  SankeyNode & SankeyLink>
+    add_tooltips(
+      data,
+      gg_nodes,
+      'node',
+      data.nodes,
+      (d3.select('#g_nodes').node() as SVGGElement),
+      node_tooltip,
+      link_tooltip,      
+    )
+    const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement,  SankeyNode & SankeyLink>
+    add_tooltips(
+      data,
+      gg_links,
+      'link',
+      data.links,
+      (d3.select('#g_links').node() as SVGGElement),
+      node_tooltip,
+      link_tooltip,      
     )
     more_processing(scale,move_node_and_link)
     localStorage.setItem('data',JSON.stringify(data))

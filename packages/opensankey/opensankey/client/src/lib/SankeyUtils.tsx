@@ -475,3 +475,112 @@ export const setSelectedTags = (
     }
   })
 }
+
+export const  default_link_tooltip = (
+  data : SankeyData,
+  d : SankeyLink | SankeyNode
+) => {
+  if ( d.tooltip_text) {
+    return d.tooltip_text
+  }
+  let region_index = 0
+  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group.length > 1 ) {
+    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  }
+  
+  const l = d as SankeyLink
+  let t = '\\n<b>'+ l.source_name.split('\\n').join(' ') + ' VERS ' + l.target_name.split('\\n').join(' ') + '\\n\\n'
+  t += '\\n<b>Valeur du flux :\\n\\n'  
+  const the_value = l.value[region_index]
+  t += ' ' + the_value + ' ' +  '\\n'
+  d.tooltip_text = t
+  return t
+}
+
+export const default_node_tooltip = (
+  data : SankeyData,
+  d : SankeyNode | SankeyLink
+) => {
+  if ( d.tooltip_text) {
+    return d.tooltip_text
+  }
+  let region_index = 0
+  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  if ( tags_group.length > 1 ) {
+    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  }
+  const n = d as SankeyNode
+  const {links} = data
+  let t =  '<b>' + n.name.split('\\n').join(' ')
+  let total=0
+  if ( n.input_links.length > 0 ) {
+    for (let i=0;i<n.input_links.length;i++) {
+      const link = links[n.input_links[i]]
+      if ( link === undefined ) {
+        //alert('Corruption du diagramme')
+        return ''
+      }
+      if (link.visible) {
+        total += +link.value[region_index]
+      }
+    }
+  }
+  if ( n.input_links.length > 0 ) {
+    t += '\\n\\n<b>ENTREES\\n\\n '        
+    for (let i=0;i<n.input_links.length;i++) {
+      const link = links[n.input_links[i]]
+      if ( link === undefined ) {
+        //alert('Corruption du diagramme')
+        return ''
+      }        
+      if (link.visible || link.visible === undefined) {
+        const source_name = link.source_name.split('\\n').join(' ')
+        t += ' ' + source_name + ': ' +  toPrecision( link.value[region_index])
+        if (n.input_links.length>1) {
+          const percent = Math.round(link.value[region_index]*100/total)
+          t += ' ('+ percent + '%)\\n'
+        } else {
+          t += '\\n'          
+        }
+      }
+    }
+    t += ' Total: ' + toPrecision(total)
+  }
+  total=0
+  if ( n.output_links.length > 0 ) {
+    for (let i=0;i<n.output_links.length;i++) {
+      const link = links[n.output_links[i]]
+      if (link === undefined ) {
+        //alert('Corruption du diagramme')
+        return ''
+      }
+      if (link.visible) {
+        total += +link.value[region_index]
+      }
+    }
+    if ( n.output_links.length > 0 ) {
+      t += '\\n\\n<b>SORTIES\\n\\n '
+      for (let i=0;i<n.output_links.length;i++) {
+        const link = links[n.output_links[i]]
+        if (link === undefined ) {
+          //alert('Corruption du diagramme')
+          return ''
+        }
+        if (link.visible) {
+          const target_name = link.target_name.split('\\n').join(' ')
+          t += ' ' + target_name + ': ' +  toPrecision(link.value[region_index])
+          if (n.output_links.length>1) {
+            const percent = Math.round(link.value[region_index]*100/total)
+            t += ' ('+ percent + '%)\\n'
+          } else {
+            t += '\\n'          
+          }
+        }
+      }
+    }
+    t += ' Total: ' + toPrecision(total)
+  }
+  d.tooltip_text = t
+  return d.tooltip_text
+}

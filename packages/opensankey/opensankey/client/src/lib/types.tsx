@@ -16,6 +16,8 @@ export const SankeyNodePropTypes = {
   x_label : PropTypes.number,
   y_label : PropTypes.number,
 
+  tooltip_text : PropTypes.string,
+
   // topology
   input_links : PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   output_links : PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
@@ -48,6 +50,8 @@ export const SankeyLinkPropTypes = {
   value                 : PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   display_value         : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
+  tooltip_text : PropTypes.string,
+  
   // geometry
   x_label              : PropTypes.number,
   y_label              : PropTypes.number,

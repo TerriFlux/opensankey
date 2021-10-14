@@ -90,6 +90,8 @@ const SankeyApp : FunctionComponent<SankeyAppTypes> = ({sankey_data}) => {
         }
         more_processing = {()=> void 0}
         redraw_node =  {()=> void 0}
+        node_tooltip = {SankeyUtils.default_node_tooltip}
+        link_tooltip = {SankeyUtils.default_link_tooltip}       
       />
       <SankeyNodeEdition 
         show={show_node}

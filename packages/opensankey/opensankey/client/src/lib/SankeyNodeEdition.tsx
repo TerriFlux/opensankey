@@ -200,7 +200,27 @@ const SankeyNodeEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_dat
                     </Table>
                   </Form.Group>
                 </Tab>) : (<></>)}
-              
+              <Tab eventKey="node_tooltip" title="Tooltip">
+                <Form >
+                  <Row>
+                    <FormLabel column sm={1}>Tooltip:</FormLabel>
+                    <Col sm={11}>
+                      <Form.Control
+                        as="textarea"
+                        rows={10}
+                        value = {node.tooltip_text ? node.tooltip_text : ''}
+                        onChange={
+                          (evt) => 
+                          {
+                            node.tooltip_text = evt.target.value.split('\n').join('\\n') 
+                            set_data({...data})
+                          }
+                        } 
+                      />
+                    </Col>  
+                  </Row>
+                </Form>
+              </Tab>              
               {children}
 
             </Tabs>
