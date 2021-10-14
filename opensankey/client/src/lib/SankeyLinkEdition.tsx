@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Modal,Row,Form,Col,FormLabel,FormCheck,Tabs,Tab, Table } from 'react-bootstrap'
+import { Modal, Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
-import PropTypes,{InferProps} from 'prop-types'
+import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
@@ -15,60 +15,60 @@ const SankeyLinkEditionPropTypes = {
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  {data, set_data, set_show_link, selected_link, show, children}
+  { data, set_data, set_show_link, selected_link, show, children }
 ) => {
-  const [tag_group_id,  set_tag_group_id]   = useState(0)
-  const [duplicate,  set_duplicate]   = useState(false)
+  const [tag_group_id, set_tag_group_id] = useState(0)
+  const [duplicate, set_duplicate] = useState(false)
 
-  const source_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
+  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links } = data
     let link = links[selected_link]
-    if ( duplicate ) {
-      link = {...links[selected_link]}
+    if (duplicate) {
+      link = { ...links[selected_link] }
       links.push(link)
-      selected_link = links.length - 1 
-      const target_node = nodes.filter(n=>n.name === link.target_name)[0]
+      selected_link = links.length - 1
+      const target_node = nodes.filter(n => n.name === link.target_name)[0]
       target_node.input_links.push(selected_link)
     } else {
-      const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
+      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
       const link_pos = previous_node.output_links.indexOf(selected_link)
-      previous_node.output_links.splice(link_pos,1)
+      previous_node.output_links.splice(link_pos, 1)
     }
-    
-    const source_node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
+
+    const source_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
     link.source_name = source_node.name
     source_node.output_links.push(selected_link)
 
-    set_data({...data})
+    set_data({ ...data })
   }
 
-  const target_change = (changeEvent : React.ChangeEvent<HTMLSelectElement>) => {
+  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links } = data
     let link = links[selected_link]
-    if ( duplicate ) {
-      link = {...links[selected_link]}
+    if (duplicate) {
+      link = { ...links[selected_link] }
       links.push(link)
-      selected_link = links.length - 1 
-      const source_node = nodes.filter(n=>n.name === link.source_name)[0]
+      selected_link = links.length - 1
+      const source_node = nodes.filter(n => n.name === link.source_name)[0]
       source_node.output_links.push(selected_link)
     } else {
-      const previous_node = nodes.filter(n=>n.name === link.target_name)[0]
+      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
       const link_pos = previous_node.input_links.indexOf(selected_link)
-      previous_node.input_links.splice(link_pos,1)
+      previous_node.input_links.splice(link_pos, 1)
     }
 
-    const target_node = nodes.filter(n=>n.name === changeEvent.target.value)[0]
+    const target_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
     link.target_name = target_node.name
     target_node.input_links.push(selected_link)
 
-    set_data({...data})
+    set_data({ ...data })
   }
 
-  const { links,nodes,tags} = data
+  const { links, nodes, tags } = data
   if (selected_link === -1) {
     selected_link = 0
   }
-  const selected_links : SankeyLink[] = []
+  const selected_links: SankeyLink[] = []
   const the_link = links[selected_link]
   selected_links.push(the_link)
 
@@ -80,18 +80,18 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   let region_index = 0
   const tags_group_region = data.tags.filter(tag => tag.tags_group_name === 'Regions')
-  if ( tags_group_region.length > 1 ) {
+  if (tags_group_region.length > 1) {
     region_index = tags_group_region[0].tags_group.indexOf(data.selected_tags['Regions'][0])
   }
 
   const tags_visible = tags.length > 0
-  
+
   return (
-    <Modal size="lg" show={show} onHide={(()=>set_show_link(false))}>
+    <Modal size="lg" show={show} onHide={(() => set_show_link(false))}>
       <Modal.Header closeButton>
         <Modal.Title>FLUX</Modal.Title>
       </Modal.Header>
-      <Modal.Body>          
+      <Modal.Body>
         <Row>
           <Col sm={12}>
             <Tabs defaultActiveKey="flux_data" id="settings-layout">
@@ -104,7 +104,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                     <Col>
                       <Form.Select onChange={source_change}>
-                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
+                        {nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Row>
@@ -115,7 +115,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                     <Col>
                       <Form.Select onChange={target_change}>
-                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
+                        {nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Row>
@@ -127,11 +127,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value = {link.value[region_index]}
-                        onChange = {
+                        value={link.value[region_index]}
+                        onChange={
                           (evt) => {
                             links[selected_link].value[region_index] = +evt.target.value
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -145,11 +145,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value = {link.display_value}
-                        onChange = {
-                          (evt) => { 
+                        value={link.display_value}
+                        onChange={
+                          (evt) => {
                             links[selected_link].display_value[region_index] = evt.target.value
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -160,13 +160,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <FormCheck
                         type='checkbox'
                         label='Dupliquer'
-                        checked = {duplicate}
-                        onChange = {
+                        checked={duplicate}
+                        onChange={
                           evt => set_duplicate(evt.target.checked)
                         }
                       />
                     </Col>
-                  </Form.Group>                  
+                  </Form.Group>
                 </Form>
               </Tab>
               <Tab eventKey="flux_attributes" title="Apparence">
@@ -177,13 +177,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <FormCheck
                         type='checkbox'
                         label='Visible'
-                        checked = {selected_links[0].visible || selected_links[0].visible === undefined}
-                        onChange = {
+                        checked={selected_links[0].visible || selected_links[0].visible === undefined}
+                        onChange={
                           evt => {
                             selected_links.forEach(
                               l => l.visible = evt.target.checked
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -197,12 +197,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Control
                         type="color"
                         defaultValue={link.color}
-                        onChange = {
+                        onChange={
                           evt => {
                             selected_links.forEach(
                               l => l.color = evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -216,12 +216,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Range
                         min="0" max="1" step="0.1"
                         value={link.curvature}
-                        onChange = {
+                        onChange={
                           evt => {
                             selected_links.forEach(
                               l => l.curvature = +evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -236,13 +236,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <FormCheck
                         type='checkbox'
                         label='Courbe'
-                        checked = {link.curved}
-                        onChange = {
-                          evt =>  {
+                        checked={link.curved}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.curved = evt.target.checked
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -251,28 +251,28 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <FormCheck
                         type='checkbox'
                         label='Flêche'
-                        checked = {link.arrow}
-                        onChange = {
-                          evt =>  {
+                        checked={link.arrow}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.arrow = evt.target.checked
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
                     </Col>
                     <Col>
-                      <FormCheck 
+                      <FormCheck
                         type='checkbox'
                         label='Recyclage'
-                        checked = {link.recycling ? link.recycling : undefined}
-                        onChange = {
-                          evt =>  {
+                        checked={link.recycling ? link.recycling : undefined}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.recycling = evt.target.checked
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -286,13 +286,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         type='radio'
                         label='Horiz-Horiz'
                         value='hh'
-                        checked = {link.orientation === 'hh'}
-                        onChange = {
-                          evt =>  {
+                        checked={link.orientation === 'hh'}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.orientation = evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -302,13 +302,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         type='radio'
                         label='Vert-Vert'
                         value='vv'
-                        checked = {link.orientation === 'vv'}
-                        onChange = {
-                          evt =>  {
+                        checked={link.orientation === 'vv'}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.orientation = evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -318,13 +318,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         type='radio'
                         label='Vert-Horiz'
                         value='vh'
-                        checked = {link.orientation === 'vh'}
-                        onChange = {
-                          evt =>  {
+                        checked={link.orientation === 'vh'}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.orientation = evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -334,13 +334,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         type='radio'
                         label='Horiz-Vert'
                         value='hv'
-                        checked = {link.orientation === 'hv'}
-                        onChange = {
-                          evt =>  {
+                        checked={link.orientation === 'hv'}
+                        onChange={
+                          evt => {
                             selected_links.forEach(
                               l => l.orientation = evt.target.value
                             )
-                            set_data({...data})
+                            set_data({ ...data })
                           }
                         }
                       />
@@ -349,20 +349,20 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Form>
               </Tab>
               <Tab eventKey="label" title="Label">
-                <br/>
+                <br />
                 <Form.Group as={Row} >
                   <Col>
                     <FormCheck
                       value='black'
                       type='radio'
                       label='Label en noir'
-                      checked = {link.text_color === 'black' }
-                      onChange = {
-                        () =>  {
+                      checked={link.text_color === 'black'}
+                      onChange={
+                        () => {
                           selected_links.forEach(
                             l => l.text_color = 'black'
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
@@ -372,13 +372,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       value='white'
                       type='radio'
                       label='Label blanc'
-                      checked = {link.text_color === 'white' }
-                      onChange = {
-                        () =>  {
+                      checked={link.text_color === 'white'}
+                      onChange={
+                        () => {
                           selected_links.forEach(
                             l => l.text_color = 'white'
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
@@ -388,13 +388,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       value='same_color'
                       type='radio'
                       label='Label en couleur'
-                      checked = {link.text_color === link.color }
-                      onChange = {
-                        () =>  {
+                      checked={link.text_color === link.color}
+                      onChange={
+                        () => {
                           selected_links.forEach(
                             l => l.text_color = l.color
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
@@ -404,13 +404,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormCheck
                     type='checkbox'
                     label='Label visible'
-                    checked = {link.label_visible || link.label_visible === undefined }
-                    onChange = {
+                    checked={link.label_visible || link.label_visible === undefined}
+                    onChange={
                       evt => {
-                        selected_links.forEach(                              
+                        selected_links.forEach(
                           l => l.label_visible = evt.target.checked
                         )
-                        set_data({...data})
+                        set_data({ ...data })
                       }
                     }
                   />
@@ -421,85 +421,85 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   </Col>
                   <Col>
                     <Form.Check
-                      value ='beginning'
+                      value='beginning'
                       type='radio'
                       label='Début'
-                      checked = {link.label_position === 'beginning'}
-                      onChange = {
+                      checked={link.label_position === 'beginning'}
+                      onChange={
                         evt => {
-                          selected_links.forEach(                              
+                          selected_links.forEach(
                             l => l.label_position = evt.target.value
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
                   </Col>
                   <Col>
                     <Form.Check
-                      value ='middle'
+                      value='middle'
                       type='radio'
                       label='Milieu'
-                      checked = {link.label_position === 'middle'}
-                      onChange = {
+                      checked={link.label_position === 'middle'}
+                      onChange={
                         evt => {
-                          selected_links.forEach(                              
+                          selected_links.forEach(
                             l => l.label_position = evt.target.value
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
                   </Col>
                   <Col>
                     <Form.Check
-                      value ='end'
+                      value='end'
                       type='radio'
                       label='Fin'
-                      checked = {link.label_position === 'end'}
-                      onChange = {
+                      checked={link.label_position === 'end'}
+                      onChange={
                         evt => {
-                          selected_links.forEach(                              
+                          selected_links.forEach(
                             l => l.label_position = evt.target.value
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
                   </Col>
                   <Col>
                     <FormCheck
-                      value ='frozen'
+                      value='frozen'
                       type='radio'
                       label='Figé'
-                      checked = {link.label_position === 'frozen'}
-                      onChange = {
+                      checked={link.label_position === 'frozen'}
+                      onChange={
                         evt => {
-                          selected_links.forEach(                              
+                          selected_links.forEach(
                             l => l.label_position = evt.target.value
                           )
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     />
                   </Col>
-                </Form.Group> 
+                </Form.Group>
                 <Form.Group>
                   <FormCheck
                     type='checkbox'
                     label='Attaché au flux'
-                    disabled = {link.label_position === 'frozen'}
-                    checked = {link.label_on_path && link.label_position !== 'frozen'}
-                    onChange = {
+                    disabled={link.label_position === 'frozen'}
+                    checked={link.label_on_path && link.label_position !== 'frozen'}
+                    onChange={
                       evt => {
-                        selected_links.forEach(                              
+                        selected_links.forEach(
                           l => l.label_on_path = evt.target.checked
                         )
-                        set_data({...data})
+                        set_data({ ...data })
                       }
                     }
-                  />  
-                </Form.Group>              
+                  />
+                </Form.Group>
               </Tab>
               {Object.keys(tags).length ? (
                 <Tab eventKey="tags" title="Tags" >
@@ -509,21 +509,21 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <FormLabel >Tag Groupe:</FormLabel>
                     </Col>
                     <Col>
-                      <Form.Select 
+                      <Form.Select
                         onChange={
-                          (evt : React.ChangeEvent<HTMLSelectElement>)=>set_tag_group_id(+evt.target.value)}>
-                        { tags.map( 
-                          (tags_group,i) => 
-                            <option 
-                              key={i} 
-                              value={i} 
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
+                        {tags.map(
+                          (tags_group, i) =>
+                            <option
+                              key={i}
+                              value={i}
                               selected={tag_group_id === i} >
                               {tags_group.tags_group_name}
                             </option>)}
                       </Form.Select>
-                    </Col> 
+                    </Col>
                   </Form.Group>
-                  <Form.Group as={Row} >     
+                  <Form.Group as={Row} >
                     <Table striped bordered hover>
                       <thead>
                         <tr>
@@ -533,24 +533,24 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       </thead>
                       <tbody>
                         {tags_visible ? (tags[tag_group_id].tags_group.map(
-                          (tag,tag_id) => { 
+                          (tag, tag_id) => {
                             const link_tag_groups = link.tags[tags[tag_group_id].tags_group_name]
                             const checked = link_tag_groups ? link_tag_groups.includes(tags[tag_group_id].tags_group[tag_id]) : true
-                            return(
+                            return (
                               <tr key={tag_id.toString()}>
                                 <td><FormLabel>{tag}</FormLabel></td>
-                                <td> 
-                                  <FormCheck 
-                                    name={'element_visible'+tag_id.toString()} 
-                                    defaultChecked={checked}  
+                                <td>
+                                  <FormCheck
+                                    name={'element_visible' + tag_id.toString()}
+                                    defaultChecked={checked}
                                     id={tag_id.toString()}
-                                    type='checkbox' 
+                                    type='checkbox'
                                     onChange={
-                                      (evt : React.ChangeEvent) => {
-                                        const {tags} = data
+                                      (evt: React.ChangeEvent) => {
+                                        const { tags } = data
                                         const new_nb_element = evt.target as HTMLInputElement
                                         const id = +new_nb_element.id
-                                        const name = tags[tag_group_id].tags_group[id] 
+                                        const name = tags[tag_group_id].tags_group[id]
                                         const visible = new_nb_element.checked
                                         const tag_group_name = tags[tag_group_id].tags_group_name
                                         if (visible) {
@@ -561,12 +561,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                                         } else {
                                           link.tags[tag_group_name].splice(link.tags[tag_group_name].indexOf(name))
                                         }
-                                        set_data({...data})
+                                        set_data({ ...data })
                                       }
-                                    }/>
+                                    } />
                                 </td>
                               </tr>
-                            )})) : (<></>)}
+                            )
+                          })) : (<></>)}
                       </tbody>
                     </Table>
                   </Form.Group>
@@ -579,14 +580,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value = {link.tooltip_text ? link.tooltip_text : ''}
-                        onChange={ evt => 
-                        {
-                          link.tooltip_text = evt.target.value.split('\n').join('\\n') 
-                          set_data({...data})
-                        }} 
+                        value={link.tooltip_text ? link.tooltip_text : ''}
+                        onChange={evt => {
+                          link.tooltip_text = evt.target.value.split('\n').join('\\n')
+                          set_data({ ...data })
+                        }}
                       />
-                    </Col>  
+                    </Col>
                   </Row>
                 </Form>
               </Tab>
