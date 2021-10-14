@@ -1,6 +1,6 @@
-import React,{ FunctionComponent } from 'react'
-import { Button,Modal,ButtonGroup } from 'react-bootstrap'
-import PropTypes,{InferProps} from 'prop-types'
+import React, { FunctionComponent } from 'react'
+import { Button, Modal, ButtonGroup } from 'react-bootstrap'
+import PropTypes, { InferProps } from 'prop-types'
 import { delete_link } from './SankeyUtils'
 import { SankeyDataPropTypes } from './types'
 
@@ -13,20 +13,20 @@ const SankeyLinkContextMenuPropTypes = {
 }
 
 type SankeyLinkContextMenuTypes = InferProps<typeof SankeyLinkContextMenuPropTypes>
-const SankeyLinkContextMenu : FunctionComponent<SankeyLinkContextMenuTypes> = ({data,set_data,closeLinkContextMenu,selected_link,show}) => {
+const SankeyLinkContextMenu: FunctionComponent<SankeyLinkContextMenuTypes> = ({ data, set_data, closeLinkContextMenu, selected_link, show }) => {
   return (
-    <Modal size="sm"  show={show} onHide={closeLinkContextMenu}>
+    <Modal size="sm" show={show} onHide={closeLinkContextMenu}>
       <Modal.Header closeButton>
       </Modal.Header>
       <Modal.Body>
         <br></br>
-        <ButtonGroup vertical style={{ 'marginLeft' : '10px' }}>
-          <Button 
-            size="sm" 
+        <ButtonGroup vertical style={{ 'marginLeft': '10px' }}>
+          <Button
+            size="sm"
             onClick={
-              ()=> {
-                delete_link(data,selected_link)
-                set_data({...data})
+              () => {
+                delete_link(data, selected_link)
+                set_data({ ...data })
                 closeLinkContextMenu()
               }
             }
