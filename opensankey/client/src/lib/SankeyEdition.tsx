@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react'
-import { Button,Row,Col,ButtonGroup } from 'react-bootstrap'
-import { SankeyNode,SankeyLink,SankeyDataPropTypes } from './types'
-import PropTypes,{InferProps} from 'prop-types'
+import { Button, Row, Col, ButtonGroup } from 'react-bootstrap'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes } from './types'
+import PropTypes, { InferProps } from 'prop-types'
 import { default_link, default_node } from './SankeyUtils'
 
 const SankeyEditionPropTypes = {
@@ -14,52 +14,52 @@ const SankeyEditionPropTypes = {
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
-const SankeyEdition : FunctionComponent<SankeyEditionTypes> = ({data,set_data,set_selected_node,set_selected_link,set_show_link,set_show_graphic_attributes}) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_selected_node, set_selected_link, set_show_link, set_show_graphic_attributes }) => {
   const add_new_node = () => {
     const { nodes } = data
 
-    const node : SankeyNode = default_node()
+    const node: SankeyNode = default_node()
     node.id = nodes.length
-    node.name = 'n'+nodes.length
-    node.x = nodes.length*50
-    nodes.push(node )
-    set_selected_node(nodes.length-1)
-    set_data({...data})
+    node.name = 'n' + nodes.length
+    node.x = nodes.length * 50
+    nodes.push(node)
+    set_selected_node(nodes.length - 1)
+    set_data({ ...data })
   }
 
   const add_new_link = () => {
-    const {nodes,links} =data
+    const { nodes, links } = data
 
     if (nodes.length < 2) {
       return
     }
-    const link : SankeyLink = default_link()
+    const link: SankeyLink = default_link()
     const link_pos = links.length
 
     links.push(link)
-    link.source_name = nodes[0].name    
+    link.source_name = nodes[0].name
     link.target_name = nodes[1].name
 
     nodes[0].output_links.push(link_pos)
     nodes[1].input_links.push(link_pos)
 
-    set_selected_link(links.length-1)
-    set_data({...data})
+    set_selected_link(links.length - 1)
+    set_data({ ...data })
     set_show_link(true)
   }
 
   return (
-    <div className='herowrap' style={{ 'backgroundColor' : 'gainsboro','marginLeft' : '0' }}>
-      <Row style={{ 'marginTop' : '10px','marginBottom' : '10px'}}>
+    <div className='herowrap' style={{ 'backgroundColor': 'gainsboro', 'marginLeft': '0' }}>
+      <Row style={{ 'marginTop': '10px', 'marginBottom': '10px' }}>
         <Col sm={4}  >
-          <ButtonGroup vertical style={{ 'marginLeft' : '10px' }}>
-            <Button size="sm" style={{ 'marginBottom' : '3px'}} onClick={add_new_node}>
+          <ButtonGroup vertical style={{ 'marginLeft': '10px' }}>
+            <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>
               Ajouter Noeud
             </Button>
-            <Button size="sm" style={{ 'marginBottom' : '3px'}} onClick={add_new_link}>
+            <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_link}>
               Ajouter Flux
             </Button>
-            <Button size="sm" onClick={()=>set_show_graphic_attributes(true)}>
+            <Button size="sm" onClick={() => set_show_graphic_attributes(true)}>
               Réglages
             </Button>
           </ButtonGroup>
