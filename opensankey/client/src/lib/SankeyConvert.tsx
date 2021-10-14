@@ -92,6 +92,12 @@ export const convert_data = (
   if (data.node_width===undefined) {
     data.node_width = 10
   }
+  if ( !data.tags) {
+    data.tags = []
+  }
+  if ( !data.selected_tags) {
+    data.selected_tags = {}
+  }
 
   if (data.flux_types || data.use_flux_types) {
     if (data.tags.filter(tag => tag.tags_group_name === 'flux_types').length === 0) {

@@ -491,6 +491,7 @@ export const updateLayout = (
   data: SankeyData,
   new_layout: SankeyData
 ) => {
+  convert_data(new_layout)
   const { nodes, links } = data
   convert_data(new_layout)
 
