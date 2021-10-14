@@ -199,9 +199,9 @@ export const convert_data = (
       if ( 'link_reverse' in l ) {
         delete l_convert.link_reverse
       }
-      if ( 'tooltip_text' in l_convert ) {
-        delete l_convert.tooltip_text
-      }
+      // if ( 'tooltip_text' in l_convert ) {
+      //   delete l_convert.tooltip_text
+      // }
       if ( 'display_unit' in l_convert ) {
         l_convert.natural_unit = l_convert.display_unit
         delete l_convert.display_unit
