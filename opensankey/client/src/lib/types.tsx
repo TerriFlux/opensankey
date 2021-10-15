@@ -5,6 +5,8 @@ export const SankeyNodePropTypes = {
   id: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
 
+  parent_name : PropTypes.string,
+
   // display attributes
   visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,

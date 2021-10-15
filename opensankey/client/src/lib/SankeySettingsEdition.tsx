@@ -367,9 +367,12 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                     onClick={
                       () => {
                         nodes.forEach(
-                          node => node.visible = true
-                        )
-                        set_data({ ...data })
+                          node=> {
+                            node.visible = true
+                            node.label_visible = true
+                          }
+                        ) 
+                        set_data({...data})
                       }
                     }
                   >Reset visible</Button>

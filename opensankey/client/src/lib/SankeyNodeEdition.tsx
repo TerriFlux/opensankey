@@ -47,8 +47,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <br></br>
                 <Form >
                   <Form.Group as={Row} >
-                    <FormLabel column sm={2} style={{ 'marginLeft': '3px' }}>Nom</FormLabel>
-                    <Col sm={8}>
+                    <Col>
+                      <FormLabel style={{ 'marginLeft' : '3px'}}>Nom</FormLabel>
+                    </Col>
+                    <Col>
                       <FormControl
                         value={node.name}
                         onChange={evt => {
@@ -61,11 +63,32 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         }}
                       />
                     </Col>
-                    <FormLabel column sm={1}>id {selected_node}</FormLabel>
+                    <Col>
+                      <FormLabel >id {selected_node}</FormLabel>
+                    </Col>
                   </Form.Group>
                   <Form.Group as={Row} >
-                    <FormLabel column sm={2}>Couleur</FormLabel>
-                    <Col sm={8}>
+                    <Col>
+                      <FormLabel style={{ 'marginLeft' : '3px'}}>Parent</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Select 
+                        onChange={
+                          (evt : React.ChangeEvent<HTMLSelectElement>) => {
+                            nodes[selected_node].parent_name = evt.target.value
+                            set_data({...data})
+                          } 
+                        }
+                      >
+                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>                  
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Couleur</FormLabel>
+                    </Col>
+                    <Col>
                       <Form.Control
                         type='color'
                         value={node.color}
@@ -84,7 +107,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         checked={node.label_visible}
                         onChange={evt => {
                           nodes[selected_node].label_visible = evt.target.checked
-                          set_data({ ...data })
+                          if ( !nodes[selected_node].label_visible && !nodes[selected_node].visible) {
+                            nodes[selected_node].input_links.forEach(
+                              l_idx => links[l_idx].visible = false
+                            )
+                            nodes[selected_node].output_links.forEach(
+                              l_idx => links[l_idx].visible = false
+                            )
+                          }
+                          set_data({...data})
                         }}
                       />
                     </Col>
@@ -126,7 +157,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         checked={node.visible}
                         onChange={evt => {
                           node.visible = evt.target.checked
-                          set_data({ ...data })
+                          if ( !node.label_visible && !node.visible) {
+                            node.input_links.forEach(
+                              l_idx => links[l_idx].visible = false
+                            )
+                            node.output_links.forEach(
+                              l_idx => links[l_idx].visible = false
+                            )
+                          }
+                          set_data({...data})
                         }}
                       />
                     </Col>
