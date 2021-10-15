@@ -1558,6 +1558,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   useEffect(() => {
 
+    const svgSankey = (d3.select('#svg') as any)
+    svgSankey
+      .attr('viewBox', [0, 0, data.width, data.height])
+      .attr('cursor', 'grab')
+      .call(d3.zoom()
+        .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
+          return event.ctrlKey
+        })
+        .wheelDelta(function wheelDelta(event) { // Permet de regler la vitesse du zoom
+          return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002)
+        })
+        .on('zoom', function (transform) {
+          d3.selectAll('svg > *') // permet de sélectionner l'ensemble des éléments de la balise svg
+            .attr('transform', transform.transform)
+          d3.selectAll('text')
+            .style('font-size', (data.display_style.font_size / transform.transform.k) + 'px') // Permet de maintenir une taille de police constante
+          // A voir si il ne faut pas la réduire quand le zomm est <1
+        })
+      )
+
     update_scale(data.user_scale)
     add_nodes_auto(
       data,
@@ -1568,6 +1588,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       false, true
     )
     const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
+
+    gg_nodes.attr('cursor', 'zoom-in')
     add_tooltips(
       data,
       gg_nodes,
@@ -1578,6 +1600,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       link_tooltip,
     )
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
+    gg_links.attr('cursor', 'zoom-in')
     add_tooltips(
       data,
       gg_links,
@@ -1593,7 +1616,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   return (
     <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
-      <svg height={data.height} width={data.width} id='svg' >
+      <svg height={data.height} width='100%' id='svg' >
         <g className='g_nodes' id='g_nodes' ></g>
         <g className='g_links' id='g_links' ></g>
       </svg>
