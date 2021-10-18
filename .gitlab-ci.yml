@@ -3,7 +3,6 @@ stages:
     - build
     - test
     - deploy
-
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
