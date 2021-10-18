@@ -96,6 +96,7 @@ dev.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
 #   - CI= sudo npm run dist
 #   - CI= npm link .
     - mv node_modules ../../..
@@ -129,6 +130,7 @@ test.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - mv node_modules ../../..
     - cd ../..
     - pip install .
@@ -158,6 +160,7 @@ prod.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
 #   - CI= sudo npm run dist
 #   - CI= npm link .
     - mv node_modules ../../..
