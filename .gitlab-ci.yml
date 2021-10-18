@@ -65,10 +65,10 @@ test:
     - source /home/gitlab-runner/gitlab/bin/activate
     - echo $CI_PROJECT_DIR
     - cd ..
-    - pip install OpenSankey
-    - python -m unittest discover opensankey.tests
-    - cd opensankey
-    - flake8 --exit-zero
+    #- pip install OpenSankey
+    #- python -m unittest discover opensankey.tests
+    #- cd opensankey
+    #- flake8 --exit-zero
   dependencies:
     - build
 
