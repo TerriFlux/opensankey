@@ -79,7 +79,7 @@ dev.opensankey.fr:
   environment:
     name: dev
   only:
-    - master
+    - main
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
