@@ -141,15 +141,15 @@ test.opensankey.fr:
 prod.opensankey.fr:
   stage: deploy
   tags:
-    - dev
+    - prod
   environment:
-    name: dev
+    name: prod
   only:
     - opensankey
   before_script:
     - sudo systemctl stop opensankey || true
   script:
-    - cd /home/ubuntu/opensankey
+    - cd /home/ubuntu/prod_opensankey
     - source opensankeyenv/bin/activate
     - cd opensankey
     - git pull
