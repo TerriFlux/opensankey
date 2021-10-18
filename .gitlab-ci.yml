@@ -152,7 +152,7 @@ prod.opensankey.fr:
     - sudo systemctl stop opensankey || true
   script:
     - cd /home/ubuntu/prod_opensankey
-    - source opensankeyenv/bin/activate
+    - source prod_opensankey/bin/activate
     - cd opensankey
     - git pull
     - git checkout opensankey/server/views.py
