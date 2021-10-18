@@ -1648,34 +1648,36 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // ceci permet d'assurer la portabilité des anciennes structure
     //-----------------------------------------------------------------------
     // Link
-    if (Object.prototype.hasOwnProperty.call(data.links[0], 'idLink')) {
-      console.log('La propertie id existe dans data.links')
-    } else {
-      console.log('La propertie id existe pas dans data.links, elle est donc ajoutée ici')
-      data.links.forEach((element, i) => element.idLink = 'link' + i)
-    }
-    // Node
-    if (Number.isInteger(data.nodes[0].id)) {
-      console.log('La propertie id est modifiée dans data.nodes, 0 => node0')
-      data.nodes.forEach((element) => element.idNode = 'node' + element.id)
-    }
-    if (Object.prototype.hasOwnProperty.call(data.nodes[0], 'inputLinkId')) {
-      console.log('Les properties inputLinkId et outputLinkId existent dans data.nodes')
-    } else {
-      console.log('Les properties inputLinkId et outputLinkId n\'existent pas dans data.nodes, elle sont donc ajoutées ici')
-      data.nodes.forEach((element: any) => {
-        element.inputLinksId = []
-        element.input_links.forEach((elt: any) => {
-          element.inputLinksId.push(data.links[elt].idLink)
+    if ( data.links.length>0) {
+      if (Object.prototype.hasOwnProperty.call(data.links[0], 'idLink')) {
+        console.log('La propertie id existe dans data.links')
+      } else {
+        console.log('La propertie id existe pas dans data.links, elle est donc ajoutée ici')
+        data.links.forEach((element, i) => element.idLink = 'link' + i)
+      }
+      // Node
+      if (Number.isInteger(data.nodes[0].id)) {
+        console.log('La propertie id est modifiée dans data.nodes, 0 => node0')
+        data.nodes.forEach((element) => element.idNode = 'node' + element.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(data.nodes[0], 'inputLinkId')) {
+        console.log('Les properties inputLinkId et outputLinkId existent dans data.nodes')
+      } else {
+        console.log('Les properties inputLinkId et outputLinkId n\'existent pas dans data.nodes, elle sont donc ajoutées ici')
+        data.nodes.forEach((element: any) => {
+          element.inputLinksId = []
+          element.input_links.forEach((elt: any) => {
+            element.inputLinksId.push(data.links[elt].idLink)
+          })
+          element.outputLinksId = []
+          element.output_links.forEach((elt: any) => {
+            element.outputLinksId.push(data.links[elt].idLink)
+          })
         })
-        element.outputLinksId = []
-        element.output_links.forEach((elt: any) => {
-          element.outputLinksId.push(data.links[elt].idLink)
-        })
-      })
+      }
+      console.log(data.links)
+      console.log(data.nodes)
     }
-    console.log(data.links)
-    console.log(data.nodes)
     //-----------------------------------------------------------------------
 
     add_nodes(
