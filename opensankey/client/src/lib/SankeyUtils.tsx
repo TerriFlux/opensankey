@@ -1,6 +1,38 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import * as d3 from 'd3'
 
+
+// Getter pour récupérer la valeur du link
+// utile pour pouvoir ensuite gérer les dataTag
+export const getLinkValue = (
+  data: SankeyData,
+  idLink: string
+) => {
+  const { links, nodes } = data
+  return links.filter(element => { return element.idLink === idLink })[0].value[0]
+}
+
+export const getTotalLinks = (
+  data: SankeyData,
+  Links: any,
+) => {
+  const { links, nodes } = data
+  let total = 0
+  Links.forEach((element : any) => {
+    const tmp = links.filter(element1 => {
+      return (element1.idLink == element)
+    })[0].value[0]
+    total += tmp
+  })
+  return total
+
+  //   console.log(idNode)
+  //   console.log(element.idLink)
+  //   console.log(links.filter(element => { return (element.idLink as any).includes(idNode) }))
+  // })
+  return 'test'
+}
+
 export const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name

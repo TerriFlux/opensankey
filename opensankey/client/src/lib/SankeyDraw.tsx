@@ -4,7 +4,7 @@ import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
-import { add_tooltips } from './SankeyTooltip'
+import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
@@ -57,6 +57,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const min_thickness = 1
 
   const [handles_visible] = useState([...new Array(data.links.length).fill(false)])
+
+  const sankeyTooltip = d3.select('body')
+    .append('div')
+    .style('opacity', 0)
+    .attr('class', 'sankey-tooltip')
+    .style('background-color', '#1abc9c')
+    .style('border', 'solid')
+    .style('border-width', '0px')
+    .style('border-radius', '5px')
+    .style('padding', '5px')
+    .style('z-index', 100)
+    .style('position', 'absolute')
+    .style('pointer-events', 'none')
 
   let alt_key_pressed = false
 
@@ -158,22 +171,39 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     // link value
+    // const select = gg_links
+    //   .filter(d => d.label_position !== 'frozen' && d.label_on_path === true)
+    //   .append('text')
+    //   .append('textPath')
+
     const select = gg_links
-      .filter(d => d.label_position !== 'frozen' && d.label_on_path === true)
+      .filter(
+        d => d.label_position !== 'frozen' && d.label_on_path === true
+      )
       .append('text')
+      .attr('pointer-events','none')
+      .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
+      .attr('fill', d => d.text_color)
+      .attr('visibility', d => link_visible(d))
+      .attr('dy', '0.3em')
       .append('textPath')
+      .attr('id', d => 'link_value' + links.indexOf(d))
+      .attr('class', 'link_value')
+      .attr('href', d => '#link' + links.indexOf(d))
+
 
     const select2 = gg_links
       .filter(d => d.label_position === 'frozen' || !d.label_on_path || d.label_on_path === undefined)
       .append('text')
 
-    select
-      .attr('href', d => '#link' + links.indexOf(d))
-      .attr('id', d => 'link_value' + links.indexOf(d))
-      .attr('class', 'link_value')
-      .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('fill', d => d.text_color)
-      .attr('visibility', d => link_visible(d))
+    // select
+    //   .attr('href', d => '#link' + links.indexOf(d))
+    //   .attr('id', d => 'link_value' + links.indexOf(d))
+    //   .attr('class', 'link_value')
+    //   .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
+    //   .attr('fill', d => d.text_color)
+    //   .attr('visibility', d => link_visible(d))
+
 
     select2
       .attr('href', d => '#link' + links.indexOf(d))
@@ -214,6 +244,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
       )
     }
+
     let error_msg: { text?: string | undefined } | undefined
     paths
       .attr('class', 'link')
@@ -237,14 +268,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mouseover', function (event, d) {
+        //d3.select(this).attr('class', 'selected_node')
+        sankeyTooltip
+          .style('opacity', 1)
+          .html(linkTooltipsContent(data, d))
         if (d.visible && d.value[region_index] >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
-      }).on('mouseout', function (event, d) {
+      })
+      .on('mousemove', d => {
+        sankeyTooltip
+          .style('top', (d.layerY - 10) + 'px')
+          .style('left', (d.layerX + 10) + 'px')
+      })
+      .on('mouseout', function (event, d) {
+        sankeyTooltip.style('opacity', 0)
         if (d.visible && d.value[region_index] >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.95')
         }
       })
+
+
     paths.attr('d', (d, i) => {
       setNodesHeight(nodes, links, d, data.selected_tags)
       return drawCurve(
@@ -301,6 +345,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     node.x = new_x
     node.y = new_y
+
+    sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
 
     d3.select(dragged).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
     d3.select('#tooltip_node' + id).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
@@ -687,7 +733,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('startOffset', positions[d.label_position][0])
         .attr('text-anchor', positions[d.label_position][1])
-        .text(d => link_text(d, link_value, display_style))
+        //.text(d => ' → ' +link_text(d, link_value, display_style) + ' → ')
+        .text(d => link_text(d, link_value, display_style) )
         .attr('visibility', d.label_visible ? 'visible' : 'hidden')
     }
   }
@@ -1230,7 +1277,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
-  const add_nodes_auto = (
+  const add_nodes = (
     data: SankeyData,
     static_sankey: boolean,
     remove_previous_nodes = false
@@ -1253,6 +1300,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('transform', d => {
         return 'translate(' + d.x + ', ' + d.y + ')'
       })
+
     if (!static_sankey) {
       ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
         .subject(Object).on('drag', function (event) {
@@ -1265,7 +1313,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           localStorage.setItem('data', JSON.stringify(data))
         })
       )
+
       ggg_nodes.on('click', (event, d) => {
+        sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
         select_node(d.id)
         deselect_nodes_and_links()
         const node_to_select = '#ggg_node' + d.id + ' rect'
@@ -1273,6 +1323,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return
       })
     }
+
     ggg_nodes.on('contextmenu', (event, d) => {
       event.preventDefault()
       nodeContextMenu(d.id)
@@ -1303,20 +1354,33 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     d3.selectAll('.node')
-      .attr('id', (d, i) => 'node' + i)
+      //.attr('id', (d, i) => 'node' + i)
+      .attr('id', (d) => { return (d as SankeyNode).idNode as string })
       .attr('visibility', d => node_visible(d))
       .attr('fill', d => node_color(d))
       .attr('fill-opacity', d => (d as SankeyNode).visible ? 0.9 : 0)
       .attr('stroke', 'black')
       .attr('stroke-width', '0')
       .on('mouseover', function (event, d) {
-        if (!node_visible(d)) {
-          return
-        }
+        //console.log(node_visible(d))
+        //if (node_visible(d)) {
         d3.select(this).attr('class', 'selected_node')
+        sankeyTooltip
+          .style('opacity', 1)
+          .html(nodeTooltipsContent(data, d as SankeyNode))
+        //}
+      })
+      .on('mousemove', function (d) {
+        //console.log(node_visible(d))
+        //if (!d.visible) {
+        sankeyTooltip
+          .style('top', (d.layerY - 10) + 'px')
+          .style('left', (d.layerX + 10) + 'px')
+        //}
       })
       .on('mouseout', function () {
         d3.select(this).attr('class', 'node')
+        sankeyTooltip.style('opacity', 0)
       })
 
     ggg_nodes
@@ -1579,7 +1643,42 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
 
     update_scale(data.user_scale)
-    add_nodes_auto(
+
+    // Modification de la dataStructure
+    // ceci permet d'assurer la portabilité des anciennes structure
+    //-----------------------------------------------------------------------
+    // Link
+    if (Object.prototype.hasOwnProperty.call(data.links[0], 'idLink')) {
+      console.log('La propertie id existe dans data.links')
+    } else {
+      console.log('La propertie id existe pas dans data.links, elle est donc ajoutée ici')
+      data.links.forEach((element, i) => element.idLink = 'link' + i)
+    }
+    // Node
+    if (Number.isInteger(data.nodes[0].id)) {
+      console.log('La propertie id est modifiée dans data.nodes, 0 => node0')
+      data.nodes.forEach((element) => element.idNode = 'node' + element.id)
+    }
+    if (Object.prototype.hasOwnProperty.call(data.nodes[0], 'inputLinkId')) {
+      console.log('Les properties inputLinkId et outputLinkId existent dans data.nodes')
+    } else {
+      console.log('Les properties inputLinkId et outputLinkId n\'existent pas dans data.nodes, elle sont donc ajoutées ici')
+      data.nodes.forEach((element: any) => {
+        element.inputLinksId = []
+        element.input_links.forEach((elt: any) => {
+          element.inputLinksId.push(data.links[elt].idLink)
+        })
+        element.outputLinksId = []
+        element.output_links.forEach((elt: any) => {
+          element.outputLinksId.push(data.links[elt].idLink)
+        })
+      })
+    }
+    console.log(data.links)
+    console.log(data.nodes)
+    //-----------------------------------------------------------------------
+
+    add_nodes(
       data,
       false, true
     )
@@ -1590,26 +1689,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
 
     gg_nodes.attr('cursor', 'zoom-in')
-    add_tooltips(
-      data,
-      gg_nodes,
-      'node',
-      data.nodes,
-      (d3.select('#g_nodes').node() as SVGGElement),
-      node_tooltip,
-      link_tooltip,
-    )
+    // add_tooltips(
+    //   data,
+    //   gg_nodes,
+    //   'node',
+    //   data.nodes,
+    //   (d3.select('#g_nodes').node() as SVGGElement),
+    //   node_tooltip,
+    //   link_tooltip,
+    // )
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_links.attr('cursor', 'zoom-in')
-    add_tooltips(
-      data,
-      gg_links,
-      'link',
-      data.links,
-      (d3.select('#g_links').node() as SVGGElement),
-      node_tooltip,
-      link_tooltip,
-    )
+    // add_tooltips(
+    //   data,
+    //   gg_links,
+    //   'link',
+    //   data.links,
+    //   (d3.select('#g_links').node() as SVGGElement),
+    //   node_tooltip,
+    //   link_tooltip,
+    // )
     more_processing(scale, move_node_and_link)
     localStorage.setItem('data', JSON.stringify(data))
   })
