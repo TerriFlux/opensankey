@@ -96,6 +96,7 @@ dev.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
 #   - CI= sudo npm run dist
 #   - CI= npm link .
     - mv node_modules ../../..
@@ -129,6 +130,7 @@ test.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - mv node_modules ../../..
     - cd ../..
     - pip install .
@@ -141,15 +143,15 @@ test.opensankey.fr:
 prod.opensankey.fr:
   stage: deploy
   tags:
-    - dev
+    - prod
   environment:
-    name: dev
+    name: prod
   only:
     - opensankey
   before_script:
     - sudo systemctl stop opensankey || true
   script:
-    - cd /home/ubuntu/opensankey
+    - cd /home/ubuntu/prod_opensankey
     - source opensankeyenv/bin/activate
     - cd opensankey
     - git pull
@@ -158,6 +160,7 @@ prod.opensankey.fr:
     - npm install
     - CI= npm run build
     - export NODE_ENV=production
+    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
 #   - CI= sudo npm run dist
 #   - CI= npm link .
     - mv node_modules ../../..
