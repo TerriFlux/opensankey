@@ -114,7 +114,7 @@ test.opensankey.fr:
   environment:
     name: test
   only:
-    - test_opensankey
+    - test
   except:
     - tags
   before_script:
@@ -141,11 +141,11 @@ test.opensankey.fr:
 prod.opensankey.fr:
   stage: deploy
   tags:
-    - dev
+    - prod
   environment:
-    name: dev
+    name: prod
   only:
-    - opensankey
+    - prod
   before_script:
     - sudo systemctl stop opensankey || true
   script:
