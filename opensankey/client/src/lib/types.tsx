@@ -3,6 +3,7 @@ import PropTypes, { InferProps } from 'prop-types'
 export const SankeyNodePropTypes = {
   // identification
   id: PropTypes.number.isRequired,
+  idNode: PropTypes.string,
   name: PropTypes.string.isRequired,
 
   parent_name : PropTypes.string,
@@ -21,7 +22,9 @@ export const SankeyNodePropTypes = {
   tooltip_text: PropTypes.string,
 
   // topology
+  inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
   input_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
   output_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
 
   // semantic
@@ -32,6 +35,7 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
 export const SankeyLinkPropTypes = {
   // identification
+  idLink: PropTypes.string,
   source_name: PropTypes.string.isRequired,
   target_name: PropTypes.string.isRequired,
 
