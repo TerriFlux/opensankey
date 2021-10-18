@@ -145,7 +145,7 @@ prod.opensankey.fr:
   environment:
     name: prod
   only:
-    - opensankey
+    - prod
   before_script:
     - sudo systemctl stop opensankey || true
   script:
