@@ -3,7 +3,6 @@ stages:
     - build
     - test
     - deploy
-
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
@@ -65,31 +64,31 @@ test:
     - source /home/gitlab-runner/gitlab/bin/activate
     - echo $CI_PROJECT_DIR
     - cd ..
-    - pip install OpenSankey
-    - python -m unittest discover opensankey.tests
-    - cd opensankey
-    - flake8 --exit-zero
+    #- pip install OpenSankey
+    #- python -m unittest discover opensankey.tests
+    #- cd opensankey
+    #- flake8 --exit-zero
   dependencies:
     - build
 
-dev.terriflux.fr:
+dev.opensankey.fr:
   stage: deploy
   tags:
     - dev
   environment:
     name: dev
   only:
-    - master
+    - main
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
-      - /home/ubuntu/dev_terriflux/opensankey/opensankey/client/node_modules/
+      - /home/ubuntu/dev_opensankey/opensankey/opensankey/client/node_modules/
     policy: pull
   before_script:
-    - sudo systemctl stop dev_terriflux || true
+    - sudo systemctl stop dev_opensankey || true
   script:
-    - cd /home/ubuntu/dev_terriflux
-    - source dev_terriflux/bin/activate
+    - cd /home/ubuntu/dev_opensankey
+    - source dev_opensankey/bin/activate
     - cd opensankey
     - git pull
     - git checkout opensankey/server/views.py
@@ -104,25 +103,25 @@ dev.terriflux.fr:
     - pip install .
     - mv ../node_modules opensankey/client
     - cd ..
-    - sudo systemctl restart dev_terriflux
+    - sudo systemctl restart dev_opensankey
   dependencies:
     - test
 
-test.terriflux.fr:
+test.opensankey.fr:
   stage: deploy
   tags:
     - test
   environment:
     name: test
   only:
-    - test_terriflux
+    - test_opensankey
   except:
     - tags
   before_script:
-    - sudo systemctl stop test_terriflux || true
+    - sudo systemctl stop test_opensankey || true
   script:
-    - cd /home/ubuntu/test_terriflux
-    - source test_terriflux/bin/activate
+    - cd /home/ubuntu/test_opensankey
+    - source test_opensankey/bin/activate
     - cd opensankey
     - git pull
     - git checkout opensankey/server/views.py
@@ -135,23 +134,23 @@ test.terriflux.fr:
     - pip install .
     - mv ../node_modules opensankey/client
     - cd ..
-    - sudo systemctl restart test_terriflux
+    - sudo systemctl restart test_opensankey
   dependencies:
     - test
 
-prod.terriflux.fr:
+prod.opensankey.fr:
   stage: deploy
   tags:
     - dev
   environment:
     name: dev
   only:
-    - terriflux
+    - opensankey
   before_script:
-    - sudo systemctl stop terriflux || true
+    - sudo systemctl stop opensankey || true
   script:
-    - cd /home/ubuntu/terriflux
-    - source terrifluxenv/bin/activate
+    - cd /home/ubuntu/opensankey
+    - source opensankeyenv/bin/activate
     - cd opensankey
     - git pull
     - git checkout opensankey/server/views.py
@@ -166,6 +165,6 @@ prod.terriflux.fr:
     - pip install .
     - mv ../node_modules opensankey/client
     - cd ..
-    - sudo systemctl restart terriflux
+    - sudo systemctl restart opensankey
   dependencies:
     - test
