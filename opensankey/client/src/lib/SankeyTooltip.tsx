@@ -7,7 +7,7 @@ export const nodeTooltipsContent = (
   node: SankeyNode,
 ) => {
   let content = '<p style=\'text-align: center;margin-bottom:0px\'><b>' + node.name + '</b></p>'
-  if ((node.inputLinksId as any).length > 0) {
+  if (node.inputLinksId && (node.inputLinksId as any).length > 0) {
     content += '<b>Entrée</b><ul style=\'margin-bottom:0px\'>';
     (node.inputLinksId as any).forEach((element: any) => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node as any).inputLinksId) as any))
@@ -16,7 +16,7 @@ export const nodeTooltipsContent = (
     })
     content += '</ul>Total : ' + getTotalLinks(data, (node as any).inputLinksId) + '<br>'
   }
-  if ((node.outputLinksId as any).length > 0) {
+  if (node.outputLinksId && (node.outputLinksId as any).length > 0) {
     content += '<b>Sortie</b><ul style=\'margin-bottom:0px\'>';
     (node.outputLinksId as any).forEach((element: any) => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node as any).outputLinksId) as any))
