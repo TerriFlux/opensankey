@@ -2,6 +2,47 @@ import pandas as pd
 import numpy as np
 import math
 
+def parse_sankey_energie_csv(
+    csv_file
+):
+    csv_data = pd.read_csv(
+        csv_file,
+        delimiter=';', encoding='latin-1'
+    )
+    sankey_dict = {}
+    nodes_names = np.unique(np.hstack((csv_data['source'], csv_data['target']))).tolist()
+    for territory in csv_data['code_territoire'].unique():
+        sankey_dict[territory] = {
+            'nodes': [],
+            'links': [],
+        }
+        territory_data = csv_data[csv_data['code_territoire'] == territory]
+        for node_id, node_name in enumerate(nodes_names):
+            sankey_dict[territory]['nodes'].append(
+                {
+                    'id': node_id,
+                    'color': 'grey',
+                    'name': node_name,
+                    'type': 'product',
+                    'orientation': 'vertical'
+                }
+            )
+            id = 0
+        for k, row in territory_data.iterrows():
+            id = id+1
+            source_name = row['source']
+            target_name = row['target']
+            sankey_dict[territory]['links']. append(
+                {
+                    'source_name': source_name,
+                    'target_name': target_name,
+                    'value': [round(row['value'], 1)],
+                    'display_value': 'default',
+                    'color': row['colors']
+                }
+            )
+        break
+    return sankey_dict
 
 def parse_conversions_sheet(
     excel_file,

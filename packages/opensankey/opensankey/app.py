@@ -1,4 +1,7 @@
-from server import create_app
+try:
+    from .server import create_app
+except Exception:
+    from server import create_app
 import flaskfilemanager
 import os
 
