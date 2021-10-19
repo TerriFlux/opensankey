@@ -1,0 +1,1409 @@
+annee;code_territoire;colors;id;id_source;id_target;label;nom_territoire;source;target;type_territoire;value
+2017;200042935;#40de48;1;0;1;imports organo-carburant;CA Haut - Bugey Agglomération;Importations;Organo-carburants;epci;43.55861497752695
+2017;200042935;#40de49;2;1;2;organo-carburant;CA Haut - Bugey Agglomération;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;43.55861497752695
+2017;200042935;#40de50;3;2;3;organo-carburant vecteur;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#40de51;4;2;4;Résidentiel;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#40de52;5;2;5;Tertiaire;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.486335194084698
+2017;200042935;#40de53;6;2;6;Agriculture;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200042935;#40de54;7;2;7;Industrie-déchets;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Transport;epci;43.072279783442255
+2017;200042935;#c5c9d1;8;8;9;Transport;CA Haut - Bugey Agglomération;Importations;Produits pétroliers primaires;epci;0.0
+2017;200042935;#c5c9d1;9;9;10;imports pp primaires;CA Haut - Bugey Agglomération;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200042935;#c5c9d1;10;10;12;pp primaires;CA Haut - Bugey Agglomération;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200042935;#c5c9d1;11;10;13;Raffinerie;CA Haut - Bugey Agglomération;Raffinerie;Exportations;epci;-0.0
+2017;200042935;#c5c9d1;12;10;14;Imports pp secondaires;CA Haut - Bugey Agglomération;Raffinerie;Pertes transformation;epci;0.0
+2017;200042935;#c5c9d1;13;11;12;pp secondaires;CA Haut - Bugey Agglomération;Importations;Produits pétroliers secondaires;epci;697.1740543571416
+2017;200042935;#c5c9d1;14;12;16;Exportations;CA Haut - Bugey Agglomération;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.255158
+2017;200042935;#c5c9d1;15;12;15;Pertes raffinage;CA Haut - Bugey Agglomération;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;696.9188963571426
+2017;200042935;#c5c9d1;16;15;3;pp secondaires vecteur;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;98.9633726450072
+2017;200042935;#c5c9d1;17;15;4;Transformation de l'énergie;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;21.7762122433223
+2017;200042935;#c5c9d1;18;15;5;Importation gaz;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;6.37601105813087
+2017;200042935;#c5c9d1;19;15;6;Gaz;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;25.7133670808413
+2017;200042935;#c5c9d1;20;15;7;Pertes réseaux;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;544.089933329841
+2017;200042935;#f58536;21;17;18;Gaz vecteur;CA Haut - Bugey Agglomération;Importations;Gaz;epci;314.5601699144832
+2017;200042935;#f58536;22;18;19;Imports CMS;CA Haut - Bugey Agglomération;Gaz;Pertes réseaux;epci;1.4008072134055147
+2017;200042935;#f58536;23;18;16;CMS;CA Haut - Bugey Agglomération;Gaz;Transformation de l'énergie;epci;32.997920019975
+2017;200042935;#f58536;24;18;20;CMS vecteur;CA Haut - Bugey Agglomération;Gaz;Gaz - vecteur énergétique ;epci;281.5622498945082
+2017;200042935;#f58536;25;20;3;Imports uranium;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Résidentiel;epci;144.11928882
+2017;200042935;#f58536;26;20;4;Uranium;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Tertiaire;epci;122.230556891444
+2017;200042935;#f58536;27;20;5;Imports biomasse solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.17482113723066706
+2017;200042935;#f58536;28;20;6;Production biommase solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Industrie et déchets;epci;13.1298404132699
+2017;200042935;#f58536;29;20;7;Biomasse solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Transport;epci;0.50693541915815
+2017;200042935;#211e1c;30;21;22;Biomasse solide vecteur;CA Haut - Bugey Agglomération;Importations;CMS;epci;0.583901861667504
+2017;200042935;#211e1c;31;22;16;Production biogaz;CA Haut - Bugey Agglomération;CMS;Transformation de l'énergie;epci;0.0
+2017;200042935;#211e1c;32;22;23;Biogaz;CA Haut - Bugey Agglomération;CMS;CMS - vecteur énergétique ;epci;0.583901861667504
+2017;200042935;#211e1c;33;23;3;Production déchets;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#211e1c;34;23;4;Déchets;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#211e1c;35;23;5;Déchets vecteur;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#211e1c;36;23;6;Production hydraulique;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Industrie et déchets;epci;0.583901861667504
+2017;200042935;#211e1c;37;23;7;Hydroélectricité;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#981ca3;38;24;25;Production éolien;CA Haut - Bugey Agglomération;Importations;Uranium;epci;0.0
+2017;200042935;#981ca3;39;25;16;Eolien;CA Haut - Bugey Agglomération;Uranium;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;40;26;28;Production solaire PV;CA Haut - Bugey Agglomération;Importations;Biomasse solide;epci;33.012386534275066
+2017;200042935;#db0d55;41;27;28;Solaire PV;CA Haut - Bugey Agglomération;Production;Biomasse solide;epci;77.02890191330849
+2017;200042935;#db0d55;42;28;16;Electricité;CA Haut - Bugey Agglomération;Biomasse solide;Transformation de l'énergie;epci;48.077632
+2017;200042935;#db0d55;43;28;29;Production solaire thermique;CA Haut - Bugey Agglomération;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;61.96365644758356
+2017;200042935;#db0d55;44;29;3;Solaire thermique;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Résidentiel;epci;65.9779973564865
+2017;200042935;#db0d55;45;29;4;Production PAC;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Tertiaire;epci;-11.397897143225139
+2017;200042935;#db0d55;46;29;5;Pertes ou torchage;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#db0d55;47;29;6;PAC;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;7.383556234322199
+2017;200042935;#db0d55;48;29;7;Chaleur locale;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#1ca337;49;30;31;Réseaux de chaleur;CA Haut - Bugey Agglomération;Production;Biogaz;epci;0.0
+2017;200042935;#1ca337;50;31;45;Pertes transformation;CA Haut - Bugey Agglomération;Biogaz;Pertes ou torchage;epci;0.0
+2017;200042935;#1ca337;51;31;20;;CA Haut - Bugey Agglomération;Biogaz;Gaz;epci;0.0
+2017;200042935;#1ca337;52;31;16;;CA Haut - Bugey Agglomération;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;58;32;33;;CA Haut - Bugey Agglomération;Production;Déchets;epci;0.0
+2017;200042935;#db0d55;59;33;16;;CA Haut - Bugey Agglomération;Déchets;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;60;33;34;;CA Haut - Bugey Agglomération;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200042935;#db0d55;61;34;3;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#db0d55;62;34;4;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#db0d55;63;34;5;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#db0d55;64;34;6;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200042935;#db0d55;65;34;7;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#3474eb;66;35;36;;CA Haut - Bugey Agglomération;Production;Hydraulique;epci;122.136444
+2017;200042935;#3474eb;67;37;38;;CA Haut - Bugey Agglomération;Production;Eolien;epci;6.78312
+2017;200042935;#faf31e;68;39;40;;CA Haut - Bugey Agglomération;Production;Solaire PV;epci;2.2165384867849296
+2017;200042935;#3474eb;69;36;41;;CA Haut - Bugey Agglomération;Hydraulique;Electricité;epci;122.136444
+2017;200042935;#3474eb;70;38;41;;CA Haut - Bugey Agglomération;Eolien;Electricité;epci;6.78312
+2017;200042935;#faf31e;71;40;41;;CA Haut - Bugey Agglomération;Solaire PV;Electricité;epci;2.2165384867849296
+2017;200042935;#faf31e;72;42;43;;CA Haut - Bugey Agglomération;Production;Solaire thermique;epci;2.23
+2017;200042935;#faf31e;73;44;46;;CA Haut - Bugey Agglomération;Production;PAC;epci;19.11
+2017;200042935;#faf31e;74;43;47;;CA Haut - Bugey Agglomération;Solaire thermique;Chaleur locale;epci;2.23
+2017;200042935;#faf31e;75;46;47;;CA Haut - Bugey Agglomération;PAC;Chaleur locale;epci;19.11
+2017;200042935;#db0d55;76;47;3;;CA Haut - Bugey Agglomération;Chaleur locale;Résidentiel;epci;21.34
+2017;200042935;#db0d55;77;47;6;;CA Haut - Bugey Agglomération;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200042935;#db0d55;78;48;19;;CA Haut - Bugey Agglomération;Chaleur RDC;Pertes réseaux;epci;3.067785500000003
+2017;200042935;#db0d55;79;48;3;;CA Haut - Bugey Agglomération;Chaleur RDC;Résidentiel;epci;33.224116965
+2017;200042935;#db0d55;80;48;4;;CA Haut - Bugey Agglomération;Chaleur RDC;Tertiaire;epci;18.069256595000002
+2017;200042935;#db0d55;81;48;5;;CA Haut - Bugey Agglomération;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;1.16575849
+2017;200042935;#db0d55;82;48;6;;CA Haut - Bugey Agglomération;Chaleur RDC;Industrie et déchets;epci;5.828792450000001
+2017;200042935;#3474eb;83;16;41;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Electricité;epci;7.99
+2017;200042935;#db0d55;84;16;48;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Chaleur RDC;epci;61.35571
+2017;200042935;#db0d55;85;16;47;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200042935;#c5c9d1;86;16;49;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Pertes transformation;epci;11.985000019974999
+2017;200042935;#3474eb;87;41;3;;CA Haut - Bugey Agglomération;Electricité;Résidentiel;epci;151.595537687203
+2017;200042935;#3474eb;88;41;4;;CA Haut - Bugey Agglomération;Electricité;Tertiaire;epci;89.8720146237775
+2017;200042935;#3474eb;89;41;5;;CA Haut - Bugey Agglomération;Electricité;Agriculture, sylviculture et aquaculture;epci;1.61371760161434
+2017;200042935;#3474eb;90;41;6;;CA Haut - Bugey Agglomération;Electricité;Industrie et déchets;epci;420.3770231092565
+2017;200042935;#3474eb;91;41;7;;CA Haut - Bugey Agglomération;Electricité;Transport;epci;2.240336311404284
+2017;200042935;#3474eb;92;41;19;;CA Haut - Bugey Agglomération;Electricité;Pertes réseaux;epci;12.52134922381064
+2017;200042935;#3474eb;93;41;13;;CA Haut - Bugey Agglomération;Electricité;Exportations;epci;-539.0938760702813
+2017;200073401;#40de48;1;0;1;imports organo-carburant;CC Mézenc-Loire-Meygal;Importations;Organo-carburants;epci;6.4403121079978805
+2017;200073401;#40de49;2;1;2;organo-carburant;CC Mézenc-Loire-Meygal;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;6.4403121079978805
+2017;200073401;#40de50;3;2;3;organo-carburant vecteur;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#40de51;4;2;4;Résidentiel;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#40de52;5;2;5;Tertiaire;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.58743616596342
+2017;200073401;#40de53;6;2;6;Agriculture;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200073401;#40de54;7;2;7;Industrie-déchets;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Transport;epci;4.85287594203446
+2017;200073401;#c5c9d1;8;8;9;Transport;CC Mézenc-Loire-Meygal;Importations;Produits pétroliers primaires;epci;0.0
+2017;200073401;#c5c9d1;9;9;10;imports pp primaires;CC Mézenc-Loire-Meygal;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200073401;#c5c9d1;10;10;12;pp primaires;CC Mézenc-Loire-Meygal;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200073401;#c5c9d1;11;10;13;Raffinerie;CC Mézenc-Loire-Meygal;Raffinerie;Exportations;epci;-0.0
+2017;200073401;#c5c9d1;12;10;14;Imports pp secondaires;CC Mézenc-Loire-Meygal;Raffinerie;Pertes transformation;epci;0.0
+2017;200073401;#c5c9d1;13;11;12;pp secondaires;CC Mézenc-Loire-Meygal;Importations;Produits pétroliers secondaires;epci;134.94635565920993
+2017;200073401;#c5c9d1;14;12;16;Exportations;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200073401;#c5c9d1;15;12;15;Pertes raffinage;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;134.94635565920998
+2017;200073401;#c5c9d1;16;15;3;pp secondaires vecteur;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;43.3444493997376
+2017;200073401;#c5c9d1;17;15;4;Transformation de l'énergie;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;9.08951845343308
+2017;200073401;#c5c9d1;18;15;5;Importation gaz;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;19.481908129438
+2017;200073401;#c5c9d1;19;15;6;Gaz;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;2.28373131474269
+2017;200073401;#c5c9d1;20;15;7;Pertes réseaux;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;60.7467483618586
+2017;200073401;#f58536;21;17;18;Gaz vecteur;CC Mézenc-Loire-Meygal;Importations;Gaz;epci;5.443799624191666
+2017;200073401;#f58536;22;18;19;Imports CMS;CC Mézenc-Loire-Meygal;Gaz;Pertes réseaux;epci;0.027083580219859058
+2017;200073401;#f58536;23;18;16;CMS;CC Mézenc-Loire-Meygal;Gaz;Transformation de l'énergie;epci;0.0
+2017;200073401;#f58536;24;18;20;CMS vecteur;CC Mézenc-Loire-Meygal;Gaz;Gaz - vecteur énergétique ;epci;5.443799624191666
+2017;200073401;#f58536;25;20;3;Imports uranium;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Résidentiel;epci;4.83570000000001
+2017;200073401;#f58536;26;20;4;Uranium;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Tertiaire;epci;0.553624534678482
+2017;200073401;#f58536;27;20;5;Imports biomasse solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.01374107276403218
+2017;200073401;#f58536;28;20;6;Production biommase solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Industrie et déchets;epci;0.0136504365292824
+2017;200073401;#f58536;29;20;7;Biomasse solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#211e1c;30;21;22;Biomasse solide vecteur;CC Mézenc-Loire-Meygal;Importations;CMS;epci;0.403065435674052
+2017;200073401;#211e1c;31;22;16;Production biogaz;CC Mézenc-Loire-Meygal;CMS;Transformation de l'énergie;epci;0.0
+2017;200073401;#211e1c;32;22;23;Biogaz;CC Mézenc-Loire-Meygal;CMS;CMS - vecteur énergétique ;epci;0.403065435674052
+2017;200073401;#211e1c;33;23;3;Production déchets;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#211e1c;34;23;4;Déchets;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#211e1c;35;23;5;Déchets vecteur;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#211e1c;36;23;6;Production hydraulique;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Industrie et déchets;epci;0.403065435674052
+2017;200073401;#211e1c;37;23;7;Hydroélectricité;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#981ca3;38;24;25;Production éolien;CC Mézenc-Loire-Meygal;Importations;Uranium;epci;0.0
+2017;200073401;#981ca3;39;25;16;Eolien;CC Mézenc-Loire-Meygal;Uranium;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;40;26;28;Production solaire PV;CC Mézenc-Loire-Meygal;Importations;Biomasse solide;epci;10.75012338007866
+2017;200073401;#db0d55;41;27;28;Solaire PV;CC Mézenc-Loire-Meygal;Production;Biomasse solide;epci;25.083621220183538
+2017;200073401;#db0d55;42;28;16;Electricité;CC Mézenc-Loire-Meygal;Biomasse solide;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;43;28;29;Production solaire thermique;CC Mézenc-Loire-Meygal;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;35.8337446002622
+2017;200073401;#db0d55;44;29;3;Solaire thermique;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Résidentiel;epci;35.0158128531069
+2017;200073401;#db0d55;45;29;4;Production PAC;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.706109965850183
+2017;200073401;#db0d55;46;29;5;Pertes ou torchage;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;47;29;6;PAC;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.111821781305115
+2017;200073401;#db0d55;48;29;7;Chaleur locale;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#1ca337;49;30;31;Réseaux de chaleur;CC Mézenc-Loire-Meygal;Production;Biogaz;epci;0.0
+2017;200073401;#1ca337;50;31;45;Pertes transformation;CC Mézenc-Loire-Meygal;Biogaz;Pertes ou torchage;epci;0.0
+2017;200073401;#1ca337;51;31;20;;CC Mézenc-Loire-Meygal;Biogaz;Gaz;epci;0.0
+2017;200073401;#1ca337;52;31;16;;CC Mézenc-Loire-Meygal;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;58;32;33;;CC Mézenc-Loire-Meygal;Production;Déchets;epci;0.0
+2017;200073401;#db0d55;59;33;16;;CC Mézenc-Loire-Meygal;Déchets;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;60;33;34;;CC Mézenc-Loire-Meygal;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200073401;#db0d55;61;34;3;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#db0d55;62;34;4;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#db0d55;63;34;5;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;64;34;6;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200073401;#db0d55;65;34;7;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#3474eb;66;35;36;;CC Mézenc-Loire-Meygal;Production;Hydraulique;epci;0.455198
+2017;200073401;#3474eb;67;37;38;;CC Mézenc-Loire-Meygal;Production;Eolien;epci;17.25356
+2017;200073401;#faf31e;68;39;40;;CC Mézenc-Loire-Meygal;Production;Solaire PV;epci;2.5625955377767933
+2017;200073401;#3474eb;69;36;41;;CC Mézenc-Loire-Meygal;Hydraulique;Electricité;epci;0.455198
+2017;200073401;#3474eb;70;38;41;;CC Mézenc-Loire-Meygal;Eolien;Electricité;epci;17.25356
+2017;200073401;#faf31e;71;40;41;;CC Mézenc-Loire-Meygal;Solaire PV;Electricité;epci;2.5625955377767933
+2017;200073401;#faf31e;72;42;43;;CC Mézenc-Loire-Meygal;Production;Solaire thermique;epci;0.42
+2017;200073401;#faf31e;73;44;46;;CC Mézenc-Loire-Meygal;Production;PAC;epci;8.81
+2017;200073401;#faf31e;74;43;47;;CC Mézenc-Loire-Meygal;Solaire thermique;Chaleur locale;epci;0.42
+2017;200073401;#faf31e;75;46;47;;CC Mézenc-Loire-Meygal;PAC;Chaleur locale;epci;8.81
+2017;200073401;#db0d55;76;47;3;;CC Mézenc-Loire-Meygal;Chaleur locale;Résidentiel;epci;9.23
+2017;200073401;#db0d55;77;47;6;;CC Mézenc-Loire-Meygal;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200073401;#db0d55;78;48;19;;CC Mézenc-Loire-Meygal;Chaleur RDC;Pertes réseaux;epci;0.0
+2017;200073401;#db0d55;79;48;3;;CC Mézenc-Loire-Meygal;Chaleur RDC;Résidentiel;epci;0.0
+2017;200073401;#db0d55;80;48;4;;CC Mézenc-Loire-Meygal;Chaleur RDC;Tertiaire;epci;0.0
+2017;200073401;#db0d55;81;48;5;;CC Mézenc-Loire-Meygal;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;82;48;6;;CC Mézenc-Loire-Meygal;Chaleur RDC;Industrie et déchets;epci;0.0
+2017;200073401;#3474eb;83;16;41;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Electricité;epci;0.0
+2017;200073401;#db0d55;84;16;48;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Chaleur RDC;epci;0.0
+2017;200073401;#db0d55;85;16;47;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200073401;#c5c9d1;86;16;49;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200073401;#3474eb;87;41;3;;CC Mézenc-Loire-Meygal;Electricité;Résidentiel;epci;29.6575219999999
+2017;200073401;#3474eb;88;41;4;;CC Mézenc-Loire-Meygal;Electricité;Tertiaire;epci;12.4793444385371
+2017;200073401;#3474eb;89;41;5;;CC Mézenc-Loire-Meygal;Electricité;Agriculture, sylviculture et aquaculture;epci;3.6380033536566
+2017;200073401;#3474eb;90;41;6;;CC Mézenc-Loire-Meygal;Electricité;Industrie et déchets;epci;6.777973888541203
+2017;200073401;#3474eb;91;41;7;;CC Mézenc-Loire-Meygal;Electricité;Transport;epci;0.0387820220350487
+2017;200073401;#3474eb;92;41;19;;CC Mézenc-Loire-Meygal;Electricité;Pertes réseaux;epci;1.8244218183999108
+2017;200073401;#3474eb;93;41;13;;CC Mézenc-Loire-Meygal;Electricité;Exportations;epci;-34.14469398339297
+2017;200071215;#40de48;1;0;1;imports organo-carburant;CC Chavanon Combrailles et Volcans;Importations;Organo-carburants;epci;21.063458074200867
+2017;200071215;#40de49;2;1;2;organo-carburant;CC Chavanon Combrailles et Volcans;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;21.063458074200867
+2017;200071215;#40de50;3;2;3;organo-carburant vecteur;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#40de51;4;2;4;Résidentiel;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#40de52;5;2;5;Tertiaire;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;3.20259388718187
+2017;200071215;#40de53;6;2;6;Agriculture;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071215;#40de54;7;2;7;Industrie-déchets;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Transport;epci;17.860864187018997
+2017;200071215;#c5c9d1;8;8;9;Transport;CC Chavanon Combrailles et Volcans;Importations;Produits pétroliers primaires;epci;0.0
+2017;200071215;#c5c9d1;9;9;10;imports pp primaires;CC Chavanon Combrailles et Volcans;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200071215;#c5c9d1;10;10;12;pp primaires;CC Chavanon Combrailles et Volcans;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200071215;#c5c9d1;11;10;13;Raffinerie;CC Chavanon Combrailles et Volcans;Raffinerie;Exportations;epci;-0.0
+2017;200071215;#c5c9d1;12;10;14;Imports pp secondaires;CC Chavanon Combrailles et Volcans;Raffinerie;Pertes transformation;epci;0.0
+2017;200071215;#c5c9d1;13;11;12;pp secondaires;CC Chavanon Combrailles et Volcans;Importations;Produits pétroliers secondaires;epci;311.84127521395476
+2017;200071215;#c5c9d1;14;12;16;Exportations;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.37113
+2017;200071215;#c5c9d1;15;12;15;Pertes raffinage;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;311.470145213955
+2017;200071215;#c5c9d1;16;15;3;pp secondaires vecteur;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;36.075300804101
+2017;200071215;#c5c9d1;17;15;4;Transformation de l'énergie;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;6.34422601126574
+2017;200071215;#c5c9d1;18;15;5;Importation gaz;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;39.1315998501529
+2017;200071215;#c5c9d1;19;15;6;Gaz;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;3.79405728541767
+2017;200071215;#c5c9d1;20;15;7;Pertes réseaux;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;226.1249612630177
+2017;200071215;#f58536;21;17;18;Gaz vecteur;CC Chavanon Combrailles et Volcans;Importations;Gaz;epci;6.3128100143863515
+2017;200071215;#f58536;22;18;19;Imports CMS;CC Chavanon Combrailles et Volcans;Gaz;Pertes réseaux;epci;0.03140701499694705
+2017;200071215;#f58536;23;18;16;CMS;CC Chavanon Combrailles et Volcans;Gaz;Transformation de l'énergie;epci;0.0
+2017;200071215;#f58536;24;18;20;CMS vecteur;CC Chavanon Combrailles et Volcans;Gaz;Gaz - vecteur énergétique ;epci;6.3128100143863515
+2017;200071215;#f58536;25;20;3;Imports uranium;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Résidentiel;epci;5.63220000000001
+2017;200071215;#f58536;26;20;4;Uranium;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Tertiaire;epci;0.618692537690001
+2017;200071215;#f58536;27;20;5;Imports biomasse solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.009200063665787616
+2017;200071215;#f58536;28;20;6;Production biommase solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Industrie et déchets;epci;0.021310398033606
+2017;200071215;#f58536;29;20;7;Biomasse solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#211e1c;30;21;22;Biomasse solide vecteur;CC Chavanon Combrailles et Volcans;Importations;CMS;epci;0.112602981937386
+2017;200071215;#211e1c;31;22;16;Production biogaz;CC Chavanon Combrailles et Volcans;CMS;Transformation de l'énergie;epci;0.0
+2017;200071215;#211e1c;32;22;23;Biogaz;CC Chavanon Combrailles et Volcans;CMS;CMS - vecteur énergétique ;epci;0.112602981937386
+2017;200071215;#211e1c;33;23;3;Production déchets;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#211e1c;34;23;4;Déchets;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#211e1c;35;23;5;Déchets vecteur;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#211e1c;36;23;6;Production hydraulique;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Industrie et déchets;epci;0.112602981937386
+2017;200071215;#211e1c;37;23;7;Hydroélectricité;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#981ca3;38;24;25;Production éolien;CC Chavanon Combrailles et Volcans;Importations;Uranium;epci;0.0
+2017;200071215;#981ca3;39;25;16;Eolien;CC Chavanon Combrailles et Volcans;Uranium;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;40;26;28;Production solaire PV;CC Chavanon Combrailles et Volcans;Importations;Biomasse solide;epci;16.451457192067334
+2017;200071215;#db0d55;41;27;28;Solaire PV;CC Chavanon Combrailles et Volcans;Production;Biomasse solide;epci;38.386733448157116
+2017;200071215;#db0d55;42;28;16;Electricité;CC Chavanon Combrailles et Volcans;Biomasse solide;Transformation de l'énergie;epci;0.99158
+2017;200071215;#db0d55;43;28;29;Production solaire thermique;CC Chavanon Combrailles et Volcans;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;53.846610640224455
+2017;200071215;#db0d55;44;29;3;Solaire thermique;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Résidentiel;epci;45.8433678286467
+2017;200071215;#db0d55;45;29;4;Production PAC;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.37096969410251196
+2017;200071215;#db0d55;46;29;5;Pertes ou torchage;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#db0d55;47;29;6;PAC;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;7.63227311747524
+2017;200071215;#db0d55;48;29;7;Chaleur locale;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#1ca337;49;30;31;Réseaux de chaleur;CC Chavanon Combrailles et Volcans;Production;Biogaz;epci;0.0
+2017;200071215;#1ca337;50;31;45;Pertes transformation;CC Chavanon Combrailles et Volcans;Biogaz;Pertes ou torchage;epci;0.0
+2017;200071215;#1ca337;51;31;20;;CC Chavanon Combrailles et Volcans;Biogaz;Gaz;epci;0.0
+2017;200071215;#1ca337;52;31;16;;CC Chavanon Combrailles et Volcans;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;58;32;33;;CC Chavanon Combrailles et Volcans;Production;Déchets;epci;0.0
+2017;200071215;#db0d55;59;33;16;;CC Chavanon Combrailles et Volcans;Déchets;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;60;33;34;;CC Chavanon Combrailles et Volcans;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200071215;#db0d55;61;34;3;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#db0d55;62;34;4;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#db0d55;63;34;5;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#db0d55;64;34;6;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071215;#db0d55;65;34;7;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#3474eb;66;35;36;;CC Chavanon Combrailles et Volcans;Production;Hydraulique;epci;17.280429
+2017;200071215;#3474eb;67;37;38;;CC Chavanon Combrailles et Volcans;Production;Eolien;epci;0.0
+2017;200071215;#faf31e;68;39;40;;CC Chavanon Combrailles et Volcans;Production;Solaire PV;epci;4.572177298773485
+2017;200071215;#3474eb;69;36;41;;CC Chavanon Combrailles et Volcans;Hydraulique;Electricité;epci;17.280429
+2017;200071215;#3474eb;70;38;41;;CC Chavanon Combrailles et Volcans;Eolien;Electricité;epci;0.0
+2017;200071215;#faf31e;71;40;41;;CC Chavanon Combrailles et Volcans;Solaire PV;Electricité;epci;4.572177298773485
+2017;200071215;#faf31e;72;42;43;;CC Chavanon Combrailles et Volcans;Production;Solaire thermique;epci;0.55
+2017;200071215;#faf31e;73;44;46;;CC Chavanon Combrailles et Volcans;Production;PAC;epci;9.93
+2017;200071215;#faf31e;74;43;47;;CC Chavanon Combrailles et Volcans;Solaire thermique;Chaleur locale;epci;0.55
+2017;200071215;#faf31e;75;46;47;;CC Chavanon Combrailles et Volcans;PAC;Chaleur locale;epci;9.93
+2017;200071215;#db0d55;76;47;3;;CC Chavanon Combrailles et Volcans;Chaleur locale;Résidentiel;epci;10.48
+2017;200071215;#db0d55;77;47;6;;CC Chavanon Combrailles et Volcans;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200071215;#db0d55;78;48;19;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Pertes réseaux;epci;0.06813550000000007
+2017;200071215;#db0d55;79;48;3;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Résidentiel;epci;0.7379074649999999
+2017;200071215;#db0d55;80;48;4;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Tertiaire;epci;0.401318095
+2017;200071215;#db0d55;81;48;5;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.02589149
+2017;200071215;#db0d55;82;48;6;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Industrie et déchets;epci;0.12945745
+2017;200071215;#3474eb;83;16;41;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Electricité;epci;0.0
+2017;200071215;#db0d55;84;16;48;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Chaleur RDC;epci;1.36271
+2017;200071215;#db0d55;85;16;47;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200071215;#c5c9d1;86;16;49;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200071215;#3474eb;87;41;3;;CC Chavanon Combrailles et Volcans;Electricité;Résidentiel;epci;36.188171145819
+2017;200071215;#3474eb;88;41;4;;CC Chavanon Combrailles et Volcans;Electricité;Tertiaire;epci;30.2761963029011
+2017;200071215;#3474eb;89;41;5;;CC Chavanon Combrailles et Volcans;Electricité;Agriculture, sylviculture et aquaculture;epci;6.09196193406336
+2017;200071215;#3474eb;90;41;6;;CC Chavanon Combrailles et Volcans;Electricité;Industrie et déchets;epci;8.93218433825503
+2017;200071215;#3474eb;91;41;7;;CC Chavanon Combrailles et Volcans;Electricité;Transport;epci;0.0644574331305948
+2017;200071215;#3474eb;92;41;19;;CC Chavanon Combrailles et Volcans;Electricité;Pertes réseaux;epci;1.9667345668896132
+2017;200071215;#3474eb;93;41;13;;CC Chavanon Combrailles et Volcans;Electricité;Exportations;epci;-61.66709942228521
+2017;200065894;#40de48;1;0;1;imports organo-carburant;CC de Forez-Est;Importations;Organo-carburants;epci;55.778928036401254
+2017;200065894;#40de49;2;1;2;organo-carburant;CC de Forez-Est;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;55.778928036401254
+2017;200065894;#40de50;3;2;3;organo-carburant vecteur;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#40de51;4;2;4;Résidentiel;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#40de52;5;2;5;Tertiaire;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;2.25203695363603
+2017;200065894;#40de53;6;2;6;Agriculture;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200065894;#40de54;7;2;7;Industrie-déchets;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Transport;epci;53.526891082765225
+2017;200065894;#c5c9d1;8;8;9;Transport;CC de Forez-Est;Importations;Produits pétroliers primaires;epci;0.0
+2017;200065894;#c5c9d1;9;9;10;imports pp primaires;CC de Forez-Est;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200065894;#c5c9d1;10;10;12;pp primaires;CC de Forez-Est;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200065894;#c5c9d1;11;10;13;Raffinerie;CC de Forez-Est;Raffinerie;Exportations;epci;-0.0
+2017;200065894;#c5c9d1;12;10;14;Imports pp secondaires;CC de Forez-Est;Raffinerie;Pertes transformation;epci;0.0
+2017;200065894;#c5c9d1;13;11;12;pp secondaires;CC de Forez-Est;Importations;Produits pétroliers secondaires;epci;952.7886408725553
+2017;200065894;#c5c9d1;14;12;16;Exportations;CC de Forez-Est;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.18000000017999998
+2017;200065894;#c5c9d1;15;12;15;Pertes raffinage;CC de Forez-Est;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;952.6086408723751
+2017;200065894;#c5c9d1;16;15;3;pp secondaires vecteur;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;94.849010752206
+2017;200065894;#c5c9d1;17;15;4;Transformation de l'énergie;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;19.0674777748363
+2017;200065894;#c5c9d1;18;15;5;Importation gaz;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;29.7977279741927
+2017;200065894;#c5c9d1;19;15;6;Gaz;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;130.339162107074
+2017;200065894;#c5c9d1;20;15;7;Pertes réseaux;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;678.5552622640661
+2017;200065894;#f58536;21;17;18;Gaz vecteur;CC de Forez-Est;Importations;Gaz;epci;563.5705177186284
+2017;200065894;#f58536;22;18;19;Imports CMS;CC de Forez-Est;Gaz;Pertes réseaux;epci;2.7971418791971585
+2017;200065894;#f58536;23;18;16;CMS;CC de Forez-Est;Gaz;Transformation de l'énergie;epci;1.345
+2017;200065894;#f58536;24;18;20;CMS vecteur;CC de Forez-Est;Gaz;Gaz - vecteur énergétique ;epci;562.2255177186283
+2017;200065894;#f58536;25;20;3;Imports uranium;CC de Forez-Est;Gaz - vecteur énergétique ;Résidentiel;epci;143.9079825
+2017;200065894;#f58536;26;20;4;Uranium;CC de Forez-Est;Gaz - vecteur énergétique ;Tertiaire;epci;54.714665838132404
+2017;200065894;#f58536;27;20;5;Imports biomasse solide;CC de Forez-Est;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.7432018748447164
+2017;200065894;#f58536;28;20;6;Production biommase solide;CC de Forez-Est;Gaz - vecteur énergétique ;Industrie et déchets;epci;360.06252562645403
+2017;200065894;#f58536;29;20;7;Biomasse solide;CC de Forez-Est;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#211e1c;30;21;22;Biomasse solide vecteur;CC de Forez-Est;Importations;CMS;epci;0.887161920170533
+2017;200065894;#211e1c;31;22;16;Production biogaz;CC de Forez-Est;CMS;Transformation de l'énergie;epci;0.0
+2017;200065894;#211e1c;32;22;23;Biogaz;CC de Forez-Est;CMS;CMS - vecteur énergétique ;epci;0.887161920170533
+2017;200065894;#211e1c;33;23;3;Production déchets;CC de Forez-Est;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#211e1c;34;23;4;Déchets;CC de Forez-Est;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#211e1c;35;23;5;Déchets vecteur;CC de Forez-Est;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#211e1c;36;23;6;Production hydraulique;CC de Forez-Est;CMS - vecteur énergétique ;Industrie et déchets;epci;0.887161920170533
+2017;200065894;#211e1c;37;23;7;Hydroélectricité;CC de Forez-Est;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#981ca3;38;24;25;Production éolien;CC de Forez-Est;Importations;Uranium;epci;0.0
+2017;200065894;#981ca3;39;25;16;Eolien;CC de Forez-Est;Uranium;Transformation de l'énergie;epci;0.0
+2017;200065894;#db0d55;40;26;28;Production solaire PV;CC de Forez-Est;Importations;Biomasse solide;epci;35.770461534114105
+2017;200065894;#db0d55;41;27;28;Solaire PV;CC de Forez-Est;Production;Biomasse solide;epci;83.46441024626624
+2017;200065894;#db0d55;42;28;16;Electricité;CC de Forez-Est;Biomasse solide;Transformation de l'énergie;epci;7.821474
+2017;200065894;#db0d55;43;28;29;Production solaire thermique;CC de Forez-Est;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;111.41339778038035
+2017;200065894;#db0d55;44;29;3;Solaire thermique;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Résidentiel;epci;110.09358224488301
+2017;200065894;#db0d55;45;29;4;Production PAC;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.015975972577780162
+2017;200065894;#db0d55;46;29;5;Pertes ou torchage;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#db0d55;47;29;6;PAC;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;1.30383956291957
+2017;200065894;#db0d55;48;29;7;Chaleur locale;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#1ca337;49;30;31;Réseaux de chaleur;CC de Forez-Est;Production;Biogaz;epci;1.5825624999999999
+2017;200065894;#1ca337;50;31;45;Pertes transformation;CC de Forez-Est;Biogaz;Pertes ou torchage;epci;0.03751249999999995
+2017;200065894;#1ca337;51;31;20;;CC de Forez-Est;Biogaz;Gaz;epci;0.0
+2017;200065894;#1ca337;52;31;16;;CC de Forez-Est;Biogaz;Transformation de l'énergie;epci;1.5450499999999998
+2017;200065894;#db0d55;58;32;33;;CC de Forez-Est;Production;Déchets;epci;0.0
+2017;200065894;#db0d55;59;33;16;;CC de Forez-Est;Déchets;Transformation de l'énergie;epci;0.0
+2017;200065894;#db0d55;60;33;34;;CC de Forez-Est;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200065894;#db0d55;61;34;3;;CC de Forez-Est;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#db0d55;62;34;4;;CC de Forez-Est;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#db0d55;63;34;5;;CC de Forez-Est;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#db0d55;64;34;6;;CC de Forez-Est;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200065894;#db0d55;65;34;7;;CC de Forez-Est;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#3474eb;66;35;36;;CC de Forez-Est;Production;Hydraulique;epci;0.0
+2017;200065894;#3474eb;67;37;38;;CC de Forez-Est;Production;Eolien;epci;0.0
+2017;200065894;#faf31e;68;39;40;;CC de Forez-Est;Production;Solaire PV;epci;5.033787076563307
+2017;200065894;#3474eb;69;36;41;;CC de Forez-Est;Hydraulique;Electricité;epci;0.0
+2017;200065894;#3474eb;70;38;41;;CC de Forez-Est;Eolien;Electricité;epci;0.0
+2017;200065894;#faf31e;71;40;41;;CC de Forez-Est;Solaire PV;Electricité;epci;5.033787076563307
+2017;200065894;#faf31e;72;42;43;;CC de Forez-Est;Production;Solaire thermique;epci;2.24
+2017;200065894;#faf31e;73;44;46;;CC de Forez-Est;Production;PAC;epci;27.57
+2017;200065894;#faf31e;74;43;47;;CC de Forez-Est;Solaire thermique;Chaleur locale;epci;2.24
+2017;200065894;#faf31e;75;46;47;;CC de Forez-Est;PAC;Chaleur locale;epci;27.57
+2017;200065894;#db0d55;76;47;3;;CC de Forez-Est;Chaleur locale;Résidentiel;epci;29.810000000000002
+2017;200065894;#db0d55;77;47;6;;CC de Forez-Est;Chaleur locale;Industrie et déchets;epci;0.7080499999999998
+2017;200065894;#db0d55;78;48;19;;CC de Forez-Est;Chaleur RDC;Pertes réseaux;epci;0.45832370000000044
+2017;200065894;#db0d55;79;48;3;;CC de Forez-Est;Chaleur RDC;Résidentiel;epci;4.963645670999999
+2017;200065894;#db0d55;80;48;4;;CC de Forez-Est;Chaleur RDC;Tertiaire;epci;2.699526593
+2017;200065894;#db0d55;81;48;5;;CC de Forez-Est;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.174163006
+2017;200065894;#db0d55;82;48;6;;CC de Forez-Est;Chaleur RDC;Industrie et déchets;epci;0.87081503
+2017;200065894;#3474eb;83;16;41;;CC de Forez-Est;Transformation de l'énergie;Electricité;epci;0.6180000000000001
+2017;200065894;#db0d55;84;16;48;;CC de Forez-Est;Transformation de l'énergie;Chaleur RDC;epci;9.166474000000001
+2017;200065894;#db0d55;85;16;47;;CC de Forez-Est;Transformation de l'énergie;Chaleur locale;epci;0.7080499999999998
+2017;200065894;#c5c9d1;86;16;49;;CC de Forez-Est;Transformation de l'énergie;Pertes transformation;epci;0.39900000018000004
+2017;200065894;#3474eb;87;41;3;;CC de Forez-Est;Electricité;Résidentiel;epci;166.829073297397
+2017;200065894;#3474eb;88;41;4;;CC de Forez-Est;Electricité;Tertiaire;epci;100.066365599553
+2017;200065894;#3474eb;89;41;5;;CC de Forez-Est;Electricité;Agriculture, sylviculture et aquaculture;epci;8.2912426935732
+2017;200065894;#3474eb;90;41;6;;CC de Forez-Est;Electricité;Industrie et déchets;epci;171.41944900187374
+2017;200065894;#3474eb;91;41;7;;CC de Forez-Est;Electricité;Transport;epci;0.250334058355654
+2017;200065894;#3474eb;92;41;19;;CC de Forez-Est;Electricité;Pertes réseaux;epci;0.5086608368906975
+2017;200065894;#3474eb;93;41;13;;CC de Forez-Est;Electricité;Exportations;epci;-441.71333841108
+2017;243800984;#40de48;1;0;1;imports organo-carburant;CA du Pays Voironnais;Importations;Organo-carburants;epci;71.97299582348239
+2017;243800984;#40de49;2;1;2;organo-carburant;CA du Pays Voironnais;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;71.97299582348239
+2017;243800984;#40de50;3;2;3;organo-carburant vecteur;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#40de51;4;2;4;Résidentiel;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#40de52;5;2;5;Tertiaire;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.916076071556722
+2017;243800984;#40de53;6;2;6;Agriculture;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;243800984;#40de54;7;2;7;Industrie-déchets;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Transport;epci;71.05691975192568
+2017;243800984;#c5c9d1;8;8;9;Transport;CA du Pays Voironnais;Importations;Produits pétroliers primaires;epci;0.0
+2017;243800984;#c5c9d1;9;9;10;imports pp primaires;CA du Pays Voironnais;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;243800984;#c5c9d1;10;10;12;pp primaires;CA du Pays Voironnais;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;243800984;#c5c9d1;11;10;13;Raffinerie;CA du Pays Voironnais;Raffinerie;Exportations;epci;-0.0
+2017;243800984;#c5c9d1;12;10;14;Imports pp secondaires;CA du Pays Voironnais;Raffinerie;Pertes transformation;epci;0.0
+2017;243800984;#c5c9d1;13;11;12;pp secondaires;CA du Pays Voironnais;Importations;Produits pétroliers secondaires;epci;1086.1815088839517
+2017;243800984;#c5c9d1;14;12;16;Exportations;CA du Pays Voironnais;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;243800984;#c5c9d1;15;12;15;Pertes raffinage;CA du Pays Voironnais;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;1086.1815088839526
+2017;243800984;#c5c9d1;16;15;3;pp secondaires vecteur;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;99.4195576586367
+2017;243800984;#c5c9d1;17;15;4;Transformation de l'énergie;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;37.6239459920762
+2017;243800984;#c5c9d1;18;15;5;Importation gaz;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;12.7499827751965
+2017;243800984;#c5c9d1;19;15;6;Gaz;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;46.9594667606035
+2017;243800984;#c5c9d1;20;15;7;Pertes réseaux;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;889.4285556974397
+2017;243800984;#f58536;21;17;18;Gaz vecteur;CA du Pays Voironnais;Importations;Gaz;epci;451.3512810912303
+2017;243800984;#f58536;22;18;19;Imports CMS;CA du Pays Voironnais;Gaz;Pertes réseaux;epci;2.2355536372698044
+2017;243800984;#f58536;23;18;16;CMS;CA du Pays Voironnais;Gaz;Transformation de l'énergie;epci;2.005
+2017;243800984;#f58536;24;18;20;CMS vecteur;CA du Pays Voironnais;Gaz;Gaz - vecteur énergétique ;epci;449.3462810912303
+2017;243800984;#f58536;25;20;3;Imports uranium;CA du Pays Voironnais;Gaz - vecteur énergétique ;Résidentiel;epci;215.390064767219
+2017;243800984;#f58536;26;20;4;Uranium;CA du Pays Voironnais;Gaz - vecteur énergétique ;Tertiaire;epci;69.01961234458629
+2017;243800984;#f58536;27;20;5;Imports biomasse solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.240488374773606
+2017;243800984;#f58536;28;20;6;Production biommase solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Industrie et déchets;epci;160.717894850889
+2017;243800984;#f58536;29;20;7;Biomasse solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Transport;epci;0.742667116492609
+2017;243800984;#211e1c;30;21;22;Biomasse solide vecteur;CA du Pays Voironnais;Importations;CMS;epci;1.27411867505916
+2017;243800984;#211e1c;31;22;16;Production biogaz;CA du Pays Voironnais;CMS;Transformation de l'énergie;epci;0.0
+2017;243800984;#211e1c;32;22;23;Biogaz;CA du Pays Voironnais;CMS;CMS - vecteur énergétique ;epci;1.27411867505916
+2017;243800984;#211e1c;33;23;3;Production déchets;CA du Pays Voironnais;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#211e1c;34;23;4;Déchets;CA du Pays Voironnais;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#211e1c;35;23;5;Déchets vecteur;CA du Pays Voironnais;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#211e1c;36;23;6;Production hydraulique;CA du Pays Voironnais;CMS - vecteur énergétique ;Industrie et déchets;epci;1.27411867505916
+2017;243800984;#211e1c;37;23;7;Hydroélectricité;CA du Pays Voironnais;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#981ca3;38;24;25;Production éolien;CA du Pays Voironnais;Importations;Uranium;epci;0.0
+2017;243800984;#981ca3;39;25;16;Eolien;CA du Pays Voironnais;Uranium;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;40;26;28;Production solaire PV;CA du Pays Voironnais;Importations;Biomasse solide;epci;42.81993807007781
+2017;243800984;#db0d55;41;27;28;Solaire PV;CA du Pays Voironnais;Production;Biomasse solide;epci;99.91318883018155
+2017;243800984;#db0d55;42;28;16;Electricité;CA du Pays Voironnais;Biomasse solide;Transformation de l'énergie;epci;13.417
+2017;243800984;#db0d55;43;28;29;Production solaire thermique;CA du Pays Voironnais;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;129.31612690025938
+2017;243800984;#db0d55;44;29;3;Solaire thermique;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Résidentiel;epci;126.263671021404
+2017;243800984;#db0d55;45;29;4;Production PAC;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.35051035099757977
+2017;243800984;#db0d55;46;29;5;Pertes ou torchage;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#db0d55;47;29;6;PAC;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;2.7019455278577897
+2017;243800984;#db0d55;48;29;7;Chaleur locale;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#1ca337;49;30;31;Réseaux de chaleur;CA du Pays Voironnais;Production;Biogaz;epci;0.0
+2017;243800984;#1ca337;50;31;45;Pertes transformation;CA du Pays Voironnais;Biogaz;Pertes ou torchage;epci;0.0
+2017;243800984;#1ca337;51;31;20;;CA du Pays Voironnais;Biogaz;Gaz;epci;0.0
+2017;243800984;#1ca337;52;31;16;;CA du Pays Voironnais;Biogaz;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;58;32;33;;CA du Pays Voironnais;Production;Déchets;epci;0.0
+2017;243800984;#db0d55;59;33;16;;CA du Pays Voironnais;Déchets;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;60;33;34;;CA du Pays Voironnais;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;243800984;#db0d55;61;34;3;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#db0d55;62;34;4;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#db0d55;63;34;5;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#db0d55;64;34;6;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;243800984;#db0d55;65;34;7;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#3474eb;66;35;36;;CA du Pays Voironnais;Production;Hydraulique;epci;2.359366
+2017;243800984;#3474eb;67;37;38;;CA du Pays Voironnais;Production;Eolien;epci;0.0
+2017;243800984;#faf31e;68;39;40;;CA du Pays Voironnais;Production;Solaire PV;epci;4.408196625524942
+2017;243800984;#3474eb;69;36;41;;CA du Pays Voironnais;Hydraulique;Electricité;epci;2.359366
+2017;243800984;#3474eb;70;38;41;;CA du Pays Voironnais;Eolien;Electricité;epci;0.0
+2017;243800984;#faf31e;71;40;41;;CA du Pays Voironnais;Solaire PV;Electricité;epci;4.408196625524942
+2017;243800984;#faf31e;72;42;43;;CA du Pays Voironnais;Production;Solaire thermique;epci;3.32
+2017;243800984;#faf31e;73;44;46;;CA du Pays Voironnais;Production;PAC;epci;30.33
+2017;243800984;#faf31e;74;43;47;;CA du Pays Voironnais;Solaire thermique;Chaleur locale;epci;3.32
+2017;243800984;#faf31e;75;46;47;;CA du Pays Voironnais;PAC;Chaleur locale;epci;30.33
+2017;243800984;#db0d55;76;47;3;;CA du Pays Voironnais;Chaleur locale;Résidentiel;epci;33.65
+2017;243800984;#db0d55;77;47;6;;CA du Pays Voironnais;Chaleur locale;Industrie et déchets;epci;0.0
+2017;243800984;#db0d55;78;48;19;;CA du Pays Voironnais;Chaleur RDC;Pertes réseaux;epci;0.7843000000000007
+2017;243800984;#db0d55;79;48;3;;CA du Pays Voironnais;Chaleur RDC;Résidentiel;epci;8.493969
+2017;243800984;#db0d55;80;48;4;;CA du Pays Voironnais;Chaleur RDC;Tertiaire;epci;4.619527
+2017;243800984;#db0d55;81;48;5;;CA du Pays Voironnais;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.298034
+2017;243800984;#db0d55;82;48;6;;CA du Pays Voironnais;Chaleur RDC;Industrie et déchets;epci;1.49017
+2017;243800984;#3474eb;83;16;41;;CA du Pays Voironnais;Transformation de l'énergie;Electricité;epci;0.0
+2017;243800984;#db0d55;84;16;48;;CA du Pays Voironnais;Transformation de l'énergie;Chaleur RDC;epci;15.686
+2017;243800984;#db0d55;85;16;47;;CA du Pays Voironnais;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;243800984;#c5c9d1;86;16;49;;CA du Pays Voironnais;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;243800984;#3474eb;87;41;3;;CA du Pays Voironnais;Electricité;Résidentiel;epci;258.521566440531
+2017;243800984;#3474eb;88;41;4;;CA du Pays Voironnais;Electricité;Tertiaire;epci;126.279005639515
+2017;243800984;#3474eb;89;41;5;;CA du Pays Voironnais;Electricité;Agriculture, sylviculture et aquaculture;epci;4.79050373503939
+2017;243800984;#3474eb;90;41;6;;CA du Pays Voironnais;Electricité;Industrie et déchets;epci;128.927426068427
+2017;243800984;#3474eb;91;41;7;;CA du Pays Voironnais;Electricité;Transport;epci;23.73643808267582
+2017;243800984;#3474eb;92;41;19;;CA du Pays Voironnais;Electricité;Pertes réseaux;epci;0.6090806362972445
+2017;243800984;#3474eb;93;41;13;;CA du Pays Voironnais;Electricité;Exportations;epci;-536.0964579769604
+2017;200067627;#40de48;1;0;1;imports organo-carburant;CC Billom Communauté;Importations;Organo-carburants;epci;19.31622617143838
+2017;200067627;#40de49;2;1;2;organo-carburant;CC Billom Communauté;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;19.31622617143838
+2017;200067627;#40de50;3;2;3;organo-carburant vecteur;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#40de51;4;2;4;Résidentiel;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#40de52;5;2;5;Tertiaire;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.12742555579706
+2017;200067627;#40de53;6;2;6;Agriculture;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200067627;#40de54;7;2;7;Industrie-déchets;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Transport;epci;18.18880061564132
+2017;200067627;#c5c9d1;8;8;9;Transport;CC Billom Communauté;Importations;Produits pétroliers primaires;epci;0.0
+2017;200067627;#c5c9d1;9;9;10;imports pp primaires;CC Billom Communauté;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200067627;#c5c9d1;10;10;12;pp primaires;CC Billom Communauté;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200067627;#c5c9d1;11;10;13;Raffinerie;CC Billom Communauté;Raffinerie;Exportations;epci;-0.0
+2017;200067627;#c5c9d1;12;10;14;Imports pp secondaires;CC Billom Communauté;Raffinerie;Pertes transformation;epci;0.0
+2017;200067627;#c5c9d1;13;11;12;pp secondaires;CC Billom Communauté;Importations;Produits pétroliers secondaires;epci;287.7377876006727
+2017;200067627;#c5c9d1;14;12;16;Exportations;CC Billom Communauté;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200067627;#c5c9d1;15;12;15;Pertes raffinage;CC Billom Communauté;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;287.7377876006728
+2017;200067627;#c5c9d1;16;15;3;pp secondaires vecteur;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;33.6167724135238
+2017;200067627;#c5c9d1;17;15;4;Transformation de l'énergie;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;7.21487343758546
+2017;200067627;#c5c9d1;18;15;5;Importation gaz;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;13.9744957015546
+2017;200067627;#c5c9d1;19;15;6;Gaz;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;3.44347116938868
+2017;200067627;#c5c9d1;20;15;7;Pertes réseaux;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;229.48817487862024
+2017;200067627;#f58536;21;17;18;Gaz vecteur;CC Billom Communauté;Importations;Gaz;epci;56.30172633186361
+2017;200067627;#f58536;22;18;19;Imports CMS;CC Billom Communauté;Gaz;Pertes réseaux;epci;0.2801080912033018
+2017;200067627;#f58536;23;18;16;CMS;CC Billom Communauté;Gaz;Transformation de l'énergie;epci;0.0
+2017;200067627;#f58536;24;18;20;CMS vecteur;CC Billom Communauté;Gaz;Gaz - vecteur énergétique ;epci;56.30172633186361
+2017;200067627;#f58536;25;20;3;Imports uranium;CC Billom Communauté;Gaz - vecteur énergétique ;Résidentiel;epci;42.4944000000001
+2017;200067627;#f58536;26;20;4;Uranium;CC Billom Communauté;Gaz - vecteur énergétique ;Tertiaire;epci;11.8947234385365
+2017;200067627;#f58536;27;20;5;Imports biomasse solide;CC Billom Communauté;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.42713043434186704
+2017;200067627;#f58536;28;20;6;Production biommase solide;CC Billom Communauté;Gaz - vecteur énergétique ;Industrie et déchets;epci;1.20536436778184
+2017;200067627;#f58536;29;20;7;Biomasse solide;CC Billom Communauté;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#211e1c;30;21;22;Biomasse solide vecteur;CC Billom Communauté;Importations;CMS;epci;0.585970200050141
+2017;200067627;#211e1c;31;22;16;Production biogaz;CC Billom Communauté;CMS;Transformation de l'énergie;epci;0.0
+2017;200067627;#211e1c;32;22;23;Biogaz;CC Billom Communauté;CMS;CMS - vecteur énergétique ;epci;0.585970200050141
+2017;200067627;#211e1c;33;23;3;Production déchets;CC Billom Communauté;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#211e1c;34;23;4;Déchets;CC Billom Communauté;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#211e1c;35;23;5;Déchets vecteur;CC Billom Communauté;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#211e1c;36;23;6;Production hydraulique;CC Billom Communauté;CMS - vecteur énergétique ;Industrie et déchets;epci;0.585970200050141
+2017;200067627;#211e1c;37;23;7;Hydroélectricité;CC Billom Communauté;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#981ca3;38;24;25;Production éolien;CC Billom Communauté;Importations;Uranium;epci;0.0
+2017;200067627;#981ca3;39;25;16;Eolien;CC Billom Communauté;Uranium;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;40;26;28;Production solaire PV;CC Billom Communauté;Importations;Biomasse solide;epci;15.679194927910082
+2017;200067627;#db0d55;41;27;28;Solaire PV;CC Billom Communauté;Production;Biomasse solide;epci;36.58478816512353
+2017;200067627;#db0d55;42;28;16;Electricité;CC Billom Communauté;Biomasse solide;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;43;28;29;Production solaire thermique;CC Billom Communauté;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;52.26398309303361
+2017;200067627;#db0d55;44;29;3;Solaire thermique;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Résidentiel;epci;51.4719616432967
+2017;200067627;#db0d55;45;29;4;Production PAC;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.606265709853391
+2017;200067627;#db0d55;46;29;5;Pertes ou torchage;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;47;29;6;PAC;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.185755739883517
+2017;200067627;#db0d55;48;29;7;Chaleur locale;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#1ca337;49;30;31;Réseaux de chaleur;CC Billom Communauté;Production;Biogaz;epci;0.0
+2017;200067627;#1ca337;50;31;45;Pertes transformation;CC Billom Communauté;Biogaz;Pertes ou torchage;epci;0.0
+2017;200067627;#1ca337;51;31;20;;CC Billom Communauté;Biogaz;Gaz;epci;0.0
+2017;200067627;#1ca337;52;31;16;;CC Billom Communauté;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;58;32;33;;CC Billom Communauté;Production;Déchets;epci;0.0
+2017;200067627;#db0d55;59;33;16;;CC Billom Communauté;Déchets;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;60;33;34;;CC Billom Communauté;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200067627;#db0d55;61;34;3;;CC Billom Communauté;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#db0d55;62;34;4;;CC Billom Communauté;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#db0d55;63;34;5;;CC Billom Communauté;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;64;34;6;;CC Billom Communauté;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200067627;#db0d55;65;34;7;;CC Billom Communauté;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#3474eb;66;35;36;;CC Billom Communauté;Production;Hydraulique;epci;0.0
+2017;200067627;#3474eb;67;37;38;;CC Billom Communauté;Production;Eolien;epci;0.0
+2017;200067627;#faf31e;68;39;40;;CC Billom Communauté;Production;Solaire PV;epci;1.545298465439942
+2017;200067627;#3474eb;69;36;41;;CC Billom Communauté;Hydraulique;Electricité;epci;0.0
+2017;200067627;#3474eb;70;38;41;;CC Billom Communauté;Eolien;Electricité;epci;0.0
+2017;200067627;#faf31e;71;40;41;;CC Billom Communauté;Solaire PV;Electricité;epci;1.545298465439942
+2017;200067627;#faf31e;72;42;43;;CC Billom Communauté;Production;Solaire thermique;epci;1.09
+2017;200067627;#faf31e;73;44;46;;CC Billom Communauté;Production;PAC;epci;13.19
+2017;200067627;#faf31e;74;43;47;;CC Billom Communauté;Solaire thermique;Chaleur locale;epci;1.09
+2017;200067627;#faf31e;75;46;47;;CC Billom Communauté;PAC;Chaleur locale;epci;13.19
+2017;200067627;#db0d55;76;47;3;;CC Billom Communauté;Chaleur locale;Résidentiel;epci;14.28
+2017;200067627;#db0d55;77;47;6;;CC Billom Communauté;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200067627;#db0d55;78;48;19;;CC Billom Communauté;Chaleur RDC;Pertes réseaux;epci;0.0
+2017;200067627;#db0d55;79;48;3;;CC Billom Communauté;Chaleur RDC;Résidentiel;epci;0.0
+2017;200067627;#db0d55;80;48;4;;CC Billom Communauté;Chaleur RDC;Tertiaire;epci;0.0
+2017;200067627;#db0d55;81;48;5;;CC Billom Communauté;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;82;48;6;;CC Billom Communauté;Chaleur RDC;Industrie et déchets;epci;0.0
+2017;200067627;#3474eb;83;16;41;;CC Billom Communauté;Transformation de l'énergie;Electricité;epci;0.0
+2017;200067627;#db0d55;84;16;48;;CC Billom Communauté;Transformation de l'énergie;Chaleur RDC;epci;0.0
+2017;200067627;#db0d55;85;16;47;;CC Billom Communauté;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200067627;#c5c9d1;86;16;49;;CC Billom Communauté;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200067627;#3474eb;87;41;3;;CC Billom Communauté;Electricité;Résidentiel;epci;72.7062679152211
+2017;200067627;#3474eb;88;41;4;;CC Billom Communauté;Electricité;Tertiaire;epci;17.4679867350191
+2017;200067627;#3474eb;89;41;5;;CC Billom Communauté;Electricité;Agriculture, sylviculture et aquaculture;epci;3.8993448261363
+2017;200067627;#3474eb;90;41;6;;CC Billom Communauté;Electricité;Industrie et déchets;epci;5.8494385783237774
+2017;200067627;#3474eb;91;41;7;;CC Billom Communauté;Electricité;Transport;epci;0.118557098092828
+2017;200067627;#3474eb;92;41;19;;CC Billom Communauté;Electricité;Pertes réseaux;epci;0.13907686188959473
+2017;200067627;#3474eb;93;41;13;;CC Billom Communauté;Electricité;Exportations;epci;-98.63537354924274
+2017;200042935;#40de48;1;0;1;imports organo-carburant;CA Haut - Bugey Agglomération;Importations;Organo-carburants;epci;43.55861497752695
+2017;200042935;#40de49;2;1;2;organo-carburant;CA Haut - Bugey Agglomération;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;43.55861497752695
+2017;200042935;#40de50;3;2;3;organo-carburant vecteur;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#40de51;4;2;4;Résidentiel;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#40de52;5;2;5;Tertiaire;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.486335194084698
+2017;200042935;#40de53;6;2;6;Agriculture;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200042935;#40de54;7;2;7;Industrie-déchets;CA Haut - Bugey Agglomération;Organo-carburants - vecteur énergétique ;Transport;epci;43.072279783442255
+2017;200042935;#c5c9d1;8;8;9;Transport;CA Haut - Bugey Agglomération;Importations;Produits pétroliers primaires;epci;0.0
+2017;200042935;#c5c9d1;9;9;10;imports pp primaires;CA Haut - Bugey Agglomération;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200042935;#c5c9d1;10;10;12;pp primaires;CA Haut - Bugey Agglomération;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200042935;#c5c9d1;11;10;13;Raffinerie;CA Haut - Bugey Agglomération;Raffinerie;Exportations;epci;-0.0
+2017;200042935;#c5c9d1;12;10;14;Imports pp secondaires;CA Haut - Bugey Agglomération;Raffinerie;Pertes transformation;epci;0.0
+2017;200042935;#c5c9d1;13;11;12;pp secondaires;CA Haut - Bugey Agglomération;Importations;Produits pétroliers secondaires;epci;697.1740543571416
+2017;200042935;#c5c9d1;14;12;16;Exportations;CA Haut - Bugey Agglomération;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.255158
+2017;200042935;#c5c9d1;15;12;15;Pertes raffinage;CA Haut - Bugey Agglomération;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;696.9188963571426
+2017;200042935;#c5c9d1;16;15;3;pp secondaires vecteur;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;98.9633726450072
+2017;200042935;#c5c9d1;17;15;4;Transformation de l'énergie;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;21.7762122433223
+2017;200042935;#c5c9d1;18;15;5;Importation gaz;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;6.37601105813087
+2017;200042935;#c5c9d1;19;15;6;Gaz;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;25.7133670808413
+2017;200042935;#c5c9d1;20;15;7;Pertes réseaux;CA Haut - Bugey Agglomération;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;544.089933329841
+2017;200042935;#f58536;21;17;18;Gaz vecteur;CA Haut - Bugey Agglomération;Importations;Gaz;epci;314.5601699144832
+2017;200042935;#f58536;22;18;19;Imports CMS;CA Haut - Bugey Agglomération;Gaz;Pertes réseaux;epci;1.4008072134055147
+2017;200042935;#f58536;23;18;16;CMS;CA Haut - Bugey Agglomération;Gaz;Transformation de l'énergie;epci;32.997920019975
+2017;200042935;#f58536;24;18;20;CMS vecteur;CA Haut - Bugey Agglomération;Gaz;Gaz - vecteur énergétique ;epci;281.5622498945082
+2017;200042935;#f58536;25;20;3;Imports uranium;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Résidentiel;epci;144.11928882
+2017;200042935;#f58536;26;20;4;Uranium;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Tertiaire;epci;122.230556891444
+2017;200042935;#f58536;27;20;5;Imports biomasse solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.17482113723066706
+2017;200042935;#f58536;28;20;6;Production biommase solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Industrie et déchets;epci;13.1298404132699
+2017;200042935;#f58536;29;20;7;Biomasse solide;CA Haut - Bugey Agglomération;Gaz - vecteur énergétique ;Transport;epci;0.50693541915815
+2017;200042935;#211e1c;30;21;22;Biomasse solide vecteur;CA Haut - Bugey Agglomération;Importations;CMS;epci;0.583901861667504
+2017;200042935;#211e1c;31;22;16;Production biogaz;CA Haut - Bugey Agglomération;CMS;Transformation de l'énergie;epci;0.0
+2017;200042935;#211e1c;32;22;23;Biogaz;CA Haut - Bugey Agglomération;CMS;CMS - vecteur énergétique ;epci;0.583901861667504
+2017;200042935;#211e1c;33;23;3;Production déchets;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#211e1c;34;23;4;Déchets;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#211e1c;35;23;5;Déchets vecteur;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#211e1c;36;23;6;Production hydraulique;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Industrie et déchets;epci;0.583901861667504
+2017;200042935;#211e1c;37;23;7;Hydroélectricité;CA Haut - Bugey Agglomération;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#981ca3;38;24;25;Production éolien;CA Haut - Bugey Agglomération;Importations;Uranium;epci;0.0
+2017;200042935;#981ca3;39;25;16;Eolien;CA Haut - Bugey Agglomération;Uranium;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;40;26;28;Production solaire PV;CA Haut - Bugey Agglomération;Importations;Biomasse solide;epci;33.012386534275066
+2017;200042935;#db0d55;41;27;28;Solaire PV;CA Haut - Bugey Agglomération;Production;Biomasse solide;epci;77.02890191330849
+2017;200042935;#db0d55;42;28;16;Electricité;CA Haut - Bugey Agglomération;Biomasse solide;Transformation de l'énergie;epci;48.077632
+2017;200042935;#db0d55;43;28;29;Production solaire thermique;CA Haut - Bugey Agglomération;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;61.96365644758356
+2017;200042935;#db0d55;44;29;3;Solaire thermique;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Résidentiel;epci;65.9779973564865
+2017;200042935;#db0d55;45;29;4;Production PAC;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Tertiaire;epci;-11.397897143225139
+2017;200042935;#db0d55;46;29;5;Pertes ou torchage;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#db0d55;47;29;6;PAC;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;7.383556234322199
+2017;200042935;#db0d55;48;29;7;Chaleur locale;CA Haut - Bugey Agglomération;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#1ca337;49;30;31;Réseaux de chaleur;CA Haut - Bugey Agglomération;Production;Biogaz;epci;0.0
+2017;200042935;#1ca337;50;31;45;Pertes transformation;CA Haut - Bugey Agglomération;Biogaz;Pertes ou torchage;epci;0.0
+2017;200042935;#1ca337;51;31;20;;CA Haut - Bugey Agglomération;Biogaz;Gaz;epci;0.0
+2017;200042935;#1ca337;52;31;16;;CA Haut - Bugey Agglomération;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;58;32;33;;CA Haut - Bugey Agglomération;Production;Déchets;epci;0.0
+2017;200042935;#db0d55;59;33;16;;CA Haut - Bugey Agglomération;Déchets;Transformation de l'énergie;epci;0.0
+2017;200042935;#db0d55;60;33;34;;CA Haut - Bugey Agglomération;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200042935;#db0d55;61;34;3;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200042935;#db0d55;62;34;4;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200042935;#db0d55;63;34;5;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200042935;#db0d55;64;34;6;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200042935;#db0d55;65;34;7;;CA Haut - Bugey Agglomération;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200042935;#3474eb;66;35;36;;CA Haut - Bugey Agglomération;Production;Hydraulique;epci;122.136444
+2017;200042935;#3474eb;67;37;38;;CA Haut - Bugey Agglomération;Production;Eolien;epci;6.78312
+2017;200042935;#faf31e;68;39;40;;CA Haut - Bugey Agglomération;Production;Solaire PV;epci;2.2165384867849296
+2017;200042935;#3474eb;69;36;41;;CA Haut - Bugey Agglomération;Hydraulique;Electricité;epci;122.136444
+2017;200042935;#3474eb;70;38;41;;CA Haut - Bugey Agglomération;Eolien;Electricité;epci;6.78312
+2017;200042935;#faf31e;71;40;41;;CA Haut - Bugey Agglomération;Solaire PV;Electricité;epci;2.2165384867849296
+2017;200042935;#faf31e;72;42;43;;CA Haut - Bugey Agglomération;Production;Solaire thermique;epci;2.23
+2017;200042935;#faf31e;73;44;46;;CA Haut - Bugey Agglomération;Production;PAC;epci;19.11
+2017;200042935;#faf31e;74;43;47;;CA Haut - Bugey Agglomération;Solaire thermique;Chaleur locale;epci;2.23
+2017;200042935;#faf31e;75;46;47;;CA Haut - Bugey Agglomération;PAC;Chaleur locale;epci;19.11
+2017;200042935;#db0d55;76;47;3;;CA Haut - Bugey Agglomération;Chaleur locale;Résidentiel;epci;21.34
+2017;200042935;#db0d55;77;47;6;;CA Haut - Bugey Agglomération;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200042935;#db0d55;78;48;19;;CA Haut - Bugey Agglomération;Chaleur RDC;Pertes réseaux;epci;3.067785500000003
+2017;200042935;#db0d55;79;48;3;;CA Haut - Bugey Agglomération;Chaleur RDC;Résidentiel;epci;33.224116965
+2017;200042935;#db0d55;80;48;4;;CA Haut - Bugey Agglomération;Chaleur RDC;Tertiaire;epci;18.069256595000002
+2017;200042935;#db0d55;81;48;5;;CA Haut - Bugey Agglomération;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;1.16575849
+2017;200042935;#db0d55;82;48;6;;CA Haut - Bugey Agglomération;Chaleur RDC;Industrie et déchets;epci;5.828792450000001
+2017;200042935;#3474eb;83;16;41;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Electricité;epci;7.99
+2017;200042935;#db0d55;84;16;48;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Chaleur RDC;epci;61.35571
+2017;200042935;#db0d55;85;16;47;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200042935;#c5c9d1;86;16;49;;CA Haut - Bugey Agglomération;Transformation de l'énergie;Pertes transformation;epci;11.985000019974999
+2017;200042935;#3474eb;87;41;3;;CA Haut - Bugey Agglomération;Electricité;Résidentiel;epci;151.595537687203
+2017;200042935;#3474eb;88;41;4;;CA Haut - Bugey Agglomération;Electricité;Tertiaire;epci;89.8720146237775
+2017;200042935;#3474eb;89;41;5;;CA Haut - Bugey Agglomération;Electricité;Agriculture, sylviculture et aquaculture;epci;1.61371760161434
+2017;200042935;#3474eb;90;41;6;;CA Haut - Bugey Agglomération;Electricité;Industrie et déchets;epci;420.3770231092565
+2017;200042935;#3474eb;91;41;7;;CA Haut - Bugey Agglomération;Electricité;Transport;epci;2.240336311404284
+2017;200042935;#3474eb;92;41;19;;CA Haut - Bugey Agglomération;Electricité;Pertes réseaux;epci;12.52134922381064
+2017;200042935;#3474eb;93;41;13;;CA Haut - Bugey Agglomération;Electricité;Exportations;epci;-539.0938760702813
+2017;200073401;#40de48;1;0;1;imports organo-carburant;CC Mézenc-Loire-Meygal;Importations;Organo-carburants;epci;6.4403121079978805
+2017;200073401;#40de49;2;1;2;organo-carburant;CC Mézenc-Loire-Meygal;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;6.4403121079978805
+2017;200073401;#40de50;3;2;3;organo-carburant vecteur;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#40de51;4;2;4;Résidentiel;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#40de52;5;2;5;Tertiaire;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.58743616596342
+2017;200073401;#40de53;6;2;6;Agriculture;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200073401;#40de54;7;2;7;Industrie-déchets;CC Mézenc-Loire-Meygal;Organo-carburants - vecteur énergétique ;Transport;epci;4.85287594203446
+2017;200073401;#c5c9d1;8;8;9;Transport;CC Mézenc-Loire-Meygal;Importations;Produits pétroliers primaires;epci;0.0
+2017;200073401;#c5c9d1;9;9;10;imports pp primaires;CC Mézenc-Loire-Meygal;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200073401;#c5c9d1;10;10;12;pp primaires;CC Mézenc-Loire-Meygal;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200073401;#c5c9d1;11;10;13;Raffinerie;CC Mézenc-Loire-Meygal;Raffinerie;Exportations;epci;-0.0
+2017;200073401;#c5c9d1;12;10;14;Imports pp secondaires;CC Mézenc-Loire-Meygal;Raffinerie;Pertes transformation;epci;0.0
+2017;200073401;#c5c9d1;13;11;12;pp secondaires;CC Mézenc-Loire-Meygal;Importations;Produits pétroliers secondaires;epci;134.94635565920993
+2017;200073401;#c5c9d1;14;12;16;Exportations;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200073401;#c5c9d1;15;12;15;Pertes raffinage;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;134.94635565920998
+2017;200073401;#c5c9d1;16;15;3;pp secondaires vecteur;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;43.3444493997376
+2017;200073401;#c5c9d1;17;15;4;Transformation de l'énergie;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;9.08951845343308
+2017;200073401;#c5c9d1;18;15;5;Importation gaz;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;19.481908129438
+2017;200073401;#c5c9d1;19;15;6;Gaz;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;2.28373131474269
+2017;200073401;#c5c9d1;20;15;7;Pertes réseaux;CC Mézenc-Loire-Meygal;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;60.7467483618586
+2017;200073401;#f58536;21;17;18;Gaz vecteur;CC Mézenc-Loire-Meygal;Importations;Gaz;epci;5.443799624191666
+2017;200073401;#f58536;22;18;19;Imports CMS;CC Mézenc-Loire-Meygal;Gaz;Pertes réseaux;epci;0.027083580219859058
+2017;200073401;#f58536;23;18;16;CMS;CC Mézenc-Loire-Meygal;Gaz;Transformation de l'énergie;epci;0.0
+2017;200073401;#f58536;24;18;20;CMS vecteur;CC Mézenc-Loire-Meygal;Gaz;Gaz - vecteur énergétique ;epci;5.443799624191666
+2017;200073401;#f58536;25;20;3;Imports uranium;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Résidentiel;epci;4.83570000000001
+2017;200073401;#f58536;26;20;4;Uranium;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Tertiaire;epci;0.553624534678482
+2017;200073401;#f58536;27;20;5;Imports biomasse solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.01374107276403218
+2017;200073401;#f58536;28;20;6;Production biommase solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Industrie et déchets;epci;0.0136504365292824
+2017;200073401;#f58536;29;20;7;Biomasse solide;CC Mézenc-Loire-Meygal;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#211e1c;30;21;22;Biomasse solide vecteur;CC Mézenc-Loire-Meygal;Importations;CMS;epci;0.403065435674052
+2017;200073401;#211e1c;31;22;16;Production biogaz;CC Mézenc-Loire-Meygal;CMS;Transformation de l'énergie;epci;0.0
+2017;200073401;#211e1c;32;22;23;Biogaz;CC Mézenc-Loire-Meygal;CMS;CMS - vecteur énergétique ;epci;0.403065435674052
+2017;200073401;#211e1c;33;23;3;Production déchets;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#211e1c;34;23;4;Déchets;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#211e1c;35;23;5;Déchets vecteur;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#211e1c;36;23;6;Production hydraulique;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Industrie et déchets;epci;0.403065435674052
+2017;200073401;#211e1c;37;23;7;Hydroélectricité;CC Mézenc-Loire-Meygal;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#981ca3;38;24;25;Production éolien;CC Mézenc-Loire-Meygal;Importations;Uranium;epci;0.0
+2017;200073401;#981ca3;39;25;16;Eolien;CC Mézenc-Loire-Meygal;Uranium;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;40;26;28;Production solaire PV;CC Mézenc-Loire-Meygal;Importations;Biomasse solide;epci;10.75012338007866
+2017;200073401;#db0d55;41;27;28;Solaire PV;CC Mézenc-Loire-Meygal;Production;Biomasse solide;epci;25.083621220183538
+2017;200073401;#db0d55;42;28;16;Electricité;CC Mézenc-Loire-Meygal;Biomasse solide;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;43;28;29;Production solaire thermique;CC Mézenc-Loire-Meygal;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;35.8337446002622
+2017;200073401;#db0d55;44;29;3;Solaire thermique;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Résidentiel;epci;35.0158128531069
+2017;200073401;#db0d55;45;29;4;Production PAC;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.706109965850183
+2017;200073401;#db0d55;46;29;5;Pertes ou torchage;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;47;29;6;PAC;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.111821781305115
+2017;200073401;#db0d55;48;29;7;Chaleur locale;CC Mézenc-Loire-Meygal;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#1ca337;49;30;31;Réseaux de chaleur;CC Mézenc-Loire-Meygal;Production;Biogaz;epci;0.0
+2017;200073401;#1ca337;50;31;45;Pertes transformation;CC Mézenc-Loire-Meygal;Biogaz;Pertes ou torchage;epci;0.0
+2017;200073401;#1ca337;51;31;20;;CC Mézenc-Loire-Meygal;Biogaz;Gaz;epci;0.0
+2017;200073401;#1ca337;52;31;16;;CC Mézenc-Loire-Meygal;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;58;32;33;;CC Mézenc-Loire-Meygal;Production;Déchets;epci;0.0
+2017;200073401;#db0d55;59;33;16;;CC Mézenc-Loire-Meygal;Déchets;Transformation de l'énergie;epci;0.0
+2017;200073401;#db0d55;60;33;34;;CC Mézenc-Loire-Meygal;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200073401;#db0d55;61;34;3;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200073401;#db0d55;62;34;4;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200073401;#db0d55;63;34;5;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;64;34;6;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200073401;#db0d55;65;34;7;;CC Mézenc-Loire-Meygal;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200073401;#3474eb;66;35;36;;CC Mézenc-Loire-Meygal;Production;Hydraulique;epci;0.455198
+2017;200073401;#3474eb;67;37;38;;CC Mézenc-Loire-Meygal;Production;Eolien;epci;17.25356
+2017;200073401;#faf31e;68;39;40;;CC Mézenc-Loire-Meygal;Production;Solaire PV;epci;2.5625955377767933
+2017;200073401;#3474eb;69;36;41;;CC Mézenc-Loire-Meygal;Hydraulique;Electricité;epci;0.455198
+2017;200073401;#3474eb;70;38;41;;CC Mézenc-Loire-Meygal;Eolien;Electricité;epci;17.25356
+2017;200073401;#faf31e;71;40;41;;CC Mézenc-Loire-Meygal;Solaire PV;Electricité;epci;2.5625955377767933
+2017;200073401;#faf31e;72;42;43;;CC Mézenc-Loire-Meygal;Production;Solaire thermique;epci;0.42
+2017;200073401;#faf31e;73;44;46;;CC Mézenc-Loire-Meygal;Production;PAC;epci;8.81
+2017;200073401;#faf31e;74;43;47;;CC Mézenc-Loire-Meygal;Solaire thermique;Chaleur locale;epci;0.42
+2017;200073401;#faf31e;75;46;47;;CC Mézenc-Loire-Meygal;PAC;Chaleur locale;epci;8.81
+2017;200073401;#db0d55;76;47;3;;CC Mézenc-Loire-Meygal;Chaleur locale;Résidentiel;epci;9.23
+2017;200073401;#db0d55;77;47;6;;CC Mézenc-Loire-Meygal;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200073401;#db0d55;78;48;19;;CC Mézenc-Loire-Meygal;Chaleur RDC;Pertes réseaux;epci;0.0
+2017;200073401;#db0d55;79;48;3;;CC Mézenc-Loire-Meygal;Chaleur RDC;Résidentiel;epci;0.0
+2017;200073401;#db0d55;80;48;4;;CC Mézenc-Loire-Meygal;Chaleur RDC;Tertiaire;epci;0.0
+2017;200073401;#db0d55;81;48;5;;CC Mézenc-Loire-Meygal;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200073401;#db0d55;82;48;6;;CC Mézenc-Loire-Meygal;Chaleur RDC;Industrie et déchets;epci;0.0
+2017;200073401;#3474eb;83;16;41;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Electricité;epci;0.0
+2017;200073401;#db0d55;84;16;48;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Chaleur RDC;epci;0.0
+2017;200073401;#db0d55;85;16;47;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200073401;#c5c9d1;86;16;49;;CC Mézenc-Loire-Meygal;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200073401;#3474eb;87;41;3;;CC Mézenc-Loire-Meygal;Electricité;Résidentiel;epci;29.6575219999999
+2017;200073401;#3474eb;88;41;4;;CC Mézenc-Loire-Meygal;Electricité;Tertiaire;epci;12.4793444385371
+2017;200073401;#3474eb;89;41;5;;CC Mézenc-Loire-Meygal;Electricité;Agriculture, sylviculture et aquaculture;epci;3.6380033536566
+2017;200073401;#3474eb;90;41;6;;CC Mézenc-Loire-Meygal;Electricité;Industrie et déchets;epci;6.777973888541203
+2017;200073401;#3474eb;91;41;7;;CC Mézenc-Loire-Meygal;Electricité;Transport;epci;0.0387820220350487
+2017;200073401;#3474eb;92;41;19;;CC Mézenc-Loire-Meygal;Electricité;Pertes réseaux;epci;1.8244218183999108
+2017;200073401;#3474eb;93;41;13;;CC Mézenc-Loire-Meygal;Electricité;Exportations;epci;-34.14469398339297
+2017;200071215;#40de48;1;0;1;imports organo-carburant;CC Chavanon Combrailles et Volcans;Importations;Organo-carburants;epci;21.063458074200867
+2017;200071215;#40de49;2;1;2;organo-carburant;CC Chavanon Combrailles et Volcans;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;21.063458074200867
+2017;200071215;#40de50;3;2;3;organo-carburant vecteur;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#40de51;4;2;4;Résidentiel;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#40de52;5;2;5;Tertiaire;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;3.20259388718187
+2017;200071215;#40de53;6;2;6;Agriculture;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071215;#40de54;7;2;7;Industrie-déchets;CC Chavanon Combrailles et Volcans;Organo-carburants - vecteur énergétique ;Transport;epci;17.860864187018997
+2017;200071215;#c5c9d1;8;8;9;Transport;CC Chavanon Combrailles et Volcans;Importations;Produits pétroliers primaires;epci;0.0
+2017;200071215;#c5c9d1;9;9;10;imports pp primaires;CC Chavanon Combrailles et Volcans;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200071215;#c5c9d1;10;10;12;pp primaires;CC Chavanon Combrailles et Volcans;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200071215;#c5c9d1;11;10;13;Raffinerie;CC Chavanon Combrailles et Volcans;Raffinerie;Exportations;epci;-0.0
+2017;200071215;#c5c9d1;12;10;14;Imports pp secondaires;CC Chavanon Combrailles et Volcans;Raffinerie;Pertes transformation;epci;0.0
+2017;200071215;#c5c9d1;13;11;12;pp secondaires;CC Chavanon Combrailles et Volcans;Importations;Produits pétroliers secondaires;epci;311.84127521395476
+2017;200071215;#c5c9d1;14;12;16;Exportations;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.37113
+2017;200071215;#c5c9d1;15;12;15;Pertes raffinage;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;311.470145213955
+2017;200071215;#c5c9d1;16;15;3;pp secondaires vecteur;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;36.075300804101
+2017;200071215;#c5c9d1;17;15;4;Transformation de l'énergie;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;6.34422601126574
+2017;200071215;#c5c9d1;18;15;5;Importation gaz;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;39.1315998501529
+2017;200071215;#c5c9d1;19;15;6;Gaz;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;3.79405728541767
+2017;200071215;#c5c9d1;20;15;7;Pertes réseaux;CC Chavanon Combrailles et Volcans;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;226.1249612630177
+2017;200071215;#f58536;21;17;18;Gaz vecteur;CC Chavanon Combrailles et Volcans;Importations;Gaz;epci;6.3128100143863515
+2017;200071215;#f58536;22;18;19;Imports CMS;CC Chavanon Combrailles et Volcans;Gaz;Pertes réseaux;epci;0.03140701499694705
+2017;200071215;#f58536;23;18;16;CMS;CC Chavanon Combrailles et Volcans;Gaz;Transformation de l'énergie;epci;0.0
+2017;200071215;#f58536;24;18;20;CMS vecteur;CC Chavanon Combrailles et Volcans;Gaz;Gaz - vecteur énergétique ;epci;6.3128100143863515
+2017;200071215;#f58536;25;20;3;Imports uranium;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Résidentiel;epci;5.63220000000001
+2017;200071215;#f58536;26;20;4;Uranium;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Tertiaire;epci;0.618692537690001
+2017;200071215;#f58536;27;20;5;Imports biomasse solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.009200063665787616
+2017;200071215;#f58536;28;20;6;Production biommase solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Industrie et déchets;epci;0.021310398033606
+2017;200071215;#f58536;29;20;7;Biomasse solide;CC Chavanon Combrailles et Volcans;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#211e1c;30;21;22;Biomasse solide vecteur;CC Chavanon Combrailles et Volcans;Importations;CMS;epci;0.112602981937386
+2017;200071215;#211e1c;31;22;16;Production biogaz;CC Chavanon Combrailles et Volcans;CMS;Transformation de l'énergie;epci;0.0
+2017;200071215;#211e1c;32;22;23;Biogaz;CC Chavanon Combrailles et Volcans;CMS;CMS - vecteur énergétique ;epci;0.112602981937386
+2017;200071215;#211e1c;33;23;3;Production déchets;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#211e1c;34;23;4;Déchets;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#211e1c;35;23;5;Déchets vecteur;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#211e1c;36;23;6;Production hydraulique;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Industrie et déchets;epci;0.112602981937386
+2017;200071215;#211e1c;37;23;7;Hydroélectricité;CC Chavanon Combrailles et Volcans;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#981ca3;38;24;25;Production éolien;CC Chavanon Combrailles et Volcans;Importations;Uranium;epci;0.0
+2017;200071215;#981ca3;39;25;16;Eolien;CC Chavanon Combrailles et Volcans;Uranium;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;40;26;28;Production solaire PV;CC Chavanon Combrailles et Volcans;Importations;Biomasse solide;epci;16.451457192067334
+2017;200071215;#db0d55;41;27;28;Solaire PV;CC Chavanon Combrailles et Volcans;Production;Biomasse solide;epci;38.386733448157116
+2017;200071215;#db0d55;42;28;16;Electricité;CC Chavanon Combrailles et Volcans;Biomasse solide;Transformation de l'énergie;epci;0.99158
+2017;200071215;#db0d55;43;28;29;Production solaire thermique;CC Chavanon Combrailles et Volcans;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;53.846610640224455
+2017;200071215;#db0d55;44;29;3;Solaire thermique;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Résidentiel;epci;45.8433678286467
+2017;200071215;#db0d55;45;29;4;Production PAC;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.37096969410251196
+2017;200071215;#db0d55;46;29;5;Pertes ou torchage;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#db0d55;47;29;6;PAC;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;7.63227311747524
+2017;200071215;#db0d55;48;29;7;Chaleur locale;CC Chavanon Combrailles et Volcans;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#1ca337;49;30;31;Réseaux de chaleur;CC Chavanon Combrailles et Volcans;Production;Biogaz;epci;0.0
+2017;200071215;#1ca337;50;31;45;Pertes transformation;CC Chavanon Combrailles et Volcans;Biogaz;Pertes ou torchage;epci;0.0
+2017;200071215;#1ca337;51;31;20;;CC Chavanon Combrailles et Volcans;Biogaz;Gaz;epci;0.0
+2017;200071215;#1ca337;52;31;16;;CC Chavanon Combrailles et Volcans;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;58;32;33;;CC Chavanon Combrailles et Volcans;Production;Déchets;epci;0.0
+2017;200071215;#db0d55;59;33;16;;CC Chavanon Combrailles et Volcans;Déchets;Transformation de l'énergie;epci;0.0
+2017;200071215;#db0d55;60;33;34;;CC Chavanon Combrailles et Volcans;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200071215;#db0d55;61;34;3;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071215;#db0d55;62;34;4;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071215;#db0d55;63;34;5;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071215;#db0d55;64;34;6;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071215;#db0d55;65;34;7;;CC Chavanon Combrailles et Volcans;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200071215;#3474eb;66;35;36;;CC Chavanon Combrailles et Volcans;Production;Hydraulique;epci;17.280429
+2017;200071215;#3474eb;67;37;38;;CC Chavanon Combrailles et Volcans;Production;Eolien;epci;0.0
+2017;200071215;#faf31e;68;39;40;;CC Chavanon Combrailles et Volcans;Production;Solaire PV;epci;4.572177298773485
+2017;200071215;#3474eb;69;36;41;;CC Chavanon Combrailles et Volcans;Hydraulique;Electricité;epci;17.280429
+2017;200071215;#3474eb;70;38;41;;CC Chavanon Combrailles et Volcans;Eolien;Electricité;epci;0.0
+2017;200071215;#faf31e;71;40;41;;CC Chavanon Combrailles et Volcans;Solaire PV;Electricité;epci;4.572177298773485
+2017;200071215;#faf31e;72;42;43;;CC Chavanon Combrailles et Volcans;Production;Solaire thermique;epci;0.55
+2017;200071215;#faf31e;73;44;46;;CC Chavanon Combrailles et Volcans;Production;PAC;epci;9.93
+2017;200071215;#faf31e;74;43;47;;CC Chavanon Combrailles et Volcans;Solaire thermique;Chaleur locale;epci;0.55
+2017;200071215;#faf31e;75;46;47;;CC Chavanon Combrailles et Volcans;PAC;Chaleur locale;epci;9.93
+2017;200071215;#db0d55;76;47;3;;CC Chavanon Combrailles et Volcans;Chaleur locale;Résidentiel;epci;10.48
+2017;200071215;#db0d55;77;47;6;;CC Chavanon Combrailles et Volcans;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200071215;#db0d55;78;48;19;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Pertes réseaux;epci;0.06813550000000007
+2017;200071215;#db0d55;79;48;3;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Résidentiel;epci;0.7379074649999999
+2017;200071215;#db0d55;80;48;4;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Tertiaire;epci;0.401318095
+2017;200071215;#db0d55;81;48;5;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.02589149
+2017;200071215;#db0d55;82;48;6;;CC Chavanon Combrailles et Volcans;Chaleur RDC;Industrie et déchets;epci;0.12945745
+2017;200071215;#3474eb;83;16;41;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Electricité;epci;0.0
+2017;200071215;#db0d55;84;16;48;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Chaleur RDC;epci;1.36271
+2017;200071215;#db0d55;85;16;47;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200071215;#c5c9d1;86;16;49;;CC Chavanon Combrailles et Volcans;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200071215;#3474eb;87;41;3;;CC Chavanon Combrailles et Volcans;Electricité;Résidentiel;epci;36.188171145819
+2017;200071215;#3474eb;88;41;4;;CC Chavanon Combrailles et Volcans;Electricité;Tertiaire;epci;30.2761963029011
+2017;200071215;#3474eb;89;41;5;;CC Chavanon Combrailles et Volcans;Electricité;Agriculture, sylviculture et aquaculture;epci;6.09196193406336
+2017;200071215;#3474eb;90;41;6;;CC Chavanon Combrailles et Volcans;Electricité;Industrie et déchets;epci;8.93218433825503
+2017;200071215;#3474eb;91;41;7;;CC Chavanon Combrailles et Volcans;Electricité;Transport;epci;0.0644574331305948
+2017;200071215;#3474eb;92;41;19;;CC Chavanon Combrailles et Volcans;Electricité;Pertes réseaux;epci;1.9667345668896132
+2017;200071215;#3474eb;93;41;13;;CC Chavanon Combrailles et Volcans;Electricité;Exportations;epci;-61.66709942228521
+2017;200065894;#40de48;1;0;1;imports organo-carburant;CC de Forez-Est;Importations;Organo-carburants;epci;55.778928036401254
+2017;200065894;#40de49;2;1;2;organo-carburant;CC de Forez-Est;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;55.778928036401254
+2017;200065894;#40de50;3;2;3;organo-carburant vecteur;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#40de51;4;2;4;Résidentiel;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#40de52;5;2;5;Tertiaire;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;2.25203695363603
+2017;200065894;#40de53;6;2;6;Agriculture;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200065894;#40de54;7;2;7;Industrie-déchets;CC de Forez-Est;Organo-carburants - vecteur énergétique ;Transport;epci;53.526891082765225
+2017;200065894;#c5c9d1;8;8;9;Transport;CC de Forez-Est;Importations;Produits pétroliers primaires;epci;0.0
+2017;200065894;#c5c9d1;9;9;10;imports pp primaires;CC de Forez-Est;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200065894;#c5c9d1;10;10;12;pp primaires;CC de Forez-Est;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200065894;#c5c9d1;11;10;13;Raffinerie;CC de Forez-Est;Raffinerie;Exportations;epci;-0.0
+2017;200065894;#c5c9d1;12;10;14;Imports pp secondaires;CC de Forez-Est;Raffinerie;Pertes transformation;epci;0.0
+2017;200065894;#c5c9d1;13;11;12;pp secondaires;CC de Forez-Est;Importations;Produits pétroliers secondaires;epci;952.7886408725553
+2017;200065894;#c5c9d1;14;12;16;Exportations;CC de Forez-Est;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.18000000017999998
+2017;200065894;#c5c9d1;15;12;15;Pertes raffinage;CC de Forez-Est;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;952.6086408723751
+2017;200065894;#c5c9d1;16;15;3;pp secondaires vecteur;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;94.849010752206
+2017;200065894;#c5c9d1;17;15;4;Transformation de l'énergie;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;19.0674777748363
+2017;200065894;#c5c9d1;18;15;5;Importation gaz;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;29.7977279741927
+2017;200065894;#c5c9d1;19;15;6;Gaz;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;130.339162107074
+2017;200065894;#c5c9d1;20;15;7;Pertes réseaux;CC de Forez-Est;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;678.5552622640661
+2017;200065894;#f58536;21;17;18;Gaz vecteur;CC de Forez-Est;Importations;Gaz;epci;563.5705177186284
+2017;200065894;#f58536;22;18;19;Imports CMS;CC de Forez-Est;Gaz;Pertes réseaux;epci;2.7971418791971585
+2017;200065894;#f58536;23;18;16;CMS;CC de Forez-Est;Gaz;Transformation de l'énergie;epci;1.345
+2017;200065894;#f58536;24;18;20;CMS vecteur;CC de Forez-Est;Gaz;Gaz - vecteur énergétique ;epci;562.2255177186283
+2017;200065894;#f58536;25;20;3;Imports uranium;CC de Forez-Est;Gaz - vecteur énergétique ;Résidentiel;epci;143.9079825
+2017;200065894;#f58536;26;20;4;Uranium;CC de Forez-Est;Gaz - vecteur énergétique ;Tertiaire;epci;54.714665838132404
+2017;200065894;#f58536;27;20;5;Imports biomasse solide;CC de Forez-Est;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.7432018748447164
+2017;200065894;#f58536;28;20;6;Production biommase solide;CC de Forez-Est;Gaz - vecteur énergétique ;Industrie et déchets;epci;360.06252562645403
+2017;200065894;#f58536;29;20;7;Biomasse solide;CC de Forez-Est;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#211e1c;30;21;22;Biomasse solide vecteur;CC de Forez-Est;Importations;CMS;epci;0.887161920170533
+2017;200065894;#211e1c;31;22;16;Production biogaz;CC de Forez-Est;CMS;Transformation de l'énergie;epci;0.0
+2017;200065894;#211e1c;32;22;23;Biogaz;CC de Forez-Est;CMS;CMS - vecteur énergétique ;epci;0.887161920170533
+2017;200065894;#211e1c;33;23;3;Production déchets;CC de Forez-Est;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#211e1c;34;23;4;Déchets;CC de Forez-Est;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#211e1c;35;23;5;Déchets vecteur;CC de Forez-Est;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#211e1c;36;23;6;Production hydraulique;CC de Forez-Est;CMS - vecteur énergétique ;Industrie et déchets;epci;0.887161920170533
+2017;200065894;#211e1c;37;23;7;Hydroélectricité;CC de Forez-Est;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#981ca3;38;24;25;Production éolien;CC de Forez-Est;Importations;Uranium;epci;0.0
+2017;200065894;#981ca3;39;25;16;Eolien;CC de Forez-Est;Uranium;Transformation de l'énergie;epci;0.0
+2017;200065894;#db0d55;40;26;28;Production solaire PV;CC de Forez-Est;Importations;Biomasse solide;epci;35.770461534114105
+2017;200065894;#db0d55;41;27;28;Solaire PV;CC de Forez-Est;Production;Biomasse solide;epci;83.46441024626624
+2017;200065894;#db0d55;42;28;16;Electricité;CC de Forez-Est;Biomasse solide;Transformation de l'énergie;epci;7.821474
+2017;200065894;#db0d55;43;28;29;Production solaire thermique;CC de Forez-Est;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;111.41339778038035
+2017;200065894;#db0d55;44;29;3;Solaire thermique;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Résidentiel;epci;110.09358224488301
+2017;200065894;#db0d55;45;29;4;Production PAC;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.015975972577780162
+2017;200065894;#db0d55;46;29;5;Pertes ou torchage;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#db0d55;47;29;6;PAC;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;1.30383956291957
+2017;200065894;#db0d55;48;29;7;Chaleur locale;CC de Forez-Est;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#1ca337;49;30;31;Réseaux de chaleur;CC de Forez-Est;Production;Biogaz;epci;1.5825624999999999
+2017;200065894;#1ca337;50;31;45;Pertes transformation;CC de Forez-Est;Biogaz;Pertes ou torchage;epci;0.03751249999999995
+2017;200065894;#1ca337;51;31;20;;CC de Forez-Est;Biogaz;Gaz;epci;0.0
+2017;200065894;#1ca337;52;31;16;;CC de Forez-Est;Biogaz;Transformation de l'énergie;epci;1.5450499999999998
+2017;200065894;#db0d55;58;32;33;;CC de Forez-Est;Production;Déchets;epci;0.0
+2017;200065894;#db0d55;59;33;16;;CC de Forez-Est;Déchets;Transformation de l'énergie;epci;0.0
+2017;200065894;#db0d55;60;33;34;;CC de Forez-Est;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200065894;#db0d55;61;34;3;;CC de Forez-Est;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200065894;#db0d55;62;34;4;;CC de Forez-Est;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200065894;#db0d55;63;34;5;;CC de Forez-Est;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200065894;#db0d55;64;34;6;;CC de Forez-Est;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200065894;#db0d55;65;34;7;;CC de Forez-Est;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200065894;#3474eb;66;35;36;;CC de Forez-Est;Production;Hydraulique;epci;0.0
+2017;200065894;#3474eb;67;37;38;;CC de Forez-Est;Production;Eolien;epci;0.0
+2017;200065894;#faf31e;68;39;40;;CC de Forez-Est;Production;Solaire PV;epci;5.033787076563307
+2017;200065894;#3474eb;69;36;41;;CC de Forez-Est;Hydraulique;Electricité;epci;0.0
+2017;200065894;#3474eb;70;38;41;;CC de Forez-Est;Eolien;Electricité;epci;0.0
+2017;200065894;#faf31e;71;40;41;;CC de Forez-Est;Solaire PV;Electricité;epci;5.033787076563307
+2017;200065894;#faf31e;72;42;43;;CC de Forez-Est;Production;Solaire thermique;epci;2.24
+2017;200065894;#faf31e;73;44;46;;CC de Forez-Est;Production;PAC;epci;27.57
+2017;200065894;#faf31e;74;43;47;;CC de Forez-Est;Solaire thermique;Chaleur locale;epci;2.24
+2017;200065894;#faf31e;75;46;47;;CC de Forez-Est;PAC;Chaleur locale;epci;27.57
+2017;200065894;#db0d55;76;47;3;;CC de Forez-Est;Chaleur locale;Résidentiel;epci;29.810000000000002
+2017;200065894;#db0d55;77;47;6;;CC de Forez-Est;Chaleur locale;Industrie et déchets;epci;0.7080499999999998
+2017;200065894;#db0d55;78;48;19;;CC de Forez-Est;Chaleur RDC;Pertes réseaux;epci;0.45832370000000044
+2017;200065894;#db0d55;79;48;3;;CC de Forez-Est;Chaleur RDC;Résidentiel;epci;4.963645670999999
+2017;200065894;#db0d55;80;48;4;;CC de Forez-Est;Chaleur RDC;Tertiaire;epci;2.699526593
+2017;200065894;#db0d55;81;48;5;;CC de Forez-Est;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.174163006
+2017;200065894;#db0d55;82;48;6;;CC de Forez-Est;Chaleur RDC;Industrie et déchets;epci;0.87081503
+2017;200065894;#3474eb;83;16;41;;CC de Forez-Est;Transformation de l'énergie;Electricité;epci;0.6180000000000001
+2017;200065894;#db0d55;84;16;48;;CC de Forez-Est;Transformation de l'énergie;Chaleur RDC;epci;9.166474000000001
+2017;200065894;#db0d55;85;16;47;;CC de Forez-Est;Transformation de l'énergie;Chaleur locale;epci;0.7080499999999998
+2017;200065894;#c5c9d1;86;16;49;;CC de Forez-Est;Transformation de l'énergie;Pertes transformation;epci;0.39900000018000004
+2017;200065894;#3474eb;87;41;3;;CC de Forez-Est;Electricité;Résidentiel;epci;166.829073297397
+2017;200065894;#3474eb;88;41;4;;CC de Forez-Est;Electricité;Tertiaire;epci;100.066365599553
+2017;200065894;#3474eb;89;41;5;;CC de Forez-Est;Electricité;Agriculture, sylviculture et aquaculture;epci;8.2912426935732
+2017;200065894;#3474eb;90;41;6;;CC de Forez-Est;Electricité;Industrie et déchets;epci;171.41944900187374
+2017;200065894;#3474eb;91;41;7;;CC de Forez-Est;Electricité;Transport;epci;0.250334058355654
+2017;200065894;#3474eb;92;41;19;;CC de Forez-Est;Electricité;Pertes réseaux;epci;0.5086608368906975
+2017;200065894;#3474eb;93;41;13;;CC de Forez-Est;Electricité;Exportations;epci;-441.71333841108
+2017;243800984;#40de48;1;0;1;imports organo-carburant;CA du Pays Voironnais;Importations;Organo-carburants;epci;71.97299582348239
+2017;243800984;#40de49;2;1;2;organo-carburant;CA du Pays Voironnais;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;71.97299582348239
+2017;243800984;#40de50;3;2;3;organo-carburant vecteur;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#40de51;4;2;4;Résidentiel;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#40de52;5;2;5;Tertiaire;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.916076071556722
+2017;243800984;#40de53;6;2;6;Agriculture;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;243800984;#40de54;7;2;7;Industrie-déchets;CA du Pays Voironnais;Organo-carburants - vecteur énergétique ;Transport;epci;71.05691975192568
+2017;243800984;#c5c9d1;8;8;9;Transport;CA du Pays Voironnais;Importations;Produits pétroliers primaires;epci;0.0
+2017;243800984;#c5c9d1;9;9;10;imports pp primaires;CA du Pays Voironnais;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;243800984;#c5c9d1;10;10;12;pp primaires;CA du Pays Voironnais;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;243800984;#c5c9d1;11;10;13;Raffinerie;CA du Pays Voironnais;Raffinerie;Exportations;epci;-0.0
+2017;243800984;#c5c9d1;12;10;14;Imports pp secondaires;CA du Pays Voironnais;Raffinerie;Pertes transformation;epci;0.0
+2017;243800984;#c5c9d1;13;11;12;pp secondaires;CA du Pays Voironnais;Importations;Produits pétroliers secondaires;epci;1086.1815088839517
+2017;243800984;#c5c9d1;14;12;16;Exportations;CA du Pays Voironnais;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;243800984;#c5c9d1;15;12;15;Pertes raffinage;CA du Pays Voironnais;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;1086.1815088839526
+2017;243800984;#c5c9d1;16;15;3;pp secondaires vecteur;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;99.4195576586367
+2017;243800984;#c5c9d1;17;15;4;Transformation de l'énergie;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;37.6239459920762
+2017;243800984;#c5c9d1;18;15;5;Importation gaz;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;12.7499827751965
+2017;243800984;#c5c9d1;19;15;6;Gaz;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;46.9594667606035
+2017;243800984;#c5c9d1;20;15;7;Pertes réseaux;CA du Pays Voironnais;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;889.4285556974397
+2017;243800984;#f58536;21;17;18;Gaz vecteur;CA du Pays Voironnais;Importations;Gaz;epci;451.3512810912303
+2017;243800984;#f58536;22;18;19;Imports CMS;CA du Pays Voironnais;Gaz;Pertes réseaux;epci;2.2355536372698044
+2017;243800984;#f58536;23;18;16;CMS;CA du Pays Voironnais;Gaz;Transformation de l'énergie;epci;2.005
+2017;243800984;#f58536;24;18;20;CMS vecteur;CA du Pays Voironnais;Gaz;Gaz - vecteur énergétique ;epci;449.3462810912303
+2017;243800984;#f58536;25;20;3;Imports uranium;CA du Pays Voironnais;Gaz - vecteur énergétique ;Résidentiel;epci;215.390064767219
+2017;243800984;#f58536;26;20;4;Uranium;CA du Pays Voironnais;Gaz - vecteur énergétique ;Tertiaire;epci;69.01961234458629
+2017;243800984;#f58536;27;20;5;Imports biomasse solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.240488374773606
+2017;243800984;#f58536;28;20;6;Production biommase solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Industrie et déchets;epci;160.717894850889
+2017;243800984;#f58536;29;20;7;Biomasse solide;CA du Pays Voironnais;Gaz - vecteur énergétique ;Transport;epci;0.742667116492609
+2017;243800984;#211e1c;30;21;22;Biomasse solide vecteur;CA du Pays Voironnais;Importations;CMS;epci;1.27411867505916
+2017;243800984;#211e1c;31;22;16;Production biogaz;CA du Pays Voironnais;CMS;Transformation de l'énergie;epci;0.0
+2017;243800984;#211e1c;32;22;23;Biogaz;CA du Pays Voironnais;CMS;CMS - vecteur énergétique ;epci;1.27411867505916
+2017;243800984;#211e1c;33;23;3;Production déchets;CA du Pays Voironnais;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#211e1c;34;23;4;Déchets;CA du Pays Voironnais;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#211e1c;35;23;5;Déchets vecteur;CA du Pays Voironnais;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#211e1c;36;23;6;Production hydraulique;CA du Pays Voironnais;CMS - vecteur énergétique ;Industrie et déchets;epci;1.27411867505916
+2017;243800984;#211e1c;37;23;7;Hydroélectricité;CA du Pays Voironnais;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#981ca3;38;24;25;Production éolien;CA du Pays Voironnais;Importations;Uranium;epci;0.0
+2017;243800984;#981ca3;39;25;16;Eolien;CA du Pays Voironnais;Uranium;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;40;26;28;Production solaire PV;CA du Pays Voironnais;Importations;Biomasse solide;epci;42.81993807007781
+2017;243800984;#db0d55;41;27;28;Solaire PV;CA du Pays Voironnais;Production;Biomasse solide;epci;99.91318883018155
+2017;243800984;#db0d55;42;28;16;Electricité;CA du Pays Voironnais;Biomasse solide;Transformation de l'énergie;epci;13.417
+2017;243800984;#db0d55;43;28;29;Production solaire thermique;CA du Pays Voironnais;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;129.31612690025938
+2017;243800984;#db0d55;44;29;3;Solaire thermique;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Résidentiel;epci;126.263671021404
+2017;243800984;#db0d55;45;29;4;Production PAC;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.35051035099757977
+2017;243800984;#db0d55;46;29;5;Pertes ou torchage;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#db0d55;47;29;6;PAC;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;2.7019455278577897
+2017;243800984;#db0d55;48;29;7;Chaleur locale;CA du Pays Voironnais;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#1ca337;49;30;31;Réseaux de chaleur;CA du Pays Voironnais;Production;Biogaz;epci;0.0
+2017;243800984;#1ca337;50;31;45;Pertes transformation;CA du Pays Voironnais;Biogaz;Pertes ou torchage;epci;0.0
+2017;243800984;#1ca337;51;31;20;;CA du Pays Voironnais;Biogaz;Gaz;epci;0.0
+2017;243800984;#1ca337;52;31;16;;CA du Pays Voironnais;Biogaz;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;58;32;33;;CA du Pays Voironnais;Production;Déchets;epci;0.0
+2017;243800984;#db0d55;59;33;16;;CA du Pays Voironnais;Déchets;Transformation de l'énergie;epci;0.0
+2017;243800984;#db0d55;60;33;34;;CA du Pays Voironnais;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;243800984;#db0d55;61;34;3;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;243800984;#db0d55;62;34;4;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;243800984;#db0d55;63;34;5;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;243800984;#db0d55;64;34;6;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;243800984;#db0d55;65;34;7;;CA du Pays Voironnais;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;243800984;#3474eb;66;35;36;;CA du Pays Voironnais;Production;Hydraulique;epci;2.359366
+2017;243800984;#3474eb;67;37;38;;CA du Pays Voironnais;Production;Eolien;epci;0.0
+2017;243800984;#faf31e;68;39;40;;CA du Pays Voironnais;Production;Solaire PV;epci;4.408196625524942
+2017;243800984;#3474eb;69;36;41;;CA du Pays Voironnais;Hydraulique;Electricité;epci;2.359366
+2017;243800984;#3474eb;70;38;41;;CA du Pays Voironnais;Eolien;Electricité;epci;0.0
+2017;243800984;#faf31e;71;40;41;;CA du Pays Voironnais;Solaire PV;Electricité;epci;4.408196625524942
+2017;243800984;#faf31e;72;42;43;;CA du Pays Voironnais;Production;Solaire thermique;epci;3.32
+2017;243800984;#faf31e;73;44;46;;CA du Pays Voironnais;Production;PAC;epci;30.33
+2017;243800984;#faf31e;74;43;47;;CA du Pays Voironnais;Solaire thermique;Chaleur locale;epci;3.32
+2017;243800984;#faf31e;75;46;47;;CA du Pays Voironnais;PAC;Chaleur locale;epci;30.33
+2017;243800984;#db0d55;76;47;3;;CA du Pays Voironnais;Chaleur locale;Résidentiel;epci;33.65
+2017;243800984;#db0d55;77;47;6;;CA du Pays Voironnais;Chaleur locale;Industrie et déchets;epci;0.0
+2017;243800984;#db0d55;78;48;19;;CA du Pays Voironnais;Chaleur RDC;Pertes réseaux;epci;0.7843000000000007
+2017;243800984;#db0d55;79;48;3;;CA du Pays Voironnais;Chaleur RDC;Résidentiel;epci;8.493969
+2017;243800984;#db0d55;80;48;4;;CA du Pays Voironnais;Chaleur RDC;Tertiaire;epci;4.619527
+2017;243800984;#db0d55;81;48;5;;CA du Pays Voironnais;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.298034
+2017;243800984;#db0d55;82;48;6;;CA du Pays Voironnais;Chaleur RDC;Industrie et déchets;epci;1.49017
+2017;243800984;#3474eb;83;16;41;;CA du Pays Voironnais;Transformation de l'énergie;Electricité;epci;0.0
+2017;243800984;#db0d55;84;16;48;;CA du Pays Voironnais;Transformation de l'énergie;Chaleur RDC;epci;15.686
+2017;243800984;#db0d55;85;16;47;;CA du Pays Voironnais;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;243800984;#c5c9d1;86;16;49;;CA du Pays Voironnais;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;243800984;#3474eb;87;41;3;;CA du Pays Voironnais;Electricité;Résidentiel;epci;258.521566440531
+2017;243800984;#3474eb;88;41;4;;CA du Pays Voironnais;Electricité;Tertiaire;epci;126.279005639515
+2017;243800984;#3474eb;89;41;5;;CA du Pays Voironnais;Electricité;Agriculture, sylviculture et aquaculture;epci;4.79050373503939
+2017;243800984;#3474eb;90;41;6;;CA du Pays Voironnais;Electricité;Industrie et déchets;epci;128.927426068427
+2017;243800984;#3474eb;91;41;7;;CA du Pays Voironnais;Electricité;Transport;epci;23.73643808267582
+2017;243800984;#3474eb;92;41;19;;CA du Pays Voironnais;Electricité;Pertes réseaux;epci;0.6090806362972445
+2017;243800984;#3474eb;93;41;13;;CA du Pays Voironnais;Electricité;Exportations;epci;-536.0964579769604
+2017;200067627;#40de48;1;0;1;imports organo-carburant;CC Billom Communauté;Importations;Organo-carburants;epci;19.31622617143838
+2017;200067627;#40de49;2;1;2;organo-carburant;CC Billom Communauté;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;19.31622617143838
+2017;200067627;#40de50;3;2;3;organo-carburant vecteur;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#40de51;4;2;4;Résidentiel;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#40de52;5;2;5;Tertiaire;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.12742555579706
+2017;200067627;#40de53;6;2;6;Agriculture;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200067627;#40de54;7;2;7;Industrie-déchets;CC Billom Communauté;Organo-carburants - vecteur énergétique ;Transport;epci;18.18880061564132
+2017;200067627;#c5c9d1;8;8;9;Transport;CC Billom Communauté;Importations;Produits pétroliers primaires;epci;0.0
+2017;200067627;#c5c9d1;9;9;10;imports pp primaires;CC Billom Communauté;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200067627;#c5c9d1;10;10;12;pp primaires;CC Billom Communauté;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200067627;#c5c9d1;11;10;13;Raffinerie;CC Billom Communauté;Raffinerie;Exportations;epci;-0.0
+2017;200067627;#c5c9d1;12;10;14;Imports pp secondaires;CC Billom Communauté;Raffinerie;Pertes transformation;epci;0.0
+2017;200067627;#c5c9d1;13;11;12;pp secondaires;CC Billom Communauté;Importations;Produits pétroliers secondaires;epci;287.7377876006727
+2017;200067627;#c5c9d1;14;12;16;Exportations;CC Billom Communauté;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200067627;#c5c9d1;15;12;15;Pertes raffinage;CC Billom Communauté;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;287.7377876006728
+2017;200067627;#c5c9d1;16;15;3;pp secondaires vecteur;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;33.6167724135238
+2017;200067627;#c5c9d1;17;15;4;Transformation de l'énergie;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;7.21487343758546
+2017;200067627;#c5c9d1;18;15;5;Importation gaz;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;13.9744957015546
+2017;200067627;#c5c9d1;19;15;6;Gaz;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;3.44347116938868
+2017;200067627;#c5c9d1;20;15;7;Pertes réseaux;CC Billom Communauté;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;229.48817487862024
+2017;200067627;#f58536;21;17;18;Gaz vecteur;CC Billom Communauté;Importations;Gaz;epci;56.30172633186361
+2017;200067627;#f58536;22;18;19;Imports CMS;CC Billom Communauté;Gaz;Pertes réseaux;epci;0.2801080912033018
+2017;200067627;#f58536;23;18;16;CMS;CC Billom Communauté;Gaz;Transformation de l'énergie;epci;0.0
+2017;200067627;#f58536;24;18;20;CMS vecteur;CC Billom Communauté;Gaz;Gaz - vecteur énergétique ;epci;56.30172633186361
+2017;200067627;#f58536;25;20;3;Imports uranium;CC Billom Communauté;Gaz - vecteur énergétique ;Résidentiel;epci;42.4944000000001
+2017;200067627;#f58536;26;20;4;Uranium;CC Billom Communauté;Gaz - vecteur énergétique ;Tertiaire;epci;11.8947234385365
+2017;200067627;#f58536;27;20;5;Imports biomasse solide;CC Billom Communauté;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.42713043434186704
+2017;200067627;#f58536;28;20;6;Production biommase solide;CC Billom Communauté;Gaz - vecteur énergétique ;Industrie et déchets;epci;1.20536436778184
+2017;200067627;#f58536;29;20;7;Biomasse solide;CC Billom Communauté;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#211e1c;30;21;22;Biomasse solide vecteur;CC Billom Communauté;Importations;CMS;epci;0.585970200050141
+2017;200067627;#211e1c;31;22;16;Production biogaz;CC Billom Communauté;CMS;Transformation de l'énergie;epci;0.0
+2017;200067627;#211e1c;32;22;23;Biogaz;CC Billom Communauté;CMS;CMS - vecteur énergétique ;epci;0.585970200050141
+2017;200067627;#211e1c;33;23;3;Production déchets;CC Billom Communauté;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#211e1c;34;23;4;Déchets;CC Billom Communauté;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#211e1c;35;23;5;Déchets vecteur;CC Billom Communauté;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#211e1c;36;23;6;Production hydraulique;CC Billom Communauté;CMS - vecteur énergétique ;Industrie et déchets;epci;0.585970200050141
+2017;200067627;#211e1c;37;23;7;Hydroélectricité;CC Billom Communauté;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#981ca3;38;24;25;Production éolien;CC Billom Communauté;Importations;Uranium;epci;0.0
+2017;200067627;#981ca3;39;25;16;Eolien;CC Billom Communauté;Uranium;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;40;26;28;Production solaire PV;CC Billom Communauté;Importations;Biomasse solide;epci;15.679194927910082
+2017;200067627;#db0d55;41;27;28;Solaire PV;CC Billom Communauté;Production;Biomasse solide;epci;36.58478816512353
+2017;200067627;#db0d55;42;28;16;Electricité;CC Billom Communauté;Biomasse solide;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;43;28;29;Production solaire thermique;CC Billom Communauté;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;52.26398309303361
+2017;200067627;#db0d55;44;29;3;Solaire thermique;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Résidentiel;epci;51.4719616432967
+2017;200067627;#db0d55;45;29;4;Production PAC;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.606265709853391
+2017;200067627;#db0d55;46;29;5;Pertes ou torchage;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;47;29;6;PAC;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.185755739883517
+2017;200067627;#db0d55;48;29;7;Chaleur locale;CC Billom Communauté;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#1ca337;49;30;31;Réseaux de chaleur;CC Billom Communauté;Production;Biogaz;epci;0.0
+2017;200067627;#1ca337;50;31;45;Pertes transformation;CC Billom Communauté;Biogaz;Pertes ou torchage;epci;0.0
+2017;200067627;#1ca337;51;31;20;;CC Billom Communauté;Biogaz;Gaz;epci;0.0
+2017;200067627;#1ca337;52;31;16;;CC Billom Communauté;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;58;32;33;;CC Billom Communauté;Production;Déchets;epci;0.0
+2017;200067627;#db0d55;59;33;16;;CC Billom Communauté;Déchets;Transformation de l'énergie;epci;0.0
+2017;200067627;#db0d55;60;33;34;;CC Billom Communauté;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200067627;#db0d55;61;34;3;;CC Billom Communauté;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200067627;#db0d55;62;34;4;;CC Billom Communauté;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200067627;#db0d55;63;34;5;;CC Billom Communauté;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;64;34;6;;CC Billom Communauté;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200067627;#db0d55;65;34;7;;CC Billom Communauté;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200067627;#3474eb;66;35;36;;CC Billom Communauté;Production;Hydraulique;epci;0.0
+2017;200067627;#3474eb;67;37;38;;CC Billom Communauté;Production;Eolien;epci;0.0
+2017;200067627;#faf31e;68;39;40;;CC Billom Communauté;Production;Solaire PV;epci;1.545298465439942
+2017;200067627;#3474eb;69;36;41;;CC Billom Communauté;Hydraulique;Electricité;epci;0.0
+2017;200067627;#3474eb;70;38;41;;CC Billom Communauté;Eolien;Electricité;epci;0.0
+2017;200067627;#faf31e;71;40;41;;CC Billom Communauté;Solaire PV;Electricité;epci;1.545298465439942
+2017;200067627;#faf31e;72;42;43;;CC Billom Communauté;Production;Solaire thermique;epci;1.09
+2017;200067627;#faf31e;73;44;46;;CC Billom Communauté;Production;PAC;epci;13.19
+2017;200067627;#faf31e;74;43;47;;CC Billom Communauté;Solaire thermique;Chaleur locale;epci;1.09
+2017;200067627;#faf31e;75;46;47;;CC Billom Communauté;PAC;Chaleur locale;epci;13.19
+2017;200067627;#db0d55;76;47;3;;CC Billom Communauté;Chaleur locale;Résidentiel;epci;14.28
+2017;200067627;#db0d55;77;47;6;;CC Billom Communauté;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200067627;#db0d55;78;48;19;;CC Billom Communauté;Chaleur RDC;Pertes réseaux;epci;0.0
+2017;200067627;#db0d55;79;48;3;;CC Billom Communauté;Chaleur RDC;Résidentiel;epci;0.0
+2017;200067627;#db0d55;80;48;4;;CC Billom Communauté;Chaleur RDC;Tertiaire;epci;0.0
+2017;200067627;#db0d55;81;48;5;;CC Billom Communauté;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200067627;#db0d55;82;48;6;;CC Billom Communauté;Chaleur RDC;Industrie et déchets;epci;0.0
+2017;200067627;#3474eb;83;16;41;;CC Billom Communauté;Transformation de l'énergie;Electricité;epci;0.0
+2017;200067627;#db0d55;84;16;48;;CC Billom Communauté;Transformation de l'énergie;Chaleur RDC;epci;0.0
+2017;200067627;#db0d55;85;16;47;;CC Billom Communauté;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200067627;#c5c9d1;86;16;49;;CC Billom Communauté;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200067627;#3474eb;87;41;3;;CC Billom Communauté;Electricité;Résidentiel;epci;72.7062679152211
+2017;200067627;#3474eb;88;41;4;;CC Billom Communauté;Electricité;Tertiaire;epci;17.4679867350191
+2017;200067627;#3474eb;89;41;5;;CC Billom Communauté;Electricité;Agriculture, sylviculture et aquaculture;epci;3.8993448261363
+2017;200067627;#3474eb;90;41;6;;CC Billom Communauté;Electricité;Industrie et déchets;epci;5.8494385783237774
+2017;200067627;#3474eb;91;41;7;;CC Billom Communauté;Electricité;Transport;epci;0.118557098092828
+2017;200067627;#3474eb;92;41;19;;CC Billom Communauté;Electricité;Pertes réseaux;epci;0.13907686188959473
+2017;200067627;#3474eb;93;41;13;;CC Billom Communauté;Electricité;Exportations;epci;-98.63537354924274
+2017;200071405;#40de48;1;0;1;imports organo-carburant;CC Ardèche Rhône Coiron;Importations;Organo-carburants;epci;18.467870617790098
+2017;200071405;#40de49;2;1;2;organo-carburant;CC Ardèche Rhône Coiron;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;18.467870617790098
+2017;200071405;#40de50;3;2;3;organo-carburant vecteur;CC Ardèche Rhône Coiron;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071405;#40de51;4;2;4;Résidentiel;CC Ardèche Rhône Coiron;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071405;#40de52;5;2;5;Tertiaire;CC Ardèche Rhône Coiron;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.336445719839029
+2017;200071405;#40de53;6;2;6;Agriculture;CC Ardèche Rhône Coiron;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;6.33668151666667
+2017;200071405;#40de54;7;2;7;Industrie-déchets;CC Ardèche Rhône Coiron;Organo-carburants - vecteur énergétique ;Transport;epci;11.794743381284396
+2017;200071405;#c5c9d1;8;8;9;Transport;CC Ardèche Rhône Coiron;Importations;Produits pétroliers primaires;epci;0.0
+2017;200071405;#c5c9d1;9;9;10;imports pp primaires;CC Ardèche Rhône Coiron;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200071405;#c5c9d1;10;10;12;pp primaires;CC Ardèche Rhône Coiron;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200071405;#c5c9d1;11;10;13;Raffinerie;CC Ardèche Rhône Coiron;Raffinerie;Exportations;epci;-0.0
+2017;200071405;#c5c9d1;12;10;14;Imports pp secondaires;CC Ardèche Rhône Coiron;Raffinerie;Pertes transformation;epci;0.0
+2017;200071405;#c5c9d1;13;11;12;pp secondaires;CC Ardèche Rhône Coiron;Importations;Produits pétroliers secondaires;epci;958.2897028541922
+2017;200071405;#c5c9d1;14;12;16;Exportations;CC Ardèche Rhône Coiron;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200071405;#c5c9d1;15;12;15;Pertes raffinage;CC Ardèche Rhône Coiron;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;967.0126587764155
+2017;200071405;#c5c9d1;16;15;3;pp secondaires vecteur;CC Ardèche Rhône Coiron;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;24.0629576622208
+2017;200071405;#c5c9d1;17;15;4;Transformation de l'énergie;CC Ardèche Rhône Coiron;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;4.08715813767922
+2017;200071405;#c5c9d1;18;15;5;Importation gaz;CC Ardèche Rhône Coiron;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;4.8372995251979
+2017;200071405;#c5c9d1;19;15;6;Gaz;CC Ardèche Rhône Coiron;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;786.873153870699
+2017;200071405;#c5c9d1;20;15;7;Pertes réseaux;CC Ardèche Rhône Coiron;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;147.15208958061865
+2017;200071405;#f58536;21;17;18;Gaz vecteur;CC Ardèche Rhône Coiron;Importations;Gaz;epci;172.8609420499417
+2017;200071405;#f58536;22;18;19;Imports CMS;CC Ardèche Rhône Coiron;Gaz;Pertes réseaux;epci;0.8600046868156311
+2017;200071405;#f58536;23;18;16;CMS;CC Ardèche Rhône Coiron;Gaz;Transformation de l'énergie;epci;0.0
+2017;200071405;#f58536;24;18;20;CMS vecteur;CC Ardèche Rhône Coiron;Gaz;Gaz - vecteur énergétique ;epci;172.8609420499417
+2017;200071405;#f58536;25;20;3;Imports uranium;CC Ardèche Rhône Coiron;Gaz - vecteur énergétique ;Résidentiel;epci;25.9443
+2017;200071405;#f58536;26;20;4;Uranium;CC Ardèche Rhône Coiron;Gaz - vecteur énergétique ;Tertiaire;epci;9.25675465859129
+2017;200071405;#f58536;27;20;5;Imports biomasse solide;CC Ardèche Rhône Coiron;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.09781255500526177
+2017;200071405;#f58536;28;20;6;Production biommase solide;CC Ardèche Rhône Coiron;Gaz - vecteur énergétique ;Industrie et déchets;epci;136.390792178215
+2017;200071405;#f58536;29;20;7;Biomasse solide;CC Ardèche Rhône Coiron;Gaz - vecteur énergétique ;Transport;epci;0.311277971314486
+2017;200071405;#211e1c;30;21;22;Biomasse solide vecteur;CC Ardèche Rhône Coiron;Importations;CMS;epci;0.165916271760744
+2017;200071405;#211e1c;31;22;16;Production biogaz;CC Ardèche Rhône Coiron;CMS;Transformation de l'énergie;epci;0.0
+2017;200071405;#211e1c;32;22;23;Biogaz;CC Ardèche Rhône Coiron;CMS;CMS - vecteur énergétique ;epci;0.165916271760744
+2017;200071405;#211e1c;33;23;3;Production déchets;CC Ardèche Rhône Coiron;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071405;#211e1c;34;23;4;Déchets;CC Ardèche Rhône Coiron;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071405;#211e1c;35;23;5;Déchets vecteur;CC Ardèche Rhône Coiron;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071405;#211e1c;36;23;6;Production hydraulique;CC Ardèche Rhône Coiron;CMS - vecteur énergétique ;Industrie et déchets;epci;0.165916271760744
+2017;200071405;#211e1c;37;23;7;Hydroélectricité;CC Ardèche Rhône Coiron;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200071405;#981ca3;38;24;25;Production éolien;CC Ardèche Rhône Coiron;Importations;Uranium;epci;68422.35006842235
+2017;200071405;#981ca3;39;25;16;Eolien;CC Ardèche Rhône Coiron;Uranium;Transformation de l'énergie;epci;68422.35006842235
+2017;200071405;#db0d55;40;26;28;Production solaire PV;CC Ardèche Rhône Coiron;Importations;Biomasse solide;epci;26.60057786125089
+2017;200071405;#db0d55;41;27;28;Solaire PV;CC Ardèche Rhône Coiron;Production;Biomasse solide;epci;62.06801500958541
+2017;200071405;#db0d55;42;28;16;Electricité;CC Ardèche Rhône Coiron;Biomasse solide;Transformation de l'énergie;epci;0.0
+2017;200071405;#db0d55;43;28;29;Production solaire thermique;CC Ardèche Rhône Coiron;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;88.6685928708363
+2017;200071405;#db0d55;44;29;3;Solaire thermique;CC Ardèche Rhône Coiron;Biomasse solide - vecteur énergétique ;Résidentiel;epci;33.3818704251677
+2017;200071405;#db0d55;45;29;4;Production PAC;CC Ardèche Rhône Coiron;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.5539698540433
+2017;200071405;#db0d55;46;29;5;Pertes ou torchage;CC Ardèche Rhône Coiron;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071405;#db0d55;47;29;6;PAC;CC Ardèche Rhône Coiron;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;54.7327525916253
+2017;200071405;#db0d55;48;29;7;Chaleur locale;CC Ardèche Rhône Coiron;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200071405;#1ca337;49;30;31;Réseaux de chaleur;CC Ardèche Rhône Coiron;Production;Biogaz;epci;0.0
+2017;200071405;#1ca337;50;31;45;Pertes transformation;CC Ardèche Rhône Coiron;Biogaz;Pertes ou torchage;epci;0.0
+2017;200071405;#1ca337;51;31;20;;CC Ardèche Rhône Coiron;Biogaz;Gaz;epci;0.0
+2017;200071405;#1ca337;52;31;16;;CC Ardèche Rhône Coiron;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200071405;#db0d55;58;32;33;;CC Ardèche Rhône Coiron;Production;Déchets;epci;134.560755736533
+2017;200071405;#db0d55;59;33;16;;CC Ardèche Rhône Coiron;Déchets;Transformation de l'énergie;epci;0.0
+2017;200071405;#db0d55;60;33;34;;CC Ardèche Rhône Coiron;Déchets;Déchets - vecteur énergétique ;epci;134.560755736533
+2017;200071405;#db0d55;61;34;3;;CC Ardèche Rhône Coiron;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071405;#db0d55;62;34;4;;CC Ardèche Rhône Coiron;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071405;#db0d55;63;34;5;;CC Ardèche Rhône Coiron;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071405;#db0d55;64;34;6;;CC Ardèche Rhône Coiron;Déchets - vecteur énergétique ;Industrie et déchets;epci;134.560755736533
+2017;200071405;#db0d55;65;34;7;;CC Ardèche Rhône Coiron;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200071405;#3474eb;66;35;36;;CC Ardèche Rhône Coiron;Production;Hydraulique;epci;56.875302000000005
+2017;200071405;#3474eb;67;37;38;;CC Ardèche Rhône Coiron;Production;Eolien;epci;10.048991
+2017;200071405;#faf31e;68;39;40;;CC Ardèche Rhône Coiron;Production;Solaire PV;epci;8.292910309842966
+2017;200071405;#3474eb;69;36;41;;CC Ardèche Rhône Coiron;Hydraulique;Electricité;epci;56.875302000000005
+2017;200071405;#3474eb;70;38;41;;CC Ardèche Rhône Coiron;Eolien;Electricité;epci;10.048991
+2017;200071405;#faf31e;71;40;41;;CC Ardèche Rhône Coiron;Solaire PV;Electricité;epci;8.292910309842966
+2017;200071405;#faf31e;72;42;43;;CC Ardèche Rhône Coiron;Production;Solaire thermique;epci;0.84
+2017;200071405;#faf31e;73;44;46;;CC Ardèche Rhône Coiron;Production;PAC;epci;9.62
+2017;200071405;#faf31e;74;43;47;;CC Ardèche Rhône Coiron;Solaire thermique;Chaleur locale;epci;0.84
+2017;200071405;#faf31e;75;46;47;;CC Ardèche Rhône Coiron;PAC;Chaleur locale;epci;9.62
+2017;200071405;#db0d55;76;47;3;;CC Ardèche Rhône Coiron;Chaleur locale;Résidentiel;epci;10.459999999999999
+2017;200071405;#db0d55;77;47;6;;CC Ardèche Rhône Coiron;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200071405;#db0d55;78;48;19;;CC Ardèche Rhône Coiron;Chaleur RDC;Pertes réseaux;epci;0.0
+2017;200071405;#db0d55;79;48;3;;CC Ardèche Rhône Coiron;Chaleur RDC;Résidentiel;epci;0.0
+2017;200071405;#db0d55;80;48;4;;CC Ardèche Rhône Coiron;Chaleur RDC;Tertiaire;epci;0.0
+2017;200071405;#db0d55;81;48;5;;CC Ardèche Rhône Coiron;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071405;#db0d55;82;48;6;;CC Ardèche Rhône Coiron;Chaleur RDC;Industrie et déchets;epci;0.0
+2017;200071405;#3474eb;83;16;41;;CC Ardèche Rhône Coiron;Transformation de l'énergie;Electricité;epci;22807.45
+2017;200071405;#db0d55;84;16;48;;CC Ardèche Rhône Coiron;Transformation de l'énergie;Chaleur RDC;epci;0.0
+2017;200071405;#db0d55;85;16;47;;CC Ardèche Rhône Coiron;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200071405;#c5c9d1;86;16;49;;CC Ardèche Rhône Coiron;Transformation de l'énergie;Pertes transformation;epci;45614.90006842235
+2017;200071405;#3474eb;87;41;3;;CC Ardèche Rhône Coiron;Electricité;Résidentiel;epci;69.5208953819187
+2017;200071405;#3474eb;88;41;4;;CC Ardèche Rhône Coiron;Electricité;Tertiaire;epci;15.9801191520742
+2017;200071405;#3474eb;89;41;5;;CC Ardèche Rhône Coiron;Electricité;Agriculture, sylviculture et aquaculture;epci;1.82559855294595
+2017;200071405;#3474eb;90;41;6;;CC Ardèche Rhône Coiron;Electricité;Industrie et déchets;epci;160.33894052497064
+2017;200071405;#3474eb;91;41;7;;CC Ardèche Rhône Coiron;Electricité;Transport;epci;7.961406819334787
+2017;200071405;#3474eb;92;41;19;;CC Ardèche Rhône Coiron;Electricité;Pertes réseaux;epci;2059.4400482978854
+2017;200071405;#3474eb;93;41;13;;CC Ardèche Rhône Coiron;Electricité;Exportations;epci;20567.600194580715
+2017;200071199;#40de48;1;0;1;imports organo-carburant;CC Plaine Limagne;Importations;Organo-carburants;epci;15.925365917719319
+2017;200071199;#40de49;2;1;2;organo-carburant;CC Plaine Limagne;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;15.925365917719319
+2017;200071199;#40de50;3;2;3;organo-carburant vecteur;CC Plaine Limagne;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071199;#40de51;4;2;4;Résidentiel;CC Plaine Limagne;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071199;#40de52;5;2;5;Tertiaire;CC Plaine Limagne;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.72131513274703
+2017;200071199;#40de53;6;2;6;Agriculture;CC Plaine Limagne;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071199;#40de54;7;2;7;Industrie-déchets;CC Plaine Limagne;Organo-carburants - vecteur énergétique ;Transport;epci;14.204050784972289
+2017;200071199;#c5c9d1;8;8;9;Transport;CC Plaine Limagne;Importations;Produits pétroliers primaires;epci;0.0
+2017;200071199;#c5c9d1;9;9;10;imports pp primaires;CC Plaine Limagne;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200071199;#c5c9d1;10;10;12;pp primaires;CC Plaine Limagne;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200071199;#c5c9d1;11;10;13;Raffinerie;CC Plaine Limagne;Raffinerie;Exportations;epci;-0.0
+2017;200071199;#c5c9d1;12;10;14;Imports pp secondaires;CC Plaine Limagne;Raffinerie;Pertes transformation;epci;0.0
+2017;200071199;#c5c9d1;13;11;12;pp secondaires;CC Plaine Limagne;Importations;Produits pétroliers secondaires;epci;249.64801706878708
+2017;200071199;#c5c9d1;14;12;16;Exportations;CC Plaine Limagne;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.0
+2017;200071199;#c5c9d1;15;12;15;Pertes raffinage;CC Plaine Limagne;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;249.64801706878737
+2017;200071199;#c5c9d1;16;15;3;pp secondaires vecteur;CC Plaine Limagne;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;30.4723778737071
+2017;200071199;#c5c9d1;17;15;4;Transformation de l'énergie;CC Plaine Limagne;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;5.32587200971609
+2017;200071199;#c5c9d1;18;15;5;Importation gaz;CC Plaine Limagne;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;21.3380543627156
+2017;200071199;#c5c9d1;19;15;6;Gaz;CC Plaine Limagne;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;13.7597362276027
+2017;200071199;#c5c9d1;20;15;7;Pertes réseaux;CC Plaine Limagne;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;178.75197659504587
+2017;200071199;#f58536;21;17;18;Gaz vecteur;CC Plaine Limagne;Importations;Gaz;epci;47.22863372300933
+2017;200071199;#f58536;22;18;19;Imports CMS;CC Plaine Limagne;Gaz;Pertes réseaux;epci;0.23496832698014614
+2017;200071199;#f58536;23;18;16;CMS;CC Plaine Limagne;Gaz;Transformation de l'énergie;epci;0.0
+2017;200071199;#f58536;24;18;20;CMS vecteur;CC Plaine Limagne;Gaz;Gaz - vecteur énergétique ;epci;47.22863372300933
+2017;200071199;#f58536;25;20;3;Imports uranium;CC Plaine Limagne;Gaz - vecteur énergétique ;Résidentiel;epci;29.9313000000002
+2017;200071199;#f58536;26;20;4;Uranium;CC Plaine Limagne;Gaz - vecteur énergétique ;Tertiaire;epci;12.1826431908562
+2017;200071199;#f58536;27;20;5;Imports biomasse solide;CC Plaine Limagne;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;1.389740001361047
+2017;200071199;#f58536;28;20;6;Production biommase solide;CC Plaine Limagne;Gaz - vecteur énergétique ;Industrie et déchets;epci;3.48186720484648
+2017;200071199;#f58536;29;20;7;Biomasse solide;CC Plaine Limagne;Gaz - vecteur énergétique ;Transport;epci;0.00811499896525572
+2017;200071199;#211e1c;30;21;22;Biomasse solide vecteur;CC Plaine Limagne;Importations;CMS;epci;1.62697034088265
+2017;200071199;#211e1c;31;22;16;Production biogaz;CC Plaine Limagne;CMS;Transformation de l'énergie;epci;0.0
+2017;200071199;#211e1c;32;22;23;Biogaz;CC Plaine Limagne;CMS;CMS - vecteur énergétique ;epci;1.62697034088265
+2017;200071199;#211e1c;33;23;3;Production déchets;CC Plaine Limagne;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071199;#211e1c;34;23;4;Déchets;CC Plaine Limagne;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071199;#211e1c;35;23;5;Déchets vecteur;CC Plaine Limagne;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071199;#211e1c;36;23;6;Production hydraulique;CC Plaine Limagne;CMS - vecteur énergétique ;Industrie et déchets;epci;1.62697034088265
+2017;200071199;#211e1c;37;23;7;Hydroélectricité;CC Plaine Limagne;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200071199;#981ca3;38;24;25;Production éolien;CC Plaine Limagne;Importations;Uranium;epci;0.0
+2017;200071199;#981ca3;39;25;16;Eolien;CC Plaine Limagne;Uranium;Transformation de l'énergie;epci;0.0
+2017;200071199;#db0d55;40;26;28;Production solaire PV;CC Plaine Limagne;Importations;Biomasse solide;epci;12.746097133269638
+2017;200071199;#db0d55;41;27;28;Solaire PV;CC Plaine Limagne;Production;Biomasse solide;epci;29.740893310962488
+2017;200071199;#db0d55;42;28;16;Electricité;CC Plaine Limagne;Biomasse solide;Transformation de l'énergie;epci;0.167055
+2017;200071199;#db0d55;43;28;29;Production solaire thermique;CC Plaine Limagne;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;42.31993544423213
+2017;200071199;#db0d55;44;29;3;Solaire thermique;CC Plaine Limagne;Biomasse solide - vecteur énergétique ;Résidentiel;epci;41.8003119239074
+2017;200071199;#db0d55;45;29;4;Production PAC;CC Plaine Limagne;Biomasse solide - vecteur énergétique ;Tertiaire;epci;0.509258381090856
+2017;200071199;#db0d55;46;29;5;Pertes ou torchage;CC Plaine Limagne;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071199;#db0d55;47;29;6;PAC;CC Plaine Limagne;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.010365139233870401
+2017;200071199;#db0d55;48;29;7;Chaleur locale;CC Plaine Limagne;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200071199;#1ca337;49;30;31;Réseaux de chaleur;CC Plaine Limagne;Production;Biogaz;epci;0.0
+2017;200071199;#1ca337;50;31;45;Pertes transformation;CC Plaine Limagne;Biogaz;Pertes ou torchage;epci;0.0
+2017;200071199;#1ca337;51;31;20;;CC Plaine Limagne;Biogaz;Gaz;epci;0.0
+2017;200071199;#1ca337;52;31;16;;CC Plaine Limagne;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200071199;#db0d55;58;32;33;;CC Plaine Limagne;Production;Déchets;epci;0.0
+2017;200071199;#db0d55;59;33;16;;CC Plaine Limagne;Déchets;Transformation de l'énergie;epci;0.0
+2017;200071199;#db0d55;60;33;34;;CC Plaine Limagne;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200071199;#db0d55;61;34;3;;CC Plaine Limagne;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200071199;#db0d55;62;34;4;;CC Plaine Limagne;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200071199;#db0d55;63;34;5;;CC Plaine Limagne;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200071199;#db0d55;64;34;6;;CC Plaine Limagne;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200071199;#db0d55;65;34;7;;CC Plaine Limagne;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200071199;#3474eb;66;35;36;;CC Plaine Limagne;Production;Hydraulique;epci;0.0
+2017;200071199;#3474eb;67;37;38;;CC Plaine Limagne;Production;Eolien;epci;0.0
+2017;200071199;#faf31e;68;39;40;;CC Plaine Limagne;Production;Solaire PV;epci;2.412054667345413
+2017;200071199;#3474eb;69;36;41;;CC Plaine Limagne;Hydraulique;Electricité;epci;0.0
+2017;200071199;#3474eb;70;38;41;;CC Plaine Limagne;Eolien;Electricité;epci;0.0
+2017;200071199;#faf31e;71;40;41;;CC Plaine Limagne;Solaire PV;Electricité;epci;2.412054667345413
+2017;200071199;#faf31e;72;42;43;;CC Plaine Limagne;Production;Solaire thermique;epci;0.8
+2017;200071199;#faf31e;73;44;46;;CC Plaine Limagne;Production;PAC;epci;10.6
+2017;200071199;#faf31e;74;43;47;;CC Plaine Limagne;Solaire thermique;Chaleur locale;epci;0.8
+2017;200071199;#faf31e;75;46;47;;CC Plaine Limagne;PAC;Chaleur locale;epci;10.6
+2017;200071199;#db0d55;76;47;3;;CC Plaine Limagne;Chaleur locale;Résidentiel;epci;11.4
+2017;200071199;#db0d55;77;47;6;;CC Plaine Limagne;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200071199;#db0d55;78;48;19;;CC Plaine Limagne;Chaleur RDC;Pertes réseaux;epci;0.008352750000000008
+2017;200071199;#db0d55;79;48;3;;CC Plaine Limagne;Chaleur RDC;Résidentiel;epci;0.09046028249999999
+2017;200071199;#db0d55;80;48;4;;CC Plaine Limagne;Chaleur RDC;Tertiaire;epci;0.0491976975
+2017;200071199;#db0d55;81;48;5;;CC Plaine Limagne;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.003174045
+2017;200071199;#db0d55;82;48;6;;CC Plaine Limagne;Chaleur RDC;Industrie et déchets;epci;0.015870224999999998
+2017;200071199;#3474eb;83;16;41;;CC Plaine Limagne;Transformation de l'énergie;Electricité;epci;0.0
+2017;200071199;#db0d55;84;16;48;;CC Plaine Limagne;Transformation de l'énergie;Chaleur RDC;epci;0.167055
+2017;200071199;#db0d55;85;16;47;;CC Plaine Limagne;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200071199;#c5c9d1;86;16;49;;CC Plaine Limagne;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200071199;#3474eb;87;41;3;;CC Plaine Limagne;Electricité;Résidentiel;epci;57.1345609999999
+2017;200071199;#3474eb;88;41;4;;CC Plaine Limagne;Electricité;Tertiaire;epci;15.0295418760559
+2017;200071199;#3474eb;89;41;5;;CC Plaine Limagne;Electricité;Agriculture, sylviculture et aquaculture;epci;6.5405189953518
+2017;200071199;#3474eb;90;41;6;;CC Plaine Limagne;Electricité;Industrie et déchets;epci;9.955050203343731
+2017;200071199;#3474eb;91;41;7;;CC Plaine Limagne;Electricité;Transport;epci;2.7606284307720013
+2017;200071199;#3474eb;92;41;19;;CC Plaine Limagne;Electricité;Pertes réseaux;epci;0.2170849200610871
+2017;200071199;#3474eb;93;41;13;;CC Plaine Limagne;Electricité;Exportations;epci;-89.225330758239
+2017;247400690;#40de48;1;0;1;imports organo-carburant;CC du Genevois;Importations;Organo-carburants;epci;42.46072606352978
+2017;247400690;#40de49;2;1;2;organo-carburant;CC du Genevois;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;42.46072606352978
+2017;247400690;#40de50;3;2;3;organo-carburant vecteur;CC du Genevois;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;247400690;#40de51;4;2;4;Résidentiel;CC du Genevois;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;247400690;#40de52;5;2;5;Tertiaire;CC du Genevois;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.807383566220604
+2017;247400690;#40de53;6;2;6;Agriculture;CC du Genevois;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;247400690;#40de54;7;2;7;Industrie-déchets;CC du Genevois;Organo-carburants - vecteur énergétique ;Transport;epci;41.65334249730918
+2017;247400690;#c5c9d1;8;8;9;Transport;CC du Genevois;Importations;Produits pétroliers primaires;epci;0.0
+2017;247400690;#c5c9d1;9;9;10;imports pp primaires;CC du Genevois;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;247400690;#c5c9d1;10;10;12;pp primaires;CC du Genevois;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;247400690;#c5c9d1;11;10;13;Raffinerie;CC du Genevois;Raffinerie;Exportations;epci;-0.0
+2017;247400690;#c5c9d1;12;10;14;Imports pp secondaires;CC du Genevois;Raffinerie;Pertes transformation;epci;0.0
+2017;247400690;#c5c9d1;13;11;12;pp secondaires;CC du Genevois;Importations;Produits pétroliers secondaires;epci;643.249402366224
+2017;247400690;#c5c9d1;14;12;16;Exportations;CC du Genevois;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.947368
+2017;247400690;#c5c9d1;15;12;15;Pertes raffinage;CC du Genevois;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;642.3020343662243
+2017;247400690;#c5c9d1;16;15;3;pp secondaires vecteur;CC du Genevois;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;80.3218414009251
+2017;247400690;#c5c9d1;17;15;4;Transformation de l'énergie;CC du Genevois;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;15.3738147140901
+2017;247400690;#c5c9d1;18;15;5;Importation gaz;CC du Genevois;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;10.6371710318269
+2017;247400690;#c5c9d1;19;15;6;Gaz;CC du Genevois;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;17.0518954360449
+2017;247400690;#c5c9d1;20;15;7;Pertes réseaux;CC du Genevois;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;518.9173117833374
+2017;247400690;#f58536;21;17;18;Gaz vecteur;CC du Genevois;Importations;Gaz;epci;164.43999779416313
+2017;247400690;#f58536;22;18;19;Imports CMS;CC du Genevois;Gaz;Pertes réseaux;epci;0.7734577004238222
+2017;247400690;#f58536;23;18;16;CMS;CC du Genevois;Gaz;Transformation de l'énergie;epci;8.975000008975
+2017;247400690;#f58536;24;18;20;CMS vecteur;CC du Genevois;Gaz;Gaz - vecteur énergétique ;epci;155.46499778518813
+2017;247400690;#f58536;25;20;3;Imports uranium;CC du Genevois;Gaz - vecteur énergétique ;Résidentiel;epci;96.1488000000004
+2017;247400690;#f58536;26;20;4;Uranium;CC du Genevois;Gaz - vecteur énergétique ;Tertiaire;epci;55.8235867088936
+2017;247400690;#f58536;27;20;5;Imports biomasse solide;CC du Genevois;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.553973978340449
+2017;247400690;#f58536;28;20;6;Production biommase solide;CC du Genevois;Gaz - vecteur énergétique ;Industrie et déchets;epci;1.44663735189329
+2017;247400690;#f58536;29;20;7;Biomasse solide;CC du Genevois;Gaz - vecteur énergétique ;Transport;epci;0.718542045636545
+2017;247400690;#211e1c;30;21;22;Biomasse solide vecteur;CC du Genevois;Importations;CMS;epci;0.123244649091426
+2017;247400690;#211e1c;31;22;16;Production biogaz;CC du Genevois;CMS;Transformation de l'énergie;epci;0.0
+2017;247400690;#211e1c;32;22;23;Biogaz;CC du Genevois;CMS;CMS - vecteur énergétique ;epci;0.123244649091426
+2017;247400690;#211e1c;33;23;3;Production déchets;CC du Genevois;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;247400690;#211e1c;34;23;4;Déchets;CC du Genevois;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;247400690;#211e1c;35;23;5;Déchets vecteur;CC du Genevois;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;247400690;#211e1c;36;23;6;Production hydraulique;CC du Genevois;CMS - vecteur énergétique ;Industrie et déchets;epci;0.123244649091426
+2017;247400690;#211e1c;37;23;7;Hydroélectricité;CC du Genevois;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;247400690;#981ca3;38;24;25;Production éolien;CC du Genevois;Importations;Uranium;epci;0.0
+2017;247400690;#981ca3;39;25;16;Eolien;CC du Genevois;Uranium;Transformation de l'énergie;epci;0.0
+2017;247400690;#db0d55;40;26;28;Production solaire PV;CC du Genevois;Importations;Biomasse solide;epci;15.5286979028715
+2017;247400690;#db0d55;41;27;28;Solaire PV;CC du Genevois;Production;Biomasse solide;epci;36.2336284400335
+2017;247400690;#db0d55;42;28;16;Electricité;CC du Genevois;Biomasse solide;Transformation de l'énergie;epci;3.789474
+2017;247400690;#db0d55;43;28;29;Production solaire thermique;CC du Genevois;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;47.972852342905
+2017;247400690;#db0d55;44;29;3;Solaire thermique;CC du Genevois;Biomasse solide - vecteur énergétique ;Résidentiel;epci;47.006717192772996
+2017;247400690;#db0d55;45;29;4;Production PAC;CC du Genevois;Biomasse solide - vecteur énergétique ;Tertiaire;epci;1.0578072236615101
+2017;247400690;#db0d55;46;29;5;Pertes ou torchage;CC du Genevois;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;247400690;#db0d55;47;29;6;PAC;CC du Genevois;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;-0.09167207352950696
+2017;247400690;#db0d55;48;29;7;Chaleur locale;CC du Genevois;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;247400690;#1ca337;49;30;31;Réseaux de chaleur;CC du Genevois;Production;Biogaz;epci;0.0
+2017;247400690;#1ca337;50;31;45;Pertes transformation;CC du Genevois;Biogaz;Pertes ou torchage;epci;0.0
+2017;247400690;#1ca337;51;31;20;;CC du Genevois;Biogaz;Gaz;epci;0.0
+2017;247400690;#1ca337;52;31;16;;CC du Genevois;Biogaz;Transformation de l'énergie;epci;0.0
+2017;247400690;#db0d55;58;32;33;;CC du Genevois;Production;Déchets;epci;0.0
+2017;247400690;#db0d55;59;33;16;;CC du Genevois;Déchets;Transformation de l'énergie;epci;0.0
+2017;247400690;#db0d55;60;33;34;;CC du Genevois;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;247400690;#db0d55;61;34;3;;CC du Genevois;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;247400690;#db0d55;62;34;4;;CC du Genevois;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;247400690;#db0d55;63;34;5;;CC du Genevois;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;247400690;#db0d55;64;34;6;;CC du Genevois;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;247400690;#db0d55;65;34;7;;CC du Genevois;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;247400690;#3474eb;66;35;36;;CC du Genevois;Production;Hydraulique;epci;0.0
+2017;247400690;#3474eb;67;37;38;;CC du Genevois;Production;Eolien;epci;0.0
+2017;247400690;#faf31e;68;39;40;;CC du Genevois;Production;Solaire PV;epci;2.0776090082503598
+2017;247400690;#3474eb;69;36;41;;CC du Genevois;Hydraulique;Electricité;epci;0.0
+2017;247400690;#3474eb;70;38;41;;CC du Genevois;Eolien;Electricité;epci;0.0
+2017;247400690;#faf31e;71;40;41;;CC du Genevois;Solaire PV;Electricité;epci;2.0776090082503598
+2017;247400690;#faf31e;72;42;43;;CC du Genevois;Production;Solaire thermique;epci;1.29
+2017;247400690;#faf31e;73;44;46;;CC du Genevois;Production;PAC;epci;11.51
+2017;247400690;#faf31e;74;43;47;;CC du Genevois;Solaire thermique;Chaleur locale;epci;1.29
+2017;247400690;#faf31e;75;46;47;;CC du Genevois;PAC;Chaleur locale;epci;11.51
+2017;247400690;#db0d55;76;47;3;;CC du Genevois;Chaleur locale;Résidentiel;epci;12.8
+2017;247400690;#db0d55;77;47;6;;CC du Genevois;Chaleur locale;Industrie et déchets;epci;0.0
+2017;247400690;#db0d55;78;48;19;;CC du Genevois;Chaleur RDC;Pertes réseaux;epci;0.23684210000000017
+2017;247400690;#db0d55;79;48;3;;CC du Genevois;Chaleur RDC;Résidentiel;epci;2.5649999429999992
+2017;247400690;#db0d55;80;48;4;;CC du Genevois;Chaleur RDC;Tertiaire;epci;1.3949999689999997
+2017;247400690;#db0d55;81;48;5;;CC du Genevois;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.08999999799999998
+2017;247400690;#db0d55;82;48;6;;CC du Genevois;Chaleur RDC;Industrie et déchets;epci;0.4499999899999999
+2017;247400690;#3474eb;83;16;41;;CC du Genevois;Transformation de l'énergie;Electricité;epci;3.59
+2017;247400690;#db0d55;84;16;48;;CC du Genevois;Transformation de l'énergie;Chaleur RDC;epci;4.736841999999999
+2017;247400690;#db0d55;85;16;47;;CC du Genevois;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;247400690;#c5c9d1;86;16;49;;CC du Genevois;Transformation de l'énergie;Pertes transformation;epci;5.385000008974999
+2017;247400690;#3474eb;87;41;3;;CC du Genevois;Electricité;Résidentiel;epci;138.255148026888
+2017;247400690;#3474eb;88;41;4;;CC du Genevois;Electricité;Tertiaire;epci;80.7104983151678
+2017;247400690;#3474eb;89;41;5;;CC du Genevois;Electricité;Agriculture, sylviculture et aquaculture;epci;2.73053917207359
+2017;247400690;#3474eb;90;41;6;;CC du Genevois;Electricité;Industrie et déchets;epci;21.47121901136016
+2017;247400690;#3474eb;91;41;7;;CC du Genevois;Electricité;Transport;epci;4.3826071419463135
+2017;247400690;#3474eb;92;41;19;;CC du Genevois;Electricité;Pertes réseaux;epci;0.5100848107425322
+2017;247400690;#3474eb;93;41;13;;CC du Genevois;Electricité;Exportations;epci;-242.39248746992803
+2017;200069169;#40de48;1;0;1;imports organo-carburant;CC Dômes Sancy Artense;Importations;Organo-carburants;epci;18.673092766994937
+2017;200069169;#40de49;2;1;2;organo-carburant;CC Dômes Sancy Artense;Organo-carburants;Organo-carburants - vecteur énergétique ;epci;18.673092766994937
+2017;200069169;#40de50;3;2;3;organo-carburant vecteur;CC Dômes Sancy Artense;Organo-carburants - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200069169;#40de51;4;2;4;Résidentiel;CC Dômes Sancy Artense;Organo-carburants - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200069169;#40de52;5;2;5;Tertiaire;CC Dômes Sancy Artense;Organo-carburants - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;2.82034768576572
+2017;200069169;#40de53;6;2;6;Agriculture;CC Dômes Sancy Artense;Organo-carburants - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200069169;#40de54;7;2;7;Industrie-déchets;CC Dômes Sancy Artense;Organo-carburants - vecteur énergétique ;Transport;epci;15.852745081229218
+2017;200069169;#c5c9d1;8;8;9;Transport;CC Dômes Sancy Artense;Importations;Produits pétroliers primaires;epci;0.0
+2017;200069169;#c5c9d1;9;9;10;imports pp primaires;CC Dômes Sancy Artense;Produits pétroliers primaires;Raffinerie;epci;0.0
+2017;200069169;#c5c9d1;10;10;12;pp primaires;CC Dômes Sancy Artense;Raffinerie;Produits pétroliers secondaires;epci;0.0
+2017;200069169;#c5c9d1;11;10;13;Raffinerie;CC Dômes Sancy Artense;Raffinerie;Exportations;epci;-0.0
+2017;200069169;#c5c9d1;12;10;14;Imports pp secondaires;CC Dômes Sancy Artense;Raffinerie;Pertes transformation;epci;0.0
+2017;200069169;#c5c9d1;13;11;12;pp secondaires;CC Dômes Sancy Artense;Importations;Produits pétroliers secondaires;epci;293.6812352481236
+2017;200069169;#c5c9d1;14;12;16;Exportations;CC Dômes Sancy Artense;Produits pétroliers secondaires;Transformation de l'énergie;epci;0.32574
+2017;200069169;#c5c9d1;15;12;15;Pertes raffinage;CC Dômes Sancy Artense;Produits pétroliers secondaires;Produits pétroliers secondaires - vecteur énergétique ;epci;293.3554952481236
+2017;200069169;#c5c9d1;16;15;3;pp secondaires vecteur;CC Dômes Sancy Artense;Produits pétroliers secondaires - vecteur énergétique ;Résidentiel;epci;38.4795481079151
+2017;200069169;#c5c9d1;17;15;4;Transformation de l'énergie;CC Dômes Sancy Artense;Produits pétroliers secondaires - vecteur énergétique ;Tertiaire;epci;6.20854289805596
+2017;200069169;#c5c9d1;18;15;5;Importation gaz;CC Dômes Sancy Artense;Produits pétroliers secondaires - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;34.4844176615169
+2017;200069169;#c5c9d1;19;15;6;Gaz;CC Dômes Sancy Artense;Produits pétroliers secondaires - vecteur énergétique ;Industrie et déchets;epci;14.10448268988
+2017;200069169;#c5c9d1;20;15;7;Pertes réseaux;CC Dômes Sancy Artense;Produits pétroliers secondaires - vecteur énergétique ;Transport;epci;200.0785038907556
+2017;200069169;#f58536;21;17;18;Gaz vecteur;CC Dômes Sancy Artense;Importations;Gaz;epci;0.138655742433143
+2017;200069169;#f58536;22;18;19;Imports CMS;CC Dômes Sancy Artense;Gaz;Pertes réseaux;epci;0.0006898295643439956
+2017;200069169;#f58536;23;18;16;CMS;CC Dômes Sancy Artense;Gaz;Transformation de l'énergie;epci;0.0
+2017;200069169;#f58536;24;18;20;CMS vecteur;CC Dômes Sancy Artense;Gaz;Gaz - vecteur énergétique ;epci;0.138655742433143
+2017;200069169;#f58536;25;20;3;Imports uranium;CC Dômes Sancy Artense;Gaz - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200069169;#f58536;26;20;4;Uranium;CC Dômes Sancy Artense;Gaz - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200069169;#f58536;27;20;5;Imports biomasse solide;CC Dômes Sancy Artense;Gaz - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200069169;#f58536;28;20;6;Production biommase solide;CC Dômes Sancy Artense;Gaz - vecteur énergétique ;Industrie et déchets;epci;0.137965912868799
+2017;200069169;#f58536;29;20;7;Biomasse solide;CC Dômes Sancy Artense;Gaz - vecteur énergétique ;Transport;epci;0.0
+2017;200069169;#211e1c;30;21;22;Biomasse solide vecteur;CC Dômes Sancy Artense;Importations;CMS;epci;0.249492278295685
+2017;200069169;#211e1c;31;22;16;Production biogaz;CC Dômes Sancy Artense;CMS;Transformation de l'énergie;epci;0.0
+2017;200069169;#211e1c;32;22;23;Biogaz;CC Dômes Sancy Artense;CMS;CMS - vecteur énergétique ;epci;0.249492278295685
+2017;200069169;#211e1c;33;23;3;Production déchets;CC Dômes Sancy Artense;CMS - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200069169;#211e1c;34;23;4;Déchets;CC Dômes Sancy Artense;CMS - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200069169;#211e1c;35;23;5;Déchets vecteur;CC Dômes Sancy Artense;CMS - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200069169;#211e1c;36;23;6;Production hydraulique;CC Dômes Sancy Artense;CMS - vecteur énergétique ;Industrie et déchets;epci;0.249492278295685
+2017;200069169;#211e1c;37;23;7;Hydroélectricité;CC Dômes Sancy Artense;CMS - vecteur énergétique ;Transport;epci;0.0
+2017;200069169;#981ca3;38;24;25;Production éolien;CC Dômes Sancy Artense;Importations;Uranium;epci;0.0
+2017;200069169;#981ca3;39;25;16;Eolien;CC Dômes Sancy Artense;Uranium;Transformation de l'énergie;epci;0.0
+2017;200069169;#db0d55;40;26;28;Production solaire PV;CC Dômes Sancy Artense;Importations;Biomasse solide;epci;13.020919608754127
+2017;200069169;#db0d55;41;27;28;Solaire PV;CC Dômes Sancy Artense;Production;Biomasse solide;epci;30.382145753759627
+2017;200069169;#db0d55;42;28;16;Electricité;CC Dômes Sancy Artense;Biomasse solide;Transformation de l'énergie;epci;4.53736
+2017;200069169;#db0d55;43;28;29;Production solaire thermique;CC Dômes Sancy Artense;Biomasse solide;Biomasse solide - vecteur énergétique ;epci;38.86570536251376
+2017;200069169;#db0d55;44;29;3;Solaire thermique;CC Dômes Sancy Artense;Biomasse solide - vecteur énergétique ;Résidentiel;epci;39.2640920905301
+2017;200069169;#db0d55;45;29;4;Production PAC;CC Dômes Sancy Artense;Biomasse solide - vecteur énergétique ;Tertiaire;epci;-0.6845495141749797
+2017;200069169;#db0d55;46;29;5;Pertes ou torchage;CC Dômes Sancy Artense;Biomasse solide - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200069169;#db0d55;47;29;6;PAC;CC Dômes Sancy Artense;Biomasse solide - vecteur énergétique ;Industrie et déchets;epci;0.2861627861586441
+2017;200069169;#db0d55;48;29;7;Chaleur locale;CC Dômes Sancy Artense;Biomasse solide - vecteur énergétique ;Transport;epci;0.0
+2017;200069169;#1ca337;49;30;31;Réseaux de chaleur;CC Dômes Sancy Artense;Production;Biogaz;epci;0.0
+2017;200069169;#1ca337;50;31;45;Pertes transformation;CC Dômes Sancy Artense;Biogaz;Pertes ou torchage;epci;0.0
+2017;200069169;#1ca337;51;31;20;;CC Dômes Sancy Artense;Biogaz;Gaz;epci;0.0
+2017;200069169;#1ca337;52;31;16;;CC Dômes Sancy Artense;Biogaz;Transformation de l'énergie;epci;0.0
+2017;200069169;#db0d55;58;32;33;;CC Dômes Sancy Artense;Production;Déchets;epci;0.0
+2017;200069169;#db0d55;59;33;16;;CC Dômes Sancy Artense;Déchets;Transformation de l'énergie;epci;0.0
+2017;200069169;#db0d55;60;33;34;;CC Dômes Sancy Artense;Déchets;Déchets - vecteur énergétique ;epci;0.0
+2017;200069169;#db0d55;61;34;3;;CC Dômes Sancy Artense;Déchets - vecteur énergétique ;Résidentiel;epci;0.0
+2017;200069169;#db0d55;62;34;4;;CC Dômes Sancy Artense;Déchets - vecteur énergétique ;Tertiaire;epci;0.0
+2017;200069169;#db0d55;63;34;5;;CC Dômes Sancy Artense;Déchets - vecteur énergétique ;Agriculture, sylviculture et aquaculture;epci;0.0
+2017;200069169;#db0d55;64;34;6;;CC Dômes Sancy Artense;Déchets - vecteur énergétique ;Industrie et déchets;epci;0.0
+2017;200069169;#db0d55;65;34;7;;CC Dômes Sancy Artense;Déchets - vecteur énergétique ;Transport;epci;0.0
+2017;200069169;#3474eb;66;35;36;;CC Dômes Sancy Artense;Production;Hydraulique;epci;0.43865499999999996
+2017;200069169;#3474eb;67;37;38;;CC Dômes Sancy Artense;Production;Eolien;epci;31.937796
+2017;200069169;#faf31e;68;39;40;;CC Dômes Sancy Artense;Production;Solaire PV;epci;4.0244172257511
+2017;200069169;#3474eb;69;36;41;;CC Dômes Sancy Artense;Hydraulique;Electricité;epci;0.43865499999999996
+2017;200069169;#3474eb;70;38;41;;CC Dômes Sancy Artense;Eolien;Electricité;epci;31.937796
+2017;200069169;#faf31e;71;40;41;;CC Dômes Sancy Artense;Solaire PV;Electricité;epci;4.0244172257511
+2017;200069169;#faf31e;72;42;43;;CC Dômes Sancy Artense;Production;Solaire thermique;epci;0.45
+2017;200069169;#faf31e;73;44;46;;CC Dômes Sancy Artense;Production;PAC;epci;9.18
+2017;200069169;#faf31e;74;43;47;;CC Dômes Sancy Artense;Solaire thermique;Chaleur locale;epci;0.45
+2017;200069169;#faf31e;75;46;47;;CC Dômes Sancy Artense;PAC;Chaleur locale;epci;9.18
+2017;200069169;#db0d55;76;47;3;;CC Dômes Sancy Artense;Chaleur locale;Résidentiel;epci;9.629999999999999
+2017;200069169;#db0d55;77;47;6;;CC Dômes Sancy Artense;Chaleur locale;Industrie et déchets;epci;0.0
+2017;200069169;#db0d55;78;48;19;;CC Dômes Sancy Artense;Chaleur RDC;Pertes réseaux;epci;0.24315500000000018
+2017;200069169;#db0d55;79;48;3;;CC Dômes Sancy Artense;Chaleur RDC;Résidentiel;epci;2.6333686499999995
+2017;200069169;#db0d55;80;48;4;;CC Dômes Sancy Artense;Chaleur RDC;Tertiaire;epci;1.4321829499999998
+2017;200069169;#db0d55;81;48;5;;CC Dômes Sancy Artense;Chaleur RDC;Agriculture, sylviculture et aquaculture;epci;0.09239889999999999
+2017;200069169;#db0d55;82;48;6;;CC Dômes Sancy Artense;Chaleur RDC;Industrie et déchets;epci;0.4619945
+2017;200069169;#3474eb;83;16;41;;CC Dômes Sancy Artense;Transformation de l'énergie;Electricité;epci;0.0
+2017;200069169;#db0d55;84;16;48;;CC Dômes Sancy Artense;Transformation de l'énergie;Chaleur RDC;epci;4.863099999999999
+2017;200069169;#db0d55;85;16;47;;CC Dômes Sancy Artense;Transformation de l'énergie;Chaleur locale;epci;0.0
+2017;200069169;#c5c9d1;86;16;49;;CC Dômes Sancy Artense;Transformation de l'énergie;Pertes transformation;epci;0.0
+2017;200069169;#3474eb;87;41;3;;CC Dômes Sancy Artense;Electricité;Résidentiel;epci;36.5539560000001
+2017;200069169;#3474eb;88;41;4;;CC Dômes Sancy Artense;Electricité;Tertiaire;epci;14.6276843228607
+2017;200069169;#3474eb;89;41;5;;CC Dômes Sancy Artense;Electricité;Agriculture, sylviculture et aquaculture;epci;6.21149717145038
+2017;200069169;#3474eb;90;41;6;;CC Dômes Sancy Artense;Electricité;Industrie et déchets;epci;19.4275562940511
+2017;200069169;#3474eb;91;41;7;;CC Dômes Sancy Artense;Electricité;Transport;epci;0.0886967534781457
+2017;200069169;#3474eb;92;41;19;;CC Dômes Sancy Artense;Electricité;Pertes réseaux;epci;3.2760781403175976
+2017;200069169;#3474eb;93;41;13;;CC Dômes Sancy Artense;Electricité;Exportations;epci;-43.784600456406935
