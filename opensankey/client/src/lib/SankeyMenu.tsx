@@ -114,30 +114,25 @@ const Menu: FunctionComponent<MenuTypes> = (
       method: 'POST',
       body: file_name
     }
-    let callback: { (server_data: SankeyData): void }
     let file_type = 'text/plain'
     reinitialization()
-    if (file_name === 'pommes_poires.txt') {
-      callback = (server_data: SankeyData) => {
-        set_data(server_data)
+
+    file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    const callback = (server_data: SankeyData) => {
+      Object.assign(data, server_data)
+      convert_data(data)
+      // const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
+      // data['region_names'] = keys
+      //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
+      const nodes_to_delete = compute_auto_sankey(data, true)
+      if (nodes_to_delete !== undefined) {
+        nodes_to_delete.forEach(
+          n => delete_node(data, n)
+        )
       }
-    } else {
-      file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      callback = (server_data: SankeyData) => {
-        Object.assign(data, server_data)
-        convert_data(data)
-        // const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
-        // data['region_names'] = keys
-        //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
-        const nodes_to_delete = compute_auto_sankey(data, true)
-        if (nodes_to_delete !== undefined) {
-          nodes_to_delete.forEach(
-            n => delete_node(data, n)
-          )
-        }
-        set_data({ ...data })
-      }
+      set_data({ ...data })
     }
+
     fetch(url, fetchData).then((response) => {
       response.text().then((text) => {
         try {
@@ -266,7 +261,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     } else if (eventKey === 'exemple2') {
       uploadExemple('pommes_poires.xlsx')
     } else if (eventKey === 'exemple3') {
-      uploadExemple('soja_v2.0.xlsx')
+      uploadExemple('sankeys_territoire_.csv')
     }
   }
 
@@ -300,7 +295,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
                 <Dropdown.Item eventKey="exemple2" >Pommes Poires Excel</Dropdown.Item>
-                <Dropdown.Item eventKey="exemple3" >Soja Excel</Dropdown.Item>
+                <Dropdown.Item eventKey="exemple3" >Energie</Dropdown.Item>
               </NavDropdown>
             </NavDropdown>
           </Nav>
