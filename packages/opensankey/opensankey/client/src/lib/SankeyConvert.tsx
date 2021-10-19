@@ -132,6 +132,9 @@ export const convert_data = (
       if (n.label_visible === undefined) {
         n.label_visible = true
       }
+      if (n.visible === undefined) {
+        n.visible = true
+      }
       if (n.name.includes('(I')) {
         import_export = true
         n.tags['Exchanges'] = ['Importations']
