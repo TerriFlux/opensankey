@@ -10,7 +10,7 @@
   "version": "0.1.2",
   "description": "Open Sankey",
   "license": "MIT",
-  "scripts": {
+  "scripts" : {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "dist": "babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
