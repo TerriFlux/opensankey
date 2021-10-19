@@ -111,24 +111,33 @@ def upload_exemple():
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(exemples_folder, exemple)
     if exemple == "pommes_poires.xlsx" or exemple == "soja_v2.0.xlsx":
-        error, nodes, links, subchains, tooltip_names, units_names, nodes2tooltips, nodes2units_conv, trade, _ = \
+        error, nodes, links, _, tooltip_names, units_names, nodes2tooltips, nodes2units_conv, _, _ = \
             parser_excel.parse_output_excel_data(exemple_file_path)
-        context = {
-            'error': error,
-            'nodes': nodes,
-            'links': links,
-            'tooltip_names': tooltip_names,
-            'units_names': units_names,
-            'nodes2tooltips': nodes2tooltips,
-            'nodes2units_conv': nodes2units_conv,
-        }
-        json_data = json.dumps(context)
-        response = Response(
-            response=json_data,
-            status=200,
-            mimetype='application/json'
-        )
-        return response
+    elif exemple == "sankeys_territoire_.csv":
+        sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
+        nodes = sankey_dict[200042935]['nodes']
+        links = sankey_dict[200042935]['links']
+        tooltip_names = []
+        units_names = []
+        nodes2tooltips = {}
+        nodes2units_conv = {}
+        error=''
+    context = {
+        'error': error,
+        'nodes': nodes,
+        'links': links,
+        'tooltip_names': tooltip_names,
+        'units_names': units_names,
+        'nodes2tooltips': nodes2tooltips,
+        'nodes2units_conv': nodes2units_conv,
+    }
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
