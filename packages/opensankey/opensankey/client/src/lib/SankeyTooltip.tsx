@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData } from './types'
-import { getLinkValue, getTotalLinks, toPrecision } from './SankeyUtils'
+import { getLinkValue, getTotalLinks } from './SankeyUtils'
 import * as d3 from 'd3'
 
 export const nodeTooltipsContent = (
@@ -9,24 +9,27 @@ export const nodeTooltipsContent = (
   if (node.tooltip_text) {
     return node.tooltip_text
   }
+  if (data.nodes.length === 0) {
+    return ''
+  }
   let content = '<p style=\'text-align: center;margin-bottom:0px\'><b>' + node.name + '</b></p>'
-  if (node.inputLinksId && (node.inputLinksId as any).length > 0) {
-    content += '<b>Entrée</b><ul style=\'margin-bottom:0px\'>';
-    (node.inputLinksId as any).forEach((element: any) => {
-      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node as any).inputLinksId) as any))
+  if (node.inputLinksId && node.inputLinksId.length > 0) {
+    content += '<b>Entrée</b><ul style=\'margin-bottom:0px\'>'
+    node.inputLinksId.forEach(element => {
+      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
       const value = getLinkValue(data, element)
       content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].source_name + ' : ' + value + ' (' + pcValue + '%)</li>' 
     })
-    content += '</ul>Total : ' + getTotalLinks(data, (node as any).inputLinksId) + '<br>'
+    content += '</ul>Total : ' + getTotalLinks(data, node.inputLinksId) + '<br>'
   }
-  if (node.outputLinksId && (node.outputLinksId as any).length > 0) {
-    content += '<b>Sortie</b><ul style=\'margin-bottom:0px\'>';
-    (node.outputLinksId as any).forEach((element: any) => {
-      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node as any).outputLinksId) as any))
+  if (node.outputLinksId && node.outputLinksId.length > 0) {
+    content += '<b>Sortie</b><ul style=\'margin-bottom:0px\'>'
+    node.outputLinksId.forEach(element => {
+      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
       const value = getLinkValue(data, element)
       content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].source_name + ' : ' + value + ' (' + pcValue + '%)</li>'
     })
-    content += '</ul>Total : ' + getTotalLinks(data, (node as any).outputLinksId)
+    content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
   return content
 }
@@ -124,6 +127,9 @@ export const linkTooltipsContent = (
 ) => {
   if (link.tooltip_text) {
     return link.tooltip_text
+  }
+  if (data.links.length === 0) {
+    return ''
   }
   const content = link.source_name + ' → ' + link.target_name + ' : ' + getLinkValue(data, link.idLink as string)
   return content

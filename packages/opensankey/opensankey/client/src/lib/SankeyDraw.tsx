@@ -175,7 +175,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //   .append('text')
     //   .append('textPath')
 
-    const select = gg_links
+    gg_links
       .filter(
         d => d.label_position !== 'frozen' && d.label_on_path === true
       )
@@ -1663,14 +1663,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         console.log('Les properties inputLinkId et outputLinkId existent dans data.nodes')
       } else {
         console.log('Les properties inputLinkId et outputLinkId n\'existent pas dans data.nodes, elle sont donc ajoutées ici')
-        data.nodes.forEach((element: any) => {
+        data.nodes.forEach( element => {
           element.inputLinksId = []
-          element.input_links.forEach((elt: any) => {
-            element.inputLinksId.push(data.links[elt].idLink)
+          element.input_links.forEach( elt => {
+            (element.inputLinksId as string[]).push(data.links[elt].idLink as string)
           })
           element.outputLinksId = []
-          element.output_links.forEach((elt: any) => {
-            element.outputLinksId.push(data.links[elt].idLink)
+          element.output_links.forEach( elt => {
+            (element.outputLinksId as string[]).push(data.links[elt].idLink as string)
           })
         })
       }
