@@ -2,6 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Modal, Row, FormControl, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes } from './types'
+import { nodeTooltipsContent } from './SankeyTooltip'
 import { default_node } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
@@ -249,7 +250,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value={node.tooltip_text ? node.tooltip_text : ''}
+                        value={node.tooltip_text ? node.tooltip_text : nodeTooltipsContent(data,node)}
                         onChange={
                           (evt) => {
                             node.tooltip_text = evt.target.value.split('\n').join('\\n')
