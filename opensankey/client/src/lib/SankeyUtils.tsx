@@ -1,5 +1,4 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-import * as d3 from 'd3'
 
 
 // Getter pour récupérer la valeur du link
@@ -8,17 +7,17 @@ export const getLinkValue = (
   data: SankeyData,
   idLink: string
 ) => {
-  const { links, nodes } = data
+  const { links } = data
   return links.filter(element => { return element.idLink === idLink })[0].value[0]
 }
 
 export const getTotalLinks = (
   data: SankeyData,
-  Links: any,
+  Links: string[],
 ) => {
-  const { links, nodes } = data
+  const { links } = data
   let total = 0
-  Links.forEach((element : any) => {
+  Links.forEach( element => {
     const tmp = links.filter(element1 => {
       return (element1.idLink == element)
     })[0].value[0]
