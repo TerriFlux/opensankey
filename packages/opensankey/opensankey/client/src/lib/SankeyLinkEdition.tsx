@@ -2,6 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Modal, Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink } from './types'
 import PropTypes, { InferProps } from 'prop-types'
+import { linkTooltipsContent } from './SankeyTooltip'
 import { default_link } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
@@ -580,7 +581,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value={link.tooltip_text ? link.tooltip_text : ''}
+                        value={link.tooltip_text ? link.tooltip_text : linkTooltipsContent(data,link)}
                         onChange={evt => {
                           link.tooltip_text = evt.target.value.split('\n').join('\\n')
                           set_data({ ...data })

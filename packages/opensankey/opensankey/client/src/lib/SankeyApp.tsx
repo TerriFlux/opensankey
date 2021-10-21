@@ -10,6 +10,7 @@ import SankeySettingsEdition from './SankeySettingsEdition'
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
 import Menu from './SankeyMenu'
+import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 
 const SankeyAppPropTypes = {
@@ -90,8 +91,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         }
         more_processing={() => void 0}
         redraw_node={() => void 0}
-        node_tooltip={SankeyUtils.default_node_tooltip}
-        link_tooltip={SankeyUtils.default_link_tooltip}
+        nodeTooltipsContent={nodeTooltipsContent}
+        linkTooltipsContent={linkTooltipsContent}
       />
       <SankeyNodeEdition
         show={show_node}
