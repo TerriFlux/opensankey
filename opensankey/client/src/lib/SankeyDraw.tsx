@@ -4,7 +4,6 @@ import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
-import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
@@ -26,8 +25,8 @@ const SankeyDrawPropTypes = {
   test_link_value: PropTypes.func.isRequired,
 
   more_processing: PropTypes.func.isRequired,
-  node_tooltip: PropTypes.func.isRequired,
-  link_tooltip: PropTypes.func.isRequired
+  nodeTooltipsContent: PropTypes.func.isRequired,
+  linkTooltipsContent: PropTypes.func.isRequired
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -48,8 +47,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   link_visible,
   test_link_value,
   more_processing,
-  node_tooltip,
-  link_tooltip
+  nodeTooltipsContent,
+  linkTooltipsContent
 }) => {
   const default_node_size = data.node_width
   const default_handle_size = 10
@@ -176,7 +175,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //   .append('text')
     //   .append('textPath')
 
-    const select = gg_links
+    gg_links
       .filter(
         d => d.label_position !== 'frozen' && d.label_on_path === true
       )
@@ -1664,14 +1663,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         console.log('Les properties inputLinkId et outputLinkId existent dans data.nodes')
       } else {
         console.log('Les properties inputLinkId et outputLinkId n\'existent pas dans data.nodes, elle sont donc ajoutées ici')
-        data.nodes.forEach((element: any) => {
+        data.nodes.forEach( element => {
           element.inputLinksId = []
-          element.input_links.forEach((elt: any) => {
-            element.inputLinksId.push(data.links[elt].idLink)
+          element.input_links.forEach( elt => {
+            (element.inputLinksId as string[]).push(data.links[elt].idLink as string)
           })
           element.outputLinksId = []
-          element.output_links.forEach((elt: any) => {
-            element.outputLinksId.push(data.links[elt].idLink)
+          element.output_links.forEach( elt => {
+            (element.outputLinksId as string[]).push(data.links[elt].idLink as string)
           })
         })
       }
