@@ -121,15 +121,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const callback = (server_data: SankeyData) => {
       Object.assign(data, server_data)
       convert_data(data)
-      // const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
-      // data['region_names'] = keys
-      //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
-      const nodes_to_delete = compute_auto_sankey(data, true)
-      if (nodes_to_delete !== undefined) {
-        nodes_to_delete.forEach(
-          n => delete_node(data, n)
-        )
-      }
+      compute_auto_sankey(data, 200)
       set_data({ ...data })
     }
 
@@ -177,21 +169,9 @@ const Menu: FunctionComponent<MenuTypes> = (
         alert(error)
         return
       }
-      // for (const key in server_data) {
-      //   data[key] = server_data[key]
-      // }
       Object.assign(data, server_data)
-      //delete data.display_style.filter_label
       convert_data(data)
-      //data.region_names = keys
-      // if (data.trade !==null && data.trade !==undefined) {
-      //   data.trade_sectors = data.trade.split(',')
-      // } else {
-      //   data.trade_sectors = ['International']
-      // }
-
-      //compute_auto_sankey(data, data.trade_sectors, true)
-      compute_auto_sankey(data, true)
+      compute_auto_sankey(data, 200)
       set_data({ ...data })
     }
     fetch(url, fetchData).then(response => {
