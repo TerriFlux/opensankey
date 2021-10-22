@@ -1,7 +1,7 @@
 import React, { useState, FunctionComponent } from 'react'
 import { Button, Modal, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { arrangeNodes, updateLayout } from './SankeyLayout'
+import { arrangeNodes, compute_auto_sankey, updateLayout } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
 import { setSelectedTags } from './SankeyUtils'
 
@@ -25,7 +25,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
-  const [, set_node_hspace] = useState(100)
+  const [node_hspace, set_node_hspace] = useState(100)
   const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { display_style, tags, links, nodes, selected_tags, node_width } = data
@@ -210,11 +210,12 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel>Espacement H</FormLabel>
+                  <FormLabel>Espacement Horizontal</FormLabel>
                 </Col>
                 <Col>
                   <FormControl
                     type="text"
+                    value={node_hspace}
                     onChange={evt => set_node_hspace(+evt.target.value)}
                   />
                 </Col>
@@ -224,16 +225,16 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                     onClick={() => arrangeNodes(data)}
                   >Arranger noeuds</Button>
                 </Col>
-              </Form.Group>
-              {/* <Form.Group as={Row} >
-                <Col sm={8}></Col>
-                <Col  sm={4}>
-                  <Button 
-                    size="sm" 
-                    onClick={optimizeLayout}
-                  >Positionnement optimal</Button>
+                <Col>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      compute_auto_sankey(data,node_hspace)
+                      set_data({...data})
+                    }}
+                  > Positionnement automatique</Button>
                 </Col>
-              </Form.Group> */}
+              </Form.Group>
             </Form>
           </Tab>
           <Tab eventKey="nodes" title="Noeuds">
