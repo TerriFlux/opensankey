@@ -149,7 +149,7 @@ export const convert_data = (
           links[n.input_links[0]].tags = {}
         }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
-      } else {
+      } else if (!n.tags['Exchanges']) {
         n.tags['Exchanges'] = ['Other']
       }
     }
