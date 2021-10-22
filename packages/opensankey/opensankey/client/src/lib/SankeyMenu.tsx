@@ -5,7 +5,7 @@ import { SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node } from './SankeyUtils'
+import { default_sankey_data } from './SankeyUtils'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
