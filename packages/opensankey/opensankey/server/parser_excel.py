@@ -37,7 +37,7 @@ def parse_sankey_energie_csv(
                     'source_name': source_name,
                     'target_name': target_name,
                     'value': [round(row['value'], 1)],
-                    'display_value': 'default',
+                    'display_value': ['default'],
                     'color': row['colors']
                 }
             )

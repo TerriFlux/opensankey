@@ -19,6 +19,7 @@ interface ConvertSankeyLink {
   conv?: number[]
   natural_unit?: string
   value: number
+  display_value: string
   data?: boolean
   unbounded?: boolean
 }
@@ -49,8 +50,12 @@ export const convert_data = (
     new_links.forEach(
       (link, i) => {
         link.value = []
+        link.display_value = []
         region_names.forEach(
-          cur_region_name => link.value.push(data.links[cur_region_name][i].value)
+          cur_region_name => {
+            link.value.push(data.links[cur_region_name][i].value)
+            link.display_value.push(data.links[cur_region_name][i].display_value)
+          }
         )
       }
     )
@@ -149,7 +154,7 @@ export const convert_data = (
           links[n.input_links[0]].tags = {}
         }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
-      } else {
+      } else if (!n.tags['Exchanges']) {
         n.tags['Exchanges'] = ['Other']
       }
     }

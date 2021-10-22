@@ -81,7 +81,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                           } 
                         }
                       >
-                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={nodes[selected_node] && nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Form.Group>                  
