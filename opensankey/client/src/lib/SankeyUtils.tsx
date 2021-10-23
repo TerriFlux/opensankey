@@ -303,8 +303,7 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags: [],
-    selected_tags: {}
+    tags_catalog: []
   }
 }
 
@@ -426,11 +425,10 @@ export const delete_node = (
 }
 
 export const setSelectedTags = (
-  sankey_data: SankeyData,
-  new_tags: { [tag_group: string]: string[] }
+  sankey_data: SankeyData
 ) => {
 
-  const { nodes, links } = sankey_data
+  const { nodes, links,tags_catalog } = sankey_data
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
@@ -450,21 +448,17 @@ export const setSelectedTags = (
   nodes.forEach(node => {
     node.visible = true
     node.label_visible = true
-    const node_tags = node.tags
-    for (const tag_group in new_tags) {
-      if (!node_tags[tag_group]) {
+    for (const i in tags_catalog) {
+      const group_name = tags_catalog[i].group_name
+      if (!node.tags[group_name] || node.tags[group_name].length === 0) {
+        // tags do not apply to node
         continue
       }
-      for (let i = 0; i < new_tags[tag_group].length; i++) {
-        let found = false
-        for (let j = 0; j < node_tags[tag_group].length; j++) {
-          if (new_tags[tag_group].includes(node_tags[tag_group][j])) {
-            found = true
-            break
-          }
-        }
-        node.visible = found
-        node.label_visible = found
+      const visible = tags_catalog[i].selected_tags.filter(selected_tag => node.tags[group_name].includes(selected_tag)).length > 0
+      if (!visible) {
+        node.visible = false
+        node.label_visible = false
+        break
       }
     }
   })
@@ -472,21 +466,17 @@ export const setSelectedTags = (
   links.forEach(link => {
     link.visible = true
     link.label_visible = true
-    const link_tags = link.tags
-    for (const tag_group in new_tags) {
-      if (!link_tags[tag_group]) {
+    for (const i in tags_catalog) {
+      const group_name = tags_catalog[i].group_name
+      if (!link.tags[group_name] || link.tags[group_name].length === 0) {
+        // tags do not apply to node
         continue
       }
-      for (let i = 0; i < new_tags[tag_group].length; i++) {
-        let found = false
-        for (let j = 0; j < link_tags[tag_group].length; j++) {
-          if (new_tags[tag_group].includes(link_tags[tag_group][j])) {
-            found = true
-            break
-          }
-        }
-        link.visible = found
-        link.label_visible = found
+      const visible = tags_catalog[i].selected_tags.filter(selected_tag => link.tags[group_name].includes(selected_tag)).length > 0
+      if (!visible) {
+        link.visible = false
+        link.label_visible = false
+        break
       }
     }
   })

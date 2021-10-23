@@ -202,8 +202,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        data.tags = []
-        data.selected_tags = {}
+        data.tags_catalog = []
         Object.assign(data, new_data)
         convert_data(data)
         set_data({ ...data })

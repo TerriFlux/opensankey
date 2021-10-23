@@ -55,7 +55,7 @@ def clean_pdf():
 @opensankey.route('/sankey/upload_data', methods=['POST'])
 def upload_data():
     excel_input_file = request.files['file']
-    error, nodes, links, subchains, tooltip_names, units_names, nodes2tooltips, nodes2units_conv, trade,periods = \
+    error, nodes, links, subchains, tooltip_names, units_names, trade,periods = \
         parser_excel.parse_output_excel_data(excel_input_file)
     context = {
         'nodes': nodes,
@@ -111,7 +111,7 @@ def upload_exemple():
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(exemples_folder, exemple)
     if exemple == "pommes_poires.xlsx" or exemple == "soja_v2.0.xlsx":
-        error, nodes, links, _, tooltip_names, units_names, nodes2tooltips, nodes2units_conv, _, _ = \
+        error, nodes, links, _, tooltip_names, units_names, _, _ = \
             parser_excel.parse_output_excel_data(exemple_file_path)
     elif exemple == "sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -119,8 +119,6 @@ def upload_exemple():
         links = sankey_dict[200042935]['links']
         tooltip_names = []
         units_names = []
-        nodes2tooltips = {}
-        nodes2units_conv = {}
         error=''
     context = {
         'error': error,
@@ -128,8 +126,6 @@ def upload_exemple():
         'links': links,
         'tooltip_names': tooltip_names,
         'units_names': units_names,
-        'nodes2tooltips': nodes2tooltips,
-        'nodes2units_conv': nodes2units_conv,
     }
     json_data = json.dumps(context)
     response = Response(
