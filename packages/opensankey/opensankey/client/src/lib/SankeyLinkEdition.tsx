@@ -65,7 +65,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     set_data({ ...data })
   }
 
-  const { links, nodes, tags } = data
+  const { links, nodes, tags_catalog } = data
   if (selected_link === -1) {
     selected_link = 0
   }
@@ -80,12 +80,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   let region_index = 0
-  const tags_group_region = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group_region = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group_region.length > 1) {
-    region_index = tags_group_region[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+    region_index = tags_group_region[0].tags.indexOf(tags_group_region[0].selected_tags[0])
   }
 
-  const tags_visible = tags.length > 0
+  const tags_visible = tags_catalog.length > 0
 
   return (
     <Modal size="lg" show={show} onHide={(() => set_show_link(false))}>
@@ -469,7 +469,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     />
                   </Col>
                   <Col>
-                    <FormCheck
+                    <Form.Check
                       value='frozen'
                       type='radio'
                       label='Figé'
@@ -502,7 +502,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   />
                 </Form.Group>
               </Tab>
-              {Object.keys(tags).length ? (
+              {Object.keys(tags_catalog).length ? (
                 <Tab eventKey="tags" title="Tags" >
                   <br></br>
                   <Form.Group as={Row} >
@@ -513,13 +513,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Select
                         onChange={
                           (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
-                        {tags.map(
+                        {tags_catalog.map(
                           (tags_group, i) =>
                             <option
                               key={i}
                               value={i}
                               selected={tag_group_id === i} >
-                              {tags_group.tags_group_name}
+                              {tags_group.group_name}
                             </option>)}
                       </Form.Select>
                     </Col>
@@ -533,27 +533,26 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         </tr>
                       </thead>
                       <tbody>
-                        {tags_visible ? (tags[tag_group_id].tags_group.map(
+                        {tags_visible ? (tags_catalog[tag_group_id].tags.map(
                           (tag, tag_id) => {
-                            const link_tag_groups = link.tags[tags[tag_group_id].tags_group_name]
-                            const checked = link_tag_groups ? link_tag_groups.includes(tags[tag_group_id].tags_group[tag_id]) : true
+                            const link_tag_groups = link.tags[tags_catalog[tag_group_id].group_name]
+                            const checked = link_tag_groups ? link_tag_groups.includes(tags_catalog[tag_group_id].tags[tag_id]) : true
                             return (
                               <tr key={tag_id.toString()}>
                                 <td><FormLabel>{tag}</FormLabel></td>
                                 <td>
-                                  <FormCheck
+                                  <Form.Check
                                     name={'element_visible' + tag_id.toString()}
-                                    defaultChecked={checked}
+                                    checked={checked}
                                     id={tag_id.toString()}
                                     type='checkbox'
                                     onChange={
                                       (evt: React.ChangeEvent) => {
-                                        const { tags } = data
                                         const new_nb_element = evt.target as HTMLInputElement
                                         const id = +new_nb_element.id
-                                        const name = tags[tag_group_id].tags_group[id]
+                                        const name = tags_catalog[tag_group_id].tags[id]
                                         const visible = new_nb_element.checked
-                                        const tag_group_name = tags[tag_group_id].tags_group_name
+                                        const tag_group_name = tags_catalog[tag_group_id].group_name
                                         if (visible) {
                                           if (!link.tags[tag_group_name]) {
                                             link.tags[tag_group_name] = []
