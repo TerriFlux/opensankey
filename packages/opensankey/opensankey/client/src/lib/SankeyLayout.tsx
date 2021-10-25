@@ -256,13 +256,21 @@ export const explore_branch = (
   }
 }
 
-export const arrangeNodes = (data: SankeyData) => {
+export const arrangeNodes = (
+  data: SankeyData,
+  h_space: number,
+  v_space: number
+) => {
   const { nodes } = data
   nodes.forEach(node => {
-    const x = Math.round(node.x / 100) * 100
+    if ( !node.visible ) {
+      return
+    }
+    const x = Math.round(node.x / h_space) * h_space
+    const y = Math.round(node.y / v_space) * v_space
     node.x = x
+    node.y = y
   })
-  //afterLoad()
 }
 
 export const compute_auto_sankey = (
