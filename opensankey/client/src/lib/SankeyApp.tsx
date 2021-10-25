@@ -1,15 +1,11 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Col, Row } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
-import SankeyLinkEdition from './SankeyLinkEdition'
-import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeySettingsEdition from './SankeySettingsEdition'
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
 import Menu from './SankeyMenu'
+import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 
 const SankeyAppPropTypes = {
@@ -35,9 +31,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_id_link, set_selected_id_link] = useState<string>('')
 
   let region_index = 0
-  const tags_group = sankey_data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+    region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
 
   return (
@@ -106,14 +102,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         }
         more_processing={() => void 0}
         redraw_node={() => void 0}
-        node_tooltip={SankeyUtils.default_node_tooltip}
-        link_tooltip={SankeyUtils.default_link_tooltip}
         set_show_nav={set_show_nav}
         show_nav={show_nav}
         set_nav_item_active={set_nav_item_active}
         nav_item_active={nav_item_active}
         set_selected_id_link={set_selected_id_link}
         selected_id_link={selected_id_link}
+        nodeTooltipsContent={nodeTooltipsContent}
+        linkTooltipsContent={linkTooltipsContent}
       />
       {/* <SankeyNodeEdition
         show={show_node}

@@ -2,6 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Modal, Row, FormControl, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes } from './types'
+import { nodeTooltipsContent } from './SankeyTooltip'
 import { default_node } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
@@ -17,7 +18,7 @@ type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show, children }) => {
   const [tag_group_id, set_tag_group_id] = useState(0)
 
-  const { links, nodes, tags } = data
+  const { links, nodes, tags_catalog } = data
   if (selected_node === -1) {
     selected_node = 0
   }
@@ -26,13 +27,13 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
     node = default_node()
   }
 
-  if (tags.length > 0) {
-    const tag_group_name = tags[tag_group_id].tags_group_name
+  if (tags_catalog.length > 0) {
+    const tag_group_name = tags_catalog[tag_group_id].group_name
     if (!node.tags[tag_group_name]) {
       node.tags[tag_group_name] = []
     }
   }
-  const tags_visible = tags.length > 0
+  const tags_visible = tags_catalog.length > 0
 
   return (
 
@@ -245,7 +246,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
               </Form.Group>
             </Form>
           </Tab>
-          {Object.keys(tags).length ? (
+          {Object.keys(tags_catalog).length ? (
             <Tab eventKey="tags" title="Tags" >
               <br></br>
               <Form.Group as={Row} >
@@ -256,13 +257,13 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                   <Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
-                    {tags.map(
+                    {tags_catalog.map(
                       (tags_group, i) =>
                         <option
                           key={i}
                           value={i}
                           selected={tag_group_id === i} >
-                          {tags_group.tags_group_name}
+                          {tags_group.group_name}
                         </option>)}
                   </Form.Select>
                 </Col>
@@ -276,7 +277,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                     </tr>
                   </thead>
                   <tbody>
-                    {tags_visible ? (tags[tag_group_id].tags_group.map(
+                    {tags_visible ? (tags_catalog[tag_group_id].tags.map(
                       (tag, i) => {
                         return (
                           <tr key={i.toString()}>
@@ -284,17 +285,16 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                             <td>
                               <FormCheck
                                 name={'element_visible' + i.toString()}
-                                defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}
+                                defaultChecked={node.tags[tags_catalog[tag_group_id].group_name].includes(tags_catalog[tag_group_id].tags[i])}
                                 id={i.toString()}
                                 type='checkbox'
                                 onChange={
                                   (evt: React.ChangeEvent) => {
-                                    const { tags } = data
                                     const new_nb_element = evt.target as HTMLInputElement
                                     const id = +new_nb_element.id
-                                    const name = tags[tag_group_id].tags_group[id]
+                                    const name = tags_catalog[tag_group_id].tags[id]
                                     const visible = new_nb_element.checked
-                                    const tag_group_name = tags[tag_group_id].tags_group_name
+                                    const tag_group_name = tags_catalog[tag_group_id].group_name
                                     if (visible) {
                                       if (!node.tags[tag_group_name]) {
                                         node.tags[tag_group_name] = []
@@ -352,7 +352,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
   const [tag_group_id, set_tag_group_id] = useState(0)
 
-  const { links, nodes, tags } = data
+  const { links, nodes, tags_catalog } = data
   if (selected_node === -1) {
     selected_node = 0
   }
@@ -361,13 +361,14 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
     node = default_node()
   }
 
-  if (tags.length > 0) {
-    const tag_group_name = tags[tag_group_id].tags_group_name
-    if (!node.tags[tag_group_name]) {
-      node.tags[tag_group_name] = []
+  let tags_group_name = ''
+  if (tags_catalog.length > 0) {
+    tags_group_name = tags_catalog[tag_group_id].group_name
+    if (!node.tags[tags_group_name]) {
+      node.tags[tags_group_name] = []
     }
   }
-  const tags_visible = tags.length > 0
+  const tags_visible = tags_catalog.length > 0
 
   return (
     <Modal size="lg" show={show} onHide={() => set_show_node(false)}>
@@ -507,7 +508,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                   </Form.Group>
                 </Form>
               </Tab>
-              {Object.keys(tags).length ? (
+              {Object.keys(tags_catalog).length ? (
                 <Tab eventKey="tags" title="Tags" >
                   <br></br>
                   <Form.Group as={Row} >
@@ -518,13 +519,13 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                       <Form.Select
                         onChange={
                           (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
-                        {tags.map(
+                        {tags_catalog.map(
                           (tags_group, i) =>
                             <option
                               key={i}
                               value={i}
                               selected={tag_group_id === i} >
-                              {tags_group.tags_group_name}
+                              {tags_group.group_name}
                             </option>)}
                       </Form.Select>
                     </Col>
@@ -538,32 +539,31 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                         </tr>
                       </thead>
                       <tbody>
-                        {tags_visible ? (tags[tag_group_id].tags_group.map(
+                        {tags_visible ? (tags_catalog[tag_group_id].tags.map(
                           (tag, i) => {
                             return (
                               <tr key={i.toString()}>
                                 <td><FormLabel>{tag}</FormLabel></td>
                                 <td>
-                                  <FormCheck
+                                  <Form.Check
                                     name={'element_visible' + i.toString()}
-                                    defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}
+                                    checked={node.tags[tags_group_name].includes(tags_catalog[tag_group_id].tags[i])}
                                     id={i.toString()}
                                     type='checkbox'
                                     onChange={
                                       (evt: React.ChangeEvent) => {
-                                        const { tags } = data
                                         const new_nb_element = evt.target as HTMLInputElement
                                         const id = +new_nb_element.id
-                                        const name = tags[tag_group_id].tags_group[id]
+                                        const name = tags_catalog[tag_group_id].tags[id]
                                         const visible = new_nb_element.checked
-                                        const tag_group_name = tags[tag_group_id].tags_group_name
+                                        //const tag_group_name = tags[tag_group_id].group_name
                                         if (visible) {
-                                          if (!node.tags[tag_group_name]) {
-                                            node.tags[tag_group_name] = []
+                                          if (!node.tags[tags_group_name]) {
+                                            node.tags[tags_group_name] = []
                                           }
-                                          node.tags[tag_group_name].push(name)
+                                          node.tags[tags_group_name].push(name)
                                         } else {
-                                          node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
+                                          node.tags[tags_group_name].splice(node.tags[tags_group_name].indexOf(name))
                                         }
                                         set_data({ ...data })
                                       }
@@ -584,7 +584,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value={node.tooltip_text ? node.tooltip_text : ''}
+                        value={node.tooltip_text ? node.tooltip_text : nodeTooltipsContent(data,node)}
                         onChange={
                           (evt) => {
                             node.tooltip_text = evt.target.value.split('\n').join('\\n')

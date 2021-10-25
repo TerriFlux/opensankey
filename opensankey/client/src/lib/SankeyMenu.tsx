@@ -1,16 +1,13 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Tabs, Tab, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, updateLayout } from './SankeyLayout'
+import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { SankeySettingsEditionV2, SankeySettingsEditionTags } from './SankeySettingsEdition'
-// import SankeySettingsEditionTags from './SankeySettingsEdition'
-
-
 import SankeyNodeEditionV2 from './SankeyNodeEdition'
 import SankeyLinkEditionV2 from './SankeyLinkEdition'
 import { delete_link } from './SankeyUtils'
@@ -63,8 +60,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
 
-  const { display_style, tags, links, nodes, selected_tags, node_width } = data
-  const { filter } = display_style
+  const { display_style, links, nodes } = data
  
   const add_new_node = () => {
     const { nodes } = data
@@ -180,15 +176,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const callback = (server_data: SankeyData) => {
       Object.assign(data, server_data)
       convert_data(data)
-      // const keys : (keyof SankeyData)[] = Object.keys(server_data.links) as (keyof SankeyData)[]
-      // data['region_names'] = keys
-      //const nodes_to_delete = compute_auto_sankey(data,['International','Reste du monde'],true)
-      const nodes_to_delete = compute_auto_sankey(data, true)
-      if (nodes_to_delete !== undefined) {
-        nodes_to_delete.forEach(
-          n => delete_node(data, n)
-        )
-      }
+      compute_auto_sankey(data, 200)
       set_data({ ...data })
     }
 
@@ -236,21 +224,9 @@ const Menu: FunctionComponent<MenuTypes> = (
         alert(error)
         return
       }
-      // for (const key in server_data) {
-      //   data[key] = server_data[key]
-      // }
       Object.assign(data, server_data)
-      //delete data.display_style.filter_label
       convert_data(data)
-      //data.region_names = keys
-      // if (data.trade !==null && data.trade !==undefined) {
-      //   data.trade_sectors = data.trade.split(',')
-      // } else {
-      //   data.trade_sectors = ['International']
-      // }
-
-      //compute_auto_sankey(data, data.trade_sectors, true)
-      compute_auto_sankey(data, true)
+      compute_auto_sankey(data, 200)
       set_data({ ...data })
     }
     fetch(url, fetchData).then(response => {
@@ -281,8 +257,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        data.tags = []
-        data.selected_tags = {}
+        data.tags_catalog = []
         Object.assign(data, new_data)
         convert_data(data)
         set_data({ ...data })
