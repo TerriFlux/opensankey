@@ -161,7 +161,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       compute_auto_sankey(data, 200)
                       set_data({ ...data })
                     }
-                    const url =  window.location.href + url_prefix + 'sankey/upload_simple_excel'
+                    let root = window.location.href
+                    if (root.includes('sankey-diagrams')) {
+                      root = root.replace('sankey-diagrams/','')
+                    }
+                    const url = root + url_prefix + 'sankey/upload_simple_excel'
                     fetch(url, fetchData).then(response => {
                       response.text().then(text => {
                         // try {
