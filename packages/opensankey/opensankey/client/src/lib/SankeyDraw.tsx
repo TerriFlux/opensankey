@@ -5,6 +5,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
+import Menu from './SankeyMenu'
+
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
@@ -27,7 +29,16 @@ const SankeyDrawPropTypes = {
 
   more_processing: PropTypes.func.isRequired,
   node_tooltip: PropTypes.func.isRequired,
-  link_tooltip: PropTypes.func.isRequired
+  link_tooltip: PropTypes.func.isRequired,
+
+  set_show_nav: PropTypes.func.isRequired,
+  show_nav: PropTypes.bool,
+
+  set_nav_item_active: PropTypes.func.isRequired,
+  nav_item_active: PropTypes.string,
+
+  set_selected_id_link:PropTypes.func.isRequired,
+  selected_id_link:PropTypes.string.isRequired
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -49,8 +60,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   test_link_value,
   more_processing,
   node_tooltip,
-  link_tooltip
+  link_tooltip,
+  set_show_nav,
+  show_nav,
+  set_nav_item_active,
+  nav_item_active,
+  set_selected_id_link,
+  selected_id_link
 }) => {
+
+  /* const [show, setShow] = useState(false)
+  const toggleShow = () => { setShow((s) => !s) }
+  const [checked, setChecked] = useState(false) */
+
+
+
   const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
@@ -181,7 +205,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         d => d.label_position !== 'frozen' && d.label_on_path === true
       )
       .append('text')
-      .attr('pointer-events','none')
+      .attr('pointer-events', 'none')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('fill', d => d.text_color)
       .attr('visibility', d => link_visible(d))
@@ -285,6 +309,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         sankeyTooltip.style('opacity', 0)
         if (d.visible && d.value[region_index] >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.95')
+        }
+      })
+      .on('click', function (event, d) {
+        if (event.ctrlKey) {
+          // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
+          sankeyTooltip.style('opacity', 0)
+          set_selected_id_link(d.idLink)
+          // select_link(d.idLink)
+          set_nav_item_active('3')
+          set_show_nav(false)
+          set_show_nav(true)
+
+
         }
       })
 
@@ -734,7 +771,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('startOffset', positions[d.label_position][0])
         .attr('text-anchor', positions[d.label_position][1])
         //.text(d => ' → ' +link_text(d, link_value, display_style) + ' → ')
-        .text(d => link_text(d, link_value, display_style) )
+        .text(d => link_text(d, link_value, display_style))
         .attr('visibility', d.label_visible ? 'visible' : 'hidden')
     }
   }
@@ -1282,6 +1319,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     static_sankey: boolean,
     remove_previous_nodes = false
   ) => {
+
     const { nodes, links, display_style } = data
     if (remove_previous_nodes) {
       d3.selectAll('.gg_nodes').remove()
@@ -1315,12 +1353,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
 
       ggg_nodes.on('click', (event, d) => {
-        sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
+        /* sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
         select_node(d.id)
         deselect_nodes_and_links()
         const node_to_select = '#ggg_node' + d.id + ' rect'
         d3.select(node_to_select).attr('class', 'selected_node')
-        return
+        return */
+        if (event.ctrlKey) {
+          // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
+          sankeyTooltip.style('opacity', 0)
+          select_node(d.id)
+          set_nav_item_active('2')
+          set_show_nav(false)
+          set_show_nav(true)
+
+        }
       })
     }
 
@@ -1648,7 +1695,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // ceci permet d'assurer la portabilité des anciennes structure
     //-----------------------------------------------------------------------
     // Link
-    if ( data.links.length>0) {
+    if (data.links.length > 0) {
       if (Object.prototype.hasOwnProperty.call(data.links[0], 'idLink')) {
         console.log('La propertie id existe dans data.links')
       } else {
@@ -1675,8 +1722,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           })
         })
       }
-      console.log(data.links)
-      console.log(data.nodes)
+      // console.log(data.links)
+      // console.log(data.nodes)
+      // console.log(data)
     }
     //-----------------------------------------------------------------------
 

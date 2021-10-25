@@ -14,7 +14,342 @@ const SankeyNodeEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show, children }) => {
+const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show, children }) => {
+  const [tag_group_id, set_tag_group_id] = useState(0)
+
+  const { links, nodes, tags } = data
+  if (selected_node === -1) {
+    selected_node = 0
+  }
+  let node = nodes[selected_node]
+  if (node === undefined) {
+    node = default_node()
+  }
+
+  if (tags.length > 0) {
+    const tag_group_name = tags[tag_group_id].tags_group_name
+    if (!node.tags[tag_group_name]) {
+      node.tags[tag_group_name] = []
+    }
+  }
+  const tags_visible = tags.length > 0
+
+  return (
+
+    <Row>
+      <Col sm={12}>
+        <Tabs defaultActiveKey="nodes_desc" id="settings-layout">
+          <Tab eventKey="nodes_desc" title="Description">
+            <br></br>
+            <Form >
+              <Form.Group as={Row} >
+                <Col xs={2} >
+                  <FormLabel >Nom</FormLabel>
+                </Col>
+                <Col xs={7} >
+                  <FormControl
+                    value={node.name}
+                    onChange={evt => {
+                      const source_links = links.filter(l => l.source_name === nodes[selected_node].name)
+                      const target_links = links.filter(l => l.target_name === nodes[selected_node].name)
+                      source_links.forEach(l => l.source_name = evt.target.value)
+                      target_links.forEach(l => l.target_name = evt.target.value)
+                      nodes[selected_node].name = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col xs={3}>
+                  <FormLabel >(id : {nodes[selected_node].idNode})</FormLabel>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={2}>
+                  <FormLabel >Parent</FormLabel>
+                </Col>
+                <Col xs={10}>
+                  <Form.Select
+                    onChange={
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                        nodes[selected_node].parent_name = evt.target.value
+                        set_data({ ...data })
+                      }
+                    }
+                  >
+                    {nodes.map((n, i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={2}>
+                  <FormLabel >Visibilité</FormLabel>
+                </Col>
+                <Col xs={1}>
+                  <FormCheck inline
+                    type='switch'
+                    //label='Visible'
+                    checked={node.visible}
+                    onChange={evt => {
+                      node.visible = evt.target.checked
+                      if (!node.label_visible && !node.visible) {
+                        node.input_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                        node.output_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                      }
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col xs={2}>
+                  <FormLabel >Couleur</FormLabel>
+                </Col>
+                <Col xs={3}>
+                  <Form.Control
+                    type='color'
+                    value={node.color}
+                    onChange={evt => {
+                      nodes[selected_node].color = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={2}>
+                  <FormLabel>Shape</FormLabel>
+                </Col>
+                <Col xs={2}>
+                  <FormCheck
+                    value="product"
+                    type='radio'
+                    label='Circle'
+                    checked={node.type === 'product'}
+                    onChange={evt => {
+                      nodes[selected_node].type = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col xs={2}>
+                  <FormCheck
+                    value="sector"
+                    type='radio'
+                    label='Rectangle'
+                    checked={node.type === 'sector'}
+                    onChange={evt => {
+                      nodes[selected_node].type = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+
+              {/* <Form.Group as={Row} >
+                <Col>
+                  <FormCheck
+                    type='checkbox'
+                    label='Label visible'
+                    checked={node.label_visible}
+                    onChange={evt => {
+                      nodes[selected_node].label_visible = evt.target.checked
+                      if (!nodes[selected_node].label_visible && !nodes[selected_node].visible) {
+                        nodes[selected_node].input_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                        nodes[selected_node].output_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                      }
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel>Type</FormLabel>
+                </Col>
+                <Col>
+                  <FormCheck
+                    value="product"
+                    type='radio'
+                    label='Produit'
+                    checked={node.type === 'product'}
+                    onChange={evt => {
+                      nodes[selected_node].type = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col>
+                  <FormCheck
+                    value="sector"
+                    type='radio'
+                    label='Secteur'
+                    checked={node.type === 'sector'}
+                    onChange={evt => {
+                      nodes[selected_node].type = evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col sm={12}>
+                  <FormCheck inline
+                    type='checkbox'
+                    label='Visible'
+                    checked={node.visible}
+                    onChange={evt => {
+                      node.visible = evt.target.checked
+                      if (!node.label_visible && !node.visible) {
+                        node.input_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                        node.output_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                      }
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group> */}
+            </Form>
+          </Tab>
+          <Tab eventKey="label_desc" title="Labels">
+            <Form>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormCheck
+                    type='checkbox'
+                    label='Label visible'
+                    checked={node.label_visible}
+                    onChange={evt => {
+                      nodes[selected_node].label_visible = evt.target.checked
+                      if (!nodes[selected_node].label_visible && !nodes[selected_node].visible) {
+                        nodes[selected_node].input_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                        nodes[selected_node].output_links.forEach(
+                          l_idx => links[l_idx].visible = false
+                        )
+                      }
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+            </Form>
+          </Tab>
+          {Object.keys(tags).length ? (
+            <Tab eventKey="tags" title="Tags" >
+              <br></br>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Tag Groupe:</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Select
+                    onChange={
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
+                    {tags.map(
+                      (tags_group, i) =>
+                        <option
+                          key={i}
+                          value={i}
+                          selected={tag_group_id === i} >
+                          {tags_group.tags_group_name}
+                        </option>)}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Table striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Appartenance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tags_visible ? (tags[tag_group_id].tags_group.map(
+                      (tag, i) => {
+                        return (
+                          <tr key={i.toString()}>
+                            <td><FormLabel>{tag}</FormLabel></td>
+                            <td>
+                              <FormCheck
+                                name={'element_visible' + i.toString()}
+                                defaultChecked={node.tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}
+                                id={i.toString()}
+                                type='checkbox'
+                                onChange={
+                                  (evt: React.ChangeEvent) => {
+                                    const { tags } = data
+                                    const new_nb_element = evt.target as HTMLInputElement
+                                    const id = +new_nb_element.id
+                                    const name = tags[tag_group_id].tags_group[id]
+                                    const visible = new_nb_element.checked
+                                    const tag_group_name = tags[tag_group_id].tags_group_name
+                                    if (visible) {
+                                      if (!node.tags[tag_group_name]) {
+                                        node.tags[tag_group_name] = []
+                                      }
+                                      node.tags[tag_group_name].push(name)
+                                    } else {
+                                      node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
+                                    }
+                                    set_data({ ...data })
+                                  }
+                                } />
+                            </td>
+                          </tr>
+                        )
+                      })) : (<></>)}
+                  </tbody>
+                </Table>
+              </Form.Group>
+            </Tab>) : (<></>)}
+          <Tab eventKey="node_tooltip" title="Tooltip">
+            <Form >
+              <Row>
+                <FormLabel column sm={1}>Tooltip:</FormLabel>
+                <Col sm={11}>
+                  <Form.Control
+                    as="textarea"
+                    rows={10}
+                    value={node.tooltip_text ? node.tooltip_text : ''}
+                    onChange={
+                      (evt) => {
+                        node.tooltip_text = evt.target.value.split('\n').join('\\n')
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Row>
+            </Form>
+          </Tab>
+          {children}
+
+        </Tabs>
+      </Col>
+    </Row>
+
+  )
+}
+
+
+
+
+
+
+/* const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show, children }) => {
+
   const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { links, nodes, tags } = data
@@ -48,7 +383,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Form >
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel style={{ 'marginLeft' : '3px'}}>Nom</FormLabel>
+                      <FormLabel style={{ 'marginLeft': '3px' }}>Nom</FormLabel>
                     </Col>
                     <Col>
                       <FormControl
@@ -69,21 +404,21 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Form.Group>
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel style={{ 'marginLeft' : '3px'}}>Parent</FormLabel>
+                      <FormLabel style={{ 'marginLeft': '3px' }}>Parent</FormLabel>
                     </Col>
                     <Col>
-                      <Form.Select 
+                      <Form.Select
                         onChange={
-                          (evt : React.ChangeEvent<HTMLSelectElement>) => {
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
                             nodes[selected_node].parent_name = evt.target.value
-                            set_data({...data})
-                          } 
+                            set_data({ ...data })
+                          }
                         }
                       >
-                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                        {nodes.map((n, i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
-                  </Form.Group>                  
+                  </Form.Group>
                   <Form.Group as={Row} >
                     <Col>
                       <FormLabel >Couleur</FormLabel>
@@ -107,7 +442,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         checked={node.label_visible}
                         onChange={evt => {
                           nodes[selected_node].label_visible = evt.target.checked
-                          if ( !nodes[selected_node].label_visible && !nodes[selected_node].visible) {
+                          if (!nodes[selected_node].label_visible && !nodes[selected_node].visible) {
                             nodes[selected_node].input_links.forEach(
                               l_idx => links[l_idx].visible = false
                             )
@@ -115,7 +450,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                               l_idx => links[l_idx].visible = false
                             )
                           }
-                          set_data({...data})
+                          set_data({ ...data })
                         }}
                       />
                     </Col>
@@ -157,7 +492,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         checked={node.visible}
                         onChange={evt => {
                           node.visible = evt.target.checked
-                          if ( !node.label_visible && !node.visible) {
+                          if (!node.label_visible && !node.visible) {
                             node.input_links.forEach(
                               l_idx => links[l_idx].visible = false
                             )
@@ -165,7 +500,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                               l_idx => links[l_idx].visible = false
                             )
                           }
-                          set_data({...data})
+                          set_data({ ...data })
                         }}
                       />
                     </Col>
@@ -269,8 +604,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       </Modal.Body>
     </Modal>
   )
-}
+} */
 
-SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
 
-export default SankeyNodeEdition
+// SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
+SankeyNodeEditionV2.propTypes = SankeyNodeEditionPropTypes
+
+export default /* SankeyNodeEdition; */SankeyNodeEditionV2
