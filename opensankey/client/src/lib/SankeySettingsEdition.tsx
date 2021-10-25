@@ -26,6 +26,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
   const [node_hspace, set_node_hspace] = useState(100)
+  const [node_vspace] = useState(100)
   const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { display_style, tags, links, nodes, selected_tags, node_width } = data
@@ -222,7 +223,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 <Col>
                   <Button
                     size="sm"
-                    onClick={() => arrangeNodes(data)}
+                    onClick={() => {
+                      arrangeNodes(data,node_hspace,node_vspace)
+                      set_data({...data})
+                    }}
                   >Arranger noeuds</Button>
                 </Col>
                 <Col>

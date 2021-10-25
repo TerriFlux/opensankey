@@ -41,6 +41,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         data={data}
         set_data={set_data}
         app_name='Open-Sankey'
+        url_prefix=''
       />
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >

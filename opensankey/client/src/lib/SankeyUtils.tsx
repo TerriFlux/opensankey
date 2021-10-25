@@ -1,4 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
+import FileSaver from 'file-saver'
+import { convert_data } from './SankeyConvert'
+import { compute_auto_sankey } from './SankeyLayout'
 
 
 // Getter pour récupérer la valeur du link
@@ -489,5 +492,68 @@ export const setSelectedTags = (
         link.label_visible = found
       }
     }
+    const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.source_name))[0]
+    const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.target_name))[0]
+    if (!source_node.visible && !source_node.label_visible && !target_node.visible && !target_node.label_visible) {
+      link.visible = false
+      link.label_visible = false      
+    }
+  })
+}
+const downloadExamples = (
+  file_name: string,
+  filetype: string
+) => {
+  const path = window.location.href
+  const url = path + 'sankey/download_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: filetype })
+    FileSaver.saveAs(newBlob, file_name)
+  }
+  fetch(url, fetchData).then(
+    response => {
+      if (response.ok) {
+        response.blob().then(showFile)
+      }
+    })
+}
+
+export const uploadExemple = (
+  file_name: string,
+  the_url_prefix: string,
+  data: SankeyData,
+  set_data: any
+) => {
+  const path = window.location.href
+  const url = path + the_url_prefix + 'sankey/upload_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  let file_type = 'text/plain'
+  set_data({ ... default_sankey_data() })
+
+  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const callback = (server_data: SankeyData) => {
+    Object.assign(data, server_data)
+    convert_data(data)
+    compute_auto_sankey(data, 200)
+    set_data({ ...data })
+  }
+
+  fetch(url, fetchData).then((response) => {
+    response.text().then((text) => {
+      try {
+        const json_data = JSON.parse(text)
+        callback(json_data)
+        downloadExamples(file_name, file_type)
+      } catch (err) {
+        alert(err)
+      }
+    })
   })
 }
