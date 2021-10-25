@@ -281,9 +281,9 @@ export const compute_auto_sankey = (
   const { nodes, links } = data
 
   let region_indices = [0]
-  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
-    region_indices = [...Array(tags_group[0].tags_group.length).keys()]
+    region_indices = [...Array(tags_group[0].tags.length).keys()]
   }
 
   const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]

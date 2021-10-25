@@ -29,13 +29,13 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [node_vspace] = useState(100)
   const [tag_group_id, set_tag_group_id] = useState(0)
 
-  const { display_style, tags, links, nodes, selected_tags, node_width } = data
+  const { display_style, tags_catalog, links, nodes, node_width } = data
   const { filter } = display_style
 
   let region_index = 0
-  const tags_group = tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group = tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+    region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
 
   let max_link_value = 0
@@ -46,11 +46,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   })
   max_link_value += 1
 
-  if (tags[tag_group_id]) {
-    const tag_group_name = tags[tag_group_id].tags_group_name
-    if (!selected_tags[tag_group_name]) {
-      selected_tags[tag_group_name] = []
-    }
+  const current_tags_group = tags_catalog[tag_group_id]
+  let selected_tags : string[] = []
+  if (current_tags_group) {
+    selected_tags = current_tags_group.selected_tags
   }
   // const nb_partition_elements = tags.length
   // const units = ['tMS','t','m3']
@@ -619,22 +618,22 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormControl
                   type="text"
-                  value={Object.keys(tags).length}
+                  value={Object.keys(tags_catalog).length}
                   onChange={
                     (evt: React.ChangeEvent) => {
-                      const { tags } = data
                       const new_nb_element = +(evt.target as HTMLInputElement).value
-                      const length = tags.length
-                      if (tags.length < new_nb_element) {
+                      const length = tags_catalog.length
+                      if (tags_catalog.length < new_nb_element) {
                         for (let i = length; i < new_nb_element; i++) {
-                          tags[i] = {
-                            tags_group_name: 'Tag Group ' + i,
-                            tags_group: []
+                          tags_catalog[i] = {
+                            group_name: 'Tag Group ' + i,
+                            tags: [],
+                            selected_tags: []
                           }
                         }
                       } else {
                         for (let i = new_nb_element; i < length; i++) {
-                          delete tags[i]
+                          delete tags_catalog[i]
                         }
                       }
                       set_data({ ...data })
@@ -650,7 +649,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 </tr>
               </thead>
               <tbody>
-                {tags.map(
+                {tags_catalog.map(
                   (tags_group, i) => {
                     return (
                       <tr key={i.toString()}>
@@ -658,12 +657,11 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                           <FormControl
                             id={i.toString()}
                             type="text"
-                            value={tags_group.tags_group_name}
+                            value={tags_group.group_name}
                             onChange={
                               (evt: React.ChangeEvent) => {
-                                const { tags } = data
                                 const new_name = (evt.target as HTMLInputElement).value
-                                tags[i].tags_group_name = new_name
+                                tags_catalog[i].group_name = new_name
                                 set_data({ ...data })
                               }
                             } />
@@ -684,13 +682,13 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 <Form.Select
                   onChange={
                     (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_id(+evt.target.value)}>
-                  {tags.map(
+                  {tags_catalog.map(
                     (tags_group, i) =>
                       <option
                         key={i}
                         value={i}
                         selected={tag_group_id === i} >
-                        {tags_group.tags_group_name}
+                        {tags_group.group_name}
                       </option>)}
                 </Form.Select>
               </Col>
@@ -702,19 +700,18 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormControl
                   type="text"
-                  value={tags.length > 0 ? tags[tag_group_id].tags_group.length : 0}
+                  value={tags_catalog.length > 0 ? current_tags_group.tags.length : 0}
                   onChange={
                     (evt: React.ChangeEvent) => {
-                      const { tags } = data
                       const new_nb_element = Number((evt.target as HTMLInputElement).value)
-                      const length = tags[tag_group_id].tags_group.length
-                      if (tags[tag_group_id].tags_group.length < new_nb_element) {
+                      const length = current_tags_group.tags.length
+                      if (current_tags_group.tags.length < new_nb_element) {
                         for (let i = length; i < new_nb_element; i++) {
-                          tags[tag_group_id].tags_group.push('Element ' + i)
+                          current_tags_group.tags.push('Element ' + i)
                         }
                       } else {
                         for (let i = new_nb_element; i < length; i++) {
-                          tags[tag_group_id].tags_group.pop()
+                          current_tags_group.tags.pop()
                         }
                       }
                       set_data({ ...data })
@@ -732,7 +729,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {tags.length > 0 ? (tags[tag_group_id].tags_group.map(
+                  {tags_catalog.length > 0 ? (current_tags_group.tags.map(
                     (tag, i) => {
                       return (
                         <tr key={i.toString()}>
@@ -742,37 +739,34 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                             value={tag}
                             onChange={
                               (evt: React.ChangeEvent) => {
-                                const { tags } = data
                                 const new_nb_element = evt.target as HTMLInputElement
                                 const id = +new_nb_element.id
                                 const name = new_nb_element.value
-                                tags[tag_group_id].tags_group[id] = name
+                                current_tags_group.tags[id] = name
                                 set_data({ ...data })
                               }
                             } /></td>
                           <td>
-                            <FormCheck
-                              name={'element_visible' + i.toString()}
-                              defaultChecked={selected_tags[tags[tag_group_id].tags_group_name].includes(tags[tag_group_id].tags_group[i])}
+                            <Form.Check
+                              name={'element_visible' + tag}
+                              checked={selected_tags.includes(current_tags_group.tags[i])}
                               id={i.toString()}
                               type='checkbox'
                               onChange={
                                 (evt: React.ChangeEvent) => {
-                                  const { selected_tags, tags } = data
                                   const new_nb_element = evt.target as HTMLInputElement
                                   const id = +new_nb_element.id
-                                  const name = tags[tag_group_id].tags_group[id]
+                                  const name = current_tags_group.tags[id]
                                   const visible = new_nb_element.checked
-                                  const tag_group_name = tags[tag_group_id].tags_group_name
                                   if (visible) {
-                                    if (!selected_tags[tag_group_name]) {
-                                      selected_tags[tag_group_name] = []
+                                    if (!selected_tags) {
+                                      selected_tags = []
                                     }
-                                    selected_tags[tag_group_name].push(name)
+                                    selected_tags.push(name)
                                   } else {
-                                    selected_tags[tag_group_name].splice(selected_tags[tag_group_name].indexOf(name), 1)
+                                    selected_tags.splice(selected_tags.indexOf(name), 1)
                                   }
-                                  setSelectedTags(data, selected_tags)
+                                  setSelectedTags(data)
                                   set_data({ ...data })
                                 }
                               } />
