@@ -518,8 +518,11 @@ export const uploadExemple = (
   data: SankeyData,
   set_data: any
 ) => {
-  const path = window.location.href
-  const url = path + the_url_prefix + 'sankey/upload_examples'
+  let root = window.location.href
+  if (root.includes('sankey-diagrams')) {
+    root = root.replace('sankey-diagrams/','')
+  }
+  const url = root + the_url_prefix + 'sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
