@@ -228,6 +228,15 @@ export const convert_data = (
       if (!source_node || !target_node) {
         return
       }
+      if (l.label_visible === undefined) {
+        l.label_visible = true
+      }
+      if (l.visible === undefined) {
+        l.visible = true
+      }
+      if (l.color === undefined) {
+        l.color = source_node.color
+      }
       if (!l.tags) {
         l.tags = {}
       }
@@ -247,6 +256,9 @@ export const convert_data = (
         } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
           (l as SankeyLink).orientation = 'hv'
         }
+      }
+      if (!('display_value' in l)) {
+        (l as SankeyLink).display_value = ['default']
       }
       if (!('arrow' in l)) {
         (l as SankeyLink).arrow = true
