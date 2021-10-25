@@ -1,11 +1,19 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container } from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes } from './types'
+import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Tabs, Tab, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { SankeyData, SankeyNode, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { compute_auto_sankey, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node } from './SankeyUtils'
+import Accordion from 'react-bootstrap/Accordion'
+import { SankeySettingsEditionV2, SankeySettingsEditionTags } from './SankeySettingsEdition'
+// import SankeySettingsEditionTags from './SankeySettingsEdition'
+
+
+import SankeyNodeEditionV2 from './SankeyNodeEdition'
+import SankeyLinkEditionV2 from './SankeyLinkEdition'
+import { delete_link } from './SankeyUtils'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -14,14 +22,65 @@ const MenuPropTypes = {
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
   right_menu: PropTypes.element,
-  app_name: PropTypes.string.isRequired
+  app_name: PropTypes.string.isRequired,
+  set_show_nav: PropTypes.func.isRequired,
+  show_nav: PropTypes.bool,
+  set_nav_item_active: PropTypes.func.isRequired,
+  nav_item_active: PropTypes.string,
+  set_selected_node: PropTypes.func.isRequired,
+  selected_node: PropTypes.number.isRequired,
+  set_selected_link: PropTypes.func.isRequired,
+  selected_link: PropTypes.number.isRequired,
+  set_selected_id_link: PropTypes.func.isRequired,
+  selected_id_link: PropTypes.string.isRequired
 }
+
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu: FunctionComponent<MenuTypes> = (
-  { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name }
+  { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name,
+    set_show_nav, show_nav, set_nav_item_active, nav_item_active, set_selected_node, selected_node, set_selected_link, selected_link, set_selected_id_link, selected_id_link }
 ) => {
+  //NEW By Vince
+
+  let file_layout: Blob[] | undefined
+
+  /* const [shift_left, set_shift_left] = useState(100)
+  const [shift_top, set_shift_top] = useState(100)
+  const [user_scale, set_user_scale] = useState(data.user_scale)
+  const [height, set_height] = useState(data.height)
+  const [width, set_width] = useState(data.width)
+  const [, set_node_hspace] = useState(100)
+  const [tag_group_id, set_tag_group_id] = useState(0) */
+  const [sga, set_sga] = useState(true)
+  const [show_node, set_show_node] = useState(true)
+  // const [selected_node, set_selected_node] = useState(0)
+  // const [show_node_context, set_show_node_context] = useState(false)
+  const [show_link, set_show_link] = useState(true)
+  // const [selected_link, set_selected_link] = useState(0)
+
+
+
+
+  const { display_style, tags, links, nodes, selected_tags, node_width } = data
+  const { filter } = display_style
+ 
+  const add_new_node = () => {
+    const { nodes } = data
+ 
+    const node: SankeyNode = default_node()
+    node.id = nodes.length
+    node.name = 'n' + nodes.length
+    node.x = nodes.length * 50
+    nodes.push(node)
+    set_selected_node(nodes.length - 1)
+    set_data({ ...data })
+  }
+
+
+  //-----------------------------------
+
 
   const _load_json = useRef<HTMLInputElement>(null)
 
@@ -265,9 +324,37 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
+  const setShow = (t: boolean) => {
+    set_show_nav(t)
+  }
+
+
+  // const [show, setShow] = useState(false)
+  const handleClose = () => setShow(true)
+  const handleShow = () => setShow(true)
+  // const toggleShow = () => { setShow((s) => !s) }
+  const toggleShow = () => {
+    setShow(!show_nav)
+  }
+  const [checked, setChecked] = useState(false)
+  //const handleReglage=()=> SankeySettingsEditionV2()
+  const getNavItem = () => {
+    const tmp = nav_item_active as string
+    return tmp
+  }
+
+  if (selected_id_link == '' && links.length != 0) {
+    selected_id_link = links[0].idLink as any
+  }
+
+
+  const props = {
+    scroll: true,
+    backdrop: false,
+  }
   return (
     <>
-      <Navbar className='bg-light' expand="lg" >
+      <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
           <Navbar.Brand href="#">{app_name}</Navbar.Brand>
           <Nav onSelect={handleSelect}>
@@ -298,10 +385,167 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item eventKey="exemple3" >Energie</Dropdown.Item>
               </NavDropdown>
             </NavDropdown>
+            <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
+              <ToggleButton
+                id="toggle-check"
+                type="checkbox"
+                variant="outline-primary"
+                checked={checked}
+                onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                onClick={toggleShow}
+                value="1">Configuration Sankey
+              </ToggleButton>
+            </ButtonGroup>
           </Nav>
           {right_menu}
         </Container>
       </Navbar>
+      <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
+        <Offcanvas.Body style={{ 'padding': '0px' }}>
+          <Accordion defaultActiveKey={getNavItem()}>
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>Shortcut</Accordion.Header>
+              <Accordion.Body>
+                <p>Fonctionnement des clics :</p><br />
+                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>Paramêtres généraux</Accordion.Header>
+              <Accordion.Body>
+                <SankeySettingsEditionV2
+                  show={sga}
+                  set_show_graphic_attributes={sga as any}
+                  data={data}
+                  set_data={set_data}
+                  set_current_filter={(
+                    new_current_filter: number
+                  ) => {
+                    const { display_style } = data
+                    display_style.filter = +new_current_filter
+                    set_data({ ...data })
+                  }}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="2" >
+              <Accordion.Header>Noeuds</Accordion.Header>
+              <Accordion.Body>
+                <br />
+                <Row>
+                  <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>
+                    Ajouter Noeud
+                  </Button>
+
+                </Row>
+                <Row>
+                  <Col>
+                    <Button
+                      size="sm"
+                      style={{ 'marginBottom': '3px' }}
+                      onClick={
+                        () => {
+                          delete_node(data, selected_node)
+                          set_data({ ...data })
+                        }
+                      }
+                    >Supprimer noeud</Button>
+                  </Col>
+                  <Col>
+                    <Form.Select id="selectionNode"
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          set_selected_node(nodes.filter(f => { return f.name == evt.target.value })[0].id)
+                        }
+                      }
+                    >
+                      {nodes.map((n, i) => <option key={i} value={n.name} selected={nodes[i].idNode === nodes[selected_node].idNode} >{nodes[i].name}</option>)}
+                    </Form.Select>
+                  </Col>
+                </Row>
+
+                <br />
+                <SankeyNodeEditionV2
+                  show={sga}
+                  data={data}
+                  set_data={set_data}
+                  set_show_node={set_show_node}
+                  selected_node={selected_node}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="3">
+              <Accordion.Header>Links</Accordion.Header>
+              <Accordion.Body>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+                <Row>
+                  <Col>
+                    <Form.Select id="selectionLink"
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          set_selected_id_link(links.filter(f => { return f.idLink == evt.target.value })[0].idLink)
+                        }
+                      }
+                    >
+                      {links.map((n, i) => <option key={i} value={n.idLink as any} selected={n.idLink == selected_id_link}  >{n.idLink}</option>)}
+                    </Form.Select>
+                  </Col>
+                  <Col>
+
+                    <Button
+                      size="sm"
+                      onClick={
+                        () => {
+                          delete_link(data, selected_link)
+                          set_data({ ...data })
+                        }
+                      }
+                    >Supprimer flux</Button>
+
+                  </Col>
+
+                </Row>
+                <br />
+                <SankeyLinkEditionV2
+                  show={true}
+                  data={data}
+                  set_data={set_data}
+                  set_show_link={set_show_link}
+                  selected_link={selected_link}
+                  selected_id_link={selected_id_link}
+                  set_selected_id_link={set_selected_id_link}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="4">
+              <Accordion.Header>Tags</Accordion.Header>
+              <Accordion.Body>
+                <SankeySettingsEditionTags
+                  show={sga}
+                  set_show_graphic_attributes={sga as any}
+                  data={data}
+                  set_data={set_data}
+                  set_current_filter={(
+                    new_current_filter: number
+                  ) => {
+                    const { display_style } = data
+                    display_style.filter = +new_current_filter
+                    set_data({ ...data })
+                  }}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="5">
+              <Accordion.Header>Aide</Accordion.Header>
+              <Accordion.Body>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        </Offcanvas.Body>
+      </Offcanvas>
 
       {show_excel_dialog ? (
         <ExcelModal

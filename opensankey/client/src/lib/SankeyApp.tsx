@@ -21,12 +21,18 @@ type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [show_node, set_show_node] = useState(false)
   const [show_link, set_show_link] = useState(false)
+  const [show_nav, set_show_nav] = useState(false)
+  const [nav_item_active, set_nav_item_active] = useState<string>('')
+
+
+
   const [show_graphic_attributes, set_show_graphic_attributes] = useState(false)
   const [show_node_context, set_show_node_context] = useState(false)
   const [show_link_context, set_show_link_context] = useState(false)
   const [selected_link, set_selected_link] = useState(0)
   const [selected_node, set_selected_node] = useState(0)
   const [data, set_data] = useState<SankeyData>(sankey_data)
+  const [selected_id_link, set_selected_id_link] = useState<string>('')
 
   let region_index = 0
   const tags_group = sankey_data.tags.filter(tag => tag.tags_group_name === 'Regions')
@@ -40,8 +46,18 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         data={data}
         set_data={set_data}
         app_name='Open-Sankey'
+        set_show_nav={set_show_nav}
+        show_nav={show_nav}
+        set_nav_item_active={set_nav_item_active}
+        nav_item_active={nav_item_active}
+        set_selected_node={set_selected_node}
+        selected_node={selected_node}
+        set_selected_link={set_selected_link}
+        selected_link={selected_link}
+        set_selected_id_link={set_selected_id_link}
+        selected_id_link={selected_id_link}
       />
-      <Row>
+      {/*  <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition
             data={data}
@@ -51,7 +67,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             set_show_graphic_attributes={set_show_graphic_attributes}
             set_data={set_data} />
         </Col>
-      </Row>
+      </Row> */}
       <SankeyDraw
         data={data}
         select_node={(i: number) => {
@@ -92,22 +108,28 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         redraw_node={() => void 0}
         node_tooltip={SankeyUtils.default_node_tooltip}
         link_tooltip={SankeyUtils.default_link_tooltip}
+        set_show_nav={set_show_nav}
+        show_nav={show_nav}
+        set_nav_item_active={set_nav_item_active}
+        nav_item_active={nav_item_active}
+        set_selected_id_link={set_selected_id_link}
+        selected_id_link={selected_id_link}
       />
-      <SankeyNodeEdition
+      {/* <SankeyNodeEdition
         show={show_node}
         data={data}
         set_data={set_data}
         set_show_node={set_show_node}
         selected_node={selected_node}
-      />
-      <SankeyLinkEdition
+      /> */}
+      {/* <SankeyLinkEdition
         show={show_link}
         data={data}
         set_data={set_data}
         set_show_link={set_show_link}
         selected_link={selected_link}
-      />
-      <SankeySettingsEdition
+      /> */}
+      {/* <SankeySettingsEdition
         show={show_graphic_attributes}
         set_show_graphic_attributes={set_show_graphic_attributes}
         data={data}
@@ -119,7 +141,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           display_style.filter = +new_current_filter
           set_data({ ...data })
         }}
-      />
+      /> */}
       <SankeyNodeContextMenu
         data={data}
         set_data={set_data}
