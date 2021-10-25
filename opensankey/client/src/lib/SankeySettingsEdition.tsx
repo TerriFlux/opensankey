@@ -616,8 +616,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeyEditionTypes> = ({
     } else {
       tags[tag_group_id].tags_group.splice(tag_id, 1)
     }
-
     set_data({ ...data })
+  }
+
+  const handleDelGroupTag = (i :number)=>{
+    const { tags } = data
   }
 
 
@@ -635,7 +638,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeyEditionTypes> = ({
             (tags_group, i) => {
               return (
                 <tr key={i.toString()}>
-                  <td><Button variant="danger">-</Button></td>
+                  <td><Button variant="danger" onClick={handleDelGroupTag(i)}>-</Button></td>
                   <td>
                     <FormControl
                       id={i.toString()}
