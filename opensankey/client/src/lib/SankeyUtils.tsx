@@ -519,7 +519,7 @@ export const uploadExemple = (
   set_data: any
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams')) {
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
     root = root.replace('sankey-diagrams/','')
   }
   const url = root + the_url_prefix + 'sankey/upload_examples'
