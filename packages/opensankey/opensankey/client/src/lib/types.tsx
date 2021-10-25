@@ -72,6 +72,16 @@ export const SankeyLinkPropTypes = {
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
+export const TagsCatalogPropTypes = PropTypes.arrayOf(
+  PropTypes.shape({
+    group_name: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+  }).isRequired
+).isRequired
+
+export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
+
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   node_width: PropTypes.number.isRequired,
@@ -97,13 +107,7 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired
   }).isRequired,
 
-  tags: PropTypes.arrayOf(
-    PropTypes.shape({
-      tags_group_name: PropTypes.string.isRequired,
-      tags_group: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
-    }).isRequired
-  ).isRequired,
-  selected_tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
+  tags_catalog: TagsCatalogPropTypes
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>

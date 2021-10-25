@@ -132,7 +132,7 @@ export const reorder_links = (
   nodes: SankeyNode[],
   links: SankeyLink[]
 ) => {
-  const prev_link = links
+  const prev_link = [...links]
   const new_links = prev_link.sort(
     (l1, l2) => {
       const node1 = nodes.filter(n => normalize_name(n.name) === normalize_name(l1.source_name))[0]
@@ -144,7 +144,7 @@ export const reorder_links = (
       }
     }
   )
-  links = new_links
+  links = [...new_links]
 }
 
 export const compute_default_input_output_links = (
@@ -267,15 +267,14 @@ export const arrangeNodes = (data: SankeyData) => {
 
 export const compute_auto_sankey = (
   data: SankeyData,
-  //trade_sectors: string[], 
-  positions = true
+  h_space : number
 ) => {
   const { nodes, links } = data
 
   let region_indices = [0]
-  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
-    region_indices = [...Array(tags_group[0].tags_group.length).keys()]
+    region_indices = [...Array(tags_group[0].tags.length).keys()]
   }
 
   const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]
@@ -291,9 +290,9 @@ export const compute_auto_sankey = (
   // var the_nodes_max : SankeyNode[] = []  
   // var default_node_size = sankey.get_default_node_size() 
 
-  if (!positions) {
-    return
-  }
+  // if (!positions) {
+  //   return
+  // }
 
   // Use a relevant scale
   links.forEach(link => {
@@ -329,7 +328,7 @@ export const compute_auto_sankey = (
     delete l.target
   })
 
-  const width = Math.max(max_horizontal_index * 200, 1000)
+  const width = Math.max(max_horizontal_index * h_space, 1000)
   // const array_horizontal_indices = Array.from(set_horizontal_indices)
   // array_horizontal_indices.sort((a, b) => a - b)
   // nodes.forEach((node)=>{
@@ -337,7 +336,7 @@ export const compute_auto_sankey = (
   // })
 
   nodes.forEach((node, i) => {
-    node.x = 50 + horizontal_indices[i] / max_horizontal_index * width * 0.9
+    node.x = 50 + horizontal_indices[i] / max_horizontal_index * width //* 0.9
   })
 
   // Reorder links using the x of source name as criteria 
@@ -471,7 +470,7 @@ export const compute_auto_sankey = (
   //data.max_vertical_offset = max_vertical_offset
 
   reorganize_all_input_output_links(nodes, links)
-  data.width = width + 100
+  data.width = width + h_space
   data.height = max_vertical_offset + 100
   return []
 }

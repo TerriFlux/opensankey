@@ -37,7 +37,7 @@ def parse_sankey_energie_csv(
                     'source_name': source_name,
                     'target_name': target_name,
                     'value': [round(row['value'], 1)],
-                    'display_value': 'default',
+                    'display_value': ['default'],
                     'color': row['colors']
                 }
             )
@@ -637,8 +637,7 @@ def parse_output_excel_data(
                     if 'data_constraint' in data_values_dict[region_name][link['source_name']+link['target_name']]:
                         link['data_constraint'] = data_values_dict[region_name][link['source_name']+link['target_name']]['data_constraint']
 
-    return error, nodes, links, subchains, tooltip_names, units_names,\
-         nodes2tooltips, nodes2units_conv, params_dict['Import Export'],'periods' in params_dict
+    return error, nodes, links, subchains, tooltip_names, units_names, params_dict['Import Export'],'periods' in params_dict
 
 
 def parse_input_excel_data(
