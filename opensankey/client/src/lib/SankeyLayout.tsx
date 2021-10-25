@@ -2,7 +2,6 @@ import { SankeyNode, SankeyLink, SankeyData, } from './types'
 import { find_link, find_node, normalize_name } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import * as d3 from 'd3'
-import { updateReturn } from 'typescript'
 
 interface ExtendedSankeyLink {
   target?: number
