@@ -30,9 +30,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
   let region_index = 0
-  const tags_group = sankey_data.tags.filter(tag => tag.tags_group_name === 'Regions')
+  const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+    region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
 
   return (
