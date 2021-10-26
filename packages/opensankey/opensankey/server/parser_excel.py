@@ -13,8 +13,12 @@ def parse_sankey_energie_csv(
     nodes_names = np.unique(np.hstack((csv_data['source'], csv_data['target']))).tolist()
     for territory in csv_data['code_territoire'].unique():
         sankey_dict[territory] = {
-            'nodes': [],
-            'links': [],
+            'nodes'   : [],
+            'links'   : [],
+            'h_space' : 300,
+            'display_style' : {
+                'filter_label' : 20
+            }
         }
         territory_data = csv_data[csv_data['code_territoire'] == territory]
         for node_id, node_name in enumerate(nodes_names):
@@ -38,7 +42,9 @@ def parse_sankey_energie_csv(
                     'target_name': target_name,
                     'value': [round(row['value'], 1)],
                     'display_value': ['default'],
-                    'color': row['colors']
+                    'color': row['colors'],
+                    'curvature' : 1,
+                    'label_position' : 'beginning'
                 }
             )
         break
