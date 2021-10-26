@@ -44,7 +44,8 @@ def parse_sankey_energie_csv(
                     'display_value': ['default'],
                     'color': row['colors'],
                     'curvature' : 1,
-                    'label_position' : 'beginning'
+                    'label_position' : 'beginning',
+                    'left_horiz_shift' : 1/6
                 }
             )
         break
