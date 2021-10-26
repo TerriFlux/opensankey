@@ -534,7 +534,7 @@ export const uploadExemple = (
   const callback = (server_data: SankeyData) => {
     Object.assign(data, server_data)
     convert_data(data)
-    compute_auto_sankey(data, 200)
+    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
     set_data({ ...data })
   }
 

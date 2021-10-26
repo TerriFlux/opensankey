@@ -82,18 +82,27 @@ def upload_exemple():
     exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(exemples_folder, exemple)
+    error=''
     if exemple == "pommes_poires.xlsx":
         nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
+        context = {
+            'error'  : error,
+            'nodes'  : nodes,
+            'links'  : links,
+        }
     elif exemple == "sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
         nodes = sankey_dict[200042935]['nodes']
         links = sankey_dict[200042935]['links']
-    error=''
-    context = {
-        'error': error,
-        'nodes': nodes,
-        'links': links
-    }
+        h_space = sankey_dict[200042935]['h_space']
+        context = {
+            'error'        : error,
+            'nodes'        : nodes,
+            'links'        : links,
+            'h_space'      : h_space,
+            'filter_label' : 20
+        }
+
     json_data = json.dumps(context)
     response = Response(
         response=json_data,
