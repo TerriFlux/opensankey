@@ -95,12 +95,13 @@ def upload_exemple():
         nodes = sankey_dict[200042935]['nodes']
         links = sankey_dict[200042935]['links']
         h_space = sankey_dict[200042935]['h_space']
+        display_style = sankey_dict[200042935]['display_style']
         context = {
             'error'        : error,
             'nodes'        : nodes,
             'links'        : links,
             'h_space'      : h_space,
-            'filter_label' : 20
+            'display_style' : display_style
         }
 
     json_data = json.dumps(context)
