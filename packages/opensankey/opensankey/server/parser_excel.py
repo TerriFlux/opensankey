@@ -54,6 +54,8 @@ def parse_simple_excel(
     ws = pd.read_excel(excel_file, excel_file.sheet_names[0])
 
     nodes = []
+    current_parent_level = 1
+    previous_level = 1
     for i in range(ws.shape[0]):
         name = ws.iat[i, nodes_cols.index('Nodes')].strip()
         new_node = {
@@ -74,6 +76,13 @@ def parse_simple_excel(
                 new_node['type'] = 'product'
         except Exception:
             pass
+        level = ws.iat[i, nodes_cols.index('Level')]
+        if level > previous_level:
+            current_node_parent = nodes[i-1]
+            current_parent_level = previous_level
+        if level > current_parent_level:
+            new_node['parent_name'] = current_node_parent['name']
+        previous_level = level
         nodes.append(new_node)
 
     flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
@@ -82,9 +91,18 @@ def parse_simple_excel(
     ]
     links = []
     for row in range(flux_ws.shape[0]):
+        source_name = flux_ws.iat[row, flux_cols.index('Origin')]
+        target_name = flux_ws.iat[row, flux_cols.index('Destination')]
+        source_node = [n for n in nodes if n['name'] == source_name][0]
+        target_node = [n for n in nodes if n['name'] == target_name][0] 
+        if source_node['type'] == 'product':
+            color = source_node['color']
+        elif target_node['type'] == 'product':
+            color = target_node['color']           
         links.append({
             'source_name' :  flux_ws.iat[row, flux_cols.index('Origin')],
             'target_name' :  flux_ws.iat[row, flux_cols.index('Destination')],
-            'value'       : [flux_ws.iat[row, flux_cols.index('Value')]]
+            'value'       : [flux_ws.iat[row, flux_cols.index('Value')]],
+            'color'       : color
         })
     return nodes, links
