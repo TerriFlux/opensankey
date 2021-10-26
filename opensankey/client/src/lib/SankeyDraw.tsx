@@ -1325,6 +1325,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     ggg_nodes.on('contextmenu', (event, d) => {
       event.preventDefault()
+      sankeyTooltip.style('opacity', 0)
       nodeContextMenu(d.id)
     })
 
