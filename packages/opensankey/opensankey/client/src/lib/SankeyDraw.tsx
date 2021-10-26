@@ -164,6 +164,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
       paths.on('contextmenu', (event, d) => {
         event.preventDefault()
+        sankeyTooltip.style('opacity', 0)
         const id = links.indexOf(d)
         linkContextMenu(id)
       })
