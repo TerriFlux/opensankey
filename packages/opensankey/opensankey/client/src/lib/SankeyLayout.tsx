@@ -302,6 +302,10 @@ export const compute_auto_sankey = (
   //   return
   // }
 
+  const scale = d3.scaleLinear()
+    .domain([0, data.user_scale])
+    .range([0, 100])
+
   // Use a relevant scale
   links.forEach(link => {
     region_indices.forEach(i =>
@@ -309,6 +313,7 @@ export const compute_auto_sankey = (
     )
   })
   data.user_scale = max_node_value
+  const vspace = Math.max(2* scale(max_node_value),100)
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
   extended_links.forEach(l => {
@@ -336,7 +341,7 @@ export const compute_auto_sankey = (
     delete l.target
   })
 
-  const width = Math.max(max_horizontal_index * h_space, 1000)
+  const width = max_horizontal_index * h_space
   // const array_horizontal_indices = Array.from(set_horizontal_indices)
   // array_horizontal_indices.sort((a, b) => a - b)
   // nodes.forEach((node)=>{
@@ -357,27 +362,17 @@ export const compute_auto_sankey = (
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
   let max_vertical_offset = 0
   for (let i = 0; i <= max_horizontal_index; i++) {
-    let total_nb = 0
     let vertical_space: number
     let vertical_offset = 0
     const the_nodes = nodes.filter((n, ii) => horizontal_indices[ii] === i)
-    the_nodes.forEach(
-      () => {
-        //total_height += sankey.scale(Math.max(node.total_input_offset, node.total_output_offset));
-        total_nb += 1
-      }
-    )
-    if (total_nb > 1) {
+    if (the_nodes.length > 1) {
       //vertical_space = (0.6 * height - total_height) / (total_nb - 1)
-      vertical_space = 100 //(200 - total_height) / (total_nb - 1)
+      vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
     else {
       vertical_space = 0
     }
 
-    const scale = d3.scaleLinear()
-      .domain([0, data.user_scale])
-      .range([0, 100])
 
     the_nodes.forEach((node, id) => {
       let total_output_offset = 0
