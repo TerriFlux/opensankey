@@ -131,6 +131,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         firingFunc = doubleClick
       })
       paths.on('click', (event, d) => {
+        sankeyTooltip.style('opacity', 0)
         if (firing) {
           return
         }
@@ -1422,12 +1423,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         } else {
           const text_anchor = 'middle'
-          // if (d.name.includes('(I')) { // TODO
-          //   text_anchor = 'right'
-          // }
-          // if (isExport(d)) {
-          //   text_anchor = 'left'
-          // }
           const name_lines = d.name.split('\\n')
           // if (d.type ==='sector') {
           //   name_lines = dname.split('<BR>')
