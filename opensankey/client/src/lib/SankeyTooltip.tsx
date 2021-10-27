@@ -27,7 +27,7 @@ export const nodeTooltipsContent = (
     node.outputLinksId.forEach(element => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
       const value = getLinkValue(data, element)
-      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].source_name + ' : ' + value + ' (' + pcValue + '%)</li>'
+      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].target_name + ' : ' + value + ' (' + pcValue + '%)</li>'
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
