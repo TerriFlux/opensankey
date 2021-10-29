@@ -169,7 +169,7 @@ export const convert_data = (
       if (!n.tags) {
         n.tags = {}
       }
-      if (n_convert.subchain) {
+      if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')
         n_convert.subchain.split(',').forEach( s => {
           if ( !subchains.includes(s) ) {
@@ -251,7 +251,7 @@ export const convert_data = (
       if (!l.tags) {
         l.tags = {}
       }
-      if (l_convert.subchain) {
+      if (l_convert.subchain && l_convert.subchain !== '' ) {
         l.tags['SubChain'] = l_convert.subchain.split(',')
         l_convert.subchain.split(',').forEach( s => {
           if ( !subchains.includes(s) ) {
