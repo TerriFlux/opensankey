@@ -262,7 +262,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
       .attr('stroke', l => link_color(l))
       .attr('stroke-dasharray', d => {
-        if (String(d.display_value).includes('[')) {
+        if (String(d.display_value[region_index]).includes('[')) {
           return '1, 1'
         } else {
           return ''
@@ -722,7 +722,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', d => d.label_position === 'frozen' && d.x_label ? d.x_label : x_pos)
         .attr('y', d => d.label_position === 'frozen' && d.y_label ? d.y_label + default_handle_size : y_pos + default_handle_size)
-        .text(d => link_text(d, link_value, display_style))
+        .text(d => link_text(d, link_value, display_style,region_index))
         .attr('visibility', d.label_visible ? 'visible' : 'hidden')
     } else {
       const positions: { [label_position: string]: string[] } = {
@@ -736,7 +736,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('startOffset', positions[d.label_position][0])
         .attr('text-anchor', positions[d.label_position][1])
         //.text(d => ' → ' +link_text(d, link_value, display_style) + ' → ')
-        .text(d => link_text(d, link_value, display_style) )
+        .text(d => link_text(d, link_value, display_style,region_index) )
         .attr('visibility', d.label_visible ? 'visible' : 'hidden')
     }
   }
