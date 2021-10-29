@@ -270,10 +270,11 @@ export const toPrecision = (
 
 export const link_text = (
   d: SankeyLink,
-  link_value: number
-  /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/,
+  link_value: number,
+  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean },
+  reg_index: number
 ) => {
-  const str_display = String(d.display_value[0])
+  const str_display = String(d.display_value[reg_index])
   if (str_display !== 'default') {
     return str_display
   }
