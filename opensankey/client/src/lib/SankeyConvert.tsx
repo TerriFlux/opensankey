@@ -401,7 +401,7 @@ export const convert_data = (
     }
   )
 
-  if (data.subchains) {
+  if (data.subchains && data.subchains[0] !== '') {
     if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
       data.tags_catalog.push({
         group_name: 'SubChain',
