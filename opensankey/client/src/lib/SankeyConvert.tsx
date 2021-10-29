@@ -93,7 +93,7 @@ export const convert_data = (
       data.tags_catalog.push({
         group_name: 'Regions',
         tags: region_names,
-        selected_tags: [data.region_name]
+        selected_tags: [data.region_name !== undefined ? data.region_name : region_names[0]]
       })
     }
     delete data.region_names
