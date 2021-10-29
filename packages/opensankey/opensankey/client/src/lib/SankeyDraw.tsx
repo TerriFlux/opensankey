@@ -21,7 +21,7 @@ const SankeyDrawPropTypes = {
   linkContextMenu: PropTypes.func.isRequired,
   link_color: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
-  link_visible: PropTypes.func.isRequired,
+  link_text_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
   more_processing: PropTypes.func.isRequired,
@@ -44,7 +44,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   linkContextMenu,
   link_color,
   link_text,
-  link_visible,
+  link_text_visible,
   test_link_value,
   more_processing,
   nodeTooltipsContent,
@@ -185,7 +185,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('pointer-events','none')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('fill', d => d.text_color)
-      .attr('visibility', d => link_visible(d))
+      .attr('visibility', d => link_text_visible(d))
       .attr('dy', '0.3em')
       .append('textPath')
       .attr('id', d => 'link_value' + links.indexOf(d))
@@ -203,7 +203,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //   .attr('class', 'link_value')
     //   .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
     //   .attr('fill', d => d.text_color)
-    //   .attr('visibility', d => link_visible(d))
+    //   .attr('visibility', d => link_text_visible(d))
 
 
     select2
@@ -212,7 +212,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link_value')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('fill', d => d.text_color)
-      .attr('visibility', d => link_visible(d))
+      .attr('visibility', d => link_text_visible(d))
 
     if (!static_sankey) {
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
@@ -1104,7 +1104,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    const l_visible = link_visible(d)
+    const l_visible = link_text_visible(d)
     if (link_value > display_style.filter_label && l_visible === 'visible' ) {
       drawLinkText(link_id, links, link_value, display_style, xs, ys, xt, yt)
     }

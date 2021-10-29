@@ -78,7 +78,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         link_color={l => l.color}
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
-        link_visible={(l: SankeyLink) => {
+        link_text_visible={(l: SankeyLink) => {
           let region_index = 0
           const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
           if (tags_group.length > 0) {
