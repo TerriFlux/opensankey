@@ -374,10 +374,10 @@ export const convert_data = (
       if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
           if (l_convert.data) {
-            l.tags['flux_types'] = ['initial_data', 'computed_data']
+            l.tags['flux_types'] = ['initial_data', 'adjusted_data']
             delete l_convert.data
           } else {
-            l.tags['flux_types'] = ['adjusted_data']
+            l.tags['flux_types'] = ['computed_data']
           }
           if (l_convert.unbounded) {
             l.tags['flux_types'] = ['unbounded']
