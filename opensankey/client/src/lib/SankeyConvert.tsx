@@ -70,6 +70,9 @@ export const convert_data = (
   if (!data.display_style) {
     (data.display_style as any) = {}
   }
+  if (data.tags_catalog === undefined ) {
+    data.tags_catalog = []
+  }
   if (!Array.isArray(data.links)) {
     const region_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[region_names[0]])) as SankeyLink[]
@@ -135,9 +138,6 @@ export const convert_data = (
   }
   if (data.v_space === undefined) {
     data.v_space = 100
-  }
-  if (data.tags_catalog === undefined ) {
-    data.tags_catalog = []
   }
 
   if (data.flux_types || data.use_flux_types) {
