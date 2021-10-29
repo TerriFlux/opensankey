@@ -273,7 +273,7 @@ export const link_text = (
   link_value: number
   /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/,
 ) => {
-  const str_display = String(d.display_value)
+  const str_display = String(d.display_value[0])
   if (str_display !== 'default') {
     return str_display
   }
@@ -291,6 +291,8 @@ export const default_sankey_data = (): SankeyData => {
     height: 1500,
     width: 2150,
     node_width: 10,
+    h_space: 100,
+    v_space: 100,
 
     display_style: {
       font_size: 11,

@@ -281,7 +281,7 @@ export const compute_auto_sankey = (
 
   let region_indices = [0]
   const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 1) {
+  if (tags_group.length > 0) {
     region_indices = [...Array(tags_group[0].tags.length).keys()]
   }
 
@@ -302,9 +302,6 @@ export const compute_auto_sankey = (
   //   return
   // }
 
-  const scale = d3.scaleLinear()
-    .domain([0, data.user_scale])
-    .range([0, 100])
 
   // Use a relevant scale
   links.forEach(link => {
@@ -313,6 +310,9 @@ export const compute_auto_sankey = (
     )
   })
   data.user_scale = max_node_value
+  const scale = d3.scaleLinear()
+    .domain([0, data.user_scale])
+    .range([0, 100])
   const vspace = Math.max(2* scale(max_node_value),100)
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
@@ -377,11 +377,11 @@ export const compute_auto_sankey = (
     the_nodes.forEach((node, id) => {
       let total_output_offset = 0
       node.output_links.forEach(
-        (id) => total_output_offset += +links[id].value
+        (id) => total_output_offset += +links[id].value[0]
       )
       let total_input_offset = 0
       node.input_links.forEach(
-        (id) => total_input_offset += +links[id].value
+        (id) => total_input_offset += +links[id].value[0]
       )
       if (id === 0) {
         node.y = 200//0.2 * height;

@@ -90,21 +90,22 @@ def upload_exemple():
             'nodes'  : nodes,
             'links'  : links,
         }
+        json_data = json.dumps(context)
     elif exemple == "sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
-        nodes = sankey_dict[200042935]['nodes']
-        links = sankey_dict[200042935]['links']
-        h_space = sankey_dict[200042935]['h_space']
-        display_style = sankey_dict[200042935]['display_style']
-        context = {
-            'error'        : error,
-            'nodes'        : nodes,
-            'links'        : links,
-            'h_space'      : h_space,
-            'display_style' : display_style
-        }
+        # nodes = sankey_dict[200042935]['nodes']
+        # links = sankey_dict[200042935]['links']
+        # h_space = sankey_dict[200042935]['h_space']
+        # display_style = sankey_dict[200042935]['display_style']
+        # context = {
+        #     'error'        : error,
+        #     'nodes'        : nodes,
+        #     'links'        : links,
+        #     'h_space'      : h_space,
+        #     'display_style' : display_style
+        # }
+        json_data = json.dumps(sankey_dict)
 
-    json_data = json.dumps(context)
     response = Response(
         response=json_data,
         status=200,

@@ -29,12 +29,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_node, set_selected_node] = useState(0)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
-  let region_index = 0
-  const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 1) {
-    region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
-  }
-
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
@@ -85,11 +79,21 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
         link_visible={(l: SankeyLink) => {
-          (l.visible && (l.value[region_index] >= Math.max(data.display_style.filter, data.display_style.filter_label))) ? 'visible' : 'hidden'
+          let region_index = 0
+          const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+          if (tags_group.length > 0) {
+            region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
+          }
+          return (l.visible && (l.value[region_index] >= Math.max(data.display_style.filter, data.display_style.filter_label))) ? 'visible' : 'hidden'
         }}
-        test_link_value={
-          (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => d.value[region_index]
-        }
+        test_link_value={ (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => {
+          let region_index = 0
+          const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+          if (tags_group.length > 0) {
+            region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
+          }
+          return d.value[region_index]
+        }}
         more_processing={() => void 0}
         redraw_node={() => void 0}
         nodeTooltipsContent={nodeTooltipsContent}
