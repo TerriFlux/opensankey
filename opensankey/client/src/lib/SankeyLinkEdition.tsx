@@ -81,7 +81,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   let region_index = 0
   const tags_group_region = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group_region.length > 1) {
+  if (tags_group_region.length > 0) {
     region_index = tags_group_region[0].tags.indexOf(tags_group_region[0].selected_tags[0])
   }
 
@@ -146,7 +146,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value={link.display_value}
+                        value={link.display_value[region_index]}
                         onChange={
                           (evt) => {
                             links[selected_link].display_value[region_index] = evt.target.value

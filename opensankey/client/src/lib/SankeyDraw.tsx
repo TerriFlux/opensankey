@@ -74,7 +74,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   let region_index = 0
   const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 1) {
+  if (tags_group.length > 0) {
     region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
 
@@ -717,12 +717,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       d.y_label = y_pos
     }
 
-    const positions: { [label_position: string]: string[] } = {
-      'frozen': ['50%', 'start'],
-      'beginning': ['5%', 'start'],
-      'middle': ['50%', 'start'],
-      'end': ['95%', 'end']
-    }
     if (d.label_position === 'frozen' && d.x_label ||
       !d.label_on_path || d.label_on_path === undefined) {
       (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
@@ -731,6 +725,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .text(d => link_text(d, link_value, display_style))
         .attr('visibility', d.label_visible ? 'visible' : 'hidden')
     } else {
+      const positions: { [label_position: string]: string[] } = {
+        'frozen': ['50%', 'start'],
+        'beginning': ['10px', 'start'],
+        'middle': ['50%', 'start'],
+        'end': ['100%', 'end']
+      };
+
       (d3.select('#link_value' + link_id) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('startOffset', positions[d.label_position][0])
         .attr('text-anchor', positions[d.label_position][1])
@@ -1103,7 +1104,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    if (link_value > display_style.filter_label && d.visible) {
+    const l_visible = link_visible(d)
+    if (link_value > display_style.filter_label && l_visible === 'visible' ) {
       drawLinkText(link_id, links, link_value, display_style, xs, ys, xt, yt)
     }
 

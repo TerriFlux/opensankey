@@ -25,8 +25,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
-  const [node_hspace, set_node_hspace] = useState(100)
-  const [node_vspace] = useState(100)
+  const [node_hspace, set_node_hspace] = useState(data.h_space)
+  const [node_vspace, set_node_vspace] = useState(data.v_space)
   const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { display_style, tags_catalog, links, nodes, node_width } = data
@@ -34,7 +34,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
   let region_index = 0
   const tags_group = tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 1) {
+  if (tags_group.length > 0) {
     region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
 
@@ -210,15 +210,36 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel>Espacement Horizontal</FormLabel>
+                  <FormLabel>Définition de la Grille</FormLabel>
+                </Col>
+                <Col>
+                  <FormLabel>Horizontal</FormLabel>
                 </Col>
                 <Col>
                   <FormControl
                     type="text"
                     value={node_hspace}
-                    onChange={evt => set_node_hspace(+evt.target.value)}
+                    onChange={evt => {
+                      set_node_hspace(+evt.target.value)
+                      data.h_space = +evt.target.value
+                    }}
                   />
                 </Col>
+                <Col>
+                  <FormLabel>Vertical</FormLabel>
+                </Col>
+                <Col>
+                  <FormControl
+                    type="text"
+                    value={node_vspace}
+                    onChange={evt => {
+                      set_node_vspace(+evt.target.value)
+                      data.v_space = +evt.target.value
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
                 <Col>
                   <Button
                     size="sm"

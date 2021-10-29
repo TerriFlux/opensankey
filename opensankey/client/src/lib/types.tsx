@@ -88,7 +88,8 @@ export const SankeyDataPropTypes = {
   user_scale: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
-  h_space: PropTypes.number,
+  h_space: PropTypes.number.isRequired,
+  v_space: PropTypes.number.isRequired,
 
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,

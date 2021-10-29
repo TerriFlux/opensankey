@@ -127,6 +127,12 @@ export const convert_data = (
   if (data.node_width === undefined) {
     data.node_width = 10
   }
+  if (data.h_space === undefined) {
+    data.h_space = 100
+  }
+  if (data.v_space === undefined) {
+    data.v_space = 100
+  }
   if (!data.tags_catalog) {
     data.tags_catalog = []
   }
