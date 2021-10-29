@@ -1,5 +1,5 @@
 import { SankeyData, SankeyLink } from './types'
-import { normalize_name } from './SankeyUtils'
+import { normalize_name, setSelectedTags } from './SankeyUtils'
 
 interface ConvertSankeyNode {
   orientation?: string,
@@ -433,4 +433,5 @@ export const convert_data = (
   }
 
   data.version = '0.4'
+  setSelectedTags(data)
 }
