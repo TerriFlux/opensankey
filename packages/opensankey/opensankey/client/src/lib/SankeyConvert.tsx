@@ -133,7 +133,7 @@ export const convert_data = (
   if (data.v_space === undefined) {
     data.v_space = 100
   }
-  if (!data.tags_catalog) {
+  if (data.tags_catalog === undefined ) {
     data.tags_catalog = []
   }
 
