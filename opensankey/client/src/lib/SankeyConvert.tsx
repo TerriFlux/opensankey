@@ -89,11 +89,13 @@ export const convert_data = (
       }
     )
     data_to_convert.links = new_links
-    data.tags_catalog.push({
-      group_name: 'Regions',
-      tags: region_names,
-      selected_tags: [data.region_name]
-    })
+    if ( region_names.length > 1) {
+      data.tags_catalog.push({
+        group_name: 'Regions',
+        tags: region_names,
+        selected_tags: [data.region_name]
+      })
+    }
     delete data.region_names
     delete data.region_name
   }
