@@ -95,7 +95,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           return d.value[region_index]
         }}
         more_processing={() => void 0}
-        redraw_node={() => void 0}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
       />
