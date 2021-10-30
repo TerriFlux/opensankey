@@ -15,7 +15,6 @@ const SankeyDrawPropTypes = {
   node_label_visible: PropTypes.func.isRequired,
   node_visible: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
-  redraw_node: PropTypes.func.isRequired,
 
   select_link: PropTypes.func.isRequired,
   linkContextMenu: PropTypes.func.isRequired,
@@ -39,7 +38,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   node_visible,
   node_label_visible,
   node_arrow_visible,
-  redraw_node,
   select_link,
   linkContextMenu,
   link_color,
@@ -399,8 +397,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         }
       })
-
-    redraw_node(node)
 
     if (error_msg.text !== undefined) {
       alert(error_msg)
@@ -1687,28 +1683,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       false, true
     )
     const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
-
     gg_nodes.attr('cursor', 'zoom-in')
-    // add_tooltips(
-    //   data,
-    //   gg_nodes,
-    //   'node',
-    //   data.nodes,
-    //   (d3.select('#g_nodes').node() as SVGGElement),
-    //   node_tooltip,
-    //   link_tooltip,
-    // )
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_links.attr('cursor', 'zoom-in')
-    // add_tooltips(
-    //   data,
-    //   gg_links,
-    //   'link',
-    //   data.links,
-    //   (d3.select('#g_links').node() as SVGGElement),
-    //   node_tooltip,
-    //   link_tooltip,
-    // )
+
     more_processing(scale, move_node_and_link)
     localStorage.setItem('data', JSON.stringify(data))
   })
