@@ -10,7 +10,8 @@ interface ConvertSankeyNode {
   total_output_offset: any,
   output_offsets: any,
   horizontal_index: any,
-  visible: number | boolean
+  visible: number | boolean,
+  trade_close: boolean
 }
 interface ConvertSankeyLink {
   classif: any
@@ -200,6 +201,7 @@ export const convert_data = (
           links[n.output_links[0]].tags = {}
         }
         links[n.output_links[0]].tags['Exchanges'] = ['Importations']
+        n_convert.trade_close = data.display_style.trade_close ? data.display_style.trade_close : true
       } else if (n.name.includes('(E')) {
         import_export = true
         n.tags['Exchanges'] = ['Exportations']
@@ -207,11 +209,16 @@ export const convert_data = (
           links[n.input_links[0]].tags = {}
         }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
+        n_convert.trade_close = data.display_style.trade_close ? data.display_style.trade_close : true
       } else if (!n.tags['Exchanges']) {
         n.tags['Exchanges'] = ['Other']
       }
     }
   )
+
+  if ( 'trade_close' in data.display_style) {
+    delete data.display_style.trade_close
+  }
 
   if (import_export) {
     if (data.tags_catalog.filter(tag => tag.group_name === 'Exchanges').length === 0) {
