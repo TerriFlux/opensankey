@@ -400,7 +400,11 @@ export const compute_auto_sankey = (
       node.output_links.forEach(
         id => {
           if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === links[id].target_name)[0]
+            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+            if (target_node === undefined ) {
+              console.log(links[id].target_name)
+              return
+            }
             if ( target_node.y < node.y ) {
               total_nb_output_links_up += 1
             } else {
@@ -416,7 +420,11 @@ export const compute_auto_sankey = (
       node.output_links.forEach(
         id => {
           if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === links[id].target_name)[0]
+            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+            if (target_node === undefined ) {
+              console.log(links[id].target_name)
+              return
+            }
             if ( target_node.y < node.y ) {
               links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
               links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
