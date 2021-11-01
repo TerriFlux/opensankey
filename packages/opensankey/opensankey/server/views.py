@@ -89,6 +89,8 @@ def upload_exemple():
             'error'  : error,
             'nodes'  : nodes,
             'links'  : links,
+            'h_space': 500,
+            'v_space': 250
         }
         json_data = json.dumps(context)
     elif exemple == "sankeys_territoire_.csv":

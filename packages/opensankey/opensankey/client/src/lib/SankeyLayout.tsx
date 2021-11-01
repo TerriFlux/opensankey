@@ -373,30 +373,7 @@ export const compute_auto_sankey = (
       vertical_space = 0
     }
 
-    let total_nb_output_links = 0
-    the_nodes.forEach((node) => {
-      node.output_links.forEach(
-        id => {
-          if ( links[id].visible ) {
-            total_nb_output_links += 1
-          }
-        }
-      )
-    })
-
-    let current_output_link = 0
     the_nodes.forEach((node, node_id) => {
-      let total_output_offset = 0
-      node.output_links.forEach(
-        id => {
-          if ( links[id].visible ) {
-            total_output_offset += +links[id].value[0]
-            links[id].left_horiz_shift = data.left_shift - (current_output_link/total_nb_output_links)*data.max_shift
-            links[id].right_horiz_shift = data.right_shift - (current_output_link/total_nb_output_links)*data.max_shift
-            current_output_link += 1
-          }
-        }
-      )
       let total_input_offset = 0
       node.input_links.forEach(
         (id) => total_input_offset += +links[id].value[0]
@@ -413,6 +390,47 @@ export const compute_auto_sankey = (
     if (max_vertical_offset < vertical_offset) {
       max_vertical_offset = vertical_offset
     }
+  }
+  for (let i = 0; i <= max_horizontal_index; i++) {
+    const the_nodes = nodes.filter((n, ii) => horizontal_indices[ii] === i)
+    let total_nb_output_links_up = 0
+    let total_nb_output_links_down = 0
+    the_nodes.forEach((node) => {
+
+      node.output_links.forEach(
+        id => {
+          if ( links[id].visible ) {
+            const target_node = nodes.filter(n=>normalize_name(n.name) === links[id].target_name)[0]
+            if ( target_node.y < node.y ) {
+              total_nb_output_links_up += 1
+            } else {
+              total_nb_output_links_down += 1              
+            }
+          }
+        }
+      )
+    })
+    let current_output_link_up = 0
+    let current_output_link_down = 0
+    the_nodes.forEach(node => {
+      node.output_links.forEach(
+        id => {
+          if ( links[id].visible ) {
+            const target_node = nodes.filter(n=>normalize_name(n.name) === links[id].target_name)[0]
+            if ( target_node.y < node.y ) {
+              links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              current_output_link_up += 1
+            } else {
+              links[id].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              links[id].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              current_output_link_down += 1
+            }
+
+          }
+        }
+      )
+    })
   }
   // Vertical position of horizontal nodes
   // nodes.forEach(node => {
