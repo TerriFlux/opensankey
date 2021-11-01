@@ -1415,9 +1415,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (d.type === 'sector' && display_style.sector_uppercase ||
             d.type === 'product' && display_style.product_uppercase
           ) {
-            d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.toUpperCase())
+            d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.split(' - ')[0].toUpperCase())
           } else {
-            d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name)
+            d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.split(' - ')[0])
           }
         } else {
           const text_anchor = 'middle'
