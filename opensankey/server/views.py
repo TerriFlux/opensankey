@@ -93,17 +93,10 @@ def upload_exemple():
         json_data = json.dumps(context)
     elif exemple == "sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
-        # nodes = sankey_dict[200042935]['nodes']
-        # links = sankey_dict[200042935]['links']
-        # h_space = sankey_dict[200042935]['h_space']
-        # display_style = sankey_dict[200042935]['display_style']
-        # context = {
-        #     'error'        : error,
-        #     'nodes'        : nodes,
-        #     'links'        : links,
-        #     'h_space'      : h_space,
-        #     'display_style' : display_style
-        # }
+        layout_file_name = os.path.join(exemples_folder, "energie_layout.json")
+        layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
+        layout_data = json.load(layout_file)
+        sankey_dict["layout"] = layout_data
         json_data = json.dumps(sankey_dict)
 
     response = Response(
@@ -113,15 +106,9 @@ def upload_exemple():
     )
     return response
 
-@opensankey.route('/sankey/download_opensankey_examples', methods=['POST'])
+@opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
-    exemples_folder = os.path.join(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'server'
-        ),
-        'exemples'
-    )
+    exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(exemples_folder, exemple)
     if os.path.exists(exemple_file_path):

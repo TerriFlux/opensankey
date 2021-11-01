@@ -313,7 +313,7 @@ export const compute_auto_sankey = (
   const scale = d3.scaleLinear()
     .domain([0, data.user_scale])
     .range([0, 100])
-  const vspace = Math.max(2* scale(max_node_value),100)
+  const vspace = data.v_space
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
   extended_links.forEach(l => {
@@ -373,23 +373,41 @@ export const compute_auto_sankey = (
       vertical_space = 0
     }
 
+    let total_nb_output_links = 0
+    the_nodes.forEach((node) => {
+      node.output_links.forEach(
+        id => {
+          if ( links[id].visible ) {
+            total_nb_output_links += 1
+          }
+        }
+      )
+    })
 
-    the_nodes.forEach((node, id) => {
+    let current_output_link = 0
+    the_nodes.forEach((node, node_id) => {
       let total_output_offset = 0
       node.output_links.forEach(
-        (id) => total_output_offset += +links[id].value[0]
+        id => {
+          if ( links[id].visible ) {
+            total_output_offset += +links[id].value[0]
+            links[id].left_horiz_shift = data.left_shift - (current_output_link/total_nb_output_links)*data.max_shift
+            links[id].right_horiz_shift = data.right_shift - (current_output_link/total_nb_output_links)*data.max_shift
+            current_output_link += 1
+          }
+        }
       )
       let total_input_offset = 0
       node.input_links.forEach(
         (id) => total_input_offset += +links[id].value[0]
       )
-      if (id === 0) {
+      if (node_id === 0) {
         node.y = 200//0.2 * height;
-        vertical_offset = 200 + scale(Math.max(total_input_offset, total_output_offset)) + vertical_space
+        vertical_offset = 200 + vertical_space
       }
       else {
         node.y = vertical_offset
-        vertical_offset += scale(Math.max(total_input_offset, total_output_offset)) + vertical_space
+        vertical_offset += vertical_space
       }
     })
     if (max_vertical_offset < vertical_offset) {
@@ -494,7 +512,6 @@ export const updateLayout = (
 ) => {
   convert_data(new_layout)
   const { nodes, links } = data
-  convert_data(new_layout)
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
@@ -509,10 +526,17 @@ export const updateLayout = (
   // Apply nodes layout
   for (let i = 0; i < new_layout.nodes.length; i++) {
     const node_layout = new_layout.nodes[i]
-    const node = find_node(node_layout.name, nodes)
+    let node = find_node(node_layout.name, nodes)
     if (node === undefined) {
-      continue
+      if (node_layout.input_links.length === 0 && node_layout.output_links.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
+        // Case of not a label
+        node = {...node_layout}
+        nodes.push(node)
+      } else {
+        continue
+      }
     }
+
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y
@@ -561,6 +585,9 @@ export const updateLayout = (
     link.label_visible = label_visible
     link.x_label = x_label
     link.y_label = y_label
+    link.left_horiz_shift = link_layout.left_horiz_shift
+    link.right_horiz_shift = link_layout.right_horiz_shift
+    link.orientation = link_layout.orientation
     //link.type = type
     link.recycling = recycling
 
@@ -586,5 +613,4 @@ export const updateLayout = (
   if (data.display_style.filter_label === undefined) {
     data.display_style.filter_label = 0
   }
-  //this.setState({data})
 }

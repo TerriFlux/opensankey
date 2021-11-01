@@ -17,6 +17,7 @@ def parse_sankey_energie_csv(
         'links'   : [],
         'h_space' : 300,
         'display_style' : {
+            'filter' : 1,
             'filter_label' : 20
         },
 
@@ -59,7 +60,6 @@ def parse_sankey_energie_csv(
                 'right_horiz_shift' : 0.50
             }
         )
-    reg_idx = 0
     for region_name in regions_names:
       territory_data = csv_data[csv_data['nom_territoire'] == region_name]
       i = 0
@@ -67,9 +67,6 @@ def parse_sankey_energie_csv(
         sankey_dict['links'][i]['value'].append(round(row['value'], 1))         
         sankey_dict['links'][i]['display_value'].append('default')
         i = i+1
-        reg_idx = reg_idx + 1
-        if reg_idx == 2:
-          break
     return sankey_dict
 
 def parse_simple_excel(

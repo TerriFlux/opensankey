@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { compute_auto_sankey,compute_default_input_output_links, updateLayout } from './SankeyLayout'
 
 
 // Getter pour récupérer la valeur du link
@@ -292,8 +292,12 @@ export const default_sankey_data = (): SankeyData => {
     height: 1500,
     width: 2150,
     node_width: 10,
-    h_space: 100,
+    h_space: 200,
     v_space: 100,
+
+    left_shift: 1/3,
+    right_shift: 2/3,
+    max_shift: 0.2,
 
     display_style: {
       font_size: 11,
@@ -452,8 +456,6 @@ export const setSelectedTags = (
   // }
 
   nodes.forEach(node => {
-    node.visible = true
-    node.label_visible = true
     for (const i in tags_catalog) {
       const group_name = tags_catalog[i].group_name
       if (!node.tags[group_name] || node.tags[group_name].length === 0) {
@@ -465,6 +467,9 @@ export const setSelectedTags = (
         node.visible = false
         node.label_visible = false
         break
+      } else {
+        node.visible = true
+        node.label_visible = true
       }
     }
   })
@@ -495,10 +500,14 @@ export const setSelectedTags = (
 }
 const downloadExamples = (
   file_name: string,
+  the_url_prefix: string,
   filetype: string
 ) => {
-  const path = window.location.href
-  const url = path + 'sankey/download_examples'
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
+    root = root.replace('sankey-diagrams/','')
+  }
+  const url = root + the_url_prefix + 'sankey/download_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -537,7 +546,12 @@ export const uploadExemple = (
   const callback = (server_data: SankeyData) => {
     Object.assign(data, server_data)
     convert_data(data)
-    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+    data.left_shift = 0.45
+    data.right_shift = 0.55
+    //compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+    compute_default_input_output_links(data.nodes, data.links)
+    updateLayout(data,(data as any).layout)
+    //delete (data as any).layout
     set_data({ ...data })
   }
 
@@ -546,7 +560,7 @@ export const uploadExemple = (
       try {
         const json_data = JSON.parse(text)
         callback(json_data)
-        downloadExamples(file_name, file_type)
+        downloadExamples(file_name, the_url_prefix, file_type)
       } catch (err) {
         alert(err)
       }

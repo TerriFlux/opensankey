@@ -137,10 +137,16 @@ export const convert_data = (
     data.node_width = 10
   }
   if (data.h_space === undefined) {
-    data.h_space = 100
+    data.h_space = 200
   }
   if (data.v_space === undefined) {
     data.v_space = 100
+  }
+  if (data.left_shift === undefined) {
+    data.left_shift = 1/3
+  }
+  if (data.right_shift === undefined) {
+    data.right_shift = 2/3
   }
 
   if (data.flux_types || data.use_flux_types) {

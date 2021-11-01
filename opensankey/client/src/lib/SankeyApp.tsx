@@ -88,7 +88,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         }}
         test_link_value={ (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => {
           let region_index = 0
-          const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+          const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
           if (tags_group.length > 0) {
             region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
           }
