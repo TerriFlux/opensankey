@@ -548,10 +548,13 @@ export const uploadExemple = (
     convert_data(data)
     data.left_shift = 0.45
     data.right_shift = 0.55
-    //compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-    compute_default_input_output_links(data.nodes, data.links)
-    updateLayout(data,(data as any).layout)
-    //delete (data as any).layout
+    if ('layout' in (data as any)) {
+      compute_default_input_output_links(data.nodes, data.links)
+      updateLayout(data,(data as any).layout)
+      delete (data as any).layout
+    } else {
+      compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+    }
     set_data({ ...data })
   }
 
