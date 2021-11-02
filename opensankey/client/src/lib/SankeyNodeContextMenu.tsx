@@ -206,13 +206,13 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             style={{ 'marginBottom' : '3px'}} 
             onClick = {
               () =>  {
-                const current_prev_x = nodes[selected_node].x - data.h_space
+                const current_prev_x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space - data.h_space
                 const current_y = nodes[selected_node].y 
                 const node_to_replace = nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
-                  node_to_replace.x = nodes[selected_node].x
+                  node_to_replace.x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space
                 }
-                nodes[selected_node].x = nodes[selected_node].x - data.h_space
+                nodes[selected_node].x = current_prev_x
                 set_data({...data})
               }
             }
@@ -222,13 +222,13 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             style={{ 'marginBottom' : '3px'}} 
             onClick = {
               () =>  {
-                const current_prev_x = nodes[selected_node].x + data.h_space
+                const current_prev_x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space + data.h_space
                 const current_y = nodes[selected_node].y 
                 const node_to_replace = nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
-                  node_to_replace.x = nodes[selected_node].x
+                  node_to_replace.x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space
                 }
-                nodes[selected_node].x = nodes[selected_node].x + data.h_space
+                nodes[selected_node].x = current_prev_x
                 set_data({...data})
               }
             }
