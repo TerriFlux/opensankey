@@ -295,8 +295,8 @@ export const default_sankey_data = (): SankeyData => {
     h_space: 200,
     v_space: 100,
 
-    left_shift: 1/3,
-    right_shift: 2/3,
+    left_shift: 0.4,
+    right_shift: 0.5,
     max_shift: 0.2,
 
     display_style: {
@@ -546,8 +546,8 @@ export const uploadExemple = (
   const callback = (server_data: SankeyData) => {
     Object.assign(data, server_data)
     convert_data(data)
-    data.left_shift = 0.45
-    data.right_shift = 0.55
+    data.left_shift = 0.40
+    data.right_shift = 0.50
     if ('layout' in (data as any)) {
       compute_default_input_output_links(data.nodes, data.links)
       updateLayout(data,(data as any).layout)

@@ -60,7 +60,8 @@ interface ConvertSankeyData {
   filtered_nodes: any,
   filtered_nodes_names: any,
   filtered_links: any,
-  previous_filter: any
+  previous_filter: any,
+  periods?: boolean
 }
 
 
@@ -75,28 +76,36 @@ export const convert_data = (
     data.tags_catalog = []
   }
   if (!Array.isArray(data.links)) {
-    const region_names = Object.keys(data.links)
-    const new_links = JSON.parse(JSON.stringify(data.links[region_names[0]])) as SankeyLink[]
+    const key_names = Object.keys(data.links)
+    const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
       (link, i) => {
         link.value = []
         link.display_value = []
-        region_names.forEach(
-          cur_region_name => {
-            link.value.push(data.links[cur_region_name][i].value)
-            link.display_value.push(data.links[cur_region_name][i].display_value)
+        key_names.forEach(
+          cur_key_name => {
+            link.value.push(data.links[cur_key_name][i].value)
+            link.display_value.push(data.links[cur_key_name][i].display_value)
           }
         )
       }
     )
     data_to_convert.links = new_links
-    if ( region_names.length > 1) {
+    if ( key_names.length > 1 && !data.periods) {
       data.tags_catalog.push({
         group_name: 'Regions',
-        tags: region_names,
-        selected_tags: [data.region_name !== undefined ? data.region_name : region_names[0]]
+        tags: key_names,
+        selected_tags: [data.region_name !== undefined ? data.region_name : key_names[0]]
       })
     }
+    if ( key_names.length > 1 && data.periods) {
+      data.tags_catalog.push({
+        group_name: 'Periods',
+        tags: key_names,
+        selected_tags: [data.region_name !== undefined ? data.region_name : key_names[0]]
+      })
+    }
+    delete data.periods
     delete data.region_names
     delete data.region_name
   }
