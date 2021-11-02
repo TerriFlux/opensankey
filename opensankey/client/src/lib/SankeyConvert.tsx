@@ -382,6 +382,7 @@ export const convert_data = (
       } else if (l_convert.text_same_color === 'same_color') {
         l.text_color = l.color
       }
+      delete l_convert.text_same_color
 
       if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
         if (!l.tags['Exchanges']) {
