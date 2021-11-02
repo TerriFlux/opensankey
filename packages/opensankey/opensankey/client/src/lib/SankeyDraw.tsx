@@ -251,21 +251,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return 'link' + i
       })
       .attr('fill', 'none')
-      .attr('stroke-opacity', d => d.visible && d.value[region_index] >= display_style.filter ? 0.95 : 0)
+      .attr('stroke-opacity', d => d.visible && d.value[region_index] >= display_style.filter ? ((String(d.display_value[region_index]).includes('[')) ? 0.3 :0.95) : 0)
       .attr('stroke-width', d => {
         const link_value = test_link_value(nodes, d, data.tags_catalog)
         return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
       })
-      //.attr('stroke-linejoin','round')
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
       .attr('stroke', l => link_color(l))
-      .attr('stroke-dasharray', d => {
-        if (String(d.display_value[region_index]).includes('[')) {
-          return '1, 1'
-        } else {
-          return ''
-        }
-      })
       .on('mouseover', function (event, d) {
         //d3.select(this).attr('class', 'selected_node')
         sankeyTooltip
@@ -283,7 +275,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
         if (d.visible && d.value[region_index] >= display_style.filter) {
-          return d3.select(this).attr('stroke-opacity', '0.95')
+          const opacity = String(d.display_value[region_index]).includes('[') ? 0.3 : 0.95
+          return d3.select(this).attr('stroke-opacity', opacity)
         }
       })
 
