@@ -492,7 +492,7 @@ export const setSelectedTags = (
     }
     const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.source_name))[0]
     const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.target_name))[0]
-    if (!source_node.visible && !source_node.label_visible && !target_node.visible && !target_node.label_visible) {
+    if ((!source_node.visible && !source_node.label_visible) || (!target_node.visible && !target_node.label_visible)) {
       link.visible = false
       link.label_visible = false      
     }
