@@ -143,10 +143,10 @@ export const convert_data = (
     data.v_space = 100
   }
   if (data.left_shift === undefined) {
-    data.left_shift = 1/3
+    data.left_shift = 0.4
   }
   if (data.right_shift === undefined) {
-    data.right_shift = 2/3
+    data.right_shift = 0.5
   }
 
   if (data.flux_types || data.use_flux_types) {
