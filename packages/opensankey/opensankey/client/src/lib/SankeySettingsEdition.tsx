@@ -59,7 +59,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
     <Modal
       size="lg"
       show={show}
-      onHide={() => set_show_graphic_attributes(false)}
+      onHide={() => {
+        localStorage.setItem('data', JSON.stringify(data))        
+        set_show_graphic_attributes(false)
+      }}
     >
       <Modal.Header closeButton>
         <Modal.Title>Réglages</Modal.Title>
