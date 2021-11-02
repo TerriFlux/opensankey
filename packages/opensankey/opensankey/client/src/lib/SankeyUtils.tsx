@@ -467,7 +467,7 @@ export const setSelectedTags = (
         node.visible = false
         node.label_visible = false
         break
-      } else {
+      } else if (!node.visible && !node.label_visible) {
         node.visible = true
         node.label_visible = true
       }
