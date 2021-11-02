@@ -1567,7 +1567,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           })
           .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
           .attr('fill', () => link_color(l))
-          .attr('fill-opacity', 0.95)
+          .attr('fill-opacity', () => {
+            const opacity = String(l.display_value[region_index]).includes('[') ? 0.3 : 0.95
+            return opacity
+          })
       }
       if (is_v && n.x > source_node.x) {
         cum_v_left += link_value
