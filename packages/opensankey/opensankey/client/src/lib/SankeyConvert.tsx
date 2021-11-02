@@ -109,7 +109,7 @@ export const convert_data = (
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
   }
-  if (display_style.trade_close === undefined && data.version !== '0.1') {
+  if (display_style.trade_close === undefined && (data.version === '0.2' || data.version === '0.3') ) {
     display_style.trade_close = true
   }
   if (data.version === '0.1') {
@@ -207,7 +207,9 @@ export const convert_data = (
           links[n.output_links[0]].tags = {}
         }
         links[n.output_links[0]].tags['Exchanges'] = ['Importations']
-        n_convert.trade_close = data.display_style.trade_close ? data.display_style.trade_close : true
+        if (data.display_style.trade_close !== undefined ) {
+          n_convert.trade_close = data.display_style.trade_close
+        }
       } else if (n.name.includes('(E')) {
         import_export = true
         n.tags['Exchanges'] = ['Exportations']
@@ -215,7 +217,9 @@ export const convert_data = (
           links[n.input_links[0]].tags = {}
         }
         links[n.input_links[0]].tags['Exchanges'] = ['Exportations']
-        n_convert.trade_close = data.display_style.trade_close ? data.display_style.trade_close : true
+        if (data.display_style.trade_close !== undefined ) {
+          n_convert.trade_close = data.display_style.trade_close
+        }
       } else if (!n.tags['Exchanges']) {
         n.tags['Exchanges'] = ['Other']
       }

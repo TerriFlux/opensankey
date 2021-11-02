@@ -1031,8 +1031,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     n_id: number,
     node_x: number,
     node_y: number,
-    node_x_label: number | null | undefined,
-    node_y_label: number | null | undefined,
+    node_x_label: number,
+    node_y_label: number,
     node_label_visible: boolean,
     l_id: number,
     link_x: number,
@@ -1043,14 +1043,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select('#ggg_node' + n_id + ' rect')
       .attr('fill-opacity', 0)
     const visible = node_label_visible ? 'visible' : 'hidden'
-    if (node_x_label && node_y_label) {
-      d3.select('#ggg_node' + n_id + ' text')
-        .attr('x', node_x_label)
-        .attr('y', node_y_label)
-        .attr('visibility', visible)
-        .selectAll('tspan')
-        .attr('x', node_x_label)
-    }
+    d3.select('#ggg_node' + n_id + ' text')
+      .attr('x', node_x_label)
+      .attr('y', node_y_label)
+      .attr('visibility', visible)
+      .selectAll('tspan')
+      .attr('x', node_x_label)
     d3.select('#link' + l_id).attr('d', d => {
       let error_msg
       return drawCurve(
