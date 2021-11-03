@@ -267,10 +267,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
       })
-      .on('mousemove', d => {
+      .on('mousemove', (event, d) => {
         sankeyTooltip
-          .style('top', (d.layerY - 10) + 'px')
-          .style('left', (d.layerX + 10) + 'px')
+          .style('top', (event.layerY - 10) + 'px')
+          .style('left', (event.layerX + 10) + 'px')
       })
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
@@ -1353,25 +1353,25 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke', 'black')
       .attr('stroke-width', '0')
       .on('mouseover', function (event, d) {
-        //console.log(node_visible(d))
-        //if (node_visible(d)) {
-        d3.select(this).attr('class', 'selected_node')
-        sankeyTooltip
-          .style('opacity', 1)
-          .html(nodeTooltipsContent(data, d as SankeyNode))
-        //}
+        if (node_label_visible(d)) {
+          d3.select(this).attr('class', 'selected_node')
+          sankeyTooltip
+            .style('opacity', 1)
+            .html(nodeTooltipsContent(data, d as SankeyNode))
+        }
       })
-      .on('mousemove', function (d) {
-        //console.log(node_visible(d))
-        //if (!d.visible) {
-        sankeyTooltip
-          .style('top', (d.layerY - 10) + 'px')
-          .style('left', (d.layerX + 10) + 'px')
-        //}
+      .on('mousemove', function (event, d) {
+        if (node_label_visible(d)) {
+          sankeyTooltip
+            .style('top', (event.layerY - 10) + 'px')
+            .style('left', (event.layerX + 10) + 'px')
+        }
       })
-      .on('mouseout', function () {
-        d3.select(this).attr('class', 'node')
-        sankeyTooltip.style('opacity', 0)
+      .on('mouseout', function (event, d) {
+        if (node_label_visible(d)) {
+          d3.select(this).attr('class', 'node')
+          sankeyTooltip.style('opacity', 0)
+        }
       })
 
     ggg_nodes
@@ -1458,6 +1458,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           })
         }
         return
+      })
+      .on('mouseover', function (event, d) {
+        if (node_label_visible(d)) {
+          d3.select(this).attr('class', 'selected_node')
+          sankeyTooltip
+            .style('opacity', 1)
+            .html(nodeTooltipsContent(data, d as SankeyNode))
+        }
+      })
+      .on('mousemove', function (event, d) {
+        if (node_label_visible(d)) {
+          sankeyTooltip
+            .style('top', (event.layerY - 10) + 'px')
+            .style('left', (event.layerX + 10) + 'px')
+        }
+      })
+      .on('mouseout', function (event, d) {
+        if (node_label_visible(d)) {
+          d3.select(this).attr('class', 'node')
+          sankeyTooltip.style('opacity', 0)
+        }
       })
     if (!static_sankey) {
       select.on('click', (event, d) => {
