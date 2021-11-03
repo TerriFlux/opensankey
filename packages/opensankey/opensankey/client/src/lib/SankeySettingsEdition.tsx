@@ -10,13 +10,14 @@ const SankeySettingsEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   set_show_graphic_attributes: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
-  set_current_filter: PropTypes.func.isRequired
+  set_current_filter: PropTypes.func.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
 const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
-  data, set_data, set_show_graphic_attributes, show, set_current_filter, children
+  data, set_data, set_show_graphic_attributes, show, set_current_filter,getValueIndex, children
 }) => {
   let file_layout: Blob[] | undefined
 
@@ -32,16 +33,12 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const { display_style, tags_catalog, links, nodes, node_width } = data
   const { filter } = display_style
 
-  let region_index = 0
-  const tags_group = tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 0) {
-    region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
-  }
+  const value_index = getValueIndex(data)
 
   let max_link_value = 0
   links.forEach(link => {
-    if (link.value[region_index] > max_link_value) {
-      max_link_value = link.value[region_index]
+    if (link.value[value_index] > max_link_value) {
+      max_link_value = link.value[value_index]
     }
   })
   max_link_value += 1

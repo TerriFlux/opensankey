@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 export const nodeTooltipsContent = (
   data: SankeyData,
   node: SankeyNode,
+  getValueIndex: any
 ) => {
   if (node.tooltip_text) {
     return node.tooltip_text
@@ -41,10 +42,10 @@ export const nodeTooltipsContent = (
 //   if (d.tooltip_text) {
 //     return d.tooltip_text
 //   }
-//   let region_index = 0
+//   let value_index = 0
 //   const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
 //   if (tags_group.length > 1) {
-//     region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+//     value_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
 //   }
 //   const n = d as SankeyNode
 //   const { links } = data
@@ -58,7 +59,7 @@ export const nodeTooltipsContent = (
 //         return ''
 //       }
 //       if (link.visible) {
-//         total += +link.value[region_index]
+//         total += +link.value[value_index]
 //       }
 //     }
 //   }
@@ -72,9 +73,9 @@ export const nodeTooltipsContent = (
 //       }
 //       if (link.visible || link.visible === undefined) {
 //         const source_name = link.source_name.split('\\n').join(' ')
-//         t += ' ' + source_name + ': ' + toPrecision(link.value[region_index])
+//         t += ' ' + source_name + ': ' + toPrecision(link.value[value_index])
 //         if (n.input_links.length > 1) {
-//           const percent = Math.round(link.value[region_index] * 100 / total)
+//           const percent = Math.round(link.value[value_index] * 100 / total)
 //           t += ' (' + percent + '%)\\n'
 //         } else {
 //           t += '\\n'
@@ -92,7 +93,7 @@ export const nodeTooltipsContent = (
 //         return ''
 //       }
 //       if (link.visible) {
-//         total += +link.value[region_index]
+//         total += +link.value[value_index]
 //       }
 //     }
 //     if (n.output_links.length > 0) {
@@ -105,9 +106,9 @@ export const nodeTooltipsContent = (
 //         }
 //         if (link.visible) {
 //           const target_name = link.target_name.split('\\n').join(' ')
-//           t += ' ' + target_name + ': ' + toPrecision(link.value[region_index])
+//           t += ' ' + target_name + ': ' + toPrecision(link.value[value_index])
 //           if (n.output_links.length > 1) {
-//             const percent = Math.round(link.value[region_index] * 100 / total)
+//             const percent = Math.round(link.value[value_index] * 100 / total)
 //             t += ' (' + percent + '%)\\n'
 //           } else {
 //             t += '\\n'
@@ -124,6 +125,7 @@ export const nodeTooltipsContent = (
 export const linkTooltipsContent = (
   data: SankeyData,
   link: SankeyLink,
+  getValueIndex: any
 ) => {
   if (link.tooltip_text) {
     return link.tooltip_text
