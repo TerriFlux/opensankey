@@ -400,7 +400,7 @@ export const convert_data = (
       }
       if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
-          if (l_convert.data) {
+          if (l_convert.data && l_convert.agregated_data_value !== undefined) {
             l.tags['flux_types'] = ['initial_data', 'adjusted_data']
             delete l_convert.data
           } else {
@@ -423,6 +423,8 @@ export const convert_data = (
           target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
             [...target_node.tags['flux_types'], ...l.tags['flux_types']]
           )] : [...l.tags['flux_types']]
+        } else if (l.tags['flux_types'].includes('initial_data') && l_convert.agregated_data_value === undefined) {
+          l.tags['flux_types'].splice(l.tags['flux_types'].indexOf('initial_data'))
         }
       }
     }
