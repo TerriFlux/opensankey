@@ -11,11 +11,12 @@ const SankeyNodeEditionPropTypes = {
   set_show_node: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show, children }) => {
+const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show,getValueIndex, children }) => {
   const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { links, nodes, tags_catalog } = data
@@ -250,7 +251,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value={node.tooltip_text ? node.tooltip_text : nodeTooltipsContent(data,node)}
+                        value={node.tooltip_text ? node.tooltip_text : nodeTooltipsContent(data,node,getValueIndex)}
                         onChange={
                           (evt) => {
                             node.tooltip_text = evt.target.value.split('\n').join('\\n')

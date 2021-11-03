@@ -279,12 +279,6 @@ export const compute_auto_sankey = (
 ) => {
   const { nodes, links } = data
 
-  let region_indices = [0]
-  const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group.length > 0) {
-    region_indices = [...Array(tags_group[0].tags.length).keys()]
-  }
-
   const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]
   //sankey.update_scale(data.user_scale)
   // var alerte = false
@@ -304,11 +298,7 @@ export const compute_auto_sankey = (
 
 
   // Use a relevant scale
-  links.forEach(link => {
-    region_indices.forEach(i =>
-      max_node_value = link.value[i] > max_node_value ? link.value[i] : max_node_value
-    )
-  })
+  links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
   data.user_scale = max_node_value
   const scale = d3.scaleLinear()
     .domain([0, data.user_scale])

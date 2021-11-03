@@ -10,13 +10,14 @@ const SankeyLinkEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   set_show_link: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
-  show: PropTypes.bool.isRequired
+  show: PropTypes.bool.isRequired,
+  getValueIndex: PropTypes.func.isRequired,
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, set_show_link, selected_link, show, children }
+  { data, set_data, set_show_link, selected_link, show, getValueIndex, children }
 ) => {
   const [tag_group_id, set_tag_group_id] = useState(0)
   const [duplicate, set_duplicate] = useState(false)
@@ -79,11 +80,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     link = selected_links[0]
   }
 
-  let region_index = 0
-  const tags_group_region = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group_region.length > 0) {
-    region_index = tags_group_region[0].tags.indexOf(tags_group_region[0].selected_tags[0])
-  }
+  const value_index = getValueIndex(data)
 
   const tags_visible = tags_catalog.length > 0
 
@@ -128,10 +125,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value={link.value[region_index]}
+                        value={link.value[value_index]}
                         onChange={
                           (evt) => {
-                            links[selected_link].value[region_index] = +evt.target.value
+                            links[selected_link].value[value_index] = +evt.target.value
                             set_data({ ...data })
                           }
                         }
@@ -146,10 +143,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     <Col>
                       <Form.Control
                         type='text'
-                        value={link.display_value[region_index]}
+                        value={link.display_value[value_index]}
                         onChange={
                           (evt) => {
-                            links[selected_link].display_value[region_index] = evt.target.value
+                            links[selected_link].display_value[value_index] = evt.target.value
                             set_data({ ...data })
                           }
                         }
@@ -580,7 +577,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       <Form.Control
                         as="textarea"
                         rows={10}
-                        value={link.tooltip_text ? link.tooltip_text : linkTooltipsContent(data,link)}
+                        value={link.tooltip_text ? link.tooltip_text : linkTooltipsContent(data,link,getValueIndex)}
                         onChange={evt => {
                           link.tooltip_text = evt.target.value.split('\n').join('\\n')
                           set_data({ ...data })

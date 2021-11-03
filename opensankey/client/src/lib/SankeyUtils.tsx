@@ -3,7 +3,6 @@ import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey,compute_default_input_output_links, updateLayout } from './SankeyLayout'
 
-
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
 export const getLinkValue = (
