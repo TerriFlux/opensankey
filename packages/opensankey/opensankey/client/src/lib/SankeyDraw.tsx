@@ -72,7 +72,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   let alt_key_pressed = false
 
-  let value_index = getValueIndex(data)
+  const value_index = getValueIndex(data)
 
   const add_links = (
     data: SankeyData,
