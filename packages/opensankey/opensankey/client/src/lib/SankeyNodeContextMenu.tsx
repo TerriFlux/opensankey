@@ -92,10 +92,18 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const node_name = nodes[selected_node].name
                 const desagregate_nodes = nodes.filter( n => n.parent_name === node_name )
+                const nb_desagregated = desagregate_nodes.length
+                let current_y = data.v_space/2
+                const delta_y = data.v_space / (nb_desagregated-1)
                 desagregate_nodes.forEach(n => {
                   // show desagregated nodes and input and output links if source and target nodes are visible
                   n.label_visible = true
                   n.visible = true
+                  if (n.x === undefined) {
+                    n.x = nodes[selected_node].x
+                    n.y = nodes[selected_node].y - current_y
+                  }
+                  current_y = current_y - delta_y
                   n.input_links.forEach(
                     l_idx => {
                       const source_name = links[l_idx].source_name
@@ -134,9 +142,13 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
                   return
                 }
                 const desagregate_nodes = nodes.filter( n => n.parent_name === agregated_node.name )
+                let mean_x = 0
+                let mean_y = 0
                 desagregate_nodes.forEach(n => {
                   n.label_visible = false
                   n.visible = false
+                  mean_x += n.x
+                  mean_y += n.y
                   n.input_links.forEach(
                     l_idx => links[l_idx].visible = false
                   )
@@ -144,9 +156,15 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
                     l_idx => links[l_idx].visible = false
                   )
                 })
+                mean_x = mean_x/desagregate_nodes.length
+                mean_y = mean_y/desagregate_nodes.length
                 // show agregated node
                 agregated_node.label_visible = true
                 agregated_node.visible = true
+                if (agregated_node.x === undefined ) {
+                  agregated_node.x = mean_x
+                  agregated_node.y = mean_y
+                }
                 agregated_node.input_links.forEach(
                   l_idx => {
                     const source_name = links[l_idx].source_name

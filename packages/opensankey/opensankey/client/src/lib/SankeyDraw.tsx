@@ -57,6 +57,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const [handles_visible] = useState([...new Array(data.links.length).fill(false)])
 
+  const visible_nodes = data.nodes.filter( n=> n.visible || n.label_visible )
+
   const sankeyTooltip = d3.select('body')
     .append('div')
     .style('opacity', 0)
@@ -143,13 +145,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       paths.call(d3.drag<SVGPathElement, SankeyLink>()
         .subject(Object)
         .on('drag', function (event) {
-          drag_link(nodes, links, display_style, data.tags_catalog, this, event)
+          drag_link(visible_nodes, links, display_style, data.tags_catalog, this, event)
           links.forEach(
             (link: SankeyLink, i: number) => {
               d3.select('#link' + i).attr('d',
                 () => {
                   return drawCurve(
-                    nodes, links, display_style,
+                    visible_nodes, links, display_style,
                     data.tags_catalog, link, i,
                     error_msg
                   )
@@ -214,13 +216,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
-            drag_text(nodes, links, this, event)
+            drag_text(visible_nodes, links, this, event)
           }
         })
       )
         .on('click', (event, d) => {
-          const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.source_name))[0]
-          const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.target_name))[0]
+          const source_node = visible_nodes.filter(n => normalize_name(n.name) === normalize_name(d.source_name))[0]
+          const target_node = visible_nodes.filter(n => normalize_name(n.name) === normalize_name(d.target_name))[0]
           const id = links.indexOf(d)
           select_link(id)
           // if classic link
@@ -233,10 +235,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
-            drag_text(nodes, links, this, event)
+            drag_text(visible_nodes, links, this, event)
           } else {
             const link_to_drag = 'link' + d3.select(this).attr('id').substring(4)
-            drag_link(nodes, links, display_style, data.tags_catalog, (d3.select(link_to_drag).node() as SVGPathElement), event)
+            drag_link(visible_nodes, links, display_style, data.tags_catalog, (d3.select(link_to_drag).node() as SVGPathElement), event)
           }
         })
       )
@@ -251,7 +253,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('fill', 'none')
       .attr('stroke-opacity', d => d.visible && d.value[value_index] >= display_style.filter ? ((String(d.display_value[value_index]).includes('[')) ? 0.3 :0.95) : 0)
       .attr('stroke-width', d => {
-        const link_value = test_link_value(nodes, d, data.tags_catalog)
+        const link_value = test_link_value(visible_nodes, d, data.tags_catalog)
         return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
       })
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
@@ -280,9 +282,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     paths.attr('d', (d, i) => {
-      setNodesHeight(nodes, links, d, data.tags_catalog)
+      setNodesHeight(visible_nodes, links, d, data.tags_catalog)
       return drawCurve(
-        nodes, links, display_style,
+        visible_nodes, links, display_style,
         data.tags_catalog, d, i, error_msg
       )
     })
@@ -768,13 +770,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   ) => {
     let source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.source_name))[0]
     let target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.target_name))[0]
-    if (target_node === undefined) {
-      target_node = nodes.filter(n => n.name === d.target_name)[0]
-    }
-    if (source_node === undefined) {
-      const filter_source_name = normalize_name(d.source_name)
-      const filter_nodes = nodes.filter(n => normalize_name(n.name) === filter_source_name)
-      source_node = filter_nodes[0]
+    if (source_node === undefined || target_node === undefined) {
+      return
     }
 
     let res = compute_total_offsets(source_node, nodes, links, tags_catalog, test_link_value)
@@ -1376,7 +1373,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(n => node_arrow_visible(n))
       .each(function (n) {
         const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n, nodes, links, display_style, data.tags_catalog, selection)
+        drawArrows(n, visible_nodes, links, display_style, data.tags_catalog, selection)
       })
 
 

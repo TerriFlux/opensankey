@@ -65,7 +65,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
         }
         node_arrow_visible={
-          (n: SankeyNode) => (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.visible || (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
         }
         select_link={(i: number) => {
           set_selected_link(i)
