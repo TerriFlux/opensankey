@@ -123,5 +123,3 @@ prod.opensankey.fr:
     - mv ../node_modules opensankey/client
     - cd prod_opensankey
     - sudo systemctl restart opensankey
-  dependencies:
-    - test
