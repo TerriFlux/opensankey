@@ -38,10 +38,10 @@ dev.opensankey.fr:
     - cd opensankey/client
     - npm install
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
-    - npm run build
-    - export NODE_ENV=production
+    - CI= npm run build
+    - set NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
-    - sudo npm run dist
+    - CI= sudo npm run dist
     - npm link .
     - mv node_modules ../../..
     - cd ../..
