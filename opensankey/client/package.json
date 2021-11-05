@@ -13,7 +13,7 @@
   "scripts" : {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "dist": "babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
+    "dist": "cross-env NODE_ENV=production babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "eslint --fix --ext .js,.jsx,.tsx ."
