@@ -43,7 +43,7 @@ dev.opensankey.fr:
     - CI= npm run build
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - CI= sudo npm run dist
-    - npm link .
+    - sudo npm link .
     - mv node_modules ../../..
     - cd ../..
     - pip install .
