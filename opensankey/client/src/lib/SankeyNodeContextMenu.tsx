@@ -23,10 +23,10 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
       </Modal.Header>
       <Modal.Body>
         <br></br>
-        <ButtonGroup vertical style={{ 'marginLeft': '10px' }}>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}>
           <Button
             size="sm"
-            style={{ 'marginBottom': '3px' }}
+            style={{ 'marginBottom': '3px', 'marginRight' : '3px' }}
             onClick={
               () => {
                 reorganize_input_links(selected_node, true, false, nodes, links)
@@ -44,6 +44,8 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Réorganiser liens sortants</Button>
+        </ButtonGroup>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}>
           <Button
             size="sm"
             style={{ 'marginBottom': '3px' }}
@@ -55,9 +57,11 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Supprimer noeud</Button>
+        </ButtonGroup>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}>
           <Button
             size="sm"
-            style={{ 'marginBottom': '3px' }}
+            style={{ 'marginBottom': '3px', 'marginRight' : '3px' }}
             onClick={
               () => {
                 while (nodes[selected_node].input_links.length > 0) {
@@ -79,9 +83,11 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Supprimer flux sortant</Button>
+        </ButtonGroup>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}>
           <Button 
             size="sm" 
-            style={{ 'marginBottom' : '3px'}} 
+            style={{ 'marginBottom' : '3px', 'marginRight' : '3px'}} 
             onClick = {
               () =>  {
                 const node_name = nodes[selected_node].name
@@ -159,6 +165,74 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Agrégation</Button>
+        </ButtonGroup>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}> 
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px', 'marginRight' : '3px'}} 
+            onClick = {
+              () =>  {
+                const current_x = nodes[selected_node].x
+                const current_prev_y = nodes[selected_node].y - data.v_space
+                const node_to_replace = nodes.filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                if ( node_to_replace !== undefined ) {
+                  node_to_replace.y = nodes[selected_node].y
+                }
+                nodes[selected_node].y = nodes[selected_node].y - data.v_space
+                set_data({...data})
+              }
+            }
+          >Monter</Button>
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px', 'marginRight' : '3px'}} 
+            onClick = {
+              () =>  {
+                const current_x = nodes[selected_node].x
+                const current_prev_y = nodes[selected_node].y + data.v_space
+                const node_to_replace = nodes.filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                if ( node_to_replace !== undefined ) {
+                  node_to_replace.y = nodes[selected_node].y
+                }
+                nodes[selected_node].y = nodes[selected_node].y + data.v_space
+                set_data({...data})
+              }
+            }
+          >Descendre</Button>
+        </ButtonGroup>
+        <ButtonGroup style={{ 'marginLeft': '10px' }}> 
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px'}} 
+            onClick = {
+              () =>  {
+                const current_prev_x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space - data.h_space
+                const current_y = nodes[selected_node].y 
+                const node_to_replace = nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                if ( node_to_replace !== undefined ) {
+                  node_to_replace.x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space
+                }
+                nodes[selected_node].x = current_prev_x
+                set_data({...data})
+              }
+            }
+          >Décaler gauche</Button>
+          <Button 
+            size="sm" 
+            style={{ 'marginBottom' : '3px'}} 
+            onClick = {
+              () =>  {
+                const current_prev_x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space + data.h_space
+                const current_y = nodes[selected_node].y 
+                const node_to_replace = nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                if ( node_to_replace !== undefined ) {
+                  node_to_replace.x = Math.round(nodes[selected_node].x/data.h_space)*data.h_space
+                }
+                nodes[selected_node].x = current_prev_x
+                set_data({...data})
+              }
+            }
+          >Décaler droite</Button>
         </ButtonGroup>
       </Modal.Body>
     </Modal>
