@@ -1,7 +1,7 @@
 stages:
-    - install_dependencies
-    - build
-    - test
+    #- install_dependencies
+    #- build
+    #- test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -95,11 +95,11 @@ dev.opensankey.fr:
     - cd opensankey/client
     - npm install
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
-    - CI= npm run build
-    - CI= export NODE_ENV=production
+    - npm run build
+    - export NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
-    - CI= sudo npm run dist
-    - CI= npm link .
+    - sudo npm run dist
+    - npm link .
     - mv node_modules ../../..
     - cd ../..
     - pip install .
