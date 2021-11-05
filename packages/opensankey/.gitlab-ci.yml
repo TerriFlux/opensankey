@@ -108,6 +108,8 @@ dev.opensankey.fr:
     - mv ../node_modules opensankey/client
     - cd dev_opensankey
     - sudo systemctl restart dev_opensankey
+#  dependencies:
+#    - test
 
 test.opensankey.fr:
   stage: deploy
@@ -142,8 +144,8 @@ test.opensankey.fr:
     - mv ../node_modules opensankey/client
     - cd test_opensankey
     - sudo systemctl restart test_opensankey
-  dependencies:
-    - test
+#dependencies:
+#    - test
 
 prod.opensankey.fr:
   stage: deploy
@@ -176,5 +178,5 @@ prod.opensankey.fr:
     - mv ../node_modules opensankey/client
     - cd prod_opensankey
     - sudo systemctl restart opensankey
-  dependencies:
-    - test
+#  dependencies:
+#    - test
