@@ -10,6 +10,7 @@ import SankeySettingsEdition from './SankeySettingsEdition'
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
 import Menu from './SankeyMenu'
+import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 
 const SankeyAppPropTypes = {
@@ -28,18 +29,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_node, set_selected_node] = useState(0)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
-  let region_index = 0
-  const tags_group = sankey_data.tags.filter(tag => tag.tags_group_name === 'Regions')
-  if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
-  }
-
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
         data={data}
         set_data={set_data}
         app_name='Open-Sankey'
+        url_prefix=''
       />
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
@@ -82,16 +78,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         link_color={l => l.color}
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
-        link_visible={(l: SankeyLink) => {
-          (l.visible && (l.value[region_index] >= Math.max(data.display_style.filter, data.display_style.filter_label))) ? 'visible' : 'hidden'
+        link_visible={(l: SankeyLink) => l.visible }
+        test_link_value={ (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => {
+          return d.value[0]
         }}
-        test_link_value={
-          (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => d.value[region_index]
-        }
         more_processing={() => void 0}
-        redraw_node={() => void 0}
-        node_tooltip={SankeyUtils.default_node_tooltip}
-        link_tooltip={SankeyUtils.default_link_tooltip}
+        nodeTooltipsContent={nodeTooltipsContent}
+        linkTooltipsContent={linkTooltipsContent}
+        getValueIndex={() => 0 }
       />
       <SankeyNodeEdition
         show={show_node}
@@ -99,6 +93,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         set_data={set_data}
         set_show_node={set_show_node}
         selected_node={selected_node}
+        getValueIndex={() => 0 }
       />
       <SankeyLinkEdition
         show={show_link}
@@ -106,6 +101,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         set_data={set_data}
         set_show_link={set_show_link}
         selected_link={selected_link}
+        getValueIndex={() => 0 }
       />
       <SankeySettingsEdition
         show={show_graphic_attributes}
@@ -119,6 +115,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           display_style.filter = +new_current_filter
           set_data({ ...data })
         }}
+        getValueIndex={() => 0 }
       />
       <SankeyNodeContextMenu
         data={data}
