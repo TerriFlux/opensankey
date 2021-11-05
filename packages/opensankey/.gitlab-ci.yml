@@ -96,7 +96,7 @@ dev.opensankey.fr:
     - npm install
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
-    - export NODE_ENV=production
+    - CI= export NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - CI= sudo npm run dist
     - CI= npm link .
@@ -133,7 +133,7 @@ test.opensankey.fr:
     - npm install
     - sudo npm link /home/ubuntu/test_terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
-    - export NODE_ENV=production
+    - CI= export NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - CI= sudo npm run dist
     - CI= npm link .
@@ -168,7 +168,7 @@ prod.opensankey.fr:
     - npm install
     - sudo npm link /home/ubuntu/terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
-    - export NODE_ENV=production
+    - CI= export NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - CI= sudo npm run dist
     - CI= npm link .
