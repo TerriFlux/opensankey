@@ -18,6 +18,8 @@ dev.opensankey.fr:
   stage: deploy
   tags:
     - dev
+  variables:
+    NODE_ENV: "production"
   environment:
     name: dev
   only:
@@ -39,7 +41,6 @@ dev.opensankey.fr:
     - npm install
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
-    - set NODE_ENV=production
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
     - CI= sudo npm run dist
     - npm link .
