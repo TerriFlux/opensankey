@@ -1,5 +1,38 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-import * as d3 from 'd3'
+import FileSaver from 'file-saver'
+import { convert_data } from './SankeyConvert'
+import { compute_auto_sankey,compute_default_input_output_links, updateLayout } from './SankeyLayout'
+
+// Getter pour récupérer la valeur du link
+// utile pour pouvoir ensuite gérer les dataTag
+export const getLinkValue = (
+  data: SankeyData,
+  idLink: string
+) => {
+  const { links } = data
+  return links.filter(element => { return element.idLink === idLink })[0].value[0]
+}
+
+export const getTotalLinks = (
+  data: SankeyData,
+  Links: string[],
+) => {
+  const { links } = data
+  let total = 0
+  Links.forEach( element => {
+    const tmp = links.filter(element1 => {
+      return (element1.idLink == element)
+    })[0].value[0]
+    total += tmp
+  })
+  return total
+
+  //   console.log(idNode)
+  //   console.log(element.idLink)
+  //   console.log(links.filter(element => { return (element.idLink as any).includes(idNode) }))
+  // })
+  return 'test'
+}
 
 export const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
@@ -234,27 +267,13 @@ export const toPrecision = (
   return new_v
 }
 
-export const cloneSelection = (
-  toCopy: d3.Selection<d3.BaseType, unknown, HTMLElement, unknown>,
-  times: number
-) => {
-  toCopy.each(function () {
-    for (let i = 0; i < times; i++) {
-      const n = (d3.select('svg') as d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>).node()
-      if (n) {
-        const clone = n.appendChild((this as HTMLElement).cloneNode(true)) as HTMLElement
-        d3.select(clone).attr('class', 'clone').attr('id', 'front-' + i)
-      }
-    }
-  })
-}
-
 export const link_text = (
   d: SankeyLink,
-  link_value: number
-  /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/,
+  link_value: number,
+  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean },
+  reg_index: number
 ) => {
-  const str_display = String(d.display_value)
+  const str_display = String(d.display_value[reg_index])
   if (str_display !== 'default') {
     return str_display
   }
@@ -272,6 +291,12 @@ export const default_sankey_data = (): SankeyData => {
     height: 1500,
     width: 2150,
     node_width: 10,
+    h_space: 200,
+    v_space: 100,
+
+    left_shift: 0.4,
+    right_shift: 0.5,
+    max_shift: 0.2,
 
     display_style: {
       font_size: 11,
@@ -287,8 +312,7 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags: [],
-    selected_tags: {}
+    tags_catalog: []
   }
 }
 
@@ -410,11 +434,10 @@ export const delete_node = (
 }
 
 export const setSelectedTags = (
-  sankey_data: SankeyData,
-  new_tags: { [tag_group: string]: string[] }
+  sankey_data: SankeyData
 ) => {
 
-  const { nodes, links } = sankey_data
+  const { nodes, links,tags_catalog } = sankey_data
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
@@ -432,23 +455,20 @@ export const setSelectedTags = (
   // }
 
   nodes.forEach(node => {
-    node.visible = true
-    node.label_visible = true
-    const node_tags = node.tags
-    for (const tag_group in new_tags) {
-      if (!node_tags[tag_group]) {
+    for (const i in tags_catalog) {
+      const group_name = tags_catalog[i].group_name
+      if (!node.tags[group_name] || node.tags[group_name].length === 0) {
+        // tags do not apply to node
         continue
       }
-      for (let i = 0; i < new_tags[tag_group].length; i++) {
-        let found = false
-        for (let j = 0; j < node_tags[tag_group].length; j++) {
-          if (new_tags[tag_group].includes(node_tags[tag_group][j])) {
-            found = true
-            break
-          }
-        }
-        node.visible = found
-        node.label_visible = found
+      const visible = tags_catalog[i].selected_tags.filter(selected_tag => node.tags[group_name].includes(selected_tag)).length > 0
+      if (!visible) {
+        node.visible = false
+        node.label_visible = false
+        break
+      } else if (!node.visible && !node.label_visible) {
+        node.visible = true
+        node.label_visible = true
       }
     }
   })
@@ -456,131 +476,96 @@ export const setSelectedTags = (
   links.forEach(link => {
     link.visible = true
     link.label_visible = true
-    const link_tags = link.tags
-    for (const tag_group in new_tags) {
-      if (!link_tags[tag_group]) {
+    for (const i in tags_catalog) {
+      const group_name = tags_catalog[i].group_name
+      if (!link.tags[group_name] || link.tags[group_name].length === 0) {
+        // tags do not apply to node
         continue
       }
-      for (let i = 0; i < new_tags[tag_group].length; i++) {
-        let found = false
-        for (let j = 0; j < link_tags[tag_group].length; j++) {
-          if (new_tags[tag_group].includes(link_tags[tag_group][j])) {
-            found = true
-            break
-          }
-        }
-        link.visible = found
-        link.label_visible = found
+      const visible = tags_catalog[i].selected_tags.filter(selected_tag => link.tags[group_name].includes(selected_tag)).length > 0
+      if (!visible) {
+        link.visible = false
+        link.label_visible = false
+        break
       }
+    }
+    const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.source_name))[0]
+    const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.target_name))[0]
+    if ((!source_node.visible && !source_node.label_visible) || (!target_node.visible && !target_node.label_visible)) {
+      link.visible = false
+      link.label_visible = false      
     }
   })
 }
-
-export const default_link_tooltip = (
-  data: SankeyData,
-  d: SankeyLink | SankeyNode
+const downloadExamples = (
+  file_name: string,
+  the_url_prefix: string,
+  filetype: string
 ) => {
-  if (d.tooltip_text) {
-    return d.tooltip_text
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
+    root = root.replace('sankey-diagrams/','')
   }
-  let region_index = 0
-  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
-  if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  const url = root + the_url_prefix + 'sankey/download_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
   }
-
-  const l = d as SankeyLink
-  let t = '\\n<b>' + l.source_name.split('\\n').join(' ') + ' VERS ' + l.target_name.split('\\n').join(' ') + '\\n\\n'
-  t += '\\n<b>Valeur du flux :\\n\\n'
-  const the_value = l.value[region_index]
-  t += ' ' + the_value + ' ' + '\\n'
-  d.tooltip_text = t
-  return t
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: filetype })
+    FileSaver.saveAs(newBlob, file_name)
+  }
+  fetch(url, fetchData).then(
+    response => {
+      if (response.ok) {
+        response.blob().then(showFile)
+      }
+    })
 }
 
-export const default_node_tooltip = (
+export const uploadExemple = (
+  file_name: string,
+  the_url_prefix: string,
   data: SankeyData,
-  d: SankeyNode | SankeyLink
+  set_data: any
 ) => {
-  if (d.tooltip_text) {
-    return d.tooltip_text
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
+    root = root.replace('sankey-diagrams/','')
   }
-  let region_index = 0
-  const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
-  if (tags_group.length > 1) {
-    region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+  const url = root + the_url_prefix + 'sankey/upload_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
   }
-  const n = d as SankeyNode
-  const { links } = data
-  let t = '<b>' + n.name.split('\\n').join(' ')
-  let total = 0
-  if (n.input_links.length > 0) {
-    for (let i = 0; i < n.input_links.length; i++) {
-      const link = links[n.input_links[i]]
-      if (link === undefined) {
-        //alert('Corruption du diagramme')
-        return ''
-      }
-      if (link.visible) {
-        total += +link.value[region_index]
-      }
+  let file_type = 'text/plain'
+  set_data({ ... default_sankey_data() })
+
+  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const callback = (server_data: SankeyData) => {
+    Object.assign(data, server_data)
+    convert_data(data)
+    data.left_shift = 0.40
+    data.right_shift = 0.50
+    if ('layout' in (data as any)) {
+      compute_default_input_output_links(data.nodes, data.links)
+      updateLayout(data,(data as any).layout)
+      delete (data as any).layout
+    } else {
+      compute_auto_sankey(data, data.h_space ? data.h_space : 200)
     }
+    set_data({ ...data })
   }
-  if (n.input_links.length > 0) {
-    t += '\\n\\n<b>ENTREES\\n\\n '
-    for (let i = 0; i < n.input_links.length; i++) {
-      const link = links[n.input_links[i]]
-      if (link === undefined) {
-        //alert('Corruption du diagramme')
-        return ''
+
+  fetch(url, fetchData).then((response) => {
+    response.text().then((text) => {
+      try {
+        const json_data = JSON.parse(text)
+        callback(json_data)
+        downloadExamples(file_name, the_url_prefix, file_type)
+      } catch (err) {
+        alert(err)
       }
-      if (link.visible || link.visible === undefined) {
-        const source_name = link.source_name.split('\\n').join(' ')
-        t += ' ' + source_name + ': ' + toPrecision(link.value[region_index])
-        if (n.input_links.length > 1) {
-          const percent = Math.round(link.value[region_index] * 100 / total)
-          t += ' (' + percent + '%)\\n'
-        } else {
-          t += '\\n'
-        }
-      }
-    }
-    t += ' Total: ' + toPrecision(total)
-  }
-  total = 0
-  if (n.output_links.length > 0) {
-    for (let i = 0; i < n.output_links.length; i++) {
-      const link = links[n.output_links[i]]
-      if (link === undefined) {
-        //alert('Corruption du diagramme')
-        return ''
-      }
-      if (link.visible) {
-        total += +link.value[region_index]
-      }
-    }
-    if (n.output_links.length > 0) {
-      t += '\\n\\n<b>SORTIES\\n\\n '
-      for (let i = 0; i < n.output_links.length; i++) {
-        const link = links[n.output_links[i]]
-        if (link === undefined) {
-          //alert('Corruption du diagramme')
-          return ''
-        }
-        if (link.visible) {
-          const target_name = link.target_name.split('\\n').join(' ')
-          t += ' ' + target_name + ': ' + toPrecision(link.value[region_index])
-          if (n.output_links.length > 1) {
-            const percent = Math.round(link.value[region_index] * 100 / total)
-            t += ' (' + percent + '%)\\n'
-          } else {
-            t += '\\n'
-          }
-        }
-      }
-    }
-    t += ' Total: ' + toPrecision(total)
-  }
-  d.tooltip_text = t
-  return d.tooltip_text
+    })
+  })
 }
