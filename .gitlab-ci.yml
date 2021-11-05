@@ -85,6 +85,8 @@ dev.opensankey.fr:
     policy: pull
   before_script:
     - sudo systemctl stop dev_opensankey || true
+  variables:
+    NODE_ENV: "production"
   script:
     - cd /home/ubuntu/dev_opensankey
     - source dev_opensankey/bin/activate
@@ -106,8 +108,6 @@ dev.opensankey.fr:
     - mv ../node_modules opensankey/client
     - cd dev_opensankey
     - sudo systemctl restart dev_opensankey
-  dependencies:
-    - test
 
 test.opensankey.fr:
   stage: deploy
