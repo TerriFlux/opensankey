@@ -106,7 +106,6 @@ dev.opensankey.fr:
     - source ../../dev_terriflux/dev_terriflux/bin/activate
     - pip install .  
     - mv ../node_modules opensankey/client
-    - cd dev_opensankey
     - sudo systemctl restart dev_opensankey
 #  dependencies:
 #    - test
@@ -142,7 +141,6 @@ test.opensankey.fr:
     - source ../../test_terriflux/test_terriflux/bin/activate
     - pip install .  
     - mv ../node_modules opensankey/client
-    - cd test_opensankey
     - sudo systemctl restart test_opensankey
 #dependencies:
 #    - test
@@ -176,7 +174,6 @@ prod.opensankey.fr:
     - source ../../terriflux/terrifluxenv/bin/activate
     - pip install .    
     - mv ../node_modules opensankey/client
-    - cd prod_opensankey
     - sudo systemctl restart opensankey
 #  dependencies:
 #    - test
