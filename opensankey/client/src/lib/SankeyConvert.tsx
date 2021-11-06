@@ -11,6 +11,7 @@ interface ConvertSankeyNode {
   output_offsets: any,
   horizontal_index: any,
   visible: number | boolean,
+  label_visible: number | boolean,
   trade_close: boolean
 }
 interface ConvertSankeyLink {
@@ -194,15 +195,26 @@ export const convert_data = (
         })
         delete n_convert.subchain
       }
-      if (n.label_visible === undefined) {
-        n.label_visible = true
-      }
+
       if (n.visible === undefined) {
         n.visible = true
       }
       if (n_convert.visible === 1) {
         n.visible = true
       }
+      if (n_convert.visible === 0) {
+        n.visible = false
+      }
+      if (n_convert.label_visible === 1) {
+        n.label_visible = true
+      }
+      if (n_convert.label_visible === 0) {
+        n.label_visible = false
+      }
+      if (n.label_visible === undefined) {
+        n.label_visible = n.visible
+      }
+
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
         if (attributes_to_remove[attr] in n_convert) {
@@ -326,10 +338,10 @@ export const convert_data = (
         l_convert.agregated_data_value = l_convert.data_value
       }
       if (!('visible' in l_convert)) {
-        l.visible = true
+        l.visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
       }
       if (!('label_visible' in l_convert)) {
-        l.label_visible = true
+        l.label_visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
       }
       if (l_convert.type === 'short_link_arrow') {
         l.curved = false
