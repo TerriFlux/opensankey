@@ -7,7 +7,7 @@ def parse_sankey_energie_csv(
 ):
     csv_data = pd.read_csv(
         csv_file,
-        delimiter=';', encoding='latin-1'
+        delimiter=';', encoding='utf-8'
     )
     sankey_dict = {}
     nodes_names = np.unique(np.hstack((csv_data['source'], csv_data['target']))).tolist()
