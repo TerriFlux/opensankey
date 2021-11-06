@@ -86,13 +86,13 @@ export const compute_total_offsets = (
   const bottom_flux: number[] = []
   node.output_links.forEach(
     (id) => {
-      let target_node
-      try {
-        target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].target_name))[0]
-      } catch {
-        return
-      }
       if (links[id].visible) {
+        let target_node
+        try {
+          target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+        } catch {
+          return
+        }
         if (links[id].orientation === 'hh') {
           if (target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
             right_flux.push(id)
@@ -124,13 +124,13 @@ export const compute_total_offsets = (
 
   node.input_links.forEach(
     (id) => {
-      let source_node
-      try {
-        source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].source_name))[0]
-      } catch {
-        return
-      }
       if (links[id].visible) {
+        let source_node
+        try {
+          source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].source_name))[0]
+        } catch {
+          return
+        }
         if (links[id].orientation === 'vv') {
           if (source_node.y < node.y) {
             // flux goes down
