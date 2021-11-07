@@ -635,8 +635,10 @@ export const updateLayout = (
     link.left_horiz_shift = link_layout.left_horiz_shift
     link.right_horiz_shift = link_layout.right_horiz_shift
     link.orientation = link_layout.orientation
-    //link.type = type
     link.recycling = recycling
+    if (String(link.display_value).includes('*')) {
+      link.value[0] = link_layout.value[0]
+    }
 
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift

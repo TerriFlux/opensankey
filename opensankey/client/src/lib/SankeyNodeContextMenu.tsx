@@ -221,14 +221,14 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
                 agregated_node.input_links.forEach(
                   l_idx => {
                     const source_name = new_display_links[l_idx].source_name
-                    const source_node = new_display_nodes.filter( n => n.name === source_name )[0]
+                    const source_node = new_display_nodes.filter( n => normalize_name(n.name) === normalize_name(source_name) )[0]
                     new_display_links[l_idx].visible = source_node.visible
                   }
                 )
                 agregated_node.output_links.forEach(
                   l_idx => {
                     const target_name = new_display_links[l_idx].target_name
-                    const target_node = new_display_nodes.filter( n => n.name === target_name )[0]
+                    const target_node = new_display_nodes.filter( n => normalize_name(n.name) === normalize_name(target_name) )[0]
                     new_display_links[l_idx].visible = target_node.visible
                   }
                 )
