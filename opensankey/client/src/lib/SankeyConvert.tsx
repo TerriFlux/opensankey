@@ -415,11 +415,11 @@ export const convert_data = (
       }
       delete l_convert.text_same_color
 
-      if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
-        if (!l.tags['Exchanges']) {
-          l.tags['Exchanges'] = ['Other']
-        }
-      }
+      // if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
+      //   if (!l.tags['Exchanges']) {
+      //     l.tags['Exchanges'] = ['Other']
+      //   }
+      // }
       if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
           if (l_convert.data && l_convert.agregated_data_value !== undefined) {
