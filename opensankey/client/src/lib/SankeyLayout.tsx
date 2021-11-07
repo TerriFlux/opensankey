@@ -171,11 +171,16 @@ export const apply_input_output_links = (
   data: SankeyData
 ) => {
   const { nodes, links } = data
-
+  const display_nodes : SankeyNode[] = nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = links.filter( l=> {
+    const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
 
   ref_nodes.forEach(
     (ref_node) => {
-      const node = nodes.filter(n2 => normalize_name(n2.name) === normalize_name(ref_node.name))[0]
+      const node = display_nodes.filter(n2 => normalize_name(n2.name) === normalize_name(ref_node.name))[0]
       if (node === undefined) {
         return
       }
@@ -189,7 +194,7 @@ export const apply_input_output_links = (
           const link_and_idx = find_link(
             ref_link.source_name,
             ref_link.target_name,
-            links
+            display_links
           )
           if (link_and_idx === undefined) {
             return
@@ -209,7 +214,7 @@ export const apply_input_output_links = (
           const link_and_idx = find_link(
             ref_link.source_name,
             ref_link.target_name,
-            links
+            display_links
           )
           if (link_and_idx === undefined) {
             return
@@ -264,8 +269,9 @@ export const arrangeNodes = (
   h_space: number,
   v_space: number
 ) => {
-  const { nodes } = data
-  nodes.forEach(node => {
+  //const { nodes } = data
+  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+  display_nodes.forEach(node => {
     if ( !node.visible ) {
       return
     }
@@ -280,9 +286,15 @@ export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number
 ) => {
-  const { nodes, links } = data
+  //const { nodes, links } = data
+  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
 
-  const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]
+  const extended_links = display_links as (SankeyLink & ExtendedSankeyLink)[]
   //sankey.update_scale(data.user_scale)
   // var alerte = false
   // var message = ''
@@ -301,7 +313,7 @@ export const compute_auto_sankey = (
 
 
   // Use a relevant scale
-  links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
+  display_links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
   data.user_scale = max_node_value
   const scale = d3.scaleLinear()
     .domain([0, data.user_scale])
@@ -310,14 +322,14 @@ export const compute_auto_sankey = (
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
   extended_links.forEach(l => {
-    let n = nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    l.source = n.id
-    n = nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    l.target = n.id
+    let n = display_nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    l.source = display_nodes.indexOf(n)
+    n = display_nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    l.target = display_nodes.indexOf(n)
   })
   const horizontal_indices: number[] = []
-  nodes.forEach((node) => {
-    const horizontal_index = explore_branch(node.name, 0, [], extended_links,nodes)
+  display_nodes.forEach((node) => {
+    const horizontal_index = explore_branch(node.name, 0, [], extended_links,display_nodes)
     //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
     horizontal_indices.push(horizontal_index)
     //set_horizontal_indices.add(horizontal_index)
@@ -341,7 +353,7 @@ export const compute_auto_sankey = (
   //   node.horizontal_index = array_horizontal_indices.indexOf(node.horizontal_index )
   // })
 
-  nodes.forEach((node, i) => {
+  display_nodes.forEach((node, i) => {
     if (!node.visible) {
       return
     }
@@ -351,8 +363,8 @@ export const compute_auto_sankey = (
   // Reorder links using the x of source name as criteria 
   // Compute input_output_links
 
-  reorder_links(nodes, links)
-  compute_default_input_output_links(nodes, links)
+  //reorder_links(nodes, links)
+  compute_default_input_output_links(display_nodes, display_links)
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
@@ -360,7 +372,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
+    const the_nodes = display_nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
     if (the_nodes.length > 1) {
       //vertical_space = (0.6 * height - total_height) / (total_nb - 1)
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
@@ -372,7 +384,7 @@ export const compute_auto_sankey = (
     the_nodes.forEach((node, node_id) => {
       let total_input_offset = 0
       node.input_links.forEach(
-        (id) => total_input_offset += +links[id].value[0]
+        (id) => total_input_offset += +display_links[id].value[0]
       )
       if (node_id === 0) {
         node.y = 200//0.2 * height;
@@ -388,17 +400,17 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
+    const the_nodes = display_nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
     let total_nb_output_links_up = 0
     let total_nb_output_links_down = 0
     the_nodes.forEach((node) => {
 
       node.output_links.forEach(
         id => {
-          if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+          if ( display_links[id].visible ) {
+            const target_node = display_nodes.filter(n=>normalize_name(n.name) === normalize_name(display_links[id].target_name))[0]
             if (target_node === undefined ) {
-              console.log(links[id].target_name)
+              console.log(display_links[id].target_name)
               return
             }
             if ( target_node.y < node.y ) {
@@ -415,19 +427,19 @@ export const compute_auto_sankey = (
     the_nodes.forEach(node => {
       node.output_links.forEach(
         id => {
-          if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+          if ( display_links[id].visible ) {
+            const target_node = display_nodes.filter(n=>normalize_name(n.name) === normalize_name(display_links[id].target_name))[0]
             if (target_node === undefined ) {
-              console.log(links[id].target_name)
+              console.log(display_links[id].target_name)
               return
             }
             if ( target_node.y < node.y ) {
-              links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
-              links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              display_links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              display_links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
               current_output_link_up += 1
             } else {
-              links[id].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
-              links[id].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              display_links[id].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              display_links[id].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
               current_output_link_down += 1
             }
 
@@ -512,9 +524,9 @@ export const compute_auto_sankey = (
   // })
   //data.max_vertical_offset = max_vertical_offset
 
-  reorganize_all_input_output_links(nodes, links)
+  reorganize_all_input_output_links(display_nodes, display_links)
   data.width = width + h_space
-  data.height = max_vertical_offset + 100
+  data.height = Math.max(1500,max_vertical_offset + 100)
   return []
 }
 
@@ -533,7 +545,13 @@ export const updateLayout = (
   new_layout: SankeyData
 ) => {
   convert_data(new_layout)
-  const { nodes, links } = data
+  //const { nodes, links } = data
+  const display_nodes = data.nodes.filter( n=> n.display )
+  const display_links = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
@@ -545,20 +563,20 @@ export const updateLayout = (
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
   }
-  nodes.forEach(compute_offset)
+  display_nodes.forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
   data.node_width = new_layout.node_width
   // Apply nodes layout
   for (let i = 0; i < new_layout.nodes.length; i++) {
     const node_layout = new_layout.nodes[i]
-    let node = find_node(node_layout.name, nodes)
+    let node = find_node(node_layout.name, display_nodes)
 
     if (node === undefined) {
       if (node_layout.input_links.length === 0 && node_layout.output_links.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
-        nodes.push(node)
+        data.nodes.push(node)
       } else {
         continue
       }
@@ -589,7 +607,7 @@ export const updateLayout = (
     const link_and_idx = find_link(
       link_layout.source_name,
       link_layout.target_name,
-      links
+      display_links
     )
     if (link_and_idx === undefined) {
       continue
@@ -599,8 +617,8 @@ export const updateLayout = (
     //     !String(link_layout.display_value).includes('[') ) {
     //   link.value = link_layout.value
     // }
-    const node_source = find_node(link_layout.source_name, nodes)
-    const node_target = find_node(link_layout.target_name, nodes)
+    const node_source = find_node(link_layout.source_name, display_nodes)
+    const node_target = find_node(link_layout.target_name, display_nodes)
     if (node_source && node_target) {
       link.source_name = node_source.name
       link.target_name = node_target.name

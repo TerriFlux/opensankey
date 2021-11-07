@@ -12,6 +12,7 @@ import SankeyNodeContextMenu from './SankeyNodeContextMenu'
 import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
+import { normalize_name } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -29,6 +30,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_node, set_selected_node] = useState(0)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
+  const display_links : SankeyLink [] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+  
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
@@ -65,7 +72,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
         }
         node_arrow_visible={
-          (n: SankeyNode) => !n.visible || (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.visible || (n.input_links.length === 0) || (!display_links[n.input_links[0]].arrow) ? false : true
         }
         select_link={(i: number) => {
           set_selected_link(i)

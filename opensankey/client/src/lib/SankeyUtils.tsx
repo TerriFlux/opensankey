@@ -321,6 +321,7 @@ export const default_node = (): SankeyNode => {
     id: 0,
     name: '',
     type: 'sector',
+    display: true,
     visible: true,
     label_visible: true,
     color: 'darkgrey',
@@ -559,13 +560,13 @@ export const uploadExemple = (
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      try {
-        const json_data = JSON.parse(text)
-        callback(json_data)
-        downloadExamples(file_name, the_url_prefix, file_type)
-      } catch (err) {
-        alert(err)
-      }
+      // try {
+      const json_data = JSON.parse(text)
+      callback(json_data)
+      downloadExamples(file_name, the_url_prefix, file_type)
+      // } catch (err) {
+      //   alert(err)
+      // }
     })
   })
 }

@@ -1,9 +1,9 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Modal, Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink } from './types'
+import { SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { linkTooltipsContent } from './SankeyTooltip'
-import { default_link } from './SankeyUtils'
+import { default_link, normalize_name } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -22,22 +22,28 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const [tag_group_id, set_tag_group_id] = useState(0)
   const [duplicate, set_duplicate] = useState(false)
 
+  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes, links } = data
-    let link = links[selected_link]
+    let link = display_links[selected_link]
     if (duplicate) {
-      link = JSON.parse(JSON.stringify(links[selected_link]))
-      links.push(link)
-      selected_link = links.length - 1
-      const target_node = nodes.filter(n => n.name === link.target_name)[0]
+      link = JSON.parse(JSON.stringify(display_links[selected_link]))
+      data.links.push(link)
+      selected_link = display_links.length - 1
+      const target_node = display_nodes.filter(n => n.name === link.target_name)[0]
       target_node.input_links.push(selected_link)
     } else {
-      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = display_nodes.filter(n => n.name === link.target_name)[0]
       const link_pos = previous_node.output_links.indexOf(selected_link)
       previous_node.output_links.splice(link_pos, 1)
     }
 
-    const source_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
+    const source_node = display_nodes.filter(n => n.name === changeEvent.target.value)[0]
     link.source_name = source_node.name
     source_node.output_links.push(selected_link)
 
@@ -45,36 +51,35 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes, links } = data
-    let link = links[selected_link]
+    let link = display_links[selected_link]
     if (duplicate) {
-      link = JSON.parse(JSON.stringify(links[selected_link]))
-      links.push(link)
-      selected_link = links.length - 1
-      const source_node = nodes.filter(n => n.name === link.source_name)[0]
+      link = JSON.parse(JSON.stringify(display_links[selected_link]))
+      data.links.push(link)
+      selected_link = display_links.length - 1
+      const source_node = display_nodes.filter(n => n.name === link.source_name)[0]
       source_node.output_links.push(selected_link)
     } else {
-      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = display_nodes.filter(n => n.name === link.target_name)[0]
       const link_pos = previous_node.input_links.indexOf(selected_link)
       previous_node.input_links.splice(link_pos, 1)
     }
 
-    const target_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
+    const target_node = display_nodes.filter(n => n.name === changeEvent.target.value)[0]
     link.target_name = target_node.name
     target_node.input_links.push(selected_link)
 
     set_data({ ...data })
   }
 
-  const { links, nodes, tags_catalog } = data
+  const { tags_catalog } = data
   if (selected_link === -1) {
     selected_link = 0
   }
   const selected_links: SankeyLink[] = []
-  const the_link = links[selected_link]
+  const the_link = display_links[selected_link]
   selected_links.push(the_link)
 
-  let link = links[selected_link]
+  let link = display_links[selected_link]
   if (selected_links[0] === undefined) {
     selected_links[0] = default_link()
     link = selected_links[0]
@@ -102,7 +107,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                     <Col>
                       <Form.Select onChange={source_change}>
-                        {nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
+                        {display_nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].source_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Row>
@@ -113,7 +118,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </Col>
                     <Col>
                       <Form.Select onChange={target_change}>
-                        {nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
+                        {display_nodes.map((n, i) => <option key={i} value={n.name} selected={selected_links[0].target_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Row>
@@ -128,7 +133,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         value={link.value[value_index]}
                         onChange={
                           (evt) => {
-                            links[selected_link].value[value_index] = +evt.target.value
+                            display_links[selected_link].value[value_index] = +evt.target.value
                             set_data({ ...data })
                           }
                         }
@@ -146,7 +151,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                         value={link.display_value[value_index]}
                         onChange={
                           (evt) => {
-                            links[selected_link].display_value[value_index] = evt.target.value
+                            display_links[selected_link].display_value[value_index] = evt.target.value
                             set_data({ ...data })
                           }
                         }
