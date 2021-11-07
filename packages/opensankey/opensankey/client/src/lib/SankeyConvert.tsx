@@ -11,6 +11,7 @@ interface ConvertSankeyNode {
   output_offsets: any,
   horizontal_index: any,
   visible: number | boolean,
+  display: number | boolean,
   label_visible: number | boolean,
   trade_close: boolean
 }
@@ -214,6 +215,15 @@ export const convert_data = (
       if (n.label_visible === undefined) {
         n.label_visible = n.visible
       }
+      if (n_convert.display === 1) {
+        n.display = true
+      }
+      if (n_convert.display === 0) {
+        n.display = false
+      }
+      if (n.display === undefined) {
+        n.display = true
+      }
 
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
@@ -221,7 +231,7 @@ export const convert_data = (
           delete (n_convert as any)[attributes_to_remove[attr]]
         }
       }
-      if (n.name.includes('(I')) {
+      if (n.name.includes('(I') && n.output_links.length > 0) {
         import_export = true
         n.tags['Exchanges'] = ['Importations']
         if (!links[n.output_links[0]].tags) {

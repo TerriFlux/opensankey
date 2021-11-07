@@ -1,9 +1,9 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Modal, Row, FormControl, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import { nodeTooltipsContent } from './SankeyTooltip'
-import { default_node } from './SankeyUtils'
+import { default_node, normalize_name } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -19,11 +19,18 @@ type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node, selected_node, show,getValueIndex, children }) => {
   const [tag_group_id, set_tag_group_id] = useState(0)
 
-  const { links, nodes, tags_catalog } = data
+  const { tags_catalog } = data
+  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+
   if (selected_node === -1) {
     selected_node = 0
   }
-  let node = nodes[selected_node]
+  let node = display_nodes[selected_node]
   if (node === undefined) {
     node = default_node()
   }
@@ -57,11 +64,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       <FormControl
                         value={node.name}
                         onChange={evt => {
-                          const source_links = links.filter(l => l.source_name === nodes[selected_node].name)
-                          const target_links = links.filter(l => l.target_name === nodes[selected_node].name)
+                          const source_links = data.links.filter(l => l.source_name === display_nodes[selected_node].name)
+                          const target_links = data.links.filter(l => l.target_name === display_nodes[selected_node].name)
                           source_links.forEach(l => l.source_name = evt.target.value)
                           target_links.forEach(l => l.target_name = evt.target.value)
-                          nodes[selected_node].name = evt.target.value
+                          display_nodes[selected_node].name = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -78,12 +85,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       <Form.Select 
                         onChange={
                           (evt : React.ChangeEvent<HTMLSelectElement>) => {
-                            nodes[selected_node].parent_name = evt.target.value
+                            display_nodes[selected_node].parent_name = evt.target.value
                             set_data({...data})
                           } 
                         }
                       >
-                        {nodes.map( (n,i) => <option key={i} value={n.name} selected={nodes[selected_node] && nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                        {data.nodes.map( (n,i) => <option key={i} value={n.name} selected={display_nodes[selected_node] && display_nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Form.Group>                  
@@ -96,7 +103,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         type='color'
                         value={node.color}
                         onChange={evt => {
-                          nodes[selected_node].color = evt.target.value
+                          display_nodes[selected_node].color = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -109,13 +116,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         label='Label visible'
                         checked={node.label_visible}
                         onChange={evt => {
-                          nodes[selected_node].label_visible = evt.target.checked
-                          if ( !nodes[selected_node].label_visible && !nodes[selected_node].visible) {
-                            nodes[selected_node].input_links.forEach(
-                              l_idx => links[l_idx].visible = false
+                          display_nodes[selected_node].label_visible = evt.target.checked
+                          if ( !display_nodes[selected_node].label_visible && !display_nodes[selected_node].visible) {
+                            display_nodes[selected_node].input_links.forEach(
+                              l_idx => display_links[l_idx].visible = false
                             )
-                            nodes[selected_node].output_links.forEach(
-                              l_idx => links[l_idx].visible = false
+                            display_nodes[selected_node].output_links.forEach(
+                              l_idx => display_links[l_idx].visible = false
                             )
                           }
                           set_data({...data})
@@ -134,7 +141,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         label='Produit'
                         checked={node.type === 'product'}
                         onChange={evt => {
-                          nodes[selected_node].type = evt.target.value
+                          display_nodes[selected_node].type = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -146,7 +153,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         label='Secteur'
                         checked={node.type === 'sector'}
                         onChange={evt => {
-                          nodes[selected_node].type = evt.target.value
+                          display_nodes[selected_node].type = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -162,10 +169,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                           node.visible = evt.target.checked
                           if ( !node.label_visible && !node.visible) {
                             node.input_links.forEach(
-                              l_idx => links[l_idx].visible = false
+                              l_idx => data.links[l_idx].visible = false
                             )
                             node.output_links.forEach(
-                              l_idx => links[l_idx].visible = false
+                              l_idx => data.links[l_idx].visible = false
                             )
                           }
                           set_data({...data})
