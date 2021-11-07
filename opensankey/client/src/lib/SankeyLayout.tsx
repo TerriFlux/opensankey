@@ -555,9 +555,6 @@ export const updateLayout = (
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
-    if (node.tags['Exchanges'].includes('Importations') || node.tags['Exchanges'].includes('Exportations')) {
-      return
-    }
     if (!node.visible) {
       return
     }
@@ -587,7 +584,7 @@ export const updateLayout = (
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y
-    if (!node.tags['Exchanges'].includes('Exportations') && node.y + 200 > max_vertical_offset) {
+    if (node.y + 200 > max_vertical_offset) {
       max_vertical_offset = node.y + 200
     }
     //node.color = node_layout.color

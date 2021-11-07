@@ -439,23 +439,14 @@ export const setSelectedTags = (
 ) => {
 
   const { nodes, links,tags_catalog } = sankey_data
+  const display_nodes : SankeyNode[] = nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = links.filter( l=> {
+    const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node =nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
 
-  // specific to filiere paille
-  // if ((new_tags[0] === 'Usages' || 
-  //     new_tags[0] === 'Logistique' ||
-  //     new_tags[0] === 'Energie' ||
-  //     new_tags[0] === 'Autres') && sankey_data.old_user_scale === undefined
-  // ) {
-  //   sankey_data.old_user_scale = sankey_data.user_scale
-  //   sankey_data.user_scale = sankey_data.user_scale/4
-  //   nodes.forEach((n)=>n.x -= 800)
-  // } else if (sankey_data.old_user_scale  && new_tags.includes('Champs')) {
-  //   sankey_data.old_user_scale = undefined
-  //   sankey_data.user_scale = sankey_data.user_scale*4
-  //   nodes.forEach((n)=>n.x += 800)      
-  // }
-
-  nodes.forEach(node => {
+  display_nodes.forEach(node => {
     for (const i in tags_catalog) {
       const group_name = tags_catalog[i].group_name
       if (!node.tags[group_name] || node.tags[group_name].length === 0) {
@@ -474,7 +465,7 @@ export const setSelectedTags = (
     }
   })
 
-  links.forEach(link => {
+  display_links.forEach(link => {
     link.visible = true
     link.label_visible = true
     for (const i in tags_catalog) {

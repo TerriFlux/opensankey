@@ -251,9 +251,9 @@ export const convert_data = (
         if (data.display_style.trade_close !== undefined ) {
           n_convert.trade_close = data.display_style.trade_close
         }
-      } else if (!n.tags['Exchanges']) {
-        n.tags['Exchanges'] = ['Other']
-      }
+      } //else if (!n.tags['Exchanges']) {
+      //   n.tags['Exchanges'] = ['Other']
+      // }
     }
   )
 
