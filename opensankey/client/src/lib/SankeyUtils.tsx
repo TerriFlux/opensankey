@@ -549,7 +549,13 @@ export const uploadExemple = (
     data.left_shift = 0.40
     data.right_shift = 0.50
     if ('layout' in (data as any)) {
-      compute_default_input_output_links(data.nodes, data.links)
+      const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+      const display_links : SankeyLink[] = data.links.filter( l=> {
+        const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+        const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+        return source_node.display &&  target_node.display
+      })
+      compute_default_input_output_links(display_nodes, display_links)
       updateLayout(data,(data as any).layout)
       delete (data as any).layout
     } else {
