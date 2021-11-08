@@ -34,7 +34,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     if (duplicate) {
       link = JSON.parse(JSON.stringify(display_links[selected_link]))
       data.links.push(link)
-      selected_link = display_links.length - 1
+      selected_link = display_links.length
       const target_node = display_nodes.filter(n => n.name === link.target_name)[0]
       target_node.input_links.push(selected_link)
     } else {
@@ -55,7 +55,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     if (duplicate) {
       link = JSON.parse(JSON.stringify(display_links[selected_link]))
       data.links.push(link)
-      selected_link = display_links.length - 1
+      selected_link = display_links.length
       const source_node = display_nodes.filter(n => n.name === link.source_name)[0]
       source_node.output_links.push(selected_link)
     } else {
