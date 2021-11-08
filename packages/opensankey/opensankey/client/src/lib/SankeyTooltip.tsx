@@ -64,10 +64,12 @@ export const nodeTooltipsContent = (
         content += '<td>'
         desagregate_nodes.forEach(n=> content += n.name+'<br>')
         content += '</td>'
-      } else {
+      } else if ( header_written) {
         content += '<td>NA</td>'
       }
-      content += '</tr>'
+      if ( header_written) {
+        content += '</tr>'
+      }
     }
   })
   content += '</tbody></table>'
