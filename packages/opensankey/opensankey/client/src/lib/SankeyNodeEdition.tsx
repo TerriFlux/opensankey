@@ -42,6 +42,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       node.tags[tags_group_name] = []
     }
   }
+
+  let current_parent_name : string = ''
+  if ( display_nodes[selected_node] && display_nodes[selected_node].dimensions 
+       && display_nodes[selected_node].dimensions[data.dimension_name]) {
+    const has_parent = display_nodes[selected_node].dimensions[data.dimension_name].parent_name
+    current_parent_name = has_parent ? has_parent : ''
+  }
   const tags_visible = tags_catalog.length > 0
 
   return (
@@ -85,12 +92,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       <Form.Select 
                         onChange={
                           (evt : React.ChangeEvent<HTMLSelectElement>) => {
-                            display_nodes[selected_node].parent_name = evt.target.value
+                            if (evt.target.value === 'root') {
+                              display_nodes[selected_node].dimensions[data.dimension_name].parent_name = undefined
+                            } else {
+                              display_nodes[selected_node].dimensions[data.dimension_name].parent_name = evt.target.value
+                            }
                             set_data({...data})
                           } 
                         }
                       >
-                        {data.nodes.map( (n,i) => <option key={i} value={n.name} selected={display_nodes[selected_node] && display_nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                        <option value='root' selected={current_parent_name === ''} >Noeud racine</option>
+                        {data.nodes.map( (n,i) => <option key={i} value={n.name} selected={current_parent_name === n.name} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Form.Group>                  

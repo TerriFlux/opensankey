@@ -298,6 +298,7 @@ export const default_sankey_data = (): SankeyData => {
     right_shift: 0.5,
     max_shift: 0.2,
 
+    dimension_name: 'Primaire',
     display_style: {
       font_size: 11,
       sector_uppercase: true,
@@ -329,7 +330,8 @@ export const default_node = (): SankeyNode => {
     y: 100,
     input_links: [],
     output_links: [],
-    tags: {}
+    tags: {},
+    dimensions: {'Primaire' : {parent_name: undefined}}
   }
 }
 

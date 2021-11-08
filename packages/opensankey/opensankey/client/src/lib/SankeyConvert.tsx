@@ -159,6 +159,9 @@ export const convert_data = (
   if (data.right_shift === undefined) {
     data.right_shift = 0.5
   }
+  if (data.dimension_name === undefined) {
+    data.dimension_name = 'Primaire'
+  }
 
   if (data.flux_types || data.use_flux_types) {
     if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
@@ -254,6 +257,9 @@ export const convert_data = (
       } //else if (!n.tags['Exchanges']) {
       //   n.tags['Exchanges'] = ['Other']
       // }
+      if (n.dimensions === undefined) {
+        n.dimensions = {'Primaire':{parent_name: undefined}}
+      }
     }
   )
 
@@ -469,6 +475,14 @@ export const convert_data = (
         selected_tags: [...subchains]
       })
     }
+  }
+
+  if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'dimensions').length === 0) {
+    data.tags_catalog.push({
+      group_name: 'dimensions',
+      tags: ['Primaire'],
+      selected_tags: ['Primaire']
+    })
   }
 
   if ('sankey_type' in data) {

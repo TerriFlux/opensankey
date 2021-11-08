@@ -1,5 +1,13 @@
 import PropTypes, { InferProps } from 'prop-types'
 
+export const DimensionPropTypes = PropTypes.arrayOf(
+  PropTypes.shape({
+    group_name: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+  }).isRequired
+).isRequired
+
 export const SankeyNodePropTypes = {
   // identification
   id: PropTypes.number.isRequired,
@@ -7,7 +15,13 @@ export const SankeyNodePropTypes = {
   name: PropTypes.string.isRequired,
 
   //- level attributes
-  parent_name : PropTypes.string,
+  dimensions : PropTypes.objectOf(
+    PropTypes.shape({
+      parent_name : PropTypes.string,
+      level       : PropTypes.number,
+    }).isRequired
+  ).isRequired,
+
   display: PropTypes.bool.isRequired,
 
   // display attributes
@@ -99,6 +113,7 @@ export const SankeyDataPropTypes = {
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
+  dimension_name: PropTypes.string.isRequired,
 
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,

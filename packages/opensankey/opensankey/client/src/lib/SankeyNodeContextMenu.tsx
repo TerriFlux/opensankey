@@ -97,7 +97,10 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             onClick = {
               () =>  {
                 const node_name = display_nodes[selected_node].name
-                const desagregate_nodes = data.nodes.filter( n => n.parent_name === node_name )
+                const desagregate_nodes = data.nodes.filter( n => n.dimensions[data.dimension_name] && n.dimensions[data.dimension_name].parent_name === node_name )
+                if (desagregate_nodes.length === 0) {
+                  return
+                }
                 desagregate_nodes.forEach( n => {
                   n.display = true
                   n.visible = true
@@ -147,14 +150,14 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
                   n.input_links.forEach(
                     l_idx => {
                       const source_name = new_display_links[l_idx].source_name
-                      const source_node = new_display_nodes.filter( n => n.name === source_name )[0]
+                      const source_node = new_display_nodes.filter( n => normalize_name(n.name) === normalize_name(source_name) )[0]
                       new_display_links[l_idx].visible = source_node.visible
                     }
                   )
                   n.output_links.forEach(
                     l_idx => {
                       const target_name = new_display_links[l_idx].target_name
-                      const target_node = new_display_nodes.filter( n => n.name === target_name )[0]
+                      const target_node = new_display_nodes.filter( n => normalize_name(n.name) === normalize_name(target_name) )[0]
                       new_display_links[l_idx].visible = target_node.visible
                     }
                   )
@@ -173,11 +176,15 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             style={{ 'marginBottom' : '3px'}} 
             onClick = {
               () =>  {
-                const agregated_node = data.nodes.filter( n => n.name === display_nodes[selected_node].parent_name )[0]
+                const selected_node_dim = display_nodes[selected_node].dimensions[data.dimension_name]
+                if ( !selected_node_dim ) {
+                  return
+                }
+                const agregated_node = data.nodes.filter( n => n.name === selected_node_dim.parent_name )[0]
                 if (!agregated_node) {
                   return
                 }
-                const desagregate_nodes = display_nodes.filter( n => n.parent_name === agregated_node.name )
+                const desagregate_nodes = display_nodes.filter( n => n.dimensions[data.dimension_name] && n.dimensions[data.dimension_name].parent_name === agregated_node.name )
                 // show agregated node
                 agregated_node.display = true
                 agregated_node.visible = true
