@@ -43,7 +43,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }
   }
 
-  let current_parent_name : string = ''
+  let current_parent_name = ''
   if ( display_nodes[selected_node] && display_nodes[selected_node].dimensions 
        && display_nodes[selected_node].dimensions[data.dimension_name]) {
     const has_parent = display_nodes[selected_node].dimensions[data.dimension_name].parent_name
