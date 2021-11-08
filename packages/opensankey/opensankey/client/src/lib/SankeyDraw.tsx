@@ -57,7 +57,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const [handles_visible] = useState([...new Array(data.links.length).fill(false)])
 
-  const sankeyTooltip = d3.select('body')
+  const sankeyTooltip = d3.select('#visualization_div')
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
