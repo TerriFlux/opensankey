@@ -1,11 +1,11 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
-import { SankeyData, SankeyNode, SankeyDataPropTypes } from './types'
+import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, default_link } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { SankeySettingsEditionV2, SankeySettingsEditionTags } from './SankeySettingsEdition'
 import SankeyNodeEditionV2 from './SankeyNodeEdition'
@@ -29,7 +29,15 @@ const MenuPropTypes = {
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
   set_selected_id_link: PropTypes.func.isRequired,
-  selected_id_link: PropTypes.string.isRequired
+
+  selected_id_link: PropTypes.string.isRequired,
+
+  set_selected_key_group_tag: PropTypes.func.isRequired,
+  selected_key_group_tag: PropTypes.number.isRequired,
+  key_tag: PropTypes.number.isRequired,
+  set_key_tag: PropTypes.func.isRequired
+
+
 }
 
 
@@ -37,7 +45,11 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name,
-    set_show_nav, show_nav, set_nav_item_active, nav_item_active, set_selected_node, selected_node, set_selected_link, selected_link, set_selected_id_link, selected_id_link }
+    set_show_nav, show_nav, set_nav_item_active, nav_item_active,
+    set_selected_node, selected_node, set_selected_link, selected_link,
+    set_selected_id_link, selected_id_link,
+    set_selected_key_group_tag, selected_key_group_tag, key_tag, set_key_tag
+  }
 ) => {
   //NEW By Vince
 
@@ -57,21 +69,40 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_link, set_show_link] = useState(true)
   // const [selected_link, set_selected_link] = useState(0)
 
-
-
+  const [key_group_tag, set_key_group_tag] = useState(0)
+  const [duplicate, set_duplicate] = useState(false)
 
   const { display_style, links, nodes } = data
- 
+
   const add_new_node = () => {
     const { nodes } = data
- 
+    // permet de definir un id unique (même en cas de delete node)
+    let nId = 'node0'
+    let newId = 0
+    // nodes.map((n, i) => {
+    // //   if (n.id > max) {
+    // //     max = n.id
+    // //   }
+    // // })
+    if (nodes.length > 0) {
+      nId = (nodes[nodes.length - 1].idNode as any)
+      newId = parseInt(nId.replace('node', '')) + 1
+
+    }
+
+
+
     const node: SankeyNode = default_node()
-    node.id = nodes.length
-    node.name = 'n' + nodes.length
-    node.x = nodes.length * 50
+    node.id = newId
+    node.idNode = 'node' + newId
+    node.name = 'n' + newId
+    // node.x = nodes.length * 50
+    node.x = newId * 50
     nodes.push(node)
     set_selected_node(nodes.length - 1)
     set_data({ ...data })
+    // console.log(JSON.parse(JSON.stringify(nodes)))
+
   }
 
 
@@ -322,6 +353,149 @@ const Menu: FunctionComponent<MenuTypes> = (
     selected_id_link = links[0].idLink as any
   }
 
+  const add_new_link = () => {
+    const { nodes, links } = data
+
+    if (nodes.length < 2) {
+      return
+    }
+    const link: SankeyLink = default_link()
+    const link_pos = links.length
+
+    links.push(link)
+    link.idLink = 'link' + links.length
+    link.source_name = nodes[0].name
+    link.target_name = nodes[1].name
+
+    nodes[0].output_links.push(link_pos)
+    nodes[1].input_links.push(link_pos)
+
+    set_selected_link(links.length - 1)
+    set_data({ ...data })
+    set_show_link(true)
+  }
+
+
+  const { tags_catalog, tags_catalog_v2 } = data
+  const [tag_group_id, set_tag_group_id] = useState(0)
+  const [radio_selected, set_radio_selected] = useState<string>('local')
+
+
+  if (selected_node === -1) {
+    selected_node = 0
+  }
+  let node = nodes[selected_node]
+  if (node === undefined) {
+    node = default_node()
+  }
+  if (tags_catalog.length > 0) {
+    const tag_group_name = tags_catalog[tag_group_id].group_name
+    if (!node.tags[tag_group_name]) {
+      node.tags[tag_group_name] = []
+    }
+  }
+
+  //---------------------------
+  if (Object.keys(tags_catalog_v2).length > 0) {
+    const tag_cat = tags_catalog_v2[selected_key_group_tag]
+    if (tag_cat != undefined) {
+      const tag_group_name = tag_cat.group_name
+      if (!node.tags[tag_group_name]) {
+        node.tags[tag_group_name] = []
+
+      }
+    }
+  }
+
+  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    const { nodes, links } = data
+    let link = links[selected_link]
+    if (duplicate) {
+      link = JSON.parse(JSON.stringify(links[selected_link]))
+      links.push(link)
+      selected_link = links.length - 1
+      const target_node = nodes.filter(n => n.name === link.target_name)[0]
+      target_node.input_links.push(selected_link)
+    } else {
+      console.log('========1=============')
+      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+      // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = nodes.filter(n => n.name === link.source_name)[0]
+
+      const link_pos = previous_node.output_links.indexOf(selected_link)
+      previous_node.output_links.splice(link_pos, 1)
+    }
+
+    const source_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
+    link.source_name = source_node.name
+    source_node.output_links.push(selected_link)
+
+    set_data({ ...data })
+  }
+
+  const addDropSource = () => {
+    if (nodes.length >= 2 && links.length != 0) {
+      return (
+        nodes.map((n, i) => <option key={i} value={n.name} selected={links[selected_link].source_name === n.name} >{n.name}</option>)
+      )
+    }
+  }
+  const addDropCible = () => {
+    if (nodes.length >= 2 && links.length != 0) {
+
+      return (
+        nodes.map((n, i) => <option key={i} value={n.name} selected={links[selected_link].target_name === n.name} >{n.name}</option>)
+      )
+    }
+  }
+
+  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    const { nodes, links } = data
+    let link = links[selected_link]
+    if (duplicate) {
+      link = JSON.parse(JSON.stringify(links[selected_link]))
+      links.push(link)
+      selected_link = links.length - 1
+      const source_node = nodes.filter(n => n.name === link.source_name)[0]
+      source_node.output_links.push(selected_link)
+    } else {
+      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const link_pos = previous_node.input_links.indexOf(selected_link)
+      previous_node.input_links.splice(link_pos, 1)
+    }
+
+    const target_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
+    link.target_name = target_node.name
+    target_node.input_links.push(selected_link)
+
+    set_data({ ...data })
+  }
+
+
+  const addLabelId = () => {
+    if (nodes.length != 0) {
+      return nodes[selected_node].idNode
+    }
+  }
+
+  const selected_links: SankeyLink[] = []
+  const the_link = links[selected_link]
+  selected_links.push(the_link)
+
+  let link = links[selected_link]
+  if (selected_links[0] === undefined) {
+    selected_links[0] = default_link()
+    link = selected_links[0]
+  }
+
+  let region_index = 0
+  const tags_group_region = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+  if (tags_group_region.length > 1) {
+    region_index = tags_group_region[0].tags.indexOf(tags_group_region[0].selected_tags[0])
+  }
+
+
+
 
   const props = {
     scroll: true,
@@ -400,6 +574,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                     display_style.filter = +new_current_filter
                     set_data({ ...data })
                   }}
+                  key_tag={key_tag}
+                  key_group_tag={key_group_tag}
+                  selected_key_group_tag={selected_key_group_tag}
+                  set_key_tag={set_key_tag}
+                  set_key_group_tag={set_key_group_tag}
+                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -407,26 +587,12 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
                 <br />
-                <Row>
-                  <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>
-                    Ajouter Noeud
-                  </Button>
 
-                </Row>
-                <Row>
-                  <Col>
-                    <Button
-                      size="sm"
-                      style={{ 'marginBottom': '3px' }}
-                      onClick={
-                        () => {
-                          delete_node(data, selected_node)
-                          set_data({ ...data })
-                        }
-                      }
-                    >Supprimer noeud</Button>
+                <Row >
+                  <Col xs={1}>
+                    <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>+</Button>
                   </Col>
-                  <Col>
+                  <Col xs={10}>
                     <Form.Select id="selectionNode"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -437,7 +603,110 @@ const Menu: FunctionComponent<MenuTypes> = (
                       {nodes.map((n, i) => <option key={i} value={n.name} selected={nodes[i].idNode === nodes[selected_node].idNode} >{nodes[i].name}</option>)}
                     </Form.Select>
                   </Col>
+
+                  <Col xs={1}>
+
+                    <Button
+                      size="sm"
+                      variant='danger'
+                      style={{ 'marginBottom': '3px' }}
+                      onClick={
+                        () => {
+                          delete_node(data, selected_node)
+                          // on change le selected_node car il n'existe plus, met le dernier node de la liste nodes
+                          set_selected_node(data.nodes.length - 1)
+                          set_data({ ...data })
+                        }
+                      }
+                    >-</Button>
+
+                  </Col>
                 </Row>
+                <Form>
+                  <Form.Group as={Row} >
+                    <Col xs={2} >
+                      <FormLabel >Nom</FormLabel>
+                    </Col>
+                    <Col xs={7} >
+                      <FormControl
+                        value={node.name}
+                        onChange={evt => {
+                          const source_links = links.filter(l => l.source_name === nodes[selected_node].name)
+                          const target_links = links.filter(l => l.target_name === nodes[selected_node].name)
+                          source_links.forEach(l => l.source_name = evt.target.value)
+                          target_links.forEach(l => l.target_name = evt.target.value)
+                          nodes[selected_node].name = evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col xs={3}>
+                      <FormLabel >(id : {addLabelId()})</FormLabel>
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col xs={2}>
+                      <FormLabel >Parent</FormLabel>
+                    </Col>
+                    <Col xs={10}>
+                      <Form.Select
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            nodes[selected_node].parent_name = evt.target.value
+                            set_data({ ...data })
+                          }
+                        }
+                      > <option>Choisissez parent</option>
+                        {nodes.map((n, i) => <option key={i} value={n.name} selected={nodes[selected_node].parent_name === n.name} >{n.name}</option>)}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
+                </Form>
+
+                <Form>
+                  <Form.Group as={Row} onChange={evt => {
+                    console.log(evt)
+                    // set_radio_selected(evt.target.value)
+                    // node.nodeParameter=evt.target.value
+                  }}>
+                    <div key='radioTypeCouelurNoeud'>
+                      <Form.Check inline type='radio' checked={radio_selected === 'Général'} name='TypeCouleurNoeud' id='radioGeneral' value='Général' label='Général'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+                        }} />
+                      <Form.Check inline type='radio' checked={radio_selected === 'GroupTag'} name='TypeCouleurNoeud' id='radioGroupTag' value='GroupTag' label='GroupTag'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+
+                        }} />
+                      <Form.Check inline type='radio' checked={radio_selected === 'local'} name='TypeCouleurNoeud' id='radioLocal' value='local' label='Local'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+
+                        }} />
+                    </div>
+
+
+                  </Form.Group>
+
+                  {/* 
+                  {(radio_selected === 'GroupTag') ? (
+                    < Form.Select >
+                      {tags_catalog.filter(d => {
+                        return (
+                          Object.keys(nodes[selected_node].tags).includes(d.group_name) && nodes[selected_node].tags[d.group_name].length>0
+                        )
+                      })
+                        .map(d => <option key={d.group_name}>{d.group_name}</option>)}
+                    </Form.Select>
+                    
+                  ) : (<></>)} */}
+
+
+                </Form>
 
                 <br />
                 <SankeyNodeEditionV2
@@ -446,42 +715,128 @@ const Menu: FunctionComponent<MenuTypes> = (
                   set_data={set_data}
                   set_show_node={set_show_node}
                   selected_node={selected_node}
+                  tag_group_id={tag_group_id}
+                  set_tag_group_id={set_tag_group_id}
+                  set_radio_selected={set_radio_selected}
+                  radio_selected={radio_selected}
+                  key_group_tag={key_group_tag}
+                  selected_key_group_tag={selected_key_group_tag}
+                  set_key_group_tag={set_key_group_tag}
+                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="3">
               <Accordion.Header>Links</Accordion.Header>
               <Accordion.Body>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
                 <Row>
-                  <Col>
+                  <Col xs={1}>
+
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={
+                        () => {
+                          add_new_link()
+                          set_data({ ...data })
+                        }
+                      }
+                    >+</Button>
+
+                  </Col>
+                  <Col xs={10}>
                     <Form.Select id="selectionLink"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          set_selected_id_link(links.filter(f => { return f.idLink == evt.target.value })[0].idLink)
+                          const newLink = links.filter(f => { return f.idLink == evt.target.value })[0].idLink
+                          let newLinkId = 0
+                          links.map((d, i) => {
+                            if (d.idLink == evt.target.value) {
+                              newLinkId = i
+                            }
+                          })
+                          // console.log(newLinkId)
+                          console.log(nodes)
+
+                          // set_selected_id_link(links.filter(f => { return f.idLink == evt.target.value })[0].idLink)
+                          set_selected_id_link(newLink)
+                          set_selected_link(newLinkId as number)
+
+                          set_data({ ...data })
+                          // console.log(selected_link)
+
                         }
                       }
                     >
                       {links.map((n, i) => <option key={i} value={n.idLink as any} selected={n.idLink == selected_id_link}  >{n.idLink}</option>)}
                     </Form.Select>
                   </Col>
-                  <Col>
 
+                  <Col xs={1}>
                     <Button
                       size="sm"
+                      variant="danger"
                       onClick={
                         () => {
                           delete_link(data, selected_link)
+                          set_selected_link(links.length - 1)
+
                           set_data({ ...data })
                         }
                       }
-                    >Supprimer flux</Button>
-
+                    >-</Button>
                   </Col>
 
                 </Row>
                 <br />
+
+                <Row>
+                  <Col>
+                    <FormLabel>Source</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select onChange={source_change}>
+                      {addDropSource()}
+
+
+
+                    </Form.Select>
+                  </Col>
+                </Row>
+                <br></br>
+                <Row>
+                  <Col>
+                    <FormLabel>Cible</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select onChange={target_change}>
+
+                      {addDropCible()}
+
+                    </Form.Select>
+                  </Col>
+                </Row>
+                <br></br>
+                <Row>
+                  <Col>
+                    <FormLabel>Valeur</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Control
+                      type='text'
+                      value={link.value[region_index]}
+                      onChange={
+                        (evt) => {
+                          console.log(selected_link)
+                          console.log(links[selected_link].value[region_index])
+                          links[selected_link].value[region_index] = +evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Row>
+
                 <SankeyLinkEditionV2
                   show={true}
                   data={data}
@@ -490,6 +845,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                   selected_link={selected_link}
                   selected_id_link={selected_id_link}
                   set_selected_id_link={set_selected_id_link}
+                  duplicate={duplicate}
+                  set_duplicate={set_duplicate}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -508,32 +865,38 @@ const Menu: FunctionComponent<MenuTypes> = (
                     display_style.filter = +new_current_filter
                     set_data({ ...data })
                   }}
+                  key_tag={key_tag}
+                  key_group_tag={key_group_tag}
+                  selected_key_group_tag={selected_key_group_tag}
+                  set_key_tag={set_key_tag}
+                  set_key_group_tag={set_key_group_tag}
+                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="5">
               <Accordion.Header>Aide</Accordion.Header>
               <Accordion.Body>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>
         </Offcanvas.Body>
       </Offcanvas>
 
-      {show_excel_dialog ? (
-        <ExcelModal
-          handleCloseDialog={handleCloseExcelDialog}
-          uploadExcelImpl={uploadExcelImpl} />
-      ) :
-        (<div />)
+      {
+        show_excel_dialog ? (
+          <ExcelModal
+            handleCloseDialog={handleCloseExcelDialog}
+            uploadExcelImpl={uploadExcelImpl} />
+        ) :
+          (<div />)
       }
-      {processing ? (
-        <Modal.Dialog >
-          <Button className="btn btn-sm btn-warning col-md-12">
-            <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
-          </Button></Modal.Dialog>) : (<div></div>)
+      {
+        processing ? (
+          <Modal.Dialog >
+            <Button className="btn btn-sm btn-warning col-md-12">
+              <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
+            </Button></Modal.Dialog>) : (<div></div>)
       }
     </>
   )

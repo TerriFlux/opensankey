@@ -12,8 +12,9 @@ const SankeyLinkEditionPropTypes = {
   selected_link: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired,
   set_selected_id_link: PropTypes.func.isRequired,
-  selected_id_link: PropTypes.string.isRequired
-
+  selected_id_link: PropTypes.string.isRequired,
+  duplicate:PropTypes.bool.isRequired,
+  set_duplicate:PropTypes.func.isRequired
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
@@ -21,12 +22,12 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 
 const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, set_show_link, selected_link, show,selected_id_link,set_selected_id_link, children }
+  { data, set_data, set_show_link, selected_link, show, selected_id_link, set_selected_id_link, duplicate ,set_duplicate,children }
 ) => {
   const [tag_group_id, set_tag_group_id] = useState(0)
-  const [duplicate, set_duplicate] = useState(false)
+  /* const [duplicate, set_duplicate] = useState(false) */
 
-  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+  /* const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links } = data
     let link = links[selected_link]
     if (duplicate) {
@@ -36,7 +37,11 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
       const target_node = nodes.filter(n => n.name === link.target_name)[0]
       target_node.input_links.push(selected_link)
     } else {
-      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      console.log('========1=============')
+      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+      // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = nodes.filter(n => n.name === link.source_name)[0]
+
       const link_pos = previous_node.output_links.indexOf(selected_link)
       previous_node.output_links.splice(link_pos, 1)
     }
@@ -46,9 +51,9 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
     source_node.output_links.push(selected_link)
 
     set_data({ ...data })
-  }
+  } */
 
-  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+  /* const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes, links } = data
     let link = links[selected_link]
     if (duplicate) {
@@ -68,7 +73,23 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
     target_node.input_links.push(selected_link)
 
     set_data({ ...data })
+  } */
+
+  /* const addDropSource = () => {
+    if (nodes.length >= 2 && links.length != 0) {
+      return (
+        nodes.map((n, i) => <option key={i} value={n.name} selected={links[selected_link].source_name === n.name} >{n.name}</option>)
+      )
+    }
   }
+  const addDropCible = () => {
+    if (nodes.length >= 2 && links.length != 0) {
+
+      return (
+        nodes.map((n, i) => <option key={i} value={n.name} selected={links[selected_link].target_name === n.name} >{n.name}</option>)
+      )
+    }
+  } */
 
   const { links, nodes, tags_catalog } = data
   if (selected_link === -1) {
@@ -91,7 +112,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const tags_visible = data.tags_catalog.length > 0
-  
+
   const last_selected_link = links.filter((t: SankeyLink) => { return (t.idLink as any) == selected_id_link })
   return (
 
@@ -101,13 +122,16 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
           <Tab eventKey="flux_data" title="Données">
             <br></br>
             <Form >
-              <Row>
+              {/*  <Row>
                 <Col>
                   <FormLabel>Source</FormLabel>
                 </Col>
                 <Col>
                   <Form.Select onChange={source_change}>
-                    {nodes.map((n, i) => <option key={i} value={n.name} selected={last_selected_link[0].source_name === n.name} >{n.name}</option>)}
+                    {addDropSource()}
+
+
+
                   </Form.Select>
                 </Col>
               </Row>
@@ -118,7 +142,9 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col>
                   <Form.Select onChange={target_change}>
-                    {nodes.map((n, i) => <option key={i} value={n.name} selected={last_selected_link[0].target_name === n.name} >{n.name}</option>)}
+
+                    {addDropCible()}
+
                   </Form.Select>
                 </Col>
               </Row>
@@ -133,13 +159,15 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={link.value[region_index]}
                     onChange={
                       (evt) => {
+                        console.log(selected_link)
+                        console.log(links[selected_link].value[region_index])
                         links[selected_link].value[region_index] = +evt.target.value
                         set_data({ ...data })
                       }
                     }
                   />
                 </Col>
-              </Row>
+              </Row> */}
               <br></br>
               <Row >
                 <Col>
@@ -177,19 +205,30 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
             <Form >
               <Form.Group as={Row} >
                 <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Visible'
-                    checked={last_selected_link[0].visible || last_selected_link[0].visible === undefined}
-                    onChange={
-                      evt => {
-                        last_selected_link.forEach(
-                          l => l.visible = evt.target.checked
-                        )
-                        set_data({ ...data })
+                  {
+                    () => {
+                      if (last_selected_link.length == 0) {
+                        return ''
+                      } else {
+                        return (<FormCheck
+                          type='checkbox'
+                          label='Visible'
+                          checked={
+                            last_selected_link[0].visible || last_selected_link[0].visible === undefined
+                          }
+                          onChange={
+                            evt => {
+                              last_selected_link.forEach(
+                                l => l.visible = evt.target.checked
+                              )
+                              set_data({ ...data })
+                            }
+                          }
+                        />)
                       }
                     }
-                  />
+                  }
+
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >

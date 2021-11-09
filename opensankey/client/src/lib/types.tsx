@@ -12,6 +12,13 @@ export const SankeyNodePropTypes = {
   visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
   color: PropTypes.string.isRequired,
+  colorFavoriteTags:PropTypes.objectOf(PropTypes.shape({
+    tag_associated:PropTypes.string.isRequired,
+    color:PropTypes.string
+  }).isRequired
+  ).isRequired,
+
+  nodeParameter:PropTypes.string.isRequired,
 
   // geometry
   x: PropTypes.number.isRequired,
@@ -76,11 +83,32 @@ export const TagsCatalogPropTypes = PropTypes.arrayOf(
   PropTypes.shape({
     group_name: PropTypes.string.isRequired,
     tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    banner:PropTypes.string
   }).isRequired
 ).isRequired
 
 export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
+
+//-------------------------
+//TAGS CATALOG V2
+export const TagsCatalogV2PropTypes = PropTypes.objectOf(
+  PropTypes.shape({
+    group_name: PropTypes.string.isRequired,
+    // tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    tags:PropTypes.objectOf(PropTypes.shape({
+      name:PropTypes.string.isRequired,
+      color:PropTypes.string,
+      selected:PropTypes.bool
+    }).isRequired).isRequired,
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    banner:PropTypes.string
+  }).isRequired
+).isRequired
+
+export type TagsV2Catalog = InferProps<typeof TagsCatalogV2PropTypes>
+
+//-------------------------
 
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
@@ -107,7 +135,8 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired
   }).isRequired,
 
-  tags_catalog: TagsCatalogPropTypes
+  tags_catalog: TagsCatalogPropTypes,
+  tags_catalog_v2:TagsCatalogV2PropTypes
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>

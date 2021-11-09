@@ -272,7 +272,9 @@ export const compute_auto_sankey = (
   const { nodes, links } = data
 
   let region_indices = [0]
-  const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+  // const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
+  const tags_group = Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'Regions')
+  
   if (tags_group.length > 1) {
     region_indices = [...Array(tags_group[0].tags.length).keys()]
   }
