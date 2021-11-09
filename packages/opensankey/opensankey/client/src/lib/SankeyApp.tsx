@@ -4,9 +4,11 @@ import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
+import SankeyEdition from './SankeyEdition'
 import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
+import { Carousel, Row, Col } from 'react-bootstrap'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -29,13 +31,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_node, set_selected_node] = useState(0)
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const [selected_id_link, set_selected_id_link] = useState<string>('')
+  const [key_tag, set_key_tag] = useState(0)
+  const [selected_key_group_tag, set_selected_key_group_tag] = useState(0)
+
 
   let region_index = 0
   const tags_group = sankey_data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
   if (tags_group.length > 1) {
     region_index = tags_group[0].tags.indexOf(tags_group[0].selected_tags[0])
   }
-
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
@@ -52,8 +56,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         selected_link={selected_link}
         set_selected_id_link={set_selected_id_link}
         selected_id_link={selected_id_link}
+        set_key_tag={set_key_tag}
+        set_selected_key_group_tag={set_selected_key_group_tag}
+        key_tag={key_tag}
+        selected_key_group_tag={selected_key_group_tag}
+
       />
-      {/*  <Row>
+      <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition
             data={data}
@@ -63,7 +72,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             set_show_graphic_attributes={set_show_graphic_attributes}
             set_data={set_data} />
         </Col>
-      </Row> */}
+      </Row>
       <SankeyDraw
         data={data}
         select_node={(i: number) => {
@@ -111,6 +120,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
       />
+
+
       {/* <SankeyNodeEdition
         show={show_node}
         data={data}
@@ -155,7 +166,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_show_link_context(false)
         }}
         selected_link={selected_link} />
-    </div>
+    </div >
   )
 }
 

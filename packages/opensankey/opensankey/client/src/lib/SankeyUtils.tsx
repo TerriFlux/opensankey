@@ -17,7 +17,7 @@ export const getTotalLinks = (
 ) => {
   const { links } = data
   let total = 0
-  Links.forEach( element => {
+  Links.forEach(element => {
     const tmp = links.filter(element1 => {
       return (element1.idLink == element)
     })[0].value[0]
@@ -180,6 +180,7 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(nodes, links[the_id], selected_tags)
+      console.log(v)
       if (v === undefined) {
         return
       }
@@ -303,7 +304,9 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags_catalog: []
+    tags_catalog: [],
+    //New to replace tags_catalog
+    tags_catalog_v2:{}
   }
 }
 
@@ -315,11 +318,13 @@ export const default_node = (): SankeyNode => {
     visible: true,
     label_visible: true,
     color: 'darkgrey',
+    nodeParameter:'Général',
     x: 100,
     y: 100,
     input_links: [],
     output_links: [],
-    tags: {}
+    tags: {},
+    colorFavoriteTags:{},
   }
 }
 
@@ -407,8 +412,21 @@ export const delete_node = (
   }
 
   // delete node and shift numerotation
+  /*  let ind = -1
+   nodes.map((n, i) => {
+     if (n.id == node_id) {
+       console.log(i)
+       ind = i
+     }
+   })
+   console.log(ind)
+   console.log(nodes)
+ 
+   nodes.splice(ind, 1) */
+
   nodes.splice(node_id, 1)
   nodes.forEach((node, i) => node.id = i)
+  // console.log(nodes)
 
   // shift source and target of links and update links
   // region_names.forEach(region_name => {
@@ -428,7 +446,7 @@ export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
 
-  const { nodes, links,tags_catalog } = sankey_data
+  const { nodes, links, tags_catalog } = sankey_data
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
