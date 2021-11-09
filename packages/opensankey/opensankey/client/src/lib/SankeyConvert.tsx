@@ -16,13 +16,13 @@ interface ConvertSankeyNode {
   trade_close: boolean
 }
 interface ConvertSankeyLink {
-  classif: any
-  title_length: any
-  raw_value: any
-  old_display_value: any
-  old_color: any
-  y_sd_label: any
-  x_sd_label: any
+  classif?: any
+  title_length?: any
+  raw_value?: any
+  old_display_value?: any
+  old_color?: any
+  y_sd_label?: any
+  x_sd_label?: any
   visible?: boolean
   label_visible?: boolean
   text_same_color?: boolean | string
@@ -31,15 +31,19 @@ interface ConvertSankeyLink {
   display_unit?: string,
   type?: string
   tooltip_text?: string
-  data_value?: number
+  data_value?: number | number[]
+  data_source?: string | string[]
+  data_period?: string | string[]
   agregated_data_value?: number
   conv?: number[]
   natural_unit?: string
-  value: number
-  display_value: string
+  value: number | number[]
+  display_value: string | string[]
   data?: boolean
   unbounded?: boolean,
-  subchain?: string
+  subchain?: string,
+  mini?: number | number[],
+  maxi?: number | number[]
 }
 interface ConvertSankeyData {
   units_names: string[]
@@ -84,10 +88,37 @@ export const convert_data = (
       (link, i) => {
         link.value = []
         link.display_value = []
+        let convert_link = link as ConvertSankeyLink
+        if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
+          convert_link.mini = []
+          convert_link.maxi = []
+        }
+        if (convert_link.data_value !== undefined ) {
+          convert_link.data_value = []
+        }
+        if (convert_link.data_source !== undefined ) {
+          convert_link.data_source = []
+        }
+        if (convert_link.data_period !== undefined ) {
+          convert_link.data_period = []
+        }
         key_names.forEach(
           cur_key_name => {
-            link.value.push(data.links[cur_key_name][i].value)
-            link.display_value.push(data.links[cur_key_name][i].display_value)
+            link.value.push(data.links[cur_key_name][i].value as number)
+            link.display_value.push(data.links[cur_key_name][i].display_value as string)
+            if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
+              (convert_link.mini as number[]).push(data.links[cur_key_name][i].mini as number);
+              (convert_link.maxi as number[]).push(data.links[cur_key_name][i].maxi as number)
+            }
+            if (convert_link.data_value !== undefined) {
+              (convert_link.data_value as number[]).push(data.links[cur_key_name][i].data_value as number)
+            }
+            if (convert_link.data_source !== undefined) {
+              (convert_link.data_source as string[]).push(data.links[cur_key_name][i].data_source as string)
+            }
+            if (convert_link.data_period !== undefined) {
+              (convert_link.data_period as string[]).push(data.links[cur_key_name][i].data_period as string)
+            }
           }
         )
       }
@@ -350,8 +381,9 @@ export const convert_data = (
         l_convert.natural_unit = l_convert.display_unit
         delete l_convert.display_unit
       }
-      if (!('agregated_data_value' in l_convert)) {
-        l_convert.agregated_data_value = l_convert.data_value
+      if (('agregated_data_value' in l_convert)) {
+        l_convert.data_value = l_convert.agregated_data_value
+        delete l_convert.agregated_data_value
       }
       if (!('visible' in l_convert)) {
         l.visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
@@ -428,7 +460,7 @@ export const convert_data = (
       // }
       if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
-          if (l_convert.data && l_convert.agregated_data_value !== undefined) {
+          if (l_convert.data && l_convert.data_value !== undefined) {
             l.tags['flux_types'] = ['initial_data', 'adjusted_data']
             delete l_convert.data
           } else {
@@ -451,7 +483,7 @@ export const convert_data = (
           target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
             [...target_node.tags['flux_types'], ...l.tags['flux_types']]
           )] : [...l.tags['flux_types']]
-        } else if (l.tags['flux_types'].includes('initial_data') && l_convert.agregated_data_value === undefined) {
+        } else if (l.tags['flux_types'].includes('initial_data') && l_convert.data_value === undefined) {
           l.tags['flux_types'].splice(l.tags['flux_types'].indexOf('initial_data'))
         }
       }
