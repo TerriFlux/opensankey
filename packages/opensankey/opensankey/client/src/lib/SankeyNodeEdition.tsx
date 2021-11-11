@@ -8,16 +8,13 @@ const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
-  radio_selected: PropTypes.string.isRequired,
-  getValueIndex: PropTypes.func.isRequired
+  radio_selected: PropTypes.string.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
-  const [tag_group_id, set_tag_group_id] = useState(0)
-
-  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog_v2).length>0 ? Object.keys(data.tags_catalog_v2)[0] : '')
+const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,children}) => {
+  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog).length>0 ? Object.keys(data.tags_catalog)[0] : '')
 
   /*  const { links, nodes, tags_catalog } = data
    if (selected_node === -1) {
@@ -37,7 +34,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
 
 
-  const { links, nodes, tags_catalog_v2 } = data
+  const { links, nodes, tags_catalog } = data
   if (selected_node === -1) {
     selected_node = 0
   }
@@ -46,13 +43,13 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
   if (node === undefined) {
     node = default_node()
   }
-  // if (Object.keys(tags_catalog_v2).length > 0) {
+  // if (Object.keys(tags_catalog).length > 0) {
   //   const tag_group_name = 'tag_group_' + selected_key_group_tag
   //   if (!node.tags[tag_group_name]) {
   //     node.tags[tag_group_name] = []
   //   }
   // }
-  const tags_visible = Object.keys(tags_catalog_v2).length > 0
+  const tags_visible = Object.keys(tags_catalog).length > 0
 
   const outline_Fav_Button = (tag_key: string) => {
     if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
@@ -78,13 +75,13 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                 set_data({ ...data })
               }}>
 
-            {Object.keys(tags_catalog_v2).map(
+            {Object.keys(tags_catalog).map(
               (cur_tags_group_key, i) =>
                 <option
                   key={i}
                   value={tags_group_key}
                   selected={tags_group_key === cur_tags_group_key} >
-                  {tags_catalog_v2[cur_tags_group_key].group_name}
+                  {tags_catalog[cur_tags_group_key].group_name}
                 </option>)}
           </Form.Select>
         </Col>
@@ -99,25 +96,25 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
             </tr>
           </thead>
           <tbody>
-            {tags_visible && tags_group_key != '' ? (Object.keys(tags_catalog_v2[tags_group_key].tags).map(
+            {tags_visible && tags_group_key != '' ? (Object.keys(tags_catalog[tags_group_key].tags).map(
               (tag_key, i) => {
                 return (
 
                   <tr key={i.toString()}>
-                    <td><FormLabel>{tags_catalog_v2[tags_group_key].tags[tag_key].name}</FormLabel></td>
+                    <td><FormLabel>{tags_catalog[tags_group_key].tags[tag_key].name}</FormLabel></td>
                     <td>
                       <FormCheck inline
                         name={'element_visible' + i.toString()}
-                        // checked={node.tags[tags_catalog_v2['tag_group_'+selected_key_group_tag].group_name].includes('tag'+tag_key)}
+                        // checked={node.tags[tags_catalog['tag_group_'+selected_key_group_tag].group_name].includes('tag'+tag_key)}
                         id={i.toString()}
                         type='checkbox'
                         onChange={
                           () => {
                             /*  const new_nb_element = evt.target as HTMLInputElement
                              const id = +new_nb_element.id
-                             const name = tags_catalog_v2[key_group_tag].tags[]
+                             const name = tags_catalog[key_group_tag].tags[]
                              const visible = new_nb_element.checked
-                             const tag_group_name = tags_catalog_v2[tag_group_id].group_name
+                             const tag_group_name = tags_catalog[tag_group_id].group_name
                              if (visible) {
                                if (!node.tags[tag_group_name]) {
                                  node.tags[tag_group_name] = []
@@ -130,9 +127,9 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                             // const new_nb_element = evt.target as HTMLInputElement
                             // const id = +new_nb_element.id
                             // console.log(id)
-                            // const name = tags_catalog_v2[selected_key_group_tag].tags['tag' + id].name
+                            // const name = tags_catalog[selected_key_group_tag].tags['tag' + id].name
                             // const visible = new_nb_element.checked
-                            // const tag_group_name = tags_catalog_v2[selected_key_group_tag].group_name
+                            // const tag_group_name = tags_catalog[selected_key_group_tag].group_name
                             // if (visible) {
                             //   if (!node.tags[tag_group_name]) {
                             //     node.tags[tag_group_name] = []
@@ -158,7 +155,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
                             const newFavColor = {
                               tag_associated: tag_key,
-                              color: tags_catalog_v2[tags_group_key].tags[tag_key].color
+                              color: tags_catalog[tags_group_key].tags[tag_key].color
                             }
 
                             if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
@@ -294,7 +291,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
 
 
-          {Object.keys(tags_catalog_v2).length > 0 ? node_tag : (<></>)}
+          {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
 
 
           <Tab eventKey="node_tooltip" title="Tooltip">
@@ -561,6 +558,6 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
 
 // SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
-SankeyNodeEditionV2.propTypes = SankeyNodeEditionPropTypes
+SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
 
-export default /* SankeyNodeEdition; */SankeyNodeEditionV2
+export default /* SankeyNodeEdition; */SankeyNodeEdition

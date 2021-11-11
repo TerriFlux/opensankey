@@ -1,7 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData, } from './types'
 import { find_link, find_node, normalize_name } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
-import * as d3 from 'd3'
 
 interface ExtendedSankeyLink {
   target?: number
@@ -303,9 +302,6 @@ export const compute_auto_sankey = (
   // Use a relevant scale
   links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
   data.user_scale = max_node_value
-  const scale = d3.scaleLinear()
-    .domain([0, data.user_scale])
-    .range([0, 100])
   const vspace = data.v_space
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()

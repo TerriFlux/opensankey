@@ -73,8 +73,8 @@ export const convert_data = (
   if (!data.display_style) {
     (data.display_style as any) = {}
   }
-  if (data.tags_catalog_v2 === undefined ) {
-    data.tags_catalog_v2 = {}
+  if (data.tags_catalog === undefined ) {
+    data.tags_catalog = {}
   }
   if (!Array.isArray(data.links)) {
     const key_names = Object.keys(data.links)
@@ -93,14 +93,14 @@ export const convert_data = (
     )
     data_to_convert.links = new_links
     if ( key_names.length > 1 && !data.periods && data.region_names) {
-      data.tags_catalog_v2['Regions'] = {
+      data.tags_catalog['Regions'] = {
         group_name: 'Regions',
         tags: Object.assign({}, ...data.region_names.map((region_name) => ({[region_name]: {name:region_name,color:'',selected:region_name===data.region_name}}))),
         banner: 'one'
       }
     }
     if ( key_names.length > 1 && data.periods) {
-      data.tags_catalog_v2['Periods'] = {
+      data.tags_catalog['Periods'] = {
         group_name: 'Periods',
         tags: Object.assign({}, ...key_names.map((key_name) => ({[key_name]: {name:key_name,color:'',selected:key_names[0]}}))),
         banner: 'one'
@@ -147,8 +147,8 @@ export const convert_data = (
     data.node_width = 10
   }
 
-  if (!data.tags_catalog_v2) {
-    data.tags_catalog_v2 = {}
+  if (!data.tags_catalog) {
+    data.tags_catalog = {}
   }
   if (data.h_space === undefined) {
     data.h_space = 200
@@ -174,8 +174,8 @@ export const convert_data = (
     //   delete data.use_flux_types
     // }
 
-    if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
-      data.tags_catalog_v2['flux_types'] = {
+    if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
+      data.tags_catalog['flux_types'] = {
         group_name: 'flux_types',
         tags: {
           'null_data': { name: 'null_data', selected: true },
@@ -282,8 +282,8 @@ export const convert_data = (
     // }
 
     //TC v2
-    if (Object.values(data.tags_catalog_v2).filter(tag => tag.group_name === 'Exchanges').length === 0) {
-      data.tags_catalog_v2['Exchanges'] = {
+    if (Object.values(data.tags_catalog).filter(tag => tag.group_name === 'Exchanges').length === 0) {
+      data.tags_catalog['Exchanges'] = {
         group_name: 'Exchanges',
         tags: {
           'Importations': { name: 'Importations', selected: true }
@@ -439,13 +439,13 @@ export const convert_data = (
       }
       delete l_convert.text_same_color
 
-      if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
+      if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
         if (!l.tags['Exchanges']) {
           l.tags['Exchanges'] = ['Other']
         }
       }
 
-      if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
+      if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
           if (l_convert.data && l_convert.agregated_data_value !== undefined) {
             l.tags['flux_types'] = ['initial_data', 'adjusted_data']
@@ -479,9 +479,9 @@ export const convert_data = (
 
   if (data.subchains && data.subchains[0] !== '') {
     const cpySbchaine = data.subchains
-    if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
+    if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
       const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
-      data.tags_catalog_v2['SubChain']={
+      data.tags_catalog['SubChain']={
         group_name: 'SubChain',
         tags: tags_dict,
         banner: 'multi'
@@ -490,8 +490,8 @@ export const convert_data = (
     }
   } else if (subchains.length > 0) {
     const tags_dict = Object.assign({}, ...subchains.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
-    if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
-      data.tags_catalog_v2['SubChain']={
+    if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
+      data.tags_catalog['SubChain']={
         group_name: 'SubChain',
         tags: tags_dict,
         banner: 'multi'
