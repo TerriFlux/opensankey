@@ -1063,7 +1063,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return [xs, ys, xt, yt]
   }
   const move_node_and_link = (
-    n_id: number,
+    node: SankeyNode,
     node_x: number,
     node_y: number,
     node_x_label: number,
@@ -1073,12 +1073,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     link_x: number,
     link_y: number
   ) => {
-    d3.select('#ggg_node' + n_id)
+    d3.select('#ggg_'+ node.idNode)
       .attr('transform', 'translate(' + node_x + ',' + node_y + ')')
-    d3.select('#ggg_node' + n_id + ' rect')
+    d3.select('#ggg_'+ node.idNode + ' rect')
       .attr('fill-opacity', 0)
     const visible = node_label_visible ? 'visible' : 'hidden'
-    d3.select('#ggg_node' + n_id + ' text')
+    d3.select('#ggg_node' + node.idNode + ' text')
       .attr('x', node_x_label)
       .attr('y', node_y_label)
       .attr('visibility', visible)
