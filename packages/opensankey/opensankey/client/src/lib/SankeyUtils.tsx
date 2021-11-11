@@ -304,9 +304,9 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags_catalog: [],
-    //New to replace tags_catalog
-    tags_catalog_v2:{}
+    tags_catalog_v2:{},
+    tags_group_idx:0,
+    tag_idx:0
   }
 }
 
@@ -446,7 +446,7 @@ export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
 
-  const { nodes, links, tags_catalog } = sankey_data
+  const { nodes, links, tags_catalog_v2 } = sankey_data
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
@@ -466,36 +466,36 @@ export const setSelectedTags = (
   nodes.forEach(node => {
     node.visible = true
     node.label_visible = true
-    for (const i in tags_catalog) {
-      const group_name = tags_catalog[i].group_name
-      if (!node.tags[group_name] || node.tags[group_name].length === 0) {
+    Object.keys(tags_catalog_v2).forEach( tags_group_key => {
+      const tags_group = tags_catalog_v2[tags_group_key]
+      if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
         // tags do not apply to node
-        continue
+        return
       }
-      const visible = tags_catalog[i].selected_tags.filter(selected_tag => node.tags[group_name].includes(selected_tag)).length > 0
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
       if (!visible) {
         node.visible = false
         node.label_visible = false
-        break
+        return
       }
-    }
+    })
   })
 
   links.forEach(link => {
     link.visible = true
     link.label_visible = true
-    for (const i in tags_catalog) {
-      const group_name = tags_catalog[i].group_name
-      if (!link.tags[group_name] || link.tags[group_name].length === 0) {
+    Object.keys(tags_catalog_v2).forEach( tags_group_key => {
+      const tags_group = tags_catalog_v2[tags_group_key]
+      if (!link.tags[tags_group_key] || link.tags[tags_group_key].length === 0) {
         // tags do not apply to node
-        continue
+        return
       }
-      const visible = tags_catalog[i].selected_tags.filter(selected_tag => link.tags[group_name].includes(selected_tag)).length > 0
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected &&  link.tags[tags_group_key].includes(tag_key)).length > 0
       if (!visible) {
         link.visible = false
         link.label_visible = false
-        break
+        return
       }
-    }
+    })
   })
 }

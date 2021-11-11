@@ -10,7 +10,7 @@
   "version": "0.1.2",
   "description": "Open Sankey",
   "license": "MIT",
-  "scripts" : {
+  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "dist": "babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
@@ -39,6 +39,7 @@
     "react-bootstrap": "^2.0.0-rc.0",
     "react-color": "^2.19.3",
     "react-dom": "^17.0.2",
+    "react-multiselect-dropdown-bootstrap": "^1.1.0",
     "react-scripts": "^4.0.3",
     "typescript": "^4.3.5"
   },

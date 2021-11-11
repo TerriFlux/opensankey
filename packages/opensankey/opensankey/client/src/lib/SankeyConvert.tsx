@@ -127,38 +127,33 @@ export const convert_data = (
   if (data.node_width === undefined) {
     data.node_width = 10
   }
-  if (!data.tags_catalog) {
-    data.tags_catalog = []
-  }
 
   if (!data.tags_catalog_v2) {
     data.tags_catalog_v2 = {}
   }
 
   if (data.flux_types || data.use_flux_types) {
-    if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
-      data.tags_catalog.push({
-        group_name: 'flux_types',
-        tags: ['null_data', 'initial_data', 'computed_data', 'adjusted_data', 'unbounded'],
-        selected_tags: ['null_data', 'computed_data', 'adjusted_data']
-      })
-      delete data.flux_types
-      delete data.use_flux_types
-    }
+    // if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
+    //   data.tags_catalog.push({
+    //     group_name: 'flux_types',
+    //     tags: ['null_data', 'initial_data', 'computed_data', 'adjusted_data', 'unbounded'],
+    //     selected_tags: ['null_data', 'computed_data', 'adjusted_data']
+    //   })
+    //   delete data.flux_types
+    //   delete data.use_flux_types
+    // }
 
-    //TC v2
     if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'flux_types').length === 0) {
       data.tags_catalog_v2['flux_types'] = {
         group_name: 'flux_types',
         tags: {
-          'null_data': { name: 'null_data' },
-          'initial_data': { name: 'initial_data' },
-          'computed_data': { name: 'computed_data' },
-          'adjusted_data': { name: 'adjusted_data' },
-          'unbounded': { name: 'unbounded' },
+          'null_data': { name: 'null_data', selected: true },
+          'initial_data': { name: 'initial_data', selected: false },
+          'computed_data': { name: 'computed_data',selected: true },
+          'adjusted_data': { name: 'adjusted_data', selected: true },
+          'unbounded': { name: 'unbounded', selected: false },
         },
-
-        selected_tags: ['null_data', 'computed_data', 'adjusted_data']
+        banner: 'multi'
       }
       delete data.flux_types
       delete data.use_flux_types
@@ -226,24 +221,24 @@ export const convert_data = (
 
   if (import_export) {
 
-    if (data.tags_catalog.filter(tag => tag.group_name === 'Exchanges').length === 0) {
-      data.tags_catalog.push({
-        group_name: 'Exchanges',
-        tags: ['Importations', 'Exportations', 'Other'],
-        selected_tags: ['Importations', 'Exportations', 'Other']
-      })
-    }
+    // if (data.tags_catalog.filter(tag => tag.group_name === 'Exchanges').length === 0) {
+    //   data.tags_catalog.push({
+    //     group_name: 'Exchanges',
+    //     tags: ['Importations', 'Exportations', 'Other'],
+    //     selected_tags: ['Importations', 'Exportations', 'Other']
+    //   })
+    // }
 
     //TC v2
     if (Object.values(data.tags_catalog_v2).filter(tag => tag.group_name === 'Exchanges').length === 0) {
       data.tags_catalog_v2['Exchanges'] = {
         group_name: 'Exchanges',
         tags: {
-          'Importations': { name: 'Importations' }
-          , 'Exportations': { name: 'Exportations' }
-          , 'Other': { name: 'Other' }
+          'Importations': { name: 'Importations', selected: true }
+          , 'Exportations': { name: 'Exportations', selected: true }
+          , 'Other': { name: 'Other', selected: true }
         },
-        selected_tags: ['Importations', 'Exportations', 'Other']
+        banner: 'multi'
       }
     }
   }
@@ -391,48 +386,12 @@ export const convert_data = (
         l.text_color = l.color
       }
 
-      if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
-        if (!l.tags['Exchanges']) {
-          l.tags['Exchanges'] = ['Other']
-        }
-      }
-
-      //TC v2
       if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
         if (!l.tags['Exchanges']) {
           l.tags['Exchanges'] = ['Other']
         }
       }
 
-
-      if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
-        if (!l.tags['flux_types']) {
-          if (l_convert.data) {
-            l.tags['flux_types'] = ['initial_data', 'computed_data']
-            delete l_convert.data
-          } else {
-            l.tags['flux_types'] = ['adjusted_data']
-          }
-          if (l_convert.unbounded) {
-            l.tags['flux_types'] = ['unbounded']
-          }
-          if ('unbounded' in l_convert) {
-            delete l_convert.unbounded
-          }
-          if (l_convert.value === 0) {
-            l.tags['flux_types'] = ['null_data']
-          }
-
-          source_node.tags['flux_types'] = source_node.tags['flux_types'] ? [...new Set(
-            [...source_node.tags['flux_types'], ...l.tags['flux_types']]
-          )] : [...l.tags['flux_types']]
-
-          target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
-            [...target_node.tags['flux_types'], ...l.tags['flux_types']]
-          )] : [...l.tags['flux_types']]
-        }
-      }
-      //TC v2 
       if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'flux_types').length > 0) {
         if (!l.tags['flux_types']) {
           if (l_convert.data) {
@@ -460,50 +419,30 @@ export const convert_data = (
           )] : [...l.tags['flux_types']]
         }
       }
-
-
     }
-
-
   )
 
   if (data.subchains) {
     const cpySbchaine = data.subchains
-    if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
-      data.tags_catalog.push({
+    if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
+      const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
+      data.tags_catalog_v2['SubChain']={
         group_name: 'SubChain',
-        tags: [...data.subchains],
-        selected_tags: [...data.subchains]
-      })
+        tags: tags_dict,
+        banner: 'multi'
+      }
       delete data.subchains
     }
-    //TC v2
-    // if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
-    //   data.tags_catalog_v2['SubChain']={
-    //     group_name: 'SubChain',
-    //     tags: cpySbchaine.map(d=> {return {[d]:{name:d,color:'red',selected:false}}}),
-    //     selected_tags: [...cpySbchaine]
-    //   }
-    //   delete data.subchains
-    // }
 
   } else if (subchains.length > 0) {
-    if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
-      data.tags_catalog.push({
+    const tags_dict = Object.assign({}, ...subchains.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
+    if (Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
+      data.tags_catalog_v2['SubChain']={
         group_name: 'SubChain',
-        tags: [...subchains],
-        selected_tags: [...subchains]
-      })
+        tags: tags_dict,
+        banner: 'multi'
+      }
     }
-
-    //TC v2
-    // if (data.tags_catalog.filter(tags_group => tags_group.group_name === 'SubChain').length === 0) {
-    //   data.tags_catalog.push({
-    //     group_name: 'SubChain',
-    //     tags: [...subchains],
-    //     selected_tags: [...subchains]
-    //   })
-    // }
   }
 
   if ('sankey_type' in data) {

@@ -23,21 +23,13 @@ const MenuPropTypes = {
   set_show_nav: PropTypes.func.isRequired,
   show_nav: PropTypes.bool,
   set_nav_item_active: PropTypes.func.isRequired,
-  nav_item_active: PropTypes.string,
+  nav_item_active: PropTypes.string.isRequired,
   set_selected_node: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
   set_selected_id_link: PropTypes.func.isRequired,
-
-  selected_id_link: PropTypes.string.isRequired,
-
-  set_selected_key_group_tag: PropTypes.func.isRequired,
-  selected_key_group_tag: PropTypes.number.isRequired,
-  key_tag: PropTypes.number.isRequired,
-  set_key_tag: PropTypes.func.isRequired
-
-
+  selected_id_link: PropTypes.string.isRequired
 }
 
 
@@ -47,32 +39,13 @@ const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node, set_selected_link, selected_link,
-    set_selected_id_link, selected_id_link,
-    set_selected_key_group_tag, selected_key_group_tag, key_tag, set_key_tag
+    set_selected_id_link, selected_id_link
   }
 ) => {
-  //NEW By Vince
-
-  let file_layout: Blob[] | undefined
-
-  /* const [shift_left, set_shift_left] = useState(100)
-  const [shift_top, set_shift_top] = useState(100)
-  const [user_scale, set_user_scale] = useState(data.user_scale)
-  const [height, set_height] = useState(data.height)
-  const [width, set_width] = useState(data.width)
-  const [, set_node_hspace] = useState(100)
-  const [tag_group_id, set_tag_group_id] = useState(0) */
-  const [sga, set_sga] = useState(true)
-  const [show_node, set_show_node] = useState(true)
-  // const [selected_node, set_selected_node] = useState(0)
-  // const [show_node_context, set_show_node_context] = useState(false)
-  const [show_link, set_show_link] = useState(true)
-  // const [selected_link, set_selected_link] = useState(0)
-
-  const [key_group_tag, set_key_group_tag] = useState(0)
+  const set_show_link = useState(true)[1]
   const [duplicate, set_duplicate] = useState(false)
 
-  const { display_style, links, nodes } = data
+  const { links, nodes } = data
 
   const add_new_node = () => {
     const { nodes } = data
@@ -85,12 +58,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     // //   }
     // // })
     if (nodes.length > 0) {
-      nId = (nodes[nodes.length - 1].idNode as any)
+      nId = (nodes[nodes.length - 1].idNode as string)
       newId = parseInt(nId.replace('node', '')) + 1
-
     }
-
-
 
     const node: SankeyNode = default_node()
     node.id = newId
@@ -102,12 +72,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_selected_node(nodes.length - 1)
     set_data({ ...data })
     // console.log(JSON.parse(JSON.stringify(nodes)))
-
   }
-
-
-  //-----------------------------------
-
 
   const _load_json = useRef<HTMLInputElement>(null)
 
@@ -288,7 +253,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        data.tags_catalog = []
+        data.tags_catalog_v2 = {}
         Object.assign(data, new_data)
         convert_data(data)
         set_data({ ...data })
@@ -334,23 +299,15 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_nav(t)
   }
 
-
-  // const [show, setShow] = useState(false)
   const handleClose = () => setShow(true)
-  const handleShow = () => setShow(true)
-  // const toggleShow = () => { setShow((s) => !s) }
+
   const toggleShow = () => {
     setShow(!show_nav)
   }
   const [checked, setChecked] = useState(false)
-  //const handleReglage=()=> SankeySettingsEditionV2()
-  const getNavItem = () => {
-    const tmp = nav_item_active as string
-    return tmp
-  }
 
   if (selected_id_link == '' && links.length != 0) {
-    selected_id_link = links[0].idLink as any
+    selected_id_link = (links[0].idLink as string)
   }
 
   const add_new_link = () => {
@@ -375,11 +332,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_link(true)
   }
 
-
-  const { tags_catalog, tags_catalog_v2 } = data
-  const [tag_group_id, set_tag_group_id] = useState(0)
   const [radio_selected, set_radio_selected] = useState<string>('local')
-
 
   if (selected_node === -1) {
     selected_node = 0
@@ -387,24 +340,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   let node = nodes[selected_node]
   if (node === undefined) {
     node = default_node()
-  }
-  if (tags_catalog.length > 0) {
-    const tag_group_name = tags_catalog[tag_group_id].group_name
-    if (!node.tags[tag_group_name]) {
-      node.tags[tag_group_name] = []
-    }
-  }
-
-  //---------------------------
-  if (Object.keys(tags_catalog_v2).length > 0) {
-    const tag_cat = tags_catalog_v2[selected_key_group_tag]
-    if (tag_cat != undefined) {
-      const tag_group_name = tag_cat.group_name
-      if (!node.tags[tag_group_name]) {
-        node.tags[tag_group_name] = []
-
-      }
-    }
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
@@ -489,13 +424,15 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   let region_index = 0
-  const tags_group_region = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  if (tags_group_region.length > 1) {
-    region_index = tags_group_region[0].tags.indexOf(tags_group_region[0].selected_tags[0])
+  const tags_group = data.tags_catalog_v2['Regions']
+  if (tags_group) {
+    region_index = 0
+    Object.keys(tags_group.tags).forEach((tag_key,i)=> {
+      if (tags_group.tags[tag_key].selected) {
+        region_index = i
+      }
+    })
   }
-
-
-
 
   const props = {
     scroll: true,
@@ -551,20 +488,18 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Navbar>
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
-          <Accordion defaultActiveKey={getNavItem()}>
-            <Accordion.Item eventKey="0">
+          <Accordion activeKey={nav_item_active as string} >
+            <Accordion.Item eventKey="0" onClick={() => set_nav_item_active('0')}>
               <Accordion.Header>Shortcut</Accordion.Header>
               <Accordion.Body>
                 <p>Fonctionnement des clics :</p><br />
                 <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="1">
+            <Accordion.Item eventKey="1" onClick={() => set_nav_item_active('1')} >
               <Accordion.Header>Paramêtres généraux</Accordion.Header>
               <Accordion.Body>
                 <SankeySettingsEditionV2
-                  show={sga}
-                  set_show_graphic_attributes={sga as any}
                   data={data}
                   set_data={set_data}
                   set_current_filter={(
@@ -574,16 +509,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                     display_style.filter = +new_current_filter
                     set_data({ ...data })
                   }}
-                  key_tag={key_tag}
-                  key_group_tag={key_group_tag}
-                  selected_key_group_tag={selected_key_group_tag}
-                  set_key_tag={set_key_tag}
-                  set_key_group_tag={set_key_group_tag}
-                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="2" >
+            <Accordion.Item eventKey="2" onClick={() => set_nav_item_active('2')}>
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
                 <br />
@@ -710,23 +639,14 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <br />
                 <SankeyNodeEditionV2
-                  show={sga}
                   data={data}
                   set_data={set_data}
-                  set_show_node={set_show_node}
                   selected_node={selected_node}
-                  tag_group_id={tag_group_id}
-                  set_tag_group_id={set_tag_group_id}
-                  set_radio_selected={set_radio_selected}
                   radio_selected={radio_selected}
-                  key_group_tag={key_group_tag}
-                  selected_key_group_tag={selected_key_group_tag}
-                  set_key_group_tag={set_key_group_tag}
-                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="3">
+            <Accordion.Item eventKey="3" onClick={() => set_nav_item_active('3')}>
               <Accordion.Header>Links</Accordion.Header>
               <Accordion.Body>
                 <Row>
@@ -768,7 +688,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     >
-                      {links.map((n, i) => <option key={i} value={n.idLink as any} selected={n.idLink == selected_id_link}  >{n.idLink}</option>)}
+                      {links.map((n, i) => <option key={i} value={n.idLink as string} selected={n.idLink == selected_id_link}  >{n.idLink}</option>)}
                     </Form.Select>
                   </Col>
 
@@ -850,31 +770,16 @@ const Menu: FunctionComponent<MenuTypes> = (
                 />
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="4">
+            <Accordion.Item eventKey="4" onClick={() => set_nav_item_active('4')}>
               <Accordion.Header>Tags</Accordion.Header>
               <Accordion.Body>
                 <SankeySettingsEditionTags
-                  show={sga}
-                  set_show_graphic_attributes={sga as any}
                   data={data}
                   set_data={set_data}
-                  set_current_filter={(
-                    new_current_filter: number
-                  ) => {
-                    const { display_style } = data
-                    display_style.filter = +new_current_filter
-                    set_data({ ...data })
-                  }}
-                  key_tag={key_tag}
-                  key_group_tag={key_group_tag}
-                  selected_key_group_tag={selected_key_group_tag}
-                  set_key_tag={set_key_tag}
-                  set_key_group_tag={set_key_group_tag}
-                  set_selected_key_group_tag={set_selected_key_group_tag}
                 />
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="5">
+            <Accordion.Item eventKey="5" onClick={() => set_nav_item_active('5')}>
               <Accordion.Header>Aide</Accordion.Header>
               <Accordion.Body>
               </Accordion.Body>
