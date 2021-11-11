@@ -9,11 +9,13 @@ const SankeyNodeEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
   radio_selected: PropTypes.string.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,children}) => {
+const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
+  const [tag_group_id, set_tag_group_id] = useState(0)
 
   const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog_v2).length>0 ? Object.keys(data.tags_catalog_v2)[0] : '')
 

@@ -13,7 +13,8 @@ const SankeyLinkEditionPropTypes = {
   set_selected_id_link: PropTypes.func.isRequired,
   selected_id_link: PropTypes.string.isRequired,
   duplicate:PropTypes.bool.isRequired,
-  set_duplicate:PropTypes.func.isRequired
+  set_duplicate:PropTypes.func.isRequired,
+  getValueIndex: PropTypes.func.isRequired,
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
@@ -21,7 +22,7 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 
 const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link, selected_id_link, duplicate ,set_duplicate,children }
+  { data, set_data, selected_link, selected_id_link, duplicate ,set_duplicate,getValueIndex,children }
 ) => {
   const [tag_group_key, set_tag_group_key] = useState('')
   /* const [duplicate, set_duplicate] = useState(false) */
@@ -104,18 +105,8 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
     link = selected_links[0]
   }
 
-  let region_index = 0
-  const tags_group = data.tags_catalog_v2['Regions']
-  if (tags_group) {
-    region_index = 0
-    Object.keys(tags_group.tags).forEach((tag_key,i)=> {
-      if (tags_group.tags[tag_key].selected) {
-        region_index = i
-      }
-    })
-  }
+  const value_index = getValueIndex(data)
   const tags_visible = Object.keys(data.tags_catalog_v2).length > 0
-
   const last_selected_link = links.filter((t: SankeyLink) => { return (t.idLink as string) == selected_id_link })
   return (
 
@@ -159,12 +150,12 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type='text'
-                    value={link.value[region_index]}
+                    value={link.value[value_index]}
                     onChange={
                       (evt) => {
                         console.log(selected_link)
-                        console.log(links[selected_link].value[region_index])
-                        links[selected_link].value[region_index] = +evt.target.value
+                        console.log(links[selected_link].value[value_index])
+                        links[selected_link].value[value_index] = +evt.target.value
                         set_data({ ...data })
                       }
                     }
@@ -182,7 +173,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={link.display_value}
                     onChange={
                       (evt) => {
-                        links[selected_link].display_value[region_index] = evt.target.value
+                        links[selected_link].display_value[value_index] = evt.target.value
                         set_data({ ...data })
                       }
                     }

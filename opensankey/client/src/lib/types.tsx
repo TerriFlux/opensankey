@@ -101,6 +101,11 @@ export const SankeyDataPropTypes = {
   user_scale: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
+  h_space: PropTypes.number.isRequired,
+  v_space: PropTypes.number.isRequired,
+  left_shift: PropTypes.number.isRequired,
+  right_shift: PropTypes.number.isRequired,
+  max_shift: PropTypes.number.isRequired,
 
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -128,12 +133,6 @@ export type SankeyData = InferProps<typeof SankeyDataPropTypes>
 
 export interface SankeyMenuState {
   processing: boolean
-  show_excel_dialog: boolean
-  show_publish_dialog: boolean
-}
-
-export interface ExcelModalState {
-  sheet: string
 }
 
 export interface SankeyAppState {

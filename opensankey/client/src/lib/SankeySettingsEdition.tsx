@@ -7,7 +7,8 @@ import { SankeyDataPropTypes } from './types'
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  set_current_filter: PropTypes.func.isRequired
+  set_current_filter: PropTypes.func.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
@@ -16,6 +17,7 @@ const SankeySettingsEditionV2: FunctionComponent<SankeyEditionTypes> = ({
   data, 
   set_data,
   set_current_filter,
+  getValueIndex,
   children 
 }) => {
   const [shift_left, set_shift_left] = useState(100)
@@ -23,26 +25,20 @@ const SankeySettingsEditionV2: FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
+  const [node_hspace, set_node_hspace] = useState(data.h_space)
+  const [node_vspace, set_node_vspace] = useState(data.v_space)
+  const [tag_group_id, set_tag_group_id] = useState(0)
 
   const { display_style, links, nodes, node_width } = data
   const { filter } = display_style
 
-  let region_index = 0
-  const tags_group = data.tags_catalog_v2['Regions']
-  if (tags_group) {
-    region_index = 0
-    Object.keys(tags_group.tags).forEach((tag_key,i)=> {
-      if (tags_group.tags[tag_key].selected) {
-        region_index = i
-      }
-    })
-  }
+  const value_index = getValueIndex(data)
 
 
   let max_link_value = 0
   links.forEach(link => {
-    if (link.value[region_index] > max_link_value) {
-      max_link_value = link.value[region_index]
+    if (link.value[value_index] > max_link_value) {
+      max_link_value = link.value[value_index]
     }
   })
   max_link_value += 1
@@ -529,11 +525,12 @@ const SankeySettingsEditionV2: FunctionComponent<SankeyEditionTypes> = ({
 
 const SankeySettingsEditionTagsPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired
+  set_data: PropTypes.func.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({data, set_data}) => {
+const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({data, set_data,getValueIndex}) => {
   const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog_v2).length>0 ? Object.keys(data.tags_catalog_v2)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
@@ -541,21 +538,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   const { links, tags_catalog_v2 } = data
 
-  let region_index = 0
-  const tags_group = data.tags_catalog_v2['Regions']
-  if (tags_group) {
-    region_index = 0
-    Object.keys(tags_group.tags).forEach((tag_key,i)=> {
-      if (tags_group.tags[tag_key].selected) {
-        region_index = i
-      }
-    })
-  }
-
+  const value_index = getValueIndex(data)
   let max_link_value = 0
   links.forEach(link => {
-    if (link.value[region_index] > max_link_value) {
-      max_link_value = link.value[region_index]
+    if (link.value[value_index] > max_link_value) {
+      max_link_value = link.value[value_index]
     }
   })
   max_link_value += 1
@@ -837,16 +824,16 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 //   const { display_style, tags, links, nodes, selected_tags, node_width } = data
 //   const { filter } = display_style
 
-//   let region_index = 0
+//   let value_index = 0
 //   const tags_group = tags.filter(tag => tag.tags_group_name === 'Regions')
 //   if (tags_group.length > 1) {
-//     region_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+//     value_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
 //   }
 
 //   let max_link_value = 0
 //   links.forEach(link => {
-//     if (link.value[region_index] > max_link_value) {
-//       max_link_value = link.value[region_index]
+//     if (link.value[value_index] > max_link_value) {
+//       max_link_value = link.value[value_index]
 //     }
 //   })
 //   max_link_value += 1
