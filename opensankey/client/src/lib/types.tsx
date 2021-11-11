@@ -36,7 +36,7 @@ export const SankeyNodePropTypes = {
 
   // semantic
   type: PropTypes.oneOf(['product', 'sector']),
-  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
+  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
@@ -74,7 +74,7 @@ export const SankeyLinkPropTypes = {
   curvature: PropTypes.number.isRequired,
   curved: PropTypes.bool.isRequired,
 
-  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
+  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
@@ -90,8 +90,8 @@ export const TagsGroupPropTypes = {
 }
 export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 
-export const TagsCatalogV2PropTypes = PropTypes.objectOf(PropTypes.shape(TagsGroupPropTypes).isRequired).isRequired
-export type TagsV2Catalog = InferProps<typeof TagsCatalogV2PropTypes>
+export const TagsCatalogPropTypes = PropTypes.objectOf(PropTypes.shape(TagsGroupPropTypes).isRequired).isRequired
+export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 
 //-------------------------
 
@@ -124,7 +124,7 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired
   }).isRequired,
 
-  tags_catalog_v2:TagsCatalogV2PropTypes,
+  tags_catalog:TagsCatalogPropTypes,
   tags_group_idx: PropTypes.number.isRequired,
   tag_idx: PropTypes.number.isRequired
 }

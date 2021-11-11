@@ -21,7 +21,7 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 
 
-const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
+const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, selected_id_link, duplicate ,set_duplicate,getValueIndex,children }
 ) => {
   const [tag_group_key, set_tag_group_key] = useState('')
@@ -91,7 +91,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
     }
   } */
 
-  const { links, tags_catalog_v2 } = data
+  const { links, tags_catalog } = data
   if (selected_link === -1) {
     selected_link = 0
   }
@@ -106,7 +106,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const value_index = getValueIndex(data)
-  const tags_visible = Object.keys(data.tags_catalog_v2).length > 0
+  const tags_visible = Object.keys(data.tags_catalog).length > 0
   const last_selected_link = links.filter((t: SankeyLink) => { return (t.idLink as string) == selected_id_link })
   return (
 
@@ -537,7 +537,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
               />
             </Form.Group>
           </Tab>
-          {Object.keys(tags_catalog_v2).length ? (
+          {Object.keys(tags_catalog).length ? (
             <Tab eventKey="tags" title="Tags" >
               <br></br>
               <Form.Group as={Row} >
@@ -548,7 +548,7 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                   <Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_key(evt.target.value)}>
-                    {Object.entries(tags_catalog_v2).map(
+                    {Object.entries(tags_catalog).map(
                       (tags_group,i) =>
                         <option
                           key={i}
@@ -568,10 +568,10 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                     </tr>
                   </thead>
                   <tbody>
-                    {tags_visible && tag_group_key != '' ? Object.entries(tags_catalog_v2[tag_group_key].tags).map(
+                    {tags_visible && tag_group_key != '' ? Object.entries(tags_catalog[tag_group_key].tags).map(
                       tags => {
-                        const link_tags = link.tags[tags_catalog_v2[tag_group_key].group_name]
-                        const checked = link_tags ? link_tags.includes(tags_catalog_v2[tag_group_key].tags[tags[0]].name) : true
+                        const link_tags = link.tags[tags_catalog[tag_group_key].group_name]
+                        const checked = link_tags ? link_tags.includes(tags_catalog[tag_group_key].tags[tags[0]].name) : true
                         return (
                           <tr key={tags[0]}>
                             <td><FormLabel>{tags[1].name}</FormLabel></td>
@@ -583,12 +583,12 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
                                 type='checkbox'
                                 onChange={
                                   (evt: React.ChangeEvent) => {
-                                    const { tags_catalog_v2 } = data
+                                    const { tags_catalog } = data
                                     const new_nb_element = evt.target as HTMLInputElement
                                     const tag_key = new_nb_element.id
-                                    const name = tags_catalog_v2[tag_group_key].tags[tag_key].name
+                                    const name = tags_catalog[tag_group_key].tags[tag_key].name
                                     const visible = new_nb_element.checked
-                                    const tag_group_name = tags_catalog_v2[tag_group_key].group_name
+                                    const tag_group_name = tags_catalog[tag_group_key].group_name
                                     if (visible) {
                                       if (!link.tags[tag_group_name]) {
                                         link.tags[tag_group_name] = []
@@ -634,6 +634,6 @@ const SankeyLinkEditionV2: FunctionComponent<SankeyLinkEditionTypes> = (
   )
 }
 
-SankeyLinkEditionV2.propTypes = SankeyLinkEditionPropTypes
+SankeyLinkEdition.propTypes = SankeyLinkEditionPropTypes
 
-export default SankeyLinkEditionV2
+export default SankeyLinkEdition

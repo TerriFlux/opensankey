@@ -13,7 +13,7 @@ const SankeySettingsEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
-const SankeySettingsEditionV2: FunctionComponent<SankeyEditionTypes> = ({ 
+const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({ 
   data, 
   set_data,
   set_current_filter,
@@ -25,9 +25,8 @@ const SankeySettingsEditionV2: FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
-  const [node_hspace, set_node_hspace] = useState(data.h_space)
-  const [node_vspace, set_node_vspace] = useState(data.v_space)
-  const [tag_group_id, set_tag_group_id] = useState(0)
+  // const [node_hspace, set_node_hspace] = useState(data.h_space)
+  // const [node_vspace, set_node_vspace] = useState(data.v_space)
 
   const { display_style, links, nodes, node_width } = data
   const { filter } = display_style
@@ -531,12 +530,12 @@ const SankeySettingsEditionTagsPropTypes = {
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
 const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({data, set_data,getValueIndex}) => {
-  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog_v2).length>0 ? Object.keys(data.tags_catalog_v2)[0] : '')
+  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog).length>0 ? Object.keys(data.tags_catalog)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
   console.log(data)
 
-  const { links, tags_catalog_v2 } = data
+  const { links, tags_catalog } = data
 
   const value_index = getValueIndex(data)
   let max_link_value = 0
@@ -550,9 +549,9 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   //let tmp_select_group_key = selected_key_group_tag
 
-  // if (Object.keys(tags_catalog_v2).length > 0 && tags_catalog_v2['tag_group_' + selected_key_group_tag] === undefined) {
-  //   set_selected_key_group_tag(parseInt(Object.keys(tags_catalog_v2)[0].slice(10)))
-  //   tmp_select_group_key = parseInt(Object.keys(tags_catalog_v2)[0].slice(10))
+  // if (Object.keys(tags_catalog).length > 0 && tags_catalog['tag_group_' + selected_key_group_tag] === undefined) {
+  //   set_selected_key_group_tag(parseInt(Object.keys(tags_catalog)[0].slice(10)))
+  //   tmp_select_group_key = parseInt(Object.keys(tags_catalog)[0].slice(10))
 
   // }
 
@@ -571,74 +570,74 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       set_data({ ...data })
     } */
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
-    tags_catalog_v2[tags_group_key].banner = evt.target.value
+    tags_catalog[tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
-  // ------------------V2--------------------------
-  const handleAddTagButtonV2 = () => {
-    const { tags_catalog_v2 } = data
-    tags_catalog_v2[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '',selected: true }
+  // --------------------------------------------
+  const handleAddTagButton = () => {
+    const { tags_catalog } = data
+    tags_catalog[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '',selected: true }
     data.tag_idx +=1
     set_data({ ...data })
   }
 
-  const handleAddTagGrpButtonV2 = () => {
-    const { tags_catalog_v2 } = data
-    //const tab_key = Object.keys(tags_catalog_v2)
+  const handleAddTagGrpButton = () => {
+    const { tags_catalog } = data
+    //const tab_key = Object.keys(tags_catalog)
     // let tmp_key = key_group_tag
     // if (tab_key.length > 0) {
     //   tmp_key = parseInt(tab_key[tab_key.length - 1].slice(10)) + 1
     // }
     data.tags_group_idx +=1
-    tags_catalog_v2['tag_group_' + data.tags_group_idx] = {
+    tags_catalog['tag_group_' + data.tags_group_idx] = {
       group_name: 'Tag Group ' + data.tags_group_idx,
       tags: {},
       banner: 'multi'
     }
     //set_key_group_tag(tmp_key + 1)
-    // if (Object.keys(tags_catalog_v2).length == 1) {
+    // if (Object.keys(tags_catalog).length == 1) {
     //   set_tags_group_key(tmp_key)
     // }
     set_tags_group_key('tag_group_' + data.tags_group_idx) 
     set_data({ ...data })
   }
 
-  const handleDelTagV2 = (n: string) => {
-    const { tags_catalog_v2 } = data
-    delete tags_catalog_v2[tags_group_key].tags[n]
+  const handleDelTag = (n: string) => {
+    const { tags_catalog } = data
+    delete tags_catalog[tags_group_key].tags[n]
 
     set_data({ ...data })
   }
 
-  const handleDelGroupTagV2 = (i: string) => {
-    const { tags_catalog_v2 } = data
+  const handleDelGroupTag = (i: string) => {
+    const { tags_catalog } = data
     console.log(i)
-    delete tags_catalog_v2[i]
-    if (Object.keys(tags_catalog_v2).length > 0) {
-      const lastElmt = Object.keys(tags_catalog_v2)[Object.keys(tags_catalog_v2).length - 1]
+    delete tags_catalog[i]
+    if (Object.keys(tags_catalog).length > 0) {
+      const lastElmt = Object.keys(tags_catalog)[Object.keys(tags_catalog).length - 1]
       set_tags_group_key(lastElmt)
     }
     set_data({ ...data })
 
   }
 
-  // const handleBannerV2 = (i: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const { tags_catalog_v2 } = data
-  //   tags_catalog_v2[i].banner = evt.target.value
+  // const handleBanner = (i: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const { tags_catalog } = data
+  //   tags_catalog[i].banner = evt.target.value
   //   set_data({ ...data })
   // }
 
   // const optionTag = () => {
 
-  //   if (Object.keys(tags_catalog_v2).length == 0) {
+  //   if (Object.keys(tags_catalog).length == 0) {
   //     return <option></option>
   //   } else {
-  //     return Object.entries(tags_catalog_v2[tags_group_key].tags).map(
+  //     return Object.entries(tags_catalog[tags_group_key].tags).map(
   //       (tag, i) =>
   //         <option
   //           key={i}
   //           value={tag[0]}
-  //           selected={tags_catalog_v2[tags_group_key].tags[tag[0]] == tags_catalog_v2[tags_group_key].tags[tag[0]]} >
+  //           selected={tags_catalog[tags_group_key].tags[tag[0]] == tags_catalog[tags_group_key].tags[tag[0]]} >
   //           {tag[1].name}
   //         </option>)
   //   }
@@ -654,13 +653,13 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
           }}>
-          {Object.keys(tags_catalog_v2).map(
+          {Object.keys(tags_catalog).map(
             (key, i) =>
               <option
                 key={i}
                 value={key}
                 selected={tags_group_key === key} >
-                {tags_catalog_v2[key].group_name}
+                {tags_catalog[key].group_name}
               </option>
           )}
         </Form.Select>
@@ -682,39 +681,39 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
 
 
-        {Object.keys(tags_catalog_v2).length > 0 && tags_group_key !=='' ? Object.keys(tags_catalog_v2[tags_group_key].tags).map(
+        {Object.keys(tags_catalog).length > 0 && tags_group_key !=='' ? Object.keys(tags_catalog[tags_group_key].tags).map(
           (tag_key, i) => {
             return (
               <tr key={i.toString()}>
-                <td style={{ 'width': '10%' }}><Button variant="danger" value='-' onClick={() => { handleDelTagV2(tag_key) }}>-</Button></td>
+                <td style={{ 'width': '10%' }}><Button variant="danger" value='-' onClick={() => { handleDelTag(tag_key) }}>-</Button></td>
 
                 <td style={{ 'width': '33%' }}>
                   <FormControl size='sm'
                     id={i.toString()}
                     type="text"
-                    value={tags_catalog_v2[tags_group_key].tags[tag_key].name}
+                    value={tags_catalog[tags_group_key].tags[tag_key].name}
                     onChange={
                       (evt: React.ChangeEvent) => {
-                        const { tags_catalog_v2 } = data
+                        const { tags_catalog } = data
                         const new_nb_element = evt.target as HTMLInputElement
                         const name = new_nb_element.value
-                        tags_catalog_v2[tags_group_key].tags[tag_key].name = name
+                        tags_catalog[tags_group_key].tags[tag_key].name = name
                         set_data({ ...data })
                       }
                     } /></td>
                 <td style={{ 'width': '10%' }}>
                   <Form.Check inline={true}
                     name={'element_visible' + tag_key}
-                    checked={tags_catalog_v2[tags_group_key].tags[tag_key].selected}
+                    checked={tags_catalog[tags_group_key].tags[tag_key].selected}
                     id={tag_key}
                     type='switch'
                     onChange={
                       (evt: React.ChangeEvent) => {
                         const new_nb_element = evt.target as HTMLInputElement
                         const tag_key = new_nb_element.id
-                        //const name = tags_catalog_v2[tags_group_key].tags[tag_key]
+                        //const name = tags_catalog[tags_group_key].tags[tag_key]
                         const visible = new_nb_element.checked
-                        tags_catalog_v2[tags_group_key].tags[tag_key].selected = visible
+                        tags_catalog[tags_group_key].tags[tag_key].selected = visible
                         setSelectedTags(data)
                         set_data({ ...data })
                       }
@@ -723,10 +722,10 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
                 <td><Form.Control
                   type="color"
-                  value={tags_catalog_v2[tags_group_key].tags[tag_key].color as string}
+                  value={tags_catalog[tags_group_key].tags[tag_key].color as string}
                   onChange={
                     evt => {
-                      tags_catalog_v2[tags_group_key].tags[tag_key].color = evt.target.value
+                      tags_catalog[tags_group_key].tags[tag_key].color = evt.target.value
                       set_data({ ...data })
                     }
                   }
@@ -739,7 +738,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       </tbody>
     </Table>
 
-    <Button variant="success" value='+' onClick={handleAddTagButtonV2}>+</Button> </>
+    <Button variant="success" value='+' onClick={handleAddTagButton}>+</Button> </>
   )
 
   return (
@@ -755,32 +754,32 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         </thead>
         <tbody>
           {
-            Object.keys(tags_catalog_v2).map(
+            Object.keys(tags_catalog).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
                     <td style={{ 'width': '10%' }}>
-                      <Button variant="danger" onClick={() => handleDelGroupTagV2(tags_group_key)}>-</Button>
+                      <Button variant="danger" onClick={() => handleDelGroupTag(tags_group_key)}>-</Button>
                     </td>
                     <td>
                       <FormControl
                         id={i.toString()}
                         type="text"
-                        value={tags_catalog_v2[tags_group_key].group_name}
+                        value={tags_catalog[tags_group_key].group_name}
                         onChange={
                           (evt: React.ChangeEvent) => {
-                            const { tags_catalog_v2 } = data
+                            const { tags_catalog } = data
                             const new_name = (evt.target as HTMLInputElement).value
-                            tags_catalog_v2[tags_group_key].group_name = new_name
+                            tags_catalog[tags_group_key].group_name = new_name
                             set_data({ ...data })
                           }
                         } />
                     </td>
-                    <td>{Object.keys(tags_catalog_v2[tags_group_key].tags).length}</td>
+                    <td>{Object.keys(tags_catalog[tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={tags_catalog_v2[tags_group_key].banner === 'none' || !tags_catalog_v2[tags_group_key].banner} value='none'>None</option>
-                      <option key={'one' + i} id='OneBaner' selected={tags_catalog_v2[tags_group_key].banner === 'one'} value='one'>One</option>
-                      <option key={'multi' + i} id='MultipleBaner' selected={tags_catalog_v2[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
+                      <option key={'none' + i} id='NoneBaner' selected={tags_catalog[tags_group_key].banner === 'none' || !tags_catalog[tags_group_key].banner} value='none'>None</option>
+                      <option key={'one' + i} id='OneBaner' selected={tags_catalog[tags_group_key].banner === 'one'} value='one'>One</option>
+                      <option key={'multi' + i} id='MultipleBaner' selected={tags_catalog[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
                     </Form.Select>
 
                   </tr>
@@ -790,11 +789,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         </tbody>
       </Table>
 
-      <Button variant="success" onClick={handleAddTagGrpButtonV2}>+</Button>
+      <Button variant="success" onClick={handleAddTagGrpButton}>+</Button>
 
       <br></br>
 
-      {Object.keys(tags_catalog_v2).length > 0 ? tagSetting : <></>}
+      {Object.keys(tags_catalog).length > 0 ? tagSetting : <></>}
     </>
   )
 }
@@ -1584,11 +1583,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 // SankeySettingsEdition.propTypes = SankeySettingsEditionPropTypes
 //}
 
-SankeySettingsEditionV2.propTypes = SankeySettingsEditionPropTypes
+SankeySettingsEdition.propTypes = SankeySettingsEditionPropTypes
 SankeySettingsEditionTags.propTypes = SankeySettingsEditionPropTypes
 
 export default null
 
 
 
-export { SankeySettingsEditionTags, SankeySettingsEditionV2 }
+export { SankeySettingsEditionTags, SankeySettingsEdition }

@@ -12,7 +12,7 @@ const SankeyEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }) => {
-  const { tags_catalog_v2 } = data
+  const { tags_catalog } = data
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group:TagsGroup) => {
     const val = evt.target.value
@@ -54,8 +54,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     set_data({ ...data })
   }
 
-  const addDropdownV2 = () => {
-    const banner_grouptag = Object.entries(tags_catalog_v2).filter(([, tags_group]) => { return tags_group.banner == 'one' || tags_group.banner == 'multi' })
+  const addDropdown = () => {
+    const banner_grouptag = Object.entries(tags_catalog).filter(([, tags_group]) => { return tags_group.banner == 'one' || tags_group.banner == 'multi' })
     const simpleDrop = banner_grouptag.filter(([, tags_group]) => { return tags_group.banner == 'one' }).map(([, tags_group]) => {
       return (
         <Row key={tags_group.group_name}>
@@ -98,7 +98,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
         <Row style={{ 'marginTop': '90px', 'marginBottom': '10px' }}>
           <Col sm={4}  >
             <Form id='dropdown_banner'>
-              {addDropdownV2()}
+              {addDropdown()}
             </Form>
           </Col>
         </Row>

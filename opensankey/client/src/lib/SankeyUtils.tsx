@@ -313,7 +313,7 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags_catalog_v2:{},
+    tags_catalog:{},
     tags_group_idx:0,
     tag_idx:0
   }
@@ -455,7 +455,7 @@ export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
 
-  const { nodes, links, tags_catalog_v2 } = sankey_data
+  const { nodes, links, tags_catalog } = sankey_data
 
   // specific to filiere paille
   // if ((new_tags[0] === 'Usages' || 
@@ -475,8 +475,8 @@ export const setSelectedTags = (
   nodes.forEach(node => {
     // node.visible = true
     // node.label_visible = true
-    Object.keys(tags_catalog_v2).forEach( tags_group_key => {
-      const tags_group = tags_catalog_v2[tags_group_key]
+    Object.keys(tags_catalog).forEach( tags_group_key => {
+      const tags_group = tags_catalog[tags_group_key]
       if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
         // tags do not apply to node
         return
@@ -496,8 +496,8 @@ export const setSelectedTags = (
   links.forEach(link => {
     link.visible = true
     link.label_visible = true
-    Object.keys(tags_catalog_v2).forEach( tags_group_key => {
-      const tags_group = tags_catalog_v2[tags_group_key]
+    Object.keys(tags_catalog).forEach( tags_group_key => {
+      const tags_group = tags_catalog[tags_group_key]
       if (!link.tags[tags_group_key] || link.tags[tags_group_key].length === 0) {
         // tags do not apply to node
         return
@@ -547,7 +547,7 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: any
+  set_data: (data:SankeyData) => void
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {

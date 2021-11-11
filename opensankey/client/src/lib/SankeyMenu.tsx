@@ -7,9 +7,9 @@ import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { SankeySettingsEditionV2, SankeySettingsEditionTags } from './SankeySettingsEdition'
-import SankeyNodeEditionV2 from './SankeyNodeEdition'
-import SankeyLinkEditionV2 from './SankeyLinkEdition'
+import { SankeySettingsEdition, SankeySettingsEditionTags } from './SankeySettingsEdition'
+import SankeyNodeEdition from './SankeyNodeEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -81,7 +81,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const _load_simple_excel = useRef<HTMLInputElement>(null)
 
   const [processing] = useState(false)
-  const [show_excel_dialog, set_show_excel_dialog] = useState(false)
 
   const clickSaveDiagram = () => {
     const data_to_save = { ...data }
@@ -140,77 +139,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       .then(showFile).then(cleanFile)
   }
 
-  const downloadExamples = (
-    file_name: string,
-    filetype: string
-  ) => {
-    const path = window.location.href
-    const url = path + 'sankey/download_examples'
-    const fetchData = {
-      method: 'POST',
-      body: file_name
-    }
-    const showFile = (blob: BlobPart) => {
-      const newBlob = new Blob([blob], { type: filetype })
-      FileSaver.saveAs(newBlob, file_name)
-    }
-    fetch(url, fetchData).then(
-      response => {
-        if (response.ok) {
-          response.blob().then(showFile)
-        }
-      })
-  }
-
-  const handleCloseExcelDialog = () => {
-    set_show_excel_dialog(false)
-  }
-
-  const uploadExcel = () => {
-    set_show_excel_dialog(true)
-  }
-
-  const uploadExcelImpl = (
-    input_file: React.RefObject<HTMLInputElement>,
-    sheet: string
-  ) => {
-    const form_data = new FormData()
-    form_data.append('file', (input_file.current && input_file.current.files) ? input_file.current.files[0] : '')
-
-    const path = window.location.href
-
-    let url = path + 'sankey/upload_data'
-    if (sheet == 'data') {
-      url = path + 'sankey/upload_input_excel_data'
-    }
-    const fetchData = {
-      method: 'POST',
-      body: form_data
-    }
-    const callback = (server_data: SankeyData & { error: string }) => {
-      const error = server_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
-      }
-      Object.assign(data, server_data)
-      convert_data(data)
-      compute_auto_sankey(data, 200)
-      set_data({ ...data })
-    }
-    fetch(url, fetchData).then(response => {
-      response.text().then(text => {
-        // try {
-        const json_data = JSON.parse(text)
-        callback(json_data)
-        // } catch(err) {
-        //   alert(err)
-        // }
-      })
-    })
-    set_show_excel_dialog(false)
-  }
-
   const uploadJSON = () => {
     if (_load_json.current) {
       _load_json.current.name = ''
@@ -226,7 +154,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        data.tags_catalog_v2 = {}
+        data.tags_catalog = {}
         Object.assign(data, new_data)
         convert_data(data)
         set_data({ ...data })
@@ -369,7 +297,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   let region_index = 0
-  const tags_group = data.tags_catalog_v2['Regions']
+  const tags_group = data.tags_catalog['Regions']
   if (tags_group) {
     region_index = 0
     Object.keys(tags_group.tags).forEach((tag_key,i)=> {
@@ -480,8 +408,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                 value="1">Configuration Sankey
               </ToggleButton>
             </ButtonGroup>
+            {right_menu}
           </Nav>
-          {right_menu}
         </Container>
       </Navbar>
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
@@ -497,7 +425,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item eventKey="1" onClick={() => set_nav_item_active('1')} >
               <Accordion.Header>Paramêtres généraux</Accordion.Header>
               <Accordion.Body>
-                <SankeySettingsEditionV2
+                <SankeySettingsEdition
                   data={data}
                   set_data={set_data}
                   set_current_filter={(
@@ -637,12 +565,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form>
 
                 <br />
-                <SankeyNodeEditionV2
+                <SankeyNodeEdition
                   data={data}
                   set_data={set_data}
                   selected_node={selected_node}
                   radio_selected={radio_selected}
-                  getValueIndex={getValueIndex}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -757,7 +684,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Row>
 
-                <SankeyLinkEditionV2
+                <SankeyLinkEdition
                   show={true}
                   data={data}
                   set_data={set_data}

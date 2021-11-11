@@ -32,7 +32,7 @@ const json_data = localStorage.getItem('data')
 if (json_data !== null) {
   const new_data = JSON.parse(json_data)
   convert_data(new_data)
-  data.tags_catalog_v2 = {}
+  data.tags_catalog = {}
   Object.assign(data, new_data)
 }
 
