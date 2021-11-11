@@ -1,43 +1,21 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Modal, Row, FormControl, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button } from 'react-bootstrap'
+import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes } from './types'
-import { nodeTooltipsContent } from './SankeyTooltip'
 import { default_node } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  set_show_node: PropTypes.func.isRequired,
   selected_node: PropTypes.number.isRequired,
-  show: PropTypes.bool.isRequired,
-  tag_group_id: PropTypes.number.isRequired,
-  set_tag_group_id: PropTypes.func.isRequired,
-  set_radio_selected: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  key_group_tag: PropTypes.number.isRequired,
-  selected_key_group_tag: PropTypes.number.isRequired,
-  set_key_group_tag: PropTypes.func.isRequired,
-  set_selected_key_group_tag: PropTypes.func.isRequired,
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, set_show_node,
-  selected_node, show,
-  tag_group_id,
-  set_tag_group_id,
-  set_radio_selected,
-  radio_selected,
+const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,children}) => {
 
-  key_group_tag,
-  selected_key_group_tag,
-
-  set_key_group_tag,
-  set_selected_key_group_tag,
-  children
-
-}) => {
+  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog_v2).length>0 ? Object.keys(data.tags_catalog_v2)[0] : '')
 
   /*  const { links, nodes, tags_catalog } = data
    if (selected_node === -1) {
@@ -66,16 +44,16 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
   if (node === undefined) {
     node = default_node()
   }
-  if (Object.keys(tags_catalog_v2).length > 0) {
-    const tag_group_name = 'tag_group_' + selected_key_group_tag
-    if (!node.tags[tag_group_name]) {
-      node.tags[tag_group_name] = []
-    }
-  }
+  // if (Object.keys(tags_catalog_v2).length > 0) {
+  //   const tag_group_name = 'tag_group_' + selected_key_group_tag
+  //   if (!node.tags[tag_group_name]) {
+  //     node.tags[tag_group_name] = []
+  //   }
+  // }
   const tags_visible = Object.keys(tags_catalog_v2).length > 0
 
   const outline_Fav_Button = (tag_key: string) => {
-    if (node != undefined && node.colorFavoriteTags['tag_group_' + selected_key_group_tag] != undefined && (node.colorFavoriteTags['tag_group_' + selected_key_group_tag].tag_associated === tag_key)) {
+    if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
       return 'warning'
     } else {
       return 'outline-warning'
@@ -94,17 +72,17 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
             onChange={
               //+evt.target.value
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                set_selected_key_group_tag(evt.target.value as any)
+                set_tags_group_key(evt.target.value)
                 set_data({ ...data })
               }}>
 
             {Object.keys(tags_catalog_v2).map(
-              (tags_group, i) =>
+              (cur_tags_group_key, i) =>
                 <option
                   key={i}
-                  value={parseInt(tags_group.slice(10))}
-                  selected={selected_key_group_tag === i} >
-                  {tags_catalog_v2[tags_group].group_name}
+                  value={tags_group_key}
+                  selected={tags_group_key === cur_tags_group_key} >
+                  {tags_catalog_v2[cur_tags_group_key].group_name}
                 </option>)}
           </Form.Select>
         </Col>
@@ -119,12 +97,12 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
             </tr>
           </thead>
           <tbody>
-            {tags_visible ? (Object.keys(tags_catalog_v2['tag_group_' + selected_key_group_tag].tags).map(
+            {tags_visible && tags_group_key != '' ? (Object.keys(tags_catalog_v2[tags_group_key].tags).map(
               (tag_key, i) => {
                 return (
 
                   <tr key={i.toString()}>
-                    <td><FormLabel>{tags_catalog_v2['tag_group_' + selected_key_group_tag].tags[tag_key].name}</FormLabel></td>
+                    <td><FormLabel>{tags_catalog_v2[tags_group_key].tags[tag_key].name}</FormLabel></td>
                     <td>
                       <FormCheck inline
                         name={'element_visible' + i.toString()}
@@ -132,7 +110,7 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
                         id={i.toString()}
                         type='checkbox'
                         onChange={
-                          (evt: React.ChangeEvent) => {
+                          () => {
                             /*  const new_nb_element = evt.target as HTMLInputElement
                              const id = +new_nb_element.id
                              const name = tags_catalog_v2[key_group_tag].tags[]
@@ -178,16 +156,16 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
 
                             const newFavColor = {
                               tag_associated: tag_key,
-                              color: tags_catalog_v2['tag_group_' + selected_key_group_tag].tags[tag_key].color
+                              color: tags_catalog_v2[tags_group_key].tags[tag_key].color
                             }
 
                             if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
                               node.colorFavoriteTags = {}
                             }
-                            if (Object.keys(node.colorFavoriteTags).includes('tag_group_' + selected_key_group_tag)) {
-                              delete node.colorFavoriteTags['tag_group_' + selected_key_group_tag]
+                            if (Object.keys(node.colorFavoriteTags).includes(tags_group_key)) {
+                              delete node.colorFavoriteTags[tags_group_key]
                             } else {
-                              node.colorFavoriteTags['tag_group_' + selected_key_group_tag] = newFavColor
+                              node.colorFavoriteTags[tags_group_key] = newFavColor
 
                             }
                             set_data({ ...data })
@@ -205,9 +183,6 @@ const SankeyNodeEditionV2: FunctionComponent<SankeyEditionTypes> = ({ data, set_
     </Tab>)
 
   // return (<></>)
-
-
-
 
   return (
     <Row>

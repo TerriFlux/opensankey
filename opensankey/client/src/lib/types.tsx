@@ -79,33 +79,18 @@ export const SankeyLinkPropTypes = {
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
-export const TagsCatalogPropTypes = PropTypes.arrayOf(
-  PropTypes.shape({
-    group_name: PropTypes.string.isRequired,
-    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    banner:PropTypes.string
-  }).isRequired
-).isRequired
+export const TagsGroupPropTypes = {
+  group_name: PropTypes.string.isRequired,
+  tags:PropTypes.objectOf(PropTypes.shape({
+    name:PropTypes.string.isRequired,
+    color:PropTypes.string,
+    selected:PropTypes.bool.isRequired,
+  }).isRequired).isRequired,
+  banner:PropTypes.string.isRequired
+}
+export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 
-export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
-
-//-------------------------
-//TAGS CATALOG V2
-export const TagsCatalogV2PropTypes = PropTypes.objectOf(
-  PropTypes.shape({
-    group_name: PropTypes.string.isRequired,
-    // tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    tags:PropTypes.objectOf(PropTypes.shape({
-      name:PropTypes.string.isRequired,
-      color:PropTypes.string,
-      selected:PropTypes.bool
-    }).isRequired).isRequired,
-    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    banner:PropTypes.string
-  }).isRequired
-).isRequired
-
+export const TagsCatalogV2PropTypes = PropTypes.objectOf(PropTypes.shape(TagsGroupPropTypes).isRequired).isRequired
 export type TagsV2Catalog = InferProps<typeof TagsCatalogV2PropTypes>
 
 //-------------------------
@@ -119,7 +104,6 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-
 
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,
@@ -135,8 +119,9 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired
   }).isRequired,
 
-  tags_catalog: TagsCatalogPropTypes,
-  tags_catalog_v2:TagsCatalogV2PropTypes
+  tags_catalog_v2:TagsCatalogV2PropTypes,
+  tags_group_idx: PropTypes.number.isRequired,
+  tag_idx: PropTypes.number.isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
