@@ -1,16 +1,15 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormGroup, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, default_link } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { SankeySettingsEditionV2, SankeySettingsEditionTags } from './SankeySettingsEdition'
 import SankeyNodeEditionV2 from './SankeyNodeEdition'
 import SankeyLinkEditionV2 from './SankeyLinkEdition'
-import { delete_link } from './SankeyUtils'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -29,7 +28,10 @@ const MenuPropTypes = {
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.number.isRequired,
   set_selected_id_link: PropTypes.func.isRequired,
-  selected_id_link: PropTypes.string.isRequired
+  selected_id_link: PropTypes.string.isRequired,
+  example_menu: PropTypes.element,
+  url_prefix: PropTypes.string.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 
@@ -39,7 +41,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node, set_selected_link, selected_link,
-    set_selected_id_link, selected_id_link
+    set_selected_id_link, selected_id_link,example_menu,url_prefix,
+    getValueIndex
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -75,6 +78,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const _load_json = useRef<HTMLInputElement>(null)
+  const _load_simple_excel = useRef<HTMLInputElement>(null)
 
   const [processing] = useState(false)
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
@@ -158,37 +162,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       })
   }
 
-  const uploadExemple = (file_name: string) => {
-    const path = window.location.href
-    const url = path + 'sankey/upload_exemple'
-    const fetchData = {
-      method: 'POST',
-      body: file_name
-    }
-    let file_type = 'text/plain'
-    reinitialization()
-
-    file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    const callback = (server_data: SankeyData) => {
-      Object.assign(data, server_data)
-      convert_data(data)
-      compute_auto_sankey(data, 200)
-      set_data({ ...data })
-    }
-
-    fetch(url, fetchData).then((response) => {
-      response.text().then((text) => {
-        try {
-          const json_data = JSON.parse(text)
-          callback(json_data)
-          downloadExamples(file_name, file_type)
-        } catch (err) {
-          alert(err)
-        }
-      })
-    })
-  }
-
   const handleCloseExcelDialog = () => {
     set_show_excel_dialog(false)
   }
@@ -265,34 +238,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const reinitialization = () => {
     const data = default_sankey_data()
     set_data({ ...data })
-  }
-
-  const handleSelect = (eventKey: string | null, event: React.SyntheticEvent<unknown, Event>) => {
-    if (eventKey === 'documentation') {
-      return
-    }
-    event.preventDefault()
-    if (eventKey === 'uploadJSON') {
-      uploadJSON()
-    } else if (eventKey === 'uploadExcel') {
-      uploadExcel()
-    } else if (eventKey === 'clickSaveDiagram') {
-      clickSaveDiagram()
-    } else if (eventKey === 'clickSaveSVG') {
-      clickSaveSVG()
-    } else if (eventKey === 'clickSavePDF') {
-      clickSavePDF()
-    } else if (eventKey === 'reinitialization') {
-      reinitialization()
-      // } else if (eventKey === 'static_sankey' ) {
-      //   data.static_sankey = !data.static_sankey
-      //   set_data({...data})
-      //   //setState({})
-    } else if (eventKey === 'exemple2') {
-      uploadExemple('pommes_poires.xlsx')
-    } else if (eventKey === 'exemple3') {
-      uploadExemple('sankeys_territoire_.csv')
-    }
   }
 
   const setShow = (t: boolean) => {
@@ -443,32 +388,85 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
           <Navbar.Brand href="#">{app_name}</Navbar.Brand>
-          <Nav onSelect={handleSelect}>
+          <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item eventKey="uploadJSON" >JSON</Dropdown.Item>
-                <form><input type="file" name="" ref={_load_json} style={{ display: 'none' }} onChange={uploadJSONImpl} /></form>
-                <Dropdown.Item eventKey="uploadExcel" >Excel</Dropdown.Item>
+                <Dropdown.Item onClick={uploadJSON} >JSON</Dropdown.Item>
+                <Form.Control 
+                  type="file" 
+                  ref={_load_json} 
+                  style={{ display: 'none' }} 
+                  onChange={uploadJSONImpl} 
+                />
+                <Dropdown.Item onClick={ () => {
+                  if (_load_simple_excel && _load_simple_excel.current) {
+                    _load_simple_excel.current.name = ''
+                    _load_simple_excel.current.click() 
+                  }}}
+                >Excel simple
+                </Dropdown.Item>
+                <Form.Control
+                  style={{ display: 'none' }}
+                  ref={_load_simple_excel}
+                  type="file"
+                  onChange={ (evt: ChangeEvent) => {
+                    const files = (evt.target as HTMLFormElement).files
+                    const form_data = new FormData()
+                    form_data.append('file', files ? files[0] : '' )
+                    const fetchData = {
+                      method: 'POST',
+                      body: form_data
+                    }
+                    const callback = (server_data: SankeyData & { error: string }) => {
+                      const error = server_data['error']
+                      if (error && error.length != 0) {
+                        alert(error)
+                        return
+                      }
+                      Object.assign(data, server_data)
+                      convert_data(data)
+                      compute_auto_sankey(data, 200)
+                      set_data({ ...data })
+                    }
+                    let root = window.location.href
+                    if (root.includes('sankey-diagrams')) {
+                      root = root.replace('sankey-diagrams/','')
+                    }
+                    const url = root + url_prefix + 'sankey/upload_simple_excel'
+                    fetch(url, fetchData).then(response => {
+                      response.text().then(text => {
+                        // try {
+                        const json_data = JSON.parse(text)
+                        callback(json_data)
+                        // } catch(err) {
+                        //   alert(err)
+                        // }
+                      })
+                    })                                      
+                  }} 
+                />
                 {open_menu}
               </NavDropdown>
               <NavDropdown id='enregistrer' title="Enregistrer" >
-                <Dropdown.Item eventKey="clickSaveDiagram" >JSON</Dropdown.Item>
+                <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
                 {save_menu}
               </NavDropdown>
               <NavDropdown id='exporter' title="Exporter" >
-                <Dropdown.Item eventKey="clickSaveSVG" >Exporter SVG</Dropdown.Item>
-                <Dropdown.Item eventKey="clickSavePDF" >Exporter PDF</Dropdown.Item>
+                <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
+                <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
               </NavDropdown>
             </NavDropdown>
             <NavDropdown id='edition' title="Edition" >
-              <Dropdown.Item eventKey="reinitialization" >Réinitialiser</Dropdown.Item>
+              <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
               {edition_menu}
             </NavDropdown >
             <NavDropdown title="Aide" id="help">
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
-                <Dropdown.Item eventKey="exemple2" >Pommes Poires Excel</Dropdown.Item>
-                <Dropdown.Item eventKey="exemple3" >Energie</Dropdown.Item>
+                <Dropdown.Item onClick={()=>uploadExemple('pommes_poires.xlsx',url_prefix,data,set_data)} >Pommes Poires Simple</Dropdown.Item>
+                <Dropdown.Item onClick={()=>uploadExemple('sankeys_territoire_.csv',url_prefix,data,set_data)} >Energie</Dropdown.Item>
+                <NavDropdown.Divider />
+                {example_menu}
               </NavDropdown>
             </NavDropdown>
             <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
@@ -509,6 +507,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     display_style.filter = +new_current_filter
                     set_data({ ...data })
                   }}
+                  getValueIndex={getValueIndex}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -643,6 +642,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   set_data={set_data}
                   selected_node={selected_node}
                   radio_selected={radio_selected}
+                  getValueIndex={getValueIndex}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -767,6 +767,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   set_selected_id_link={set_selected_id_link}
                   duplicate={duplicate}
                   set_duplicate={set_duplicate}
+                  getValueIndex={getValueIndex}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -776,6 +777,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <SankeySettingsEditionTags
                   data={data}
                   set_data={set_data}
+                  getValueIndex={getValueIndex}
                 />
               </Accordion.Body>
             </Accordion.Item>
@@ -789,14 +791,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Offcanvas>
 
       {
-        show_excel_dialog ? (
-          <ExcelModal
-            handleCloseDialog={handleCloseExcelDialog}
-            uploadExcelImpl={uploadExcelImpl} />
-        ) :
-          (<div />)
-      }
-      {
         processing ? (
           <Modal.Dialog >
             <Button className="btn btn-sm btn-warning col-md-12">
@@ -809,86 +803,5 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 Menu.propTypes = MenuPropTypes
 
-const ExcelModalPropTypes = {
-  uploadExcelImpl: PropTypes.func.isRequired,
-  handleCloseDialog: PropTypes.func.isRequired
-}
-
-type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
-
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog }) => {
-  const input_file_ = useRef<HTMLInputElement>(null)
-  const [sheet, set_sheet] = useState('results')
-
-  return (
-    <Modal
-      show={true}
-      onHide={handleCloseDialog}
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>Ouvrir Fichier Excel</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <FormGroup>
-            <Row>
-              <Col as={FormLabel} sm={4}>Fichier d&apos;entrée excel</Col>
-              <Col sm={8}>
-                <Form.Control
-                  ref={input_file_}
-                  type="file"
-                  name=""
-                  onChange={(evt: ChangeEvent) => {
-                    if (!input_file_.current) {
-                      return
-                    }
-                    input_file_.current.files = (evt.target as HTMLFormElement).files
-                  }}
-                /></Col>
-
-            </Row>
-            <Row>
-              <Col as={FormLabel} sm={4}>Onglet</Col>
-              <Col sm={4}>
-                <FormControl as="select"
-                  onChange={
-                    evt => set_sheet((evt.target as HTMLInputElement).value)
-                  }
-                >
-                  <option
-                    key={0}
-                    value='data'
-                    selected={sheet === 'data'}
-                  >Données</option>
-                  <option
-                    key={1}
-                    value='results'
-                    selected={sheet === 'results'}
-                  >Résultats</option>
-                </FormControl>
-              </Col>
-            </Row>
-          </FormGroup>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={
-            () => uploadExcelImpl(
-              input_file_,
-              sheet
-            )
-          }
-        >Ouvrir</Button>
-        <Button
-          variant="secondary"
-          onClick={handleCloseDialog}
-        >Annuler</Button>
-      </Modal.Footer>
-    </Modal>)
-}
-
-ExcelModal.propTypes = ExcelModalPropTypes
 
 export default Menu

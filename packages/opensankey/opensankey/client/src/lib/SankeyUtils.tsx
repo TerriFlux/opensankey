@@ -1,5 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-
+import FileSaver from 'file-saver'
+import { convert_data } from './SankeyConvert'
+import { compute_auto_sankey,compute_default_input_output_links, updateLayout } from './SankeyLayout'
 
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
@@ -84,13 +86,13 @@ export const compute_total_offsets = (
   const bottom_flux: number[] = []
   node.output_links.forEach(
     (id) => {
-      let target_node
-      try {
-        target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].target_name))[0]
-      } catch {
-        return
-      }
       if (links[id].visible) {
+        let target_node
+        try {
+          target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+        } catch {
+          return
+        }
         if (links[id].orientation === 'hh') {
           if (target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
             right_flux.push(id)
@@ -122,13 +124,13 @@ export const compute_total_offsets = (
 
   node.input_links.forEach(
     (id) => {
-      let source_node
-      try {
-        source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].source_name))[0]
-      } catch {
-        return
-      }
       if (links[id].visible) {
+        let source_node
+        try {
+          source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].source_name))[0]
+        } catch {
+          return
+        }
         if (links[id].orientation === 'vv') {
           if (source_node.y < node.y) {
             // flux goes down
@@ -268,10 +270,11 @@ export const toPrecision = (
 
 export const link_text = (
   d: SankeyLink,
-  link_value: number
-  /*display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean }*/,
+  link_value: number,
+  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean },
+  reg_index: number
 ) => {
-  const str_display = String(d.display_value)
+  const str_display = String(d.display_value[reg_index])
   if (str_display !== 'default') {
     return str_display
   }
@@ -289,6 +292,12 @@ export const default_sankey_data = (): SankeyData => {
     height: 1500,
     width: 2150,
     node_width: 10,
+    h_space: 200,
+    v_space: 100,
+
+    left_shift: 0.4,
+    right_shift: 0.5,
+    max_shift: 0.2,
 
     display_style: {
       font_size: 11,
@@ -464,8 +473,8 @@ export const setSelectedTags = (
   // }
 
   nodes.forEach(node => {
-    node.visible = true
-    node.label_visible = true
+    // node.visible = true
+    // node.label_visible = true
     Object.keys(tags_catalog_v2).forEach( tags_group_key => {
       const tags_group = tags_catalog_v2[tags_group_key]
       if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
@@ -476,7 +485,10 @@ export const setSelectedTags = (
       if (!visible) {
         node.visible = false
         node.label_visible = false
-        return
+        //break
+      } else if (!node.visible && !node.label_visible) {
+        node.visible = true
+        node.label_visible = true
       }
     })
   })
@@ -495,6 +507,84 @@ export const setSelectedTags = (
         link.visible = false
         link.label_visible = false
         return
+      }
+    })
+    const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.source_name))[0]
+    const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(link.target_name))[0]
+    if ((!source_node.visible && !source_node.label_visible) || (!target_node.visible && !target_node.label_visible)) {
+      link.visible = false
+      link.label_visible = false      
+    }
+  })
+}
+const downloadExamples = (
+  file_name: string,
+  the_url_prefix: string,
+  filetype: string
+) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
+    root = root.replace('sankey-diagrams/','')
+  }
+  const url = root + the_url_prefix + 'sankey/download_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: filetype })
+    FileSaver.saveAs(newBlob, file_name)
+  }
+  fetch(url, fetchData).then(
+    response => {
+      if (response.ok) {
+        response.blob().then(showFile)
+      }
+    })
+}
+
+export const uploadExemple = (
+  file_name: string,
+  the_url_prefix: string,
+  data: SankeyData,
+  set_data: any
+) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
+    root = root.replace('sankey-diagrams/','')
+  }
+  const url = root + the_url_prefix + 'sankey/upload_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  let file_type = 'text/plain'
+  set_data({ ... default_sankey_data() })
+
+  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const callback = (server_data: SankeyData) => {
+    Object.assign(data, server_data)
+    convert_data(data)
+    data.left_shift = 0.40
+    data.right_shift = 0.50
+    if ('layout' in (data as any)) {
+      compute_default_input_output_links(data.nodes, data.links)
+      updateLayout(data,(data as any).layout)
+      delete (data as any).layout
+    } else {
+      compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+    }
+    set_data({ ...data })
+  }
+
+  fetch(url, fetchData).then((response) => {
+    response.text().then((text) => {
+      try {
+        const json_data = JSON.parse(text)
+        callback(json_data)
+        downloadExamples(file_name, the_url_prefix, file_type)
+      } catch (err) {
+        alert(err)
       }
     })
   })

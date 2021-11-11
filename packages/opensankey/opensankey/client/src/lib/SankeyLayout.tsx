@@ -155,10 +155,10 @@ export const compute_default_input_output_links = (
     node.input_links = []
     node.output_links = []
     links.forEach((link, link_id) => {
-      if (link.target_name === node.name) {
+      if (normalize_name(link.target_name) === normalize_name(node.name)) {
         node.input_links.push(link_id)
       }
-      if (link.source_name === node.name) {
+      if (normalize_name(link.source_name) === normalize_name(node.name)) {
         node.output_links.push(link_id)
       }
     })
@@ -197,7 +197,8 @@ export const apply_input_output_links = (
           new_input_links.push(link_and_idx[1] as number)
         }
       )
-      node.input_links = new_input_links
+      const result_input_links = node.input_links.concat(new_input_links)
+      node.input_links = result_input_links.filter(function (item, pos) {return node.input_links.indexOf(item) == pos})
       const new_output_links: number[] = []
       ref_node.output_links.forEach(
         (link_id) => {
@@ -216,30 +217,32 @@ export const apply_input_output_links = (
           new_output_links.push(link_and_idx[1] as number)
         }
       )
-      node.output_links = new_output_links
+      const result_output_links = node.output_links.concat(new_output_links)
+      node.output_links = result_output_links.filter(function (item, pos) {return node.output_links.indexOf(item) == pos})
     }
   )
 }
 
 export const explore_branch = (
-  node_id: number,
+  node_name: string,
   current_length: number,
-  visited_nodes: number[],
+  visited_nodes: string[],
   //trade_sectors: string[],
-  links: (SankeyLink & ExtendedSankeyLink)[]
+  links: (SankeyLink & ExtendedSankeyLink)[],
+  nodes: SankeyNode[]
 ) => {
   let no_input_link = true
   let highest_branch_length = current_length
   links.forEach(link => {
-    if (link.target === node_id) {
+    if (link.target_name === node_name && link.source !== undefined && nodes[link.source].visible ) {
       //if (link.target === node_id && !trade_sectors.includes(link.source_name) ) {
       //if (link.target === node_id ) {
       // if the node has never been visited, continue to explore the branch, otherwise stop (for recycling flows).
-      if (visited_nodes.indexOf(node_id) === -1) {
+      if (visited_nodes.indexOf(node_name) === -1) {
         no_input_link = false
         const new_visited_nodes = visited_nodes.slice()
-        new_visited_nodes.push(node_id)
-        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes, links) : 0
+        new_visited_nodes.push(node_name)
+        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source_name, current_length + 1, new_visited_nodes, links,nodes) : 0
         //const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,trade_sectors,region_name,links) : 0
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
@@ -256,13 +259,21 @@ export const explore_branch = (
   }
 }
 
-export const arrangeNodes = (data: SankeyData) => {
+export const arrangeNodes = (
+  data: SankeyData,
+  h_space: number,
+  v_space: number
+) => {
   const { nodes } = data
   nodes.forEach(node => {
-    const x = Math.round(node.x / 100) * 100
+    if ( !node.visible ) {
+      return
+    }
+    const x = Math.round(node.x / h_space) * h_space
+    const y = Math.round(node.y / v_space) * v_space
     node.x = x
+    node.y = y
   })
-  //afterLoad()
 }
 
 export const compute_auto_sankey = (
@@ -270,14 +281,6 @@ export const compute_auto_sankey = (
   h_space : number
 ) => {
   const { nodes, links } = data
-
-  let region_indices = [0]
-  // const tags_group = data.tags_catalog.filter(tags_group => tags_group.group_name === 'Regions')
-  const tags_group = Object.values(data.tags_catalog_v2).filter(tags_group => tags_group.group_name === 'Regions')
-  
-  if (tags_group.length > 1) {
-    region_indices = [...Array(tags_group[0].tags.length).keys()]
-  }
 
   const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]
   //sankey.update_scale(data.user_scale)
@@ -296,13 +299,14 @@ export const compute_auto_sankey = (
   //   return
   // }
 
+
   // Use a relevant scale
-  links.forEach(link => {
-    region_indices.forEach(i =>
-      max_node_value = link.value[i] > max_node_value ? link.value[i] : max_node_value
-    )
-  })
+  links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
   data.user_scale = max_node_value
+  const scale = d3.scaleLinear()
+    .domain([0, data.user_scale])
+    .range([0, 100])
+  const vspace = data.v_space
   //sankey.update_scale(max_node_value)
   //const set_horizontal_indices : Set<number> = new Set()
   extended_links.forEach(l => {
@@ -313,7 +317,7 @@ export const compute_auto_sankey = (
   })
   const horizontal_indices: number[] = []
   nodes.forEach((node) => {
-    const horizontal_index = explore_branch(node.id, 0, [], extended_links)
+    const horizontal_index = explore_branch(node.name, 0, [], extended_links,nodes)
     //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
     horizontal_indices.push(horizontal_index)
     //set_horizontal_indices.add(horizontal_index)
@@ -330,7 +334,7 @@ export const compute_auto_sankey = (
     delete l.target
   })
 
-  const width = Math.max(max_horizontal_index * h_space, 1000)
+  const width = max_horizontal_index * h_space
   // const array_horizontal_indices = Array.from(set_horizontal_indices)
   // array_horizontal_indices.sort((a, b) => a - b)
   // nodes.forEach((node)=>{
@@ -338,6 +342,9 @@ export const compute_auto_sankey = (
   // })
 
   nodes.forEach((node, i) => {
+    if (!node.visible) {
+      return
+    }
     node.x = 50 + horizontal_indices[i] / max_horizontal_index * width //* 0.9
   })
 
@@ -351,49 +358,83 @@ export const compute_auto_sankey = (
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
   let max_vertical_offset = 0
   for (let i = 0; i <= max_horizontal_index; i++) {
-    let total_nb = 0
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = nodes.filter((n, ii) => horizontal_indices[ii] === i)
-    the_nodes.forEach(
-      () => {
-        //total_height += sankey.scale(Math.max(node.total_input_offset, node.total_output_offset));
-        total_nb += 1
-      }
-    )
-    if (total_nb > 1) {
+    const the_nodes = nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
+    if (the_nodes.length > 1) {
       //vertical_space = (0.6 * height - total_height) / (total_nb - 1)
-      vertical_space = 100 //(200 - total_height) / (total_nb - 1)
+      vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
     else {
       vertical_space = 0
     }
 
-    const scale = d3.scaleLinear()
-      .domain([0, data.user_scale])
-      .range([0, 100])
-
-    the_nodes.forEach((node, id) => {
-      let total_output_offset = 0
-      node.output_links.forEach(
-        (id) => total_output_offset += +links[id].value
-      )
+    the_nodes.forEach((node, node_id) => {
       let total_input_offset = 0
       node.input_links.forEach(
-        (id) => total_input_offset += +links[id].value
+        (id) => total_input_offset += +links[id].value[0]
       )
-      if (id === 0) {
+      if (node_id === 0) {
         node.y = 200//0.2 * height;
-        vertical_offset = 200 + scale(Math.max(total_input_offset, total_output_offset)) + vertical_space
+        vertical_offset = 200 + vertical_space
       }
       else {
         node.y = vertical_offset
-        vertical_offset += scale(Math.max(total_input_offset, total_output_offset)) + vertical_space
+        vertical_offset += vertical_space
       }
     })
     if (max_vertical_offset < vertical_offset) {
       max_vertical_offset = vertical_offset
     }
+  }
+  for (let i = 0; i <= max_horizontal_index; i++) {
+    const the_nodes = nodes.filter((n, ii) => n.visible && horizontal_indices[ii] === i)
+    let total_nb_output_links_up = 0
+    let total_nb_output_links_down = 0
+    the_nodes.forEach((node) => {
+
+      node.output_links.forEach(
+        id => {
+          if ( links[id].visible ) {
+            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+            if (target_node === undefined ) {
+              console.log(links[id].target_name)
+              return
+            }
+            if ( target_node.y < node.y ) {
+              total_nb_output_links_up += 1
+            } else {
+              total_nb_output_links_down += 1              
+            }
+          }
+        }
+      )
+    })
+    let current_output_link_up = 0
+    let current_output_link_down = 0
+    the_nodes.forEach(node => {
+      node.output_links.forEach(
+        id => {
+          if ( links[id].visible ) {
+            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+            if (target_node === undefined ) {
+              console.log(links[id].target_name)
+              return
+            }
+            if ( target_node.y < node.y ) {
+              links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              current_output_link_up += 1
+            } else {
+              links[id].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              links[id].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              current_output_link_down += 1
+            }
+
+          }
+        }
+      )
+    })
   }
   // Vertical position of horizontal nodes
   // nodes.forEach(node => {
@@ -493,11 +534,13 @@ export const updateLayout = (
 ) => {
   convert_data(new_layout)
   const { nodes, links } = data
-  convert_data(new_layout)
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
     if (node.tags['Exchanges'].includes('Importations') || node.tags['Exchanges'].includes('Exportations')) {
+      return
+    }
+    if (!node.visible) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
@@ -505,11 +548,22 @@ export const updateLayout = (
   nodes.forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
+  data.node_width = new_layout.node_width
   // Apply nodes layout
   for (let i = 0; i < new_layout.nodes.length; i++) {
     const node_layout = new_layout.nodes[i]
-    const node = find_node(node_layout.name, nodes)
+    let node = find_node(node_layout.name, nodes)
+
     if (node === undefined) {
+      if (node_layout.input_links.length === 0 && node_layout.output_links.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
+        // Case of not a label
+        node = {...node_layout}
+        nodes.push(node)
+      } else {
+        continue
+      }
+    }
+    if (!node.visible) {
       continue
     }
     node.name = node_layout.name
@@ -560,6 +614,9 @@ export const updateLayout = (
     link.label_visible = label_visible
     link.x_label = x_label
     link.y_label = y_label
+    link.left_horiz_shift = link_layout.left_horiz_shift
+    link.right_horiz_shift = link_layout.right_horiz_shift
+    link.orientation = link_layout.orientation
     //link.type = type
     link.recycling = recycling
 
@@ -585,5 +642,4 @@ export const updateLayout = (
   if (data.display_style.filter_label === undefined) {
     data.display_style.filter_label = 0
   }
-  //this.setState({data})
 }
