@@ -63,6 +63,7 @@ interface ConvertSankeyData {
   filtered_links: any,
   previous_filter: any,
   periods?: boolean
+  tags_catalog: { group_name : string, tags: string[],selected_tags: string[]}[]
 }
 
 
@@ -73,8 +74,17 @@ export const convert_data = (
   if (!data.display_style) {
     (data.display_style as any) = {}
   }
-  if (data.tags_catalog === undefined ) {
-    data.tags_catalog = {}
+  if (data_to_convert.tags_catalog === undefined ) {
+    data_to_convert.tags_catalog = {}
+  }
+  if (Array.isArray(data.tags_catalog)) {
+    data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
+      {[tags_group.group_name] : {
+          group_name:tags_group.group_name,
+          tags: Object.assign({}, ...tags_group.tags.map((tag_name) => ({[tag_name]: {name:tag_name,color:'',selected:tags_group.selected_tags.includes(tag_name)}})))
+        }
+      }
+    )))
   }
   if (!Array.isArray(data.links)) {
     const key_names = Object.keys(data.links)
