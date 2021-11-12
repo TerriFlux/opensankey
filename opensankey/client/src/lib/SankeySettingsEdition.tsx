@@ -33,7 +33,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
   const value_index = getValueIndex(data)
 
-
   let max_link_value = 0
   links.forEach(link => {
     if (link.value[value_index] > max_link_value) {

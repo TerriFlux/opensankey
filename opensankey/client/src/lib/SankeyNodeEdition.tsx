@@ -1,19 +1,21 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes } from './types'
-import { default_node } from './SankeyUtils'
+import { SankeyDataPropTypes, SankeyLink, SankeyNode, SankeyNodePropTypes } from './types'
+import { nodeTooltipsContent } from './SankeyTooltip'
+import { default_node, normalize_name } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_node: PropTypes.number.isRequired,
-  radio_selected: PropTypes.string.isRequired
+  selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
+  radio_selected: PropTypes.string.isRequired,
+  getValueIndex: PropTypes.func.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,children}) => {
+const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
   const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog).length>0 ? Object.keys(data.tags_catalog)[0] : '')
 
   /*  const { links, nodes, tags_catalog } = data
@@ -34,12 +36,18 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
 
 
-  const { links, nodes, tags_catalog } = data
-  if (selected_node === -1) {
-    selected_node = 0
-  }
-  let node = nodes[selected_node]
+  const { tags_catalog } = data
+  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
+  const display_links : SankeyLink[] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
 
+  // if (selected_node === -1) {
+  //   selected_node = 0
+  // }
+  let node = selected_node
   if (node === undefined) {
     node = default_node()
   }
@@ -49,6 +57,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   //     node.tags[tag_group_name] = []
   //   }
   // }
+  let current_parent_name = ''
+  if ( selected_node && selected_node.dimensions 
+       && selected_node.dimensions[data.dimension_name]) {
+    const has_parent = selected_node.dimensions[data.dimension_name].parent_name
+    current_parent_name = has_parent ? has_parent : ''
+  }
   const tags_visible = Object.keys(tags_catalog).length > 0
 
   const outline_Fav_Button = (tag_key: string) => {
@@ -58,6 +72,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       return 'outline-warning'
     }
   }
+
 
   const node_tag = (
     <Tab eventKey="tags" title="Tags" >
@@ -203,11 +218,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     onChange={evt => {
                       node.visible = evt.target.checked
                       if (!node.label_visible && !node.visible) {
-                        node.input_links.forEach(
-                          l_idx => links[l_idx].visible = false
+                        node.inputLinksId.forEach(
+                          idLink => display_links[display_links.findIndex(l=>l.idLink===idLink)].visible = false
                         )
-                        node.output_links.forEach(
-                          l_idx => links[l_idx].visible = false
+                        node.outputLinksId.forEach(
+                          idLink => display_links[display_links.findIndex(l=>l.idLink===idLink)].visible = false
                         )
                       }
                       set_data({ ...data })
@@ -223,7 +238,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     disabled={radio_selected !== 'local'}
                     value={node.color}
                     onChange={evt => {
-                      nodes[selected_node].color = evt.target.value
+                      selected_node.color = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -240,7 +255,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Circle'
                     checked={node.type === 'product'}
                     onChange={evt => {
-                      nodes[selected_node].type = evt.target.value
+                      selected_node.type = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -252,7 +267,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Rectangle'
                     checked={node.type === 'sector'}
                     onChange={evt => {
-                      nodes[selected_node].type = evt.target.value
+                      selected_node.type = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -271,13 +286,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Label visible'
                     checked={node.label_visible}
                     onChange={evt => {
-                      nodes[selected_node].label_visible = evt.target.checked
-                      if (!nodes[selected_node].label_visible && !nodes[selected_node].visible) {
-                        nodes[selected_node].input_links.forEach(
-                          l_idx => links[l_idx].visible = false
+                      selected_node.label_visible = evt.target.checked
+                      if (!selected_node.label_visible && !selected_node.visible) {
+                        selected_node.inputLinksId.forEach(
+                          idLink => display_links[display_links.findIndex(l=>l.idLink===idLink)].visible = false
                         )
-                        nodes[selected_node].output_links.forEach(
-                          l_idx => links[l_idx].visible = false
+                        selected_node.outputLinksId.forEach(
+                          idLink => display_links[display_links.findIndex(l=>l.idLink===idLink)].visible = false
                         )
                       }
                       set_data({ ...data })
@@ -347,10 +362,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       onChange={evt => {
                         node.visible = evt.target.checked
                         if (!node.label_visible && !node.visible) {
-                          node.input_links.forEach(
+                          node.inputLinksId.forEach(
                             l_idx => links[l_idx].visible = false
                           )
-                          node.output_links.forEach(
+                          node.outputLinksId.forEach(
                             l_idx => links[l_idx].visible = false
                           )
                         }
@@ -417,10 +432,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       onChange={evt => {
                         nodes[selected_node].label_visible = evt.target.checked
                         if (!nodes[selected_node].label_visible && !nodes[selected_node].visible) {
-                          nodes[selected_node].input_links.forEach(
+                          nodes[selected_node].inputLinksId.forEach(
                             l_idx => links[l_idx].visible = false
                           )
-                          nodes[selected_node].output_links.forEach(
+                          nodes[selected_node].outputLinksId.forEach(
                             l_idx => links[l_idx].visible = false
                           )
                         }

@@ -87,7 +87,8 @@ def parse_simple_excel(
             'id'      : i,
             'name'    : name,
             'visible' : True,
-            'type'    : 'sector'
+            'type'    : 'sector',
+            'dimensions' : {'Primaire':{'parent_name': None}}
         }
         color = 'grey'
         shape = 'rectangle'
@@ -106,8 +107,12 @@ def parse_simple_excel(
             current_node_parent = nodes[i-1]
             current_parent_level = previous_level
         if level > current_parent_level:
-            new_node['parent_name'] = current_node_parent['name']
+            new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['name']
         previous_level = level
+        if level == 1:
+          new_node['display'] = 1
+        else:
+          new_node['display'] = 0
         nodes.append(new_node)
 
     flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])

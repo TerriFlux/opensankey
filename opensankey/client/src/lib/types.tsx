@@ -1,12 +1,27 @@
 import PropTypes, { InferProps } from 'prop-types'
 
+export const DimensionPropTypes = PropTypes.arrayOf(
+  PropTypes.shape({
+    group_name: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+  }).isRequired
+).isRequired
+
 export const SankeyNodePropTypes = {
   // identification
-  id: PropTypes.number.isRequired,
-  idNode: PropTypes.string,
+  idNode: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
 
-  parent_name : PropTypes.string,
+  //- level attributes
+  dimensions : PropTypes.objectOf(
+    PropTypes.shape({
+      parent_name : PropTypes.string,
+      level       : PropTypes.number,
+    }).isRequired
+  ).isRequired,
+
+  display: PropTypes.bool.isRequired,
 
   // display attributes
   visible: PropTypes.bool.isRequired,
@@ -29,10 +44,8 @@ export const SankeyNodePropTypes = {
   tooltip_text: PropTypes.string,
 
   // topology
-  inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
-  input_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-  outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
-  output_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   // semantic
   type: PropTypes.oneOf(['product', 'sector']),
@@ -42,7 +55,7 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
 export const SankeyLinkPropTypes = {
   // identification
-  idLink: PropTypes.string,
+  idLink: PropTypes.string.isRequired,
   source_name: PropTypes.string.isRequired,
   target_name: PropTypes.string.isRequired,
 
@@ -109,6 +122,8 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
+
+  dimension_name: PropTypes.string.isRequired,
 
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,
