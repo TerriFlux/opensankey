@@ -9,6 +9,7 @@ import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col } from 'react-bootstrap'
+import { normalize_name } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -21,11 +22,17 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [show_node_context, set_show_node_context] = useState(false)
   const [show_link_context, set_show_link_context] = useState(false)
-  const [selected_link, set_selected_link] = useState(0)
-  const [selected_node, set_selected_node] = useState(0)
+  const [selected_link, set_selected_link] = useState(SankeyUtils.default_link())
+  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
   const [data, set_data] = useState<SankeyData>(sankey_data)
-  const [selected_id_link, set_selected_id_link] = useState<string>('')
 
+
+  const display_links : SankeyLink [] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+  
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
@@ -40,8 +47,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         selected_node={selected_node}
         set_selected_link={set_selected_link}
         selected_link={selected_link}
-        set_selected_id_link={set_selected_id_link}
-        selected_id_link={selected_id_link}
         url_prefix=''
         getValueIndex={() => 0 }
       />
@@ -54,26 +59,28 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
       </Row>
       <SankeyDraw
         data={data}
-        select_node={(i: number) => {
-          set_selected_node(i)
-          //set_show_node(true)
+        select_node={(n: SankeyNode) => {
+          set_selected_node(n)
         }}
-        nodeContextMenu={(i: number) => {
-          set_selected_node(i)
+        nodeContextMenu={(n: SankeyNode) => {
+          set_selected_node(n)
           set_show_node_context(true)
         }}
+        node_visible={
+          (n: SankeyNode) => n.visible ? 'visible' : 'hidden'
+        }
         node_label_visible={
           (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
         }
         node_arrow_visible={
-          (n: SankeyNode) => !n.visible || (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.visible || (n.inputLinksId.length === 0) || (!display_links[display_links.findIndex(l=>l.idLink===n.inputLinksId[0])].arrow) ? false : true
         }
-        select_link={(i: number) => {
-          set_selected_link(i)
+        select_link={(l: SankeyLink) => {
+          set_selected_link(l)
           //set_show_link(true)
         }}
-        linkContextMenu={(i: number) => {
-          set_selected_link(i)
+        linkContextMenu={(l: SankeyLink) => {
+          set_selected_link(l)
           set_show_link_context(true)
         }}
         link_color={l => l.color}
@@ -87,8 +94,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         //redraw_node={() => void 0}
         set_show_nav={set_show_nav}
         set_nav_item_active={set_nav_item_active}
-        set_selected_id_link={set_selected_id_link}
-        selected_id_link={selected_id_link}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
         getValueIndex={() => 0 }
