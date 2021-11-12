@@ -573,7 +573,7 @@ export const convert_data = (
     }
   }
 
-  if (data_to_convert.tags_catalog['dimensions']) {
+  if (!data_to_convert.tags_catalog['dimensions']) {
     data_to_convert.tags_catalog['dimensions'] = {
       group_name: 'dimensions',
       tags: {'Primaire' : {
