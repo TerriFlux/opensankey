@@ -7,9 +7,6 @@ import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple, normalize_name } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { SankeySettingsEdition, SankeySettingsEditionTags } from './SankeySettingsEdition'
-import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeyLinkEdition from './SankeyLinkEdition'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -18,6 +15,10 @@ const MenuPropTypes = {
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
   right_menu: PropTypes.element,
+  settings_edition: PropTypes.element,
+  settings_edition_tags: PropTypes.element,
+  node_edition: PropTypes.element,
+  link_edition: PropTypes.element,
   app_name: PropTypes.string.isRequired,
   set_show_nav: PropTypes.func.isRequired,
   show_nav: PropTypes.bool,
@@ -29,23 +30,31 @@ const MenuPropTypes = {
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
-  getValueIndex: PropTypes.func.isRequired
+  getValueIndex: PropTypes.func.isRequired,
+  radio_selected: PropTypes.string.isRequired,
+  set_radio_selected: PropTypes.func.isRequired,
+  duplicate: PropTypes.bool.isRequired,
+  set_duplicate: PropTypes.func.isRequired
 }
 
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu: FunctionComponent<MenuTypes> = (
-  { data, set_data, open_menu, save_menu, edition_menu, right_menu, app_name,
+  { data, set_data, 
+    open_menu, save_menu, edition_menu, right_menu, 
+    settings_edition,settings_edition_tags,node_edition,link_edition,
+    app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node, 
     set_selected_link, selected_link,
     example_menu,url_prefix,
-    getValueIndex
+    getValueIndex,
+    radio_selected, set_radio_selected,
+    duplicate,set_duplicate
   }
 ) => {
   const set_show_link = useState(true)[1]
-  const [duplicate, set_duplicate] = useState(false)
 
   
   const display_nodes : SankeyNode [] = data.nodes.filter( n=> n.display )
@@ -209,8 +218,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
     set_show_link(true)
   }
-
-  const [radio_selected, set_radio_selected] = useState<string>('local')
 
   let node = selected_node
   if (node === undefined) {
@@ -412,18 +419,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item eventKey="1" onClick={() => set_nav_item_active('1')} >
               <Accordion.Header>Paramêtres généraux</Accordion.Header>
               <Accordion.Body>
-                <SankeySettingsEdition
-                  data={data}
-                  set_data={set_data}
-                  set_current_filter={(
-                    new_current_filter: number
-                  ) => {
-                    const { display_style } = data
-                    display_style.filter = +new_current_filter
-                    set_data({ ...data })
-                  }}
-                  getValueIndex={getValueIndex}
-                />
+                {settings_edition}
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="2" onClick={() => set_nav_item_active('2')}>
@@ -552,13 +548,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form>
 
                 <br />
-                <SankeyNodeEdition
-                  data={data}
-                  set_data={set_data}
-                  selected_node={selected_node}
-                  radio_selected={radio_selected}
-                  getValueIndex={getValueIndex}
-                />
+                {node_edition}
+
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="3" onClick={() => set_nav_item_active('3')}>
@@ -666,26 +657,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                     />
                   </Col>
                 </Row>
-
-                <SankeyLinkEdition
-                  show={true}
-                  data={data}
-                  set_data={set_data}
-                  selected_link={selected_link}
-                  duplicate={duplicate}
-                  set_duplicate={set_duplicate}
-                  getValueIndex={getValueIndex}
-                />
+                {link_edition}
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="4" onClick={() => set_nav_item_active('4')}>
               <Accordion.Header>Tags</Accordion.Header>
               <Accordion.Body>
-                <SankeySettingsEditionTags
-                  data={data}
-                  set_data={set_data}
-                  getValueIndex={getValueIndex}
-                />
+                {settings_edition_tags}
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item eventKey="5" onClick={() => set_nav_item_active('5')}>
