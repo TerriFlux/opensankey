@@ -90,7 +90,8 @@ export const convert_data = (
     data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
       {[tags_group.group_name] : {
         group_name:tags_group.group_name,
-        tags: Object.assign({}, ...tags_group.tags.map((tag_name) => ({[tag_name]: {name:tag_name,color:'',selected:tags_group.selected_tags.includes(tag_name)}})))
+        tags: Object.assign({}, ...tags_group.tags.map((tag_name) => ({[tag_name]: {name:tag_name,color:'',selected:tags_group.selected_tags.includes(tag_name)}}))),
+        banner: tags_group.group_name === 'Regions' || tags_group.group_name === 'Periods' || tags_group.group_name === 'dimension' ? 'one' : 'multi'
       }
       }
     )))
