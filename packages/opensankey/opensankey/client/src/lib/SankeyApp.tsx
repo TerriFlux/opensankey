@@ -5,6 +5,9 @@ import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
 import SankeyEdition from './SankeyEdition'
+import { SankeySettingsEdition, SankeySettingsEditionTags } from './SankeySettingsEdition'
+import SankeyNodeEdition from './SankeyNodeEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
@@ -24,6 +27,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [show_link_context, set_show_link_context] = useState(false)
   const [selected_link, set_selected_link] = useState(SankeyUtils.default_link())
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
+  const [radio_selected, set_radio_selected] = useState<string>('local')
+  const [duplicate, set_duplicate] = useState(false)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
 
@@ -47,8 +52,53 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         selected_node={selected_node}
         set_selected_link={set_selected_link}
         selected_link={selected_link}
+        radio_selected={radio_selected}
+        set_radio_selected={set_radio_selected}
+        duplicate={duplicate}
+        set_duplicate={set_duplicate}
         url_prefix=''
         getValueIndex={() => 0 }
+        settings_edition= {
+          <SankeySettingsEdition
+            data={data}
+            set_data={set_data}
+            set_current_filter={(
+              new_current_filter: number
+            ) => {
+              const { display_style } = data
+              display_style.filter = +new_current_filter
+              set_data({ ...data })
+            }}
+            getValueIndex={() => 0 }
+          />
+        }
+        node_edition= {
+          <SankeyNodeEdition
+            data={data}
+            set_data={set_data}
+            selected_node={selected_node}
+            radio_selected={radio_selected}
+            getValueIndex={() => 0 }
+          />
+        }
+        link_edition={
+          <SankeyLinkEdition
+            show={true}
+            data={data}
+            set_data={set_data}
+            selected_link={selected_link}
+            duplicate={duplicate}
+            set_duplicate={set_duplicate}
+            getValueIndex={() => 0 }
+          />
+        }
+        settings_edition_tags = {
+          <SankeySettingsEditionTags
+            data={data}
+            set_data={set_data}
+            getValueIndex={() => 0}
+          />
+        }
       />
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
