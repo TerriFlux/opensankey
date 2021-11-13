@@ -737,12 +737,17 @@ export const agregation = (selected_node : SankeyNode, data : SankeyData) =>  {
     return
   }
   let agregated_node = data.nodes.filter( n => n.name === selected_node_dim.parent_name )[0]
+  let cur_dimension = data.dimension_name
   if (!agregated_node) {
     let found = false
     Object.values(data.tags_catalog['dimensions'].tags).forEach( tag => {
       if (found ) {
         return
       }
+      if (!selected_node.dimensions[tag.name]) {
+        return
+      }
+      cur_dimension = tag.name
       agregated_node = data.nodes.filter( n => n.name === selected_node.dimensions[tag.name].parent_name )[0]
       if (agregated_node) {
         found = true
@@ -754,7 +759,7 @@ export const agregation = (selected_node : SankeyNode, data : SankeyData) =>  {
   }
     
   const display_nodes = data.nodes.filter( n=> n.display )
-  const desagregate_nodes = display_nodes.filter( n => n.dimensions[data.dimension_name] && n.dimensions[data.dimension_name].parent_name === agregated_node.name )
+  const desagregate_nodes = display_nodes.filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.name )
   // show agregated node
   agregated_node.display = true
   agregated_node.visible = true
