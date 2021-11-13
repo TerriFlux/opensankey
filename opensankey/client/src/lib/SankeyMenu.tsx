@@ -1,11 +1,12 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container } from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes } from './types'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data,uploadExemple } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple, normalize_name } from './SankeyUtils'
+import Accordion from 'react-bootstrap/Accordion'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -14,16 +15,82 @@ const MenuPropTypes = {
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
   right_menu: PropTypes.element,
-  example_menu: PropTypes.element,
+  settings_edition: PropTypes.element,
+  settings_edition_tags: PropTypes.element,
+  node_edition: PropTypes.element,
+  link_edition: PropTypes.element,
   app_name: PropTypes.string.isRequired,
-  url_prefix: PropTypes.string.isRequired
+  set_show_nav: PropTypes.func.isRequired,
+  show_nav: PropTypes.bool,
+  set_nav_item_active: PropTypes.func.isRequired,
+  nav_item_active: PropTypes.string.isRequired,
+  set_selected_node: PropTypes.func.isRequired,
+  selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
+  set_selected_link: PropTypes.func.isRequired,
+  selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
+  example_menu: PropTypes.element,
+  url_prefix: PropTypes.string.isRequired,
+  getValueIndex: PropTypes.func.isRequired,
+  radio_selected: PropTypes.string.isRequired,
+  set_radio_selected: PropTypes.func.isRequired,
+  duplicate: PropTypes.bool.isRequired,
+  set_duplicate: PropTypes.func.isRequired
 }
+
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu: FunctionComponent<MenuTypes> = (
-  { data, set_data, open_menu, save_menu, edition_menu, right_menu,example_menu, app_name,url_prefix }
+  { data, set_data, 
+    open_menu, save_menu, edition_menu, right_menu, 
+    settings_edition,settings_edition_tags,node_edition,link_edition,
+    app_name,
+    set_show_nav, show_nav, set_nav_item_active, nav_item_active,
+    set_selected_node, selected_node, 
+    set_selected_link, selected_link,
+    example_menu,url_prefix,
+    getValueIndex,
+    radio_selected, set_radio_selected,
+    duplicate,set_duplicate
+  }
 ) => {
+  const set_show_link = useState(true)[1]
+
+  
+  const display_nodes : SankeyNode [] = data.nodes.filter( n=> n.display )
+  const display_links : SankeyLink [] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+
+  const value_index = getValueIndex(data)
+  const add_new_node = () => {
+    const { nodes } = data
+    // permet de definir un id unique (même en cas de delete node)
+    let nId = 'node0'
+    let newId = 0
+    // nodes.map((n, i) => {
+    // //   if (n.id > max) {
+    // //     max = n.id
+    // //   }
+    // // })
+    if (nodes.length > 0) {
+      nId = (nodes[nodes.length - 1].idNode as string)
+      newId = parseInt(nId.replace('node', '')) + 1
+    }
+
+    const node: SankeyNode = default_node()
+    //node.id = newId
+    node.idNode = 'node' + newId
+    node.name = 'n' + newId
+    // node.x = nodes.length * 50
+    node.x = newId * 50
+    nodes.push(node)
+    set_selected_node(node)
+    set_data({ ...data })
+    // console.log(JSON.parse(JSON.stringify(nodes)))
+  }
 
   const _load_json = useRef<HTMLInputElement>(null)
   const _load_simple_excel = useRef<HTMLInputElement>(null)
@@ -102,7 +169,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         let result = String((e.target as FileReader).result)
         result = result.split('<br>').join('\\\\n')
         const new_data = JSON.parse(result)
-        data.tags_catalog = []
+        data.tags_catalog = {}
         Object.assign(data, new_data)
         convert_data(data)
         set_data({ ...data })
@@ -116,9 +183,131 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
 
+  const setShow = (t: boolean) => {
+    set_show_nav(t)
+  }
+
+  const handleClose = () => setShow(true)
+
+  const toggleShow = () => {
+    setShow(!show_nav)
+  }
+  const [checked, setChecked] = useState(false)
+
+  // if (selected_id_link == '' && display_links.length != 0) {
+  //   selected_id_link = (display_links[0].idLink as string)
+  // }
+
+  const add_new_link = () => {
+    const { nodes, links } = data
+
+    if (nodes.length < 2) {
+      return
+    }
+    const link: SankeyLink = default_link()
+
+    links.push(link)
+    link.idLink = 'link' + links.length
+    link.source_name = nodes[0].name
+    link.target_name = nodes[1].name
+
+    nodes[0].outputLinksId.push(link.idLink)
+    nodes[1].inputLinksId.push(link.idLink)
+
+    set_selected_link(link)
+    set_data({ ...data })
+    set_show_link(true)
+  }
+
+  let node = selected_node
+  if (node === undefined) {
+    node = default_node()
+  }
+
+  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    let link = selected_link
+    if (duplicate) {
+      link = JSON.parse(JSON.stringify(selected_link))
+      data.links.push(link)
+      selected_link = link
+      const target_node = data.nodes.filter(n => n.name === link.target_name)[0]
+      target_node.inputLinksId.push(selected_link.idLink)
+    } else {
+      console.log('========1=============')
+      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+      // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = data.nodes.filter(n => n.name === link.source_name)[0]
+      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
+    }
+
+    const source_node = data.nodes.filter(n => n.name === changeEvent.target.value)[0]
+    link.source_name = source_node.name
+    source_node.outputLinksId.push(selected_link.idLink)
+
+    set_data({ ...data })
+  }
+
+  const addDropSource = () => {
+    if (data.nodes.length >= 2 && data.links.length != 0) {
+      return (
+        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.source_name) === normalize_name(n.name)} >{n.name}</option>)
+      )
+    }
+  }
+  const addDropCible = () => {
+    if (data.nodes.length >= 2 && data.links.length != 0) {
+
+      return (
+        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.target_name) === normalize_name(n.name)} >{n.name}</option>)
+      )
+    }
+  }
+
+  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    const { nodes, links } = data
+    let link = selected_link
+    if (duplicate) {
+      link = JSON.parse(JSON.stringify(selected_link))
+      links.push(link)
+      selected_link = link
+      const source_node = nodes.filter(n => n.name === link.source_name)[0]
+      source_node.outputLinksId.push(selected_link.idLink)
+    } else {
+      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
+    }
+
+    const target_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
+    link.target_name = target_node.name
+    target_node.inputLinksId.push(selected_link.idLink)
+
+    set_data({ ...data })
+  }
+
+
+  const addLabelId = () => {
+    if (display_nodes.length != 0) {
+      return selected_node.idNode
+    }
+  }
+
+  //const selected_links: SankeyLink[] = []
+  //const the_link = selected_link
+  //selected_links.push(the_link)
+
+  const link = selected_link
+  // if (selected_links[0] === undefined) {
+  //   selected_links[0] = default_link()
+  //   link = selected_links[0]
+  // }
+
+  const props = {
+    scroll: true,
+    backdrop: false,
+  }
   return (
     <>
-      <Navbar className='bg-light' expand="lg" >
+      <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
           <Navbar.Brand href="#">{app_name}</Navbar.Brand>
           <Nav>
@@ -202,16 +391,296 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {example_menu}
               </NavDropdown>
             </NavDropdown>
+            <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
+              <ToggleButton
+                id="toggle-check"
+                type="checkbox"
+                variant="outline-primary"
+                checked={checked}
+                onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                onClick={toggleShow}
+                value="1">Configuration Sankey
+              </ToggleButton>
+            </ButtonGroup>
+            {right_menu}
           </Nav>
-          {right_menu}
         </Container>
       </Navbar>
+      <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
+        <Offcanvas.Body style={{ 'padding': '0px' }}>
+          <Accordion activeKey={nav_item_active as string} >
+            <Accordion.Item eventKey="0" onClick={() => set_nav_item_active('0')}>
+              <Accordion.Header>Shortcut</Accordion.Header>
+              <Accordion.Body>
+                <p>Fonctionnement des clics :</p><br />
+                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="1" onClick={() => set_nav_item_active('1')} >
+              <Accordion.Header>Paramêtres généraux</Accordion.Header>
+              <Accordion.Body>
+                {settings_edition}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="2" onClick={() => set_nav_item_active('2')}>
+              <Accordion.Header>Noeuds</Accordion.Header>
+              <Accordion.Body>
+                <br />
 
-      {processing ? (
-        <Modal.Dialog >
-          <Button className="btn btn-sm btn-warning col-md-12">
-            <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
-          </Button></Modal.Dialog>) : (<div></div>)
+                <Row >
+                  <Col xs={1}>
+                    <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>+</Button>
+                  </Col>
+                  <Col xs={10}>
+                    <Form.Select id="selectionNode"
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          set_selected_node(display_nodes.filter(f => { return f.name == evt.target.value })[0])
+                        }
+                      }
+                    >
+                      {data.nodes.map((n, i) => <option key={i} value={n.name} selected={data.nodes[i].idNode === selected_node.idNode} >{data.nodes[i].name}</option>)}
+                    </Form.Select>
+                  </Col>
+
+                  <Col xs={1}>
+
+                    <Button
+                      size="sm"
+                      variant='danger'
+                      style={{ 'marginBottom': '3px' }}
+                      onClick={
+                        () => {
+                          delete_node(data, selected_node)
+                          // on change le selected_node car il n'existe plus, met le dernier node de la liste nodes
+                          set_selected_node(data.nodes.length - 1)
+                          set_data({ ...data })
+                        }
+                      }
+                    >-</Button>
+
+                  </Col>
+                </Row>
+                <Form>
+                  <Form.Group as={Row} >
+                    <Col xs={2} >
+                      <FormLabel >Nom</FormLabel>
+                    </Col>
+                    <Col xs={7} >
+                      <FormControl
+                        value={node.name}
+                        onChange={evt => {
+                          const source_links = display_links.filter(l => l.source_name === selected_node.name)
+                          const target_links = display_links.filter(l => l.target_name === selected_node.name)
+                          source_links.forEach(l => l.source_name = evt.target.value)
+                          target_links.forEach(l => l.target_name = evt.target.value)
+                          selected_node.name = evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col xs={3}>
+                      <FormLabel >(id : {addLabelId()})</FormLabel>
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col xs={2}>
+                      <FormLabel >Parent</FormLabel>
+                    </Col>
+                    <Col xs={10}>
+                      <Form.Select
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            selected_node.dimensions[data.dimension_name].parent_name = evt.target.value
+                            set_data({ ...data })
+                          }
+                        }
+                      > <option>Choisissez parent</option>
+                        {data.nodes.map((n, i) => <option key={i} value={n.name} selected={selected_node.dimensions[data.dimension_name].parent_name === n.name} >{n.name}</option>)}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
+                </Form>
+
+                <Form>
+                  <Form.Group as={Row} onChange={evt => {
+                    console.log(evt)
+                    // set_radio_selected(evt.target.value)
+                    // node.nodeParameter=evt.target.value
+                  }}>
+                    <div key='radioTypeCouelurNoeud'>
+                      <Form.Check inline type='radio' checked={radio_selected === 'Général'} name='TypeCouleurNoeud' id='radioGeneral' value='Général' label='Général'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+                        }} />
+                      <Form.Check inline type='radio' checked={radio_selected === 'GroupTag'} name='TypeCouleurNoeud' id='radioGroupTag' value='GroupTag' label='GroupTag'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+
+                        }} />
+                      <Form.Check inline type='radio' checked={radio_selected === 'local'} name='TypeCouleurNoeud' id='radioLocal' value='local' label='Local'
+                        onChange={evt => {
+                          set_radio_selected(evt.target.value)
+                          node.nodeParameter = evt.target.value
+
+                        }} />
+                    </div>
+
+
+                  </Form.Group>
+
+                  {/* 
+                  {(radio_selected === 'GroupTag') ? (
+                    < Form.Select >
+                      {tags_catalog.filter(d => {
+                        return (
+                          Object.keys(nodes[selected_node].tags).includes(d.group_name) && nodes[selected_node].tags[d.group_name].length>0
+                        )
+                      })
+                        .map(d => <option key={d.group_name}>{d.group_name}</option>)}
+                    </Form.Select>
+                    
+                  ) : (<></>)} */}
+
+
+                </Form>
+
+                <br />
+                {node_edition}
+
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="3" onClick={() => set_nav_item_active('3')}>
+              <Accordion.Header>Links</Accordion.Header>
+              <Accordion.Body>
+                <Row>
+                  <Col xs={1}>
+
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={
+                        () => {
+                          add_new_link()
+                          set_data({ ...data })
+                        }
+                      }
+                    >+</Button>
+
+                  </Col>
+                  <Col xs={10}>
+                    <Form.Select id="selectionLink"
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          const newLink = display_links.filter(f => { return f.idLink == evt.target.value })[0].idLink
+                          let newLinkId = 0
+                          display_links.map((d, i) => {
+                            if (d.idLink == evt.target.value) {
+                              newLinkId = i
+                            }
+                          })
+                          // console.log(newLinkId)
+                          //console.log(nodes)
+
+                          // set_selected_id_link(links.filter(f => { return f.idLink == evt.target.value })[0].idLink)
+                          //set_selected_id_link(newLink)
+                          set_selected_link(newLink)
+
+                          set_data({ ...data })
+                          // console.log(selected_link)
+
+                        }
+                      }
+                    >
+                      {data.links.map((n, i) => <option key={i} value={n.idLink as string} selected={n.idLink == selected_link.idLink}  >{n.idLink}</option>)}
+                    </Form.Select>
+                  </Col>
+
+                  <Col xs={1}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={
+                        () => {
+                          delete_link(data, selected_link)
+                          set_selected_link(default_link())
+
+                          set_data({ ...data })
+                        }
+                      }
+                    >-</Button>
+                  </Col>
+
+                </Row>
+                <br />
+
+                <Row>
+                  <Col>
+                    <FormLabel>Source</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select onChange={source_change}>
+                      {addDropSource()}
+                    </Form.Select>
+                  </Col>
+                </Row>
+                <br></br>
+                <Row>
+                  <Col>
+                    <FormLabel>Cible</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select onChange={target_change}>
+                      {addDropCible()}
+                    </Form.Select>
+                  </Col>
+                </Row>
+                <br></br>
+                <Row>
+                  <Col>
+                    <FormLabel>Valeur</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Control
+                      type='text'
+                      value={link.value[value_index]}
+                      onChange={
+                        (evt) => {
+                          console.log(selected_link)
+                          console.log(selected_link.value[value_index])
+                          selected_link.value[value_index] = +evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Row>
+                {link_edition}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="4" onClick={() => set_nav_item_active('4')}>
+              <Accordion.Header>Tags</Accordion.Header>
+              <Accordion.Body>
+                {settings_edition_tags}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="5" onClick={() => set_nav_item_active('5')}>
+              <Accordion.Header>Aide</Accordion.Header>
+              <Accordion.Body>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        </Offcanvas.Body>
+      </Offcanvas>
+
+      {
+        processing ? (
+          <Modal.Dialog >
+            <Button className="btn btn-sm btn-warning col-md-12">
+              <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
+            </Button></Modal.Dialog>) : (<div></div>)
       }
     </>
   )

@@ -2,13 +2,13 @@ import React, { FunctionComponent } from 'react'
 import { Button, Modal, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { delete_link } from './SankeyUtils'
-import { SankeyDataPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 
 const SankeyLinkContextMenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   closeLinkContextMenu: PropTypes.func.isRequired,
-  selected_link: PropTypes.number.isRequired,
+  selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   show: PropTypes.bool.isRequired
 }
 

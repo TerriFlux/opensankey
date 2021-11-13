@@ -1,17 +1,18 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Col, Row } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
-import SankeyLinkEdition from './SankeyLinkEdition'
-import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeySettingsEdition from './SankeySettingsEdition'
 import SankeyLinkContextMenu from './SankeyLinkContextMenu'
 import SankeyNodeContextMenu from './SankeyNodeContextMenu'
+import SankeyEdition from './SankeyEdition'
+import { SankeySettingsEdition, SankeySettingsEditionTags } from './SankeySettingsEdition'
+import SankeyNodeEdition from './SankeyNodeEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
+import { Row, Col } from 'react-bootstrap'
+import { normalize_name } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -20,42 +21,99 @@ const SankeyAppPropTypes = {
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
-  const [show_node, set_show_node] = useState(false)
-  const [show_link, set_show_link] = useState(false)
-  const [show_graphic_attributes, set_show_graphic_attributes] = useState(false)
+  const [show_nav, set_show_nav] = useState(false)
+  const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [show_node_context, set_show_node_context] = useState(false)
   const [show_link_context, set_show_link_context] = useState(false)
-  const [selected_link, set_selected_link] = useState(0)
-  const [selected_node, set_selected_node] = useState(0)
+  const [selected_link, set_selected_link] = useState(SankeyUtils.default_link())
+  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
+  const [radio_selected, set_radio_selected] = useState<string>('local')
+  const [duplicate, set_duplicate] = useState(false)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
+
+  const display_links : SankeyLink [] = data.links.filter( l=> {
+    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+    return source_node.display &&  target_node.display
+  })
+  
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
         data={data}
         set_data={set_data}
         app_name='Open-Sankey'
+        set_show_nav={set_show_nav}
+        show_nav={show_nav}
+        set_nav_item_active={set_nav_item_active}
+        nav_item_active={nav_item_active}
+        set_selected_node={set_selected_node}
+        selected_node={selected_node}
+        set_selected_link={set_selected_link}
+        selected_link={selected_link}
+        radio_selected={radio_selected}
+        set_radio_selected={set_radio_selected}
+        duplicate={duplicate}
+        set_duplicate={set_duplicate}
         url_prefix=''
+        getValueIndex={() => 0 }
+        settings_edition= {
+          <SankeySettingsEdition
+            data={data}
+            set_data={set_data}
+            set_current_filter={(
+              new_current_filter: number
+            ) => {
+              const { display_style } = data
+              display_style.filter = +new_current_filter
+              set_data({ ...data })
+            }}
+            getValueIndex={() => 0 }
+          />
+        }
+        node_edition= {
+          <SankeyNodeEdition
+            data={data}
+            set_data={set_data}
+            selected_node={selected_node}
+            radio_selected={radio_selected}
+            getValueIndex={() => 0 }
+          />
+        }
+        link_edition={
+          <SankeyLinkEdition
+            show={true}
+            data={data}
+            set_data={set_data}
+            selected_link={selected_link}
+            duplicate={duplicate}
+            set_duplicate={set_duplicate}
+            getValueIndex={() => 0 }
+          />
+        }
+        settings_edition_tags = {
+          <SankeySettingsEditionTags
+            data={data}
+            set_data={set_data}
+            getValueIndex={() => 0}
+          />
+        }
       />
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition
             data={data}
-            set_selected_node={set_selected_node}
-            set_selected_link={set_selected_link}
-            set_show_link={set_show_link}
-            set_show_graphic_attributes={set_show_graphic_attributes}
             set_data={set_data} />
         </Col>
       </Row>
       <SankeyDraw
         data={data}
-        select_node={(i: number) => {
-          set_selected_node(i)
-          set_show_node(true)
+        select_node={(n: SankeyNode) => {
+          set_selected_node(n)
         }}
-        nodeContextMenu={(i: number) => {
-          set_selected_node(i)
+        nodeContextMenu={(n: SankeyNode) => {
+          set_selected_node(n)
           set_show_node_context(true)
         }}
         node_visible={
@@ -65,14 +123,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
         }
         node_arrow_visible={
-          (n: SankeyNode) => !n.visible || (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.visible || (n.inputLinksId.length === 0) || (!display_links[display_links.findIndex(l=>l.idLink===n.inputLinksId[0])].arrow) ? false : true
         }
-        select_link={(i: number) => {
-          set_selected_link(i)
-          set_show_link(true)
+        select_link={(l: SankeyLink) => {
+          set_selected_link(l)
+          //set_show_link(true)
         }}
-        linkContextMenu={(i: number) => {
-          set_selected_link(i)
+        linkContextMenu={(l: SankeyLink) => {
+          set_selected_link(l)
           set_show_link_context(true)
         }}
         link_color={l => l.color}
@@ -83,38 +141,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           return d.value[0]
         }}
         more_processing={() => void 0}
+        //redraw_node={() => void 0}
+        set_show_nav={set_show_nav}
+        set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
-        getValueIndex={() => 0 }
-      />
-      <SankeyNodeEdition
-        show={show_node}
-        data={data}
-        set_data={set_data}
-        set_show_node={set_show_node}
-        selected_node={selected_node}
-        getValueIndex={() => 0 }
-      />
-      <SankeyLinkEdition
-        show={show_link}
-        data={data}
-        set_data={set_data}
-        set_show_link={set_show_link}
-        selected_link={selected_link}
-        getValueIndex={() => 0 }
-      />
-      <SankeySettingsEdition
-        show={show_graphic_attributes}
-        set_show_graphic_attributes={set_show_graphic_attributes}
-        data={data}
-        set_data={set_data}
-        set_current_filter={(
-          new_current_filter: number
-        ) => {
-          const { display_style } = data
-          display_style.filter = +new_current_filter
-          set_data({ ...data })
-        }}
         getValueIndex={() => 0 }
       />
       <SankeyNodeContextMenu
@@ -134,7 +165,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_show_link_context(false)
         }}
         selected_link={selected_link} />
-    </div>
+    </div >
   )
 }
 
