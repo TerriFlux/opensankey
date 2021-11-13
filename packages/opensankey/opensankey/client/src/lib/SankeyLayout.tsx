@@ -744,6 +744,9 @@ export const agregation = (selected_node : SankeyNode, data : SankeyData) =>  {
         return
       }
       agregated_node = data.nodes.filter( n => n.name === selected_node.dimensions[tag.name].parent_name )[0]
+      if (agregated_node) {
+        found = true
+      }
     })
     if (!found) {
       return
