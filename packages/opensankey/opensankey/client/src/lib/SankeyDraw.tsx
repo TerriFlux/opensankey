@@ -1356,7 +1356,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const node_to_select = '#ggg_node' + node_idx + ' rect'
         d3.select(node_to_select).attr('class', 'selected_node')
         return */
-        if (event.shiftKey) {
+        if (event.ctrlKey) {
           // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
           sankeyTooltip.style('opacity', 0)
           select_node(d)
