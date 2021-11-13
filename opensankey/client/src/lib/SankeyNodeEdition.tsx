@@ -16,53 +16,21 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
-  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog).length>0 ? Object.keys(data.tags_catalog)[0] : '')
-
-  /*  const { links, nodes, tags_catalog } = data
-   if (selected_node === -1) {
-     selected_node = 0
-   }
-   let node = nodes[selected_node]
-   if (node === undefined) {
-     node = default_node()
-   }
-   if (tags_catalog.length > 0) {
-     const tag_group_name = tags_catalog[tag_group_id].group_name
-     if (!node.tags[tag_group_name]) {
-       node.tags[tag_group_name] = []
-     }
-   }
-   const tags_visible = tags_catalog.length > 0 */
-
-
+  const [tags_group_key,set_tags_group_key] = useState('')
 
   const { tags_catalog } = data
-  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
   const display_links : SankeyLink[] = data.links.filter( l=> {
     const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
     const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
     return source_node.display &&  target_node.display
   })
 
-  // if (selected_node === -1) {
-  //   selected_node = 0
-  // }
+
   let node = selected_node
   if (node === undefined) {
     node = default_node()
   }
-  // if (Object.keys(tags_catalog).length > 0) {
-  //   const tag_group_name = 'tag_group_' + selected_key_group_tag
-  //   if (!node.tags[tag_group_name]) {
-  //     node.tags[tag_group_name] = []
-  //   }
-  // }
-  let current_parent_name = ''
-  if ( selected_node && selected_node.dimensions 
-       && selected_node.dimensions[data.dimension_name]) {
-    const has_parent = selected_node.dimensions[data.dimension_name].parent_name
-    current_parent_name = has_parent ? has_parent : ''
-  }
+  
   const tags_visible = Object.keys(tags_catalog).length > 0
 
   const outline_Fav_Button = (tag_key: string) => {
@@ -72,7 +40,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       return 'outline-warning'
     }
   }
-
 
   const node_tag = (
     <Tab eventKey="tags" title="Tags" >
@@ -84,19 +51,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Col>
           <Form.Select
             onChange={
-              //+evt.target.value
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                set_tags_group_key(evt.target.value)
-                set_data({ ...data })
-              }}>
-
-            {Object.keys(tags_catalog).map(
-              (cur_tags_group_key, i) =>
+              (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+          >
+            {Object.entries(tags_catalog).map(
+              (tags_group, i) =>
                 <option
                   key={i}
-                  value={tags_group_key}
-                  selected={tags_group_key === cur_tags_group_key} >
-                  {tags_catalog[cur_tags_group_key].group_name}
+                  value={tags_group[0]}
+                  selected={tags_group_key === tags_group[0]} >
+                  {tags_group[1].group_name}
                 </option>)}
           </Form.Select>
         </Col>
@@ -111,66 +74,50 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </tr>
           </thead>
           <tbody>
-            {tags_visible && tags_group_key != '' ? (Object.keys(tags_catalog[tags_group_key].tags).map(
-              (tag_key, i) => {
+            {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
+              tags => {
+                const link_tags = node.tags[tags_catalog[tags_group_key].group_name]
+                const checked = link_tags ? link_tags.includes(tags_catalog[tags_group_key].tags[tags[0]].name) : true
                 return (
-
-                  <tr key={i.toString()}>
-                    <td><FormLabel>{tags_catalog[tags_group_key].tags[tag_key].name}</FormLabel></td>
+                  <tr key={tags[0]}>
+                    <td><FormLabel>{tags[1].name}</FormLabel></td>
                     <td>
-                      <FormCheck inline
-                        name={'element_visible' + i.toString()}
-                        // checked={node.tags[tags_catalog['tag_group_'+selected_key_group_tag].group_name].includes('tag'+tag_key)}
-                        id={i.toString()}
+                      <FormCheck
+                        name={'element_visible' + tags[0]}
+                        defaultChecked={checked}
+                        id={tags[0]}
                         type='checkbox'
                         onChange={
-                          () => {
-                            /*  const new_nb_element = evt.target as HTMLInputElement
-                             const id = +new_nb_element.id
-                             const name = tags_catalog[key_group_tag].tags[]
-                             const visible = new_nb_element.checked
-                             const tag_group_name = tags_catalog[tag_group_id].group_name
-                             if (visible) {
-                               if (!node.tags[tag_group_name]) {
-                                 node.tags[tag_group_name] = []
-                               }
-                               node.tags[tag_group_name].push(name)
-                             } else {
-                               node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
-                             } */
-
-                            // const new_nb_element = evt.target as HTMLInputElement
-                            // const id = +new_nb_element.id
-                            // console.log(id)
-                            // const name = tags_catalog[selected_key_group_tag].tags['tag' + id].name
-                            // const visible = new_nb_element.checked
-                            // const tag_group_name = tags_catalog[selected_key_group_tag].group_name
-                            // if (visible) {
-                            //   if (!node.tags[tag_group_name]) {
-                            //     node.tags[tag_group_name] = []
-                            //   }
-                            //   node.tags[tag_group_name].push(name)
-                            // } else {
-                            //   node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
-                            // }
-
-
+                          (evt: React.ChangeEvent) => {
+                            const { tags_catalog } = data
+                            const new_nb_element = evt.target as HTMLInputElement
+                            const tag_key = new_nb_element.id
+                            const name = tags_catalog[tags_group_key].tags[tag_key].name
+                            const visible = new_nb_element.checked
+                            const tag_group_name = tags_catalog[tags_group_key].group_name
+                            if (visible) {
+                              if (!node.tags[tag_group_name]) {
+                                node.tags[tag_group_name] = []
+                              }
+                              node.tags[tag_group_name].push(name)
+                            } else {
+                              node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
+                            }
                             set_data({ ...data })
                           }
-                        }
-                      />
+                        } />
                     </td>
                     <td>
                       <Button
                         size="sm"
 
-                        variant={outline_Fav_Button(tag_key)}
+                        variant={outline_Fav_Button(tags[0])}
                         onClick={
                           () => {
 
                             const newFavColor = {
-                              tag_associated: tag_key,
-                              color: tags_catalog[tags_group_key].tags[tag_key].color
+                              tag_associated: tags[0],
+                              color: tags_catalog[tags_group_key].tags[tags[0]].color
                             }
 
                             if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
@@ -189,14 +136,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     </td>
                   </tr>
                 )
-              })) : (<></>)}
+              }) : (<></>)}
           </tbody>
         </Table>
       </Form.Group>
-
     </Tab>)
-
-  // return (<></>)
 
   return (
     <Row>
