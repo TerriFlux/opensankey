@@ -99,9 +99,18 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             onClick = {
               () =>  {
                 const node_name = selected_node.name
-                const desagregate_nodes = data.nodes.filter( n => n.dimensions[data.dimension_name] && n.dimensions[data.dimension_name].parent_name === node_name )
+                let desagregate_nodes = data.nodes.filter( n => n.dimensions[data.dimension_name] && n.dimensions[data.dimension_name].parent_name === node_name )
                 if (desagregate_nodes.length === 0) {
-                  return
+                  let found = false
+                  Object.values(data.tags_catalog['dimensions'].tags).forEach( tag => {
+                    if (found ) {
+                      return
+                    }
+                    desagregate_nodes = data.nodes.filter( n => n.dimensions[tag.name] && n.dimensions[tag.name].parent_name === node_name )
+                    if (desagregate_nodes.length > 0) {
+                      found = true
+                    }
+                  })
                 }
                 desagregate_nodes.forEach( n => {
                   n.display = true
