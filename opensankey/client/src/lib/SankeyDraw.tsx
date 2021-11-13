@@ -287,7 +287,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
       .attr('stroke', l => link_color(l,value_index))
       .on('mouseover', function (event, d) {
-        //d3.select(this).attr('class', 'selected_node')
+        if ( !event.shiftKey ) {
+          return
+        }
         sankeyTooltip
           .style('opacity', 1)
           .html(linkTooltipsContent(data, d,getValueIndex))
@@ -296,6 +298,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', (event) => {
+        if ( !event.shiftKey ) {
+          return
+        }
         sankeyTooltip
           .style('top', (event.layerY - 10) + 'px')
           .style('left', (event.layerX + 10) + 'px')
@@ -1356,7 +1361,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const node_to_select = '#ggg_node' + node_idx + ' rect'
         d3.select(node_to_select).attr('class', 'selected_node')
         return */
-        if (event.ctrlKey) {
+        if (event.shiftKey) {
           // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
           sankeyTooltip.style('opacity', 0)
           select_node(d)
@@ -1405,7 +1410,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width', '0')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        if (node_label_visible(d)) {
+        if (node_label_visible(d) && event.shiftKey ) {
           d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1413,7 +1418,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (node_label_visible(d)) {
+        if (node_label_visible(d) && event.shiftKey) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
@@ -1527,7 +1532,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return
       })
       .on('mouseover', function (event, d) {
-        if (node_label_visible(d)) {
+        if (node_label_visible(d) && event.shiftKey) {
           d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1535,7 +1540,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (node_label_visible(d)) {
+        if (node_label_visible(d) && event.shiftKey ) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
