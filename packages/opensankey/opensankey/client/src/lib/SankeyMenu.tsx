@@ -250,7 +250,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const addDropSource = () => {
     if (data.nodes.length >= 2 && data.links.length != 0) {
       return (
-        data.nodes.map((n, i) => <option key={i} value={n.name} selected={selected_link.source_name === n.name} >{n.name}</option>)
+        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.source_name) === normalize_name(n.name)} >{n.name}</option>)
       )
     }
   }
@@ -258,7 +258,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     if (data.nodes.length >= 2 && data.links.length != 0) {
 
       return (
-        data.nodes.map((n, i) => <option key={i} value={n.name} selected={selected_link.target_name === n.name} >{n.name}</option>)
+        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.target_name) === normalize_name(n.name)} >{n.name}</option>)
       )
     }
   }

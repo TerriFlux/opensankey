@@ -172,11 +172,13 @@ export const apply_input_outputLinksId = (
           if (link === undefined) {
             return
           }
+          
+          //node.inputLinksId.splice(node.inputLinksId.indexOf(link.idLink),1)
           new_inputLinksId.push(link.idLink)
         }
       )
-      const result_inputLinksId = node.inputLinksId.concat(new_inputLinksId)
-      node.inputLinksId = result_inputLinksId.filter(function (item, pos) {return node.inputLinksId.indexOf(item) == pos})
+      //const result_inputLinksId = node.inputLinksId.concat(new_inputLinksId)
+      node.inputLinksId = new_inputLinksId //result_inputLinksId.filter(function (item, pos) {return node.inputLinksId.indexOf(item) == pos})
       const new_outputLinksId: string[] = []
       ref_node.outputLinksId.forEach(
         (idLink) => {
@@ -192,11 +194,12 @@ export const apply_input_outputLinksId = (
           if (link === undefined) {
             return
           }
+          //node.outputLinksId.splice(node.outputLinksId.indexOf(link.idLink),1)
           new_outputLinksId.push(link.idLink)
         }
       )
-      const result_outputLinksId = node.outputLinksId.concat(new_outputLinksId)
-      node.outputLinksId = result_outputLinksId.filter(function (item, pos) {return node.outputLinksId.indexOf(item) == pos})
+      //const result_outputLinksId = node.outputLinksId.concat(new_outputLinksId)
+      node.outputLinksId = new_outputLinksId//result_outputLinksId.filter(function (item, pos) {return node.outputLinksId.indexOf(item) == pos})
     }
   )
 }
@@ -517,13 +520,14 @@ export const updateLayout = (
   new_layout: SankeyData
 ) => {
   convert_data(new_layout)
-  //const { nodes, links } = data
-  const display_nodes = data.nodes.filter( n=> n.display )
-  const display_links = data.links.filter( l=> {
-    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
-  })
+
+
+  // const display_nodes = data.nodes.filter( n=> n.display )
+  // const display_links = data.links.filter( l=> {
+  //   const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
+  //   const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+  //   return source_node.display &&  target_node.display
+  // })
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
@@ -535,14 +539,14 @@ export const updateLayout = (
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
   }
-  display_nodes.forEach(compute_offset)
+  data.nodes.forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
   data.node_width = new_layout.node_width
   // Apply nodes layout
   for (let i = 0; i < new_layout.nodes.length; i++) {
     const node_layout = new_layout.nodes[i]
-    let node = find_node(node_layout.name, display_nodes)
+    let node = find_node(node_layout.name, data.nodes)
 
     if (node === undefined) {
       if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
@@ -579,7 +583,7 @@ export const updateLayout = (
     const link = find_link(
       link_layout.source_name,
       link_layout.target_name,
-      display_links
+      data.links
     )
     if (link === undefined) {
       continue
@@ -588,8 +592,8 @@ export const updateLayout = (
     //     !String(link_layout.display_value).includes('[') ) {
     //   link.value = link_layout.value
     // }
-    const node_source = find_node(link_layout.source_name, display_nodes)
-    const node_target = find_node(link_layout.target_name, display_nodes)
+    const node_source = find_node(link_layout.source_name, data.nodes)
+    const node_target = find_node(link_layout.target_name, data.nodes)
     if (node_source && node_target) {
       link.source_name = node_source.name
       link.target_name = node_target.name
@@ -607,7 +611,7 @@ export const updateLayout = (
     link.right_horiz_shift = link_layout.right_horiz_shift
     link.orientation = link_layout.orientation
     link.recycling = recycling
-    if (String(link.display_value).includes('*')) {
+    if (String(link.display_value[0]).includes('*')) {
       link.value[0] = link_layout.value[0]
     }
 
