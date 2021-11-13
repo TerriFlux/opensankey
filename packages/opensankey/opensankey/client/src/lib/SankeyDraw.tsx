@@ -70,8 +70,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const default_horiz_shift = 50
   const min_thickness = 1
 
-  const [handles_visible] = useState([...new Array(data.links.length).fill(false)])
-
   const normalize_name = (name: string) => {
     const new_name = name.split('\\n').join('').split(' ').join('')
     return new_name
@@ -83,6 +81,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
     return source_node.display &&  target_node.display
   })
+
+  const handles_visible = [...(new Array(display_links.length).fill(false))]
 
   const sankeyTooltip = d3.select('body')
     .append('div')
@@ -132,45 +132,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const paths = gg_links.append('path')
 
     if (!static_sankey) {
-      let firing = false
-      const singleClick = (id: number) => {
-        select_link(id)
-      }
-      const doubleClick = (id: number) => {
-        handles_visible[id] = !handles_visible[id]
-        let shift_handles
-        if (display_links[id].recycling) {
-          shift_handles = ['#vert_shift', '#left_horiz_shift', '#right_horiz_shift']
-        } else {
-          shift_handles = ['#left_horiz_shift', '#right_horiz_shift']
-        }
-        for (let i = 0; i < shift_handles.length; i++) {
-          const str = shift_handles[i] + id
-          const sel = d3.select(str)
-          if (handles_visible[id]) {
-            sel.attr('fill-opacity', '0.7')
-          } else {
-            sel.attr('fill-opacity', '0')
-          }
-        }
-      }
-      let firingFunc = singleClick
-      paths.on('dblclick', () => {
-        firingFunc = doubleClick
-      })
-      paths.on('click', (event, d) => {
-        sankeyTooltip.style('opacity', 0)
-        if (firing) {
-          return
-        }
-        firing = true
-        const i = display_links.indexOf(d)
-        setTimeout(() => {
-          firingFunc(i)
-          firingFunc = singleClick
-          firing = false
-        }, 300)
-      })
       let error_msg: { text: string | undefined } | undefined
       paths.call(d3.drag<SVGPathElement, SankeyLink>()
         .subject(Object)
@@ -312,18 +273,55 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return d3.select(this).attr('stroke-opacity', opacity)
         }
       })
-      .on('click', function (event, d) {
-        if (event.ctrlKey) {
-          // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
-          sankeyTooltip.style('opacity', 0)
-          select_link(d)
-          set_nav_item_active('3')
-          //set_show_nav(false)
-          set_show_nav(true)
-
-
+    let firing = false
+    const singleClick = (link: SankeyLink) => {
+      select_link(link)
+    }
+    const doubleClick = (link: SankeyLink) => {
+      const id = display_links.indexOf(link)
+      handles_visible[id] = !handles_visible[id]
+      let shift_handles
+      if (display_links[id].recycling) {
+        shift_handles = ['#vert_shift', '#left_horiz_shift', '#right_horiz_shift']
+      } else {
+        shift_handles = ['#left_horiz_shift', '#right_horiz_shift']
+      }
+      for (let i = 0; i < shift_handles.length; i++) {
+        const str = shift_handles[i] + link.idLink
+        const sel = d3.select(str)
+        if (handles_visible[id]) {
+          sel.attr('fill-opacity', '0.7')
+        } else {
+          sel.attr('fill-opacity', '0')
         }
-      })
+      }
+    }
+    let firingFunc = singleClick
+    paths.on('dblclick', () => {
+      firingFunc = doubleClick
+    })
+    paths.on('click', function (event, d) {
+      if (event.ctrlKey) {
+        // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
+        sankeyTooltip.style('opacity', 0)
+        select_link(d)
+        set_nav_item_active('3')
+        //set_show_nav(false)
+        set_show_nav(true)
+      } else {
+        sankeyTooltip.style('opacity', 0)
+        if (firing) {
+          return
+        }
+        firing = true
+        //const i = display_links.indexOf(d)
+        setTimeout(() => {
+          firingFunc(d)
+          firingFunc = singleClick
+          firing = false
+        }, 300)
+      }
+    })
 
 
     paths.attr('d', d => {
