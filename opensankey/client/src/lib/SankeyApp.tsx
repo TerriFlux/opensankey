@@ -109,6 +109,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
       </Row>
       <SankeyDraw
         data={data}
+        set_data={set_data}
         select_node={(n: SankeyNode) => {
           set_selected_node(n)
         }}

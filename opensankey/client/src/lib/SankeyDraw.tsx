@@ -4,12 +4,13 @@ import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, TagsCatalog } 
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
+import { desagregation,agregation } from './SankeyLayout'
 
 window.d3 = d3
 
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-
+  set_data: PropTypes.func.isRequired,
   select_node: PropTypes.func.isRequired,
   nodeContextMenu: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
@@ -38,6 +39,7 @@ type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
+  set_data,
   select_node,
   nodeContextMenu,
   node_color,
@@ -53,18 +55,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   more_processing,
   set_show_nav,
   set_nav_item_active,
-  // set_selected_id_link,
   nodeTooltipsContent,
   linkTooltipsContent,
   getValueIndex
 }) => {
-
   /* const [show, setShow] = useState(false)
   const toggleShow = () => { setShow((s) => !s) }
   const [checked, setChecked] = useState(false) */
-
-
-
   const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
@@ -1364,11 +1361,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           sankeyTooltip.style('opacity', 0)
           select_node(d)
           set_nav_item_active('2')
-          //set_show_nav(false)
           set_show_nav(true)
-
-        }
+        }       
       })
+      ggg_nodes.on('dblclick', (ev,n) => {
+        if (ev.altKey) {
+          desagregation(n,data)
+        } else {
+          agregation(n,data)          
+        }
+        set_data({...data})
+      }) 
     }
     // Gestion du contextMenu 
     ggg_nodes.on('contextmenu', (event, node) => {
