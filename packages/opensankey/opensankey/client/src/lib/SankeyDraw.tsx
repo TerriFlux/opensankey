@@ -755,7 +755,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (link.label_position === 'frozen' && link.x_label ||
       !link.label_on_path || link.label_on_path === undefined) {
-      (d3.select('#link_value' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+      (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', d => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
         .attr('y', d => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
         .text(d => link_text(d, link_value, display_style,value_index))
@@ -768,7 +768,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         'end': ['100%', 'end']
       };
 
-      (d3.select('#link_value' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+      (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('startOffset', positions[link.label_position][0])
         .attr('text-anchor', positions[link.label_position][1])
         //.text(d => ' → ' +link_text(d, link_value, display_style) + ' → ')
@@ -1095,7 +1095,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         error_msg
       )
     })
-    const s = d3.select('#link_value' + link.idLink)
+    const s = d3.select('#' + link.idLink + '_text')
     s.attr('x', link_x).attr('y', link_y)
   }
 
