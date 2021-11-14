@@ -1066,7 +1066,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     node_x_label: number,
     node_y_label: number,
     node_label_visible: boolean,
-    link: SankeyLink,
+    linkId: string,
     link_x: number,
     link_y: number
   ) => {
@@ -1081,7 +1081,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('visibility', visible)
       .selectAll('tspan')
       .attr('x', node_x_label)
-    d3.select('#' + link.idLink).attr('d', d => {
+    d3.select('#' + linkId).attr('d', d => {
       let error_msg
       return drawCurve(
         display_nodes,
@@ -1092,7 +1092,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         error_msg
       )
     })
-    const s = d3.select('#' + link.idLink + '_text')
+    const s = d3.select('#' + linkId + '_text')
     s.attr('x', link_x).attr('y', link_y)
   }
 

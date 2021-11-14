@@ -312,6 +312,7 @@ export const convert_data = (
       }
       if (n.name.includes('(I') && n.outputLinksId.length > 0) {
         import_export = true
+        n.visible = true
         n.tags['Exchanges'] = ['Importations']
         const l = links[links.findIndex(l=>l.idLink === n.outputLinksId[0])]
         if (!l.tags) {
@@ -323,6 +324,7 @@ export const convert_data = (
         }
       } else if (n.name.includes('(E')) {
         import_export = true
+        n.visible = true
         n.tags['Exchanges'] = ['Exportations']
         const l = links[links.findIndex(l=>l.idLink === n.inputLinksId[0])]
         if (!l.tags) {
@@ -446,12 +448,12 @@ export const convert_data = (
         l_convert.data_value = l_convert.agregated_data_value
         delete l_convert.agregated_data_value
       }
-      if (!('visible' in l_convert)) {
-        l.visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
-      }
-      if (!('label_visible' in l_convert)) {
-        l.label_visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
-      }
+      // if (!('visible' in l_convert)) {
+      //   l.visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
+      // }
+      // if (!('label_visible' in l_convert)) {
+      //   l.label_visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
+      // }
       if (l_convert.type === 'short_link_arrow') {
         l.curved = false
         l.arrow = true
