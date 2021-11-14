@@ -100,10 +100,10 @@ export const convert_data = (
     data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
   }
   if (data_to_convert.tags_catalog['SubChain']) {
-    data_to_convert.tags_catalog['flux_types'].group_name = 'Sous-Filières'
+    data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
   }
   if (data_to_convert.tags_catalog['Exchanges']) {
-    data_to_convert.tags_catalog['flux_types'].group_name = 'Echanges'
+    data_to_convert.tags_catalog['Exchanges'].group_name = 'Echanges'
   }
   if (!Array.isArray(data.links)) {
     const key_names = Object.keys(data.links)
