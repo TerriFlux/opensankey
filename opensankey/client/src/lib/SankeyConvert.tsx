@@ -96,6 +96,15 @@ export const convert_data = (
       }
     )))
   }
+  if (data_to_convert.tags_catalog['flux_types']) {
+    data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
+  }
+  if (data_to_convert.tags_catalog['SubChain']) {
+    data_to_convert.tags_catalog['flux_types'].group_name = 'Sous-Filières'
+  }
+  if (data_to_convert.tags_catalog['Exchanges']) {
+    data_to_convert.tags_catalog['flux_types'].group_name = 'Echanges'
+  }
   if (!Array.isArray(data.links)) {
     const key_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
@@ -378,7 +387,7 @@ export const convert_data = (
   if (data.flux_types || data.use_flux_types) {
     if (!data.tags_catalog['flux_types']) {
       data.tags_catalog['flux_types'] = {
-        group_name: 'Types de donnée',
+        group_name: 'Type de donnée',
         tags: {
           'null_data': { name: 'null_data', selected: true },
           'initial_data': { name: 'initial_data', selected: false },
