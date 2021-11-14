@@ -461,10 +461,10 @@ export const setSelectedTags = (
     return source_node.display &&  target_node.display
   })
 
-  let break_loop = false
   display_nodes.forEach(node => {
     // node.visible = true
     // node.label_visible = true
+    let break_loop = false
     Object.keys(tags_catalog).forEach( tags_group_key => {
       if ( break_loop ) {
         return
@@ -485,10 +485,10 @@ export const setSelectedTags = (
       }
     })
   })
-  break_loop = false
   display_links.forEach(link => {
     link.visible = true
     link.label_visible = true
+    let break_loop = false
     Object.keys(tags_catalog).forEach( tags_group_key => {
       if ( break_loop ) {
         return
