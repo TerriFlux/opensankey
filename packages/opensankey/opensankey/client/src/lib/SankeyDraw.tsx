@@ -81,7 +81,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const handles_visible = [...(new Array(display_links.length).fill(false))]
 
-  const sankeyTooltip = d3.select('#visualization_div')
+  const sankeyTooltip = d3.select('body')
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
@@ -1324,7 +1324,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
         let display: string
-        if (d.visible) { display = 'inline' } else { display = 'none' }
+        if (node_label_visible(d) || node_visible(d)) { display = 'inline' } else { display = 'none' }
         return display
       })
 
@@ -1554,14 +1554,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
     if (!static_sankey) {
-      select.on('click', (event, d) => {
-        const node_idx = display_nodes.indexOf(d)
-        select_node(node_idx)
+      select.on('click', (event, n) => {
+        select_node(n)
         deselect_nodes_and_links()
-        // const node_to_select = '#ggg_node' + d.id + ' rect'
-        const node_to_select = '#ggg_' + d.idNode + ' rect'
-
-        d3.select(node_to_select).attr('class', 'selected_node')
+        d3.select('#ggg_' + n.idNode + ' rect').attr('class', 'selected_node')
         return
       })
         .call(d3.drag<SVGTextElement, SankeyNode>()
