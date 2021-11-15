@@ -493,7 +493,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     {tags_visible && tag_group_key != '' ? Object.entries(tags_catalog[tag_group_key].tags).map(
                       tags => {
                         const link_tags = link.tags[tag_group_key]
-                        const checked = link_tags ? link_tags.includes(tags_catalog[tag_group_key].tags[tags[0]].name) : true
+                        const checked = link_tags ? link_tags.includes(tags[0]) : true
                         return (
                           <tr key={tags[0]}>
                             <td><FormLabel>{tags[1].name}</FormLabel></td>
@@ -505,19 +505,16 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                                 type='checkbox'
                                 onChange={
                                   (evt: React.ChangeEvent) => {
-                                    const { tags_catalog } = data
                                     const new_nb_element = evt.target as HTMLInputElement
                                     const tag_key = new_nb_element.id
-                                    const name = tags_catalog[tag_group_key].tags[tag_key].name
                                     const visible = new_nb_element.checked
-                                    const tag_group_name = tags_catalog[tag_group_key].group_name
                                     if (visible) {
-                                      if (!link.tags[tag_group_name]) {
-                                        link.tags[tag_group_name] = []
+                                      if (!link.tags[tag_group_key]) {
+                                        link.tags[tag_group_key] = []
                                       }
-                                      link.tags[tag_group_name].push(name)
+                                      link.tags[tag_group_key].push(tag_key)
                                     } else {
-                                      link.tags[tag_group_name].splice(link.tags[tag_group_name].indexOf(name))
+                                      link.tags[tag_group_key].splice(link.tags[tag_group_key].indexOf(tag_key))
                                     }
                                     set_data({ ...data })
                                   }
