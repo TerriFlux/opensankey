@@ -77,7 +77,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
               tags => {
                 const node_tags = node.tags[tags_group_key]
-                const checked = node_tags ? node_tags.includes(tags_catalog[tags_group_key].tags[tags[0]].name) : true
+                const checked = node_tags ? node_tags.includes(tags[0]) : true
                 return (
                   <tr key={tags[0]}>
                     <td><FormLabel>{tags[1].name}</FormLabel></td>
@@ -89,19 +89,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         type='checkbox'
                         onChange={
                           (evt: React.ChangeEvent) => {
-                            const { tags_catalog } = data
                             const new_nb_element = evt.target as HTMLInputElement
                             const tag_key = new_nb_element.id
-                            const name = tags_catalog[tags_group_key].tags[tag_key].name
                             const visible = new_nb_element.checked
-                            const tag_group_name = tags_catalog[tags_group_key].group_name
                             if (visible) {
-                              if (!node.tags[tag_group_name]) {
-                                node.tags[tag_group_name] = []
+                              if (!node.tags[tags_group_key]) {
+                                node.tags[tags_group_key] = []
                               }
-                              node.tags[tag_group_name].push(name)
+                              node.tags[tags_group_key].push(tag_key)
                             } else {
-                              node.tags[tag_group_name].splice(node.tags[tag_group_name].indexOf(name))
+                              node.tags[tags_group_key].splice(node.tags[tags_group_key].indexOf(tag_key))
                             }
                             set_data({ ...data })
                           }
