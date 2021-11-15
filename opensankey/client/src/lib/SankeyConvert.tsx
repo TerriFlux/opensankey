@@ -96,6 +96,9 @@ export const convert_data = (
       }
     )))
   }
+  Object.values(data_to_convert.tags_catalog).forEach(
+    tags_group=> {Object.values(tags_group.tags).forEach(tag=> tag.selected = Boolean(tag.selected))
+  })
   if (data_to_convert.tags_catalog['flux_types']) {
     data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
   }
@@ -168,13 +171,14 @@ export const convert_data = (
   }
   if (data.links.length > 0 && !data.links[0].idLink) {  
     data.links.forEach((l, i) => l.idLink = 'link' + i)
-    data.nodes.forEach((n) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
-    data.nodes.forEach( n => {
+  }
+  if (data.nodes.length > 0 && !data.nodes[0].idNode) {  
+    data.nodes.forEach((n, i) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+  }
+  data.nodes.forEach( n => {
+    if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
-      n.outputLinksId = []
-      if (!((n as unknown) as ConvertSankeyNode).input_links) {
-        return
-      }
+      n.outputLinksId = [];
       (((n as unknown) as ConvertSankeyNode).input_links as number[]).forEach( link_idx => {
         n.inputLinksId.push(data.links[link_idx].idLink)
       });
@@ -184,8 +188,16 @@ export const convert_data = (
       delete ((n as unknown) as ConvertSankeyNode).output_links
       delete ((n as unknown) as ConvertSankeyNode).input_links
       delete ((n as unknown) as ConvertSankeyNode).id
-    })
-  }
+    }
+  })
+  data.nodes.forEach(n => {
+    if (!n.inputLinksId) {
+      n.inputLinksId = [];
+    }
+    if (!n.outputLinksId) {
+      n.outputLinksId = [];
+    }
+  });
   const { display_style, nodes, links, node_width, units_names } = data
 
 

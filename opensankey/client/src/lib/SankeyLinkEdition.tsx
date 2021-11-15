@@ -492,7 +492,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <tbody>
                     {tags_visible && tag_group_key != '' ? Object.entries(tags_catalog[tag_group_key].tags).map(
                       tags => {
-                        const link_tags = link.tags[tags_catalog[tag_group_key].group_name]
+                        const link_tags = link.tags[tag_group_key]
                         const checked = link_tags ? link_tags.includes(tags_catalog[tag_group_key].tags[tags[0]].name) : true
                         return (
                           <tr key={tags[0]}>

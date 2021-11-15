@@ -76,8 +76,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           <tbody>
             {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
               tags => {
-                const link_tags = node.tags[tags_catalog[tags_group_key].group_name]
-                const checked = link_tags ? link_tags.includes(tags_catalog[tags_group_key].tags[tags[0]].name) : true
+                const node_tags = node.tags[tags_group_key]
+                const checked = node_tags ? node_tags.includes(tags_catalog[tags_group_key].tags[tags[0]].name) : true
                 return (
                   <tr key={tags[0]}>
                     <td><FormLabel>{tags[1].name}</FormLabel></td>

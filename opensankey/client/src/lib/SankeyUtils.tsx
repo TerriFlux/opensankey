@@ -465,6 +465,7 @@ export const setSelectedTags = (
     // node.visible = true
     // node.label_visible = true
     let break_loop = false
+    let no_tag = true
     Object.keys(tags_catalog).forEach( tags_group_key => {
       if ( break_loop ) {
         return
@@ -474,16 +475,19 @@ export const setSelectedTags = (
         // tags do not apply to node
         return
       }
+      no_tag = false
       const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
       if (!visible) {
         node.visible = false
         node.label_visible = false
         break_loop = true
-      } else if (!node.visible && !node.label_visible) {
-        node.visible = true
-        node.label_visible = true
       }
     })
+    // for the labels
+    if (no_tag && !node.visible && !node.label_visible) {
+      node.visible = true
+      node.label_visible = true
+    }
   })
   display_links.forEach(link => {
     link.visible = true
