@@ -25,8 +25,6 @@ const SankeyDrawPropTypes = {
   link_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
-  more_processing: PropTypes.func.isRequired,
-
   set_show_nav: PropTypes.func.isRequired,
   set_nav_item_active: PropTypes.func.isRequired,
 
@@ -52,7 +50,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   link_text,
   link_visible,
   test_link_value,
-  more_processing,
   set_show_nav,
   set_nav_item_active,
   nodeTooltipsContent,
@@ -122,7 +119,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // On gere la visibilité directement sur gg_nodes avec un display <inline />
       .style('display', (d) => {
         let display: string
-        if (d.visible) { display = 'inline' } else { display = 'none' }
+        if (link_visible(d)) { display = 'inline' } else { display = 'none' }
         return display
       })
 
@@ -1059,43 +1056,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     return [xs, ys, xt, yt]
   }
-  const move_node_and_link = (
-    node: SankeyNode,
-    node_x: number,
-    node_y: number,
-    node_x_label: number,
-    node_y_label: number,
-    node_label_visible: boolean,
-    linkId: string,
-    link_x: number,
-    link_y: number
-  ) => {
-    d3.select('#ggg_'+ node.idNode)
-      .attr('transform', 'translate(' + node_x + ',' + node_y + ')')
-    d3.select('#ggg_'+ node.idNode + ' rect')
-      .attr('fill-opacity', 0)
-    const visible = node_label_visible ? 'visible' : 'hidden'
-    d3.select('#ggg_' + node.idNode + ' text')
-      .attr('x', node_x_label)
-      .attr('y', node_y_label)
-      .attr('visibility', visible)
-      .selectAll('tspan')
-      .attr('x', node_x_label)
-    d3.select('#' + linkId).attr('d', d => {
-      let error_msg
-      return drawCurve(
-        display_nodes,
-        display_links,
-        data.display_style,
-        data.tags_catalog,
-        d as SankeyLink,
-        error_msg
-      )
-    })
-    const s = d3.select('#' + linkId + '_text')
-    s.attr('x', link_x).attr('y', link_y)
-  }
-
 
   // DRAW LINK   
   const drawCurve = (
@@ -1730,8 +1690,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     gg_nodes.attr('cursor', 'zoom-in')
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_links.attr('cursor', 'zoom-in')
-
-    more_processing(scale, move_node_and_link)
     localStorage.setItem('data', JSON.stringify(data))
   })
 
