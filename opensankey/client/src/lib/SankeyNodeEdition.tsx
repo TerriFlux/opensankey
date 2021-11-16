@@ -83,7 +83,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <td>
                       <FormCheck
                         name={'element_visible' + tags[0]}
-                        defaultChecked={checked}
+                        checked={checked}
                         id={tags[0]}
                         type='checkbox'
                         onChange={
