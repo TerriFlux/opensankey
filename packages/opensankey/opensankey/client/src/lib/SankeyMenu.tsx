@@ -575,22 +575,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
                           const newLink = display_links.filter(f => { return f.idLink == evt.target.value })[0].idLink
-                          let newLinkId = 0
-                          display_links.map((d, i) => {
-                            if (d.idLink == evt.target.value) {
-                              newLinkId = i
-                            }
-                          })
-                          // console.log(newLinkId)
-                          //console.log(nodes)
-
-                          // set_selected_id_link(links.filter(f => { return f.idLink == evt.target.value })[0].idLink)
-                          //set_selected_id_link(newLink)
                           set_selected_link(newLink)
-
                           set_data({ ...data })
-                          // console.log(selected_link)
-
                         }
                       }
                     >
