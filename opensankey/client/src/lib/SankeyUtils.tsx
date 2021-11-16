@@ -577,6 +577,7 @@ export const uploadExemple = (
       })
       compute_default_input_outputLinksId(display_nodes, display_links)
       updateLayout(data,(data as any).layout)
+      //compute_default_input_outputLinksId(data.nodes,data.links)
       delete (data as any).layout
     } else {
       compute_auto_sankey(data, data.h_space ? data.h_space : 200)

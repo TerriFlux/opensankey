@@ -60,8 +60,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
       return (
         <Row key={tags_group.group_name}>
           <Col>{tags_group.group_name}</Col>
-          <Col>
-            
+          <Col style={{width: '100px'}}>
             {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group) }}>{
               Object.entries(tags_group.tags).map(([tag_key, tag]) => {
                 return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
@@ -75,7 +74,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
       return (
         <Row key={tags_group.group_name}>
           <Col>{tags_group.group_name}</Col>
-          <Col>
+          <Col style={{width: '100px'}}>
             <DropdownMultiselect 
               key={tags_group.group_name} 
               selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)} 
