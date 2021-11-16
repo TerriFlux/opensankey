@@ -173,7 +173,7 @@ export const convert_data = (
     data.links.forEach((l, i) => l.idLink = 'link' + i)
   }
   if (data.nodes.length > 0 && !data.nodes[0].idNode) {  
-    data.nodes.forEach((n, i) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+    data.nodes.forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
   data.nodes.forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {

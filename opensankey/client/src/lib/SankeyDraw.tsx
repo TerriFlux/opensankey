@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
-import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, TagsCatalog } from './types'
+import React, { FunctionComponent, useEffect } from 'react'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
@@ -383,7 +383,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const error_msg: { [text: string]: string } = {}
     links.forEach(
-      (link: SankeyLink, i: number) => {
+      link => {
         if (link.source_name === node.name || link.target_name === node.name) {
           // Redraw link
           const old_x_pos = +d3.select('#' + link.idLink+'_text').attr('x')
@@ -750,8 +750,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (link.label_position === 'frozen' && link.x_label ||
       !link.label_on_path || link.label_on_path === undefined) {
       (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
-        .attr('x', d => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
-        .attr('y', d => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
+        .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
+        .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
         .text(d => link_text(d, link_value, display_style,value_index))
         .attr('visibility', link.label_visible ? 'visible' : 'hidden')
     } else {
@@ -1421,7 +1421,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
       })
       .each(d => {
-        const node_idx = display_nodes.indexOf(d)
         if (d.name.indexOf('\\n') === -1) {
           if (d.type === 'sector' && display_style.sector_uppercase ||
             d.type === 'product' && display_style.product_uppercase

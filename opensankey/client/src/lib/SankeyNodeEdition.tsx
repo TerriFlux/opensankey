@@ -1,8 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes, SankeyLink, SankeyNode, SankeyNodePropTypes } from './types'
-import { nodeTooltipsContent } from './SankeyTooltip'
+import { SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes } from './types'
 import { default_node, normalize_name } from './SankeyUtils'
 
 const SankeyNodeEditionPropTypes = {

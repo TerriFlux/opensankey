@@ -548,7 +548,7 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: any
+  set_data: (data:SankeyData)=>void
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
@@ -568,7 +568,7 @@ export const uploadExemple = (
     convert_data(data)
     data.left_shift = 0.40
     data.right_shift = 0.50
-    if ('layout' in (data as any)) {
+    if ('layout' in (data as SankeyData)) {
       const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
       const display_links : SankeyLink[] = data.links.filter( l=> {
         const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
@@ -576,9 +576,9 @@ export const uploadExemple = (
         return source_node.display &&  target_node.display
       })
       compute_default_input_outputLinksId(display_nodes, display_links)
-      updateLayout(data,(data as any).layout)
+      updateLayout(data,(data as SankeyData & {layout:SankeyData} ).layout)
       //compute_default_input_outputLinksId(data.nodes,data.links)
-      delete (data as any).layout
+      delete (data as SankeyData & {layout?:SankeyData} ).layout
     } else {
       compute_auto_sankey(data, data.h_space ? data.h_space : 200)
     }

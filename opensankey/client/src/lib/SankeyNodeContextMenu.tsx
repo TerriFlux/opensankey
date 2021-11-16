@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react'
 import { Button, Modal, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { reorganize_inputLinksId, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
+import { reorganize_inputLinksId} from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyNode, SankeyNodePropTypes } from './types'
 import { delete_link, delete_node, normalize_name } from './SankeyUtils'
 

@@ -1,9 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode } from './types'
+import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { linkTooltipsContent } from './SankeyTooltip'
-import { default_link, normalize_name } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -16,8 +14,6 @@ const SankeyLinkEditionPropTypes = {
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
-
-
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, duplicate ,set_duplicate,getValueIndex,children }
