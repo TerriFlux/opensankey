@@ -97,8 +97,8 @@ export const convert_data = (
     )))
   }
   Object.values(data_to_convert.tags_catalog).forEach(
-    tags_group=> {Object.values(tags_group.tags).forEach(tag=> tag.selected = Boolean(tag.selected))
-  })
+    tags_group=> Object.values(tags_group.tags).forEach(tag=> tag.selected = Boolean(tag.selected))
+  )
   if (data_to_convert.tags_catalog['flux_types']) {
     data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
   }
@@ -192,12 +192,12 @@ export const convert_data = (
   })
   data.nodes.forEach(n => {
     if (!n.inputLinksId) {
-      n.inputLinksId = [];
+      n.inputLinksId = []
     }
     if (!n.outputLinksId) {
-      n.outputLinksId = [];
+      n.outputLinksId = []
     }
-  });
+  })
   const { display_style, nodes, links, node_width, units_names } = data
 
 
