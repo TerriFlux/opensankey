@@ -462,8 +462,8 @@ export const setSelectedTags = (
   })
 
   display_nodes.forEach(node => {
-    // node.visible = true
-    // node.label_visible = true
+    node.visible = true
+    node.label_visible = true
     let break_loop = false
     let no_tag = true
     Object.keys(tags_catalog).forEach( tags_group_key => {
