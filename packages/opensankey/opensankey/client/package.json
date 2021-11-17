@@ -34,6 +34,7 @@
     "bootstrap": "^5.1.1",
     "cross-env": "^7.0.3",
     "d3": "^6.7.0",
+    "d3-textwrap": "^3.0.0",
     "file-saver": "^2.0.5",
     "html-react-parser": "^1.2.7",
     "react": "^17.0.2",
