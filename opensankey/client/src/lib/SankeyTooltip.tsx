@@ -10,7 +10,7 @@ export const nodeTooltipsContent = (
   if (node.tooltip_text) {
     return node.tooltip_text
   }
-  if (data.nodes.length === 0) {
+  if (Object.keys(data.nodes).length === 0) {
     return ''
   }
   let content = '<p style=\'text-align: center;margin-bottom:0px\'><b>' + node.name.split('\\n').join(' ') + '</b></p>'
@@ -19,7 +19,7 @@ export const nodeTooltipsContent = (
     node.inputLinksId.forEach(element => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
       const value = getLinkValue(data, element)
-      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].source_name + ' : ' + value + ' (' + pcValue + '%)</li>' 
+      content += '<li>' + data.nodes[data.links[element].idSource] + ' : ' + value + ' (' + pcValue + '%)</li>' 
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.inputLinksId) + '<br>'
   }
@@ -28,7 +28,7 @@ export const nodeTooltipsContent = (
     node.outputLinksId.forEach(element => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
       const value = getLinkValue(data, element)
-      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].target_name + ' : ' + value + ' (' + pcValue + '%)</li>'
+      content += '<li>' + data.nodes[data.links[element].idTarget] + ' : ' + value + ' (' + pcValue + '%)</li>'
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
@@ -50,7 +50,7 @@ export const nodeTooltipsContent = (
         content += '<tr><td>' + tag +'</td>'
         content += '<td>' + node.dimensions[tag[1].name].parent_name +'</td>'
       }
-      const desagregate_nodes = data.nodes.filter( n => n.dimensions[tag[1].name] && n.dimensions[tag[1].name].parent_name === node.name )
+      const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[tag[1].name] && n.dimensions[tag[1].name].parent_name === node.name )
       if (desagregate_nodes.length>0) {
         if (! header_written) {
           content += '<br><b>Noeuds parents et enfants</b>'
@@ -84,9 +84,9 @@ export const linkTooltipsContent = (
   if (link.tooltip_text) {
     return link.tooltip_text
   }
-  if (data.links.length === 0) {
+  if (Object.keys(data.links).length === 0) {
     return ''
   }
-  const content = link.source_name + ' → ' + link.target_name + ' : ' + getLinkValue(data, link.idLink as string)
+  const content = data.nodes[link.idSource].name + ' → ' + data.nodes[link.idTarget].name + ' : ' + getLinkValue(data, link.idLink as string)
   return content
 }
