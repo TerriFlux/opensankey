@@ -1,10 +1,11 @@
 import * as d3 from 'd3'
+import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets } from './SankeyUtils'
-import { desagregation,agregation } from './SankeyLayout'
+import { desagregation, agregation } from './SankeyLayout'
 
 window.d3 = d3
 
@@ -69,11 +70,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return new_name
   }
 
-  const display_nodes : SankeyNode [] = data.nodes.filter( n=> n.display )
-  const display_links : SankeyLink [] = data.links.filter( l=> {
+  const display_nodes: SankeyNode[] = data.nodes.filter(n => n.display)
+  const display_links: SankeyLink[] = data.links.filter(l => {
     const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
     const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
+    return source_node.display && target_node.display
   })
 
   const handles_visible = [...(new Array(display_links.length).fill(false))]
@@ -99,6 +100,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     static_sankey: boolean,
     remove_previous_links = false
   ) => {
+    // Structure svg du link
+    //- link : 
+    //- text : 
+    //- rect :
+    //- rect :
+    //- arrow :       
+
     const { display_style } = data
     if (remove_previous_links) {
       d3.select('#g_links').selectAll('.gg_links').remove()
@@ -171,7 +179,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //.attr('visibility', d => link_visible(d))
       .attr('dy', '0.3em')
       .append('textPath')
-      .attr('id', d => d.idLink+'_text')
+      .attr('id', d => d.idLink + '_text')
       .attr('class', 'link_value')
       .attr('href', d => '#' + d.idLink)
 
@@ -191,15 +199,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     select2
       .attr('href', d => '#' + d.idLink)
-      .attr('id', d => d.idLink+'_text')
-      .attr('class', 'link_value')
+      //.attr('class', 'link_value')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('fill', d => d.text_color)
-      .attr('visibility', d => link_visible(d) && d.value[value_index] >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden' )
+      .attr('visibility', d => link_visible(d) && d.value[value_index] >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden')
 
     if (!static_sankey) {
+      // A voir avec Julien
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
-        .subject(Object).on('drag', function (event,link) {
+        .subject(Object).on('drag', function (event, link) {
           if (alt_key_pressed) {
             drag_link_text(link, event)
           }
@@ -217,12 +225,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     if (!static_sankey) {
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
-        .subject(Object).on('drag', function (event,link) {
+        .subject(Object).on('drag', function (event, link) {
           if (alt_key_pressed) {
             drag_link_text(link, event)
           } else {
             const text_id = d3.select(this).attr('id')
-            const link_to_drag = text_id.substring(text_id.length-5)
+            const link_to_drag = text_id.substring(text_id.length - 5)
             drag_link(display_nodes, display_links, display_style, data.tags_catalog, (d3.select(link_to_drag).node() as SVGPathElement), event)
           }
         })
@@ -234,26 +242,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link')
       .attr('id', d => d.idLink)
       .attr('fill', 'none')
-      .attr('stroke-opacity', d => d.visible && d.value[value_index] >= display_style.filter ? ((String(d.display_value[value_index]).includes('[')) ? 0.3 :0.95) : 0)
+      .attr('stroke-opacity', d => d.visible && d.value[value_index] >= display_style.filter ? ((String(d.display_value[value_index]).includes('[')) ? 0.3 : 0.95) : 0)
       .attr('stroke-width', d => {
         const link_value = test_link_value(display_nodes, d, data.tags_catalog)
         return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
       })
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
-      .attr('stroke', l => link_color(l,value_index))
+      .attr('stroke', l => link_color(l, value_index))
       .on('mouseover', function (event, d) {
-        if ( !event.shiftKey ) {
+        if (!event.shiftKey) {
           return
         }
         sankeyTooltip
           .style('opacity', 1)
-          .html(linkTooltipsContent(data, d,getValueIndex))
+          .html(linkTooltipsContent(data, d, getValueIndex))
         if (d.visible && d.value[value_index] >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
       })
       .on('mousemove', (event) => {
-        if ( !event.shiftKey ) {
+        if (!event.shiftKey) {
           return
         }
         sankeyTooltip
@@ -329,6 +337,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       alert(error_msg.text)
     }
 
+    //Creation des Arrows associés au link
+    d3.selectAll('.ggg_nodes')
+      .filter(n => node_arrow_visible(n))
+      .each(function (n) {
+        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+        drawArrows(n as any, display_nodes, display_links, display_style, data.tags_catalog, selection)
+      })
+
     // if (document.getElementById('front-0')){
     //   document.getElementById('svg').appendChild(document.getElementById('front-0'))
     // }
@@ -353,7 +369,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
-    tags_catalog:TagsCatalog,
+    tags_catalog: TagsCatalog,
     dragged: Element,
     event: { dx: number; dy: number }
   ) => {
@@ -386,11 +402,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       link => {
         if (link.source_name === node.name || link.target_name === node.name) {
           // Redraw link
-          const old_x_pos = +d3.select('#' + link.idLink+'_text').attr('x')
-          const old_y_pos = +d3.select('#' + link.idLink+'_text').attr('y')
+          const old_x_pos = +d3.select('#' + link.idLink + '_text').attr('x')
+          const old_y_pos = +d3.select('#' + link.idLink + '_text').attr('y')
           if (!(link.label_position === 'frozen')) {
-            d3.select('#' + link.idLink+'_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
-            d3.select('#' + link.idLink+'_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
+            d3.select('#' + link.idLink + '_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
+            d3.select('#' + link.idLink + '_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
           }
           // select allows to redraw directly without refreshing
           d3.select('#' + link.idLink)
@@ -448,24 +464,24 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   ) => {
     const idLink = d3.select(dragged).attr('id')
     const p2 = d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))
-    const linked_node = identify_node(nodes, links, links[links.findIndex(l=>l.idLink === idLink)], p2)
+    const linked_node = identify_node(nodes, links, links[links.findIndex(l => l.idLink === idLink)], p2)
     if (linked_node === undefined) {
       return
     }
-    const node = nodes[nodes.findIndex(n=>n.idNode === linked_node.node_id)]
+    const node = nodes[nodes.findIndex(n => n.idNode === linked_node.node_id)]
 
     if (linked_node.type === 'source') {
       const source_order = node.outputLinksId.indexOf(idLink)
       let output_offset = 0
       for (let i = 1; i < node.outputLinksId.length; i++) {
-        const link_id = links.findIndex(l=>l.idLink === node.outputLinksId[i - 1])
+        const link_id = links.findIndex(l => l.idLink === node.outputLinksId[i - 1])
         if (i > source_order) {
           break
         }
         output_offset += links[link_id].value[value_index]
       }
       const number_of_links = node.outputLinksId.length
-      const id = links.findIndex(l=>l.idLink === idLink)
+      const id = links.findIndex(l => l.idLink === idLink)
       const value = links[id].value
       if (links[id].orientation === 'hh') {
         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value[value_index])) {
@@ -487,14 +503,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const target_order = node.inputLinksId.indexOf(idLink)
       let input_offset = 0
       for (let i = 1; i < node.inputLinksId.length; i++) {
-        const link_id = links.findIndex(l=>l.idLink === node.inputLinksId[i - 1])
+        const link_id = links.findIndex(l => l.idLink === node.inputLinksId[i - 1])
         if (i > target_order) {
           break
         }
         input_offset += links[link_id].value[value_index]
       }
       const number_of_links = node.inputLinksId.length
-      const id = links.findIndex(l=>l.idLink === idLink)
+      const id = links.findIndex(l => l.idLink === idLink)
       const value = links[id].value
       if (links[id].orientation === 'hh') {
         if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value[value_index])) {
@@ -582,7 +598,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       let error_msg
       return drawCurve(
         nodes, links, display_style,
-        data.tags_catalog, d,error_msg
+        data.tags_catalog, d, error_msg
       )
     })
   }
@@ -752,7 +768,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
         .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
-        .text(d => link_text(d, link_value, display_style,value_index))
+        .text(d => link_text(d, link_value, display_style, value_index))
         .attr('visibility', link.label_visible ? 'visible' : 'hidden')
     } else {
       const positions: { [label_position: string]: string[] } = {
@@ -766,7 +782,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('startOffset', positions[link.label_position][0])
         .attr('text-anchor', positions[link.label_position][1])
         //.text(d => ' → ' +link_text(d, link_value, display_style) + ' → ')
-        .text(d => link_text(d, link_value, display_style,value_index) )
+        .text(d => link_text(d, link_value, display_style, value_index))
         .attr('visibility', link.label_visible ? 'visible' : 'hidden')
     }
   }
@@ -775,7 +791,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     n: SankeyNode,
     nodes: SankeyNode[],
     links: SankeyLink[],
-    selected_tags:TagsCatalog
+    selected_tags: TagsCatalog
   ) => {
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
@@ -802,7 +818,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: SankeyNode[],
     links: SankeyLink[],
     d: SankeyLink,
-    tags_catalog:TagsCatalog
+    tags_catalog: TagsCatalog
   ) => {
     let source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.source_name))[0]
     let target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(d.target_name))[0]
@@ -1089,7 +1105,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    if (link_value > display_style.filter_label ) {
+    if (link_value > display_style.filter_label) {
       drawLinkText(link, links, link_value, display_style, xs, ys, xt, yt)
     }
 
@@ -1240,28 +1256,28 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     node: SankeyNode,
     event: d3.D3DragEvent<Element, unknown, unknown>
   ) => {
-    const old_x = +d3.select('#'+node.idNode+'_text').attr('x'),
-      old_y = +d3.select('#'+node.idNode+'_text').attr('y'),
+    const old_x = +d3.select('#' + node.idNode + '_text').attr('x'),
+      old_y = +d3.select('#' + node.idNode + '_text').attr('y'),
       new_x = old_x + event.dx,
       new_y = old_y + event.dy
-    d3.select('#'+node.idNode+'_text').attr('x', new_x)
-    d3.select('#'+node.idNode+'_text').attr('y', new_y)
+    d3.select('#' + node.idNode + '_text').attr('x', new_x)
+    d3.select('#' + node.idNode + '_text').attr('y', new_y)
 
     node.x_label = new_x
     node.y_label = new_y
-    d3.select('#'+node.idNode+'_text').selectAll('tspan').attr('x', new_x)
+    d3.select('#' + node.idNode + '_text').selectAll('tspan').attr('x', new_x)
   }
 
   const drag_link_text = (
     link: SankeyLink,
     event: d3.D3DragEvent<Element, unknown, unknown>
-  ) => {  
-    const old_x = +d3.select('#'+link.idLink+'_text').attr('x'),
-      old_y = +d3.select('#'+link.idLink+'_text').attr('y'),
+  ) => {
+    const old_x = +d3.select('#' + link.idLink + '_text').attr('x'),
+      old_y = +d3.select('#' + link.idLink + '_text').attr('y'),
       new_x = old_x + event.dx,
       new_y = old_y + event.dy
-    d3.select('#'+link.idLink+'_text').attr('x', new_x)
-    d3.select('#'+link.idLink+'_text').attr('y', new_y)
+    d3.select('#' + link.idLink + '_text').attr('x', new_x)
+    d3.select('#' + link.idLink + '_text').attr('y', new_y)
     link.x_label = new_x
     link.y_label = new_y
     link.label_position = 'frozen'
@@ -1322,16 +1338,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           select_node(d)
           set_nav_item_active('2')
           set_show_nav(true)
-        }       
-      })
-      ggg_nodes.on('dblclick', (ev,n) => {
-        if (ev.altKey) {
-          desagregation(n,data)
-        } else {
-          agregation(n,data)          
         }
-        set_data({...data})
-      }) 
+      })
+      ggg_nodes.on('dblclick', (ev, n) => {
+        if (ev.altKey) {
+          desagregation(n, data)
+        } else {
+          agregation(n, data)
+        }
+        set_data({ ...data })
+      })
     }
     // Gestion du contextMenu 
     ggg_nodes.on('contextmenu', (event, node) => {
@@ -1345,14 +1361,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     ggg_nodes
       .filter(d => d.type === 'sector')
       .append('rect')
-      .attr('class', 'node')
+      .classed('node', true)
+      .classed('node_shape', true)
       .attr('width', default_node_size)
       .attr('height', default_node_size)
 
     ggg_nodes
       .filter(d => d.type === 'product')
       .append('ellipse')
-      .attr('class', 'node')
+      .classed('node', true)
+      .classed('node_shape', true)
       .attr('stroke-opacity', 0)
       .attr('cx', default_node_size / 2)
       .attr('cy', default_node_size / 2)
@@ -1371,11 +1389,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width', '0')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey ) {
-          d3.select(this).attr('class', 'selected_node')
+        if (node_label_visible(d) && event.shiftKey) {
+          //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
-            .html(nodeTooltipsContent(data, d as SankeyNode,getValueIndex))
+            .html(nodeTooltipsContent(data, d as SankeyNode, getValueIndex))
         }
       })
       .on('mousemove', function (event, d) {
@@ -1387,120 +1405,143 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mouseout', function (event, d) {
         if (node_label_visible(d)) {
-          d3.select(this).attr('class', 'node')
+          //d3.select(this).attr('class', 'node')
           sankeyTooltip.style('opacity', 0)
         }
       })
+      .on('click', (event, d: any) => {
 
-    ggg_nodes
-      .filter(n => node_arrow_visible(n))
-      .each(function (n) {
-        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n, display_nodes, display_links, display_style, data.tags_catalog, selection)
+        if (event.shiftKey) {
+          // Animation des flux du Sankey
+          sankeyTooltip.style('opacity', 0)
+          d3.selectAll('#svg .tmp').remove()
+          // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
+          d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
+          d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
+          d3.select('#svg').selectAll('.node').style('fill', '#dddddd')
+          d3.select('#svg').selectAll('.link_value').style('display', 'none')
+          const nodeDisplay = [d.idNode]
+          branchAnimate(data.nodes, d, nodeDisplay)
+        }
       })
+
+    // Creation des Arrows 
+    // -> deplacer dans le add_link 
+    // ggg_nodes
+    //   .filter(n => node_arrow_visible(n))
+    //   .each(function (n) {
+    //     const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+    //     drawArrows(n, display_nodes, display_links, display_style, data.tags_catalog, selection)
+    //   })
 
 
     // Gestion des nodes label
     // A reprendre peut-être avec des foreignObjects
     const select = ggg_nodes
       .append('text')
-      .attr('id', (d) => 'text_' + d.idNode)
+      .classed('node', true)
+      .classed('node_text', true)
+      .attr('id', (d) => d.idNode + '_text')
       .attr('x', d => d.x_label ? d.x_label : 0)
-      .attr('y', d => d.y_label ? d.y_label : -6)
+      .attr('y', d => d.y_label ? d.y_label : -10)
+      .attr('text-anchor', 'center')
       .attr('visibility', n => node_label_visible(n))
-      .attr('style', d => {
-        const font = d.type === 'product' ? 'Arial' : 'Calibri'
-        const font_style =
-          d.type === 'sector' && display_style.sector_italic ||
-            d.type === 'product' && display_style.product_italic
-            ? 'italic' : 'normal'
-        const font_weight =
-          d.type === 'sector' && display_style.sector_bold ||
-            d.type === 'product' && display_style.product_bold
-            ? 'bold' : 'normal'
-        return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
-      })
-      .each(d => {
-        if (d.name.indexOf('\\n') === -1) {
-          if (d.type === 'sector' && display_style.sector_uppercase ||
-            d.type === 'product' && display_style.product_uppercase
-          ) {
-            // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.toUpperCase())
-            d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0].toUpperCase())
-
-          } else {
-            // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name)
-            d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0])
-          }
-        } else {
-          const text_anchor = 'middle'
-          const name_lines = d.name.split('\\n')
-          // if (d.type ==='sector') {
-          //   name_lines = dname.split('<BR>')
-          // }
-          // const x = +d3.select('#ggg_node' + d.id + ' text').attr('x')
-          const x = +d3.select('#ggg_' + d.idNode + ' text').attr('x')
-
-          //y = +d3.select('#ggg_node' + d.id + ' text').attr('y'),
-          const line_break = 15
-          name_lines.forEach((line, i) => {
-            if (d.type === 'sector' && display_style.sector_uppercase ||
-              d.type === 'product' && display_style.product_uppercase
-            ) {
-              line = line.toUpperCase()
-            }
-            if (i === 0) {
-              if (d.type === 'sector') {
-                // d3.select('#ggg_node' + d.id + ' text')
-                d3.select('#ggg_' + d.idNode + ' text')
-
-                  .append('tspan')
-                  //.attr('dy',(d.name.includes('(I') || isExport(d)) ? -15 : 0) // TODO
-                  .attr('text-anchor', text_anchor)
-                  .text(line)
-              } else {
-                // d3.select('#ggg_node' + d.id + ' text')
-                d3.select('#ggg_' + d.idNode + ' text')
-
-                  .append('tspan')
-                  .attr('text-anchor', text_anchor)
-                  .text(line)
-              }
-            } else {
-              if (d.type === 'sector') {
-                // d3.select('#ggg_node' + d.id + ' text')
-                d3.select('#ggg_' + d.idNode + ' text')
-
-                  .append('tspan')
-                  .attr('x', x)
-                  .attr('dy', line_break)
-                  .attr('text-anchor', text_anchor)
-                  .text(line)
-              } else {
-                // d3.select('#ggg_node' + d.id + ' text')
-                d3.select('#ggg_' + d.idNode + ' text')
-
-                  .append('tspan')
-                  .attr('x', x)
-                  .attr('dy', line_break)
-                  .attr('text-anchor', text_anchor)
-                  .text(line)
-              }
-            }
-          })
-        }
-        return
-      })
+      .style('text-align', 'center')
+      // .attr('style', d => {
+      //   const font = d.type === 'product' ? 'Arial' : 'Calibri'
+      //   const font_style =
+      //     d.type === 'sector' && display_style.sector_italic ||
+      //       d.type === 'product' && display_style.product_italic
+      //       ? 'italic' : 'normal'
+      //   const font_weight =
+      //     d.type === 'sector' && display_style.sector_bold ||
+      //       d.type === 'product' && display_style.product_bold
+      //       ? 'bold' : 'normal'
+      //   return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
+      // })
+      .text(d => d.name)
+      // .each(d => {
+      //   const wrap = textwrap()
+      //     .bounds({ height: 100, width: 80 })
+      //     //.method('tspans')
+      //   d3.select('#ggg_' + d.idNode + ' text')
+      //     .call(wrap)
+      // })
+      // .each(d => {
+      //   if (d.name.indexOf('\\n') === -1) {
+      //     if (d.type === 'sector' && display_style.sector_uppercase ||
+      //       d.type === 'product' && display_style.product_uppercase
+      //     ) {
+      //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.toUpperCase())
+      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0].toUpperCase())
+      //     } else {
+      //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name)
+      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0])
+      //     }
+      //   } else {
+      //     const text_anchor = 'middle'
+      //     const name_lines = d.name.split('\\n')
+      //     // if (d.type ==='sector') {
+      //     //   name_lines = dname.split('<BR>')
+      //     // }
+      //     // const x = +d3.select('#ggg_node' + d.id + ' text').attr('x')
+      //     const x = +d3.select('#ggg_' + d.idNode + ' text').attr('x')
+      //     //y = +d3.select('#ggg_node' + d.id + ' text').attr('y'),
+      //     const line_break = 15
+      //     name_lines.forEach((line, i) => {
+      //       if (d.type === 'sector' && display_style.sector_uppercase ||
+      //         d.type === 'product' && display_style.product_uppercase
+      //       ) {
+      //         line = line.toUpperCase()
+      //       }
+      //       if (i === 0) {
+      //         if (d.type === 'sector') {
+      //           // d3.select('#ggg_node' + d.id + ' text')
+      //           d3.select('#ggg_' + d.idNode + ' text')
+      //             .append('tspan')
+      //             //.attr('dy',(d.name.includes('(I') || isExport(d)) ? -15 : 0) // TODO
+      //             .attr('text-anchor', text_anchor)
+      //             .text(line)
+      //         } else {
+      //           // d3.select('#ggg_node' + d.id + ' text')
+      //           d3.select('#ggg_' + d.idNode + ' text')
+      //             .append('tspan')
+      //             .attr('text-anchor', text_anchor)
+      //             .text(line)
+      //         }
+      //       } else {
+      //         if (d.type === 'sector') {
+      //           // d3.select('#ggg_node' + d.id + ' text')
+      //           d3.select('#ggg_' + d.idNode + ' text')
+      //             .append('tspan')
+      //             .attr('x', x)
+      //             .attr('dy', line_break)
+      //             .attr('text-anchor', text_anchor)
+      //             .text(line)
+      //         } else {
+      //           // d3.select('#ggg_node' + d.id + ' text')
+      //           d3.select('#ggg_' + d.idNode + ' text')
+      //             .append('tspan')
+      //             .attr('x', x)
+      //             .attr('dy', line_break)
+      //             .attr('text-anchor', text_anchor)
+      //             .text(line)
+      //         }
+      //       }
+      //     })
+      //   }
+      //   return
+      // })
       .on('mouseover', function (event, d) {
         if (node_label_visible(d) && event.shiftKey) {
-          d3.select(this).attr('class', 'selected_node')
+          //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
-            .html(nodeTooltipsContent(data, d as SankeyNode,getValueIndex))
+            .html(nodeTooltipsContent(data, d as SankeyNode, getValueIndex))
         }
       })
       .on('mousemove', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey ) {
+        if (node_label_visible(d) && event.shiftKey) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
@@ -1508,7 +1549,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mouseout', function (event, d) {
         if (node_label_visible(d)) {
-          d3.select(this).attr('class', 'node')
+          //d3.select(this).attr('class', 'node')
           sankeyTooltip.style('opacity', 0)
         }
       })
@@ -1520,7 +1561,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return
       })
         .call(d3.drag<SVGTextElement, SankeyNode>()
-          .subject(Object).on('drag', function (event,node) {
+          .subject(Object).on('drag', function (event, node) {
             if (alt_key_pressed === true) {
               drag_node_text(node, event)
             }
@@ -1542,6 +1583,59 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
+  const branchAnimate = (
+    nodes: SankeyNode[],
+    nodeData: SankeyNode,
+    nodeDisplay : any
+  ) => {
+    // Permet la progation de l'animation sur l'ensemble du Sankey
+    const nodeStart = nodeData.name
+    //console.log('Click on gg.node ' + nodeStart)
+    // on pourrait aussi evnetuellement faire un clone des noeuds
+    d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
+    d3.select('#' + nodeData.idNode + '_text').style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
+
+    const glinks = (d3.select('#svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+      .filter(function (d) {
+        return d.source_name == nodeStart
+      })
+    // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
+    const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+    tmpLinks.selectAll('.link')
+      .each(function (this) {
+        const totalLength = (this as SVGGeometryElement).getTotalLength()
+        d3.select(this)
+          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+          .attr('stroke-dashoffset', totalLength)
+          .style('stroke', function (this, d) {
+            // on recupere les paramêtres initiaux du stroke
+            return d3.select(this).attr('stroke')
+          })
+
+      })
+      .transition()
+      .duration(2000)
+      .attr('stroke-dashoffset', 0)
+      .on('end', function (this, d: any) {
+        const idLink = d3.select(this).attr('id')
+        const target_name = data.links.filter(elt => elt.idLink == idLink)[0].target_name
+        // Modification des arrows après l'animation
+        const arrowInitColor = d3.select((this as any).parentNode).select('.arrow').attr('fill')
+        d3.select((this as any).parentNode).select('.arrow')
+          .style('fill', arrowInitColor)
+        // reaffichage des link value après l'animation
+        d3.select((this as any).parentNode).select('.link_value')
+          .style('display', 'inline')
+        //Propagration de l'animation sur les flux sortant du target_node
+        // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+        if (!nodeDisplay.includes(target_name))
+        {
+          nodeDisplay.push(target_name)
+          branchAnimate(nodes, nodes.filter(elt => target_name == elt.name)[0], nodeDisplay)
+        }
+      })
+  }
+ 
   const drawArrows = (
     n: SankeyNode,
     nodes: SankeyNode[],
@@ -1556,6 +1650,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let cum_h_bottom = 0
     let is_v = true
 
+    // a quoi ca sert ?
     const tmp = selection.selectAll('path')
     tmp.remove()
 
@@ -1563,7 +1658,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
     for (let i = 0; i < n.inputLinksId.length; i++) {
-      const l = links[links.findIndex(l=>l.idLink===n.inputLinksId[i])]
+      const l = links[links.findIndex(l => l.idLink === n.inputLinksId[i])]
       if (!l.visible) {
         continue
       }
@@ -1578,10 +1673,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         is_v = false
       }
       if (!display_style.filter || link_value >= display_style.filter) {
-        selection
+        //selection
+        d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
+        setNodeHeight(n, nodes, links, tags_catalog)
+        d3.select('#gg_' + l.idLink)
           .append('path')
+          .attr('class', 'arrow')
+          .attr('id', l.idLink + '_arrow')
           .attr('d', () => {
-            setNodeHeight(n, nodes, links, tags_catalog)
             let xt
             let yt
             let p5
@@ -1616,8 +1715,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
             return ''
           })
-          .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
-          .attr('fill', () => link_color(l,value_index))
+          // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
+          .attr('fill', () => link_color(l, value_index))
           .attr('fill-opacity', () => {
             const opacity = String(l.display_value[value_index]).includes('[') ? 0.3 : 0.95
             return opacity
@@ -1696,6 +1795,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
       <svg height={data.height} width='100%' id='svg' >
         <g className='g_nodes' id='g_nodes' ></g>
+        <g className='gtmp_links' id='gtmp_links' ></g>
         <g className='g_links' id='g_links' ></g>
       </svg>
     </div>
