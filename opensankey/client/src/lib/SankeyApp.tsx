@@ -12,7 +12,6 @@ import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col } from 'react-bootstrap'
-import { normalize_name } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -32,11 +31,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
 
-  const display_links : SankeyLink [] = data.links.filter( l=> {
-    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
-  })
+  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+  //   const source_node = data.nodes[l.idSource]
+  //   const target_node = data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // }).map(l=> ({[l.idLink] : {...l} })))
+
+  const display_links = data.links
   
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
@@ -124,7 +125,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
         }
         node_arrow_visible={
-          (n: SankeyNode) => !n.visible || (n.inputLinksId.length === 0) || (!display_links[display_links.findIndex(l=>l.idLink===n.inputLinksId[0])].arrow) ? false : true
+          (n: SankeyNode) => !n.visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
           set_selected_link(l)
@@ -138,7 +139,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
         link_visible={(l: SankeyLink) => l.visible }
-        test_link_value={ (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => {
+        test_link_value={ (nodes: { [node_id : string] : SankeyNode }, d: SankeyLink, /*selected_tags: string[]*/) => {
           return d.value[0]
         }}
         set_show_nav={set_show_nav}

@@ -2,6 +2,7 @@ import { SankeyData, SankeyLink, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey,compute_default_input_outputLinksId, updateLayout } from './SankeyLayout'
+import { linkHorizontal } from 'd3-shape'
 
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
@@ -10,7 +11,7 @@ export const getLinkValue = (
   idLink: string
 ) => {
   const { links } = data
-  return links.filter(element => { return element.idLink === idLink })[0].value[0]
+  return links[idLink].value[0]
 }
 
 export const getTotalLinks = (
@@ -20,106 +21,65 @@ export const getTotalLinks = (
   const { links } = data
   let total = 0
   Links.forEach(element => {
-    const tmp = links.filter(element1 => {
-      return (element1.idLink == element)
-    })[0].value[0]
+    const tmp = links[element].value[0]
     total += tmp
   })
   return total
-
-  //   console.log(idNode)
-  //   console.log(element.idLink)
-  //   console.log(links.filter(element => { return (element.idLink as any).includes(idNode) }))
-  // })
-  return 'test'
-}
-
-export const normalize_name = (name: string) => {
-  const new_name = name.split('\\n').join('').split(' ').join('')
-  return new_name
-}
-
-export const find_link = (
-  source_name: string,
-  target_name: string,
-  links: SankeyLink[]
-) => {
-  for (let i = 0; i < links.length; i++) {
-    const link = links[i]
-    if (normalize_name(link.source_name) === normalize_name(source_name) &&
-      normalize_name(link.target_name) === normalize_name(target_name)
-    ) {
-      return links[i]
-    }
-  }
-  return undefined
-}
-
-export const find_node = (
-  node_name: string,
-  nodes: SankeyNode[]
-) => {
-  for (let i = 0; i < nodes.length; i++) {
-    if (normalize_name(nodes[i].name) === normalize_name(node_name)) {
-      return nodes[i]
-    }
-  }
-  return undefined
 }
 
 export const compute_total_offsets = (
   node: SankeyNode,
-  nodes: SankeyNode[],
-  links: SankeyLink[],
+  nodes: { [node_id : string]:SankeyNode},
+  links: { [link_id : string]:SankeyLink},
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (nodes: SankeyNode[], d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
-  link: SankeyLink | undefined = undefined
+  test_link_value: (node :{ [node_id : string]:SankeyNode}, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
+  ref_link: SankeyLink | undefined = undefined
 ) => {
   let offset_height_left = 0
   let offset_height_right = 0
   let offset_width_top = 0
   let offset_width_bottom = 0
 
-  const left_flux: number[] = []
-  const right_flux: number[] = []
-  const top_flux: number[] = []
-  const bottom_flux: number[] = []
+  const left_flux: string[] = []
+  const right_flux: string[] = []
+  const top_flux: string[] = []
+  const bottom_flux: string[] = []
 
-  const link_id = link ? links.indexOf(link) : -1
+  //const link_id = link ? links.indexOf(link) : -1
   
   node.outputLinksId.forEach(
     (idLink) => {
-      const id = links.findIndex(l=>l.idLink === idLink)
-      if (links[id].visible) {
+      const link = links[idLink]
+      if (link.visible) {
         let target_node
         try {
-          target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+          target_node = nodes[link.idTarget]
         } catch {
           return
         }
-        if (links[id].orientation === 'hh') {
-          if (target_node.x > node.x && !links[id].recycling || target_node.x <= node.x && links[id].recycling) {
-            right_flux.push(id)
+        if (link.orientation === 'hh') {
+          if (target_node.x > node.x && !link.recycling || target_node.x <= node.x && link.recycling) {
+            right_flux.push(idLink)
           } else {
-            left_flux.push(id)
+            left_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'vv') {
+        } else if (link.orientation === 'vv') {
           if (target_node.y > node.y) {
-            bottom_flux.push(id)
+            bottom_flux.push(idLink)
           } else {
-            top_flux.push(id)
+            top_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'hv') {
+        } else if (link.orientation === 'hv') {
           if (target_node.x > node.x) {
-            right_flux.push(id)
+            right_flux.push(idLink)
           } else {
-            left_flux.push(id)
+            left_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'vh') {
+        } else if (link.orientation === 'vh') {
           if (target_node.y > node.y) {
-            bottom_flux.push(id)
+            bottom_flux.push(idLink)
           } else {
-            top_flux.push(id)
+            top_flux.push(idLink)
           }
         }
       }
@@ -128,45 +88,45 @@ export const compute_total_offsets = (
 
   node.inputLinksId.forEach(
     (idLink) => {
-      const id = links.findIndex(l=>l.idLink === idLink)
-      if (links[id].visible) {
+      const link = links[idLink]
+      if (link.visible) {
         let source_node
         try {
-          source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(links[id].source_name))[0]
+          source_node = nodes[link.idSource]
         } catch {
           return
         }
-        if (links[id].orientation === 'vv') {
+        if (link.orientation === 'vv') {
           if (source_node.y < node.y) {
             // flux goes down
-            top_flux.push(id)
+            top_flux.push(idLink)
           } else {
             // flux goes up
-            bottom_flux.push(id)
+            bottom_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'hh') {
-          if (source_node.x >= node.x && links[id].recycling || source_node.x < node.x && !links[id].recycling) {
+        } else if (link.orientation === 'hh') {
+          if (source_node.x >= node.x && link.recycling || source_node.x < node.x && !link.recycling) {
             // flux goes right
-            left_flux.push(id)
+            left_flux.push(idLink)
           } else {
             // flux goes left
-            right_flux.push(id)
+            right_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'hv') {
+        } else if (link.orientation === 'hv') {
           if (source_node.y < node.y) {
             // flux goes right
-            top_flux.push(id)
+            top_flux.push(idLink)
           } else {
             // flux goes left
-            bottom_flux.push(id)
+            bottom_flux.push(idLink)
           }
-        } else if (links[id].orientation === 'vh') {
+        } else if (link.orientation === 'vh') {
           if (source_node.x < node.x) {
             // flux goes right
-            left_flux.push(id)
+            left_flux.push(idLink)
           } else {
             // flux goes left
-            right_flux.push(id)
+            right_flux.push(idLink)
           }
         }
       }
@@ -174,8 +134,8 @@ export const compute_total_offsets = (
   )
 
   let top_order = -1
-  if (link) {
-    top_order = top_flux.indexOf(link_id)
+  if (ref_link) {
+    top_order = top_flux.indexOf(ref_link.idLink)
   }
   top_flux.forEach(
     (id, i) => {
@@ -195,8 +155,8 @@ export const compute_total_offsets = (
     }
   )
   let bottom_order = -1
-  if (link) {
-    bottom_order = bottom_flux.indexOf(link_id)
+  if (ref_link) {
+    bottom_order = bottom_flux.indexOf(ref_link.idLink)
   }
   bottom_flux.forEach(
     (id, i) => {
@@ -216,8 +176,8 @@ export const compute_total_offsets = (
   )
 
   let left_order = -1
-  if (link) {
-    left_order = left_flux.indexOf(link_id)
+  if (ref_link) {
+    left_order = left_flux.indexOf(ref_link.idLink)
   }
   left_flux.forEach(
     (id, i) => {
@@ -237,8 +197,8 @@ export const compute_total_offsets = (
   )
 
   let right_order = -1
-  if (link) {
-    right_order = right_flux.indexOf(link_id)
+  if (ref_link) {
+    right_order = right_flux.indexOf(ref_link.idLink)
   }
   right_flux.forEach(
     (id, i) => {
@@ -289,10 +249,10 @@ export const link_text = (
 
 export const default_sankey_data = (): SankeyData => {
   return {
-    version: '0.4',
+    version: '0.5',
 
-    nodes: [],
-    links: [],
+    nodes: {},
+    links: {},
     user_scale: 100,
     height: 1500,
     width: 2150,
@@ -347,8 +307,8 @@ export const default_node = (): SankeyNode => {
 
 export const default_link = (): SankeyLink => {
   return {
-    source_name: '',
-    target_name: '',
+    idSource: 'node0',
+    idTarget: 'node1',
     idLink: 'link0',
     value: [10],
     display_value: ['default'],
@@ -373,93 +333,37 @@ export const delete_link = (
   data: SankeyData,
   link: SankeyLink
 ) => {
+  const source_node = data.nodes[link.idSource]
+  let idx = source_node.outputLinksId.findIndex(idLink => idLink === link.idLink)
+  source_node.outputLinksId.splice(idx, 1)
 
-  const { links, nodes } = data
-  const deleted_link_id = links.indexOf(link) 
-  links.splice(deleted_link_id, 1)
+  const target_node = data.nodes[link.idTarget]
+  idx = target_node.inputLinksId.findIndex(idLink => idLink === link.idLink)
+  target_node.inputLinksId.splice(idx, 1)
 
-  nodes.forEach(node => {
-    for (let i = node.inputLinksId.length - 1; i >= 0; i--) {
-      const link_id = node.inputLinksId[i]
-      if (link_id === link.idLink) {
-        node.inputLinksId.splice(i, 1)
-      }
-    }
-    for (let i = node.outputLinksId.length - 1; i >= 0; i--) {
-      const link_id = node.outputLinksId[i]
-      if (link_id === link.idLink) {
-        node.outputLinksId.splice(i, 1)
-      }
-    }
-  })
+  delete data.links[link.idLink]
 }
 
 export const delete_node = (
   data: SankeyData,
   node: SankeyNode
 ) => {
-
-  const { nodes, links } = data
-
-  // delete links originating from / going to the deleted node
-  let i = 0
-  while (i < links.length) {
-    if (links[i].source_name === node.name) {
-      console.log('link' + i)
-      console.log(1)
-      delete_link(data, links[i])
-      i -= 1
-    }
-    else if (links[i].target_name === node.name) {
-      console.log('link' + i)
-      console.log(2)
-      delete_link(data, links[i])
-      i -= 1
-    }
-    i += 1
-  }
-
-  // delete node and shift numerotation
-  /*  let ind = -1
-   nodes.map((n, i) => {
-     if (n.id == node_id) {
-       console.log(i)
-       ind = i
-     }
-   })
-   console.log(ind)
-   console.log(nodes)
- 
-   nodes.splice(ind, 1) */
-
-  nodes.splice(nodes.indexOf(node), 1)
-  //nodes.forEach((node, i) => node.id = i)
-  // console.log(nodes)
-
-  // shift source and target of links and update links
-  // region_names.forEach(region_name => {
-  //   links[region_name].forEach(link =>{
-  //     if (link.source > node_id) {
-  //       link.source -= 1
-  //     }
-  //     if (link.target > node_id) {
-  //       link.target -= 1
-  //     }
-  //   })
-  // })
-  //set_data({...data})
+  node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]) )
+  node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]) )
+  delete data.nodes[node.idNode]
 }
 
 export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
+
   const { tags_catalog } = sankey_data
-  const display_nodes : SankeyNode[] = sankey_data.nodes.filter( n=> n.display )
-  const display_links : SankeyLink[] = sankey_data.links.filter( l=> {
-    const source_node = sankey_data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    const target_node = sankey_data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
-  })
+  const display_nodes : SankeyNode [] = Object.values(sankey_data.nodes).filter( n=> n.display )
+  // const display_links : SankeyLink [] = Object.values(sankey_data.links).filter( l=> {
+  //   const source_node = sankey_data.nodes[l.idSource]
+  //   const target_node = sankey_data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // })
 
   display_nodes.forEach(node => {
     node.visible = true
@@ -489,7 +393,9 @@ export const setSelectedTags = (
       node.label_visible = true
     }
   })
-  display_links.forEach(link => {
+  Object.values(display_nodes).forEach(n => sankey_data.nodes[n.idNode] = {...n})
+
+  Object.values(sankey_data.links).forEach(link => {
     link.visible = true
     link.label_visible = true
     let break_loop = false
@@ -509,13 +415,15 @@ export const setSelectedTags = (
         break_loop =true
       }
     })
-    const source_node = display_nodes.filter(n => normalize_name(n.name) === normalize_name(link.source_name))[0]
-    const target_node = display_nodes.filter(n => normalize_name(n.name) === normalize_name(link.target_name))[0]
+    const source_node = sankey_data.nodes[link.idSource]
+    const target_node = sankey_data.nodes[link.idTarget]
     if ((!source_node.visible && !source_node.label_visible) || (!target_node.visible && !target_node.label_visible)) {
       link.visible = false
       link.label_visible = false      
     }
   })
+
+  //Object.values(display_links).forEach(l => sankey_data.links[l.idLink] = {...l})
 }
 
 const downloadExamples = (
@@ -569,14 +477,15 @@ export const uploadExemple = (
     data.left_shift = 0.40
     data.right_shift = 0.50
     if ('layout' in (data as SankeyData)) {
-      const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
-      const display_links : SankeyLink[] = data.links.filter( l=> {
-        const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-        const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-        return source_node.display &&  target_node.display
-      })
-      compute_default_input_outputLinksId(display_nodes, display_links)
+      // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
+      // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+      //   const source_node = data.nodes[l.idSource]
+      //   const target_node = data.nodes[l.idTarget]
+      //   return source_node.display &&  target_node.display
+      // }).map(l=> ({[l.idLink] : {...l} })))
+      compute_default_input_outputLinksId(data.nodes, data.links)
       updateLayout(data,(data as SankeyData & {layout:SankeyData} ).layout)
+      //compute_auto_sankey(data, data.h_space ? data.h_space : 200)
       //compute_default_input_outputLinksId(data.nodes,data.links)
       delete (data as SankeyData & {layout?:SankeyData} ).layout
     } else {

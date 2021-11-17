@@ -37,7 +37,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const value_index = getValueIndex(data)
 
   let max_link_value = 0
-  links.forEach(link => {
+  Object.values(links).forEach(link => {
     if (link.value[value_index] > max_link_value) {
       max_link_value = link.value[value_index]
     }
@@ -115,7 +115,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    nodes.forEach((n) => n.x += shift_left)
+                    Object.values(nodes).forEach(n => n.x += shift_left)
                     set_data({ ...data })
                   }
                 }
@@ -138,7 +138,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    nodes.forEach((n) => n.y += shift_top)
+                    Object.values(nodes).forEach((n) => n.y += shift_top)
                     set_data({ ...data })
                   }
                 }
@@ -371,7 +371,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    nodes.forEach(
+                    Object.values(nodes).forEach(
                       node => {
                         node.visible = true
                         node.label_visible = true
@@ -428,7 +428,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Courbe'
                 onChange={evt => {
-                  data.links.filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => l.visible).forEach(
                     l => l.curved = evt.target.checked
                   )
                   set_data({ ...data })
@@ -440,7 +440,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Flêche'
                 onChange={evt => {
-                  data.links.filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => l.visible).forEach(
                     l => l.arrow = evt.target.checked
                   )
                   set_data({ ...data })
@@ -458,7 +458,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value={display_style.global_curvature}
                 onChange={evt => {
                   display_style.global_curvature = +evt.target.value
-                  data.links.filter(l => l.visible).forEach(l => l.curvature = +evt.target.value)
+                  Object.values(data.links).filter(l => l.visible).forEach(l => l.curvature = +evt.target.value)
                   set_data({ ...data })
                 }}
               />
@@ -477,7 +477,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='radio'
                 onChange={
                   evt => {
-                    data.links.filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => l.visible).forEach(
                       l => l.label_position = evt.target.value
                     )
                     set_data({ ...data })
@@ -492,7 +492,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value="middle"
                 type='radio'
                 onChange={evt => {
-                  data.links.filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => l.visible).forEach(
                     l => l.label_position = evt.target.value
                   )
                   set_data({ ...data })
@@ -506,7 +506,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value="end"
                 type='radio'
                 onChange={evt => {
-                  data.links.filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => l.visible).forEach(
                     l => l.label_position = evt.target.value
                   )
                   set_data({ ...data })
@@ -520,7 +520,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Attaché au flux'
                 onChange={evt => {
-                  data.links.filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => l.visible).forEach(
                     l => l.label_on_path = evt.target.checked
                   )
                   set_data({ ...data })
@@ -536,7 +536,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label en noir'
                 onChange={
                   () => {
-                    data.links.filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => l.visible).forEach(
                       l => l.text_color = 'black'
                     )
                     set_data({ ...data })
@@ -551,7 +551,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label blanc'
                 onChange={
                   () => {
-                    data.links.filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => l.visible).forEach(
                       l => l.text_color = 'white'
                     )
                     set_data({ ...data })
@@ -566,7 +566,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label en couleur'
                 onChange={
                   () => {
-                    data.links.filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => l.visible).forEach(
                       l => l.text_color = l.color
                     )
                     set_data({ ...data })
@@ -597,7 +597,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    links.forEach(
+                    Object.values(links).forEach(
                       link => {
                         link.visible = true
                         link.label_visible = true
@@ -635,7 +635,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   const value_index = getValueIndex(data)
   let max_link_value = 0
-  links.forEach(link => {
+  Object.values(links).forEach(link => {
     if (link.value[value_index] > max_link_value) {
       max_link_value = link.value[value_index]
     }

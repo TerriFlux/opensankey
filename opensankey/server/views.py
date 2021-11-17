@@ -86,6 +86,7 @@ def upload_exemple():
     if exemple == "pommes_poires.xlsx":
         nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
         context = {
+            'version': '0.4',
             'error'  : error,
             'nodes'  : nodes,
             'links'  : links,
@@ -99,6 +100,7 @@ def upload_exemple():
         layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
         layout_data = json.load(layout_file)
         sankey_dict["layout"] = layout_data
+        sankey_dict['version'] = '0.4'
         json_data = json.dumps(sankey_dict)
 
     response = Response(
