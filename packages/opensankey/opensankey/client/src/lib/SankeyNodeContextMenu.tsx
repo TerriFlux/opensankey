@@ -3,7 +3,7 @@ import { Button, Modal, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { reorganize_inputLinksId} from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyNode, SankeyNodePropTypes } from './types'
-import { delete_link, delete_node, normalize_name } from './SankeyUtils'
+import { delete_link, delete_node } from './SankeyUtils'
 
 const SankeyNodeContextMenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -15,13 +15,16 @@ const SankeyNodeContextMenuPropTypes = {
 
 type SankeyNodeContextMenuTypes = InferProps<typeof SankeyNodeContextMenuPropTypes>
 const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ data, set_data, show, selected_node, closeNodeContextMenu }) => {
-  //const { nodes, links } = data
-  const display_nodes : SankeyNode[] = data.nodes.filter( n=> n.display )
-  const display_links : SankeyLink[] = data.links.filter( l=> {
-    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
-  })
+  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
+  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+  //   const source_node = data.nodes[l.idSource]
+  //   const target_node = data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // }).map(l=> ({[l.idLink] : {...l} })))
+
+  const display_nodes = data.nodes
+  const display_links = data.links
+
   
   return (
     <Modal size="sm" show={show} onHide={closeNodeContextMenu}>
@@ -71,7 +74,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             onClick={
               () => {
                 while (selected_node.inputLinksId.length > 0) {
-                  const link = display_links[display_links.findIndex(l=>l.idLink===selected_node.inputLinksId[0])]
+                  const link = display_links[selected_node.inputLinksId[0]]
                   delete_link(data, link)
                 }
                 set_data({ ...data })
@@ -84,7 +87,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             onClick = {
               () =>  {
                 while (selected_node.outputLinksId.length > 0) {
-                  const link = display_links[display_links.findIndex(l=>l.idLink===selected_node.inputLinksId[0])]
+                  const link = display_links[selected_node.inputLinksId[0]]
                   delete_link(data, link)
                 }
                 set_data({ ...data })
@@ -100,7 +103,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_x = selected_node.x
                 const current_prev_y = selected_node.y - data.v_space
-                const node_to_replace = display_nodes.filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_x && n.y === current_prev_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.y = selected_node.y
                 }
@@ -116,7 +119,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_x = selected_node.x
                 const current_prev_y = selected_node.y + data.v_space
-                const node_to_replace = display_nodes.filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_x && n.y === current_prev_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.y = selected_node.y
                 }
@@ -134,7 +137,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_prev_x = Math.round(selected_node.x/data.h_space)*data.h_space - data.h_space
                 const current_y = selected_node.y 
-                const node_to_replace = display_nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.x = Math.round(selected_node.x/data.h_space)*data.h_space
                 }
@@ -150,7 +153,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_prev_x = Math.round(selected_node.x/data.h_space)*data.h_space + data.h_space
                 const current_y = selected_node.y 
-                const node_to_replace = display_nodes.filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.x = Math.round(selected_node.x/data.h_space)*data.h_space
                 }
