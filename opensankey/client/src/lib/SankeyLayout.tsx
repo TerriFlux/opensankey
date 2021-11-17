@@ -230,7 +230,7 @@ export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number
 ) => {
-  const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
+  let display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
   const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
     const source_node = data.nodes[l.idSource]
     const target_node = data.nodes[l.idTarget]
@@ -299,8 +299,9 @@ export const compute_auto_sankey = (
 
   // Reorder links using the x of source name as criteria 
   // Compute input_outputLinksId
-
+  Object.values(display_nodes).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
+  display_nodes = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
@@ -461,11 +462,13 @@ export const compute_auto_sankey = (
   // })
   //data.max_vertical_offset = max_vertical_offset
 
-  reorganize_all_input_outputLinksId(data.nodes, data.links)
   data.width = width + h_space
   data.height = Math.max(1500,max_vertical_offset + 100)
   Object.values(display_nodes).forEach(n => data.nodes[n.idNode] = {...n})
   Object.values(display_links).forEach(l => data.links[l.idLink] = {...l})
+  
+  reorganize_all_input_outputLinksId(data.nodes, data.links)
+
   return []
 }
 
@@ -649,9 +652,8 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
     current_y = current_y - delta_y
   })
   // Hides agregated nodes
-  //selected_node.display = false
-  // nodes[selected_node].label_visible = false
-  // nodes[selected_node].visible = false
+  selected_node.visible = false
+  selected_node.label_visible = false
   selected_node.inputLinksId.forEach(
     idLink => data.links[idLink].visible = false
   )
