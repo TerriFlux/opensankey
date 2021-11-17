@@ -5,7 +5,7 @@ import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodeProp
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple, normalize_name } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 
 const MenuPropTypes = {
@@ -57,39 +57,25 @@ const Menu: FunctionComponent<MenuTypes> = (
   const set_show_link = useState(true)[1]
 
   
-  const display_nodes : SankeyNode [] = data.nodes.filter( n=> n.display )
-  const display_links : SankeyLink [] = data.links.filter( l=> {
-    const source_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    const target_node = data.nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    return source_node.display &&  target_node.display
-  })
+  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
+  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+  //   const source_node = data.nodes[l.idSource]
+  //   const target_node = data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // }).map(l=> ({[l.idLink] : {...l} })))
+  const display_nodes = data.nodes
+  const display_links = data.links
 
   const value_index = getValueIndex(data)
   const add_new_node = () => {
     const { nodes } = data
-    // permet de definir un id unique (même en cas de delete node)
-    let nId = 'node0'
-    let newId = 0
-    // nodes.map((n, i) => {
-    // //   if (n.id > max) {
-    // //     max = n.id
-    // //   }
-    // // })
-    if (nodes.length > 0) {
-      nId = (nodes[nodes.length - 1].idNode as string)
-      newId = parseInt(nId.replace('node', '')) + 1
-    }
-
     const node: SankeyNode = default_node()
-    //node.id = newId
-    node.idNode = 'node' + newId
-    node.name = 'n' + newId
-    // node.x = nodes.length * 50
-    node.x = newId * 50
-    nodes.push(node)
+    node.idNode = 'node' + Object.keys(nodes).length
+    node.name = node.idNode
+    node.x = Object.keys(nodes).length * 50
+    nodes[node.idNode] = node
     set_selected_node(node)
     set_data({ ...data })
-    // console.log(JSON.parse(JSON.stringify(nodes)))
   }
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -201,18 +187,19 @@ const Menu: FunctionComponent<MenuTypes> = (
   const add_new_link = () => {
     const { nodes, links } = data
 
-    if (nodes.length < 2) {
+    if (Object.keys(nodes).length < 2) {
       return
     }
     const link: SankeyLink = default_link()
 
-    links.push(link)
-    link.idLink = 'link' + links.length
-    link.source_name = nodes[0].name
-    link.target_name = nodes[1].name
+    link.idLink = 'link' + Object.keys(links).length
+    links[link.idLink] = link
+    const node_keys = Object.keys(nodes)
+    link.idSource = nodes[node_keys[0]].idNode
+    link.idTarget = nodes[node_keys[1]].idNode
 
-    nodes[0].outputLinksId.push(link.idLink)
-    nodes[1].inputLinksId.push(link.idLink)
+    nodes[node_keys[0]].outputLinksId.push(link.idLink)
+    nodes[node_keys[1]].inputLinksId.push(link.idLink)
 
     set_selected_link(link)
     set_data({ ...data })
@@ -228,78 +215,71 @@ const Menu: FunctionComponent<MenuTypes> = (
     let link = selected_link
     if (duplicate) {
       link = JSON.parse(JSON.stringify(selected_link))
-      data.links.push(link)
+      link.idLink = 'link' + Object.keys(data.links).length+1
+      data.links[link.idLink] = link
       selected_link = link
-      const target_node = data.nodes.filter(n => n.name === link.target_name)[0]
+      const target_node = data.nodes[link.idTarget]
       target_node.inputLinksId.push(selected_link.idLink)
     } else {
       console.log('========1=============')
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
-      const previous_node = data.nodes.filter(n => n.name === link.source_name)[0]
+      const previous_node = data.nodes[link.idSource]
       previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
     }
 
-    const source_node = data.nodes.filter(n => n.name === changeEvent.target.value)[0]
-    link.source_name = source_node.name
+    const source_node = data.nodes[changeEvent.target.value]
+    link.idSource = source_node.idNode
     source_node.outputLinksId.push(selected_link.idLink)
 
     set_data({ ...data })
   }
 
   const addDropSource = () => {
-    if (data.nodes.length >= 2 && data.links.length != 0) {
+    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
       return (
-        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.source_name) === normalize_name(n.name)} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idSource === n.idNode} >{n.name}</option>)
       )
     }
   }
   const addDropCible = () => {
-    if (data.nodes.length >= 2 && data.links.length != 0) {
+    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
 
       return (
-        data.nodes.map((n, i) => <option key={i} value={n.name} selected={normalize_name(selected_link.target_name) === normalize_name(n.name)} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idTarget === n.idNode} >{n.name}</option>)
       )
     }
   }
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes, links } = data
+    const { nodes } = data
     let link = selected_link
     if (duplicate) {
       link = JSON.parse(JSON.stringify(selected_link))
-      links.push(link)
+      link.idLink = 'link' + Object.keys(data.links).length+1
+      data.links[link.idLink] = link
       selected_link = link
-      const source_node = nodes.filter(n => n.name === link.source_name)[0]
+      const source_node = nodes[link.idSource]
       source_node.outputLinksId.push(selected_link.idLink)
     } else {
-      const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+      const previous_node = nodes[link.idTarget]
       previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
     }
 
-    const target_node = nodes.filter(n => n.name === changeEvent.target.value)[0]
-    link.target_name = target_node.name
+    const target_node = nodes[changeEvent.target.value]
+    link.idTarget = target_node.idNode
     target_node.inputLinksId.push(selected_link.idLink)
 
     set_data({ ...data })
   }
 
-
   const addLabelId = () => {
-    if (display_nodes.length != 0) {
+    if (Object.keys(display_nodes).length != 0) {
       return selected_node.idNode
     }
   }
 
-  //const selected_links: SankeyLink[] = []
-  //const the_link = selected_link
-  //selected_links.push(the_link)
-
   const link = selected_link
-  // if (selected_links[0] === undefined) {
-  //   selected_links[0] = default_link()
-  //   link = selected_links[0]
-  // }
 
   const props = {
     scroll: true,
@@ -435,11 +415,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Select id="selectionNode"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          set_selected_node(display_nodes.filter(f => { return f.name == evt.target.value })[0])
+                          set_selected_node(display_nodes[evt.target.value])
                         }
                       }
                     >
-                      {data.nodes.map((n, i) => <option key={i} value={n.name} selected={data.nodes[i].idNode === selected_node.idNode} >{data.nodes[i].name}</option>)}
+                      {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={n.idNode === selected_node.idNode} >{n.name}</option>)}
                     </Form.Select>
                   </Col>
 
@@ -452,8 +432,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       onClick={
                         () => {
                           delete_node(data, selected_node)
-                          // on change le selected_node car il n'existe plus, met le dernier node de la liste nodes
-                          set_selected_node(data.nodes.length - 1)
+                          set_selected_node(default_node())
                           set_data({ ...data })
                         }
                       }
@@ -470,10 +449,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <FormControl
                         value={node.name}
                         onChange={evt => {
-                          const source_links = display_links.filter(l => l.source_name === selected_node.name)
-                          const target_links = display_links.filter(l => l.target_name === selected_node.name)
-                          source_links.forEach(l => l.source_name = evt.target.value)
-                          target_links.forEach(l => l.target_name = evt.target.value)
+                          const source_links = Object.values(display_links).filter(l => l.idSource === selected_node.name)
+                          const target_links = Object.values(display_links).filter(l => l.idTarget === selected_node.name)
+                          source_links.forEach(l => l.idSource = evt.target.value)
+                          target_links.forEach(l => l.idTarget = evt.target.value)
                           selected_node.name = evt.target.value
                           set_data({ ...data })
                         }}
@@ -496,7 +475,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           }
                         }
                       > <option>Choisissez parent</option>
-                        {data.nodes.map((n, i) => <option key={i} value={n.name} selected={selected_node.dimensions[data.dimension_name].parent_name === n.name} >{n.name}</option>)}
+                        {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_node.dimensions[data.dimension_name].parent_name === n.idNode} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
                   </Form.Group>
@@ -574,13 +553,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Select id="selectionLink"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          const newLink = display_links.filter(f => { return f.idLink == evt.target.value })[0].idLink
+                          const newLink = Object.values(display_links).filter(f => { return f.idLink == evt.target.value })[0].idLink
                           set_selected_link(newLink)
                           set_data({ ...data })
                         }
                       }
                     >
-                      {data.links.map((n, i) => <option key={i} value={n.idLink as string} selected={n.idLink == selected_link.idLink}  >{n.idLink}</option>)}
+                      {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name+' -> '+display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
                   </Col>
 

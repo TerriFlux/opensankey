@@ -56,8 +56,8 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 export const SankeyLinkPropTypes = {
   // identification
   idLink: PropTypes.string.isRequired,
-  source_name: PropTypes.string.isRequired,
-  target_name: PropTypes.string.isRequired,
+  idSource: PropTypes.string.isRequired,
+  idTarget: PropTypes.string.isRequired,
 
   // type of link
   recycling: PropTypes.bool,
@@ -120,8 +120,8 @@ export const SankeyDataPropTypes = {
   right_shift: PropTypes.number.isRequired,
   max_shift: PropTypes.number.isRequired,
 
-  nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-  links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
+  nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
+  links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
   dimension_name: PropTypes.string.isRequired,
 

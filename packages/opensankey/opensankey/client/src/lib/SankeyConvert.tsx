@@ -1,5 +1,5 @@
-import { SankeyData, SankeyLink } from './types'
-import { normalize_name, setSelectedTags } from './SankeyUtils'
+import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { setSelectedTags } from './SankeyUtils'
 
 interface ConvertSankeyNode {
   id?: string
@@ -70,10 +70,15 @@ interface ConvertSankeyData {
   filtered_nodes_names: string[],
   filtered_links: any,
   previous_filter: any,
+  trade_hspace?: number
   periods?: boolean
   tags_catalog: { group_name : string, tags: string[],selected_tags: string[]}[]
 }
 
+const normalize_name = (name: string) => {
+  const new_name = name.split('\\n').join('').split(' ').join('')
+  return new_name
+}
 
 export const convert_data = (
   data_to_convert: SankeyData
@@ -108,7 +113,7 @@ export const convert_data = (
   if (data_to_convert.tags_catalog['Exchanges']) {
     data_to_convert.tags_catalog['Exchanges'].group_name = 'Echanges'
   }
-  if (!Array.isArray(data.links)) {
+  if (!Array.isArray(data.links) && data.version !== '0.5') {
     const key_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
@@ -150,7 +155,7 @@ export const convert_data = (
         )
       }
     )
-    data_to_convert.links = new_links
+    data_to_convert.links = Object.assign({}, ...new_links.map(l=> ({[l.idLink] : {...l} })))
     if ( key_names.length > 1 && !data.periods && data.region_names) {
       data.tags_catalog['Regions'] = {
         group_name: 'Regions',
@@ -169,13 +174,62 @@ export const convert_data = (
     delete data.region_names
     delete data.region_name
   }
-  if (data.links.length > 0 && !data.links[0].idLink) {  
-    data.links.forEach((l, i) => l.idLink = 'link' + i)
+  if ( data.version === '0.4') {
+    if ((data.links as any).length > 0 && !data.links[0].idLink) {  
+      (data.links as any).forEach((l : SankeyLink, i : number) => l.idLink = 'link' + i)
+    }
+    if ((data.nodes as any).length > 0 && !data.nodes[0].idNode) {  
+      (data.nodes as any).forEach((n : SankeyNode) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+    }
+    data_to_convert.links = Object.assign({}, ...(data.links as any).map((l : SankeyLink)=> ({[l.idLink] : {...l} })))  
+    data_to_convert.nodes = Object.assign({}, ...(data.nodes as any).map((n : SankeyNode)=> ({[n.idNode] : {...n} })))    
   }
-  if (data.nodes.length > 0 && !data.nodes[0].idNode) {  
-    data.nodes.forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+  if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {  
+    Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
-  data.nodes.forEach( n => {
+  if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {  
+    Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+  }
+  Object.values(data.links).forEach(l => {
+    if ((l as any).source_name) {
+      const source_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name((l as any).source_name))[0]
+      const target_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name((l as any).target_name))[0]
+      l.idSource = source_node.idNode
+      l.idTarget = target_node.idNode
+      delete (l as any).source_name
+      delete (l as any).target_name
+    }
+  })
+
+  if (!data_to_convert.tags_catalog['dimensions']) {
+    data_to_convert.tags_catalog['dimensions'] = {
+      group_name: 'Dimensions',
+      tags: {'Primaire' : {
+        name: 'Primaire',
+        selected: true,
+        color: ''
+      }},
+      banner: 'one'
+    }
+  }
+  if (!data_to_convert.tags_catalog) {
+    data_to_convert.tags_catalog = {}
+  }
+  Object.values(data.nodes).forEach(n => {
+    if (n.dimensions === undefined) {
+      n.dimensions = {'Primaire':{parent_name: undefined}}
+    }
+    Object.entries(data.tags_catalog['dimensions'].tags).forEach( tag => {
+      if ((n as any).dimensions[tag[0]] && (n as any).dimensions[tag[0]].parent_name) {
+        const parent_node = Object.values(data.nodes).filter(n2 => normalize_name(n2.name) === normalize_name((n as any).dimensions[tag[0]].parent_name))[0]
+        if (!parent_node) {
+          return
+        }
+        (n as any).dimensions[tag[0]].parent_name = parent_node.idNode
+      }
+    })
+  })
+  Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
       n.outputLinksId = [];
@@ -190,7 +244,7 @@ export const convert_data = (
       delete ((n as unknown) as ConvertSankeyNode).id
     }
   })
-  data.nodes.forEach(n => {
+  Object.values(data.nodes).forEach(n => {
     if (!n.inputLinksId) {
       n.inputLinksId = []
     }
@@ -235,14 +289,14 @@ export const convert_data = (
     data.node_width = 10
   }
 
-  if (!data_to_convert.tags_catalog) {
-    data_to_convert.tags_catalog = {}
-  }
   if (data.h_space === undefined) {
     data.h_space = 200
   }
   if (data.v_space === undefined) {
     data.v_space = 100
+  }
+  if (data.trade_hspace === undefined) {
+    data.trade_hspace = 200
   }
   if (data.left_shift === undefined) {
     data.left_shift = 0.4
@@ -263,7 +317,7 @@ export const convert_data = (
 
   let import_export = false
   const subchains: string[] = []
-  nodes.forEach(
+  Object.values(nodes).forEach(
     n => {
       const n_convert = (n as unknown) as ConvertSankeyNode
       if (!n.tags) {
@@ -278,7 +332,12 @@ export const convert_data = (
         })
         delete n_convert.subchain
       }
-
+      // if (n.x === undefined) {
+      //   n.x = 0
+      // }
+      // if (n.y === undefined) {
+      //   n.y = 0
+      // }
       if (n.visible === undefined) {
         n.visible = true
       }
@@ -297,15 +356,15 @@ export const convert_data = (
       if (n.label_visible === undefined) {
         n.label_visible = n.visible
       }
-      if (n_convert.display === 1) {
-        n.display = true
-      }
-      if (n_convert.display === 0) {
-        n.display = false
-      }
-      if (n.display === undefined) {
-        n.display = true
-      }
+      // if (n_convert.display === 1) {
+      //   n.display = true
+      // }
+      // if (n_convert.display === 0) {
+      //   n.display = false
+      // }
+      // if (n.display === undefined) {
+      //   n.display = true
+      // }
 
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
@@ -317,7 +376,7 @@ export const convert_data = (
         import_export = true
         n.visible = true
         n.tags['Exchanges'] = ['Importations']
-        const l = links[links.findIndex(l=>l.idLink === n.outputLinksId[0])]
+        const l = links[n.outputLinksId[0]]
         if (!l.tags) {
           l.tags = {}
         }
@@ -329,7 +388,7 @@ export const convert_data = (
         import_export = true
         n.visible = true
         n.tags['Exchanges'] = ['Exportations']
-        const l = links[links.findIndex(l=>l.idLink === n.inputLinksId[0])]
+        const l = links[n.inputLinksId[0]]
         if (!l.tags) {
           l.tags = {}
         }
@@ -340,9 +399,6 @@ export const convert_data = (
       } //else if (!n.tags['Exchanges']) {
       //   n.tags['Exchanges'] = ['Other']
       // }
-      if (n.dimensions === undefined) {
-        n.dimensions = {'Primaire':{parent_name: undefined}}
-      }
     }
   )
 
@@ -415,8 +471,8 @@ export const convert_data = (
   }
 
   let flux_max = 0
-  links.forEach(
-    (l) => {
+  Object.values(links).forEach(
+    l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
 
       l.value.forEach(v => {
@@ -425,8 +481,8 @@ export const convert_data = (
           flux_max = v
         }
       })
-      const source_node = nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-      const target_node = nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
+      const source_node = nodes[l.idSource]
+      const target_node = nodes[l.idTarget]
       if (!source_node || !target_node) {
         return
       }
@@ -597,17 +653,7 @@ export const convert_data = (
     }
   )
 
-  if (!data_to_convert.tags_catalog['dimensions']) {
-    data_to_convert.tags_catalog['dimensions'] = {
-      group_name: 'Dimensions',
-      tags: {'Primaire' : {
-        name: 'Primaire',
-        selected: true,
-        color: ''
-      }},
-      banner: 'one'
-    }
-  }
+
 
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
@@ -621,6 +667,6 @@ export const convert_data = (
     units_names.splice(1, 0, 'natural')
   }
 
-  data.version = '0.4'
+  data.version = '0.5'
   setSelectedTags(data)
 }

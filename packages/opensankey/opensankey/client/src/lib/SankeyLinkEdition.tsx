@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 
 const SankeyLinkEditionPropTypes = {
