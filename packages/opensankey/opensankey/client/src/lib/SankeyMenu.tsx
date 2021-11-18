@@ -70,7 +70,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node()
-    node.idNode = 'node' + Object.keys(nodes).length
+    node.idNode = 'node' + data.node_idx
+    data.node_idx = data.node_idx+1
     node.name = node.idNode
     node.x = Object.keys(nodes).length * 50
     nodes[node.idNode] = node
@@ -323,6 +324,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                       Object.assign(data, server_data)
                       convert_data(data)
+                      data.node_idx = Object.keys(data.nodes).length
+                      data.link_idx = Object.keys(data.links).length
                       compute_auto_sankey(data, 200)
                       set_data({ ...data })
                     }

@@ -280,8 +280,10 @@ export const default_sankey_data = (): SankeyData => {
     },
 
     tags_catalog:{},
-    tags_group_idx:0,
-    tag_idx:0
+    tags_group_idx:1,
+    tag_idx:1,
+    node_idx:1,
+    link_idx:1
   }
 }
 
@@ -476,6 +478,8 @@ export const uploadExemple = (
     convert_data(data)
     data.left_shift = 0.40
     data.right_shift = 0.50
+    data.node_idx = Object.keys(data.nodes).length
+    data.link_idx = Object.keys(data.nodes).length
     if ('layout' in (data as SankeyData)) {
       // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
       // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {

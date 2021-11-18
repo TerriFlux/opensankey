@@ -1453,7 +1453,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //       ? 'bold' : 'normal'
       //   return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
       // })
-      .text(d => d.name)
+      .text(d =>d.name.split(' - ')[0])
       // .each(d => {
       //   const wrap = textwrap()
       //     .bounds({ height: 100, width: 80 })
@@ -1467,7 +1467,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //       d.type === 'product' && display_style.product_uppercase
       //     ) {
       //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.toUpperCase())
-      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0].toUpperCase())
+      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(split('d.name. - ')[0].toUpperCase())
       //     } else {
       //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name)
       //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0])
