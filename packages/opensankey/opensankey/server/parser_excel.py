@@ -102,6 +102,8 @@ def parse_simple_excel(
         try:
             color = ws.iat[i, nodes_cols.index('Color')]
             shape = ws.iat[i, nodes_cols.index('Shape')]
+            if not is_hex(color):
+              color = webcolors.name_to_hex(color)   
             new_node['color'] = color
             if shape == 'rectangle' :
                 new_node['type'] = 'sector' 
