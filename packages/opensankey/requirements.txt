@@ -1,3 +1,4 @@
 cloudconvert==1.0.0
 uwheel
 flaskfilemanager
+webcolors
