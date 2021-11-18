@@ -155,7 +155,10 @@ export const convert_data = (
         )
       }
     )
-    data_to_convert.links = Object.assign({}, ...new_links.map(l=> ({[l.idLink] : {...l} })))
+    new_links.forEach( (l, i) => l.idLink = 'link' + i)
+    data_to_convert.links = Object.assign({}, ...new_links.map(l=> ({[l.idLink] : {...l} })));
+    (data_to_convert.nodes as any).forEach( (n : SankeyNode, i : number) => n.idNode = 'node' + i)
+    data_to_convert.nodes = Object.assign({}, ...(data_to_convert.nodes as any).map((n : SankeyNode)=> ({[n.idNode] : {...n} })))
     if ( key_names.length > 1 && !data.periods && data.region_names) {
       data.tags_catalog['Regions'] = {
         group_name: 'Regions',
@@ -234,10 +237,10 @@ export const convert_data = (
       n.inputLinksId = []
       n.outputLinksId = [];
       (((n as unknown) as ConvertSankeyNode).input_links as number[]).forEach( link_idx => {
-        n.inputLinksId.push(data.links[link_idx].idLink)
+        n.inputLinksId.push(data.links['link'+link_idx].idLink)
       });
       (((n as unknown) as ConvertSankeyNode).output_links as number[]).forEach( link_idx => {
-        n.outputLinksId.push(data.links[link_idx].idLink)
+        n.outputLinksId.push(data.links['link'+link_idx].idLink)
       })
       delete ((n as unknown) as ConvertSankeyNode).output_links
       delete ((n as unknown) as ConvertSankeyNode).input_links
