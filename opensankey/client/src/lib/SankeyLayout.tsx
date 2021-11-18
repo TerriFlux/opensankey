@@ -634,7 +634,7 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
     }
   }
   desagregate_nodes.forEach( n => {
-    //n.display = true
+    n.display = true
     n.visible = true
     n.label_visible = true
   })
@@ -652,21 +652,19 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
     current_y = current_y - delta_y
   })
   // Hides agregated nodes
+  selected_node.display = false
   selected_node.visible = false
   selected_node.label_visible = false
   selected_node.inputLinksId.forEach(
-    idLink => data.links[idLink].visible = false
+    idLink => {
+      data.links[idLink].visible = false
+    }
   )
   selected_node.outputLinksId.forEach(
-    idLink => data.links[idLink].visible = false
+    idLink => {
+      data.links[idLink].visible = false
+    }
   )
-
-  // const new_display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const new_display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
 
   desagregate_nodes.forEach(n => {
     n.inputLinksId = []
@@ -684,6 +682,7 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
         const input_link =  data.links[idLink]
         const source_node = data.nodes[input_link.idSource]
         input_link.visible = source_node.visible
+        input_link.label_visible = source_node.visible
       }
     )
     n.outputLinksId.forEach(
@@ -691,6 +690,7 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
         const output_link =  data.links[idLink]
         const target_node = data.nodes[output_link.idTarget]
         output_link.visible = target_node.visible
+        output_link.label_visible = target_node.visible
       }
     )
   })
@@ -731,11 +731,13 @@ export const agregation = (selected_node : SankeyNode, data : SankeyData) =>  {
     
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
   // show agregated node
+  agregated_node.display = true
   agregated_node.visible = true
   agregated_node.label_visible = true
   let mean_x = 0
   let mean_y = 0
   desagregate_nodes.forEach(n => {
+    n.display = false
     n.label_visible = false
     n.visible = false
     n.inputLinksId.forEach(idLink=>data.links[idLink].visible=false)

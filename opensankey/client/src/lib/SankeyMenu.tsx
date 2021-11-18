@@ -180,10 +180,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const [checked, setChecked] = useState(false)
 
-  // if (selected_id_link == '' && display_links.length != 0) {
-  //   selected_id_link = (display_links[0].idLink as string)
-  // }
-
   const add_new_link = () => {
     const { nodes, links } = data
 
@@ -389,20 +385,50 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
           <Accordion activeKey={nav_item_active as string} >
-            <Accordion.Item eventKey="0" onClick={() => set_nav_item_active('0')}>
+            <Accordion.Item 
+              eventKey="0" 
+              onClick={ 
+                () => {
+                  if (nav_item_active === '0' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('0')                  
+                  }
+                }
+              }>
               <Accordion.Header>Shortcut</Accordion.Header>
               <Accordion.Body>
                 <p>Fonctionnement des clics :</p><br />
                 <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="1" onClick={() => set_nav_item_active('1')} >
+            <Accordion.Item 
+              eventKey="1" 
+              onClick={
+                () => {
+                  if (nav_item_active === '1' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('1')                  
+                  }
+                }
+              }>
               <Accordion.Header>Paramêtres généraux</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="2" onClick={() => set_nav_item_active('2')}>
+            <Accordion.Item 
+              eventKey="2" 
+              onClick={ 
+                () => {
+                  if (nav_item_active === '2' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('2')                  
+                  }
+                }
+              }>
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
                 <br />
@@ -531,7 +557,16 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="3" onClick={() => set_nav_item_active('3')}>
+            <Accordion.Item 
+              eventKey="3" 
+              onClick={() => {
+                if (nav_item_active === '3' ) {
+                  set_nav_item_active('')
+                } else {
+                  set_nav_item_active('3')                  
+                }
+              }}
+            >
               <Accordion.Header>Links</Accordion.Header>
               <Accordion.Body>
                 <Row>
@@ -625,13 +660,33 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {link_edition}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="4" onClick={() => set_nav_item_active('4')}>
+            <Accordion.Item 
+              eventKey="4" 
+              onClick={ 
+                () => {
+                  if (nav_item_active === '4' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('4')                  
+                  }
+                }
+              }>
               <Accordion.Header>Tags</Accordion.Header>
               <Accordion.Body>
                 {settings_edition_tags}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item eventKey="5" onClick={() => set_nav_item_active('5')}>
+            <Accordion.Item 
+              eventKey="5" 
+              onClick={ 
+                () => {
+                  if (nav_item_active === '5' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('5')                  
+                  }
+                }
+              }>
               <Accordion.Header>Aide</Accordion.Header>
               <Accordion.Body>
               </Accordion.Body>
