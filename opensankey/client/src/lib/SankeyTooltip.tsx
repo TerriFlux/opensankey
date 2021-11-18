@@ -19,7 +19,7 @@ export const nodeTooltipsContent = (
     node.inputLinksId.forEach(element => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
       const value = getLinkValue(data, element)
-      content += '<li>' + data.nodes[data.links[element].idSource] + ' : ' + value + ' (' + pcValue + '%)</li>' 
+      content += '<li>' + data.nodes[data.links[element].idSource].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>' 
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.inputLinksId) + '<br>'
   }
@@ -28,7 +28,7 @@ export const nodeTooltipsContent = (
     node.outputLinksId.forEach(element => {
       const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
       const value = getLinkValue(data, element)
-      content += '<li>' + data.nodes[data.links[element].idTarget] + ' : ' + value + ' (' + pcValue + '%)</li>'
+      content += '<li>' + data.nodes[data.links[element].idTarget].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
