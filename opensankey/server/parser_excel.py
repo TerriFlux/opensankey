@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
+import re
+import webcolors
 import math
+
+def is_hex(s):
+    return re.fullmatch(r"^[0-9a-fA-F]$", s or "") is not None
 
 def parse_sankey_energie_csv(
     csv_file
@@ -33,7 +38,7 @@ def parse_sankey_energie_csv(
         sankey_dict['nodes'].append(
             {
                 'id': node_id,
-                'color': 'grey',
+                'color': webcolors.to_hex('grey'),
                 'name': node_name,
                 'type': 'sector',
                 'orientation': 'vertical'
@@ -47,13 +52,16 @@ def parse_sankey_energie_csv(
         id = id+1
         source_name = row['source']
         target_name = row['target']
+        color = row['colors']
+        if not is_hex(color):
+          color = webcolors.name_to_hex(color)
         sankey_dict['links']. append(
             {
                 'source_name': source_name,
                 'target_name': target_name,
                 'value': [],
                 'display_value': [],
-                'color': row['colors'],
+                'color': color,
                 'curvature' : 1,
                 'label_position' : 'beginning',
                 'left_horiz_shift' : 0.40,
@@ -134,7 +142,9 @@ def parse_simple_excel(
         if source_node['type'] == 'product':
             color = source_node['color']
         elif target_node['type'] == 'product':
-            color = target_node['color']           
+            color = target_node['color']
+        if not is_hex(color):
+          color = webcolors.name_to_hex(color)      
         links.append({
             'source_name' :  flux_ws.iat[row, flux_cols.index('Origin')],
             'target_name' :  flux_ws.iat[row, flux_cols.index('Destination')],
