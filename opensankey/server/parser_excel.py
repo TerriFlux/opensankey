@@ -5,7 +5,7 @@ import webcolors
 import math
 
 def is_hex(s):
-    return re.fullmatch(r"^[0-9a-fA-F]$", s or "") is not None
+    return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
 
 def parse_sankey_energie_csv(
     csv_file
