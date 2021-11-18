@@ -388,8 +388,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item 
               eventKey="0" 
               onClick={ 
-                () => {
-                  if (nav_item_active === '0' ) {
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '0' ) {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('0')                  
@@ -405,8 +405,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item 
               eventKey="1" 
               onClick={
-                () => {
-                  if (nav_item_active === '1' ) {
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '1' ) {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('1')                  
@@ -421,8 +421,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item 
               eventKey="2" 
               onClick={ 
-                () => {
-                  if (nav_item_active === '2' ) {
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '2' ) {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')                  
@@ -559,8 +559,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item 
               eventKey="3" 
-              onClick={() => {
-                if (nav_item_active === '3' ) {
+              onClick={evt => {
+                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3' ) {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('3')                  
@@ -588,7 +588,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Select id="selectionLink"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          const newLink = Object.values(display_links).filter(f => { return f.idLink == evt.target.value })[0].idLink
+                          const newLink = Object.values(display_links).filter(f => { return f.idLink == evt.target.value })[0]
                           set_selected_link(newLink)
                           set_data({ ...data })
                         }
@@ -663,8 +663,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item 
               eventKey="4" 
               onClick={ 
-                () => {
-                  if (nav_item_active === '4' ) {
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '4' ) {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('4')                  
@@ -679,8 +679,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item 
               eventKey="5" 
               onClick={ 
-                () => {
-                  if (nav_item_active === '5' ) {
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '5' ) {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('5')                  
@@ -710,3 +710,13 @@ Menu.propTypes = MenuPropTypes
 
 
 export default Menu
+
+function newFunction(nav_item_active: string, set_nav_item_active: (...args: any[]) => any): React.MouseEventHandler<HTMLElement> | undefined {
+  return (evt) => {
+    if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3' ) {
+      set_nav_item_active('')
+    } else {
+      set_nav_item_active('3')
+    }
+  }
+}

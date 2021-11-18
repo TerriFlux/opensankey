@@ -89,7 +89,7 @@ def parse_simple_excel(
             'type'    : 'sector',
             'dimensions' : {'Primaire':{'parent_name': None}}
         }
-        color = 'grey'
+        color = '#a9a9a9'
         shape = 'rectangle'
         try:
             color = ws.iat[i, nodes_cols.index('Color')]
