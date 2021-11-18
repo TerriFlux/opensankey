@@ -38,7 +38,7 @@ def parse_sankey_energie_csv(
         sankey_dict['nodes'].append(
             {
                 'id': node_id,
-                'color': webcolors.to_hex('grey'),
+                'color': webcolors.name_to_hex('grey'),
                 'name': node_name,
                 'type': 'sector',
                 'orientation': 'vertical'

@@ -141,7 +141,9 @@ export const SankeyDataPropTypes = {
 
   tags_catalog:TagsCatalogPropTypes,
   tags_group_idx: PropTypes.number.isRequired,
-  tag_idx: PropTypes.number.isRequired
+  tag_idx: PropTypes.number.isRequired,
+  node_idx: PropTypes.number.isRequired,
+  link_idx: PropTypes.number.isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>

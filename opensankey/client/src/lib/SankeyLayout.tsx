@@ -519,7 +519,8 @@ export const updateLayout = (
       if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
-        node.idNode = 'node' + Object.keys(data.nodes).length
+        node.idNode = 'node' + data.node_idx
+        data.node_idx = data.node_idx + 1
         data.nodes[node.idNode]
       } else {
         continue
