@@ -190,7 +190,7 @@ export const explore_branch = (
   let no_input_link = true
   let highest_branch_length = current_length
   Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && nodes[link.idSource].visible ) {
+    if (link.idTarget === idNode && nodes[link.idSource].node_visible ) {
       // if the node has never been visited, continue to explore the branch, otherwise stop (for recycling flows).
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
@@ -216,7 +216,7 @@ export const arrangeNodes = (
 ) => {
   // const display_nodes : SankeyNode[] = Object.values(data.nodes).filter( n=> n.display )
   Object.values(data.nodes).forEach(node => {
-    if ( !node.visible ) {
+    if ( !node.node_visible ) {
       return
     }
     const x = Math.round(node.x / h_space) * h_space
@@ -230,12 +230,12 @@ export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number
 ) => {
-  let display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-    const source_node = data.nodes[l.idSource]
-    const target_node = data.nodes[l.idTarget]
-    return source_node.display &&  target_node.display
-  }).map(l=> ({[l.idLink] : {...l} })))
+  //let display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.n ).map(n=> ({[n.idNode] : {...n} })))
+  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+  //   const source_node = data.nodes[l.idSource]
+  //   const target_node = data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // }).map(l=> ({[l.idLink] : {...l} })))
 
   //const extended_links = display_links as (SankeyLink & ExtendedSankeyLink)[]
   //sankey.update_scale(data.user_scale)
@@ -256,42 +256,29 @@ export const compute_auto_sankey = (
 
 
   // Use a relevant scale
-  Object.values(display_links).forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
+  Object.values(data.links).forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
   data.user_scale = max_node_value
 
   const vspace = data.v_space
-  //sankey.update_scale(max_node_value)
-  //const set_horizontal_indices : Set<number> = new Set()
-  // extended_links.forEach(l => {
-  //   let n = display_nodes[l.idSource]
-  //   //l.source = display_nodes.indexOf(n)
-  //   n = display_nodes.filter(n => n.idNode === l.idTarget)[0]
-  //   //l.target = display_nodes.indexOf(n)
-  // })
   const horizontal_indices: { [node_id:string]:number} = {}
-  Object.values(display_nodes).forEach((node) => {
-    const horizontal_index = explore_branch(node.idNode, 0, [], display_links,display_nodes)
+  Object.values(data.nodes).filter(n=>n.node_visible).forEach(node => {
+    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes)
     horizontal_indices[node.idNode] = horizontal_index
-    //set_horizontal_indices.add(horizontal_index)
     if (horizontal_index > max_horizontal_index) {
       max_horizontal_index = horizontal_index
     }
   })
-  Object.values(display_links).forEach(l => {
+  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(l => {
     if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
       l.recycling = true
     }
   })
 
   const width = max_horizontal_index * h_space
-  // const array_horizontal_indices = Array.from(set_horizontal_indices)
-  // array_horizontal_indices.sort((a, b) => a - b)
-  // nodes.forEach((node)=>{
-  //   node.horizontal_index = array_horizontal_indices.indexOf(node.horizontal_index )
-  // })
 
-  Object.values(display_nodes).forEach((node) => {
-    if (!node.visible) {
+
+  Object.values(data.nodes).forEach(node => {
+    if (!node.node_visible) {
       return
     }
     node.x = 50 + horizontal_indices[node.idNode] / max_horizontal_index * width //* 0.9
@@ -299,9 +286,8 @@ export const compute_auto_sankey = (
 
   // Reorder links using the x of source name as criteria 
   // Compute input_outputLinksId
-  Object.values(display_nodes).forEach(n => data.nodes[n.idNode] = {...n})
+  Object.values(data.nodes).filter(n=>n.node_visible).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
-  display_nodes = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
@@ -309,7 +295,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = Object.values(display_nodes).filter((n, ii) => n.visible && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
     if (the_nodes.length > 1) {
       //vertical_space = (0.6 * height - total_height) / (total_nb - 1)
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
@@ -321,9 +307,11 @@ export const compute_auto_sankey = (
     the_nodes.forEach((node, node_id) => {
       let total_input_offset = 0
       node.inputLinksId.forEach(
-        (idLink) => { if (data.links[idLink].visible) {
-          total_input_offset += +data.links[idLink].value[0]
-        }}
+        (idLink) => { 
+          if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
+            total_input_offset += +data.links[idLink].value[0]
+          }
+        }
       )
       if (node_id === 0) {
         node.y = 200//0.2 * height;
@@ -339,14 +327,14 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = Object.values(display_nodes).filter((n, ii) => n.visible && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
     let total_nb_outputLinksId_up = 0
     let total_nb_outputLinksId_down = 0
     the_nodes.forEach((node) => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.links[idLink].visible ) {
-            const target_node = display_nodes[data.links[idLink].idTarget]
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
+            const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               console.log(data.links[idLink].idTarget)
               return
@@ -365,7 +353,7 @@ export const compute_auto_sankey = (
     the_nodes.forEach(node => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.links[idLink].visible ) {
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               console.log(data.links[idLink].idTarget)
@@ -464,8 +452,6 @@ export const compute_auto_sankey = (
 
   data.width = width + h_space
   data.height = Math.max(1500,max_vertical_offset + 100)
-  Object.values(display_nodes).forEach(n => data.nodes[n.idNode] = {...n})
-  Object.values(display_links).forEach(l => data.links[l.idLink] = {...l})
   
   reorganize_all_input_outputLinksId(data.nodes, data.links)
 
@@ -498,10 +484,7 @@ export const updateLayout = (
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
-    if (!node.visible) {
-      return
-    }
-    if (!node.visible) {
+    if (!node.node_visible) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
@@ -516,7 +499,7 @@ export const updateLayout = (
     const nodes = Object.values(data.nodes).filter(n=>normalize_name(n.name) === normalize_name(node_layout.name) )
     let node : SankeyNode | undefined
     if (nodes.length === 0) {
-      if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
+      if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
         node.idNode = 'node' + data.node_idx
@@ -530,7 +513,7 @@ export const updateLayout = (
     if (!node) {
       continue
     }
-    if (!node.visible) {
+    if (!node.node_visible) {
       continue
     }
     node.name = node_layout.name
@@ -636,16 +619,12 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
   }
   desagregate_nodes.forEach( n => {
     n.display = true
-    n.visible = true
-    n.label_visible = true
+    n.node_visible = true
   })
   const nb_desagregated = desagregate_nodes.length
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
-    // show desagregated nodes and input and output links if source and target nodes are visible
-    // n.label_visible = true
-    // n.visible = true
     if (n.x === undefined) {
       n.x = selected_node.x
       n.y = selected_node.y - current_y
@@ -654,47 +633,8 @@ export const desagregation = (selected_node: SankeyNode, data: SankeyData) => {
   })
   // Hides agregated nodes
   selected_node.display = false
-  selected_node.visible = false
-  selected_node.label_visible = false
-  selected_node.inputLinksId.forEach(
-    idLink => {
-      data.links[idLink].visible = false
-    }
-  )
-  selected_node.outputLinksId.forEach(
-    idLink => {
-      data.links[idLink].visible = false
-    }
-  )
-
-  desagregate_nodes.forEach(n => {
-    n.inputLinksId = []
-    n.outputLinksId = []
-    Object.values(data.links).forEach( link => {
-      if (link.idTarget === n.idNode) {
-        n.inputLinksId.push(link.idLink)
-      }
-      if (link.idSource === n.idNode) {
-        n.outputLinksId.push(link.idLink)
-      }
-    })
-    n.inputLinksId.forEach(
-      idLink => {
-        const input_link =  data.links[idLink]
-        const source_node = data.nodes[input_link.idSource]
-        input_link.visible = source_node.visible
-        input_link.label_visible = source_node.visible
-      }
-    )
-    n.outputLinksId.forEach(
-      idLink => {
-        const output_link =  data.links[idLink]
-        const target_node = data.nodes[output_link.idTarget]
-        output_link.visible = target_node.visible
-        output_link.label_visible = target_node.visible
-      }
-    )
-  })
+  selected_node.node_visible = false
+  
 
   Object.values(data.nodes).forEach(n => {
     reorganize_node_inputLinksId(n,data.nodes,data.links)
@@ -733,48 +673,24 @@ export const agregation = (selected_node : SankeyNode, data : SankeyData) =>  {
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
   // show agregated node
   agregated_node.display = true
-  agregated_node.visible = true
-  agregated_node.label_visible = true
+  agregated_node.node_visible = true
+
   let mean_x = 0
   let mean_y = 0
   desagregate_nodes.forEach(n => {
-    n.display = false
-    n.label_visible = false
-    n.visible = false
-    n.inputLinksId.forEach(idLink=>data.links[idLink].visible=false)
-    n.outputLinksId.forEach(idLink=>data.links[idLink].visible=false)
+    data.nodes[n.idNode].display = false
+    data.nodes[n.idNode].node_visible = false
+
     mean_x += n.x
     mean_y += n.y
   })
   mean_x = mean_x/desagregate_nodes.length
   mean_y = mean_y/desagregate_nodes.length
 
-  // agregated_node.label_visible = true
-  // agregated_node.visible = true
   if (agregated_node.x === undefined ) {
     agregated_node.x = mean_x
     agregated_node.y = mean_y
   }
-
-  // const new_display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const new_display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
-
-  agregated_node.inputLinksId = []
-  agregated_node.outputLinksId = []
-  Object.values(data.links).forEach(link => {
-    if (link.idTarget === agregated_node.idNode) {
-      agregated_node.inputLinksId.push(link.idLink)
-    }
-    if (link.idSource === agregated_node.idNode) {
-      agregated_node.outputLinksId.push(link.idLink)
-    }
-  })
-  agregated_node.inputLinksId.forEach(idLink => data.links[idLink].visible = data.nodes[data.links[idLink].idSource].visible)
-  agregated_node.outputLinksId.forEach(idLink => data.links[idLink].visible = data.nodes[data.links[idLink].idTarget].visible)
 
   Object.values(data.nodes).forEach(n => {
     reorganize_node_inputLinksId(n,data.nodes,data.links)

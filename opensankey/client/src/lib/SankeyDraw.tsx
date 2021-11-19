@@ -4,7 +4,7 @@ import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets } from './SankeyUtils'
+import { compute_total_offsets,setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 
 window.d3 = d3
@@ -15,8 +15,6 @@ const SankeyDrawPropTypes = {
   select_node: PropTypes.func.isRequired,
   nodeContextMenu: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
-  node_label_visible: PropTypes.func.isRequired,
-  node_visible: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
 
   select_link: PropTypes.func.isRequired,
@@ -42,8 +40,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   select_node,
   nodeContextMenu,
   node_color,
-  node_visible,
-  node_label_visible,
   node_arrow_visible,
   select_link,
   linkContextMenu,
@@ -57,20 +53,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   linkTooltipsContent,
   getValueIndex
 }) => {
-  /* const [show, setShow] = useState(false)
-  const toggleShow = () => { setShow((s) => !s) }
-  const [checked, setChecked] = useState(false) */
   const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
   const min_thickness = 1
 
-  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
   const display_nodes = data.nodes
   const display_links = data.links
 
@@ -92,6 +79,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   let alt_key_pressed = false
 
   const value_index = getValueIndex(data)
+  setSelectedTags(data)
 
   const add_links = (
     static_sankey: boolean,
@@ -240,7 +228,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link')
       .attr('id', d => d.idLink)
       .attr('fill', 'none')
-      .attr('stroke-opacity', d => d.visible && d.value[value_index] >= display_style.filter ? ((String(d.display_value[value_index]).includes('[')) ? 0.3 : 0.95) : 0)
+      .attr('stroke-opacity', d => data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && d.value[value_index] >= display_style.filter ? ((String(d.display_value[value_index]).includes('[')) ? 0.3 : 0.95) : 0)
       .attr('stroke-width', d => {
         const link_value = test_link_value(display_nodes, d, data.tags_catalog)
         return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
@@ -254,7 +242,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         sankeyTooltip
           .style('opacity', 1)
           .html(linkTooltipsContent(data, d, getValueIndex))
-        if (d.visible && d.value[value_index] >= display_style.filter) {
+        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && d.value[value_index] >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
       })
@@ -268,7 +256,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
-        if (d.visible && d.value[value_index] >= display_style.filter) {
+        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && d.value[value_index] >= display_style.filter) {
           const opacity = String(d.display_value[value_index]).includes('[') ? 0.3 : 0.95
           return d3.select(this).attr('stroke-opacity', opacity)
         }
@@ -1294,7 +1282,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
         let display: string
-        if (node_label_visible(d) || node_visible(d)) { display = 'inline' } else { display = 'none' }
+        if (d.node_visible) { display = 'inline' } else { display = 'none' }
         return display
       })
 
@@ -1376,14 +1364,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
-      .attr('visibility', d => node_visible(d))
+      .attr('visibility', d => (d as SankeyNode).shape_visible ? 'visible' : 'hidden' )
       .attr('fill', d => node_color(d))
       //.attr('fill-opacity', d => (d as SankeyNode).visible ? 0.9 : 0)
       .attr('stroke', 'black')
       .attr('stroke-width', '0')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey) {
+        if ((d as SankeyNode).shape_visible && event.shiftKey) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1391,14 +1379,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey) {
+        if ((d as SankeyNode).shape_visible && event.shiftKey) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
       .on('mouseout', function (event, d) {
-        if (node_label_visible(d)) {
+        if ((d as SankeyNode).shape_visible) {
           //d3.select(this).attr('class', 'node')
           sankeyTooltip.style('opacity', 0)
         }
@@ -1439,7 +1427,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('x', d => d.x_label ? d.x_label : 0)
       .attr('y', d => d.y_label ? d.y_label : -10)
       .attr('text-anchor', 'center')
-      .attr('visibility', n => node_label_visible(n))
+      .attr('visibility', n => n.label_visible)
       .style('text-align', 'center')
       // .attr('style', d => {
       //   const font = d.type === 'product' ? 'Arial' : 'Calibri'
@@ -1527,7 +1515,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //   return
       // })
       .on('mouseover', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey) {
+        if (d.label_visible && event.shiftKey) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1535,14 +1523,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (node_label_visible(d) && event.shiftKey) {
+        if (d.label_visible && event.shiftKey) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
       .on('mouseout', function (event, d) {
-        if (node_label_visible(d)) {
+        if (d.label_visible) {
           //d3.select(this).attr('class', 'node')
           sankeyTooltip.style('opacity', 0)
         }
@@ -1653,7 +1641,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     for (let i = 0; i < n.inputLinksId.length; i++) {
       const l = links[n.inputLinksId[i]]
-      if (!l.visible) {
+      if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
         continue
       }
       const link_value = test_link_value(nodes, l, tags_catalog)

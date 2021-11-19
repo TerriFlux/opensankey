@@ -366,6 +366,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown title="Exemples" id="exemples" >
                 <Dropdown.Item onClick={()=>uploadExemple('pommes_poires.xlsx',url_prefix,data,set_data)} >Pommes Poires Simple</Dropdown.Item>
                 <Dropdown.Item onClick={()=>uploadExemple('sankeys_territoire_.csv',url_prefix,data,set_data)} >Energie</Dropdown.Item>
+                <Dropdown.Item onClick={()=>uploadExemple('foret_bois.json',url_prefix,data,set_data)} >Forêt Bois</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
