@@ -1600,7 +1600,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-dashoffset', 0)
       .on('end', function (this, d: any) {
         const idLink = d3.select(this).attr('id')
-        const idSource = data.links[idLink].idSource
+        const idTarget = data.links[idLink].idTarget
         // Modification des arrows après l'animation
         const arrowInitColor = d3.select((this as any).parentNode).select('.arrow').attr('fill')
         d3.select((this as any).parentNode).select('.arrow')
@@ -1610,10 +1610,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .style('display', 'inline')
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-        if (!nodeDisplay.includes(idSource))
+        if (!nodeDisplay.includes(idTarget))
         {
-          nodeDisplay.push(idSource)
-          branchAnimate(nodes, nodes[idSource], nodeDisplay)
+          nodeDisplay.push(idTarget)
+          branchAnimate(nodes, nodes[idTarget], nodeDisplay)
         }
       })
   }
