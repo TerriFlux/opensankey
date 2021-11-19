@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey,compute_default_input_outputLinksId, updateLayout } from './SankeyLayout'
+import { compute_auto_sankey,compute_default_input_outputLinksId, updateLayout,reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { linkHorizontal } from 'd3-shape'
 
 // Getter pour récupérer la valeur du link
@@ -50,7 +50,7 @@ export const compute_total_offsets = (
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
-      if (link.visible) {
+      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let target_node
         try {
           target_node = nodes[link.idTarget]
@@ -89,7 +89,7 @@ export const compute_total_offsets = (
   node.inputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
-      if (link.visible) {
+      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let source_node
         try {
           source_node = nodes[link.idSource]
@@ -293,7 +293,8 @@ export const default_node = (): SankeyNode => {
     idNode: 'node0',
     type: 'sector',
     display: true,
-    visible: true,
+    node_visible: true,
+    shape_visible: true,
     label_visible: true,
     color: '#a9a9a9',
     nodeParameter:'Général',
@@ -323,7 +324,7 @@ export const default_link = (): SankeyLink => {
     label_visible: true,
     label_on_path: true,
     orientation: 'hh',
-    visible: true,
+    //visible: true,
     left_horiz_shift: 0,
     right_horiz_shift: 0,
     vert_shift: 0,
@@ -361,15 +362,9 @@ export const setSelectedTags = (
 
   const { tags_catalog } = sankey_data
   const display_nodes : SankeyNode [] = Object.values(sankey_data.nodes).filter( n=> n.display )
-  // const display_links : SankeyLink [] = Object.values(sankey_data.links).filter( l=> {
-  //   const source_node = sankey_data.nodes[l.idSource]
-  //   const target_node = sankey_data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // })
 
   display_nodes.forEach(node => {
-    node.visible = true
-    node.label_visible = true
+    node.node_visible = true
     let break_loop = false
     let no_tag = true
     Object.keys(tags_catalog).forEach( tags_group_key => {
@@ -384,48 +379,16 @@ export const setSelectedTags = (
       no_tag = false
       const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
       if (!visible) {
-        node.visible = false
-        node.label_visible = false
+        node.node_visible = false
         break_loop = true
       }
     })
     // for the labels
-    if (no_tag && !node.visible && !node.label_visible) {
-      node.visible = true
-      node.label_visible = true
-    }
-  })
-  Object.values(display_nodes).forEach(n => sankey_data.nodes[n.idNode] = {...n})
-
-  Object.values(sankey_data.links).forEach(link => {
-    link.visible = true
-    link.label_visible = true
-    let break_loop = false
-    Object.keys(tags_catalog).forEach( tags_group_key => {
-      if ( break_loop ) {
-        return
-      }
-      const tags_group = tags_catalog[tags_group_key]
-      if (!link.tags[tags_group_key] || link.tags[tags_group_key].length === 0) {
-        // tags do not apply to node
-        return
-      }
-      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected &&  link.tags[tags_group_key].includes(tag_key)).length > 0
-      if (!visible) {
-        link.visible = false
-        link.label_visible = false
-        break_loop =true
-      }
-    })
-    const source_node = sankey_data.nodes[link.idSource]
-    const target_node = sankey_data.nodes[link.idTarget]
-    if ((!source_node.visible && !source_node.label_visible) || (!target_node.visible && !target_node.label_visible)) {
-      link.visible = false
-      link.label_visible = false      
+    if (no_tag && !node.shape_visible && !node.label_visible) {
+      node.node_visible = true
     }
   })
 
-  //Object.values(display_links).forEach(l => sankey_data.links[l.idLink] = {...l})
 }
 
 const downloadExamples = (
@@ -481,18 +444,14 @@ export const uploadExemple = (
     data.node_idx = Object.keys(data.nodes).length
     data.link_idx = Object.keys(data.nodes).length
     if ('layout' in (data as SankeyData)) {
-      // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-      // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-      //   const source_node = data.nodes[l.idSource]
-      //   const target_node = data.nodes[l.idTarget]
-      //   return source_node.display &&  target_node.display
-      // }).map(l=> ({[l.idLink] : {...l} })))
       compute_default_input_outputLinksId(data.nodes, data.links)
       updateLayout(data,(data as SankeyData & {layout:SankeyData} ).layout)
-      //compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-      //compute_default_input_outputLinksId(data.nodes,data.links)
+      Object.values(data.nodes).forEach(function (n) {
+        reorganize_node_inputLinksId(n, data.nodes, data.links)
+        reorganize_node_outputLinksId(n, data.nodes, data.links)
+      })
       delete (data as SankeyData & {layout?:SankeyData} ).layout
-    } else {
+    } else if (file_name === 'pommes_poires.xlsx') {
       compute_auto_sankey(data, data.h_space ? data.h_space : 200)
     }
     set_data({ ...data })

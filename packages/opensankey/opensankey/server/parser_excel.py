@@ -92,10 +92,12 @@ def parse_simple_excel(
     for i in range(ws.shape[0]):
         name = ws.iat[i, nodes_cols.index('Nodes')].strip()
         new_node = {
-            'id'      : i,
-            'name'    : name,
-            'type'    : 'sector',
-            'dimensions' : {'Primaire':{'parent_name': None}}
+            'id'            : i,
+            'name'          : name,
+            'type'          : 'sector',
+            'dimensions'    : {'Primaire':{'parent_name': None}},
+            'label_visible' : 1,
+            'shape_visible' : 1
         }
         color = '#a9a9a9'
         shape = 'rectangle'
@@ -120,12 +122,10 @@ def parse_simple_excel(
         previous_level = level
         if level == 1:
           new_node['display'] = 1
-          new_node['visible'] = 1
-          new_node['label_visible'] = 1
+          new_node['node_visible'] = 1
         else:
           new_node['display'] = 0
-          new_node['visible'] = 0
-          new_node['label_visible'] = 0
+          new_node['node_visible'] = 0
         nodes.append(new_node)
 
     flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
@@ -138,9 +138,6 @@ def parse_simple_excel(
         target_name = flux_ws.iat[row, flux_cols.index('Destination')]
         source_node = [n for n in nodes if n['name'] == source_name][0]
         target_node = [n for n in nodes if n['name'] == target_name][0] 
-        link_visible = 0
-        if source_node['visible'] == 1 and target_node['visible'] == 1:
-            link_visible = 1
         if source_node['type'] == 'product':
             color = source_node['color']
         elif target_node['type'] == 'product':
@@ -151,7 +148,6 @@ def parse_simple_excel(
             'source_name' :  flux_ws.iat[row, flux_cols.index('Origin')],
             'target_name' :  flux_ws.iat[row, flux_cols.index('Destination')],
             'value'       : [flux_ws.iat[row, flux_cols.index('Value')]],
-            'color'       : color,
-            'visible'     : link_visible 
+            'color'       : color
         })
     return nodes, links

@@ -1,7 +1,6 @@
 import React, { useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { setSelectedTags } from './SankeyUtils'
 import { arrangeNodes, compute_auto_sankey, updateLayout } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
 
@@ -365,24 +364,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               />
             </Col>
           </Form.Group>
-          <Form.Group as={Row} >
-            <Col>
-              <Button
-                size="sm"
-                onClick={
-                  () => {
-                    Object.values(nodes).forEach(
-                      node => {
-                        node.visible = true
-                        node.label_visible = true
-                      }
-                    )
-                    set_data({ ...data })
-                  }
-                }
-              >Reset visible</Button>
-            </Col>
-          </Form.Group>
+
         </Form>
       </Tab>
       <Tab eventKey="flux" title="Flux">
@@ -428,7 +410,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Courbe'
                 onChange={evt => {
-                  Object.values(data.links).filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                     l => l.curved = evt.target.checked
                   )
                   set_data({ ...data })
@@ -440,7 +422,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Flêche'
                 onChange={evt => {
-                  Object.values(data.links).filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                     l => l.arrow = evt.target.checked
                   )
                   set_data({ ...data })
@@ -458,7 +440,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value={display_style.global_curvature}
                 onChange={evt => {
                   display_style.global_curvature = +evt.target.value
-                  Object.values(data.links).filter(l => l.visible).forEach(l => l.curvature = +evt.target.value)
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(l => l.curvature = +evt.target.value)
                   set_data({ ...data })
                 }}
               />
@@ -477,7 +459,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='radio'
                 onChange={
                   evt => {
-                    Object.values(data.links).filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                       l => l.label_position = evt.target.value
                     )
                     set_data({ ...data })
@@ -492,7 +474,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value="middle"
                 type='radio'
                 onChange={evt => {
-                  Object.values(data.links).filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                     l => l.label_position = evt.target.value
                   )
                   set_data({ ...data })
@@ -506,7 +488,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 value="end"
                 type='radio'
                 onChange={evt => {
-                  Object.values(data.links).filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                     l => l.label_position = evt.target.value
                   )
                   set_data({ ...data })
@@ -520,7 +502,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 type='checkbox'
                 label='Attaché au flux'
                 onChange={evt => {
-                  Object.values(data.links).filter(l => l.visible).forEach(
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                     l => l.label_on_path = evt.target.checked
                   )
                   set_data({ ...data })
@@ -536,7 +518,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label en noir'
                 onChange={
                   () => {
-                    Object.values(data.links).filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                       l => l.text_color = 'black'
                     )
                     set_data({ ...data })
@@ -551,7 +533,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label blanc'
                 onChange={
                   () => {
-                    Object.values(data.links).filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                       l => l.text_color = 'white'
                     )
                     set_data({ ...data })
@@ -566,7 +548,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 label='Label en couleur'
                 onChange={
                   () => {
-                    Object.values(data.links).filter(l => l.visible).forEach(
+                    Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
                       l => l.text_color = l.color
                     )
                     set_data({ ...data })
@@ -789,10 +771,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                       (evt: React.ChangeEvent) => {
                         const new_nb_element = evt.target as HTMLInputElement
                         const tag_key = new_nb_element.id
-                        //const name = tags_catalog[tags_group_key].tags[tag_key]
                         const visible = new_nb_element.checked
                         tags_catalog[tags_group_key].tags[tag_key].selected = visible
-                        setSelectedTags(data)
                         set_data({ ...data })
                       }
                     } />

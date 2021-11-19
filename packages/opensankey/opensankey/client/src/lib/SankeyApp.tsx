@@ -30,13 +30,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [duplicate, set_duplicate] = useState(false)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
-
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
-
   const display_links = data.links
   
   return (
@@ -118,18 +111,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_selected_node(n)
           set_show_node_context(true)
         }}
-        node_visible={
-          (n: SankeyNode) => n.visible ? 'visible' : 'hidden'
-        }
-        node_label_visible={
-          (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
-        }
         node_arrow_visible={
-          (n: SankeyNode) => !n.visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.node_visible || !n.shape_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
           set_selected_link(l)
-          //set_show_link(true)
         }}
         linkContextMenu={(l: SankeyLink) => {
           set_selected_link(l)
@@ -138,7 +124,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         link_color={l => l.color}
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
-        link_visible={(l: SankeyLink) => l.visible }
+        link_visible={(l: SankeyLink) => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible }
         test_link_value={ (nodes: { [node_id : string] : SankeyNode }, d: SankeyLink, /*selected_tags: string[]*/) => {
           return d.value[0]
         }}
@@ -146,7 +132,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
-        getValueIndex={() => 0 }
+        getValueIndex={() => 0 } 
       />
       <SankeyNodeContextMenu
         data={data}

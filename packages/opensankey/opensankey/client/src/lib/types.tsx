@@ -21,11 +21,15 @@ export const SankeyNodePropTypes = {
     }).isRequired
   ).isRequired,
 
+  // DISPLAY ATTRIBUTES
+  // display controls the agregation desagregation process. 
   display: PropTypes.bool.isRequired,
-
-  // display attributes
-  visible: PropTypes.bool.isRequired,
+  // node_visible controls the other process in particular tags manipulations
+  node_visible: PropTypes.bool.isRequired,
+  // shape_visible and label_visible control the visibility of the element of the node
+  shape_visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
+
   color: PropTypes.string.isRequired,
   colorFavoriteTags:PropTypes.objectOf(PropTypes.shape({
     tag_associated:PropTypes.string.isRequired,
@@ -70,7 +74,6 @@ export const SankeyLinkPropTypes = {
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
-  visible: PropTypes.bool.isRequired,
 
   // value
   value: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,

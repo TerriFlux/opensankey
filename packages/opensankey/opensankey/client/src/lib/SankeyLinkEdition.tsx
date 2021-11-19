@@ -67,23 +67,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
           <Tab eventKey="flux_attributes" title="Apparence">
             <br></br>
             <Form >
-              <Form.Group as={Row} >
-                <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Visible'
-                    checked={selected_link.visible}
-                    onChange={
-                      evt => {
-                              
-                        selected_link.visible = evt.target.checked
-        
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-              </Form.Group>
+
               <Form.Group as={Row} >
                 <Col>
                   <FormLabel >Couleur:</FormLabel>

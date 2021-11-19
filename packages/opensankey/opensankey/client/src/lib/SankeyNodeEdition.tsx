@@ -18,12 +18,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const [tags_group_key,set_tags_group_key] = useState('')
 
   const { tags_catalog } = data
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
-  // const display_nodes = data.nodes
   const display_links = data.links
 
   let node = selected_node
@@ -111,12 +105,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         variant={outline_Fav_Button(tags[0])}
                         onClick={
                           () => {
-
                             const newFavColor = {
                               tag_associated: tags[0],
                               color: tags_catalog[tags_group_key].tags[tags[0]].color
                             }
-
                             if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
                               node.colorFavoriteTags = {}
                             }
@@ -124,7 +116,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                               delete node.colorFavoriteTags[tags_group_key]
                             } else {
                               node.colorFavoriteTags[tags_group_key] = newFavColor
-
                             }
                             set_data({ ...data })
                           }
@@ -154,18 +145,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Col xs={1}>
                   <FormCheck inline
                     type='switch'
-                    //label='Visible'
-                    checked={node.visible}
+                    checked={node.shape_visible}
                     onChange={evt => {
-                      node.visible = evt.target.checked
-                      if (!node.label_visible && !node.visible) {
-                        node.inputLinksId.forEach(
-                          idLink => display_links[idLink].visible = false
-                        )
-                        node.outputLinksId.forEach(
-                          idLink => display_links[idLink].visible = false
-                        )
-                      }
+                      node.shape_visible = evt.target.checked
+                      node.node_visible = node.label_visible || node.shape_visible
+
                       set_data({ ...data })
                     }}
                   />
@@ -179,7 +163,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     disabled={radio_selected !== 'local'}
                     value={node.color}
                     onChange={evt => {
-                      selected_node.color = evt.target.value
+                      node.color = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -196,7 +180,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Circle'
                     checked={node.type === 'product'}
                     onChange={evt => {
-                      selected_node.type = evt.target.value
+                      node.type = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -208,7 +192,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Rectangle'
                     checked={node.type === 'sector'}
                     onChange={evt => {
-                      selected_node.type = evt.target.value
+                      node.type = evt.target.value
                       set_data({ ...data })
                     }}
                   />
@@ -227,15 +211,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Label visible'
                     checked={node.label_visible}
                     onChange={evt => {
-                      selected_node.label_visible = evt.target.checked
-                      if (!selected_node.label_visible && !selected_node.visible) {
-                        selected_node.inputLinksId.forEach(
-                          idLink => display_links[idLink].visible = false
-                        )
-                        selected_node.outputLinksId.forEach(
-                          idLink => display_links[idLink].visible = false
-                        )
-                      }
+                      node.label_visible = evt.target.checked
+                      node.node_visible = node.label_visible || node.shape_visible
+                      // if (!node.node_visible) {
+                      //   node.inputLinksId.forEach(
+                      //     idLink => display_links[idLink].visible = false
+                      //   )
+                      //   node.outputLinksId.forEach(
+                      //     idLink => display_links[idLink].visible = false
+                      //   )
+                      // }
                       set_data({ ...data })
                     }}
                   />
@@ -270,26 +255,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Row>
             </Form>
           </Tab>
-
           {children}
-
         </Tabs>
       </Col>
-
     </Row >
-
   )
-
 }
 
-
-
-
-
-
-
-
-// SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
 SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
 
-export default /* SankeyNodeEdition; */SankeyNodeEdition
+export default SankeyNodeEdition

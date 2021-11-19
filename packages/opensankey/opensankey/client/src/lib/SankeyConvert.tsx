@@ -1,5 +1,4 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-import { setSelectedTags } from './SankeyUtils'
 
 interface ConvertSankeyNode {
   id?: string
@@ -13,9 +12,10 @@ interface ConvertSankeyNode {
   output_links?: number[],
   output_offsets: any,
   horizontal_index: any,
-  visible: number | boolean,
+  visible?: number | boolean,
   display: number | boolean,
   label_visible: number | boolean,
+  node_visible: number | boolean,  
   trade_close: boolean
 }
 interface ConvertSankeyLink {
@@ -341,14 +341,14 @@ export const convert_data = (
       // if (n.y === undefined) {
       //   n.y = 0
       // }
-      if (n.visible === undefined) {
-        n.visible = true
+      if (n_convert.visible === undefined && !n.node_visible) {
+        n.shape_visible = true
       }
       if (n_convert.visible === 1) {
-        n.visible = true
+        n.shape_visible = true
       }
       if (n_convert.visible === 0) {
-        n.visible = false
+        n.shape_visible = false
       }
       if (n_convert.label_visible === 1) {
         n.label_visible = true
@@ -357,17 +357,25 @@ export const convert_data = (
         n.label_visible = false
       }
       if (n.label_visible === undefined) {
-        n.label_visible = n.visible
+        n.label_visible = n.shape_visible
       }
-      // if (n_convert.display === 1) {
-      //   n.display = true
-      // }
-      // if (n_convert.display === 0) {
-      //   n.display = false
-      // }
-      // if (n.display === undefined) {
-      //   n.display = true
-      // }
+      delete n_convert.visible
+      if (n.node_visible === undefined) {
+        n.node_visible = n.shape_visible || n.label_visible
+      }
+      if (n_convert.node_visible === 1) {
+        n.node_visible = true
+      }
+      if (n_convert.display === 1) {
+        n.display = true
+      }
+      if (n_convert.display === 0) {
+        n.display = false
+      }
+      if (n.display === undefined) {
+        n.display = true
+      }
+      delete n_convert.visible
 
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
@@ -377,31 +385,32 @@ export const convert_data = (
       }
       if (n.name.includes('(I') && n.outputLinksId.length > 0) {
         import_export = true
-        n.visible = true
-        n.tags['Exchanges'] = ['Importations']
+        n.node_visible = true
+        n.tags['Exchanges'] = ['import']
         const l = links[n.outputLinksId[0]]
         if (!l.tags) {
           l.tags = {}
         }
-        l.tags['Exchanges'] = ['Importations']
+        l.tags['Exchanges'] = ['import']
         if (data.display_style.trade_close !== undefined ) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } else if (n.name.includes('(E')) {
         import_export = true
-        n.visible = true
-        n.tags['Exchanges'] = ['Exportations']
+        n.node_visible = true
+        n.tags['Exchanges'] = ['export']
         const l = links[n.inputLinksId[0]]
         if (!l.tags) {
           l.tags = {}
         }
-        l.tags['Exchanges'] = ['Exportations']
+        l.tags['Exchanges'] = ['export']
         if (data.display_style.trade_close !== undefined ) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } //else if (!n.tags['Exchanges']) {
       //   n.tags['Exchanges'] = ['Other']
       // }
+
     }
   )
 
@@ -424,8 +433,8 @@ export const convert_data = (
       data.tags_catalog['Exchanges'] = {
         group_name: 'Echanges',
         tags: {
-          'Importations': { name: 'Importations', selected: true }
-          , 'Exportations': { name: 'Exportations', selected: true }
+          'import': { name: 'Importations', selected: true }
+          , 'export': { name: 'Exportations', selected: true }
           , 'Other': { name: 'Other', selected: true }
         },
         banner: 'multi'
@@ -492,9 +501,7 @@ export const convert_data = (
       if (l.label_visible === undefined) {
         l.label_visible = true
       }
-      if (l.visible === undefined) {
-        l.visible = true
-      }
+
       if (l.color === undefined) {
         l.color = source_node.color
       }
@@ -671,5 +678,4 @@ export const convert_data = (
   }
 
   data.version = '0.5'
-  setSelectedTags(data)
 }

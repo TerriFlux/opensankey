@@ -2,7 +2,6 @@ import React, { FunctionComponent } from 'react'
 import { Row, Col, Form } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { setSelectedTags } from './SankeyUtils'
 import DropdownMultiselect from 'react-multiselect-dropdown-bootstrap'
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -17,7 +16,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group:TagsGroup) => {
     const val = evt.target.value
     Object.entries(tags_group.tags).forEach(tag=> tag[1].selected = val === tag[1].name )
-    setSelectedTags(data)
     set_data({ ...data })
     // Zoom sur les parties du SANKEY affichées à l'écran
     // A faire, et il y a sans doute mieux
@@ -50,7 +48,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   const handleMultiDropdown = (selected: string[],tags_group:TagsGroup) => {
     console.log(selected)
     Object.entries(tags_group.tags).forEach(tag=> tag[1].selected = selected.includes(tag[1].name) )
-    setSelectedTags(data)
     set_data({ ...data })
   }
 

@@ -15,16 +15,8 @@ const SankeyNodeContextMenuPropTypes = {
 
 type SankeyNodeContextMenuTypes = InferProps<typeof SankeyNodeContextMenuPropTypes>
 const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ data, set_data, show, selected_node, closeNodeContextMenu }) => {
-  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
-
   const display_nodes = data.nodes
   const display_links = data.links
-
   
   return (
     <Modal size="sm" show={show} onHide={closeNodeContextMenu}>
