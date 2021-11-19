@@ -1,5 +1,21 @@
 {
    "version": "0.5",
+   "file_path": "sankey_diagram.json",
+   "node_width": 40,
+   "user_scale": "800",
+   "height": 1500,
+   "width": 2500,
+   "h_space": 200,
+   "v_space": 100,
+   "left_shift": 0.4,
+   "right_shift": 0.5,
+   "max_shift": 0.2,
+   "trade_close_hspace": 50,
+   "trade_close_vspace": 20,
+   "trade_hspace": 200,
+   "trade_left_shift": 0.45,
+   "trade_right_shift": 0.55,
+   "trade_max_shift": 0.2,
    "nodes": {
       "node0": {
          "idNode": "node0",
@@ -50,7 +66,7 @@
             "link373"
          ],
          "x": 200,
-         "y": 451.9999477863312,
+         "y": 651.9999477863312,
          "x_label": -24,
          "y_label": -3.999998092651367
       },
@@ -549,7 +565,7 @@
             "link447"
          ],
          "x": 800,
-         "y": 768,
+         "y": 968,
          "x_label": -32.999999046325684,
          "y_label": -8
       },
@@ -613,7 +629,7 @@
             "link456"
          ],
          "x": 800,
-         "y": 894,
+         "y": 1094,
          "x_label": -36.99999928474426,
          "y_label": -6
       },
@@ -736,7 +752,7 @@
             "link472"
          ],
          "x": 800,
-         "y": 507.4628586346356,
+         "y": 707.4628586346356,
          "x_label": -47.99999952316284,
          "y_label": -6
       },
@@ -799,7 +815,7 @@
             "link480"
          ],
          "x": 800,
-         "y": 597.4664494278418,
+         "y": 797.4664494278418,
          "x_label": -53.999999046325684,
          "y_label": -10
       },
@@ -912,7 +928,7 @@
             "link677"
          ],
          "x": 1400,
-         "y": 694.2843908219326
+         "y": 894.2843908219324
       },
       "node16": {
          "idNode": "node16",
@@ -972,7 +988,7 @@
             "link685"
          ],
          "x": 1400,
-         "y": 906.4944881324284,
+         "y": 1106.4944881324284,
          "x_label": -14.000000238418579,
          "y_label": -8
       },
@@ -1531,7 +1547,7 @@
             "link487"
          ],
          "x": 800,
-         "y": 342.4729586319802,
+         "y": 542.4729586319802,
          "x_label": -18,
          "y_label": -6
       },
@@ -1684,7 +1700,7 @@
             "link522"
          ],
          "x": 1400,
-         "y": 773
+         "y": 973
       },
       "node29": {
          "idNode": "node29",
@@ -1802,7 +1818,7 @@
             "link645"
          ],
          "x": 800,
-         "y": 412,
+         "y": 612,
          "x_label": 11.000002384185791,
          "y_label": -18.000000476837158
       },
@@ -1861,7 +1877,7 @@
             "link652"
          ],
          "x": 1400,
-         "y": 470.1141052246094,
+         "y": 670.1141052246094,
          "x_label": -20,
          "y_label": 24.000000953674316
       },
@@ -2208,7 +2224,7 @@
             "link691"
          ],
          "x": 1400,
-         "y": 604.2937268842687
+         "y": 804.2937268842687
       },
       "node38": {
          "idNode": "node38",
@@ -2256,7 +2272,7 @@
             "link693"
          ],
          "x": 1600,
-         "y": 605.5749045801526
+         "y": 805.5749045801526
       },
       "node39": {
          "idNode": "node39",
@@ -2301,7 +2317,7 @@
             "link699"
          ],
          "x": 1800,
-         "y": 672.7059194267646
+         "y": 872.7059194267645
       },
       "node40": {
          "idNode": "node40",
@@ -2359,7 +2375,7 @@
             "link709"
          ],
          "x": 1800,
-         "y": 844.7576573665124
+         "y": 1044.7576573665124
       },
       "node41": {
          "idNode": "node41",
@@ -2413,7 +2429,7 @@
             "link715"
          ],
          "x": 1800,
-         "y": 941.3009084706812,
+         "y": 1141.3009084706812,
          "x_label": 20.000001642438292,
          "y_label": -18.000000953674316
       },
@@ -2526,7 +2542,7 @@
             "link727"
          ],
          "x": 1400,
-         "y": 540.600452439944
+         "y": 740.600452439944
       },
       "node44": {
          "idNode": "node44",
@@ -2581,7 +2597,7 @@
             "link733"
          ],
          "x": 1800,
-         "y": 583.821573485583,
+         "y": 783.821573485583,
          "x_label": -22.99999976158142,
          "y_label": -6
       },
@@ -2638,7 +2654,7 @@
             "link739"
          ],
          "x": 1800,
-         "y": 509.8460061381743,
+         "y": 709.8460061381743,
          "x_label": -14,
          "y_label": -6
       },
@@ -2871,7 +2887,7 @@
             "link768"
          ],
          "x": 1400,
-         "y": 1043.8760925071613,
+         "y": 1243.8760925071613,
          "x_label": 12.000000688763976,
          "y_label": 52
       },
@@ -3026,7 +3042,7 @@
          ],
          "outputLinksId": [],
          "x": 1200,
-         "y": 1090.99045915325,
+         "y": 1290.99045915325,
          "x_label": 19.999999523162842,
          "y_label": 17
       },
@@ -3082,7 +3098,7 @@
             "link784"
          ],
          "x": 1800,
-         "y": 1031.9444396483918,
+         "y": 1231.9444396483918,
          "x_label": -33.999999046325684,
          "y_label": -7
       },
@@ -3138,7 +3154,7 @@
             "link789"
          ],
          "x": 1400,
-         "y": 1144.1540809364787,
+         "y": 1344.1540809364787,
          "x_label": 13.000000476837158,
          "y_label": -17.999999523162842
       },
@@ -3319,7 +3335,7 @@
             "link321"
          ],
          "x": 0,
-         "y": 452.52289130668964,
+         "y": 652.5228913066896,
          "x_label": 60,
          "y_label": -33.99999809265137
       },
@@ -3363,7 +3379,7 @@
             "link322"
          ],
          "x": 0,
-         "y": 578.9358433061127,
+         "y": 778.9358433061127,
          "x_label": -4.76837158203125e-7,
          "y_label": 267.0000305175781
       },
@@ -3444,7 +3460,7 @@
          ],
          "outputLinksId": [],
          "x": 400,
-         "y": 798,
+         "y": 998,
          "x_label": -14.00000011920929,
          "y_label": 109
       },
@@ -3484,7 +3500,7 @@
          ],
          "outputLinksId": [],
          "x": 400,
-         "y": 418.5400247806373,
+         "y": 618.5400247806373,
          "x_label": 4.000000953674316,
          "y_label": -20
       },
@@ -3665,7 +3681,7 @@
             "link342"
          ],
          "x": 1000,
-         "y": 767.0000305175781,
+         "y": 967.0000305175781,
          "x_label": -12.999999046325684,
          "y_label": -6
       },
@@ -3723,7 +3739,7 @@
             "link361"
          ],
          "x": 1000,
-         "y": 894,
+         "y": 1094,
          "x_label": -14.000001907348633,
          "y_label": -6
       },
@@ -3769,7 +3785,7 @@
             "link212"
          ],
          "x": 1600,
-         "y": 847.3649373881931,
+         "y": 1047.364937388193,
          "x_label": 14,
          "y_label": -20
       },
@@ -3842,7 +3858,7 @@
             "link350"
          ],
          "x": 1600,
-         "y": 507.0624798017882,
+         "y": 707.0624798017882,
          "x_label": -54.51664161682129,
          "y_label": 18.98679542541504
       },
@@ -3903,7 +3919,7 @@
             "link362"
          ],
          "x": 1000,
-         "y": 655.0100847385555
+         "y": 855.0100847385556
       },
       "node70": {
          "idNode": "node70",
@@ -3954,7 +3970,7 @@
             "link352"
          ],
          "x": 1600,
-         "y": 582.0646342777119,
+         "y": 782.0646342777119,
          "x_label": 27.000001907348633,
          "y_label": -17.99999964237213
       },
@@ -3995,7 +4011,7 @@
             "link207"
          ],
          "x": 1600,
-         "y": 672.0653829539312,
+         "y": 872.0653829539312,
          "x_label": 24.000001430511475,
          "y_label": -22.000001907348633
       },
@@ -4063,7 +4079,7 @@
             "link353"
          ],
          "x": 1000,
-         "y": 988.1142148805129,
+         "y": 1188.114214880513,
          "x_label": 23.000000476837158,
          "y_label": -17
       },
@@ -4233,7 +4249,7 @@
             "link286"
          ],
          "x": 1600,
-         "y": 1044.1824733300323,
+         "y": 1244.1824733300323,
          "x_label": 13.999998807907104,
          "y_label": -20
       },
@@ -4283,7 +4299,7 @@
             "link217"
          ],
          "x": 1600,
-         "y": 965.0208266005961,
+         "y": 1165.0208266005961,
          "x_label": 8.99999713897705,
          "y_label": 21
       },
@@ -4390,7 +4406,7 @@
          ],
          "outputLinksId": [],
          "x": 2000,
-         "y": 223
+         "y": 423
       },
       "node79": {
          "idNode": "node79",
@@ -4575,7 +4591,7 @@
          ],
          "outputLinksId": [],
          "x": 2000,
-         "y": 410.28864503816794
+         "y": 610.2886450381679
       },
       "node83": {
          "idNode": "node83",
@@ -4671,7 +4687,7 @@
          ],
          "outputLinksId": [],
          "x": 2000,
-         "y": 607.2958508426143
+         "y": 807.2958508426143
       },
       "node85": {
          "idNode": "node85",
@@ -4722,7 +4738,7 @@
          ],
          "outputLinksId": [],
          "x": 2000,
-         "y": 491.3439885496183,
+         "y": 691.3439885496183,
          "x_label": 74.99999809265137,
          "y_label": 20.000001192092896
       },
@@ -4867,7 +4883,7 @@
          ],
          "outputLinksId": [],
          "x": 2000,
-         "y": 691.8248411074006,
+         "y": 891.8248411074005,
          "x_label": 83.99999713897705,
          "y_label": -17.999999046325684
       },
@@ -4917,7 +4933,7 @@
             "link303"
          ],
          "x": 2000,
-         "y": 774.341843513232
+         "y": 974.3418435132321
       },
       "node89": {
          "idNode": "node89",
@@ -4970,7 +4986,7 @@
             "link324"
          ],
          "x": 400,
-         "y": 472.4934468023987,
+         "y": 672.4934468023987,
          "x_label": -69.99999952316284,
          "y_label": -6.999999046325684
       },
@@ -5012,7 +5028,7 @@
          ],
          "outputLinksId": [],
          "x": 400,
-         "y": 627.379331394305,
+         "y": 827.3793313943052,
          "x_label": -28,
          "y_label": -9
       },
@@ -8743,13 +8759,13 @@
          "idNode": "node193",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 844.0469818115234,
+         "y": 467.0625,
          "inputLinksId": [],
          "outputLinksId": [
             "link13"
@@ -8774,21 +8790,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -24.409252166748047,
-         "y_label": 6.347302754720052
+         "x_label": 38,
+         "y_label": 0.1875
       },
       "node194": {
          "name": "Bois d'œuvre - International - Importations",
          "idNode": "node194",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 867.5263900756836,
+         "y": 472.4375,
          "inputLinksId": [],
          "outputLinksId": [
             "link19"
@@ -8812,8 +8828,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -46.25042724609375,
-         "y_label": 6.284802754720052
+         "x_label": 38,
+         "y_label": 0.125
       },
       "node195": {
          "name": "Bois bûche - International - Importations",
@@ -8826,7 +8842,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": -209.12355041503906,
+         "y": -109.06497955322266,
          "inputLinksId": [],
          "outputLinksId": [
             "link55"
@@ -8850,8 +8866,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -33.628334045410156,
-         "y_label": 6.197302754720051
+         "x_label": -33.645538330078125,
+         "y_label": 6.20055669148763
       },
       "node196": {
          "name": "Bois d'œuvre F - International - Importations",
@@ -8864,7 +8880,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": -185.6441421508789,
+         "y": -85.57580947875977,
          "inputLinksId": [],
          "outputLinksId": [
             "link25"
@@ -8887,8 +8903,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -57.11945343017578,
-         "y_label": 6.191052754720052
+         "x_label": -57.131187438964844,
+         "y_label": 6.19430669148763
       },
       "node197": {
          "name": "Connexes - International - Importations",
@@ -8901,7 +8917,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -179.87355041503906,
+         "y": -79.81497955322266,
          "inputLinksId": [],
          "outputLinksId": [
             "link85"
@@ -8925,8 +8941,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -25.605464935302734,
-         "y_label": 7.847302754720052
+         "x_label": -25.567527770996094,
+         "y_label": 7.85055669148763
       },
       "node198": {
          "name": "Bois d'œuvre R - International - Importations",
@@ -8939,7 +8955,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": -162.16473388671875,
+         "y": -62.086639404296875,
          "inputLinksId": [],
          "outputLinksId": [
             "link31"
@@ -8962,21 +8978,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.54253387451172,
-         "y_label": 6.222302754720052
+         "x_label": -58.56189727783203,
+         "y_label": 6.22555669148763
       },
       "node199": {
          "name": "Bois d'industrie - International - Importations",
          "idNode": "node199",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 891.0057983398438,
+         "y": 477.6875,
          "inputLinksId": [],
          "outputLinksId": [
             "link37"
@@ -9000,8 +9016,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -63.03864288330078,
-         "y_label": 6.197302754720051
+         "x_label": 38,
+         "y_label": 0.0375
       },
       "node200": {
          "name": "Bois d'industrie F - International - Importations",
@@ -9014,7 +9030,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": -138.6853256225586,
+         "y": -38.597469329833984,
          "inputLinksId": [],
          "outputLinksId": [
             "link43"
@@ -9037,8 +9053,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -73.90766906738281,
-         "y_label": 6.197302754720051
+         "x_label": -73.94752502441406,
+         "y_label": 6.20055669148763
       },
       "node201": {
          "name": "Bois d'industrie R - International - Importations",
@@ -9051,7 +9067,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": -115.20591735839844,
+         "y": -15.108299255371094,
          "inputLinksId": [],
          "outputLinksId": [
             "link49"
@@ -9074,21 +9090,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -75.33074951171875,
-         "y_label": 6.159802754720052
+         "x_label": -75.37823486328125,
+         "y_label": 6.16305669148763
       },
       "node202": {
          "name": "Connexes plaquettes déchets - International - Importations",
          "idNode": "node202",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 914.4852066040039,
+         "y": 482.7625,
          "inputLinksId": [],
          "outputLinksId": [
             "link72"
@@ -9112,21 +9128,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -153.31137084960938,
-         "y_label": 7.847302754720052
+         "x_label": 38,
+         "y_label": 1.6875
       },
       "node203": {
          "name": "Connexes hors écorces - International - Importations",
          "idNode": "node203",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 937.9646148681641,
+         "y": 491.1375,
          "inputLinksId": [],
          "outputLinksId": [
             "link118"
@@ -9150,21 +9166,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -111.8770751953125,
-         "y_label": 7.847302754720052
+         "x_label": 38,
+         "y_label": 1.6875
       },
       "node204": {
          "name": "Sciures - International - Importations",
          "idNode": "node204",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 961.4440231323242,
+         "y": 499.5125,
          "inputLinksId": [],
          "outputLinksId": [
             "link126"
@@ -9188,21 +9204,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -8.42538833618164,
-         "y_label": 6.972302754720052
+         "x_label": 38,
+         "y_label": 0.8125
       },
       "node205": {
          "name": "Sciures F - International - Importations",
          "idNode": "node205",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 984.9234313964844,
+         "y": 506.1375,
          "inputLinksId": [],
          "outputLinksId": [
             "link133"
@@ -9225,21 +9241,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -19.294414520263672,
-         "y_label": 6.722302754720052
+         "x_label": 38,
+         "y_label": 0.5625
       },
       "node206": {
          "name": "Sciures R - International - Importations",
          "idNode": "node206",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1008.4028396606445,
+         "y": 512.2625,
          "inputLinksId": [],
          "outputLinksId": [
             "link140"
@@ -9262,21 +9278,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.71749496459961,
-         "y_label": 6.409802754720052
+         "x_label": 38,
+         "y_label": 0.25
       },
       "node207": {
          "name": "Plaquettes de scierie - International - Importations",
          "idNode": "node207",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1031.8822479248047,
+         "y": 517.7625,
          "inputLinksId": [],
          "outputLinksId": [
             "link148"
@@ -9300,21 +9316,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -96.67694091796875,
-         "y_label": 7.097302754720052
+         "x_label": 38,
+         "y_label": 0.9375
       },
       "node208": {
          "name": "Plaquettes de scierie F - International - Importations",
          "idNode": "node208",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1055.3616561889648,
+         "y": 524.6375,
          "inputLinksId": [],
          "outputLinksId": [
             "link155"
@@ -9337,21 +9353,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -107.54595947265625,
-         "y_label": 6.784802754720052
+         "x_label": 38,
+         "y_label": 0.625
       },
       "node209": {
          "name": "Plaquettes de scierie R - International - Importations",
          "idNode": "node209",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1078.841064453125,
+         "y": 530.8875,
          "inputLinksId": [],
          "outputLinksId": [
             "link162"
@@ -9374,21 +9390,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -108.96903991699219,
-         "y_label": 6.409802754720052
+         "x_label": 38,
+         "y_label": 0.25
       },
       "node210": {
          "name": "Sciages et autres - International - Importations",
          "idNode": "node210",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1102.3204727172852,
+         "y": 536.3875,
          "inputLinksId": [],
          "outputLinksId": [
             "link177"
@@ -9412,21 +9428,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -71.18525695800781,
-         "y_label": 6.472302754720052
+         "x_label": 38,
+         "y_label": 0.3125
       },
       "node211": {
          "name": "Sciages - International - Importations",
          "idNode": "node211",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1125.7998809814453,
+         "y": 542.0125,
          "inputLinksId": [],
          "outputLinksId": [
             "link184"
@@ -9450,8 +9466,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -9.869091033935547,
-         "y_label": 6.409802754720052
+         "x_label": 38,
+         "y_label": 0.25
       },
       "node212": {
          "name": "Panneaux - International - Importations",
@@ -9464,7 +9480,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -203.60295867919922,
+         "y": -103.55414962768555,
          "inputLinksId": [],
          "outputLinksId": [
             "link241"
@@ -9488,8 +9504,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -26.946044921875,
-         "y_label": 7.284802754720052
+         "x_label": -26.95421600341797,
+         "y_label": 7.28805669148763
       },
       "node213": {
          "name": "Placages - International - Importations",
@@ -9502,7 +9518,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -156.3941421508789,
+         "y": -56.325809478759766,
          "inputLinksId": [],
          "outputLinksId": [
             "link231"
@@ -9526,8 +9542,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -18.386943817138672,
-         "y_label": 6.166052754720051
+         "x_label": -18.413982391357422,
+         "y_label": 6.16930669148763
       },
       "node214": {
          "name": "Contreplaqués - International - Importations",
@@ -9540,7 +9556,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -180.12355041503906,
+         "y": -80.06497955322266,
          "inputLinksId": [],
          "outputLinksId": [
             "link236"
@@ -9564,8 +9580,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -57.67631530761719,
-         "y_label": 6.847302754720052
+         "x_label": -57.703468322753906,
+         "y_label": 6.85055669148763
       },
       "node215": {
          "name": "Traverses - International - Importations",
@@ -9578,7 +9594,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -132.91473388671875,
+         "y": -32.836639404296875,
          "inputLinksId": [],
          "outputLinksId": [
             "link202"
@@ -9602,8 +9618,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -24.038013458251953,
-         "y_label": 6.166052754720051
+         "x_label": -24.04877471923828,
+         "y_label": 6.16930669148763
       },
       "node216": {
          "name": "Parquet - International - Importations",
@@ -9616,7 +9632,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -156.6441421508789,
+         "y": -56.575809478759766,
          "inputLinksId": [],
          "outputLinksId": [
             "link209"
@@ -9640,8 +9656,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -13.602096557617188,
-         "y_label": 6.159802754720052
+         "x_label": -13.6156005859375,
+         "y_label": 6.16305669148763
       },
       "node217": {
          "name": "Sciages F - International - Importations",
@@ -9654,7 +9670,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -109.4353256225586,
+         "y": -9.347469329833984,
          "inputLinksId": [],
          "outputLinksId": [
             "link190"
@@ -9677,8 +9693,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.71749496459961,
-         "y_label": 6.166052754720051
+         "x_label": -20.725128173828125,
+         "y_label": 6.16930669148763
       },
       "node218": {
          "name": "Granulés - International - Importations",
@@ -9691,7 +9707,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -133.16473388671875,
+         "y": -33.086639404296875,
          "inputLinksId": [],
          "outputLinksId": [
             "link214"
@@ -9715,8 +9731,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.655620574951172,
-         "y_label": 6.909802754720052
+         "x_label": -20.6370849609375,
+         "y_label": 6.91305669148763
       },
       "node219": {
          "name": "Sciages R - International - Importations",
@@ -9729,7 +9745,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -85.95591735839844,
+         "y": 14.141700744628906,
          "inputLinksId": [],
          "outputLinksId": [
             "link196"
@@ -9752,8 +9768,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -22.140575408935547,
-         "y_label": 6.409802754720052
+         "x_label": -22.155838012695312,
+         "y_label": 6.41305669148763
       },
       "node220": {
          "name": "Palettes et\\nemballages - International - Importations",
@@ -9766,7 +9782,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -109.6853256225586,
+         "y": -9.597469329833984,
          "inputLinksId": [],
          "outputLinksId": [
             "link219"
@@ -9790,21 +9806,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -118.41499328613281,
-         "y_label": 0
+         "x_label": -118.56365966796875,
+         "y_label": 6.16305669148763
       },
       "node221": {
          "name": "Panneaux placages contreplaqués - International - Importations",
          "idNode": "node221",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1149.2792892456055,
+         "y": 547.5125,
          "inputLinksId": [],
          "outputLinksId": [
             "link226"
@@ -9829,21 +9845,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -184.22726440429688,
-         "y_label": 7.972302754720052
+         "x_label": 38,
+         "y_label": 1.8124999999999998
       },
       "node222": {
          "name": "Panneaux particules - International - Importations",
          "idNode": "node222",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1172.7586975097656,
+         "y": 556.1375,
          "inputLinksId": [],
          "outputLinksId": [
             "link246"
@@ -9867,21 +9883,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -94.42887878417969,
-         "y_label": 6.472302754720052
+         "x_label": 38,
+         "y_label": 0.3125
       },
       "node223": {
          "name": "Panneaux fibres - International - Importations",
          "idNode": "node223",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1196.2381057739258,
+         "y": 561.7625,
          "inputLinksId": [],
          "outputLinksId": [
             "link251"
@@ -9905,21 +9921,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -67.39037322998047,
-         "y_label": 6.472302754720052
+         "x_label": 38,
+         "y_label": 0.3125
       },
       "node224": {
          "name": "Panneaux MDF - International - Importations",
          "idNode": "node224",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1219.717514038086,
+         "y": 567.3875,
          "inputLinksId": [],
          "outputLinksId": [
             "link256"
@@ -9943,21 +9959,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -60.62559509277344,
-         "y_label": 6.472302754720052
+         "x_label": 38,
+         "y_label": 0.3125
       },
       "node225": {
          "name": "Panneaux OSB - International - Importations",
          "idNode": "node225",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1243.196922302246,
+         "y": 573.0125,
          "inputLinksId": [],
          "outputLinksId": [
             "link261"
@@ -9981,8 +9997,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.212547302246094,
-         "y_label": 6.472302754720052
+         "x_label": 38,
+         "y_label": 0.3125
       },
       "node226": {
          "name": "Pâte à\\npapier - International - Importations",
@@ -9995,7 +10011,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -62.47650909423828,
+         "y": 37.6308708190918,
          "inputLinksId": [],
          "outputLinksId": [
             "link268"
@@ -10019,21 +10035,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.171295166015625,
-         "y_label": 6.6875
+         "x_label": -58.27574920654297,
+         "y_label": 12.850556691487629
       },
       "node227": {
          "name": "Pâte à papier mécanique - International - Importations",
          "idNode": "node227",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1266.6763305664062,
+         "y": 578.6375,
          "inputLinksId": [],
          "outputLinksId": [
             "link274"
@@ -10057,21 +10073,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -124.169189453125,
-         "y_label": 9.034802754720051
+         "x_label": 38,
+         "y_label": 2.875
       },
       "node228": {
          "name": "Pâte à papier chimique - International - Importations",
          "idNode": "node228",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1290.1557388305664,
+         "y": 589.3875,
          "inputLinksId": [],
          "outputLinksId": [
             "link280"
@@ -10095,8 +10111,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -112.06269836425781,
-         "y_label": 9.972302754720051
+         "x_label": 38,
+         "y_label": 3.8125
       },
       "node229": {
          "name": "Papiers cartons - International - Importations",
@@ -10109,7 +10125,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": -86.20591735839844,
+         "y": 13.891700744628906,
          "inputLinksId": [],
          "outputLinksId": [
             "link288"
@@ -10133,8 +10149,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -62.99739074707031,
-         "y_label": 9.409802754720051
+         "x_label": -63.074134826660156,
+         "y_label": 9.413056691487629
       },
       "node230": {
          "name": "Papier\\nà recycler - International - Importations",
@@ -10147,7 +10163,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": -38.997100830078125,
+         "y": 61.12004089355469,
          "inputLinksId": [],
          "outputLinksId": [
             "link294"
@@ -10171,21 +10187,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -79.78560638427734,
-         "y_label": 0
+         "x_label": -79.86846160888672,
+         "y_label": 6.16305669148763
       },
       "node231": {
          "name": "Combustibles chaudières collectives - International - Importations",
          "idNode": "node231",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1313.6351470947266,
+         "y": 602.0125,
          "inputLinksId": [],
          "outputLinksId": [
             "link306"
@@ -10210,21 +10226,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -196.76686096191406,
-         "y_label": 7.097302754720052
+         "x_label": 38,
+         "y_label": 0.9375
       },
       "node232": {
          "name": "Bois rond F - International - Importations",
          "idNode": "node232",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1337.1145553588867,
+         "y": 608.8875,
          "inputLinksId": [],
          "outputLinksId": [
             "link312"
@@ -10248,21 +10264,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -35.278282165527344,
-         "y_label": 6.222302754720052
+         "x_label": 38,
+         "y_label": 0.0625
       },
       "node233": {
          "name": "Bois rond R - International - Importations",
          "idNode": "node233",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1360.5939636230469,
+         "y": 614.0125,
          "inputLinksId": [],
          "outputLinksId": [
             "link318"
@@ -10286,21 +10302,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -36.70135498046875,
-         "y_label": 6.222302754720052
+         "x_label": 38,
+         "y_label": 0.0625
       },
       "node234": {
          "name": "Bois bûche ménages - International - Importations",
          "idNode": "node234",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1384.073371887207,
+         "y": 619.1375,
          "inputLinksId": [],
          "outputLinksId": [
             "link326"
@@ -10325,21 +10341,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -96.69755554199219,
-         "y_label": 6.197302754720051
+         "x_label": 38,
+         "y_label": 0.0375
       },
       "node235": {
          "name": "Connexes F - International - Importations",
          "idNode": "node235",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1407.5527801513672,
+         "y": 624.2125000000001,
          "inputLinksId": [],
          "outputLinksId": [
             "link338"
@@ -10362,21 +10378,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -36.45386505126953,
-         "y_label": 7.347302754720052
+         "x_label": 38,
+         "y_label": 1.1875
       },
       "node236": {
          "name": "Connexes hors écorces F - International - Importations",
          "idNode": "node236",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1431.0321884155273,
+         "y": 631.5875000000001,
          "inputLinksId": [],
          "outputLinksId": [
             "link345"
@@ -10399,21 +10415,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -122.72547912597656,
-         "y_label": 7.347302754720052
+         "x_label": 38,
+         "y_label": 1.1875
       },
       "node237": {
          "name": "Connexes R - International - Importations",
          "idNode": "node237",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1454.5115966796875,
+         "y": 638.9625000000001,
          "inputLinksId": [],
          "outputLinksId": [
             "link357"
@@ -10436,21 +10452,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -37.89756774902344,
-         "y_label": 6.659802754720052
+         "x_label": 38,
+         "y_label": 0.5
       },
       "node238": {
          "name": "Connexes hors écorces R - International - Importations",
          "idNode": "node238",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1477.9910049438477,
+         "y": 644.9625000000001,
          "inputLinksId": [],
          "outputLinksId": [
             "link364"
@@ -10473,21 +10489,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -124.169189453125,
-         "y_label": 6.659802754720052
+         "x_label": 38,
+         "y_label": 0.5
       },
       "node239": {
          "name": "Bois rond - International - Exportations",
          "idNode": "node239",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1961.5775123329631,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link426"
          ],
@@ -10513,20 +10529,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node240": {
          "name": "Bois d'œuvre - International - Exportations",
          "idNode": "node240",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1980.0569205971233,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link436"
          ],
@@ -10551,7 +10567,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node241": {
          "name": "Bois bûche - International - Exportations",
@@ -10564,7 +10580,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1455.0305305214397,
+         "y": 1655.089101383256,
          "inputLinksId": [
             "link485"
          ],
@@ -10589,7 +10605,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node242": {
          "name": "Bois d'œuvre F - International - Exportations",
@@ -10602,7 +10618,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1473.5099387855998,
+         "y": 1673.578271457719,
          "inputLinksId": [
             "link445"
          ],
@@ -10626,7 +10642,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node243": {
          "name": "Connexes - International - Exportations",
@@ -10639,7 +10655,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1473.5099387855998,
+         "y": 1673.578271457719,
          "inputLinksId": [
             "link520"
          ],
@@ -10664,7 +10680,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node244": {
          "name": "Bois d'œuvre R - International - Exportations",
@@ -10677,7 +10693,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1491.98934704976,
+         "y": 1692.0674415321819,
          "inputLinksId": [
             "link454"
          ],
@@ -10701,20 +10717,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node245": {
          "name": "Bois d'industrie - International - Exportations",
          "idNode": "node245",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1998.5363288612834,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link462"
          ],
@@ -10739,7 +10755,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node246": {
          "name": "Bois d'industrie F - International - Exportations",
@@ -10752,7 +10768,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1510.4687553139202,
+         "y": 1710.5566116066448,
          "inputLinksId": [
             "link470"
          ],
@@ -10776,7 +10792,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node247": {
          "name": "Bois d'industrie R - International - Exportations",
@@ -10789,7 +10805,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1528.9481635780803,
+         "y": 1729.0457816811077,
          "inputLinksId": [
             "link478"
          ],
@@ -10813,20 +10829,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node248": {
          "name": "Connexes plaquettes déchets - International - Exportations",
          "idNode": "node248",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2017.0157371254436,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link503"
          ],
@@ -10851,20 +10867,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node249": {
          "name": "Connexes hors écorces - International - Exportations",
          "idNode": "node249",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2035.4951453896037,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link557"
          ],
@@ -10889,20 +10905,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node250": {
          "name": "Sciures - International - Exportations",
          "idNode": "node250",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2053.974553653764,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link568"
          ],
@@ -10927,20 +10943,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node251": {
          "name": "Sciures F - International - Exportations",
          "idNode": "node251",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2072.453961917924,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link579"
          ],
@@ -10964,20 +10980,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node252": {
          "name": "Sciures R - International - Exportations",
          "idNode": "node252",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2090.933370182084,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link590"
          ],
@@ -11001,20 +11017,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node253": {
          "name": "Plaquettes de scierie - International - Exportations",
          "idNode": "node253",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2109.4127784462444,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link605"
          ],
@@ -11039,20 +11055,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node254": {
          "name": "Plaquettes de scierie F - International - Exportations",
          "idNode": "node254",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2127.8921867104045,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link620"
          ],
@@ -11076,20 +11092,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node255": {
          "name": "Plaquettes de scierie R - International - Exportations",
          "idNode": "node255",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2146.3715949745647,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link635"
          ],
@@ -11113,20 +11129,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node256": {
          "name": "Sciages et autres - International - Exportations",
          "idNode": "node256",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2164.851003238725,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link659"
          ],
@@ -11151,20 +11167,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node257": {
          "name": "Sciages - International - Exportations",
          "idNode": "node257",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2183.330411502885,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link667"
          ],
@@ -11189,7 +11205,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node258": {
          "name": "Panneaux - International - Exportations",
@@ -11202,7 +11218,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1455.0305305214397,
+         "y": 1655.089101383256,
          "inputLinksId": [
             "link737"
          ],
@@ -11227,7 +11243,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node259": {
          "name": "Placages - International - Exportations",
@@ -11240,7 +11256,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1491.98934704976,
+         "y": 1692.0674415321819,
          "inputLinksId": [
             "link725"
          ],
@@ -11265,7 +11281,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node260": {
          "name": "Contreplaqués - International - Exportations",
@@ -11278,7 +11294,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1473.5099387855998,
+         "y": 1673.578271457719,
          "inputLinksId": [
             "link731"
          ],
@@ -11303,7 +11319,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node261": {
          "name": "Traverses - International - Exportations",
@@ -11316,7 +11332,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1510.4687553139202,
+         "y": 1710.5566116066448,
          "inputLinksId": [
             "link689"
          ],
@@ -11341,7 +11357,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node262": {
          "name": "Parquet - International - Exportations",
@@ -11354,7 +11370,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1491.98934704976,
+         "y": 1692.0674415321819,
          "inputLinksId": [
             "link697"
          ],
@@ -11379,7 +11395,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node263": {
          "name": "Sciages F - International - Exportations",
@@ -11392,7 +11408,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1528.9481635780803,
+         "y": 1729.0457816811077,
          "inputLinksId": [
             "link675"
          ],
@@ -11416,7 +11432,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node264": {
          "name": "Granulés - International - Exportations",
@@ -11429,7 +11445,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1510.4687553139202,
+         "y": 1710.5566116066448,
          "inputLinksId": [
             "link707"
          ],
@@ -11454,7 +11470,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node265": {
          "name": "Sciages R - International - Exportations",
@@ -11467,7 +11483,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1547.4275718422405,
+         "y": 1747.5349517555705,
          "inputLinksId": [
             "link683"
          ],
@@ -11491,7 +11507,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node266": {
          "name": "Palettes et\\nemballages - International - Exportations",
@@ -11504,7 +11520,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1528.9481635780803,
+         "y": 1729.0457816811077,
          "inputLinksId": [
             "link713"
          ],
@@ -11529,20 +11545,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node267": {
          "name": "Panneaux placages contreplaqués - International - Exportations",
          "idNode": "node267",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2201.809819767045,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link720"
          ],
@@ -11568,20 +11584,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node268": {
          "name": "Panneaux particules - International - Exportations",
          "idNode": "node268",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2220.2892280312053,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link743"
          ],
@@ -11606,20 +11622,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node269": {
          "name": "Panneaux fibres - International - Exportations",
          "idNode": "node269",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2238.7686362953655,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link749"
          ],
@@ -11644,20 +11660,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node270": {
          "name": "Panneaux MDF - International - Exportations",
          "idNode": "node270",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2257.2480445595256,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link755"
          ],
@@ -11682,20 +11698,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node271": {
          "name": "Panneaux OSB - International - Exportations",
          "idNode": "node271",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2275.727452823686,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link761"
          ],
@@ -11720,7 +11736,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node272": {
          "name": "Pâte à\\npapier - International - Exportations",
@@ -11733,7 +11749,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1565.9069801064006,
+         "y": 1766.0241218300334,
          "inputLinksId": [
             "link766"
          ],
@@ -11758,20 +11774,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node273": {
          "name": "Pâte à papier mécanique - International - Exportations",
          "idNode": "node273",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2294.206861087846,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link771"
          ],
@@ -11796,20 +11812,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node274": {
          "name": "Pâte à papier chimique - International - Exportations",
          "idNode": "node274",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2312.686269352006,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link776"
          ],
@@ -11834,7 +11850,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node275": {
          "name": "Papiers cartons - International - Exportations",
@@ -11847,7 +11863,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1547.4275718422405,
+         "y": 1747.5349517555705,
          "inputLinksId": [
             "link782"
          ],
@@ -11872,7 +11888,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node276": {
          "name": "Papier\\nà recycler - International - Exportations",
@@ -11885,7 +11901,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1584.3863883705608,
+         "y": 1784.5132919044963,
          "inputLinksId": [
             "link787"
          ],
@@ -11910,20 +11926,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node277": {
          "name": "Combustibles chaudières collectives - International - Exportations",
          "idNode": "node277",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2331.1656776161662,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link803"
          ],
@@ -11949,20 +11965,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node278": {
          "name": "Bois rond F - International - Exportations",
          "idNode": "node278",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2349.6450858803264,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link816"
          ],
@@ -11987,20 +12003,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node279": {
          "name": "Bois rond R - International - Exportations",
          "idNode": "node279",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2368.1244941444866,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link829"
          ],
@@ -12025,20 +12041,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node280": {
          "name": "Bois bûche ménages - International - Exportations",
          "idNode": "node280",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2386.6039024086467,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link842"
          ],
@@ -12064,20 +12080,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node281": {
          "name": "Connexes F - International - Exportations",
          "idNode": "node281",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2405.083310672807,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link859"
          ],
@@ -12101,20 +12117,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node282": {
          "name": "Connexes hors écorces F - International - Exportations",
          "idNode": "node282",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2423.562718936967,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link875"
          ],
@@ -12138,20 +12154,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node283": {
          "name": "Connexes R - International - Exportations",
          "idNode": "node283",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2442.042127201127,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link892"
          ],
@@ -12175,20 +12191,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node284": {
          "name": "Connexes hors écorces R - International - Exportations",
          "idNode": "node284",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 2460.5215354652873,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link908"
          ],
@@ -12212,20 +12228,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node285": {
          "name": "Bois rond - Autres régions françaises - Importations",
          "idNode": "node285",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 150,
+         "y": 50,
          "inputLinksId": [],
          "outputLinksId": [
             "link14"
@@ -12250,21 +12266,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -24.409252166748047,
-         "y_label": 15.284802754720051
+         "x_label": 38,
+         "y_label": 9.125
       },
       "node286": {
          "name": "Bois d'œuvre - Autres régions françaises - Importations",
          "idNode": "node286",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 173.47940826416016,
+         "y": 73.25,
          "inputLinksId": [],
          "outputLinksId": [
             "link20"
@@ -12288,8 +12304,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -46.25042724609375,
-         "y_label": 9.909802754720051
+         "x_label": 38,
+         "y_label": 3.75
       },
       "node287": {
          "name": "Bois bûche - Autres régions françaises - Importations",
@@ -12302,7 +12318,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 50,
+         "y": 150,
          "inputLinksId": [],
          "outputLinksId": [
             "link56"
@@ -12326,8 +12342,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -33.628334045410156,
-         "y_label": 11.472302754720051
+         "x_label": -33.645538330078125,
+         "y_label": 11.475556691487629
       },
       "node288": {
          "name": "Plaquettes\\nforestières - Autres régions françaises - Importations",
@@ -12340,7 +12356,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 73.47940826416016,
+         "y": 173.4891700744629,
          "inputLinksId": [],
          "outputLinksId": [
             "link168"
@@ -12364,8 +12380,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -114.33137512207031,
-         "y_label": 8.8125
+         "x_label": -114.40359497070312,
+         "y_label": 14.975556691487629
       },
       "node289": {
          "name": "Bois d'œuvre F - Autres régions françaises - Importations",
@@ -12378,7 +12394,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 96.95881652832031,
+         "y": 196.97834014892578,
          "inputLinksId": [],
          "outputLinksId": [
             "link26"
@@ -12401,8 +12417,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -57.11945343017578,
-         "y_label": 6.472302754720052
+         "x_label": -57.131187438964844,
+         "y_label": 6.47555669148763
       },
       "node290": {
          "name": "Connexes - Autres régions françaises - Importations",
@@ -12415,7 +12431,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 50,
+         "y": 150,
          "inputLinksId": [],
          "outputLinksId": [
             "link86"
@@ -12439,8 +12455,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -25.605464935302734,
-         "y_label": 18.28480275472005
+         "x_label": -25.567527770996094,
+         "y_label": 18.28805669148763
       },
       "node291": {
          "name": "Bois d'œuvre R - Autres régions françaises - Importations",
@@ -12453,7 +12469,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 120.43822479248047,
+         "y": 220.46751022338867,
          "inputLinksId": [],
          "outputLinksId": [
             "link32"
@@ -12476,21 +12492,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.54253387451172,
-         "y_label": 9.597302754720053
+         "x_label": -58.56189727783203,
+         "y_label": 9.60055669148763
       },
       "node292": {
          "name": "Bois d'industrie - Autres régions françaises - Importations",
          "idNode": "node292",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 196.9588165283203,
+         "y": 85.75,
          "inputLinksId": [],
          "outputLinksId": [
             "link38"
@@ -12514,8 +12530,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -63.03864288330078,
-         "y_label": 6.191052754720052
+         "x_label": 38,
+         "y_label": 0.03125
       },
       "node293": {
          "name": "Bois d'industrie F - Autres régions françaises - Importations",
@@ -12528,7 +12544,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 143.91763305664062,
+         "y": 243.95668029785156,
          "inputLinksId": [],
          "outputLinksId": [
             "link44"
@@ -12551,8 +12567,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -73.90766906738281,
-         "y_label": 6.197302754720051
+         "x_label": -73.94752502441406,
+         "y_label": 6.20055669148763
       },
       "node294": {
          "name": "Bois d'industrie R - Autres régions françaises - Importations",
@@ -12565,7 +12581,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
-         "y": 167.39704132080078,
+         "y": 267.44585037231445,
          "inputLinksId": [],
          "outputLinksId": [
             "link50"
@@ -12588,21 +12604,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -75.33074951171875,
-         "y_label": 6.159802754720052
+         "x_label": -75.37823486328125,
+         "y_label": 6.16305669148763
       },
       "node295": {
          "name": "Connexes plaquettes déchets - Autres régions françaises - Importations",
          "idNode": "node295",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 220.43822479248047,
+         "y": 90.8125,
          "inputLinksId": [],
          "outputLinksId": [
             "link73"
@@ -12626,21 +12642,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -153.31137084960938,
-         "y_label": 27.15980275472005
+         "x_label": 38,
+         "y_label": 21
       },
       "node296": {
          "name": "Connexes hors écorces - Autres régions françaises - Importations",
          "idNode": "node296",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 267.43822479248047,
+         "y": 137.8125,
          "inputLinksId": [],
          "outputLinksId": [
             "link119"
@@ -12664,21 +12680,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -111.8770751953125,
-         "y_label": 18.28480275472005
+         "x_label": 38,
+         "y_label": 12.125
       },
       "node297": {
          "name": "Sciures - Autres régions françaises - Importations",
          "idNode": "node297",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 296.68822479248047,
+         "y": 167.0625,
          "inputLinksId": [],
          "outputLinksId": [
             "link127"
@@ -12702,21 +12718,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -8.42538833618164,
-         "y_label": 15.472302754720051
+         "x_label": 38,
+         "y_label": 9.3125
       },
       "node298": {
          "name": "Sciures F - Autres régions françaises - Importations",
          "idNode": "node298",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 320.31322479248047,
+         "y": 190.6875,
          "inputLinksId": [],
          "outputLinksId": [
             "link134"
@@ -12739,21 +12755,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -19.294414520263672,
-         "y_label": 14.784802754720051
+         "x_label": 38,
+         "y_label": 8.625
       },
       "node299": {
          "name": "Sciures R - Autres régions françaises - Importations",
          "idNode": "node299",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 343.7926330566406,
+         "y": 212.9375,
          "inputLinksId": [],
          "outputLinksId": [
             "link141"
@@ -12776,21 +12792,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.71749496459961,
-         "y_label": 6.784802754720052
+         "x_label": 38,
+         "y_label": 0.625
       },
       "node300": {
          "name": "Plaquettes de scierie - Autres régions françaises - Importations",
          "idNode": "node300",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 367.2720413208008,
+         "y": 219.1875,
          "inputLinksId": [],
          "outputLinksId": [
             "link149"
@@ -12814,21 +12830,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -96.67694091796875,
-         "y_label": 8.972302754720051
+         "x_label": 38,
+         "y_label": 2.8125
       },
       "node301": {
          "name": "Plaquettes de scierie F - Autres régions françaises - Importations",
          "idNode": "node301",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 390.75144958496094,
+         "y": 229.8125,
          "inputLinksId": [],
          "outputLinksId": [
             "link156"
@@ -12851,21 +12867,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -107.54595947265625,
-         "y_label": 7.347302754720052
+         "x_label": 38,
+         "y_label": 1.1875
       },
       "node302": {
          "name": "Plaquettes de scierie R - Autres régions françaises - Importations",
          "idNode": "node302",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 414.2308578491211,
+         "y": 237.1875,
          "inputLinksId": [],
          "outputLinksId": [
             "link163"
@@ -12888,21 +12904,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -108.96903991699219,
-         "y_label": 7.847302754720052
+         "x_label": 38,
+         "y_label": 1.6875
       },
       "node303": {
          "name": "Sciages et autres - Autres régions françaises - Importations",
          "idNode": "node303",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 437.71026611328125,
+         "y": 245.5625,
          "inputLinksId": [],
          "outputLinksId": [
             "link178"
@@ -12926,21 +12942,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -71.18525695800781,
-         "y_label": 13.597302754720051
+         "x_label": 38,
+         "y_label": 7.4375
       },
       "node304": {
          "name": "Sciages - Autres régions françaises - Importations",
          "idNode": "node304",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 461.1896743774414,
+         "y": 265.4375,
          "inputLinksId": [],
          "outputLinksId": [
             "link185"
@@ -12964,8 +12980,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -9.869091033935547,
-         "y_label": 13.597302754720051
+         "x_label": 38,
+         "y_label": 7.4375
       },
       "node305": {
          "name": "Panneaux - Autres régions françaises - Importations",
@@ -12978,7 +12994,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 50,
+         "y": 150,
          "inputLinksId": [],
          "outputLinksId": [
             "link242"
@@ -13002,8 +13018,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -26.946044921875,
-         "y_label": 6.784802754720052
+         "x_label": -26.95421600341797,
+         "y_label": 6.78805669148763
       },
       "node306": {
          "name": "Placages - Autres régions françaises - Importations",
@@ -13016,7 +13032,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 79.25,
+         "y": 179.25,
          "inputLinksId": [],
          "outputLinksId": [
             "link232"
@@ -13040,8 +13056,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -18.386943817138672,
-         "y_label": 6.159802754720052
+         "x_label": -18.413982391357422,
+         "y_label": 6.16305669148763
       },
       "node307": {
          "name": "Contreplaqués - Autres régions françaises - Importations",
@@ -13054,7 +13070,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 73.47940826416016,
+         "y": 173.4891700744629,
          "inputLinksId": [],
          "outputLinksId": [
             "link237"
@@ -13078,8 +13094,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -57.67631530761719,
-         "y_label": 6.409802754720052
+         "x_label": -57.703468322753906,
+         "y_label": 6.41305669148763
       },
       "node308": {
          "name": "Traverses - Autres régions françaises - Importations",
@@ -13092,7 +13108,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 102.72940826416016,
+         "y": 202.7391700744629,
          "inputLinksId": [],
          "outputLinksId": [
             "link203"
@@ -13116,8 +13132,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -24.038013458251953,
-         "y_label": 6.166052754720051
+         "x_label": -24.04877471923828,
+         "y_label": 6.16930669148763
       },
       "node309": {
          "name": "Parquet - Autres régions françaises - Importations",
@@ -13130,7 +13146,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 96.95881652832031,
+         "y": 196.97834014892578,
          "inputLinksId": [],
          "outputLinksId": [
             "link210"
@@ -13154,8 +13170,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -13.602096557617188,
-         "y_label": 6.159802754720052
+         "x_label": -13.6156005859375,
+         "y_label": 6.16305669148763
       },
       "node310": {
          "name": "Sciages F - Autres régions françaises - Importations",
@@ -13168,7 +13184,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 126.20881652832031,
+         "y": 226.22834014892578,
          "inputLinksId": [],
          "outputLinksId": [
             "link191"
@@ -13191,8 +13207,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.71749496459961,
-         "y_label": 6.166052754720051
+         "x_label": -20.725128173828125,
+         "y_label": 6.16930669148763
       },
       "node311": {
          "name": "Granulés - Autres régions françaises - Importations",
@@ -13205,7 +13221,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 120.43822479248047,
+         "y": 220.46751022338867,
          "inputLinksId": [],
          "outputLinksId": [
             "link215"
@@ -13229,8 +13245,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -20.655620574951172,
-         "y_label": 6.909802754720052
+         "x_label": -20.6370849609375,
+         "y_label": 6.91305669148763
       },
       "node312": {
          "name": "Sciages R - Autres régions françaises - Importations",
@@ -13243,7 +13259,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 149.68822479248047,
+         "y": 249.71751022338867,
          "inputLinksId": [],
          "outputLinksId": [
             "link197"
@@ -13266,8 +13282,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -22.140575408935547,
-         "y_label": 13.597302754720051
+         "x_label": -22.155838012695312,
+         "y_label": 13.600556691487629
       },
       "node313": {
          "name": "Palettes et\\nemballages - Autres régions françaises - Importations",
@@ -13280,7 +13296,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 143.91763305664062,
+         "y": 243.95668029785156,
          "inputLinksId": [],
          "outputLinksId": [
             "link220"
@@ -13304,21 +13320,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -118.41499328613281,
-         "y_label": 12
+         "x_label": -118.56365966796875,
+         "y_label": 18.16305669148763
       },
       "node314": {
          "name": "Panneaux placages contreplaqués - Autres régions françaises - Importations",
          "idNode": "node314",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 484.66908264160156,
+         "y": 285.3125,
          "inputLinksId": [],
          "outputLinksId": [
             "link227"
@@ -13343,21 +13359,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -184.22726440429688,
-         "y_label": 7.034802754720052
+         "x_label": 38,
+         "y_label": 0.8750000000000001
       },
       "node315": {
          "name": "Panneaux particules - Autres régions françaises - Importations",
          "idNode": "node315",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 508.1484909057617,
+         "y": 292.0625,
          "inputLinksId": [],
          "outputLinksId": [
             "link247"
@@ -13381,21 +13397,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -94.42887878417969,
-         "y_label": 6.347302754720052
+         "x_label": 38,
+         "y_label": 0.1875
       },
       "node316": {
          "name": "Panneaux fibres - Autres régions françaises - Importations",
          "idNode": "node316",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 531.6278991699219,
+         "y": 297.4375,
          "inputLinksId": [],
          "outputLinksId": [
             "link252"
@@ -13419,21 +13435,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -67.39037322998047,
-         "y_label": 6.347302754720052
+         "x_label": 38,
+         "y_label": 0.1875
       },
       "node317": {
          "name": "Panneaux MDF - Autres régions françaises - Importations",
          "idNode": "node317",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 555.107307434082,
+         "y": 302.8125,
          "inputLinksId": [],
          "outputLinksId": [
             "link257"
@@ -13457,21 +13473,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -60.62559509277344,
-         "y_label": 6.347302754720052
+         "x_label": 38,
+         "y_label": 0.1875
       },
       "node318": {
          "name": "Panneaux OSB - Autres régions françaises - Importations",
          "idNode": "node318",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 578.5867156982422,
+         "y": 308.1875,
          "inputLinksId": [],
          "outputLinksId": [
             "link262"
@@ -13495,8 +13511,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.212547302246094,
-         "y_label": 6.347302754720052
+         "x_label": 38,
+         "y_label": 0.1875
       },
       "node319": {
          "name": "Pâte à\\npapier - Autres régions françaises - Importations",
@@ -13509,7 +13525,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 173.16763305664062,
+         "y": 273.20668029785156,
          "inputLinksId": [],
          "outputLinksId": [
             "link269"
@@ -13533,21 +13549,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -58.171295166015625,
-         "y_label": 6.6875
+         "x_label": -58.27574920654297,
+         "y_label": 12.850556691487629
       },
       "node320": {
          "name": "Pâte à papier mécanique - Autres régions françaises - Importations",
          "idNode": "node320",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 602.0661239624023,
+         "y": 313.5625,
          "inputLinksId": [],
          "outputLinksId": [
             "link275"
@@ -13571,21 +13587,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -124.169189453125,
-         "y_label": 9.034802754720051
+         "x_label": 38,
+         "y_label": 2.875
       },
       "node321": {
          "name": "Pâte à papier chimique - Autres régions françaises - Importations",
          "idNode": "node321",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 625.5455322265625,
+         "y": 324.3125,
          "inputLinksId": [],
          "outputLinksId": [
             "link281"
@@ -13609,8 +13625,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -112.06269836425781,
-         "y_label": 9.972302754720051
+         "x_label": 38,
+         "y_label": 3.8125
       },
       "node322": {
          "name": "Papiers cartons - Autres régions françaises - Importations",
@@ -13623,7 +13639,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 172.91763305664062,
+         "y": 272.95668029785156,
          "inputLinksId": [],
          "outputLinksId": [
             "link289"
@@ -13647,8 +13663,8 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -62.99739074707031,
-         "y_label": 9.409802754720051
+         "x_label": -63.074134826660156,
+         "y_label": 9.413056691487629
       },
       "node323": {
          "name": "Papier\\nà recycler - Autres régions françaises - Importations",
@@ -13661,7 +13677,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
-         "y": 196.64704132080078,
+         "y": 296.69585037231445,
          "inputLinksId": [],
          "outputLinksId": [
             "link295"
@@ -13685,21 +13701,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -79.78560638427734,
-         "y_label": 0
+         "x_label": -79.86846160888672,
+         "y_label": 6.16305669148763
       },
       "node324": {
          "name": "Combustibles chaudières collectives - Autres régions françaises - Importations",
          "idNode": "node324",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 649.0249404907227,
+         "y": 336.9375,
          "inputLinksId": [],
          "outputLinksId": [
             "link307"
@@ -13724,21 +13740,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -196.76686096191406,
-         "y_label": 17.84730275472005
+         "x_label": 38,
+         "y_label": 11.6875
       },
       "node325": {
          "name": "Bois rond F - Autres régions françaises - Importations",
          "idNode": "node325",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 677.3999404907227,
+         "y": 365.3125,
          "inputLinksId": [],
          "outputLinksId": [
             "link313"
@@ -13762,21 +13778,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -35.278282165527344,
-         "y_label": 6.534802754720052
+         "x_label": 38,
+         "y_label": 0.375
       },
       "node326": {
          "name": "Bois rond R - Autres régions françaises - Importations",
          "idNode": "node326",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 700.8793487548828,
+         "y": 371.0625,
          "inputLinksId": [],
          "outputLinksId": [
             "link319"
@@ -13800,21 +13816,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -36.70135498046875,
-         "y_label": 9.597302754720053
+         "x_label": 38,
+         "y_label": 3.4375000000000004
       },
       "node327": {
          "name": "Bois bûche ménages - Autres régions françaises - Importations",
          "idNode": "node327",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 724.358757019043,
+         "y": 382.9375,
          "inputLinksId": [],
          "outputLinksId": [
             "link327"
@@ -13839,21 +13855,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -96.69755554199219,
-         "y_label": 11.472302754720051
+         "x_label": 38,
+         "y_label": 5.3125
       },
       "node328": {
          "name": "Connexes F - Autres régions françaises - Importations",
          "idNode": "node328",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 747.8381652832031,
+         "y": 398.5625,
          "inputLinksId": [],
          "outputLinksId": [
             "link339"
@@ -13876,21 +13892,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -36.45386505126953,
-         "y_label": 15.972302754720051
+         "x_label": 38,
+         "y_label": 9.8125
       },
       "node329": {
          "name": "Connexes hors écorces F - Autres régions françaises - Importations",
          "idNode": "node329",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 772.4631652832031,
+         "y": 423.1875,
          "inputLinksId": [],
          "outputLinksId": [
             "link346"
@@ -13913,21 +13929,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -122.72547912597656,
-         "y_label": 15.972302754720051
+         "x_label": 38,
+         "y_label": 9.8125
       },
       "node330": {
          "name": "Connexes R - Autres régions françaises - Importations",
          "idNode": "node330",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 797.0881652832031,
+         "y": 447.8125,
          "inputLinksId": [],
          "outputLinksId": [
             "link358"
@@ -13950,21 +13966,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -37.89756774902344,
-         "y_label": 8.472302754720051
+         "x_label": 38,
+         "y_label": 2.3125
       },
       "node331": {
          "name": "Connexes hors écorces R - Autres régions françaises - Importations",
          "idNode": "node331",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 820.5675735473633,
+         "y": 457.4375,
          "inputLinksId": [],
          "outputLinksId": [
             "link365"
@@ -13987,21 +14003,21 @@
          "dimensions": {
             "Primaire": {}
          },
-         "x_label": -124.169189453125,
-         "y_label": 8.472302754720051
+         "x_label": 38,
+         "y_label": 2.3125
       },
       "node332": {
          "name": "Bois rond - Autres régions françaises - Exportations",
          "idNode": "node332",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1444.1540809364787,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link427"
          ],
@@ -14027,20 +14043,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node333": {
          "name": "Bois d'œuvre - Autres régions françaises - Exportations",
          "idNode": "node333",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1462.633489200639,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link437"
          ],
@@ -14065,7 +14081,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node334": {
          "name": "Bois bûche - Autres régions françaises - Exportations",
@@ -14078,7 +14094,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1244.1540809364787,
+         "y": 1444.1540809364787,
          "inputLinksId": [
             "link486"
          ],
@@ -14103,7 +14119,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node335": {
          "name": "Plaquettes\\nforestières - Autres régions françaises - Exportations",
@@ -14116,7 +14132,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1262.633489200639,
+         "y": 1462.6432510109416,
          "inputLinksId": [
             "link644"
          ],
@@ -14141,7 +14157,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node336": {
          "name": "Bois d'œuvre F - Autres régions françaises - Exportations",
@@ -14154,7 +14170,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1281.112897464799,
+         "y": 1481.1324210854045,
          "inputLinksId": [
             "link446"
          ],
@@ -14178,7 +14194,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node337": {
          "name": "Connexes - Autres régions françaises - Exportations",
@@ -14191,7 +14207,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1244.1540809364787,
+         "y": 1444.1540809364787,
          "inputLinksId": [
             "link521"
          ],
@@ -14216,7 +14232,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node338": {
          "name": "Bois d'œuvre R - Autres régions françaises - Exportations",
@@ -14229,7 +14245,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1299.5923057289592,
+         "y": 1499.6215911598674,
          "inputLinksId": [
             "link455"
          ],
@@ -14253,20 +14269,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node339": {
          "name": "Bois d'industrie - Autres régions françaises - Exportations",
          "idNode": "node339",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1481.112897464799,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link463"
          ],
@@ -14291,7 +14307,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node340": {
          "name": "Bois d'industrie F - Autres régions françaises - Exportations",
@@ -14304,7 +14320,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1318.0717139931194,
+         "y": 1518.1107612343303,
          "inputLinksId": [
             "link471"
          ],
@@ -14328,7 +14344,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node341": {
          "name": "Bois d'industrie R - Autres régions françaises - Exportations",
@@ -14341,7 +14357,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
-         "y": 1336.5511222572795,
+         "y": 1536.5999313087932,
          "inputLinksId": [
             "link479"
          ],
@@ -14365,20 +14381,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node342": {
          "name": "Connexes plaquettes déchets - Autres régions françaises - Exportations",
          "idNode": "node342",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1499.5923057289592,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link504"
          ],
@@ -14403,20 +14419,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node343": {
          "name": "Connexes hors écorces - Autres régions françaises - Exportations",
          "idNode": "node343",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1518.0717139931194,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link558"
          ],
@@ -14441,20 +14457,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node344": {
          "name": "Sciures - Autres régions françaises - Exportations",
          "idNode": "node344",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1536.5511222572795,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link569"
          ],
@@ -14479,20 +14495,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node345": {
          "name": "Sciures F - Autres régions françaises - Exportations",
          "idNode": "node345",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1555.0305305214397,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link580"
          ],
@@ -14516,20 +14532,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node346": {
          "name": "Sciures R - Autres régions françaises - Exportations",
          "idNode": "node346",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1573.5099387855998,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link591"
          ],
@@ -14553,20 +14569,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node347": {
          "name": "Plaquettes de scierie - Autres régions françaises - Exportations",
          "idNode": "node347",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1591.98934704976,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link606"
          ],
@@ -14591,20 +14607,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node348": {
          "name": "Plaquettes de scierie F - Autres régions françaises - Exportations",
          "idNode": "node348",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1610.4687553139202,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link621"
          ],
@@ -14628,20 +14644,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node349": {
          "name": "Plaquettes de scierie R - Autres régions françaises - Exportations",
          "idNode": "node349",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1628.9481635780803,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link636"
          ],
@@ -14665,20 +14681,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node350": {
          "name": "Sciages et autres - Autres régions françaises - Exportations",
          "idNode": "node350",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1647.4275718422405,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link660"
          ],
@@ -14703,20 +14719,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node351": {
          "name": "Sciages - Autres régions françaises - Exportations",
          "idNode": "node351",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1665.9069801064006,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link668"
          ],
@@ -14741,7 +14757,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node352": {
          "name": "Panneaux - Autres régions françaises - Exportations",
@@ -14754,7 +14770,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1244.1540809364787,
+         "y": 1444.1540809364787,
          "inputLinksId": [
             "link738"
          ],
@@ -14779,7 +14795,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node353": {
          "name": "Placages - Autres régions françaises - Exportations",
@@ -14792,7 +14808,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1262.633489200639,
+         "y": 1462.6432510109416,
          "inputLinksId": [
             "link726"
          ],
@@ -14817,7 +14833,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node354": {
          "name": "Contreplaqués - Autres régions françaises - Exportations",
@@ -14830,7 +14846,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1262.633489200639,
+         "y": 1462.6432510109416,
          "inputLinksId": [
             "link732"
          ],
@@ -14855,7 +14871,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node355": {
          "name": "Traverses - Autres régions françaises - Exportations",
@@ -14868,7 +14884,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1281.112897464799,
+         "y": 1481.1324210854045,
          "inputLinksId": [
             "link690"
          ],
@@ -14893,7 +14909,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node356": {
          "name": "Parquet - Autres régions françaises - Exportations",
@@ -14906,7 +14922,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1281.112897464799,
+         "y": 1481.1324210854045,
          "inputLinksId": [
             "link698"
          ],
@@ -14931,7 +14947,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node357": {
          "name": "Sciages F - Autres régions françaises - Exportations",
@@ -14944,7 +14960,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1299.5923057289592,
+         "y": 1499.6215911598674,
          "inputLinksId": [
             "link676"
          ],
@@ -14968,7 +14984,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node358": {
          "name": "Granulés - Autres régions françaises - Exportations",
@@ -14981,7 +14997,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1299.5923057289592,
+         "y": 1499.6215911598674,
          "inputLinksId": [
             "link708"
          ],
@@ -15006,7 +15022,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node359": {
          "name": "Sciages R - Autres régions françaises - Exportations",
@@ -15019,7 +15035,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1318.0717139931194,
+         "y": 1518.1107612343303,
          "inputLinksId": [
             "link684"
          ],
@@ -15043,7 +15059,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node360": {
          "name": "Palettes et\\nemballages - Autres régions françaises - Exportations",
@@ -15056,7 +15072,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1318.0717139931194,
+         "y": 1518.1107612343303,
          "inputLinksId": [
             "link714"
          ],
@@ -15081,20 +15097,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node361": {
          "name": "Panneaux placages contreplaqués - Autres régions françaises - Exportations",
          "idNode": "node361",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1684.3863883705608,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link721"
          ],
@@ -15120,20 +15136,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node362": {
          "name": "Panneaux particules - Autres régions françaises - Exportations",
          "idNode": "node362",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1702.865796634721,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link744"
          ],
@@ -15158,20 +15174,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node363": {
          "name": "Panneaux fibres - Autres régions françaises - Exportations",
          "idNode": "node363",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1721.345204898881,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link750"
          ],
@@ -15196,20 +15212,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node364": {
          "name": "Panneaux MDF - Autres régions françaises - Exportations",
          "idNode": "node364",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1739.8246131630412,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link756"
          ],
@@ -15234,20 +15250,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node365": {
          "name": "Panneaux OSB - Autres régions françaises - Exportations",
          "idNode": "node365",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1758.3040214272014,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link762"
          ],
@@ -15272,7 +15288,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node366": {
          "name": "Pâte à\\npapier - Autres régions françaises - Exportations",
@@ -15285,7 +15301,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1336.5511222572795,
+         "y": 1536.5999313087932,
          "inputLinksId": [
             "link767"
          ],
@@ -15310,20 +15326,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node367": {
          "name": "Pâte à papier mécanique - Autres régions françaises - Exportations",
          "idNode": "node367",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1776.7834296913616,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link772"
          ],
@@ -15348,20 +15364,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node368": {
          "name": "Pâte à papier chimique - Autres régions françaises - Exportations",
          "idNode": "node368",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1795.2628379555217,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link777"
          ],
@@ -15386,7 +15402,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node369": {
          "name": "Papiers cartons - Autres régions françaises - Exportations",
@@ -15399,7 +15415,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
-         "y": 1336.5511222572795,
+         "y": 1536.5999313087932,
          "inputLinksId": [
             "link783"
          ],
@@ -15424,7 +15440,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node370": {
          "name": "Papier\\nà recycler - Autres régions françaises - Exportations",
@@ -15437,7 +15453,7 @@
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
-         "y": 1355.0305305214397,
+         "y": 1555.089101383256,
          "inputLinksId": [
             "link788"
          ],
@@ -15462,20 +15478,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 9.244585037231445
       },
       "node371": {
          "name": "Combustibles chaudières collectives - Autres régions françaises - Exportations",
          "idNode": "node371",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1813.7422462196819,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link804"
          ],
@@ -15501,20 +15517,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node372": {
          "name": "Bois rond F - Autres régions françaises - Exportations",
          "idNode": "node372",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1832.221654483842,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link817"
          ],
@@ -15539,20 +15555,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node373": {
          "name": "Bois rond R - Autres régions françaises - Exportations",
          "idNode": "node373",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1850.7010627480022,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link830"
          ],
@@ -15577,20 +15593,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node374": {
          "name": "Bois bûche ménages - Autres régions françaises - Exportations",
          "idNode": "node374",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1869.1804710121623,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link843"
          ],
@@ -15616,20 +15632,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node375": {
          "name": "Connexes F - Autres régions françaises - Exportations",
          "idNode": "node375",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1887.6598792763225,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link860"
          ],
@@ -15653,20 +15669,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node376": {
          "name": "Connexes hors écorces F - Autres régions françaises - Exportations",
          "idNode": "node376",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1906.1392875404827,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link876"
          ],
@@ -15690,20 +15706,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node377": {
          "name": "Connexes R - Autres régions françaises - Exportations",
          "idNode": "node377",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1924.6186958046428,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link893"
          ],
@@ -15727,20 +15743,20 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       },
       "node378": {
          "name": "Connexes hors écorces R - Autres régions françaises - Exportations",
          "idNode": "node378",
          "type": "sector",
          "node_visible": 0,
-         "shape_visible": true,
+         "shape_visible": false,
          "label_visible": true,
          "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": null,
-         "y": 1943.098104068803,
+         "y": 1344.1540809364787,
          "inputLinksId": [
             "link909"
          ],
@@ -15764,7 +15780,7 @@
             "Primaire": {}
          },
          "x_label": 0,
-         "y_label": 9.239704132080078
+         "y_label": 0
       }
    },
    "links": {
@@ -15802,7 +15818,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 55,
-         "y_label": 509.02289130668964,
+         "y_label": 709.0228913066896,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -15840,7 +15856,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 55,
-         "y_label": 697.9358433061127,
+         "y_label": 897.9358433061127,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -16460,7 +16476,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 750.3942845662435,
+         "y_label": 467.25,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -16524,7 +16540,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 65.28480275472005,
+         "y_label": 59.125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -16713,7 +16729,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 773.8111928304037,
+         "y_label": 472.5625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -16749,7 +16765,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 83.3892110188802,
+         "y_label": 77,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -17019,8 +17035,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.32272727272727275,
          "right_horiz_shift": 0.42272727272727273,
-         "y_label": 220.54691060384116,
-         "x_label": 485.6686248779297,
+         "y_label": 220.61849721272787,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link26": {
@@ -17075,8 +17091,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.41363636363636364,
          "right_horiz_shift": 0.5136363636363637,
-         "y_label": 103.43111928304036,
-         "x_label": 485.6686248779297,
+         "y_label": 103.4538968404134,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link27": {
@@ -17243,7 +17259,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 475,
-         "y_label": 544.2434468023987,
+         "y_label": 744.2434468023987,
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -17365,8 +17381,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.30454545454545456,
          "right_horiz_shift": 0.40454545454545454,
-         "y_label": 244.0575688680013,
-         "x_label": 485.6686248779297,
+         "y_label": 244.13891728719076,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link32": {
@@ -17421,8 +17437,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.39545454545454545,
          "right_horiz_shift": 0.4954545454545455,
-         "y_label": 130.03552754720053,
-         "x_label": 485.6686248779297,
+         "y_label": 130.0680669148763,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link33": {
@@ -17682,7 +17698,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 797.2031010945639,
+         "y_label": 477.725,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -17736,7 +17752,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 103.14986928304036,
+         "y_label": 85.78125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -18014,8 +18030,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.2863636363636364,
          "right_horiz_shift": 0.38636363636363635,
-         "y_label": 267.51197713216146,
-         "x_label": 485.6686248779297,
+         "y_label": 267.60308736165365,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link44": {
@@ -18070,8 +18086,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.37727272727272726,
          "right_horiz_shift": 0.4772727272727273,
-         "y_label": 150.11493581136068,
-         "x_label": 485.6686248779297,
+         "y_label": 150.1572369893392,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link45": {
@@ -18346,10 +18362,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 290.9538853963216,
+         "y_label": 291.0547574361165,
          "left_horiz_shift": 0.2681818181818182,
          "right_horiz_shift": 0.3681818181818182,
-         "x_label": 485.6686248779297,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link50": {
@@ -18402,10 +18418,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 173.55684407552084,
+         "y_label": 173.6089070638021,
          "left_horiz_shift": 0.3590909090909091,
          "right_horiz_shift": 0.4590909090909091,
-         "x_label": 485.6686248779297,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link51": {
@@ -18611,8 +18627,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.34090909090909094,
          "right_horiz_shift": 0.440909090909091,
-         "y_label": 197.073752339681,
-         "x_label": 485.6686248779297,
+         "y_label": 197.13557713826498,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link56": {
@@ -18649,8 +18665,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "y_label": 61.472302754720054,
-         "x_label": 485.6686248779297,
+         "y_label": 61.47555669148763,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link57": {
@@ -19463,7 +19479,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 822.332509358724,
+         "y_label": 484.45,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -19527,7 +19543,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 147.59802754720053,
+         "y_label": 111.8125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -19761,7 +19777,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1075,
-         "y_label": 901.9375,
+         "y_label": 1101.9375,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -20213,8 +20229,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.35,
          "right_horiz_shift": 0.45000000000000007,
-         "y_label": 227.973752339681,
-         "x_label": 1120.2143936157227,
+         "y_label": 228.03557713826498,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link86": {
@@ -20269,8 +20285,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "y_label": 68.28480275472005,
-         "x_label": 1120.2143936157227,
+         "y_label": 68.28805669148763,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link87": {
@@ -21349,7 +21365,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 845.8119176228842,
+         "y_label": 492.825,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -21385,7 +21401,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 185.72302754720053,
+         "y_label": 149.9375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -21622,7 +21638,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 868.4163258870443,
+         "y_label": 500.325,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -21658,7 +21674,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 212.16052754720053,
+         "y_label": 176.375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -21862,7 +21878,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 891.6457341512045,
+         "y_label": 506.7,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -21898,7 +21914,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 235.09802754720053,
+         "y_label": 199.3125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22102,7 +22118,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 914.8126424153646,
+         "y_label": 512.5125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22138,7 +22154,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 250.5774358113607,
+         "y_label": 213.5625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22483,7 +22499,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 938.9795506795248,
+         "y_label": 518.7,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22537,7 +22553,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 276.2443440755208,
+         "y_label": 222,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22759,7 +22775,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 962.1464589436849,
+         "y_label": 525.2625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22795,7 +22811,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 298.09875233968097,
+         "y_label": 231,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -22999,7 +23015,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 985.2508672078451,
+         "y_label": 531.1375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -23035,7 +23051,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 322.0781606038411,
+         "y_label": 238.875,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -23295,8 +23311,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.4318181818181818,
          "right_horiz_shift": 0.5318181818181819,
-         "y_label": 88.4517110188802,
-         "x_label": 485.6686248779297,
+         "y_label": 88.46472676595052,
+         "x_label": 485.5964050292969,
          "label_position": "frozen"
       },
       "link169": {
@@ -23777,7 +23793,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1008.7927754720052,
+         "y_label": 536.7,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -23841,7 +23857,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 351.3075688680013,
+         "y_label": 253,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -24063,7 +24079,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1032.2096837361653,
+         "y_label": 542.2625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -24099,7 +24115,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 374.78697713216144,
+         "y_label": 272.875,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -24361,8 +24377,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.30714285714285716,
          "right_horiz_shift": 0.40714285714285714,
-         "y_label": 296.73072713216146,
-         "x_label": 1120.2143936157227,
+         "y_label": 296.82183736165365,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link191": {
@@ -24417,8 +24433,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.40714285714285714,
          "right_horiz_shift": 0.5071428571428572,
-         "y_label": 132.37486928304037,
-         "x_label": 1120.2143936157227,
+         "y_label": 132.39764684041342,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link192": {
@@ -24585,7 +24601,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1075,
-         "y_label": 930.25,
+         "y_label": 1130.25,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -24707,8 +24723,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.29285714285714287,
          "right_horiz_shift": 0.3928571428571429,
-         "y_label": 320.4538853963216,
-         "x_label": 1120.2143936157227,
+         "y_label": 320.5547574361165,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link197": {
@@ -24763,8 +24779,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
-         "y_label": 163.28552754720053,
-         "x_label": 1120.2143936157227,
+         "y_label": 163.3180669148763,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link198": {
@@ -25043,8 +25059,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.3214285714285714,
          "right_horiz_shift": 0.4214285714285715,
-         "y_label": 273.2513188680013,
-         "x_label": 1120.2143936157227,
+         "y_label": 273.33266728719076,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link203": {
@@ -25099,8 +25115,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.42142857142857143,
          "right_horiz_shift": 0.5214285714285715,
-         "y_label": 108.8954610188802,
-         "x_label": 1120.2143936157227,
+         "y_label": 108.90847676595051,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link204": {
@@ -25379,10 +25395,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 249.51566060384116,
+         "y_label": 249.58724721272787,
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
-         "x_label": 1481.5850067138672,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link210": {
@@ -25417,10 +25433,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 103.11861928304036,
+         "y_label": 103.1413968404134,
          "left_horiz_shift": 0.4166666666666667,
          "right_horiz_shift": 0.5166666666666667,
-         "x_label": 1481.5850067138672,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link211": {
@@ -25640,8 +25656,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.3,
          "right_horiz_shift": 0.4,
-         "y_label": 273.7450688680013,
-         "x_label": 1481.5850067138672,
+         "y_label": 273.82641728719074,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link215": {
@@ -25696,8 +25712,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5,
-         "y_label": 127.34802754720052,
-         "x_label": 1481.5850067138672,
+         "y_label": 127.3805669148763,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link216": {
@@ -25933,10 +25949,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 296.47447713216144,
+         "y_label": 296.5655873616536,
          "left_horiz_shift": 0.2833333333333333,
          "right_horiz_shift": 0.38333333333333336,
-         "x_label": 1481.5850067138672,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link220": {
@@ -26001,8 +26017,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.38333333333333336,
          "right_horiz_shift": 0.4833333333333334,
-         "y_label": 162.0774358113607,
-         "x_label": 1481.5850067138672,
+         "y_label": 162.1197369893392,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link221": {
@@ -26323,7 +26339,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1057.2515920003254,
+         "y_label": 549.325,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -26387,7 +26403,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 391.7038853963216,
+         "y_label": 286.1875,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -26626,8 +26642,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.33571428571428574,
          "right_horiz_shift": 0.4357142857142858,
-         "y_label": 249.77191060384115,
-         "x_label": 1120.2143936157227,
+         "y_label": 249.84349721272787,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link232": {
@@ -26680,10 +26696,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 85.40980275472005,
+         "y_label": 85.41305669148763,
          "left_horiz_shift": 0.4357142857142857,
          "right_horiz_shift": 0.5357142857142858,
-         "x_label": 1120.2143936157227,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link233": {
@@ -26911,8 +26927,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.43333333333333335,
-         "y_label": 226.723752339681,
-         "x_label": 1481.5850067138672,
+         "y_label": 226.78557713826498,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link237": {
@@ -26967,8 +26983,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.43333333333333335,
          "right_horiz_shift": 0.5333333333333333,
-         "y_label": 79.8892110188802,
-         "x_label": 1481.5850067138672,
+         "y_label": 79.90222676595052,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link238": {
@@ -27196,8 +27212,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.35,
          "right_horiz_shift": 0.45000000000000007,
-         "y_label": 203.68184407552084,
-         "x_label": 1481.5850067138672,
+         "y_label": 203.7339070638021,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link242": {
@@ -27252,8 +27268,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "y_label": 56.784802754720054,
-         "x_label": 1481.5850067138672,
+         "y_label": 56.78805669148763,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link243": {
@@ -27408,7 +27424,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1079.2310002644856,
+         "y_label": 556.45,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27444,7 +27460,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 414.49579366048175,
+         "y_label": 292.25,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27582,7 +27598,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1102.7104085286458,
+         "y_label": 562.075,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27618,7 +27634,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 437.9752019246419,
+         "y_label": 297.625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27756,7 +27772,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1126.189816792806,
+         "y_label": 567.7,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27792,7 +27808,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 461.45461018880206,
+         "y_label": 303,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27930,7 +27946,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1149.669225056966,
+         "y_label": 573.325,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -27966,7 +27982,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 484.9340184529622,
+         "y_label": 308.375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -28279,8 +28295,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.2785714285714286,
          "right_horiz_shift": 0.3785714285714286,
-         "y_label": 350.37079366048175,
-         "x_label": 1120.2143936157227,
+         "y_label": 350.4814275105794,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link269": {
@@ -28335,8 +28351,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.37857142857142856,
          "right_horiz_shift": 0.4785714285714286,
-         "y_label": 186.0149358113607,
-         "x_label": 1120.2143936157227,
+         "y_label": 186.0572369893392,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link270": {
@@ -28606,7 +28622,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1175.7111333211262,
+         "y_label": 581.5125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -28660,7 +28676,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 511.1009267171224,
+         "y_label": 316.4375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -28931,7 +28947,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1200.1280415852864,
+         "y_label": 593.2,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -28985,7 +29001,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 535.5178349812826,
+         "y_label": 328.125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -29261,7 +29277,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1655,
-         "y_label": 1065.3074733300323,
+         "y_label": 1265.3074733300323,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -29383,8 +29399,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.26666666666666666,
          "right_horiz_shift": 0.3666666666666667,
-         "y_label": 323.2038853963216,
-         "x_label": 1481.5850067138672,
+         "y_label": 323.3047574361165,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link289": {
@@ -29439,8 +29455,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.3666666666666667,
          "right_horiz_shift": 0.4666666666666667,
-         "y_label": 182.3274358113607,
-         "x_label": 1481.5850067138672,
+         "y_label": 182.3697369893392,
+         "x_label": 1481.4363403320312,
          "label_position": "frozen"
       },
       "link290": {
@@ -29719,10 +29735,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 367.1627019246419,
+         "y_label": 367.2830975850423,
          "left_horiz_shift": 0.2642857142857143,
          "right_horiz_shift": 0.3642857142857143,
-         "x_label": 1120.2143936157227,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link295": {
@@ -29775,10 +29791,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 202.80684407552084,
+         "y_label": 202.8589070638021,
          "left_horiz_shift": 0.3642857142857143,
          "right_horiz_shift": 0.4642857142857143,
-         "x_label": 1120.2143936157227,
+         "x_label": 1120.1315383911133,
          "label_position": "frozen"
       },
       "link296": {
@@ -30344,7 +30360,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1220.7324498494465,
+         "y_label": 602.95,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -30398,7 +30414,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 566.8722432454427,
+         "y_label": 348.625,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -30587,7 +30603,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1243.3368581136067,
+         "y_label": 608.95,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -30623,7 +30639,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 583.9347432454427,
+         "y_label": 365.6875,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -30794,7 +30810,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1266.8162663777669,
+         "y_label": 614.075,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -30830,7 +30846,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 610.4766515096029,
+         "y_label": 374.5,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31175,7 +31191,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#008311",
-         "y_label": 1290.270674641927,
+         "y_label": 619.1750000000001,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31229,7 +31245,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#008311",
-         "y_label": 635.8310597737631,
+         "y_label": 388.25,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31616,7 +31632,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1314.9000829060872,
+         "y_label": 625.4000000000001,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31652,7 +31668,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 663.8104680379232,
+         "y_label": 408.375,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31856,7 +31872,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1338.3794911702473,
+         "y_label": 632.7750000000001,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -31892,7 +31908,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 688.4354680379232,
+         "y_label": 433,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -32261,7 +32277,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1361.1713994344075,
+         "y_label": 639.4625000000001,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -32297,7 +32313,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 705.5604680379232,
+         "y_label": 450.125,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -32501,7 +32517,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1384.6508076985676,
+         "y_label": 645.4625000000001,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -32537,7 +32553,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 729.0398763020834,
+         "y_label": 459.75,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -32641,7 +32657,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 255,
-         "y_label": 787.7499477863312,
+         "y_label": 987.7499477863312,
          "left_horiz_shift": 0.21827789306640624,
          "right_horiz_shift": 0.7877268473307292
       },
@@ -32783,7 +32799,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 415,
-         "y_label": 463.9999477863312,
+         "y_label": 663.9999477863312,
          "left_horiz_shift": 0.017885422479538646,
          "right_horiz_shift": 0.07350389462425587
       },
@@ -32865,7 +32881,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 255,
-         "y_label": 552.4999477863312,
+         "y_label": 752.4999477863312,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -32903,7 +32919,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 255,
-         "y_label": 678.2499477863312,
+         "y_label": 878.2499477863312,
          "left_horiz_shift": 0.4227154541015625,
          "right_horiz_shift": 0.818013916015625
       },
@@ -35260,7 +35276,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1870.8172164650432,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -35324,7 +35340,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1353.3937850685588,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -35645,7 +35661,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1889.2966247292034,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -35681,7 +35697,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1371.873193332719,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -36139,8 +36155,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.32272727272727275,
          "right_horiz_shift": 0.42272727272727273,
-         "y_label": 1482.74964291768,
-         "x_label": 1172.3313751220703,
+         "y_label": 1482.8228564949504,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link446": {
@@ -36195,8 +36211,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.41363636363636364,
          "right_horiz_shift": 0.5136363636363637,
-         "y_label": 1390.3526015968791,
-         "x_label": 1172.3313751220703,
+         "y_label": 1390.377006122636,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link447": {
@@ -36363,7 +36379,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 855,
-         "y_label": 926.4875,
+         "y_label": 1126.4875,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -36671,8 +36687,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.30454545454545456,
          "right_horiz_shift": 0.40454545454545454,
-         "y_label": 1501.22905118184,
-         "x_label": 1172.3313751220703,
+         "y_label": 1501.3120265694133,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link455": {
@@ -36727,8 +36743,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.39545454545454545,
          "right_horiz_shift": 0.4954545454545455,
-         "y_label": 1408.8320098610393,
-         "x_label": 1172.3313751220703,
+         "y_label": 1408.8661761970989,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link456": {
@@ -37090,7 +37106,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1907.7760329933635,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -37144,7 +37160,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1390.3526015968791,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -37551,8 +37567,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.2863636363636364,
          "right_horiz_shift": 0.38636363636363635,
-         "y_label": 1519.7084594460002,
-         "x_label": 1172.3313751220703,
+         "y_label": 1519.8011966438762,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link471": {
@@ -37607,8 +37623,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.37727272727272726,
          "right_horiz_shift": 0.4772727272727273,
-         "y_label": 1427.3114181251995,
-         "x_label": 1172.3313751220703,
+         "y_label": 1427.3553462715618,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link472": {
@@ -38014,8 +38030,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.2681818181818182,
          "right_horiz_shift": 0.3681818181818182,
-         "y_label": 1538.1878677101604,
-         "x_label": 1172.3313751220703,
+         "y_label": 1538.290366718339,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link479": {
@@ -38070,8 +38086,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.3590909090909091,
          "right_horiz_shift": 0.4590909090909091,
-         "y_label": 1445.7908263893596,
-         "x_label": 1172.3313751220703,
+         "y_label": 1445.8445163460246,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link480": {
@@ -38203,7 +38219,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 955,
-         "y_label": 351.2229586319802,
+         "y_label": 551.2229586319802,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -38323,8 +38339,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.34090909090909094,
          "right_horiz_shift": 0.440909090909091,
-         "y_label": 1464.2702346535198,
-         "x_label": 1172.3313751220703,
+         "y_label": 1464.3336864204875,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link486": {
@@ -38361,8 +38377,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "y_label": 1353.3937850685588,
-         "x_label": 1172.3313751220703,
+         "y_label": 1353.3986659737102,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link487": {
@@ -39226,7 +39242,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1926.2554412575237,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -39290,7 +39306,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1408.8320098610393,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -40173,8 +40189,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.35,
          "right_horiz_shift": 0.45000000000000007,
-         "y_label": 1482.74964291768,
-         "x_label": 1737.7856063842773,
+         "y_label": 1482.8228564949504,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link521": {
@@ -40227,10 +40243,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1353.3937850685588,
+         "y_label": 1353.3986659737102,
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link522": {
@@ -41441,7 +41457,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1944.7348495216838,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -41477,7 +41493,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1427.3114181251995,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -41813,7 +41829,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1963.214257785844,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -41849,7 +41865,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1445.7908263893596,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -42185,7 +42201,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1981.6936660500041,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -42221,7 +42237,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1464.2702346535198,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -42557,7 +42573,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2000.1730743141643,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -42593,7 +42609,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1482.74964291768,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -43305,7 +43321,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2018.6524825783245,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -43359,7 +43375,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1501.22905118184,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -43845,7 +43861,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2037.1318908424846,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -43881,7 +43897,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1519.7084594460002,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -44349,7 +44365,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2055.6112991066448,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -44385,7 +44401,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1538.1878677101604,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -44815,8 +44831,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.4318181818181818,
          "right_horiz_shift": 0.5318181818181819,
-         "y_label": 1371.873193332719,
-         "x_label": 1172.3313751220703,
+         "y_label": 1371.887836048173,
+         "x_label": 1172.4035949707031,
          "label_position": "frozen"
       },
       "link645": {
@@ -45636,7 +45652,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 2074.090707370805,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -45700,7 +45716,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1556.6672759743205,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -45955,7 +45971,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 2092.570115634965,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -45991,7 +46007,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1575.1466842384807,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -46373,10 +46389,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1538.1878677101604,
+         "y_label": 1538.290366718339,
          "left_horiz_shift": 0.30714285714285716,
          "right_horiz_shift": 0.40714285714285714,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link676": {
@@ -46429,10 +46445,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1408.8320098610393,
+         "y_label": 1408.8661761970989,
          "left_horiz_shift": 0.40714285714285714,
          "right_horiz_shift": 0.5071428571428572,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link677": {
@@ -46731,7 +46747,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1495,
-         "y_label": 929.1194881324284,
+         "y_label": 1129.1194881324284,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -46851,10 +46867,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1556.6672759743205,
+         "y_label": 1556.779536792802,
          "left_horiz_shift": 0.29285714285714287,
          "right_horiz_shift": 0.3928571428571429,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link684": {
@@ -46909,8 +46925,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
-         "y_label": 1427.3114181251995,
-         "x_label": 1737.7856063842773,
+         "y_label": 1427.3553462715618,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link685": {
@@ -47187,10 +47203,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1519.7084594460002,
+         "y_label": 1519.8011966438762,
          "left_horiz_shift": 0.3214285714285714,
          "right_horiz_shift": 0.4214285714285715,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link690": {
@@ -47243,10 +47259,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1390.3526015968791,
+         "y_label": 1390.377006122636,
          "left_horiz_shift": 0.42142857142857143,
          "right_horiz_shift": 0.5214285714285715,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link691": {
@@ -47546,10 +47562,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1501.22905118184,
+         "y_label": 1501.3120265694133,
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
-         "x_label": 2176.414993286133,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link698": {
@@ -47584,10 +47600,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1390.3526015968791,
+         "y_label": 1390.377006122636,
          "left_horiz_shift": 0.4166666666666667,
          "right_horiz_shift": 0.5166666666666667,
-         "x_label": 2176.414993286133,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link699": {
@@ -48077,8 +48093,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.3,
          "right_horiz_shift": 0.4,
-         "y_label": 1519.7084594460002,
-         "x_label": 2176.414993286133,
+         "y_label": 1519.8011966438762,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link708": {
@@ -48133,8 +48149,8 @@
          "text_color": "#EC7920",
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5,
-         "y_label": 1408.8320098610393,
-         "x_label": 2176.414993286133,
+         "y_label": 1408.8661761970989,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link709": {
@@ -48411,10 +48427,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1538.1878677101604,
+         "y_label": 1538.290366718339,
          "left_horiz_shift": 0.2833333333333333,
          "right_horiz_shift": 0.38333333333333336,
-         "x_label": 2176.414993286133,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link714": {
@@ -48479,8 +48495,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.38333333333333336,
          "right_horiz_shift": 0.4833333333333334,
-         "y_label": 1427.3114181251995,
-         "x_label": 2176.414993286133,
+         "y_label": 1427.3553462715618,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link715": {
@@ -48801,7 +48817,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 2111.0495238991252,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -48865,7 +48881,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1593.6260925026409,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -49092,10 +49108,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1501.22905118184,
+         "y_label": 1501.3120265694133,
          "left_horiz_shift": 0.33571428571428574,
          "right_horiz_shift": 0.4357142857142858,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link726": {
@@ -49148,10 +49164,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1371.873193332719,
+         "y_label": 1371.887836048173,
          "left_horiz_shift": 0.4357142857142857,
          "right_horiz_shift": 0.5357142857142858,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link727": {
@@ -49420,8 +49436,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.43333333333333335,
-         "y_label": 1482.74964291768,
-         "x_label": 2176.414993286133,
+         "y_label": 1482.8228564949504,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link732": {
@@ -49476,8 +49492,8 @@
          "text_color": "#4DB35D",
          "left_horiz_shift": 0.43333333333333335,
          "right_horiz_shift": 0.5333333333333333,
-         "y_label": 1371.873193332719,
-         "x_label": 2176.414993286133,
+         "y_label": 1371.887836048173,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link733": {
@@ -49746,8 +49762,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.35,
          "right_horiz_shift": 0.45000000000000007,
-         "y_label": 1464.2702346535198,
-         "x_label": 2176.414993286133,
+         "y_label": 1464.3336864204875,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link738": {
@@ -49802,8 +49818,8 @@
          "text_color": "#9D2527",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "y_label": 1353.3937850685588,
-         "x_label": 2176.414993286133,
+         "y_label": 1353.3986659737102,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link739": {
@@ -49991,7 +50007,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 2129.5289321632854,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50027,7 +50043,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1612.105500766801,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50198,7 +50214,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 2148.0083404274455,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50234,7 +50250,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1630.5849090309612,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50405,7 +50421,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 2166.4877486916057,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50441,7 +50457,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1649.0643172951213,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50612,7 +50628,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 2184.967156955766,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50648,7 +50664,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "y_label": 1667.5437255592815,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -50747,7 +50763,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1455,
-         "y_label": 1059.3760925071613,
+         "y_label": 1259.3760925071613,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -50867,10 +50883,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1575.1466842384807,
+         "y_label": 1575.2687068672649,
          "left_horiz_shift": 0.2785714285714286,
          "right_horiz_shift": 0.3785714285714286,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link767": {
@@ -50923,10 +50939,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1445.7908263893596,
+         "y_label": 1445.8445163460246,
          "left_horiz_shift": 0.37857142857142856,
          "right_horiz_shift": 0.4785714285714286,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link768": {
@@ -51135,7 +51151,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 2203.446565219926,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -51189,7 +51205,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1686.0231338234416,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -51399,7 +51415,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 2221.925973484086,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -51453,7 +51469,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1704.5025420876018,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -51743,8 +51759,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.26666666666666666,
          "right_horiz_shift": 0.3666666666666667,
-         "y_label": 1556.6672759743205,
-         "x_label": 2176.414993286133,
+         "y_label": 1556.779536792802,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link783": {
@@ -51799,8 +51815,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.3666666666666667,
          "right_horiz_shift": 0.4666666666666667,
-         "y_label": 1445.7908263893596,
-         "x_label": 2176.414993286133,
+         "y_label": 1445.8445163460246,
+         "x_label": 2176.5636596679688,
          "label_position": "frozen"
       },
       "link784": {
@@ -52028,8 +52044,8 @@
          "text_color": "#6B93EB",
          "left_horiz_shift": 0.2642857142857143,
          "right_horiz_shift": 0.3642857142857143,
-         "y_label": 1593.6260925026409,
-         "x_label": 1737.7856063842773,
+         "y_label": 1593.7578769417278,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link788": {
@@ -52092,10 +52108,10 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#6B93EB",
-         "y_label": 1464.2702346535198,
+         "y_label": 1464.3336864204875,
          "left_horiz_shift": 0.3642857142857143,
          "right_horiz_shift": 0.4642857142857143,
-         "x_label": 1737.7856063842773,
+         "x_label": 1737.8684616088867,
          "label_position": "frozen"
       },
       "link789": {
@@ -52865,7 +52881,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2240.4053817482463,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -52919,7 +52935,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1722.981950351762,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -53339,7 +53355,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 2258.8847900124065,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -53375,7 +53391,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1741.461358615922,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -53777,7 +53793,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 2277.3641982765666,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -53813,7 +53829,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "y_label": 1759.9407668800823,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -54413,7 +54429,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#008311",
-         "y_label": 2295.843606540727,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -54467,7 +54483,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#008311",
-         "y_label": 1778.4201751442424,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -55019,7 +55035,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2314.323014804887,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -55055,7 +55071,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1796.8995834084026,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -55567,7 +55583,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2332.802423069047,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -55603,7 +55619,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1815.3789916725627,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -56137,7 +56153,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2351.2818313332073,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -56173,7 +56189,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1833.858399936723,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -56685,7 +56701,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 2369.7612395973674,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -56721,7 +56737,7 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#EC7920",
-         "y_label": 1852.337808200883,
+         "y_label": 1344.1540809364787,
          "x_label": null,
          "label_position": "frozen"
       },
@@ -56759,16 +56775,8 @@
          "text_color": "black"
       }
    },
-   "user_scale": "800",
-   "height": 1500,
-   "width": 2500,
-   "node_width": 40,
-   "h_space": 200,
-   "v_space": 100,
-   "left_shift": 0.4,
-   "right_shift": 0.5,
-   "max_shift": 0.2,
-   "dimension_name": "Primaire",
+   "animation_tooltips": {},
+   "show_uncert": false,
    "display_style": {
       "font_size": "14",
       "unit": false,
@@ -56778,6 +56786,7 @@
       "sector_bold": true,
       "filter_label": 200
    },
+   "static_sankey": false,
    "tags_catalog": {
       "flux_types": {
          "group_name": "Type de donnée",
@@ -56925,20 +56934,7 @@
          "banner": "multi"
       }
    },
-   "tags_group_idx": 1,
-   "tag_idx": 1,
-   "node_idx": 373,
-   "link_idx": 373,
-   "trade_hspace": 200,
-   "file_path": "sankey_diagram.json",
-   "trade_close_hspace": 50,
-   "trade_close_vspace": 20,
-   "trade_left_shift": 0.45,
-   "trade_right_shift": 0.55,
-   "trade_max_shift": 0.2,
-   "animation_tooltips": {},
-   "show_uncert": false,
-   "static_sankey": false,
+   "dimension_name": "Primaire",
    "tooltip_names": [
       "humidité sur sec",
       "sur brut",
@@ -56958,6 +56954,10 @@
       "m3 (plein) du produit"
    ],
    "default_tooltip": true,
+   "tags_group_idx": 1,
+   "tag_idx": 1,
+   "node_idx": 373,
+   "link_idx": 373,
    "trade_sectors": [
       "International - Importations",
       "International - Exportations",
