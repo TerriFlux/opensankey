@@ -56,13 +56,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 ) => {
   const set_show_link = useState(true)[1]
 
-  
-  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
   const display_nodes = data.nodes
   const display_links = data.links
 
@@ -492,7 +485,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <FormLabel >(id : {addLabelId()})</FormLabel>
                     </Col>
                   </Form.Group>
-                  <Form.Group as={Row} >
+                  {/* <Form.Group as={Row} >
                     <Col xs={2}>
                       <FormLabel >Parent</FormLabel>
                     </Col>
@@ -508,7 +501,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_node.dimensions[data.dimension_name].parent_name === n.idNode} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
-                  </Form.Group>
+                  </Form.Group> */}
                 </Form>
 
                 <Form>

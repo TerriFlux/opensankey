@@ -204,34 +204,34 @@ export const convert_data = (
     }
   })
 
-  if (!data_to_convert.tags_catalog['dimensions']) {
-    data_to_convert.tags_catalog['dimensions'] = {
-      group_name: 'Dimensions',
-      tags: {'Primaire' : {
-        name: 'Primaire',
-        selected: true,
-        color: ''
-      }},
-      banner: 'one'
-    }
-  }
+  // if (!data_to_convert.tags_catalog['dimensions']) {
+  //   data_to_convert.tags_catalog['dimensions'] = {
+  //     group_name: 'Dimensions',
+  //     tags: {'Primaire' : {
+  //       name: 'Primaire',
+  //       selected: true,
+  //       color: ''
+  //     }},
+  //     banner: 'one'
+  //   }
+  // }
   if (!data_to_convert.tags_catalog) {
     data_to_convert.tags_catalog = {}
   }
-  Object.values(data.nodes).forEach(n => {
-    if (n.dimensions === undefined) {
-      n.dimensions = {'Primaire':{parent_name: undefined}}
-    }
-    Object.entries(data.tags_catalog['dimensions'].tags).forEach( tag => {
-      if ((n as any).dimensions[tag[0]] && (n as any).dimensions[tag[0]].parent_name) {
-        const parent_node = Object.values(data.nodes).filter(n2 => normalize_name(n2.name) === normalize_name((n as any).dimensions[tag[0]].parent_name))[0]
-        if (!parent_node) {
-          return
-        }
-        (n as any).dimensions[tag[0]].parent_name = parent_node.idNode
-      }
-    })
-  })
+  // Object.values(data.nodes).forEach(n => {
+  //   if (n.dimensions === undefined) {
+  //     n.dimensions = {'Primaire':{parent_name: undefined}}
+  //   }
+  //   Object.entries(data.dimensions).forEach( tag => {
+  //     if ((n as any).dimensions[tag[0]] && (n as any).dimensions[tag[0]].parent_name) {
+  //       const parent_node = Object.values(data.nodes).filter(n2 => normalize_name(n2.name) === normalize_name((n as any).dimensions[tag[0]].parent_name))[0]
+  //       if (!parent_node) {
+  //         return
+  //       }
+  //       (n as any).dimensions[tag[0]].parent_name = parent_node.idNode
+  //     }
+  //   })
+  // })
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
@@ -307,9 +307,9 @@ export const convert_data = (
   if (data.right_shift === undefined) {
     data.right_shift = 0.5
   }
-  if (data.dimension_name === undefined) {
-    data.dimension_name = 'Primaire'
-  }
+  // if (data.dimension_name === undefined) {
+  //   data.dimension_name = 'Primaire'
+  // }
 
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
   for (const attr in attributes_to_remove) {
