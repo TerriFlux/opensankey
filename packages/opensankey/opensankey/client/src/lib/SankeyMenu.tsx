@@ -32,9 +32,8 @@ const MenuPropTypes = {
   url_prefix: PropTypes.string.isRequired,
   getValueIndex: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  set_radio_selected: PropTypes.func.isRequired,
-  duplicate: PropTypes.bool.isRequired,
-  set_duplicate: PropTypes.func.isRequired
+  set_radio_selected: PropTypes.func.isRequired  
+
 }
 
 
@@ -50,8 +49,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_selected_link, selected_link,
     example_menu,url_prefix,
     getValueIndex,
-    radio_selected, set_radio_selected,
-    duplicate,set_duplicate
+    radio_selected, 
+    set_radio_selected
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -202,21 +201,12 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    let link = selected_link
-    if (duplicate) {
-      link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length+1
-      data.links[link.idLink] = link
-      selected_link = link
-      const target_node = data.nodes[link.idTarget]
-      target_node.inputLinksId.push(selected_link.idLink)
-    } else {
-      console.log('========1=============')
-      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-      // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
-      const previous_node = data.nodes[link.idSource]
-      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
-    }
+    const link = selected_link
+    console.log('========1=============')
+    //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+    // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+    const previous_node = data.nodes[link.idSource]
+    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
@@ -243,18 +233,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
-    let link = selected_link
-    if (duplicate) {
-      link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length+1
-      data.links[link.idLink] = link
-      selected_link = link
-      const source_node = nodes[link.idSource]
-      source_node.outputLinksId.push(selected_link.idLink)
-    } else {
-      const previous_node = nodes[link.idTarget]
-      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
-    }
+    const link = selected_link
+    const previous_node = nodes[link.idTarget]
+    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
