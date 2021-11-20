@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey,compute_default_input_outputLinksId, updateLayout,reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
+import { compute_auto_sankey, compute_default_input_outputLinksId, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
 import { linkHorizontal } from 'd3-shape'
 
 // Getter pour récupérer la valeur du link
@@ -21,18 +21,21 @@ export const getTotalLinks = (
   const { links } = data
   let total = 0
   Links.forEach(element => {
-    const tmp = links[element].value[0]
-    total += tmp
+    // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
+    if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
+      const tmp = links[element].value[0]
+      total += tmp
+    }
   })
   return total
 }
 
 export const compute_total_offsets = (
   node: SankeyNode,
-  nodes: { [node_id : string]:SankeyNode},
-  links: { [link_id : string]:SankeyLink},
+  nodes: { [node_id: string]: SankeyNode },
+  links: { [link_id: string]: SankeyLink },
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (node :{ [node_id : string]:SankeyNode}, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
+  test_link_value: (node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
   ref_link: SankeyLink | undefined = undefined
 ) => {
   let offset_height_left = 0
@@ -46,7 +49,7 @@ export const compute_total_offsets = (
   const bottom_flux: string[] = []
 
   //const link_id = link ? links.indexOf(link) : -1
-  
+
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
@@ -279,11 +282,11 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5
     },
 
-    tags_catalog:{},
-    tags_group_idx:1,
-    tag_idx:1,
-    node_idx:1,
-    link_idx:1
+    tags_catalog: {},
+    tags_group_idx: 1,
+    tag_idx: 1,
+    node_idx: 1,
+    link_idx: 1
   }
 }
 
@@ -297,14 +300,14 @@ export const default_node = (): SankeyNode => {
     shape_visible: true,
     label_visible: true,
     color: '#a9a9a9',
-    nodeParameter:'Général',
+    node_parameter: 'Général',
     x: 100,
     y: 100,
     inputLinksId: [],
     outputLinksId: [],
     tags: {},
-    colorFavoriteTags:{},
-    dimensions: {'Primaire' : {parent_name: undefined}}
+    colorFavoriteTags: {},
+    dimensions: { 'Primaire': { parent_name: undefined } }
   }
 }
 
@@ -351,8 +354,8 @@ export const delete_node = (
   data: SankeyData,
   node: SankeyNode
 ) => {
-  node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]) )
-  node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]) )
+  node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
+  node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
   delete data.nodes[node.idNode]
 }
 
@@ -361,14 +364,14 @@ export const setSelectedTags = (
 ) => {
 
   const { tags_catalog } = sankey_data
-  const display_nodes : SankeyNode [] = Object.values(sankey_data.nodes).filter( n=> n.display )
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
 
   display_nodes.forEach(node => {
     node.node_visible = true
     let break_loop = false
     let no_tag = true
-    Object.keys(tags_catalog).forEach( tags_group_key => {
-      if ( break_loop ) {
+    Object.keys(tags_catalog).forEach(tags_group_key => {
+      if (break_loop) {
         return
       }
       const tags_group = tags_catalog[tags_group_key]
@@ -397,8 +400,8 @@ const downloadExamples = (
   filetype: string
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
-    root = root.replace('sankey-diagrams/','')
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
   }
   const url = root + the_url_prefix + 'sankey/download_examples'
   const fetchData = {
@@ -421,11 +424,11 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data:SankeyData)=>void
+  set_data: (data: SankeyData) => void
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && the_url_prefix !== '' ) {
-    root = root.replace('sankey-diagrams/','')
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
   }
   const url = root + the_url_prefix + 'sankey/upload_examples'
   const fetchData = {
@@ -433,7 +436,7 @@ export const uploadExemple = (
     body: file_name
   }
   let file_type = 'text/plain'
-  set_data({ ... default_sankey_data() })
+  set_data({ ...default_sankey_data() })
 
   file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   const callback = (server_data: SankeyData) => {
@@ -445,12 +448,12 @@ export const uploadExemple = (
     data.link_idx = Object.keys(data.nodes).length
     if ('layout' in (data as SankeyData)) {
       compute_default_input_outputLinksId(data.nodes, data.links)
-      updateLayout(data,(data as SankeyData & {layout:SankeyData} ).layout)
+      updateLayout(data, (data as SankeyData & { layout: SankeyData }).layout)
       Object.values(data.nodes).forEach(function (n) {
         reorganize_node_inputLinksId(n, data.nodes, data.links)
         reorganize_node_outputLinksId(n, data.nodes, data.links)
       })
-      delete (data as SankeyData & {layout?:SankeyData} ).layout
+      delete (data as SankeyData & { layout?: SankeyData }).layout
     } else if (file_name === 'pommes_poires.xlsx') {
       compute_auto_sankey(data, data.h_space ? data.h_space : 200)
     }

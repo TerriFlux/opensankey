@@ -17,18 +17,22 @@ export const nodeTooltipsContent = (
   if (node.inputLinksId && node.inputLinksId.length > 0) {
     content += '<b>Entrées</b><ul style=\'margin-bottom:0px\'>'
     node.inputLinksId.forEach(element => {
-      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
-      const value = getLinkValue(data, element)
-      content += '<li>' + data.nodes[data.links[element].idSource].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>' 
+      if (data.nodes[data.links[element].idSource].node_visible) {
+        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
+        const value = getLinkValue(data, element)
+        content += '<li>' + data.nodes[data.links[element].idSource].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
+      }
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.inputLinksId) + '<br>'
   }
   if (node.outputLinksId && node.outputLinksId.length > 0) {
     content += '<b>Sorties</b><ul style=\'margin-bottom:0px\'>'
     node.outputLinksId.forEach(element => {
-      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
-      const value = getLinkValue(data, element)
-      content += '<li>' + data.nodes[data.links[element].idTarget].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
+      if (data.nodes[data.links[element].idTarget].node_visible) {
+        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[])) as number))
+        const value = getLinkValue(data, element)
+        content += '<li>' + data.nodes[data.links[element].idTarget].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
+      }
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
@@ -37,37 +41,37 @@ export const nodeTooltipsContent = (
     return
   }
   let header_written = false
-  Object.entries(dimensions_tags.tags).forEach(tag=> {
+  Object.entries(dimensions_tags.tags).forEach(tag => {
     let has_parent = false
     if (node.dimensions[tag[1].name]) {
       if (node.dimensions[tag[1].name].parent_name) {
-        if (! header_written) {
+        if (!header_written) {
           content += '<br><b>Noeuds parents et enfants</b>'
           content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
-          header_written = true        
+          header_written = true
         }
         has_parent = true
-        content += '<tr><td>' + tag +'</td>'
-        content += '<td>' + node.dimensions[tag[1].name].parent_name +'</td>'
+        content += '<tr><td>' + tag + '</td>'
+        content += '<td>' + node.dimensions[tag[1].name].parent_name + '</td>'
       }
-      const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[tag[1].name] && n.dimensions[tag[1].name].parent_name === node.name )
-      if (desagregate_nodes.length>0) {
-        if (! header_written) {
+      const desagregate_nodes = Object.values(data.nodes).filter(n => n.dimensions[tag[1].name] && n.dimensions[tag[1].name].parent_name === node.name)
+      if (desagregate_nodes.length > 0) {
+        if (!header_written) {
           content += '<br><b>Noeuds parents et enfants</b>'
           content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
-          header_written = true        
+          header_written = true
         }
         if (!has_parent) {
-          content += '<tr><td>' + tag +'</td>'
-          content += '<td>NA</td>'        
+          content += '<tr><td>' + tag + '</td>'
+          content += '<td>NA</td>'
         }
         content += '<td>'
-        desagregate_nodes.forEach(n=> content += n.name+'<br>')
+        desagregate_nodes.forEach(n => content += n.name + '<br>')
         content += '</td>'
-      } else if ( header_written) {
+      } else if (header_written) {
         content += '<td>NA</td>'
       }
-      if ( header_written) {
+      if (header_written) {
         content += '</tr>'
       }
     }
