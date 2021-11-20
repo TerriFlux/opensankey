@@ -603,27 +603,15 @@ export const updateLayout = (
 }
 
 export const desagregation = (
-  selected_node: SankeyNode, 
   data: SankeyData,   
+  idChildNode: string, 
   cur_dimension: string
 ) => {
-  const idNode = selected_node.idNode
-  let desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
-  if (desagregate_nodes.length === 0) {
-    let found = false
-    Object.values(data.tags_catalog['dimensions'].tags).forEach( tag => {
-      if (found ) {
-        return
-      }
-      desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[tag.name] && n.dimensions[tag.name].parent_name === idNode )
-      if (desagregate_nodes.length > 0) {
-        found = true
-      }
-    })
-    if (!found) {
-      return
-    }
+  const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
+  if (!idParent) {
+    return
   }
+  const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
   desagregate_nodes.forEach( n => {
     n.display = true
     n.node_visible = true
@@ -633,16 +621,15 @@ export const desagregation = (
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
     if (n.x === undefined) {
-      n.x = selected_node.x
-      n.y = selected_node.y - current_y
+      n.x = data.nodes[idParent].x
+      n.y = data.nodes[idParent].y - current_y
     }
     current_y = current_y - delta_y
   })
   // Hides agregated nodes
-  selected_node.display = false
-  selected_node.node_visible = false
+  data.nodes[idParent].display = false
+  data.nodes[idParent].node_visible = false
   
-
   Object.values(data.nodes).forEach(n => {
     reorganize_node_inputLinksId(n,data.nodes,data.links)
     reorganize_node_outputLinksId(n,data.nodes,data.links)
@@ -690,22 +677,23 @@ const AgregationModalPropTypes = {
   parent_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   dimension_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   set_show_agregation : PropTypes.func.isRequired,
-  show_agregation : PropTypes.bool.isRequired
+  show_agregation : PropTypes.bool.isRequired,
+  is_agregation: PropTypes.bool.isRequired
 }
 
 type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, parent_names, dimension_names, set_show_agregation,show_agregation}
+  {data, set_data, parent_names, dimension_names, set_show_agregation,show_agregation,is_agregation}
 ) => {
-  const [idParent,setIdParent] = useState(parent_names[0])
+  let idParent = parent_names[0]
 
   return (
     <Modal 
       show={show_agregation} 
       onHide={ () => set_show_agregation(false) } >
       <Modal.Header closeButton>
-        <Modal.Title>Noeuds agrégation</Modal.Title>
+        <Modal.Title>{is_agregation ? 'Noeuds agrégation' : 'Noeuds desagrégation'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
@@ -713,7 +701,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
             <Row>
               <Col>    
                 <Form.Select
-                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> setIdParent(evt.target.value)}
+                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idParent = evt.target.value}
                 >
                   {parent_names.map(
                     (curIdParent, i) => <option key={i} value={curIdParent} selected={idParent === curIdParent} >{data.nodes[curIdParent].name}</option>
@@ -728,11 +716,15 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         <Button 
           variant="secondary" 
           onClick={()=> {
-            agregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
+            if (is_agregation) {
+              agregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
+            } else {
+              desagregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
+            }
             set_data({...data})
             set_show_agregation(false)
           }}
-        >Agrégation</Button>
+        >{is_agregation ? 'Agrégation' : 'Désagrégation'}</Button>
         <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
       </Modal.Footer>
     </Modal>

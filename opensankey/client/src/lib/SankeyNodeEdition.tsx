@@ -23,7 +23,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   if (node === undefined) {
     node = default_node()
   }
-  
 
   const outline_Fav_Button = (tag_key: string) => {
     if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
@@ -99,7 +98,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <td>
                       <Button
                         size="sm"
-
                         variant={outline_Fav_Button(tags[0])}
                         onClick={
                           () => {
@@ -135,7 +133,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           <Tab eventKey="nodes_desc" title="Description">
             <br></br>
             <Form >
-
               <Form.Group as={Row} >
                 <Col xs={2}>
                   <FormLabel >Visibilité</FormLabel>
@@ -196,8 +193,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   />
                 </Col>
               </Form.Group>
-
-
             </Form>
           </Tab>
           {<Tab eventKey="label_desc" title="Labels">
@@ -211,14 +206,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     onChange={evt => {
                       node.label_visible = evt.target.checked
                       node.node_visible = node.label_visible || node.shape_visible
-                      // if (!node.node_visible) {
-                      //   node.inputLinksId.forEach(
-                      //     idLink => display_links[idLink].visible = false
-                      //   )
-                      //   node.outputLinksId.forEach(
-                      //     idLink => display_links[idLink].visible = false
-                      //   )
-                      // }
                       set_data({ ...data })
                     }}
                   />
@@ -226,13 +213,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Form.Group>
             </Form>
           </Tab>}
-
-
-
-
           {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
-
-
           <Tab eventKey="node_tooltip" title="Tooltip">
             <Form >
               <Row>

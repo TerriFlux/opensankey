@@ -56819,27 +56819,6 @@
          },
          "banner": "multi"
       },
-      "dimensions": {
-         "group_name": "Dimensions",
-         "tags": {
-            "Primaire": {
-               "name": "Primaire",
-               "selected": false,
-               "color": ""
-            },
-            "Espéces": {
-               "name": "Espéces",
-               "selected": false,
-               "color": ""
-            },
-            "Usages": {
-               "name": "Usages",
-               "selected": false,
-               "color": ""
-            }
-         },
-         "banner": "one"
-      },
       "Sous-Filieres": {
          "group_name": "Sous-Filieres",
          "tags": {
