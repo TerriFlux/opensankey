@@ -1742,6 +1742,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   useEffect(() => {
 
+    d3.selectAll('.tmp').remove()
+
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
       .attr('viewBox', [0, 0, data.width, data.height])
@@ -1777,7 +1779,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
       <svg height={data.height} width='100%' id='svg' >
         <g className='g_nodes' id='g_nodes' ></g>
-        <g className='gtmp_links' id='gtmp_links' ></g>
         <g className='g_links' id='g_links' ></g>
       </svg>
     </div>

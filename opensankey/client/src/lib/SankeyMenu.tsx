@@ -1,11 +1,11 @@
 ﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node,delete_link, default_link,uploadExemple } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 
 const MenuPropTypes = {
@@ -41,22 +41,22 @@ const MenuPropTypes = {
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
 const Menu: FunctionComponent<MenuTypes> = (
-  { data, set_data, 
-    open_menu, save_menu, edition_menu, right_menu, 
-    settings_edition,settings_edition_tags,node_edition,link_edition,
+  { data, set_data,
+    open_menu, save_menu, edition_menu, right_menu,
+    settings_edition, settings_edition_tags, node_edition, link_edition,
     app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
-    set_selected_node, selected_node, 
+    set_selected_node, selected_node,
     set_selected_link, selected_link,
-    example_menu,url_prefix,
+    example_menu, url_prefix,
     getValueIndex,
     radio_selected, set_radio_selected,
-    duplicate,set_duplicate
+    duplicate, set_duplicate
   }
 ) => {
   const set_show_link = useState(true)[1]
 
-  
+
   // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
   // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
   //   const source_node = data.nodes[l.idSource]
@@ -71,7 +71,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const { nodes } = data
     const node: SankeyNode = default_node()
     node.idNode = 'node' + data.node_idx
-    data.node_idx = data.node_idx+1
+    data.node_idx = data.node_idx + 1
     node.name = node.idNode
     node.x = Object.keys(nodes).length * 50
     nodes[node.idNode] = node
@@ -212,7 +212,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     let link = selected_link
     if (duplicate) {
       link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length+1
+      link.idLink = 'link' + Object.keys(data.links).length + 1
       data.links[link.idLink] = link
       selected_link = link
       const target_node = data.nodes[link.idTarget]
@@ -253,7 +253,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     let link = selected_link
     if (duplicate) {
       link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length+1
+      link.idLink = 'link' + Object.keys(data.links).length + 1
       data.links[link.idLink] = link
       selected_link = link
       const source_node = nodes[link.idSource]
@@ -291,27 +291,28 @@ const Menu: FunctionComponent<MenuTypes> = (
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
                 <Dropdown.Item onClick={uploadJSON} >JSON</Dropdown.Item>
-                <Form.Control 
-                  type="file" 
-                  ref={_load_json} 
-                  style={{ display: 'none' }} 
-                  onChange={uploadJSONImpl} 
+                <Form.Control
+                  type="file"
+                  ref={_load_json}
+                  style={{ display: 'none' }}
+                  onChange={uploadJSONImpl}
                 />
-                <Dropdown.Item onClick={ () => {
+                <Dropdown.Item onClick={() => {
                   if (_load_simple_excel && _load_simple_excel.current) {
                     _load_simple_excel.current.name = ''
-                    _load_simple_excel.current.click() 
-                  }}}
+                    _load_simple_excel.current.click()
+                  }
+                }}
                 >Excel simple
                 </Dropdown.Item>
                 <Form.Control
                   style={{ display: 'none' }}
                   ref={_load_simple_excel}
                   type="file"
-                  onChange={ (evt: ChangeEvent) => {
+                  onChange={(evt: ChangeEvent) => {
                     const files = (evt.target as HTMLFormElement).files
                     const form_data = new FormData()
-                    form_data.append('file', files ? files[0] : '' )
+                    form_data.append('file', files ? files[0] : '')
                     const fetchData = {
                       method: 'POST',
                       body: form_data
@@ -331,7 +332,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     }
                     let root = window.location.href
                     if (root.includes('sankey-diagrams')) {
-                      root = root.replace('sankey-diagrams/','')
+                      root = root.replace('sankey-diagrams/', '')
                     }
                     const url = root + url_prefix + 'sankey/upload_simple_excel'
                     fetch(url, fetchData).then(response => {
@@ -343,8 +344,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         //   alert(err)
                         // }
                       })
-                    })                                      
-                  }} 
+                    })
+                  }}
                 />
                 {open_menu}
               </NavDropdown>
@@ -364,9 +365,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             <NavDropdown title="Aide" id="help">
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
-                <Dropdown.Item onClick={()=>uploadExemple('pommes_poires.xlsx',url_prefix,data,set_data)} >Pommes Poires Simple</Dropdown.Item>
-                <Dropdown.Item onClick={()=>uploadExemple('sankeys_territoire_.csv',url_prefix,data,set_data)} >Energie</Dropdown.Item>
-                <Dropdown.Item onClick={()=>uploadExemple('foret_bois.json',url_prefix,data,set_data)} >Forêt Bois</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple('pommes_poires.xlsx', url_prefix, data, set_data)} >Pommes Poires Simple</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple('sankeys_territoire_.csv', url_prefix, data, set_data)} >Energie</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple('foret_bois.json', url_prefix, data, set_data)} >Forêt Bois</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
@@ -389,14 +390,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
           <Accordion activeKey={nav_item_active as string} >
-            <Accordion.Item 
-              eventKey="0" 
-              onClick={ 
+            <Accordion.Item
+              eventKey="0"
+              onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '0' ) {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '0') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('0')                  
+                    set_nav_item_active('0')
                   }
                 }
               }>
@@ -406,14 +407,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="1" 
+            <Accordion.Item
+              eventKey="1"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '1' ) {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '1') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('1')                  
+                    set_nav_item_active('1')
                   }
                 }
               }>
@@ -422,14 +423,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {settings_edition}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="2" 
-              onClick={ 
+            <Accordion.Item
+              eventKey="2"
+              onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '2' ) {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('2')                  
+                    set_nav_item_active('2')
                   }
                 }
               }>
@@ -510,37 +511,54 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Col>
                   </Form.Group>
                 </Form>
-
                 <Form>
-                  <Form.Group as={Row} onChange={evt => {
-                    console.log(evt)
-                    // set_radio_selected(evt.target.value)
-                    // node.nodeParameter=evt.target.value
-                  }}>
-                    <div key='radioTypeCouelurNoeud'>
-                      <Form.Check inline type='radio' checked={radio_selected === 'Général'} name='TypeCouleurNoeud' id='radioGeneral' value='Général' label='Général'
+                  <Form.Group as={Row} >
+                    <Col xs={2}>
+                      <FormLabel>Héritage</FormLabel>
+                    </Col>
+                    <Col xs={2}>
+                      <FormCheck
+                        value="general"
+                        type='radio'
+                        label='Général'
+                        checked={node.node_parameter === 'general'}
                         onChange={evt => {
-                          set_radio_selected(evt.target.value)
-                          node.nodeParameter = evt.target.value
-                        }} />
-                      <Form.Check inline type='radio' checked={radio_selected === 'GroupTag'} name='TypeCouleurNoeud' id='radioGroupTag' value='GroupTag' label='GroupTag'
+                          console.log(evt.target.value)                          
+                          node.node_parameter = evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col xs={3}>
+                      <FormCheck
+                        value="groupTag"
+                        type='radio'
+                        label='Groupe Tag'
+                        checked={node.node_parameter === 'groupTag'}
                         onChange={evt => {
-                          set_radio_selected(evt.target.value)
-                          node.nodeParameter = evt.target.value
-
-                        }} />
-                      <Form.Check inline type='radio' checked={radio_selected === 'local'} name='TypeCouleurNoeud' id='radioLocal' value='local' label='Local'
+                          node.node_parameter = evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col xs={2}>
+                      <FormCheck
+                        value="local"
+                        type='radio'
+                        label='local'
+                        checked={node.node_parameter === 'local'}
                         onChange={evt => {
-                          set_radio_selected(evt.target.value)
-                          node.nodeParameter = evt.target.value
-
-                        }} />
-                    </div>
-
-
+                          console.log(evt.target.value)
+                          node.node_parameter = evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
                   </Form.Group>
+                </Form>
 
-                  {/* 
+
+                {/* 
                   {(radio_selected === 'GroupTag') ? (
                     < Form.Select >
                       {tags_catalog.filter(d => {
@@ -554,20 +572,19 @@ const Menu: FunctionComponent<MenuTypes> = (
                   ) : (<></>)} */}
 
 
-                </Form>
 
                 <br />
                 {node_edition}
 
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="3" 
+            <Accordion.Item
+              eventKey="3"
               onClick={evt => {
-                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3' ) {
+                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
-                  set_nav_item_active('3')                  
+                  set_nav_item_active('3')
                 }
               }}
             >
@@ -598,7 +615,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     >
-                      {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name+' -> '+display_nodes[l.idTarget].name}</option>)}
+                      {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
                   </Col>
 
@@ -664,14 +681,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {link_edition}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="4" 
-              onClick={ 
+            <Accordion.Item
+              eventKey="4"
+              onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '4' ) {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '4') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('4')                  
+                    set_nav_item_active('4')
                   }
                 }
               }>
@@ -680,14 +697,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {settings_edition_tags}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="5" 
-              onClick={ 
+            <Accordion.Item
+              eventKey="5"
+              onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '5' ) {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '5') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('5')                  
+                    set_nav_item_active('5')
                   }
                 }
               }>
@@ -717,7 +734,7 @@ export default Menu
 
 function newFunction(nav_item_active: string, set_nav_item_active: (...args: any[]) => any): React.MouseEventHandler<HTMLElement> | undefined {
   return (evt) => {
-    if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3' ) {
+    if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
       set_nav_item_active('')
     } else {
       set_nav_item_active('3')

@@ -13,12 +13,12 @@ const SankeySettingsEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
-const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({ 
-  data, 
+const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
+  data,
   set_data,
   set_current_filter,
   getValueIndex,
-  children 
+  children
 }) => {
   let file_layout: Blob[] | undefined
 
@@ -114,7 +114,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    Object.values(nodes).filter(n=>n.node_visible).forEach(n => n.x += shift_left)
+                    Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
                     set_data({ ...data })
                   }
                 }
@@ -137,7 +137,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    Object.values(nodes).filter(n=>n.node_visible).forEach(n => n.y += shift_top)
+                    Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
                     set_data({ ...data })
                   }
                 }
@@ -223,8 +223,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Button
                 size="sm"
                 onClick={() => {
-                  arrangeNodes(data,node_hspace,node_vspace)
-                  set_data({...data})
+                  arrangeNodes(data, node_hspace, node_vspace)
+                  set_data({ ...data })
                 }}
               >Arranger noeuds</Button>
             </Col>
@@ -232,8 +232,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Button
                 size="sm"
                 onClick={() => {
-                  compute_auto_sankey(data,node_hspace)
-                  set_data({...data})
+                  compute_auto_sankey(data, node_hspace)
+                  set_data({ ...data })
                 }}
               > Positionnement automatique</Button>
             </Col>
@@ -589,8 +589,8 @@ const SankeySettingsEditionTagsPropTypes = {
 }
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({data, set_data,getValueIndex}) => {
-  const [tags_group_key,set_tags_group_key] = useState(Object.keys(data.tags_catalog).length>0 ? Object.keys(data.tags_catalog)[0] : '')
+const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data, getValueIndex }) => {
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
   console.log(data)
@@ -636,8 +636,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   // --------------------------------------------
   const handleAddTagButton = () => {
     const { tags_catalog } = data
-    tags_catalog[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '',selected: true }
-    data.tag_idx +=1
+    tags_catalog[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '#000000', selected: true }
+    data.tag_idx += 1
     set_data({ ...data })
   }
 
@@ -648,17 +648,17 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     // if (tab_key.length > 0) {
     //   tmp_key = parseInt(tab_key[tab_key.length - 1].slice(10)) + 1
     // }
-    data.tags_group_idx +=1
+    data.tags_group_idx += 1
     tags_catalog['tag_group_' + data.tags_group_idx] = {
       group_name: 'Tag Group ' + data.tags_group_idx,
       tags: {},
-      banner: 'multi'
+      banner: 'none'
     }
     //set_key_group_tag(tmp_key + 1)
     // if (Object.keys(tags_catalog).length == 1) {
     //   set_tags_group_key(tmp_key)
     // }
-    set_tags_group_key('tag_group_' + data.tags_group_idx) 
+    set_tags_group_key('tag_group_' + data.tags_group_idx)
     set_data({ ...data })
   }
 
@@ -741,7 +741,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
 
 
-        {Object.keys(tags_catalog).length > 0 && tags_group_key !=='' ? Object.keys(tags_catalog[tags_group_key].tags).map(
+        {Object.keys(tags_catalog).length > 0 && tags_group_key !== '' ? Object.keys(tags_catalog[tags_group_key].tags).map(
           (tag_key, i) => {
             return (
               <tr key={i.toString()}>
@@ -777,7 +777,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                       }
                     } />
                 </td>
-
                 <td><Form.Control
                   type="color"
                   value={tags_catalog[tags_group_key].tags[tag_key].color as string}
