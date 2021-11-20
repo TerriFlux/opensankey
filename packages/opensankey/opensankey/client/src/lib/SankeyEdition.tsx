@@ -52,7 +52,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   }
 
   const addDropdown = () => {
-    const banner_grouptag = Object.entries(tags_catalog).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') && tags_group.group_name !== 'Dimensions' })
+    const banner_grouptag = Object.entries(tags_catalog).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const simpleDrop = banner_grouptag.filter(([, tags_group]) => { return tags_group.banner == 'one' }).map(([, tags_group]) => {
       return (
         <Row key={tags_group.group_name}>
