@@ -357,7 +357,10 @@ export const convert_data = (
         n.label_visible = false
       }
       if (n.label_visible === undefined) {
-        n.label_visible = n.shape_visible
+        n.label_visible = true
+      }
+      if (n.shape_visible === undefined) {
+        n.shape_visible =true
       }
       delete n_convert.visible
       if (n.node_visible === undefined) {
