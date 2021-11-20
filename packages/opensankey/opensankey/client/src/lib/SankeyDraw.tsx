@@ -54,8 +54,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   getValueIndex
 }) => {
   const [show_agregation, set_show_agregation] = useState(false)
-  const [agregation_parent_names, set_agregation_parent_names] = useState<string[]>([])
-  const [agregation_dimension_names, set_agregation_dimension_names] = useState<string[]>([])
+  const [agregation_parent_names,set_agregation_parent_names] = useState<string[]>([])
+  const [agregation_dimension_names,set_agregation_dimension_names] = useState<string[]>([])
+  const [is_agregation,set_is_agregation] = useState(true)
 
   const default_node_size = data.node_width
   const default_handle_size = 10
@@ -1327,8 +1328,34 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       ggg_nodes.on('dblclick', (ev, n) => {
+        if (!n.dimensions) {
+          return
+        }
         if (ev.altKey) {
-          desagregation(n, data,'Primaire')
+          const child_names : string[] = []
+          const dim_names : string[] = []
+          Object.keys(n.dimensions).forEach(
+            dim=> {
+              const desagregate_node = Object.values(data.nodes).filter( n2 => {
+                return n2.dimensions[dim] && (n2.dimensions[dim].parent_name == n.idNode)
+              })[0]
+              if (desagregate_node) {
+                child_names.push(desagregate_node.idNode)
+                dim_names.push(dim)
+              }
+            }
+          )
+          if (child_names.length === 0) { 
+            return
+          }
+          if (child_names.length > 1) {
+            set_agregation_parent_names(child_names)
+            set_agregation_dimension_names(dim_names)
+            set_is_agregation(false)
+            set_show_agregation(true)
+          } else {
+            desagregation(data,child_names[0],dim_names[0])
+          }
         } else {
           const parent_names : string[] = []
           const dim_names : string[] = []
@@ -1340,9 +1367,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             }
           )
+          if (parent_names.length === 0) { 
+            return
+          }
           if (parent_names.length > 1) {
             set_agregation_parent_names(parent_names)
             set_agregation_dimension_names(dim_names)
+            set_is_agregation(true)
             set_show_agregation(true)
           } else {
             agregation(data,parent_names[0],dim_names[0])
@@ -1809,6 +1840,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         parent_names={agregation_parent_names}
         dimension_names={agregation_dimension_names}
         set_show_agregation={set_show_agregation}
+        is_agregation={is_agregation}
       />
     </>
   )
