@@ -18,12 +18,11 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, duplicate ,set_duplicate,getValueIndex,children }
 ) => {
-  const [tag_group_key, set_tag_group_key] = useState('')
-
   const { tags_catalog } = data
+  const tags_visible = Object.keys(tags_catalog).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
 
   const value_index = getValueIndex(data)
-  const tags_visible = Object.keys(data.tags_catalog).length > 0
   return (
 
     <Row>
@@ -354,13 +353,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Select
                     onChange={
-                      (evt: React.ChangeEvent<HTMLSelectElement>) => set_tag_group_key(evt.target.value)}>
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
                     {Object.entries(tags_catalog).map(
                       (tags_group,i) =>
                         <option
                           key={i}
                           value={tags_group[0]}
-                          selected={tag_group_key === tags_group[0]} >
+                          selected={tags_group_key === tags_group[0]} >
                           {tags_group[1].group_name}
                         </option>)}
                   </Form.Select>
@@ -375,9 +374,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </tr>
                   </thead>
                   <tbody>
-                    {tags_visible && tag_group_key != '' ? Object.entries(tags_catalog[tag_group_key].tags).map(
+                    {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
                       tags => {
-                        const link_tags = selected_link.tags[tag_group_key]
+                        const link_tags = selected_link.tags[tags_group_key]
                         const checked = link_tags ? link_tags.includes(tags[0]) : true
                         return (
                           <tr key={tags[0]}>
@@ -394,12 +393,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                                     const tag_key = new_nb_element.id
                                     const visible = new_nb_element.checked
                                     if (visible) {
-                                      if (!selected_link.tags[tag_group_key]) {
-                                        selected_link.tags[tag_group_key] = []
+                                      if (!selected_link.tags[tags_group_key]) {
+                                        selected_link.tags[tags_group_key] = []
                                       }
-                                      selected_link.tags[tag_group_key].push(tag_key)
+                                      selected_link.tags[tags_group_key].push(tag_key)
                                     } else {
-                                      selected_link.tags[tag_group_key].splice(selected_link.tags[tag_group_key].indexOf(tag_key))
+                                      selected_link.tags[tags_group_key].splice(selected_link.tags[tags_group_key].indexOf(tag_key))
                                     }
                                     set_data({ ...data })
                                   }
