@@ -15,17 +15,15 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
-  const [tags_group_key,set_tags_group_key] = useState('')
-
   const { tags_catalog } = data
-  const display_links = data.links
+  const tags_visible = Object.keys(tags_catalog).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
 
   let node = selected_node
   if (node === undefined) {
     node = default_node()
   }
   
-  const tags_visible = Object.keys(tags_catalog).length > 0
 
   const outline_Fav_Button = (tag_key: string) => {
     if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
