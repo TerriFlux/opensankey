@@ -452,12 +452,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Col>
                     <Col xs={7} >
                       <FormControl
-                        value={node.name}
+                        value={selected_node.name}
                         onChange={evt => {
-                          const source_links = Object.values(display_links).filter(l => l.idSource === selected_node.name)
-                          const target_links = Object.values(display_links).filter(l => l.idTarget === selected_node.name)
-                          source_links.forEach(l => l.idSource = evt.target.value)
-                          target_links.forEach(l => l.idTarget = evt.target.value)
                           selected_node.name = evt.target.value
                           set_data({ ...data })
                         }}
