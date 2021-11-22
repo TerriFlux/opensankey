@@ -79,7 +79,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             onClick = {
               () =>  {
                 while (selected_node.outputLinksId.length > 0) {
-                  const link = display_links[selected_node.inputLinksId[0]]
+                  const link = display_links[selected_node.outputLinksId[0]]
                   delete_link(data, link)
                 }
                 set_data({ ...data })

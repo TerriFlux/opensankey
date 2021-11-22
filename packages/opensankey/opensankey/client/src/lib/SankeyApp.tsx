@@ -107,7 +107,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_show_node_context(true)
         }}
         node_arrow_visible={
-          (n: SankeyNode) => !n.node_visible || !n.shape_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
           set_selected_link(l)
