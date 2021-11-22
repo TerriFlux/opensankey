@@ -620,7 +620,7 @@ export const desagregation = (
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
-    if (n.x === undefined) {
+    if (n.x === undefined || (n.x === 0 && n.y === 0)) {
       n.x = data.nodes[idParent].x
       n.y = data.nodes[idParent].y - current_y
     }
@@ -660,7 +660,7 @@ export const agregation = (
   mean_x = mean_x/desagregate_nodes.length
   mean_y = mean_y/desagregate_nodes.length
 
-  if (agregated_node.x === undefined ) {
+  if (agregated_node.x === undefined || (agregated_node.x === 0 && agregated_node.y === 0) ) {
     agregated_node.x = mean_x
     agregated_node.y = mean_y
   }

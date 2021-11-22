@@ -665,6 +665,60 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 }
               }>
+              <Accordion.Header>Niveaux agrégation</Accordion.Header>
+              <Accordion.Body>
+                <Row>
+                  <Col>
+                    <FormLabel>Niveau agrégation</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Select id="selectionNode"
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          if (evt.target.value ==='') {
+                            return
+                          }
+                          for (let level = 1; level<=+evt.target.value; level++) {
+                            Object.values(display_nodes).forEach( n => {
+                              if (!n.dimensions['Primaire'] || !n.dimensions['Primaire'].level) {
+                                n.display = false
+                                n.node_visible = false
+                                return
+                              }
+                              if (n.dimensions['Primaire'].level === level ) {
+                                n.node_visible = true
+                                n.display = true
+                                if (n.dimensions['Primaire'].parent_name) {
+                                  display_nodes[n.dimensions['Primaire'].parent_name].node_visible = false
+                                  display_nodes[n.dimensions['Primaire'].parent_name].display = false
+                                }
+                              } else if (n.dimensions['Primaire'].level > level )  {
+                                n.node_visible = false
+                                n.display = false
+                              }
+                            })
+                          }
+                          set_data({...data})
+                        }
+                      }
+                    >
+                      {['',1,2,3].map( level => <option key={level} value={level}  >{level}</option>)}
+                    </Form.Select>
+                  </Col>
+                </Row>
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item 
+              eventKey="6" 
+              onClick={ 
+                evt => {
+                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '6' ) {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('6')                  
+                  }
+                }
+              }>
               <Accordion.Header>Aide</Accordion.Header>
               <Accordion.Body>
               </Accordion.Body>

@@ -84,7 +84,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   let alt_key_pressed = false
 
   const value_index = getValueIndex(data)
-  setSelectedTags(data)
+  //setSelectedTags(data)
 
   const add_links = (
     static_sankey: boolean,
@@ -274,7 +274,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const id = Object.values(display_links).indexOf(link)
       handles_visible[id] = !handles_visible[id]
       let shift_handles
-      if (display_links[id].recycling) {
+      if (Object.values(display_links)[id].recycling) {
         shift_handles = ['#vert_shift', '#left_horiz_shift', '#right_horiz_shift']
       } else {
         shift_handles = ['#left_horiz_shift', '#right_horiz_shift']
@@ -1415,7 +1415,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
-      .attr('visibility', d => (d as SankeyNode).shape_visible ? 'visible' : 'hidden' )
+      .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden' )
       .attr('fill', d => node_color(d))
       //.attr('fill-opacity', d => (d as SankeyNode).visible ? 0.9 : 0)
       .attr('stroke', 'black')
