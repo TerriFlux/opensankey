@@ -234,8 +234,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
     const link = selected_link
-      const previous_node = nodes[link.idTarget]
-      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
+    const previous_node = nodes[link.idTarget]
+    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
