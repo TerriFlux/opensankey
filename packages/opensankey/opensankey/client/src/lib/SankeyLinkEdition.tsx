@@ -8,15 +8,13 @@ const SankeyLinkEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   show: PropTypes.bool.isRequired,
-  duplicate:PropTypes.bool.isRequired,
-  set_duplicate:PropTypes.func.isRequired,
   getValueIndex: PropTypes.func.isRequired,
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link, duplicate ,set_duplicate,getValueIndex,children }
+  { data, set_data, selected_link,getValueIndex,children }
 ) => {
   const { tags_catalog } = data
   const tags_visible = Object.keys(tags_catalog).length > 0
@@ -49,18 +47,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   />
                 </Col>
               </Row>
-              <Form.Group as={Row} >
-                <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Dupliquer'
-                    checked={duplicate}
-                    onChange={
-                      evt => set_duplicate(evt.target.checked)
-                    }
-                  />
-                </Col>
-              </Form.Group>
             </Form>
           </Tab>
           <Tab eventKey="flux_attributes" title="Apparence">

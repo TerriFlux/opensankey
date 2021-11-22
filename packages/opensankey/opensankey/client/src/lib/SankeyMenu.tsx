@@ -1,4 +1,4 @@
-﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
@@ -32,9 +32,8 @@ const MenuPropTypes = {
   url_prefix: PropTypes.string.isRequired,
   getValueIndex: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  set_radio_selected: PropTypes.func.isRequired,
-  duplicate: PropTypes.bool.isRequired,
-  set_duplicate: PropTypes.func.isRequired
+  set_radio_selected: PropTypes.func.isRequired  
+
 }
 
 
@@ -50,19 +49,12 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_selected_link, selected_link,
     example_menu, url_prefix,
     getValueIndex,
-    radio_selected, set_radio_selected,
-    duplicate, set_duplicate
+    radio_selected, 
+    set_radio_selected
   }
 ) => {
   const set_show_link = useState(true)[1]
 
-
-  // const display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.display ).map(n=> ({[n.idNode] : {...n} })))
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
   const display_nodes = data.nodes
   const display_links = data.links
 
@@ -209,21 +201,12 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    let link = selected_link
-    if (duplicate) {
-      link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length + 1
-      data.links[link.idLink] = link
-      selected_link = link
-      const target_node = data.nodes[link.idTarget]
-      target_node.inputLinksId.push(selected_link.idLink)
-    } else {
+    const link = selected_link
       console.log('========1=============')
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
       const previous_node = data.nodes[link.idSource]
       previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
-    }
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
@@ -250,18 +233,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
-    let link = selected_link
-    if (duplicate) {
-      link = JSON.parse(JSON.stringify(selected_link))
-      link.idLink = 'link' + Object.keys(data.links).length + 1
-      data.links[link.idLink] = link
-      selected_link = link
-      const source_node = nodes[link.idSource]
-      source_node.outputLinksId.push(selected_link.idLink)
-    } else {
+    const link = selected_link
       const previous_node = nodes[link.idTarget]
       previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
-    }
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
@@ -493,7 +467,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <FormLabel >(id : {addLabelId()})</FormLabel>
                     </Col>
                   </Form.Group>
-                  <Form.Group as={Row} >
+                  {/* <Form.Group as={Row} >
                     <Col xs={2}>
                       <FormLabel >Parent</FormLabel>
                     </Col>
@@ -509,7 +483,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_node.dimensions[data.dimension_name].parent_name === n.idNode} >{n.name}</option>)}
                       </Form.Select>
                     </Col>
-                  </Form.Group>
+                  </Form.Group> */}
                 </Form>
                 <Form>
                   <Form.Group as={Row} >

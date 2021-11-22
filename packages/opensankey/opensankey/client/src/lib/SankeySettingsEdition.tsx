@@ -606,25 +606,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   })
   max_link_value += 1
 
-
-  //let tmp_select_group_key = selected_key_group_tag
-
-  // if (Object.keys(tags_catalog).length > 0 && tags_catalog['tag_group_' + selected_key_group_tag] === undefined) {
-  //   set_selected_key_group_tag(parseInt(Object.keys(tags_catalog)[0].slice(10)))
-  //   tmp_select_group_key = parseInt(Object.keys(tags_catalog)[0].slice(10))
-
-  // }
-
-  // if (tags_catalog[tag_group_id]) {
-  //   const tag_group_name = tags_catalog[tag_group_id].group_name
-  //   if (!selected_tags[tag_group_name]) {
-  //     selected_tags[tag_group_name] = []
-  //   }
-  // }
-  // const nb_partition_elements = tags.length
-  // const units = ['tMS','t','m3']
-  // const nb_units = units.length
-
   /*   const handleBanner = (i: number, evt: React.ChangeEvent<HTMLSelectElement>) => {
       tags_catalog[i].banner = evt.target.value
       set_data({ ...data })
@@ -726,7 +707,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       </Col>
     </Form.Group>
 
-
     <Table striped bordered hover responsive='sm' size='sm'>
       <thead>
         <tr>
@@ -737,10 +717,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         </tr>
       </thead>
       <tbody>
-
-
-
-
         {Object.keys(tags_catalog).length > 0 && tags_group_key !== '' ? Object.keys(tags_catalog[tags_group_key].tags).map(
           (tag_key, i) => {
             return (
@@ -790,8 +766,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
               </tr>
             )
           }) : (<></>)}
-
-
       </tbody>
     </Table>
 
