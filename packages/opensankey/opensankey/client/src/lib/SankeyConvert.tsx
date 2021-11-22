@@ -363,6 +363,9 @@ export const convert_data = (
       if (n.shape_visible === undefined || n_convert.shape_visible === 1) {
         n.shape_visible =true
       }
+      if (n.node_parameter === undefined) {
+        n.node_parameter ='general'
+      }
       delete n_convert.visible
       if (n.node_visible === undefined) {
         n.node_visible = n.shape_visible || n.label_visible

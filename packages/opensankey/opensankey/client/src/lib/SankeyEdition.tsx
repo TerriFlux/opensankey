@@ -46,7 +46,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   }
 
   const handleMultiDropdown = (selected: string[],tags_group:TagsGroup) => {
-    console.log(selected)
     Object.entries(tags_group.tags).forEach(tag=> tag[1].selected = selected.includes(tag[1].name) )
     set_data({ ...data })
   }
