@@ -364,7 +364,22 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               />
             </Col>
           </Form.Group>
-
+          <Form.Group as={Row} >
+            <Col>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+                      delete n.x_label
+                      delete n.y_label
+                    })
+                  }
+                }
+              >Reset label position</Button>
+            </Col>
+          </Form.Group>
         </Form>
       </Tab>
       <Tab eventKey="flux" title="Flux">
@@ -572,6 +587,21 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               />
             </Col>
             <Col >{display_style.font_size}</Col>
+          </Form.Group>
+          <Form.Group as={Row} >
+            <Col>
+              <FormLabel >Flux Nuls:</FormLabel>
+            </Col>
+            <Col >
+              <FormCheck
+                type='checkbox'
+                label='Visible'
+                onChange={evt => {
+                  data.display_style.null_flux = evt.target.checked
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
           </Form.Group>
         </Form>
       </Tab>

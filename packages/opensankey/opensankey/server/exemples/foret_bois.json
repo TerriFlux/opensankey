@@ -267,8 +267,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -337,8 +337,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -514,8 +514,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -697,8 +697,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -749,8 +749,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -810,8 +810,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -976,8 +976,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -1033,8 +1033,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -1082,8 +1082,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -1128,8 +1128,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1207,8 +1207,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1227,10 +1227,10 @@
             null
          ],
          "inputLinksId": [
-            "link84",
-            "link85",
-            "link86",
             "link87",
+            "link86",
+            "link85",
+            "link84",
             "link78",
             "link80",
             "link76",
@@ -1242,11 +1242,10 @@
             "link83"
          ],
          "outputLinksId": [
-            "link519",
-            "link509",
-            "link520",
-            "link521",
             "link522",
+            "link521",
+            "link520",
+            "link519",
             "link511",
             "link513",
             "link512",
@@ -1257,6 +1256,7 @@
             "link507",
             "link518",
             "link517",
+            "link509",
             "link508",
             "link510"
          ],
@@ -1856,8 +1856,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1918,8 +1918,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#a17f1a",
          "dimensions": {
             "Primaire": {
@@ -2014,7 +2014,7 @@
             "link704"
          ],
          "x": 1805.8070068359375,
-         "y": 524.1489868164062,
+         "y": 525.4696655273438,
          "node_parameter": "general"
       },
       "node35": {
@@ -2091,8 +2091,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -2149,8 +2149,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -2204,8 +2204,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -2260,8 +2260,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2500,8 +2500,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2535,7 +2535,7 @@
             "link764"
          ],
          "x": 1400,
-         "y": 1000,
+         "y": 1013.20654296875,
          "node_parameter": "general"
       },
       "node45": {
@@ -2556,8 +2556,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2612,8 +2612,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2747,8 +2747,8 @@
             "link780",
             "link779"
          ],
-         "x": 1800.0001220703125,
-         "y": 999.8150634765625,
+         "x": 1798.679443359375,
+         "y": 1013.0216064453125,
          "node_parameter": "general"
       },
       "node49": {
@@ -3514,8 +3514,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3573,8 +3573,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3629,8 +3629,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4118,8 +4118,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4185,8 +4185,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4252,8 +4252,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4335,7 +4335,7 @@
             "link286"
          ],
          "x": 1602.641357421875,
-         "y": 999.815185546875,
+         "y": 1013.021728515625,
          "node_parameter": "general"
       },
       "node78": {
@@ -4372,10 +4372,10 @@
             "link814",
             "link421",
             "link827",
+            "link654",
             "link671",
             "link443",
             "link663",
-            "link654",
             "link434",
             "link452",
             "link679"
@@ -4406,8 +4406,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4415,30 +4415,30 @@
             }
          },
          "inputLinksId": [
-            "link380",
-            "link389",
-            "link398",
-            "link407",
-            "link531",
-            "link538",
-            "link612",
-            "link627",
-            "link795",
-            "link836",
-            "link850",
-            "link867",
-            "link883",
             "link900",
+            "link883",
+            "link867",
+            "link850",
+            "link836",
+            "link795",
+            "link627",
+            "link612",
+            "link538",
+            "link531",
+            "link407",
+            "link398",
+            "link389",
+            "link380",
             "link481",
             "link638",
             "link648",
             "link371",
-            "link494",
-            "link524",
-            "link700",
-            "link422",
-            "link511",
             "link549",
+            "link422",
+            "link494",
+            "link700",
+            "link511",
+            "link524",
             "link597"
          ],
          "outputLinksId": [],
@@ -4464,8 +4464,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4486,7 +4486,7 @@
          ],
          "outputLinksId": [],
          "x": 2014.2554931640625,
-         "y": 340.6082305908203,
+         "y": 341.9288787841797,
          "node_parameter": "general"
       },
       "node81": {
@@ -4546,8 +4546,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4790,8 +4790,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4812,6 +4812,7 @@
             "link800",
             "link856",
             "link872",
+            "link717",
             "link889",
             "link905",
             "link734",
@@ -4820,15 +4821,14 @@
             "link528",
             "link686",
             "link692",
+            "link655",
             "link517",
             "link565",
             "link694",
             "link554",
             "link672",
-            "link717",
             "link602",
             "link664",
-            "link655",
             "link710",
             "link680",
             "link779"
@@ -4839,8 +4839,8 @@
             "link68",
             "link291"
          ],
-         "x": 1998.81201171875,
-         "y": 810.691650390625,
+         "x": 1994.85009765625,
+         "y": 813.3329467773438,
          "node_parameter": "general"
       },
       "node88": {
@@ -4863,8 +4863,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4930,8 +4930,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -6500,7 +6500,7 @@
             524
          ],
          "color": "#4DB35D",
-         "label_visible": 0,
+         "label_visible": true,
          "idLink": "link16",
          "idSource": "node64",
          "idTarget": "node6",
@@ -6509,10 +6509,10 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black",
-         "label_position": "middle",
-         "x_label": 734.4064333673272,
-         "y_label": 680.4043731689453,
+         "text_color": "white",
+         "label_position": "beginning",
+         "x_label": 660.94033203125,
+         "y_label": 534.3895568847656,
          "left_horiz_shift": 0.5888403968944438,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -7079,7 +7079,7 @@
          "text_color": "black",
          "label_position": "middle",
          "x_label": 713.0361938476562,
-         "y_label": 758.8510284423828,
+         "y_label": 727.6010284423828,
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -9469,7 +9469,7 @@
             238
          ],
          "color": "#EC7920",
-         "label_visible": 0,
+         "label_visible": true,
          "idLink": "link75",
          "idSource": "node66",
          "idTarget": "node21",
@@ -9478,12 +9478,12 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black",
-         "label_position": "middle",
-         "x_label": 1207.3934416770935,
-         "y_label": 682.5984706401825,
+         "text_color": "white",
+         "label_position": "beginning",
+         "x_label": 1074.4786883354186,
+         "y_label": 808.025,
          "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666
+         "right_horiz_shift": 0.3410865975740406
       },
       "link76": {
          "value": [
@@ -9672,7 +9672,8 @@
          "y_label": 0,
          "left_horiz_shift": 0,
          "right_horiz_shift": 0,
-         "recycling": true
+         "recycling": true,
+         "vert_shift": 0
       },
       "link79": {
          "value": [
@@ -9903,7 +9904,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link83": {
          "value": [
@@ -9954,7 +9957,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link84": {
          "value": [
@@ -10292,7 +10297,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link92": {
          "value": [
@@ -10325,7 +10332,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link93": {
          "value": [
@@ -10358,7 +10367,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link94": {
          "value": [
@@ -10424,7 +10435,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link96": {
          "value": [
@@ -10457,7 +10470,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link97": {
          "value": [
@@ -11119,7 +11134,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link117": {
          "value": [
@@ -13232,9 +13249,9 @@
          "x_label": 1839,
          "y_label": 808.3418740308101,
          "left_horiz_shift": 38,
-         "right_horiz_shift": 23.977783203125,
+         "right_horiz_shift": 42.467041015625,
          "recycling": true,
-         "vert_shift": -524.333251953125
+         "vert_shift": -536.2191467285156
       },
       "link172": {
          "value": [
@@ -13693,7 +13710,7 @@
             245
          ],
          "color": "#4DB35D",
-         "label_visible": 0,
+         "label_visible": true,
          "idLink": "link180",
          "idSource": "node66",
          "idTarget": "node14",
@@ -13702,12 +13719,12 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black",
-         "label_position": "middle",
-         "x_label": 1210,
-         "y_label": 839.7322197385903,
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666
+         "text_color": "white",
+         "label_position": "beginning",
+         "x_label": 1075,
+         "y_label": 836.4625,
+         "left_horiz_shift": 0.5785977027529764,
+         "right_horiz_shift": 0.742132626488095
       },
       "link181": {
          "value": [
@@ -14938,7 +14955,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link206": {
          "value": [
@@ -16980,7 +16999,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link245": {
          "value": [
@@ -17145,7 +17166,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link250": {
          "value": [
@@ -17310,7 +17333,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link255": {
          "value": [
@@ -17475,7 +17500,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link260": {
          "value": [
@@ -18413,7 +18440,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link279": {
          "value": [
@@ -18778,7 +18807,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link286": {
          "value": [
@@ -18841,8 +18872,8 @@
          "curvature": 1,
          "text_color": "white",
          "label_position": "beginning",
-         "x_label": 1657.3772338867188,
-         "y_label": 1020.940185546875,
+         "x_label": 1657.245166015625,
+         "y_label": 1034.146728515625,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -19169,7 +19200,7 @@
          "x_label": 1743,
          "y_label": 806.1540809364787,
          "left_horiz_shift": 0,
-         "right_horiz_shift": 33.262939453125,
+         "right_horiz_shift": 43.828125,
          "recycling": true,
          "vert_shift": 0
       },
@@ -22219,7 +22250,7 @@
          "text_color": "black",
          "label_position": "middle",
          "x_label": 513.0361938476562,
-         "y_label": 564.2260284423828,
+         "y_label": 548.6010284423828,
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -24953,7 +24984,7 @@
          "text_color": "black",
          "label_position": "middle",
          "x_label": 912.3759155273438,
-         "y_label": 822.9689697265625,
+         "y_label": 822.8502197265625,
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -25054,7 +25085,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link433": {
          "value": [
@@ -25829,7 +25862,7 @@
          "text_color": "black",
          "label_position": "middle",
          "x_label": 910,
-         "y_label": 899.6625,
+         "y_label": 871.23125,
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": 0.6666666666666666
       },
@@ -26081,7 +26114,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "white",
-         "label_position": "beginning"
+         "label_position": "beginning",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link453": {
          "value": [
@@ -26346,7 +26381,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link458": {
          "value": [
@@ -26448,7 +26485,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link460": {
          "value": [
@@ -26499,7 +26538,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link461": {
          "value": [
@@ -26886,7 +26927,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link468": {
          "value": [
@@ -26937,7 +26980,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link469": {
          "value": [
@@ -27334,7 +27379,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link476": {
          "value": [
@@ -27385,7 +27432,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link477": {
          "value": [
@@ -29092,7 +29141,7 @@
          "left_horiz_shift": 0.3333333333333333,
          "right_horiz_shift": -14.776814778645834,
          "recycling": true,
-         "vert_shift": -713.965087890625
+         "vert_shift": -704.7204895019531
       },
       "link510": {
          "value": [
@@ -29143,7 +29192,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link511": {
          "value": [
@@ -29816,7 +29867,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link524": {
          "value": [
@@ -30554,7 +30607,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link546": {
          "value": [
@@ -30661,7 +30716,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link549": {
          "value": [
@@ -30799,7 +30856,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link553": {
          "value": [
@@ -30898,7 +30957,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link556": {
          "value": [
@@ -34115,7 +34176,9 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black"
+         "text_color": "black",
+         "left_horiz_shift": 0.3333333333333333,
+         "right_horiz_shift": 0.6666666666666666
       },
       "link642": {
          "value": [
@@ -34896,8 +34959,8 @@
          "curvature": 0.5,
          "text_color": "black",
          "label_position": "middle",
-         "x_label": 1544.613586509905,
-         "y_label": 834.4346923828125,
+         "x_label": 1543.8360635131326,
+         "y_label": 835.7553405761719,
          "left_horiz_shift": 0.1892619554924241,
          "right_horiz_shift": 0.20323671283143913
       },
@@ -35364,7 +35427,7 @@
             296
          ],
          "color": "#4DB35D",
-         "label_visible": 0,
+         "label_visible": true,
          "idLink": "link665",
          "idSource": "node14",
          "idTarget": "node88",
@@ -35373,10 +35436,10 @@
          "curved": true,
          "label_on_path": true,
          "curvature": 0.5,
-         "text_color": "black",
-         "label_position": "middle",
-         "x_label": 1895.2450561523438,
-         "y_label": 762.6071402922905,
+         "text_color": "white",
+         "label_position": "beginning",
+         "x_label": 1495.10341796875,
+         "y_label": 810.0144394771805,
          "left_horiz_shift": 0.8184055696645215,
          "right_horiz_shift": 0.8520717731868991
       },
@@ -40079,7 +40142,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 1455.2641357421876,
-         "y_label": 1015.5,
+         "y_label": 1028.70654296875,
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5
       },
@@ -40349,7 +40412,7 @@
          "text_color": "black",
          "label_position": "middle",
          "x_label": 1491.1253051757812,
-         "y_label": 983.7825927734375,
+         "y_label": 990.3858642578125,
          "left_horiz_shift": 0.3566811522575818,
          "right_horiz_shift": 0.3787067678152247
       },

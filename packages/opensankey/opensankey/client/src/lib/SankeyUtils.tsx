@@ -278,7 +278,8 @@ export const default_sankey_data = (): SankeyData => {
       unit: false,
       filter: 0,
       filter_label: 0,
-      global_curvature: 0.5
+      global_curvature: 0.5,
+      null_flux: false
     },
 
     tags_catalog: {},
@@ -326,7 +327,6 @@ export const default_link = (): SankeyLink => {
     label_visible: true,
     label_on_path: true,
     orientation: 'hh',
-    //visible: true,
     left_horiz_shift: 0,
     right_horiz_shift: 0,
     vert_shift: 0,
