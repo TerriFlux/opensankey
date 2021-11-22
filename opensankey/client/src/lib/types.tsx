@@ -29,7 +29,7 @@ export const SankeyNodePropTypes = {
   // shape_visible and label_visible control the visibility of the element of the node
   shape_visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
-
+  
   color: PropTypes.string.isRequired,
   colorFavoriteTags:PropTypes.objectOf(PropTypes.shape({
     tag_associated:PropTypes.string.isRequired,
@@ -37,7 +37,7 @@ export const SankeyNodePropTypes = {
   }).isRequired
   ).isRequired,
 
-  nodeParameter:PropTypes.string.isRequired,
+  node_parameter:PropTypes.string.isRequired,
 
   // geometry
   x: PropTypes.number.isRequired,
