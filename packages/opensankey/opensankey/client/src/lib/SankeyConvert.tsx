@@ -285,9 +285,6 @@ export const convert_data = (
   if (data.right_shift === undefined) {
     data.right_shift = 0.5
   }
-  // if (data.dimension_name === undefined) {
-  //   data.dimension_name = 'Primaire'
-  // }
 
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
   for (const attr in attributes_to_remove) {

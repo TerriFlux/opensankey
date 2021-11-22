@@ -701,10 +701,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                               if (n.dimensions['Primaire'].level === level ) {
                                 n.node_visible = true
                                 n.display = true
-                                if (n.dimensions['Primaire'].parent_name) {
-                                  display_nodes[n.dimensions['Primaire'].parent_name].node_visible = false
-                                  display_nodes[n.dimensions['Primaire'].parent_name].display = false
-                                }
+                                Object.keys(n.dimensions).forEach( dim => {
+                                  const idParent = n.dimensions[dim].parent_name
+                                  if (idParent !== null && idParent !== undefined) {
+                                    display_nodes[idParent].node_visible = false
+                                    display_nodes[idParent].display = false
+                                  }
+                                })
                               } else if (n.dimensions['Primaire'].level > level )  {
                                 n.node_visible = false
                                 n.display = false
