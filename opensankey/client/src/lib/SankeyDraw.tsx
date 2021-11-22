@@ -1480,91 +1480,34 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('text-anchor', 'center')
       .attr('visibility', n => n.label_visible)
       .style('text-align', 'center')
-      // .attr('style', d => {
-      //   const font = d.type === 'product' ? 'Arial' : 'Calibri'
-      //   const font_style =
-      //     d.type === 'sector' && display_style.sector_italic ||
-      //       d.type === 'product' && display_style.product_italic
-      //       ? 'italic' : 'normal'
-      //   const font_weight =
-      //     d.type === 'sector' && display_style.sector_bold ||
-      //       d.type === 'product' && display_style.product_bold
-      //       ? 'bold' : 'normal'
-      //   return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
-      // })
-      .text(d =>d.name.split(' - ')[0])
-      // .each(d => {
-      //   const wrap = textwrap()
-      //     .bounds({ height: 100, width: 80 })
-      //     //.method('tspans')
-      //   d3.select('#ggg_' + d.idNode + ' text')
-      //     .call(wrap)
-      // })
-      // .each(d => {
-      //   if (d.name.indexOf('\\n') === -1) {
-      //     if (d.type === 'sector' && display_style.sector_uppercase ||
-      //       d.type === 'product' && display_style.product_uppercase
-      //     ) {
-      //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name.toUpperCase())
-      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(split('d.name. - ')[0].toUpperCase())
-      //     } else {
-      //       // d3.select('#ggg_node' + d.id + ' text').append('tspan').text(d.name)
-      //       d3.select('#ggg_' + d.idNode + ' text').append('tspan').text(d.name.split(' - ')[0])
-      //     }
-      //   } else {
-      //     const text_anchor = 'middle'
-      //     const name_lines = d.name.split('\\n')
-      //     // if (d.type ==='sector') {
-      //     //   name_lines = dname.split('<BR>')
-      //     // }
-      //     // const x = +d3.select('#ggg_node' + d.id + ' text').attr('x')
-      //     const x = +d3.select('#ggg_' + d.idNode + ' text').attr('x')
-      //     //y = +d3.select('#ggg_node' + d.id + ' text').attr('y'),
-      //     const line_break = 15
-      //     name_lines.forEach((line, i) => {
-      //       if (d.type === 'sector' && display_style.sector_uppercase ||
-      //         d.type === 'product' && display_style.product_uppercase
-      //       ) {
-      //         line = line.toUpperCase()
-      //       }
-      //       if (i === 0) {
-      //         if (d.type === 'sector') {
-      //           // d3.select('#ggg_node' + d.id + ' text')
-      //           d3.select('#ggg_' + d.idNode + ' text')
-      //             .append('tspan')
-      //             //.attr('dy',(d.name.includes('(I') || isExport(d)) ? -15 : 0) // TODO
-      //             .attr('text-anchor', text_anchor)
-      //             .text(line)
-      //         } else {
-      //           // d3.select('#ggg_node' + d.id + ' text')
-      //           d3.select('#ggg_' + d.idNode + ' text')
-      //             .append('tspan')
-      //             .attr('text-anchor', text_anchor)
-      //             .text(line)
-      //         }
-      //       } else {
-      //         if (d.type === 'sector') {
-      //           // d3.select('#ggg_node' + d.id + ' text')
-      //           d3.select('#ggg_' + d.idNode + ' text')
-      //             .append('tspan')
-      //             .attr('x', x)
-      //             .attr('dy', line_break)
-      //             .attr('text-anchor', text_anchor)
-      //             .text(line)
-      //         } else {
-      //           // d3.select('#ggg_node' + d.id + ' text')
-      //           d3.select('#ggg_' + d.idNode + ' text')
-      //             .append('tspan')
-      //             .attr('x', x)
-      //             .attr('dy', line_break)
-      //             .attr('text-anchor', text_anchor)
-      //             .text(line)
-      //         }
-      //       }
-      //     })
-      //   }
-      //   return
-      // })
+      .attr('style', d => {
+        const font = d.type === 'product' ? 'Arial' : 'Calibri'
+        const font_style =
+          d.type === 'sector' && display_style.sector_italic ||
+            d.type === 'product' && display_style.product_italic
+            ? 'italic' : 'normal'
+        const font_weight =
+          d.type === 'sector' && display_style.sector_bold ||
+            d.type === 'product' && display_style.product_bold
+            ? 'bold' : 'normal'
+        return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
+      })
+      .text(d => {
+        if (d.type === 'sector' && display_style.sector_uppercase ||
+          d.type === 'product' && display_style.product_uppercase
+        ) {        
+          return d.name.split(' - ')[0].toUpperCase()
+        } else {
+          return d.name.split(' - ')[0]
+        }
+      })
+      .each(d => {
+        const wrap = textwrap()
+          .bounds({ height: 100, width: 120 })
+          .method('tspans')
+        d3.select('#ggg_' + d.idNode + ' text')
+          .call(wrap)
+      })
       .on('mouseover', function (event, d) {
         if (d.label_visible && event.shiftKey) {
           //d3.select(this).attr('class', 'selected_node')
