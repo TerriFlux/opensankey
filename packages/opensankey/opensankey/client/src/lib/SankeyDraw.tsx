@@ -1704,9 +1704,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return opacity
           })
       }
-      if (is_v && n.x > source_node.x) {
+      if (is_v && (n.x > source_node.x && !l.recycling || n.x < source_node.x && l.recycling) ) {
         cum_v_left += link_value
-      } else if (is_v && n.x < source_node.x) {
+      } else if (is_v && n.x < source_node.x && !l.recycling || n.x > source_node.x && l.recycling) {
         cum_v_right += link_value
       } else if (!is_v && n.y > source_node.y) {
         cum_h_top += link_value
