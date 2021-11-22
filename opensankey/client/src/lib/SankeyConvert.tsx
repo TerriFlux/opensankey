@@ -15,6 +15,7 @@ interface ConvertSankeyNode {
   visible?: number | boolean,
   display: number | boolean,
   label_visible: number | boolean,
+  shape_visible: number | boolean,
   node_visible: number | boolean,  
   trade_close: boolean
 }
@@ -356,10 +357,10 @@ export const convert_data = (
       if (n_convert.label_visible === 0) {
         n.label_visible = false
       }
-      if (n.label_visible === undefined) {
+      if (n.label_visible === undefined || n_convert.label_visible === 1) {
         n.label_visible = true
       }
-      if (n.shape_visible === undefined) {
+      if (n.shape_visible === undefined || n_convert.shape_visible === 1) {
         n.shape_visible =true
       }
       if (n.node_parameter === undefined) {

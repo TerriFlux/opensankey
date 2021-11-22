@@ -27,7 +27,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_link, set_selected_link] = useState(SankeyUtils.default_link())
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
   const [radio_selected, set_radio_selected] = useState<string>('local')
-  const [duplicate, set_duplicate] = useState(false)
   const [data, set_data] = useState<SankeyData>(sankey_data)
 
   const display_links = data.links
@@ -48,8 +47,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         selected_link={selected_link}
         radio_selected={radio_selected}
         set_radio_selected={set_radio_selected}
-        duplicate={duplicate}
-        set_duplicate={set_duplicate}
         url_prefix=''
         getValueIndex={() => 0 }
         settings_edition= {
@@ -81,8 +78,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             data={data}
             set_data={set_data}
             selected_link={selected_link}
-            duplicate={duplicate}
-            set_duplicate={set_duplicate}
             getValueIndex={() => 0 }
           />
         }
@@ -112,7 +107,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_show_node_context(true)
         }}
         node_arrow_visible={
-          (n: SankeyNode) => !n.node_visible || !n.shape_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
           set_selected_link(l)

@@ -36,46 +36,46 @@ export const nodeTooltipsContent = (
     })
     content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
   }
-  const dimensions_tags = data.tags_catalog['dimensions']
-  if (!dimensions_tags) {
-    return
-  }
-  let header_written = false
-  Object.entries(dimensions_tags.tags).forEach(tag => {
-    let has_parent = false
-    if (node.dimensions[tag[1].name]) {
-      if (node.dimensions[tag[1].name].parent_name) {
-        if (!header_written) {
-          content += '<br><b>Noeuds parents et enfants</b>'
-          content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
-          header_written = true
-        }
-        has_parent = true
-        content += '<tr><td>' + tag + '</td>'
-        content += '<td>' + node.dimensions[tag[1].name].parent_name + '</td>'
-      }
-      const desagregate_nodes = Object.values(data.nodes).filter(n => n.dimensions[tag[1].name] && n.dimensions[tag[1].name].parent_name === node.name)
-      if (desagregate_nodes.length > 0) {
-        if (!header_written) {
-          content += '<br><b>Noeuds parents et enfants</b>'
-          content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
-          header_written = true
-        }
-        if (!has_parent) {
-          content += '<tr><td>' + tag + '</td>'
-          content += '<td>NA</td>'
-        }
-        content += '<td>'
-        desagregate_nodes.forEach(n => content += n.name + '<br>')
-        content += '</td>'
-      } else if (header_written) {
-        content += '<td>NA</td>'
-      }
-      if (header_written) {
-        content += '</tr>'
-      }
-    }
-  })
+  // const dimensions_tags = data.dimensions
+  // if (!dimensions_tags) {
+  //   return
+  // }
+  // let header_written = false
+  // dimensions_tags.forEach(tag=> {
+  //   let has_parent = false
+  //   if (node.dimensions[tag]) {
+  //     if (node.dimensions[tag].parent_name) {
+  //       if (! header_written) {
+  //         content += '<br><b>Noeuds parents et enfants</b>'
+  //         content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
+  //         header_written = true        
+  //       }
+  //       has_parent = true
+  //       content += '<tr><td>' + tag +'</td>'
+  //       content += '<td>' + node.dimensions[tag].parent_name +'</td>'
+  //     }
+  //     const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[tag] && n.dimensions[tag].parent_name === node.name )
+  //     if (desagregate_nodes.length>0) {
+  //       if (! header_written) {
+  //         content += '<br><b>Noeuds parents et enfants</b>'
+  //         content += '<table class="table table-striped table-dark" ><thead><tr><th>Dimension</th><th>Parent</th><th>Enfants</th></tr></thead><tbody>'
+  //         header_written = true        
+  //       }
+  //       if (!has_parent) {
+  //         content += '<tr><td>' + tag +'</td>'
+  //         content += '<td>NA</td>'        
+  //       }
+  //       content += '<td>'
+  //       desagregate_nodes.forEach(n=> content += n.name+'<br>')
+  //       content += '</td>'
+  //     } else if ( header_written) {
+  //       content += '<td>NA</td>'
+  //     }
+  //     if ( header_written) {
+  //       content += '</tr>'
+  //     }
+  //   }
+  // })
   content += '</tbody></table>'
   return content
 }
