@@ -211,22 +211,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   />
                 </Col>
               </Form.Group>
-              <Form.Group as={Row} >
-                <Col>
-                  <Button
-                    size="sm"
-                    style={{ 'marginBottom': '3px' }}
-                    onClick={
-                      () => {
-                        Object.values(data.nodes).forEach(n=> {
-                          delete n.x_label
-                          delete n.y_label
-                        })
-                      }
-                    }
-                  >Reset position</Button>
-                </Col>
-              </Form.Group>
             </Form>
           </Tab>}
           {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}

@@ -123,6 +123,7 @@ export const SankeyDataPropTypes = {
   right_shift: PropTypes.number.isRequired,
   max_shift: PropTypes.number.isRequired,
 
+
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
@@ -140,7 +141,8 @@ export const SankeyDataPropTypes = {
     unit: PropTypes.bool.isRequired,
     filter: PropTypes.number.isRequired,
     filter_label: PropTypes.number.isRequired,
-    global_curvature: PropTypes.number.isRequired
+    global_curvature: PropTypes.number.isRequired,
+    null_flux: PropTypes.bool.isRequired,
   }).isRequired,
 
   tags_catalog:TagsCatalogPropTypes,

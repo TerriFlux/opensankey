@@ -119,7 +119,18 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         link_color={l => l.color}
         node_color={n => n.color}
         link_text={SankeyUtils.link_text}
-        link_visible={(l: SankeyLink) => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible }
+        link_visible={(l: SankeyLink) => {
+          if ( !data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible ) {
+            return false
+          }
+          if ( data.display_style.null_flux ) {
+            return true
+          }
+          if (l.value[0] === 0 ) {
+            return false
+          }
+          return true
+        }}
         test_link_value={ (nodes: { [node_id : string] : SankeyNode }, d: SankeyLink, /*selected_tags: string[]*/) => {
           return d.value[0]
         }}

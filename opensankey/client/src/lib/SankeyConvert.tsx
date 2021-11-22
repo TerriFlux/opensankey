@@ -269,6 +269,9 @@ export const convert_data = (
   if (data.node_width === undefined) {
     data.node_width = 10
   }
+  if (data.display_style.null_flux === undefined) {
+    data.display_style.null_flux = false
+  }
 
   if (data.h_space === undefined) {
     data.h_space = 200
