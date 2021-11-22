@@ -384,6 +384,8 @@ export const convert_data = (
       }
       delete n_convert.visible
 
+      n.name = n.name.split('\\n').join(' ')
+
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
         if (attributes_to_remove[attr] in n_convert) {
