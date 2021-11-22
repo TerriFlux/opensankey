@@ -1,11 +1,11 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets,setSelectedTags } from './SankeyUtils'
-import { desagregation, agregation, AgregationModal } from './SankeyLayout'
+import { desagregation, agregation } from './SankeyLayout'
 
 window.d3 = d3
 
@@ -53,11 +53,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   linkTooltipsContent,
   getValueIndex
 }) => {
-  const [show_agregation, set_show_agregation] = useState(false)
-  const [agregation_parent_names,set_agregation_parent_names] = useState<string[]>([])
-  const [agregation_dimension_names,set_agregation_dimension_names] = useState<string[]>([])
-  const [is_agregation,set_is_agregation] = useState(true)
-
   const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
@@ -1328,56 +1323,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       ggg_nodes.on('dblclick', (ev, n) => {
-        if (!n.dimensions) {
-          return
-        }
         if (ev.altKey) {
-          const child_names : string[] = []
-          const dim_names : string[] = []
-          Object.keys(n.dimensions).forEach(
-            dim=> {
-              const desagregate_node = Object.values(data.nodes).filter( n2 => {
-                return n2.dimensions[dim] && (n2.dimensions[dim].parent_name == n.idNode)
-              })[0]
-              if (desagregate_node) {
-                child_names.push(desagregate_node.idNode)
-                dim_names.push(dim)
-              }
-            }
-          )
-          if (child_names.length === 0) { 
-            return
-          }
-          if (child_names.length > 1) {
-            set_agregation_parent_names(child_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(false)
-            set_show_agregation(true)
-          } else {
-            desagregation(data,child_names[0],dim_names[0])
-          }
+          desagregation(n, data)
         } else {
-          const parent_names : string[] = []
-          const dim_names : string[] = []
-          Object.keys(n.dimensions).forEach(
-            dim=> {
-              if (n.dimensions[dim].parent_name) {
-                parent_names.push(n.dimensions[dim].parent_name as any)
-                dim_names.push(dim)
-              }
-            }
-          )
-          if (parent_names.length === 0) { 
-            return
-          }
-          if (parent_names.length > 1) {
-            set_agregation_parent_names(parent_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(true)
-            set_show_agregation(true)
-          } else {
-            agregation(data,parent_names[0],dim_names[0])
-          }
+          agregation(n, data)
         }
         set_data({ ...data })
       })
@@ -1781,23 +1730,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
 
   return (
-    <>
-      <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
-        <svg height={data.height} width='100%' id='svg' >
-          <g className='g_nodes' id='g_nodes' ></g>
-          <g className='g_links' id='g_links' ></g>
-        </svg>
-      </div>
-      <AgregationModal
-        show_agregation={show_agregation}
-        data={data}
-        set_data={set_data}
-        parent_names={agregation_parent_names}
-        dimension_names={agregation_dimension_names}
-        set_show_agregation={set_show_agregation}
-        is_agregation={is_agregation}
-      />
-    </>
+    <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
+      <svg height={data.height} width='100%' id='svg' >
+        <g className='g_nodes' id='g_nodes' ></g>
+        <g className='g_links' id='g_links' ></g>
+      </svg>
+    </div>
   )
 }
 

@@ -126,8 +126,7 @@ export const SankeyDataPropTypes = {
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
-  //dimension_name: PropTypes.string.isRequired,
-  dimensions: PropTypes.arrayOf(PropTypes.string.isRequired),
+  dimension_name: PropTypes.string.isRequired,
 
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,

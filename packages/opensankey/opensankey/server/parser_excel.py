@@ -92,7 +92,7 @@ def parse_simple_excel(
     for i in range(ws.shape[0]):
         name = ws.iat[i, nodes_cols.index('Nodes')].strip()
         new_node = {
-            'idNode'        : 'node'+str(i),
+            'id'            : i,
             'name'          : name,
             'type'          : 'sector',
             'dimensions'    : {'Primaire':{'parent_name': None}},
@@ -114,12 +114,11 @@ def parse_simple_excel(
         except Exception:
             pass
         level = ws.iat[i, nodes_cols.index('Level')]
-        new_node['dimensions']['Primaire']['level'] = int(level)
         if level > previous_level:
             current_node_parent = nodes[i-1]
             current_parent_level = previous_level
         if level > current_parent_level:
-            new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['idNode']
+            new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['name']
         previous_level = level
         if level == 1:
           new_node['display'] = 1
