@@ -1458,8 +1458,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .each(d => {
+        let width = 110
+        if (d.name.split(' - ').length === 3) {
+          width = 250
+        }
         const wrap = textwrap()
-          .bounds({ height: 100, width: 110 })
+          .bounds({ height: 100, width: width })
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
