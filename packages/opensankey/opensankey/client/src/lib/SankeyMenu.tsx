@@ -202,11 +202,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = selected_link
-      console.log('========1=============')
-      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-      // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
-      const previous_node = data.nodes[link.idSource]
-      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
+    console.log('========1=============')
+    //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+    // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
+    const previous_node = data.nodes[link.idSource]
+    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
