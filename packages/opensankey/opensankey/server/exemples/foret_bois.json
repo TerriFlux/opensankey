@@ -46042,27 +46042,6 @@
          },
          "banner": "multi"
       },
-      "dimensions": {
-         "group_name": "Dimensions",
-         "tags": {
-            "Primaire": {
-               "name": "Primaire",
-               "selected": false,
-               "color": ""
-            },
-            "Usages": {
-               "name": "Usages",
-               "selected": false,
-               "color": ""
-            },
-            "Espéces": {
-               "name": "Espéces",
-               "selected": false,
-               "color": ""
-            }
-         },
-         "banner": "one"
-      },
       "Especes": {
          "group_name": "Especes",
          "tags": {
