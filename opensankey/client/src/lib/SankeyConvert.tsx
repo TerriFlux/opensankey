@@ -205,34 +205,11 @@ export const convert_data = (
     }
   })
 
-  // if (!data_to_convert.tags_catalog['dimensions']) {
-  //   data_to_convert.tags_catalog['dimensions'] = {
-  //     group_name: 'Dimensions',
-  //     tags: {'Primaire' : {
-  //       name: 'Primaire',
-  //       selected: true,
-  //       color: ''
-  //     }},
-  //     banner: 'one'
-  //   }
-  // }
+
   if (!data_to_convert.tags_catalog) {
     data_to_convert.tags_catalog = {}
   }
-  // Object.values(data.nodes).forEach(n => {
-  //   if (n.dimensions === undefined) {
-  //     n.dimensions = {'Primaire':{parent_name: undefined}}
-  //   }
-  //   Object.entries(data.dimensions).forEach( tag => {
-  //     if ((n as any).dimensions[tag[0]] && (n as any).dimensions[tag[0]].parent_name) {
-  //       const parent_node = Object.values(data.nodes).filter(n2 => normalize_name(n2.name) === normalize_name((n as any).dimensions[tag[0]].parent_name))[0]
-  //       if (!parent_node) {
-  //         return
-  //       }
-  //       (n as any).dimensions[tag[0]].parent_name = parent_node.idNode
-  //     }
-  //   })
-  // })
+
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
