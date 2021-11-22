@@ -1474,9 +1474,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .append('text')
       .classed('node', true)
       .classed('node_text', true)
-      .attr('id', (d) => d.idNode + '_text')
-      .attr('x', d => d.x_label ? d.x_label : 0)
-      .attr('y', d => d.y_label ? d.y_label : -10)
+      .attr('id', n => n.idNode + '_text')
+      .attr('x', n => n.x_label ? n.x_label : 0)
+      .attr('y', n => {
+        if (n.y_label) {
+          return n.y_label
+        }
+        setNodeHeight(n,display_nodes,display_links,data.tags_catalog)
+        const height = +d3.select('#' + n.idNode).attr('height' )
+        return height + 13
+      })
       .attr('text-anchor', 'center')
       .attr('visibility', n => n.label_visible)
       .style('text-align', 'center')
@@ -1503,7 +1510,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .each(d => {
         const wrap = textwrap()
-          .bounds({ height: 100, width: 120 })
+          .bounds({ height: 100, width: 110 })
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
