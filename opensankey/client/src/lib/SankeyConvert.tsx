@@ -44,7 +44,7 @@ interface ConvertSankeyLink {
   value: number | number[]
   display_value: string | string[]
   data?: boolean
-  unbounded?: boolean,
+  //unbounded?: boolean,
   subchain?: string,
   mini?: number | number[],
   maxi?: number | number[]
@@ -107,6 +107,9 @@ export const convert_data = (
   )
   if (data_to_convert.tags_catalog['flux_types']) {
     data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
+    data_to_convert.tags_catalog['flux_types'].tags['initial_data'].name = 'Données collectées'
+    data_to_convert.tags_catalog['flux_types'].tags['adjusted_data'].name = 'Données réconciliées'
+    data_to_convert.tags_catalog['flux_types'].tags['computed_data'].name = 'Données déterminées'
   }
   if (data_to_convert.tags_catalog['SubChain']) {
     data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
@@ -455,11 +458,9 @@ export const convert_data = (
       data.tags_catalog['flux_types'] = {
         group_name: 'Type de donnée',
         tags: {
-          'null_data': { name: 'null_data', selected: true },
-          'initial_data': { name: 'initial_data', selected: false },
-          'computed_data': { name: 'computed_data',selected: true },
-          'adjusted_data': { name: 'adjusted_data', selected: true },
-          'unbounded': { name: 'unbounded', selected: false },
+          'initial_data' : { name: 'Données collectées', selected: false },
+          'computed_data': { name: 'Données déterminées',selected: true },
+          'adjusted_data': { name: 'Données réconciliées', selected: true },
         },
         banner: 'multi'
       }
@@ -632,12 +633,12 @@ export const convert_data = (
           } else {
             l.tags['flux_types'] = ['computed_data']
           }
-          if (l_convert.unbounded) {
-            l.tags['flux_types'] = ['unbounded']
-          }
-          if ('unbounded' in l_convert) {
-            delete l_convert.unbounded
-          }
+          // if (l_convert.unbounded) {
+          //   l.tags['flux_types'] = ['unbounded']
+          // }
+          // if ('unbounded' in l_convert) {
+          //   delete l_convert.unbounded
+          // }
           if (l_convert.value === 0) {
             l.tags['flux_types'] = ['null_data']
           }
