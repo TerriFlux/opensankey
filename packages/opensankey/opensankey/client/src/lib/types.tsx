@@ -84,9 +84,12 @@ export const SankeyLinkPropTypes = {
   // geometry
   x_label: PropTypes.number,
   y_label: PropTypes.number,
-  left_horiz_shift: PropTypes.number.isRequired,
-  right_horiz_shift: PropTypes.number.isRequired,
-  vert_shift: PropTypes.number.isRequired,
+
+  left_horiz_shift  : PropTypes.number.isRequired,
+  right_horiz_shift : PropTypes.number.isRequired,
+  vert_shift        : PropTypes.number.isRequired,
+  shift_gap         : PropTypes.number.isRequired,
+
   curvature: PropTypes.number.isRequired,
   curved: PropTypes.bool.isRequired,
 

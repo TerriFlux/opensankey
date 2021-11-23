@@ -330,6 +330,7 @@ export const default_link = (): SankeyLink => {
     left_horiz_shift: 0,
     right_horiz_shift: 0,
     vert_shift: 0,
+    shift_gap: 0.1,
     tags: {}
   }
 }
