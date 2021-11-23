@@ -28,6 +28,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
   const [radio_selected, set_radio_selected] = useState<string>('local')
   const [data, set_data] = useState<SankeyData>(sankey_data)
+  const [agregation_level,set_agregation_level] = useState(0)
+  const nb_agregation_level = useState(
+    ((data:SankeyData) => {
+      let max_nb_level = 0
+      Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => max_nb_level = dim[1].level as number > max_nb_level ? dim[1].level as number : max_nb_level))
+      return max_nb_level
+    })(sankey_data)
+  )[0]
 
   const display_links = data.links
   
@@ -47,6 +55,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         selected_link={selected_link}
         radio_selected={radio_selected}
         set_radio_selected={set_radio_selected}
+        agregation_level={agregation_level}
+        set_agregation_level={set_agregation_level}        
+        nb_agregation_level={nb_agregation_level}
         url_prefix=''
         getValueIndex={() => 0 }
         settings_edition= {
