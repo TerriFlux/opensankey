@@ -142,7 +142,7 @@ export const SankeyDataPropTypes = {
     filter: PropTypes.number.isRequired,
     filter_label: PropTypes.number.isRequired,
     global_curvature: PropTypes.number.isRequired,
-    null_flux: PropTypes.bool.isRequired,
+    null_flux: PropTypes.bool.isRequired
   }).isRequired,
 
   tags_catalog:TagsCatalogPropTypes,
