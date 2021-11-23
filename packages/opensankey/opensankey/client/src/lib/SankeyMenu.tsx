@@ -35,8 +35,7 @@ const MenuPropTypes = {
   radio_selected: PropTypes.string.isRequired,
   set_radio_selected: PropTypes.func.isRequired,  
   agregation_level: PropTypes.number.isRequired,
-  set_agregation_level: PropTypes.func.isRequired,
-  nb_agregation_level: PropTypes.number.isRequired
+  set_agregation_level: PropTypes.func.isRequired
 }
 
 
@@ -55,14 +54,17 @@ const Menu: FunctionComponent<MenuTypes> = (
     radio_selected, 
     set_radio_selected,
     agregation_level,
-    set_agregation_level,
-    nb_agregation_level
+    set_agregation_level
   }
 ) => {
   const set_show_link = useState(true)[1]
 
   const display_nodes = data.nodes
   const display_links = data.links
+
+  let nb_agregation_level = 0
+  Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+
 
   const value_index = getValueIndex(data)
   const add_new_node = () => {
