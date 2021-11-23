@@ -319,7 +319,7 @@ export const convert_data = (
       if (n.y === undefined) {
         n.y = 0
       }
-      if (n_convert.visible === undefined && !n.node_visible) {
+      if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
         n.shape_visible = true
       }
       if (n_convert.visible === 1) {
