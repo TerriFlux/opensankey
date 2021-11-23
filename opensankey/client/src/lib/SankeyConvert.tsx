@@ -494,6 +494,13 @@ export const convert_data = (
       if (!l.tags) {
         l.tags = {}
       }
+      if (l.shift_gap === undefined) {
+        if (l.left_horiz_shift && l.right_horiz_shift && !l.recycling) {
+          l.shift_gap = (l.right_horiz_shift - l.left_horiz_shift)/2
+        } else {
+          l.shift_gap = 0.1
+        }
+      }
       if (l_convert.subchain && l_convert.subchain !== '' ) {
         l.tags['SubChain'] = l_convert.subchain.split(',')
         l_convert.subchain.split(',').forEach(s => {

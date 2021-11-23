@@ -72,21 +72,43 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Courbure</FormLabel>
+                  <FormLabel >Position du centre</FormLabel>
                 </Col>
                 <Col>
                   <Form.Range
-                    min="0" max="1" step="0.1"
-                    value={selected_link.curvature}
+                    min="0" max="1" step="0.05"
+                    value={(selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2}
                     onChange={
                       evt => {
-                        selected_link.curvature = +evt.target.value
+                        selected_link.left_horiz_shift  = +evt.target.value - selected_link.shift_gap
+                        selected_link.right_horiz_shift = +evt.target.value + selected_link.shift_gap                       
                         set_data({ ...data })
                       }
                     }
                   />
                 </Col>
-                <Col sm={2}>{selected_link.curvature}</Col>
+                <Col sm={2}>{(selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2}</Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Ecart entre Poignées</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
+                    min="0" max="0.5" step="0.05"
+                    value={selected_link.shift_gap}
+                    onChange={
+                      evt => {
+                        selected_link.shift_gap  = +evt.target.value
+                        const center = (selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2
+                        selected_link.left_horiz_shift  = center - selected_link.shift_gap
+                        selected_link.right_horiz_shift = center + selected_link.shift_gap                   
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+                <Col sm={2}>{selected_link.shift_gap}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
@@ -131,6 +153,25 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     }
                   />
                 </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Courbure</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
+                    min="0" max="1" step="0.1"
+                    value={selected_link.curvature}
+                    disabled={!selected_link.curved}
+                    onChange={
+                      evt => {
+                        selected_link.curvature = +evt.target.value
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+                <Col sm={2}>{selected_link.curvature}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col sm={12}>
