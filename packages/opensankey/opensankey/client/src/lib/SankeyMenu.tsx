@@ -7,6 +7,7 @@ import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
+import { range } from 'd3-array'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -32,8 +33,10 @@ const MenuPropTypes = {
   url_prefix: PropTypes.string.isRequired,
   getValueIndex: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  set_radio_selected: PropTypes.func.isRequired  
-
+  set_radio_selected: PropTypes.func.isRequired,  
+  agregation_level: PropTypes.number.isRequired,
+  set_agregation_level: PropTypes.func.isRequired,
+  nb_agregation_level: PropTypes.number.isRequired
 }
 
 
@@ -50,7 +53,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     example_menu, url_prefix,
     getValueIndex,
     radio_selected, 
-    set_radio_selected
+    set_radio_selected,
+    agregation_level,
+    set_agregation_level,
+    nb_agregation_level
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -691,7 +697,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           if (evt.target.value ==='') {
                             return
                           }
-                          for (let level = 1; level<=+evt.target.value; level++) {
+                          for (let level = 1; level<=+evt.target.value+1; level++) {
                             Object.values(display_nodes).forEach( n => {
                               if (!n.dimensions['Primaire'] || !n.dimensions['Primaire'].level) {
                                 n.display = false
@@ -714,11 +720,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                               }
                             })
                           }
+                          set_agregation_level(+evt.target.value)
                           set_data({...data})
                         }
                       }
                     >
-                      {['',1,2,3].map( level => <option key={level} value={level}  >{level}</option>)}
+                      {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={(level as unknown) as string} selected={level === agregation_level} >{'Niveau ' + (level+1)}</option>)}
                     </Form.Select>
                   </Col>
                 </Row>

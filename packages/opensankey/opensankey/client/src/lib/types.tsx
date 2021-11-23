@@ -127,8 +127,6 @@ export const SankeyDataPropTypes = {
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
 
-  //dimensions: PropTypes.arrayOf(PropTypes.string.isRequired),
-
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,
     sector_uppercase: PropTypes.bool.isRequired,
@@ -145,6 +143,8 @@ export const SankeyDataPropTypes = {
   }).isRequired,
 
   tags_catalog:TagsCatalogPropTypes,
+
+  // last indices used to increment in the id's :idNode idLink idTag idTagGroup
   tags_group_idx: PropTypes.number.isRequired,
   tag_idx: PropTypes.number.isRequired,
   node_idx: PropTypes.number.isRequired,
