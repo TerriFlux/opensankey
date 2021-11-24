@@ -1,5 +1,21 @@
 {
    "version": "0.5",
+   "file_path": "/fm/userfiles/Savoie/filiere_complete.json",
+   "node_width": 40,
+   "user_scale": "800",
+   "height": 1500,
+   "width": 2500,
+   "h_space": 200,
+   "v_space": 100,
+   "left_shift": 0.4,
+   "right_shift": 0.5,
+   "max_shift": 0.2,
+   "trade_close_hspace": 50,
+   "trade_close_vspace": 20,
+   "trade_hspace": 200,
+   "trade_left_shift": 0.45,
+   "trade_right_shift": 0.55,
+   "trade_max_shift": 0.2,
    "nodes": {
       "node0": {
          "idNode": "node0",
@@ -339,8 +355,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -389,8 +405,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Espéces": {
@@ -433,7 +449,9 @@
          ],
          "x": 800,
          "y": 768,
-         "node_parameter": "general"
+         "node_parameter": "general",
+         "x_label": -14.527202606201172,
+         "y_label": 16
       },
       "node8": {
          "idNode": "node8",
@@ -452,8 +470,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Espéces": {
@@ -496,7 +514,9 @@
          ],
          "x": 800,
          "y": 894,
-         "node_parameter": "general"
+         "node_parameter": "general",
+         "x_label": -17.168514251708984,
+         "y_label": 81.09565582275391
       },
       "node9": {
          "idNode": "node9",
@@ -516,8 +536,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -574,8 +594,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Espéces": {
@@ -615,9 +635,11 @@
             "link468",
             "link469"
          ],
-         "x": 800,
+         "x": 798.6793746948242,
          "y": 507.4628586346356,
-         "node_parameter": "general"
+         "node_parameter": "general",
+         "x_label": -21.130481719970703,
+         "y_label": 17.320655822753906
       },
       "node11": {
          "idNode": "node11",
@@ -636,8 +658,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Espéces": {
@@ -679,7 +701,9 @@
          ],
          "x": 797.3883514404297,
          "y": 580.05543773198,
-         "node_parameter": "general"
+         "node_parameter": "general",
+         "x_label": -18.489171504974365,
+         "y_label": 17.320653915405273
       },
       "node12": {
          "idNode": "node12",
@@ -1213,8 +1237,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1288,8 +1312,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1317,8 +1341,8 @@
             "link529",
             "link528"
          ],
-         "x": 1401.9145774841309,
-         "y": 586.0843963623047,
+         "x": 1397.9526138305664,
+         "y": 599.2909383773804,
          "node_parameter": "general"
       },
       "node23": {
@@ -1445,8 +1469,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1960,8 +1984,8 @@
             "link646",
             "link647"
          ],
-         "x": 1400,
-         "y": 470.1141052246094,
+         "x": 1392.0760498046875,
+         "y": 435.7770690917969,
          "node_parameter": "general"
       },
       "node34": {
@@ -2009,15 +2033,15 @@
          ],
          "outputLinksId": [
             "link709",
+            "link702",
             "link708",
             "link707",
-            "link702",
+            "link706",
             "link701",
             "link700",
             "link705",
             "link704",
-            "link703",
-            "link706"
+            "link703"
          ],
          "x": 1829.005859375,
          "y": 452.9664001464844,
@@ -2246,7 +2270,9 @@
          ],
          "x": 1829.312255859375,
          "y": 698.7418730454146,
-         "node_parameter": "general"
+         "node_parameter": "general",
+         "x_label": -31.695720672607422,
+         "y_label": 16
       },
       "node39": {
          "idNode": "node39",
@@ -2266,8 +2292,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2322,8 +2348,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2368,8 +2394,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2414,8 +2440,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2460,8 +2486,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -4021,8 +4047,8 @@
             "link229",
             "link223"
          ],
-         "x": 1601.9998779296875,
-         "y": 834.0000919103622,
+         "x": 1602.547290802002,
+         "y": 889.6385921239853,
          "node_parameter": "general"
       },
       "node72": {
@@ -4391,11 +4417,11 @@
             "link647",
             "link493",
             "link421",
+            "link663",
             "link671",
             "link443",
             "link434",
             "link654",
-            "link663",
             "link452",
             "link679"
          ],
@@ -4403,7 +4429,7 @@
             "link217"
          ],
          "x": 1601.3205089569092,
-         "y": 907.9238481521606,
+         "y": 929.0543413162231,
          "node_parameter": "general"
       },
       "node79": {
@@ -4483,8 +4509,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4525,8 +4551,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4564,8 +4590,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4579,6 +4605,7 @@
             "link868",
             "link851",
             "link703",
+            "link649",
             "link796",
             "link628",
             "link613",
@@ -4586,7 +4613,6 @@
             "link539",
             "link532",
             "link639",
-            "link649",
             "link495",
             "link550",
             "link512",
@@ -4616,8 +4642,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4664,8 +4690,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -5232,10 +5258,10 @@
          "name": "Bois d'œuvre - Hors Pays de Savoie - Importations",
          "idNode": "node100",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -5274,10 +5300,10 @@
          "name": "Bois d'industrie - Hors Pays de Savoie - Importations",
          "idNode": "node101",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -5357,10 +5383,10 @@
          "name": "Connexes hors écorces - Hors Pays de Savoie - Importations",
          "idNode": "node103",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
@@ -5780,10 +5806,10 @@
          "name": "Panneaux particules - Hors Pays de Savoie - Importations",
          "idNode": "node113",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -5822,10 +5848,10 @@
          "name": "Panneaux fibres - Hors Pays de Savoie - Importations",
          "idNode": "node114",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -5864,10 +5890,10 @@
          "name": "Panneaux MDF - Hors Pays de Savoie - Importations",
          "idNode": "node115",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -5906,10 +5932,10 @@
          "name": "Panneaux OSB - Hors Pays de Savoie - Importations",
          "idNode": "node116",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -6440,10 +6466,10 @@
          "name": "Bois d'industrie F - Hors Pays de Savoie - Importations",
          "idNode": "node129",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -6485,10 +6511,10 @@
          "name": "Panneaux - Hors Pays de Savoie - Importations",
          "idNode": "node130",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -6611,10 +6637,10 @@
          "name": "Bois d'industrie R - Hors Pays de Savoie - Importations",
          "idNode": "node133",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -6779,10 +6805,10 @@
          "name": "Bois d'œuvre F - Hors Pays de Savoie - Importations",
          "idNode": "node137",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -6824,10 +6850,10 @@
          "name": "Connexes - Hors Pays de Savoie - Importations",
          "idNode": "node138",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1200,
@@ -6907,10 +6933,10 @@
          "name": "Bois d'œuvre R - Hors Pays de Savoie - Importations",
          "idNode": "node140",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 600,
@@ -7200,10 +7226,10 @@
          "name": "Bois d'œuvre - Hors Pays de Savoie - Exportations",
          "idNode": "node147",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -7242,10 +7268,10 @@
          "name": "Bois d'industrie - Hors Pays de Savoie - Exportations",
          "idNode": "node148",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -7325,10 +7351,10 @@
          "name": "Connexes hors écorces - Hors Pays de Savoie - Exportations",
          "idNode": "node150",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -7748,10 +7774,10 @@
          "name": "Panneaux particules - Hors Pays de Savoie - Exportations",
          "idNode": "node160",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
@@ -7790,10 +7816,10 @@
          "name": "Panneaux fibres - Hors Pays de Savoie - Exportations",
          "idNode": "node161",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
@@ -7832,10 +7858,10 @@
          "name": "Panneaux MDF - Hors Pays de Savoie - Exportations",
          "idNode": "node162",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
@@ -7874,10 +7900,10 @@
          "name": "Panneaux OSB - Hors Pays de Savoie - Exportations",
          "idNode": "node163",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
@@ -8408,10 +8434,10 @@
          "name": "Bois d'industrie F - Hors Pays de Savoie - Exportations",
          "idNode": "node176",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -8453,10 +8479,10 @@
          "name": "Panneaux - Hors Pays de Savoie - Exportations",
          "idNode": "node177",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2000,
@@ -8579,10 +8605,10 @@
          "name": "Bois d'industrie R - Hors Pays de Savoie - Exportations",
          "idNode": "node180",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -8747,10 +8773,10 @@
          "name": "Bois d'œuvre F - Hors Pays de Savoie - Exportations",
          "idNode": "node184",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -8792,10 +8818,10 @@
          "name": "Connexes - Hors Pays de Savoie - Exportations",
          "idNode": "node185",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1600,
@@ -8875,10 +8901,10 @@
          "name": "Bois d'œuvre R - Hors Pays de Savoie - Exportations",
          "idNode": "node187",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1000,
@@ -9169,7 +9195,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9209,7 +9235,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9288,7 +9314,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9703,7 +9729,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9743,7 +9769,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9783,7 +9809,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -9823,7 +9849,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10303,7 +10329,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10346,7 +10372,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10466,7 +10492,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10628,7 +10654,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10671,7 +10697,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -10750,7 +10776,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11031,7 +11057,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11071,7 +11097,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11150,7 +11176,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11565,7 +11591,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11605,7 +11631,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11645,7 +11671,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -11685,7 +11711,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12165,7 +12191,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12208,7 +12234,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12328,7 +12354,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12490,7 +12516,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12533,7 +12559,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12612,7 +12638,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12893,7 +12919,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -12933,7 +12959,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -13012,7 +13038,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -13427,7 +13453,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -13467,7 +13493,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -13507,7 +13533,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -13547,7 +13573,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14071,7 +14097,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14114,7 +14140,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14234,7 +14260,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14396,7 +14422,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14439,7 +14465,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14518,7 +14544,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14799,7 +14825,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14839,7 +14865,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -14918,7 +14944,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -15333,7 +15359,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -15373,7 +15399,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -15413,7 +15439,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -15453,7 +15479,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -15977,7 +16003,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -16020,7 +16046,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -16140,7 +16166,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -16302,7 +16328,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -16345,7 +16371,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -16424,7 +16450,7 @@
          "node_visible": false,
          "shape_visible": true,
          "label_visible": true,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 100,
@@ -18482,9 +18508,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.7088673623805724,
-         "right_horiz_shift": 0.914359262982785,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.75,
+         "right_horiz_shift": 0.8500000000000001,
+         "shift_gap": 0.05
       },
       "link35": {
          "value": [
@@ -18590,8 +18616,8 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "left_horiz_shift": 0.4,
-         "right_horiz_shift": 0.5,
+         "left_horiz_shift": 0.75,
+         "right_horiz_shift": 0.95,
          "y_label": 77.94176737467448,
          "x_label": 484.8023986816406,
          "label_position": "frozen",
@@ -25940,8 +25966,8 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.6432552642175989,
-         "right_horiz_shift": 0.6666666666666666,
+         "left_horiz_shift": 0.4802872350971375,
+         "right_horiz_shift": 0.5246651300235782,
          "shift_gap": 0.1
       },
       "link200": {
@@ -26932,8 +26958,8 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#4DB35D",
-         "left_horiz_shift": 0.8999999999999999,
-         "right_horiz_shift": 1,
+         "left_horiz_shift": 0.85,
+         "right_horiz_shift": 0.9500000000000001,
          "y_label": 222.83597119649252,
          "x_label": 1462.5594024658203,
          "label_position": "frozen",
@@ -36830,9 +36856,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.6425787756073242,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.05,
+         "right_horiz_shift": 0.07025541709329278,
+         "shift_gap": 0.05
       },
       "link434": {
          "value": [
@@ -37317,9 +37343,9 @@
          "curvature": 0.5,
          "text_color": "white",
          "label_position": "beginning",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.35000000000000003,
+         "right_horiz_shift": 0.45,
+         "shift_gap": 0.05
       },
       "link444": {
          "value": [
@@ -41819,8 +41845,8 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.530918907617497,
-         "right_horiz_shift": 0.5823313985953851,
+         "left_horiz_shift": 0.3419283674526393,
+         "right_horiz_shift": 0.3574563491322787,
          "shift_gap": 0.1
       },
       "link527": {
@@ -41927,8 +41953,8 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.496876148176115,
-         "right_horiz_shift": 0.4983139063384855,
+         "left_horiz_shift": 0.43001730521794473,
+         "right_horiz_shift": 0.43861840836788785,
          "shift_gap": 0.1
       },
       "link530": {
@@ -42707,8 +42733,8 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.567358984839579,
-         "right_horiz_shift": 0.6078090425579942,
+         "left_horiz_shift": 0.8126638297345554,
+         "right_horiz_shift": 0.8314691919403207,
          "shift_gap": 0.1
       },
       "link552": {
@@ -46641,8 +46667,8 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.33748486954302703,
+         "left_horiz_shift": 0.2659667038545695,
+         "right_horiz_shift": 0.270118240064263,
          "shift_gap": 0.1
       },
       "link650": {
@@ -46982,10 +47008,10 @@
          "curvature": 0.5,
          "text_color": "black",
          "label_position": "middle",
-         "x_label": 1493.2545380659813,
+         "x_label": 1694.654379374575,
          "y_label": 836.4120111465454,
-         "left_horiz_shift": 0.08076570034670388,
-         "right_horiz_shift": 0.14778327435812003,
+         "left_horiz_shift": 0.4731026550215098,
+         "right_horiz_shift": 0.5080422428859083,
          "shift_gap": 0.1
       },
       "link656": {
@@ -50173,7 +50199,7 @@
          "right_horiz_shift": 0.6666666666666666,
          "shift_gap": 0.1,
          "recycling": true,
-         "vert_shift": 0
+         "vert_shift": 38.2989501953125
       },
       "link717": {
          "value": [
@@ -51510,9 +51536,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.7999999999999999,
+         "right_horiz_shift": 0.9,
+         "shift_gap": 0.05
       },
       "link742": {
          "value": [
@@ -51546,8 +51572,8 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "left_horiz_shift": 0.45,
-         "right_horiz_shift": 0.55,
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.7,
          "y_label": 1352.534315109253,
          "x_label": 2172.7232360839844,
          "label_position": "frozen",
@@ -51723,9 +51749,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.7999999999999999,
+         "right_horiz_shift": 0.9,
+         "shift_gap": 0.05
       },
       "link748": {
          "value": [
@@ -51759,12 +51785,12 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "left_horiz_shift": 0.4277777777777778,
-         "right_horiz_shift": 0.5277777777777778,
+         "left_horiz_shift": 0.5499999999999999,
+         "right_horiz_shift": 0.65,
          "y_label": 1369.6937656402588,
          "x_label": 2172.7232360839844,
          "label_position": "frozen",
-         "shift_gap": 0.1
+         "shift_gap": 0.05
       },
       "link749": {
          "value": [
@@ -51936,9 +51962,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.7999999999999999,
+         "right_horiz_shift": 0.9,
+         "shift_gap": 0.05
       },
       "link754": {
          "value": [
@@ -51972,8 +51998,8 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "left_horiz_shift": 0.40555555555555556,
-         "right_horiz_shift": 0.5055555555555556,
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.7,
          "y_label": 1386.8532161712646,
          "x_label": 2172.7232360839844,
          "label_position": "frozen",
@@ -52149,9 +52175,9 @@
          "label_on_path": true,
          "curvature": 0.5,
          "text_color": "black",
-         "left_horiz_shift": 0.3333333333333333,
-         "right_horiz_shift": 0.6666666666666666,
-         "shift_gap": 0.1
+         "left_horiz_shift": 0.7999999999999999,
+         "right_horiz_shift": 0.9,
+         "shift_gap": 0.05
       },
       "link760": {
          "value": [
@@ -52185,8 +52211,8 @@
          "label_on_path": true,
          "curvature": 1,
          "text_color": "#9D2527",
-         "left_horiz_shift": 0.38333333333333336,
-         "right_horiz_shift": 0.4833333333333334,
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.7,
          "y_label": 1404.0126667022705,
          "x_label": 2172.7232360839844,
          "label_position": "frozen",
@@ -58527,15 +58553,8 @@
          "shift_gap": 0.1
       }
    },
-   "user_scale": "800",
-   "height": 1500,
-   "width": 2500,
-   "node_width": 40,
-   "h_space": 200,
-   "v_space": 100,
-   "left_shift": 0.4,
-   "right_shift": 0.5,
-   "max_shift": 0.2,
+   "animation_tooltips": {},
+   "show_uncert": false,
    "display_style": {
       "font_size": "14",
       "unit": false,
@@ -58546,6 +58565,7 @@
       "filter_label": 200,
       "null_flux": false
    },
+   "static_sankey": false,
    "tags_catalog": {
       "flux_types": {
          "group_name": "Type de donnée",
@@ -58667,20 +58687,6 @@
          "banner": "multi"
       }
    },
-   "tags_group_idx": 1,
-   "tag_idx": 1,
-   "node_idx": 373,
-   "link_idx": 373,
-   "file_path": "sankey_diagram.json",
-   "trade_close_hspace": 50,
-   "trade_close_vspace": 20,
-   "trade_hspace": 200,
-   "trade_left_shift": 0.45,
-   "trade_right_shift": 0.55,
-   "trade_max_shift": 0.2,
-   "animation_tooltips": {},
-   "show_uncert": false,
-   "static_sankey": false,
    "tooltip_names": [
       "humidité sur sec",
       "sur brut",
@@ -58700,6 +58706,11 @@
       "m3 (plein) du produit"
    ],
    "default_tooltip": true,
+   "tags_group_idx": 1,
+   "tag_idx": 1,
+   "node_idx": 373,
+   "link_idx": 373,
+   "dimension_name": "Primaire",
    "trade_sectors": [
       "Hors Pays de Savoie - Importations",
       "Hors Pays de Savoie - Exportations",
@@ -58707,5 +58718,8 @@
       "International - Exportations",
       "Autres régions françaises - Importations",
       "Autres régions françaises - Exportations"
-   ]
+   ],
+   "current_filter": 0,
+   "use_flux_types": true,
+   "trade": "Hors Pays de Savoie,Autres régions françaises,International"
 }
