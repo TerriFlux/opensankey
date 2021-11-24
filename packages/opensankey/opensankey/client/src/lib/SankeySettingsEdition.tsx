@@ -1,7 +1,7 @@
 import React, { useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { arrangeNodes, compute_auto_sankey, updateLayout } from './SankeyLayout'
+import { arrangeNodes, compute_auto_sankey, updateLayout,reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
 
 const SankeySettingsEditionPropTypes = {
@@ -236,6 +236,20 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   set_data({ ...data })
                 }}
               > Positionnement automatique</Button>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} >
+            <Col>
+              <Button
+                size="sm"
+                onClick={() => {
+                  Object.values(data.nodes).forEach(n => {
+                    reorganize_node_inputLinksId(n,data.nodes,data.links)
+                    reorganize_node_outputLinksId(n,data.nodes,data.links)
+                  })                  
+                  set_data({ ...data })
+                }}
+              >Reorganiser liens entrants et sortant</Button>
             </Col>
           </Form.Group>
         </Form>

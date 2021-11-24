@@ -629,11 +629,6 @@ export const desagregation = (
   // Hides agregated nodes
   data.nodes[idParent].display = false
   data.nodes[idParent].node_visible = false
-  
-  Object.values(data.nodes).forEach(n => {
-    reorganize_node_inputLinksId(n,data.nodes,data.links)
-    reorganize_node_outputLinksId(n,data.nodes,data.links)
-  })
 }
 
 export const agregation = (
@@ -664,11 +659,6 @@ export const agregation = (
     agregated_node.x = mean_x
     agregated_node.y = mean_y
   }
-
-  Object.values(data.nodes).forEach(n => {
-    reorganize_node_inputLinksId(n,data.nodes,data.links)
-    reorganize_node_outputLinksId(n,data.nodes,data.links)
-  })
 }
 
 const AgregationModalPropTypes = {
