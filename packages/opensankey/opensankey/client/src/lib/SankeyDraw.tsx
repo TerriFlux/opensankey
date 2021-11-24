@@ -1485,7 +1485,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return height + 13
       })
       .attr('text-anchor', 'center')
-      .attr('visibility', n => n.label_visible)
+      .attr('visibility', n => n.node_visible && n.label_visible )
       .style('text-align', 'center')
       .attr('style', d => {
         const font = d.type === 'product' ? 'Arial' : 'Calibri'
