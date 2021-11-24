@@ -1334,17 +1334,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (ev.altKey) {
           const child_names : string[] = []
           const dim_names : string[] = []
-          Object.keys(n.dimensions).forEach(
-            dim=> {
-              const desagregate_node = Object.values(data.nodes).filter( n2 => {
-                return n2.dimensions[dim] && (n2.dimensions[dim].parent_name == n.idNode)
-              })[0]
-              if (desagregate_node) {
-                child_names.push(desagregate_node.idNode)
-                dim_names.push(dim)
+          Object.values(data.nodes).forEach( n2 => {
+            for (const dim in n2.dimensions) {
+              if (n2.dimensions[dim].parent_name == n.idNode) {
+                if (dim_names.indexOf(dim) === -1) {
+                  child_names.push(n2.idNode)
+                  dim_names.push(dim)
+                }
               }
             }
-          )
+            return false
+          })
           if (child_names.length === 0) { 
             return
           }
