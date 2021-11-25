@@ -115,6 +115,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 onClick={
                   () => {
                     Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
+                    Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.x_label).forEach(l => (l.x_label as number) += shift_left)
                     set_data({ ...data })
                   }
                 }
@@ -138,6 +139,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 onClick={
                   () => {
                     Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
+                    Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.y_label).forEach(l => (l.y_label as number) += shift_top)
                     set_data({ ...data })
                   }
                 }
