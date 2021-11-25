@@ -3,11 +3,10 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { compute_auto_sankey,compute_default_input_outputLinksId,updateLayout,reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { range } from 'd3-array'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -63,8 +62,17 @@ const Menu: FunctionComponent<MenuTypes> = (
   const display_links = data.links
 
   let nb_agregation_level = 0
-  Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-
+  Object.values(data.nodes).forEach( n => {
+    if ( !n.dimensions) {
+      return
+    }
+    Object.entries(n.dimensions).forEach( dim => { 
+      if (!dim[1].level) {
+        return
+      }
+      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
+    })
+  })
 
   const value_index = getValueIndex(data)
   const add_new_node = () => {
@@ -347,9 +355,27 @@ const Menu: FunctionComponent<MenuTypes> = (
             <NavDropdown title="Aide" id="help">
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
-                <Dropdown.Item onClick={() => uploadExemple('pommes_poires.xlsx', url_prefix, data, set_data)} >Pommes Poires Simple</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple('sankeys_territoire_.csv', url_prefix, data, set_data)} >Energie</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple('foret_bois.json', url_prefix, data, set_data)} >Forêt Bois</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'pommes_poires.xlsx', url_prefix, data, set_data, 
+                  (server_data : SankeyData)=>compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                )} >Pommes Poires Simple</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'sankeys_territoire_.csv', url_prefix, data, set_data,
+                  (server_data : SankeyData) => {
+                    compute_default_input_outputLinksId(server_data.nodes, server_data.links)
+                    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                    Object.values(server_data.nodes).forEach(function (n) {
+                      reorganize_node_inputLinksId(n, data.nodes, data.links)
+                      reorganize_node_outputLinksId(n, data.nodes, data.links)
+                    })
+                    delete (data as SankeyData & { layout?: SankeyData }).layout
+                  }                    
+                )} >Energie</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'foret_bois.json', url_prefix, data, set_data,
+                  ()=> 0
+                )} 
+                >Forêt Bois</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
@@ -699,28 +725,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                           if (evt.target.value ==='') {
                             return
                           }
-                          for (let level = 1; level<=+evt.target.value+1; level++) {
-                            Object.values(display_nodes).forEach( n => {
-                              if (!n.dimensions['Primaire'] || !n.dimensions['Primaire'].level) {
-                                n.display = false
-                                n.node_visible = false
-                                return
-                              }
-                              if (n.dimensions['Primaire'].level === level ) {
-                                n.node_visible = true
-                                n.display = true
-                                Object.keys(n.dimensions).forEach( dim => {
-                                  const idParent = n.dimensions[dim].parent_name
-                                  if (idParent !== null && idParent !== undefined) {
-                                    display_nodes[idParent].node_visible = false
-                                    display_nodes[idParent].display = false
-                                  }
-                                })
-                              } else if (n.dimensions['Primaire'].level > level )  {
-                                n.node_visible = false
-                                n.display = false
-                              }
-                            })
+                          for (let level = 1; level <= +evt.target.value+1; level++) {
+                            set_nodes_level(display_nodes,level)
                           }
                           set_agregation_level(+evt.target.value)
                           set_data({...data})
@@ -768,12 +774,4 @@ Menu.propTypes = MenuPropTypes
 
 export default Menu
 
-function newFunction(nav_item_active: string, set_nav_item_active: (...args: any[]) => any): React.MouseEventHandler<HTMLElement> | undefined {
-  return (evt) => {
-    if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
-      set_nav_item_active('')
-    } else {
-      set_nav_item_active('3')
-    }
-  }
-}
+
