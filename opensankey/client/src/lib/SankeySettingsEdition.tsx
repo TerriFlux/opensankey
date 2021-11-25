@@ -24,6 +24,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
   const [shift_left, set_shift_left] = useState(100)
   const [shift_top, set_shift_top] = useState(100)
+  const [shift_visible, set_shift_visible] = useState(true)  
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
@@ -100,6 +101,21 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           </Form.Group>
           <Form.Group as={Row} >
             <Col>
+              <FormCheck
+                type='checkbox'
+                label='Déplacer visible seulement'
+                checked={shift_visible}
+                onChange={
+                  evt => {
+                    set_shift_visible(evt.target.checked)
+                    set_data({ ...data })
+                  }
+                }
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} >
+            <Col>
               <FormLabel>Shift horizontal</FormLabel>
             </Col>
             <Col>
@@ -114,12 +130,17 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
-                    Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.x_label).forEach(l => (l.x_label as number) += shift_left)
+                    if ( shift_visible) {
+                      Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
+                      Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.x_label).forEach(l => (l.x_label as number) += shift_left)
+                    } else {
+                      Object.values(nodes).forEach(n => n.x += shift_left)
+                      Object.values(links).filter(l => l.x_label).forEach(l => (l.x_label as number) += shift_left)                      
+                    }
                     set_data({ ...data })
                   }
                 }
-              >Shift</Button>
+              >Déplacer</Button>
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
@@ -138,12 +159,17 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
-                    Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.y_label).forEach(l => (l.y_label as number) += shift_top)
+                    if ( shift_visible) {
+                      Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
+                      Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.y_label).forEach(l => (l.y_label as number) += shift_top)
+                    } else {
+                      Object.values(nodes).forEach(n => n.y += shift_top)
+                      Object.values(links).filter(l => l.y_label).forEach(l => (l.y_label as number) += shift_top)                      
+                    }
                     set_data({ ...data })
                   }
                 }
-              >Shift</Button>
+              >Déplacer</Button>
             </Col>
           </Form.Group>
         </Form>
@@ -587,6 +613,20 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }
               />
             </Col>
+          </Form.Group>
+          <Form.Group >
+            <FormCheck
+              type='checkbox'
+              label='Label visible'
+              onChange={
+                evt => {
+                  Object.values(data.links).filter(l => data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(
+                    l => l.label_visible = evt.target.checked
+                  )
+                  set_data({ ...data })
+                }
+              }
+            />
           </Form.Group>
           <Form.Group as={Row} >
             <Col>
