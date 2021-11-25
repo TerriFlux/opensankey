@@ -420,11 +420,14 @@ const downloadExamples = (
     })
 }
 
+
+
 export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void,
+  example_callback: (data: SankeyData) => void
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
@@ -439,32 +442,19 @@ export const uploadExemple = (
   set_data({ ...default_sankey_data() })
 
   file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  const callback = (server_data: SankeyData) => {
-    Object.assign(data, server_data)
-    convert_data(data)
-    data.left_shift = 0.40
-    data.right_shift = 0.50
-    data.node_idx = Object.keys(data.nodes).length
-    data.link_idx = Object.keys(data.nodes).length
-    if ('layout' in (data as SankeyData)) {
-      compute_default_input_outputLinksId(data.nodes, data.links)
-      updateLayout(data, (data as SankeyData & { layout: SankeyData }).layout)
-      Object.values(data.nodes).forEach(function (n) {
-        reorganize_node_inputLinksId(n, data.nodes, data.links)
-        reorganize_node_outputLinksId(n, data.nodes, data.links)
-      })
-      delete (data as SankeyData & { layout?: SankeyData }).layout
-    } else if (file_name === 'pommes_poires.xlsx') {
-      compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-    }
-    set_data({ ...data })
-  }
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
       // try {
-      const json_data = JSON.parse(text)
-      callback(json_data)
+      const server_data = JSON.parse(text)
+      Object.assign(data, server_data)
+      convert_data(data)
+      // data.left_shift = 0.40
+      // data.right_shift = 0.50
+      data.node_idx = Object.keys(data.nodes).length
+      data.link_idx = Object.keys(data.nodes).length
+      example_callback(data)
+      set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)
       // } catch (err) {
       //   alert(err)
@@ -473,3 +463,29 @@ export const uploadExemple = (
   })
 }
 
+export const set_nodes_level = (
+  display_nodes: { [key : string] : SankeyNode },
+  level: number
+) => {
+  Object.values(display_nodes).forEach(node => {
+    if (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level) {
+      node.display = false
+      node.node_visible = false
+      return
+    }
+    if (node.dimensions['Primaire'].level === level) {
+      node.node_visible = true
+      node.display = true
+      Object.keys(node.dimensions).forEach(dim => {
+        const idParent = node.dimensions[dim].parent_name
+        if (idParent !== null && idParent !== undefined) {
+          display_nodes[idParent].node_visible = false
+          display_nodes[idParent].display = false
+        }
+      })
+    } else if (node.dimensions['Primaire'].level > level) {
+      node.node_visible = false
+      node.display = false
+    }
+  })
+}
