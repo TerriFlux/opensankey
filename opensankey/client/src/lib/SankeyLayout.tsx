@@ -120,12 +120,6 @@ export const apply_input_outputLinksId = (
   ref_links: { [link_id : string]:SankeyLink},
   data: SankeyData
 ) => {
-  // const display_nodes : SankeyNode [] = Object.values(data.nodes).filter( n=> n.display )
-  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
-  //   const source_node = data.nodes[l.idSource]
-  //   const target_node = data.nodes[l.idTarget]
-  //   return source_node.display &&  target_node.display
-  // }).map(l=> ({[l.idLink] : {...l} })))
   const display_nodes = data.nodes
   const display_links = data.links
 
@@ -476,14 +470,6 @@ export const updateLayout = (
   new_layout: SankeyData
 ) => {
   convert_data(new_layout)
-
-
-  // const display_nodes = data.nodes.filter( n=> n.display )
-  // const display_links = data.links.filter( l=> {
-  //   const source_node = data.nodes.filter(n => n.idNode === l.idSource)[0]
-  //   const target_node = data.nodes.filter(n => n.idNode === l.idTarget)[0]
-  //   return source_node.display &&  target_node.display
-  // })
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {

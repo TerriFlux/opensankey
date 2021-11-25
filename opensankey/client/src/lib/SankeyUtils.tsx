@@ -452,7 +452,7 @@ export const uploadExemple = (
       // data.left_shift = 0.40
       // data.right_shift = 0.50
       data.node_idx = Object.keys(data.nodes).length
-      data.link_idx = Object.keys(data.nodes).length
+      data.link_idx = Object.keys(data.links).length
       example_callback(data)
       set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)
