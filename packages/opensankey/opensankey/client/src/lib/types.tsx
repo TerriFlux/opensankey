@@ -37,6 +37,12 @@ export const SankeyNodePropTypes = {
   }).isRequired
   ).isRequired,
 
+  tag_favorite :PropTypes.objectOf(PropTypes.shape({
+    tagGroup:PropTypes.string.isRequired,
+    tagElement :PropTypes.string.isRequired
+  }).isRequired
+  ).isRequired,
+
   node_parameter:PropTypes.string.isRequired,
 
   // geometry
@@ -97,8 +103,10 @@ export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
+  show_legend: PropTypes.bool.isRequired,
   tags:PropTypes.objectOf(PropTypes.shape({
     name:PropTypes.string.isRequired,
+    shape:PropTypes.string,
     color:PropTypes.string,
     selected:PropTypes.bool.isRequired,
   }).isRequired).isRequired,

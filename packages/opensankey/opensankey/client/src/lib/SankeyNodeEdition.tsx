@@ -14,7 +14,7 @@ const SankeyNodeEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,selected_node,radio_selected,getValueIndex,children}) => {
+const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, selected_node, radio_selected, getValueIndex, children }) => {
   const { tags_catalog } = data
   const tags_visible = Object.keys(tags_catalog).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
@@ -23,7 +23,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   if (node === undefined) {
     node = default_node()
   }
-  
+
 
   const outline_Fav_Button = (tag_key: string) => {
     if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
@@ -103,18 +103,29 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         variant={outline_Fav_Button(tags[0])}
                         onClick={
                           () => {
-                            const newFavColor = {
-                              tag_associated: tags[0],
-                              color: tags_catalog[tags_group_key].tags[tags[0]].color
-                            }
-                            if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
-                              node.colorFavoriteTags = {}
-                            }
-                            if (Object.keys(node.colorFavoriteTags).includes(tags_group_key)) {
-                              delete node.colorFavoriteTags[tags_group_key]
-                            } else {
-                              node.colorFavoriteTags[tags_group_key] = newFavColor
-                            }
+                            console.log(node.tag_favorite)
+                            console.log(tags_group_key)
+                            console.log(tags[0])
+                            node.tag_favorite['tagGroup'] =tags_group_key as any
+                            node.tag_favorite['tagElement'] =  tags[0] as any
+                            // Modification
+                            // je ne pense pas qu'il soit necessaire ici de donner la couleur
+                            // le tagGroup et le tag est suffisant
+                            // de plus je ne sais pas si il faut un favori par groupTag sinon ne sait pas quoi prendre
+                            //const newFavColor = {
+                            //  tagGroup_associated : tags_group_key,
+                            //  tag_associated: tags[0],
+                            //  color: tags_catalog[tags_group_key].tags[tags[0]].color
+                            //}
+                            // if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
+                            //   node.colorFavoriteTags = {}
+                            // }
+                            // if (Object.keys(node.colorFavoriteTags).includes(tags_group_key)) {
+                            //   delete node.colorFavoriteTags[tags_group_key]
+                            // } else {
+                            //   node.colorFavoriteTags[tags_group_key] = newFavColor
+                            // }
+                            //node.colorFavoriteTags= newFavColor
                             set_data({ ...data })
                           }
                         }
@@ -126,7 +137,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           </tbody>
         </Table>
       </Form.Group>
-    </Tab>)
+    </Tab >)
 
   return (
     <Row>

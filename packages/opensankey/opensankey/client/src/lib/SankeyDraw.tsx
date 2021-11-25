@@ -4,7 +4,7 @@ import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets,setSelectedTags } from './SankeyUtils'
+import { compute_total_offsets, setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 
 window.d3 = d3
@@ -184,7 +184,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     select2
       .attr('href', d => '#' + d.idLink)
-      .attr('id', d => d.idLink+'_text')
+      .attr('id', d => d.idLink + '_text')
       .attr('class', 'link_value')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('fill', d => d.text_color)
@@ -352,8 +352,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const drag_node = (
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
     tags_catalog: TagsCatalog,
     dragged: Element,
@@ -441,8 +441,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   const drag_link = (
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter: number; filter_label: number },
     tags_catalog: TagsCatalog,
     dragged: SVGPathElement | null,
@@ -517,8 +517,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const drag_handle = (
     link: SankeyLink,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     dragged: Element,
@@ -588,8 +588,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   // Identify the node that is the closest from mouse click (either source or target).
   const identify_node = (
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     link: SankeyLink,
     mouse_coord: number[]
   ) => {
@@ -622,8 +622,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const add_shift_handle = (
     link: SankeyLink,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     shift_name: string,
@@ -654,8 +654,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const add_shift_handles = (
     link: SankeyLink,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     xs: number,
@@ -696,7 +696,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const drawLinkText = (
     link: SankeyLink,
-    links: { [link_id : string]:SankeyLink},
+    links: { [link_id: string]: SankeyLink },
     link_value: number,
     display_style: { font_size: number; filter: number; filter_label: number },
     xs: number,
@@ -772,9 +772,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const setNodeHeight = (
     n: SankeyNode,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
-    selected_tags:TagsCatalog
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
+    selected_tags: TagsCatalog
   ) => {
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
@@ -798,8 +798,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const setNodesHeight = (
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     d: SankeyLink,
     tags_catalog: TagsCatalog
   ) => {
@@ -853,8 +853,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     source_node: SankeyNode,
     target_node: SankeyNode,
     link: SankeyLink,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     selected_tags: { [tag_group: string]: string[] },
 
   ) => {
@@ -1057,8 +1057,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   // DRAW LINK   
   const drawCurve = (
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter: number; filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     tags_catalog: TagsCatalog,
     link: SankeyLink,
@@ -1147,7 +1147,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   // Returns the x/y position of link_center / left/right/vert_shift
   const handles_positions = (
-    links: { [link_id : string]:SankeyLink},
+    links: { [link_id: string]: SankeyLink },
     link: SankeyLink,
     xs: number,
     ys: number,
@@ -1364,7 +1364,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
-      .attr('visibility', d => (d as SankeyNode).shape_visible ? 'visible' : 'hidden' )
+      .attr('visibility', d => (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
       .attr('fill', d => node_color(d))
       //.attr('fill-opacity', d => (d as SankeyNode).visible ? 0.9 : 0)
       .attr('stroke', 'black')
@@ -1441,7 +1441,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //       ? 'bold' : 'normal'
       //   return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
       // })
-      .text(d =>d.name.split(' - ')[0])
+      .text(d => d.name.split(' - ')[0])
       // .each(d => {
       //   const wrap = textwrap()
       //     .bounds({ height: 100, width: 80 })
@@ -1566,9 +1566,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const branchAnimate = (
-    nodes: { [node_id : string]:SankeyNode},
+    nodes: { [node_id: string]: SankeyNode },
     nodeData: SankeyNode,
-    nodeDisplay : any
+    nodeDisplay: any
   ) => {
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
@@ -1610,18 +1610,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .style('display', 'inline')
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-        if (!nodeDisplay.includes(idTarget))
-        {
+        if (!nodeDisplay.includes(idTarget)) {
           nodeDisplay.push(idTarget)
           branchAnimate(nodes, nodes[idTarget], nodeDisplay)
         }
       })
   }
- 
+
   const drawArrows = (
     n: SankeyNode,
-    nodes: { [node_id : string]:SankeyNode},
-    links: { [link_id : string]:SankeyLink},
+    nodes: { [node_id: string]: SankeyNode },
+    links: { [link_id: string]: SankeyLink },
     display_style: { font_size: number; filter?: number; filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     tags_catalog: TagsCatalog,
     selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
@@ -1740,6 +1739,78 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   })
 
+  const drawLegend = (
+    nodes: { [node_id: string]: SankeyNode },
+    tags_catalog: TagsCatalog,
+  ) => {
+    // Dans le menu tags, les éléments affichés dans la légende sont :
+    // les tagGroup pour lesquelles Legend est à true 
+    // le selected du tags à true
+    //console.log('FUNCTION : drawLegend')
+
+    // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
+    let dx = 0
+    const pas = 180
+
+
+    d3.select('#g_legend').selectAll('*').remove()
+
+    const legend = d3.select('#g_legend').style('transform', 'translateY(50px)').append('g')
+
+    const wrap = textwrap()
+      .bounds({ height: 100, width: pas - 40 })
+      .method('tspans')
+
+    Object.values(data.tags_catalog).filter(tag_group => tag_group.show_legend).forEach(tag_group => {
+
+      // Ajout du tagGroup.name  
+      const legendTitle = legend.append('text')
+        .attr('transform', function (d, i) {
+          return 'translate(' + dx + ', 0 )'
+        })
+        .attr('x', 0)
+        .attr('y', 0)
+        .text(tag_group.group_name)
+        .call(wrap)
+
+      const legendElements = legend.append('g')
+        .selectAll('g')
+        // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
+        .data(Object.entries(tag_group.tags))
+        .enter()
+        .append('svg:g')
+        // on filtre les tags avec selected à true (Visible)
+        .filter(function (d) { return d[1].selected })
+        .attr('transform', function (d, i) {
+          return 'translate(' + dx + ',' + i * 30 + ')'
+        })
+
+      // Ajout du shape  
+      legendElements.append('rect')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('x', 0)
+        .attr('y', 10)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .style('fill', function (d: any) { return d[1].color })
+        .style('fill-opacity', 1)
+      // Ajout du label
+      legendElements.append('text')
+        .attr('x', 35)
+        .attr('y', 20)
+        .text(function (d) { return d[1].name })
+        .call(wrap)
+
+      dx = dx + pas
+
+    })
+
+    // On translateY #g_nodes et #g_links de la hauteur de la légende
+    //d3.select('#g_nodes').style('transform', 'translateY(50px)')
+    //d3.select('#g_links').style('transform', 'translateY(50px)')
+  }
+
   useEffect(() => {
 
     d3.selectAll('.tmp').remove()
@@ -1756,11 +1827,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002)
         })
         .on('zoom', function (transform) {
-          d3.selectAll('svg > *') // permet de sélectionner l'ensemble des éléments de la balise svg
+          //d3.selectAll('svg > *') // permet de sélectionner l'ensemble des éléments de la balise svg
+          d3.select('#g_nodes')
             .attr('transform', transform.transform)
-          d3.selectAll('text')
-            .style('font-size', (data.display_style.font_size / transform.transform.k) + 'px') // Permet de maintenir une taille de police constante
-          // A voir si il ne faut pas la réduire quand le zomm est <1
+          d3.select('#g_links')
+            .attr('transform', transform.transform)
+          d3.selectAll('#g_nodes text')
+            .style('font-size', function () {
+              return data.display_style.font_size / transform.transform.k + 'px' // Permet de maintenir une taille de police constante
+              // A voir si il ne faut pas la réduire quand le zomm est <1
+            })
+          d3.selectAll('#g_links text')
+            .style('font-size', function () {
+              return data.display_style.font_size / transform.transform.k + 'px' // Permet de maintenir une taille de police constante
+              // A voir si il ne faut pas la réduire quand le zomm est <1
+            })
         })
       )
 
@@ -1772,12 +1853,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     gg_nodes.attr('cursor', 'zoom-in')
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_links.attr('cursor', 'zoom-in')
+
+    drawLegend(data.nodes, data.tags_catalog)
+
     localStorage.setItem('data', JSON.stringify(data))
+    console.log(data)
   })
 
   return (
     <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
       <svg height={data.height} width='100%' id='svg' >
+        <g className='g_legend' id='g_legend'></g>
         <g className='g_nodes' id='g_nodes' ></g>
         <g className='g_links' id='g_links' ></g>
       </svg>

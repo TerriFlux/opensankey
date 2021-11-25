@@ -290,10 +290,12 @@ export const default_sankey_data = (): SankeyData => {
   }
 }
 
-export const default_node = (): SankeyNode => {
-  return {
+export const default_node = (
+): SankeyNode => {
+  console.log('-> Affectation du default_node')
+  const defaultNode = {
     name: '',
-    idNode: 'node0',
+    idNode: 'default',
     type: 'sector',
     display: true,
     node_visible: true,
@@ -306,9 +308,11 @@ export const default_node = (): SankeyNode => {
     inputLinksId: [],
     outputLinksId: [],
     tags: {},
+    tag_favorite: {},
     colorFavoriteTags: {},
     dimensions: { 'Primaire': { parent_name: undefined } }
   }
+  return defaultNode
 }
 
 export const default_link = (): SankeyLink => {
@@ -473,3 +477,9 @@ export const uploadExemple = (
   })
 }
 
+export const getColor = (
+  node: SankeyNode,
+  data: SankeyData,
+) => {
+  console.log(node)
+}
