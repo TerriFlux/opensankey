@@ -73,7 +73,7 @@ interface ConvertSankeyData {
   previous_filter: any,
   trade_hspace?: number
   periods?: boolean
-  tags_catalog: { group_name : string, tags: string[],selected_tags: string[]}[]
+  tags_catalog: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
 }
 
 const normalize_name = (name: string) => {
@@ -85,25 +85,38 @@ export const convert_data = (
   data_to_convert: SankeyData
 ): void => {
   const data = data_to_convert as SankeyData & ConvertSankeyData
+  
+  console.log('FUNCTION : convert_data')
+
   if (!data.display_style) {
     (data.display_style as any) = {}
   }
-  if (data_to_convert.tags_catalog === undefined ) {
+  if (data_to_convert.tags_catalog === undefined) {
     data_to_convert.tags_catalog = {}
   }
 
+  // if (data_to_convert.colorFavoriteTags === undefined) {
+  //   data_to_convert.colorFavoriteTags = {}
+  // }
+
   if (Array.isArray(data.tags_catalog)) {
     data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
-      {[tags_group.group_name] : {
-        group_name:tags_group.group_name,
-        tags: Object.assign({}, ...tags_group.tags.map((tag_name) => ({[tag_name]: {name:tag_name,color:'',selected:tags_group.selected_tags.includes(tag_name)}}))),
-        banner: tags_group.group_name === 'Regions' || tags_group.group_name === 'Periods' || tags_group.group_name === 'dimension' ? 'one' : 'multi'
-      }
+      {
+        [tags_group.group_name]: {
+          group_name: tags_group.group_name,
+          show_legend: tags_group.show_legend,
+          tags: Object.assign({}, ...tags_group.tags.map((tag_name) => ({ [tag_name]: { name: tag_name, color: '', selected: tags_group.selected_tags.includes(tag_name) } }))),
+          banner: tags_group.group_name === 'Regions' || tags_group.group_name === 'Periods' || tags_group.group_name === 'dimension' ? 'one' : 'multi'
+        }
       }
     )))
   }
+
   Object.values(data_to_convert.tags_catalog).forEach(
-    tags_group=> Object.values(tags_group.tags).forEach(tag=> tag.selected = Boolean(tag.selected))
+    tags_group => {
+      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+    }
   )
   if (data_to_convert.tags_catalog['flux_types']) {
     data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
@@ -129,13 +142,13 @@ export const convert_data = (
           convert_link.mini = []
           convert_link.maxi = []
         }
-        if (convert_link.data_value !== undefined ) {
+        if (convert_link.data_value !== undefined) {
           convert_link.data_value = []
         }
-        if (convert_link.data_source !== undefined ) {
+        if (convert_link.data_source !== undefined) {
           convert_link.data_source = []
         }
-        if (convert_link.data_period !== undefined ) {
+        if (convert_link.data_period !== undefined) {
           convert_link.data_period = []
         }
         key_names.forEach(
@@ -159,21 +172,23 @@ export const convert_data = (
         )
       }
     )
-    new_links.forEach( (l, i) => l.idLink = 'link' + i)
-    data_to_convert.links = Object.assign({}, ...new_links.map(l=> ({[l.idLink] : {...l} })));
-    (data_to_convert.nodes as any).forEach( (n : SankeyNode, i : number) => n.idNode = 'node' + i)
-    data_to_convert.nodes = Object.assign({}, ...(data_to_convert.nodes as any).map((n : SankeyNode)=> ({[n.idNode] : {...n} })))
-    if ( key_names.length > 1 && !data.periods && data.region_names) {
+    new_links.forEach((l, i) => l.idLink = 'link' + i)
+    data_to_convert.links = Object.assign({}, ...new_links.map(l => ({ [l.idLink]: { ...l } })));
+    (data_to_convert.nodes as any).forEach((n: SankeyNode, i: number) => n.idNode = 'node' + i)
+    data_to_convert.nodes = Object.assign({}, ...(data_to_convert.nodes as any).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
+    if (key_names.length > 1 && !data.periods && data.region_names) {
       data.tags_catalog['Regions'] = {
         group_name: 'Regions',
-        tags: Object.assign({}, ...data.region_names.map((region_name) => ({[region_name]: {name:region_name,color:'',selected:region_name===data.region_name}}))),
+        show_legend: false,
+        tags: Object.assign({}, ...data.region_names.map((region_name) => ({ [region_name]: { name: region_name, color: '', selected: region_name === data.region_name } }))),
         banner: 'one'
       }
     }
-    if ( key_names.length > 1 && data.periods) {
+    if (key_names.length > 1 && data.periods) {
       data.tags_catalog['Periods'] = {
         group_name: 'Periods',
-        tags: Object.assign({}, ...key_names.map((key_name) => ({[key_name]: {name:key_name,color:'',selected:key_names[0]}}))),
+        show_legend: false,
+        tags: Object.assign({}, ...key_names.map((key_name) => ({ [key_name]: { name: key_name, color: '', selected: key_names[0] } }))),
         banner: 'one'
       }
     }
@@ -181,20 +196,20 @@ export const convert_data = (
     delete data.region_names
     delete data.region_name
   }
-  if ( data.version === '0.4') {
-    if ((data.links as any).length > 0 && !data.links[0].idLink) {  
-      (data.links as any).forEach((l : SankeyLink, i : number) => l.idLink = 'link' + i)
+  if (data.version === '0.4') {
+    if ((data.links as any).length > 0 && !data.links[0].idLink) {
+      (data.links as any).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
     }
-    if ((data.nodes as any).length > 0 && !data.nodes[0].idNode) {  
-      (data.nodes as any).forEach((n : SankeyNode) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+    if ((data.nodes as any).length > 0 && !data.nodes[0].idNode) {
+      (data.nodes as any).forEach((n: SankeyNode) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
     }
-    data_to_convert.links = Object.assign({}, ...(data.links as any).map((l : SankeyLink)=> ({[l.idLink] : {...l} })))  
-    data_to_convert.nodes = Object.assign({}, ...(data.nodes as any).map((n : SankeyNode)=> ({[n.idNode] : {...n} })))    
+    data_to_convert.links = Object.assign({}, ...(data.links as any).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
+    data_to_convert.nodes = Object.assign({}, ...(data.nodes as any).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
-  if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {  
+  if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
-  if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {  
+  if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
   Object.values(data.links).forEach(l => {
@@ -217,11 +232,11 @@ export const convert_data = (
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
       n.outputLinksId = [];
-      (((n as unknown) as ConvertSankeyNode).input_links as number[]).forEach( link_idx => {
-        n.inputLinksId.push(data.links['link'+link_idx].idLink)
+      (((n as unknown) as ConvertSankeyNode).input_links as number[]).forEach(link_idx => {
+        n.inputLinksId.push(data.links['link' + link_idx].idLink)
       });
-      (((n as unknown) as ConvertSankeyNode).output_links as number[]).forEach( link_idx => {
-        n.outputLinksId.push(data.links['link'+link_idx].idLink)
+      (((n as unknown) as ConvertSankeyNode).output_links as number[]).forEach(link_idx => {
+        n.outputLinksId.push(data.links['link' + link_idx].idLink)
       })
       delete ((n as unknown) as ConvertSankeyNode).output_links
       delete ((n as unknown) as ConvertSankeyNode).input_links
@@ -245,7 +260,7 @@ export const convert_data = (
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
   }
-  if (display_style.trade_close === undefined && (data.version === '0.2' || data.version === '0.3') ) {
+  if (display_style.trade_close === undefined && (data.version === '0.2' || data.version === '0.3')) {
     display_style.trade_close = true
   }
   if (data.version === '0.1') {
@@ -344,7 +359,7 @@ export const convert_data = (
         n.shape_visible =true
       }
       if (n.node_parameter === undefined) {
-        n.node_parameter ='general'
+        n.node_parameter = 'general'
       }
       delete n_convert.visible
       if (n.node_visible === undefined) {
@@ -362,6 +377,11 @@ export const convert_data = (
       if (n.display === undefined) {
         n.display = true
       }
+
+      if (n.tag_favorite === undefined) {
+        n.tag_favorite = {}
+      }
+
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
@@ -381,7 +401,7 @@ export const convert_data = (
           l.tags = {}
         }
         l.tags['Exchanges'] = ['import']
-        if (data.display_style.trade_close !== undefined ) {
+        if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } else if (n.name.includes('(E')) {
@@ -393,7 +413,7 @@ export const convert_data = (
           l.tags = {}
         }
         l.tags['Exchanges'] = ['export']
-        if (data.display_style.trade_close !== undefined ) {
+        if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } //else if (!n.tags['Exchanges']) {
@@ -403,7 +423,7 @@ export const convert_data = (
     }
   )
 
-  if ( 'trade_close' in data.display_style) {
+  if ('trade_close' in data.display_style) {
     delete data.display_style.trade_close
   }
 
@@ -421,6 +441,7 @@ export const convert_data = (
     if (Object.entries(data.tags_catalog).filter(tag => tag[0] === 'Exchanges').length === 0) {
       data.tags_catalog['Exchanges'] = {
         group_name: 'Echanges',
+        show_legend: false,
         tags: {
           'import': { name: 'Importations', selected: true }
           , 'export': { name: 'Exportations', selected: true }
@@ -434,19 +455,21 @@ export const convert_data = (
   if (data.subchains && data.subchains[0] !== '') {
     const cpySbchaine = data.subchains
     if (Object.entries(data.tags_catalog).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
-      const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
-      data.tags_catalog['SubChain']={
+      const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({ [subchain]: { name: subchain, color: 'red', selected: true } })))
+      data.tags_catalog['SubChain'] = {
         group_name: 'Sous-Filières',
+        show_legend: false,
         tags: tags_dict,
         banner: 'multi'
       }
       delete data.subchains
     }
   } else if (subchains.length > 0) {
-    const tags_dict = Object.assign({}, ...subchains.map((subchain) => ({[subchain]: {name:subchain,color:'red',selected:true}})))
+    const tags_dict = Object.assign({}, ...subchains.map((subchain) => ({ [subchain]: { name: subchain, color: 'red', selected: true } })))
     if (Object.entries(data.tags_catalog).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
-      data.tags_catalog['SubChain']={
+      data.tags_catalog['SubChain'] = {
         group_name: 'Sous-Filières',
+        show_legend: false,
         tags: tags_dict,
         banner: 'multi'
       }
@@ -457,6 +480,7 @@ export const convert_data = (
     if (!data.tags_catalog['flux_types']) {
       data.tags_catalog['flux_types'] = {
         group_name: 'Type de donnée',
+        show_legend: false,
         tags: {
           'initial_data' : { name: 'Données collectées', selected: false },
           'computed_data': { name: 'Données déterminées',selected: true },

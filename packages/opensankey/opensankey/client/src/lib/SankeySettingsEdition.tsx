@@ -682,8 +682,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
-  console.log(data)
-
   const { links, tags_catalog } = data
 
   const value_index = getValueIndex(data)
@@ -721,6 +719,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     data.tags_group_idx += 1
     tags_catalog['tag_group_' + data.tags_group_idx] = {
       group_name: 'Tag Group ' + data.tags_group_idx,
+      show_legend: false,
       tags: {},
       banner: 'none'
     }
@@ -803,6 +802,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           <th>Nom</th>
           <th>Visible</th>
           <th>Couleur</th>
+          <th>Shape</th>
         </tr>
       </thead>
       <tbody>
@@ -852,6 +852,16 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                     }
                   }
                 /></td>
+                <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+                {
+                  tags_catalog[tags_group_key].tags[tag_key].shape = evt.target.value
+                  set_data({ ...data })
+                }
+
+                }>
+                  <option key={'rect' + i} id='rect' selected={tags_catalog[tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
+                  <option key={'circle' + i} id='circle' selected={tags_catalog[tags_group_key].banner === 'multi'} value='circle'>Circle</option>
+                </Form.Select>
               </tr>
             )
           }) : (<></>)}
@@ -868,7 +878,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           <tr>
             <th></th>
             <th>Nom</th>
-            <th>Nombre tag</th>
+            <th>Legend</th>
+            <th>Nb tag</th>
             <th>Bannière</th>
           </tr>
         </thead>
@@ -891,6 +902,23 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                             const { tags_catalog } = data
                             const new_name = (evt.target as HTMLInputElement).value
                             tags_catalog[tags_group_key].group_name = new_name
+                            set_data({ ...data })
+                          }
+                        } />
+                    </td>
+                    <td>
+                      <Form.Check inline={true}
+                        // Permet de selection le tag pour l'affichage dans la légende
+                        name={'element_legend_' + tags_group_key}
+                        checked={tags_catalog[tags_group_key].show_legend}
+                        id={tags_group_key}
+                        type='switch'
+                        onChange={
+                          (evt: React.ChangeEvent) => {
+                            const new_nb_element = evt.target as HTMLInputElement
+                            const tags_group_key = new_nb_element.id
+                            const visible = new_nb_element.checked
+                            tags_catalog[tags_group_key].show_legend = visible
                             set_data({ ...data })
                           }
                         } />
