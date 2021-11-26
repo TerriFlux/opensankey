@@ -327,6 +327,7 @@ export const default_link = (): SankeyLink => {
     arrow: true,
     text_color: 'black',
     label_position: 'middle',
+    orthogonal_label_position: 'middle',
     curvature: 0.5,
     label_visible: true,
     label_on_path: true,

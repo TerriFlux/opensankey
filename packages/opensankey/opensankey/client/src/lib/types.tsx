@@ -76,6 +76,7 @@ export const SankeyLinkPropTypes = {
 
   // display_attribute
   label_position: PropTypes.string.isRequired,
+  orthogonal_label_position : PropTypes.string.isRequired,
   label_on_path: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,

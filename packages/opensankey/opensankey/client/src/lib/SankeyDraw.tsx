@@ -165,9 +165,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .append('text')
       .attr('pointer-events', 'none')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('fill', d => d.text_color)
+      .attr('fill', l => {
+        if (l.text_color === l.color && l.orthogonal_label_position=== 'middle') {
+          return 'white'
+        }
+        return l.text_color
+      })
       //.attr('visibility', d => link_visible(d))
-      .attr('dy', '0.3em')
+      .attr('dy', l => { 
+        if (l.orthogonal_label_position === 'middle' ) {
+          return '0.3em'
+        } else if (l.orthogonal_label_position === 'below' ) {
+          return scale(l.value[value_index])/2+10 + 'px'
+        } else if (l.orthogonal_label_position === 'above' ) {
+          return -scale(l.value[value_index])/2 + 'px'
+        }
+        return '0.3em'
+      })
       .append('textPath')
       .attr('id', d => d.idLink + '_text')
       .attr('class', 'link_value')
@@ -192,7 +206,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', d => d.idLink + '_text')
       .attr('class', 'link_value')
       .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('fill', d => d.text_color)
+      .attr('fill', l => {
+        if (l.text_color === l.color && l.orthogonal_label_position=== 'middle') {
+          return 'white'
+        }
+        return l.text_color
+      })
       .attr('visibility', d => link_visible(d) && d.value[value_index] >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden')
 
     if (!static_sankey) {
