@@ -78,8 +78,15 @@ const Menu: FunctionComponent<MenuTypes> = (
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node()
-    node.idNode = 'node' + data.node_idx
-    data.node_idx = data.node_idx + 1
+    
+    // en remplacement de node_idx
+    //data.node_idx = data.node_idx + 1
+    // Méthode pour incrementer idNode
+    const listId = [] as any
+    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    const idNode = Math.max(...listId)+1
+
+    node.idNode = 'node' + idNode
     node.name = node.idNode
     node.x = Object.keys(nodes).length * 50
     nodes[node.idNode] = node
@@ -412,7 +419,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Header>Shortcut</Accordion.Header>
               <Accordion.Body>
                 <p>Fonctionnement des clics :</p><br />
-                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds clicke dans l onglet Noeuds du menu</p>
+                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds click dans l onglet Noeuds du menu</p>
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
@@ -457,8 +464,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                           set_selected_node(display_nodes[evt.target.value])
                         }
                       }
-                    >
-                      {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={n.idNode === selected_node.idNode} >{n.name}</option>)}
+                    > {<option value={'default'} disabled={(selected_node.idNode === 'default') ? false : true} > Choisissez noeud</option>}
+                      {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={(selected_node.idNode != 'default' && n.idNode === selected_node.idNode) ? true : false} >{n.name}</option>)}
                     </Form.Select>
                   </Col>
 
@@ -527,7 +534,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         label='Général'
                         checked={node.node_parameter === 'general'}
                         onChange={evt => {
-                          console.log(evt.target.value)                          
+                          console.log(evt.target.value)
                           node.node_parameter = evt.target.value
                           set_data({ ...data })
                         }}

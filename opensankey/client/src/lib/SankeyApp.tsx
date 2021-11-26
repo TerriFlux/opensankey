@@ -51,8 +51,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         agregation_level={agregation_level}
         set_agregation_level={set_agregation_level}
         url_prefix=''
-        getValueIndex={() => 0 }
-        settings_edition= {
+        getValueIndex={() => 0}
+        settings_edition={
           <SankeySettingsEdition
             data={data}
             set_data={set_data}
@@ -63,16 +63,16 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
               display_style.filter = +new_current_filter
               set_data({ ...data })
             }}
-            getValueIndex={() => 0 }
+            getValueIndex={() => 0}
           />
         }
-        node_edition= {
+        node_edition={
           <SankeyNodeEdition
             data={data}
             set_data={set_data}
             selected_node={selected_node}
             radio_selected={radio_selected}
-            getValueIndex={() => 0 }
+            getValueIndex={() => 0}
           />
         }
         link_edition={
@@ -84,7 +84,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             getValueIndex={() => 0 }
           />
         }
-        settings_edition_tags = {
+        settings_edition_tags={
           <SankeySettingsEditionTags
             data={data}
             set_data={set_data}
@@ -120,7 +120,30 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           set_show_link_context(true)
         }}
         link_color={l => l.color}
-        node_color={n => n.color}
+        //node_color={n => n.color}
+        node_color={n => {
+          let colorNode
+          // Le couleur est définie dans l'onglet général
+          if (n.node_parameter === 'general') {
+            colorNode = '#0000ff'
+          }
+          if (n.node_parameter === 'groupTag') {
+            // Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+            // on controle ici qu'il y a bien un favorite tag
+            if (n.tag_favorite['tagGroup'] !== undefined) {
+              const tagGroup = n.tag_favorite['tagGroup']
+              const tagElement = n.tag_favorite['tagElement']
+              colorNode = data.tags_catalog[tagGroup].tags[tagElement].color
+            }
+
+          }
+          if (n.node_parameter === 'local') {
+            // Le couleur est définie dans les parametres locaux du noeud
+            colorNode = n.color
+          }
+
+          return colorNode
+        }}
         link_text={SankeyUtils.link_text}
         link_visible={(l: SankeyLink) => {
           if ( !data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible ) {
@@ -141,7 +164,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
-        getValueIndex={() => 0 } 
+        getValueIndex={() => 0}
       />
       <SankeyNodeContextMenu
         data={data}
