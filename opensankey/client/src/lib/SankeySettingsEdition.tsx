@@ -570,6 +570,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           <Form.Group as={Row} >
             <Col>
               <FormCheck
+                name='color'
                 value='black'
                 type='radio'
                 label='Label en noir'
@@ -585,6 +586,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
             <Col>
               <FormCheck
+                name='color'
                 value='white'
                 type='radio'
                 label='Label blanc'
@@ -600,6 +602,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
             <Col>
               <FormCheck
+                name='color'
                 value='same_color'
                 type='radio'
                 label='Label en couleur'
