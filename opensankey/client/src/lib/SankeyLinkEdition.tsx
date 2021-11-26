@@ -296,7 +296,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel>Position:</FormLabel>
+                <FormLabel>Position laterale:</FormLabel>
               </Col>
               <Col>
                 <Form.Check
@@ -368,6 +368,53 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   }
                 }
               />
+            </Form.Group>
+            <Form.Group as={Row} >
+              <Col>
+                <FormLabel>Position orthogonale:</FormLabel>
+              </Col>
+              <Col>
+                <Form.Check
+                  value='below'
+                  type='radio'
+                  label='Dessous'
+                  checked={selected_link.orthogonal_label_position === 'below'}
+                  onChange={
+                    evt => {
+                      selected_link.orthogonal_label_position = evt.target.value
+                      set_data({ ...data })
+                    }
+                  }
+                />
+              </Col>
+              <Col>
+                <Form.Check
+                  value='middle'
+                  type='radio'
+                  label='Milieu'
+                  checked={selected_link.orthogonal_label_position === 'middle'}
+                  onChange={
+                    evt => {                      
+                      selected_link.orthogonal_label_position = evt.target.value
+                      set_data({ ...data })
+                    }
+                  }
+                />
+              </Col>
+              <Col>
+                <Form.Check
+                  value='above'
+                  type='radio'
+                  label='Dessus'
+                  checked={selected_link.orthogonal_label_position === 'above'}
+                  onChange={
+                    evt => {                      
+                      selected_link.orthogonal_label_position = evt.target.value
+                      set_data({ ...data })
+                    }
+                  }
+                />
+              </Col>
             </Form.Group>
           </Tab>
           {Object.keys(tags_catalog).length ? (
