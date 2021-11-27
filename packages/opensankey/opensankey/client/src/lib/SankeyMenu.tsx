@@ -379,10 +379,15 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }                    
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'foret_bois.json', url_prefix, data, set_data,
+                  'foret_bois_savoie.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
-                >Forêt Bois</Dropdown.Item>
+                >Forêt Bois Savoie</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'foret_bois_grand_est.json', url_prefix, data, set_data,
+                  ()=> 0
+                )} 
+                >Forêt Bois Grand Est</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
