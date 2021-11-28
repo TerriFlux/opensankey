@@ -84,7 +84,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     // Méthode pour incrementer idNode
     const listId = [] as any
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    const idNode = Math.max(...listId)+1
+    const idNode = listId.length > 0 ? Math.max(...listId)+1 : 0
 
     node.idNode = 'node' + idNode
     node.name = node.idNode
