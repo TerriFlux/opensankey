@@ -102,7 +102,7 @@ def upload_exemple():
         sankey_dict["layout"] = layout_data
         sankey_dict['version'] = '0.4'
         json_data = json.dumps(sankey_dict)
-    elif exemple == "foret_bois_savoie.json" or exemple == "foret_bois_grand_est.json":
+    elif exemple == "foret_bois_savoie.json" or exemple == "foret_bois_grand_est.json" or exemple == "viande_nationale.json":
         json_file_name = os.path.join(exemples_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
