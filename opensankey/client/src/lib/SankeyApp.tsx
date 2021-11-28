@@ -125,7 +125,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           let colorNode
           // Le couleur est définie dans l'onglet général
           if (n.node_parameter === 'general') {
-            colorNode = '#0000ff'
+            colorNode = '#808080'
           }
           if (n.node_parameter === 'groupTag') {
             // Le couleur est définie dans les parametres du groupTag pour le favoriteTag
