@@ -388,6 +388,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'viande_nationale.json', url_prefix, data, set_data,
+                  ()=> 0
+                )} 
+                >Viande Nationale</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>

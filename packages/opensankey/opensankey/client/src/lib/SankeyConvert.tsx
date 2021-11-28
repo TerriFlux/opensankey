@@ -196,7 +196,7 @@ export const convert_data = (
     delete data.region_names
     delete data.region_name
   }
-  if (data.version === '0.4') {
+  if (Array.isArray(data.links) && data.version === '0.5') {
     if ((data.links as any).length > 0 && !data.links[0].idLink) {
       (data.links as any).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
     }
