@@ -383,7 +383,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     dragged: Element,
     event: { dx: number; dy: number }
   ) => {
-    const { width, height } = data
+    const { width } = data
 
     //- ggg_node5 -> node5
     const idNode = dragged.id.substring(4)
@@ -549,7 +549,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     handle_type: string,
     the_event: d3.D3DragEvent<Element, unknown, unknown>
   ) => {
-    const { width, height } = data
+    const { width } = data
 
     const old_x = +d3.select(dragged).attr('transform').split(',')[0].substring(10)
     const old_y_str = d3.select(dragged).attr('transform').split(',')[1]
@@ -1779,7 +1779,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#g_legend').selectAll('*').remove()
 
-    const legend = d3.select('#g_legend').style('transform', 'translateY(50px)').append('g')
+    const legend = d3.select('#g_legend').style('transform', 'translateY(-100px)').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -1795,6 +1795,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('x', 0)
         .attr('y', 0)
         .text(tag_group.group_name)
+        .attr('style', 'font-weight:bold')
         .call(wrap)
 
       const legendElements = legend.append('g')
@@ -1839,9 +1840,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.selectAll('.tmp').remove()
 
+    let height = 0
+    Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
+
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
-      .attr('viewBox', [0, 0, data.width, data.height])
+      .attr('viewBox', [0, 0, data.width, height])
       .attr('cursor', 'grab')
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -1883,11 +1887,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     localStorage.setItem('data', JSON.stringify(data))
     console.log(data)
   })
-
+  let height = 0
+  Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
-        <svg height={data.height} width='100%' id='svg' >
+        <svg height={height} width='100%' id='svg' >
           <g className='g_legend' id='g_legend'></g>
           <g className='g_nodes' id='g_nodes' ></g>
           <g className='g_links' id='g_links' ></g>
