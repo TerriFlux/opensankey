@@ -448,7 +448,7 @@ export const compute_auto_sankey = (
   //data.max_vertical_offset = max_vertical_offset
 
   data.width = width + h_space
-  data.height = Math.max(1500,max_vertical_offset + 100)
+  //data.height = Math.max(1500,max_vertical_offset + 100)
   
   reorganize_all_input_outputLinksId(data.nodes, data.links)
 
@@ -573,9 +573,9 @@ export const updateLayout = (
 
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
-  if ('height' in new_layout) {
-    data.height = new_layout.height
-  }
+  // if ('height' in new_layout) {
+  //   data.height = new_layout.height
+  // }
   if ('width' in new_layout) {
     data.width = new_layout.width
   }
