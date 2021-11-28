@@ -302,7 +302,7 @@ export const default_node = (
     shape_visible: true,
     label_visible: true,
     color: '#a9a9a9',
-    node_parameter: 'Général',
+    node_parameter: 'general',
     x: 100,
     y: 100,
     inputLinksId: [],
