@@ -257,7 +257,7 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 100,
-    height: 1500,
+    //height: 1500,
     width: 2150,
     node_width: 10,
     h_space: 200,
