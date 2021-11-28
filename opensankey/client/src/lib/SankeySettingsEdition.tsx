@@ -26,7 +26,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [shift_top, set_shift_top] = useState(100)
   const [shift_visible, set_shift_visible] = useState(true)  
   const [user_scale, set_user_scale] = useState(data.user_scale)
-  const [height, set_height] = useState(data.height)
+  // const [height, set_height] = useState(data.height)
   const [width, set_width] = useState(data.width)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
@@ -67,7 +67,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Form.Text>    (valeur pour 100px)</Form.Text>
             </Col>
           </Form.Group>
-          <Form.Group as={Row} >
+          {/* <Form.Group as={Row} >
             <Col>
               <FormLabel >Hauteur</FormLabel>
             </Col>
@@ -82,7 +82,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }}
               />
             </Col>
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group as={Row} >
             <Col>
               <FormLabel>Largeur</FormLabel>
