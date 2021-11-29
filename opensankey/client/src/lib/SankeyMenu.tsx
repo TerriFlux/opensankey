@@ -393,6 +393,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                   ()=> 0
                 )} 
                 >Viande</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'filiere_lait.json', url_prefix, data, set_data,
+                  ()=> 0
+                )}
+                >Lait</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
