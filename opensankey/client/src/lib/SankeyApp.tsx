@@ -31,7 +31,32 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const [agregation_level,set_agregation_level] = useState(0)
 
   const display_links = data.links
-  
+
+  const getValueIndex = (
+    data: SankeyData 
+  ) => {
+    let region_index = 0
+    const regions_tags_group = data.tags_catalog['Regions']
+    if (regions_tags_group) {
+      Object.entries(regions_tags_group.tags).forEach((tag,i)=> {
+        if (tag[1].selected) {
+          region_index = i
+        }
+      })
+    }
+    let period_index = 0
+    const periods_tags_group = data.tags_catalog['Periods']
+    if (periods_tags_group) {
+      Object.entries(periods_tags_group.tags).forEach((tag,i)=> {
+        if (tag[1].selected) {
+          period_index = i
+        }
+      })
+      return region_index * Object.keys(periods_tags_group).length + period_index  
+    }
+    return region_index
+  }
+
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <Menu
@@ -51,7 +76,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         agregation_level={agregation_level}
         set_agregation_level={set_agregation_level}
         url_prefix=''
-        getValueIndex={() => 0}
+        getValueIndex={getValueIndex}
         settings_edition={
           <SankeySettingsEdition
             data={data}
