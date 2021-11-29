@@ -88,7 +88,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
               display_style.filter = +new_current_filter
               set_data({ ...data })
             }}
-            getValueIndex={() => 0}
+            getValueIndex={getValueIndex}
           />
         }
         node_edition={
@@ -97,7 +97,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             set_data={set_data}
             selected_node={selected_node}
             radio_selected={radio_selected}
-            getValueIndex={() => 0}
+            getValueIndex={getValueIndex}
           />
         }
         link_edition={
@@ -106,14 +106,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             data={data}
             set_data={set_data}
             selected_link={selected_link}
-            getValueIndex={() => 0 }
+            getValueIndex={getValueIndex}
           />
         }
         settings_edition_tags={
           <SankeySettingsEditionTags
             data={data}
             set_data={set_data}
-            getValueIndex={() => 0}
+            getValueIndex={getValueIndex}
           />
         }
       />
@@ -189,7 +189,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
-        getValueIndex={() => 0}
+        getValueIndex={getValueIndex}
       />
       <SankeyNodeContextMenu
         data={data}
