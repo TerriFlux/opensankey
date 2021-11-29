@@ -392,7 +392,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   'viande_nationale.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
-                >Viande Nationale</Dropdown.Item>
+                >Viande</Dropdown.Item>
                 <NavDropdown.Divider />
                 {example_menu}
               </NavDropdown>
