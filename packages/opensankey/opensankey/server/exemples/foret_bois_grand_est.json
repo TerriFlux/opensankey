@@ -203,8 +203,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -258,8 +258,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -420,8 +420,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -576,8 +576,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -629,8 +629,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -680,8 +680,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -823,8 +823,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -871,8 +871,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -918,8 +918,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1043,8 +1043,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1202,8 +1202,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1573,8 +1573,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#EC7920",
          "dimensions": {
             "Primaire": {
@@ -1630,8 +1630,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#a17f1a",
          "dimensions": {
             "Primaire": {
@@ -1788,8 +1788,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -1837,8 +1837,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -1884,8 +1884,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#4DB35D",
          "dimensions": {
             "Primaire": {
@@ -1978,8 +1978,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2020,8 +2020,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2062,8 +2062,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2104,8 +2104,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#9D2527",
          "dimensions": {
             "Primaire": {
@@ -2146,8 +2146,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2192,8 +2192,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2239,8 +2239,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#6B93EB",
          "dimensions": {
             "Primaire": {
@@ -2577,8 +2577,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "#008311",
          "dimensions": {
             "Primaire": {
@@ -2626,8 +2626,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#008311",
          "dimensions": {
             "Primaire": {
@@ -2662,8 +2662,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "#008311",
          "dimensions": {
             "Primaire": {
@@ -3166,8 +3166,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3221,8 +3221,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3276,8 +3276,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3315,8 +3315,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3351,8 +3351,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3413,8 +3413,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3468,8 +3468,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3831,8 +3831,8 @@
                "Other"
             ]
          },
-         "display": true,
-         "node_visible": true,
+         "display": false,
+         "node_visible": false,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3886,8 +3886,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -3989,8 +3989,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4039,8 +4039,8 @@
                "Other"
             ]
          },
-         "display": false,
-         "node_visible": false,
+         "display": true,
+         "node_visible": true,
          "color": "grey",
          "dimensions": {
             "Primaire": {
@@ -4638,10 +4638,10 @@
          "name": "Bois rond - Reste du monde - Importations",
          "idNode": "node90",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 957.5184326171875,
@@ -4678,10 +4678,10 @@
          "name": "Bois d'œuvre - Reste du monde - Importations",
          "idNode": "node91",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -4801,10 +4801,10 @@
          "name": "Bois d'industrie - Reste du monde - Importations",
          "idNode": "node94",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -4924,10 +4924,10 @@
          "name": "Bois bûche officiel - Reste du monde - Importations",
          "idNode": "node97",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -4967,10 +4967,10 @@
          "name": "Connexes plaquettes déchets - Reste du monde - Importations",
          "idNode": "node98",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5049,10 +5049,10 @@
          "name": "Ecorces - Reste du monde - Importations",
          "idNode": "node100",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5174,10 +5174,10 @@
          "name": "Connexes hors écorces - Reste du monde - Importations",
          "idNode": "node103",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5471,10 +5471,10 @@
          "name": "Plaquettes forestières - Reste du monde - Importations",
          "idNode": "node110",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -5514,10 +5514,10 @@
          "name": "Déchets bois - Reste du monde - Importations",
          "idNode": "node111",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -5557,10 +5557,10 @@
          "name": "Sciages et autres - Reste du monde - Importations",
          "idNode": "node112",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5595,10 +5595,10 @@
          "name": "Sciages - Reste du monde - Importations",
          "idNode": "node113",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1310,
@@ -5708,10 +5708,10 @@
          "name": "Traverses - Reste du monde - Importations",
          "idNode": "node116",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1310,
@@ -5747,10 +5747,10 @@
          "name": "Merrains - Reste du monde - Importations",
          "idNode": "node117",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1310,
@@ -5866,10 +5866,10 @@
          "name": "Panneaux placages contreplaqués - Reste du monde - Importations",
          "idNode": "node120",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5905,10 +5905,10 @@
          "name": "Placages - Reste du monde - Importations",
          "idNode": "node121",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -5944,10 +5944,10 @@
          "name": "Contreplaqués - Reste du monde - Importations",
          "idNode": "node122",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1912.375789642334,
@@ -6022,10 +6022,10 @@
          "name": "Panneaux particules - Reste du monde - Importations",
          "idNode": "node124",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6061,10 +6061,10 @@
          "name": "Panneaux fibres - Reste du monde - Importations",
          "idNode": "node125",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6100,10 +6100,10 @@
          "name": "Panneaux MDF - Reste du monde - Importations",
          "idNode": "node126",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6139,10 +6139,10 @@
          "name": "Panneaux OSB - Reste du monde - Importations",
          "idNode": "node127",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6178,10 +6178,10 @@
          "name": "Pâte à papier - Reste du monde - Importations",
          "idNode": "node128",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6216,10 +6216,10 @@
          "name": "Pâte à papier mécanique - Reste du monde - Importations",
          "idNode": "node129",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6255,10 +6255,10 @@
          "name": "Pâte à papier chimique - Reste du monde - Importations",
          "idNode": "node130",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1510,
@@ -6481,10 +6481,10 @@
          "name": "Bois bûche ménages - Reste du monde - Importations",
          "idNode": "node136",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 910,
@@ -6740,10 +6740,10 @@
          "name": "Bois rond - Reste du monde - Exportations",
          "idNode": "node143",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1137.5184326171875,
@@ -6780,10 +6780,10 @@
          "name": "Bois d'œuvre - Reste du monde - Exportations",
          "idNode": "node144",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -6903,10 +6903,10 @@
          "name": "Bois d'industrie - Reste du monde - Exportations",
          "idNode": "node147",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -7026,10 +7026,10 @@
          "name": "Bois bûche officiel - Reste du monde - Exportations",
          "idNode": "node150",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -7069,10 +7069,10 @@
          "name": "Connexes plaquettes déchets - Reste du monde - Exportations",
          "idNode": "node151",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -7151,10 +7151,10 @@
          "name": "Ecorces - Reste du monde - Exportations",
          "idNode": "node153",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -7276,10 +7276,10 @@
          "name": "Connexes hors écorces - Reste du monde - Exportations",
          "idNode": "node156",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -7573,10 +7573,10 @@
          "name": "Plaquettes forestières - Reste du monde - Exportations",
          "idNode": "node163",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -7616,10 +7616,10 @@
          "name": "Déchets bois - Reste du monde - Exportations",
          "idNode": "node164",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -7659,10 +7659,10 @@
          "name": "Sciages et autres - Reste du monde - Exportations",
          "idNode": "node165",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -7697,10 +7697,10 @@
          "name": "Sciages - Reste du monde - Exportations",
          "idNode": "node166",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1490,
@@ -7810,10 +7810,10 @@
          "name": "Traverses - Reste du monde - Exportations",
          "idNode": "node169",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1490,
@@ -7849,10 +7849,10 @@
          "name": "Merrains - Reste du monde - Exportations",
          "idNode": "node170",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1490,
@@ -7968,10 +7968,10 @@
          "name": "Panneaux placages contreplaqués - Reste du monde - Exportations",
          "idNode": "node173",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8007,10 +8007,10 @@
          "name": "Placages - Reste du monde - Exportations",
          "idNode": "node174",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8046,10 +8046,10 @@
          "name": "Contreplaqués - Reste du monde - Exportations",
          "idNode": "node175",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 2092.375789642334,
@@ -8124,10 +8124,10 @@
          "name": "Panneaux particules - Reste du monde - Exportations",
          "idNode": "node177",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8163,10 +8163,10 @@
          "name": "Panneaux fibres - Reste du monde - Exportations",
          "idNode": "node178",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8202,10 +8202,10 @@
          "name": "Panneaux MDF - Reste du monde - Exportations",
          "idNode": "node179",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8241,10 +8241,10 @@
          "name": "Panneaux OSB - Reste du monde - Exportations",
          "idNode": "node180",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8280,10 +8280,10 @@
          "name": "Pâte à papier - Reste du monde - Exportations",
          "idNode": "node181",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8318,10 +8318,10 @@
          "name": "Pâte à papier mécanique - Reste du monde - Exportations",
          "idNode": "node182",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8357,10 +8357,10 @@
          "name": "Pâte à papier chimique - Reste du monde - Exportations",
          "idNode": "node183",
          "type": "sector",
-         "node_visible": false,
+         "node_visible": true,
          "shape_visible": false,
          "label_visible": false,
-         "display": false,
+         "display": true,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1690,
@@ -8583,10 +8583,10 @@
          "name": "Bois bûche ménages - Reste du monde - Exportations",
          "idNode": "node189",
          "type": "sector",
-         "node_visible": true,
+         "node_visible": false,
          "shape_visible": false,
          "label_visible": false,
-         "display": true,
+         "display": false,
          "color": "grey",
          "nodeParameter": "Général",
          "x": 1090,
@@ -28212,7 +28212,7 @@
          "text_color": "white",
          "label_position": "beginning",
          "x_label": 475,
-         "y_label": 353.59166666666664,
+         "y_label": 332.125,
          "left_horiz_shift": 0.4246816224156657,
          "right_horiz_shift": 0.46945242745535715
       },
@@ -51276,13 +51276,13 @@
    "tag_idx": 1,
    "node_idx": 196,
    "link_idx": 818,
+   "trade": "Reste du monde",
    "height": 1500,
    "trade_sectors": [
       "Hors Pays de Savoie",
       "Autres régions françaises",
       "International"
    ],
-   "trade": "Reste du monde",
    "current_filter": 0,
    "subchains": [
       ""
