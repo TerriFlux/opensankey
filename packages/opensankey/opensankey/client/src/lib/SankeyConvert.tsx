@@ -72,6 +72,8 @@ interface ConvertSankeyData {
   filtered_links: any,
   previous_filter: any,
   trade_hspace?: number
+  trade_close_hspace?: number
+  trade_close_vspace?: number
   periods?: boolean
   tags_catalog: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
 }
@@ -305,6 +307,12 @@ export const convert_data = (
   }
   if (data.right_shift === undefined) {
     data.right_shift = 0.5
+  }
+  if (data.trade_close_hspace === undefined) {
+    data.trade_close_hspace = 50
+  }
+  if (data.trade_close_vspace === undefined) {
+    data.trade_close_vspace = 20
   }
 
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
