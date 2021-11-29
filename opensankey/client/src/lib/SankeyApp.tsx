@@ -183,7 +183,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           return true
         }}
         test_link_value={ (nodes: { [node_id : string] : SankeyNode }, d: SankeyLink, /*selected_tags: string[]*/) => {
-          return d.value[0]
+          return d.value[getValueIndex(data)]
         }}
         set_show_nav={set_show_nav}
         set_nav_item_active={set_nav_item_active}
