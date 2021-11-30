@@ -51274,7 +51274,7 @@
    "default_tooltip": true,
    "tags_group_idx": 1,
    "tag_idx": 1,
-   "node_idx": 196,
+   "node_idx": 194,
    "link_idx": 818,
    "trade": "Reste du monde",
    "height": 1500,
@@ -51293,5 +51293,9 @@
    "link_global": {},
    "link_trade": {},
    "diagrams_selector_label": "Scénario",
-   "periods": false
+   "periods": false,
+   "legend_position": [
+      0,
+      -100
+   ]
 }
