@@ -95,7 +95,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_x = selected_node.x
                 const current_prev_y = selected_node.y - data.v_space
-                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.y = selected_node.y
                 }
@@ -111,7 +111,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_x = selected_node.x
                 const current_prev_y = selected_node.y + data.v_space
-                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_x && n.y === current_prev_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.y = selected_node.y
                 }
@@ -129,7 +129,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_prev_x = Math.round(selected_node.x/data.h_space)*data.h_space - data.h_space
                 const current_y = selected_node.y 
-                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.x = Math.round(selected_node.x/data.h_space)*data.h_space
                 }
@@ -145,7 +145,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               () =>  {
                 const current_prev_x = Math.round(selected_node.x/data.h_space)*data.h_space + data.h_space
                 const current_y = selected_node.y 
-                const node_to_replace = Object.values(display_nodes).filter(n => n.x === current_prev_x && n.y === current_y )[0]
+                const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y )[0]
                 if ( node_to_replace !== undefined ) {
                   node_to_replace.x = Math.round(selected_node.x/data.h_space)*data.h_space
                 }
