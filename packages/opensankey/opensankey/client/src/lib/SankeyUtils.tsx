@@ -262,6 +262,7 @@ export const default_sankey_data = (): SankeyData => {
     node_width: 10,
     h_space: 200,
     v_space: 100,
+    legend_position: [0,100],
 
     left_shift: 0.4,
     right_shift: 0.5,

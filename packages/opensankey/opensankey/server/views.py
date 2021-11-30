@@ -86,7 +86,7 @@ def upload_exemple():
     if exemple == "pommes_poires.xlsx":
         nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
         context = {
-            'version': '0.4',
+            'version': '0.5',
             'error'  : error,
             'nodes'  : nodes,
             'links'  : links,
@@ -100,7 +100,7 @@ def upload_exemple():
         layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
         layout_data = json.load(layout_file)
         sankey_dict["layout"] = layout_data
-        sankey_dict['version'] = '0.4'
+        sankey_dict['version'] = '0.5'
         json_data = json.dumps(sankey_dict)
     elif exemple == "foret_bois_savoie.json" or exemple == "foret_bois_grand_est.json" or exemple == "viande_nationale.json" or exemple == "filiere_lait.json":
         json_file_name = os.path.join(exemples_folder, exemple)

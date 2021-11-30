@@ -26,7 +26,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [shift_top, set_shift_top] = useState(100)
   const [shift_visible, set_shift_visible] = useState(true)  
   const [user_scale, set_user_scale] = useState(data.user_scale)
-  // const [height, set_height] = useState(data.height)
+  const [legend_position, set_legend_position] = useState(data.legend_position)
   const [width, set_width] = useState(data.width)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
@@ -170,6 +170,38 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   }
                 }
               >Déplacer</Button>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} >
+            <Col>
+              <FormLabel >Légende X</FormLabel>
+            </Col>
+            <Col>
+              <FormControl
+                type="text"
+                value={legend_position[0]}
+                onChange={evt => set_legend_position( [ +evt.target.value, legend_position[1] ]) }
+                onBlur={() => {
+                  data.legend_position = legend_position
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} >
+            <Col>
+              <FormLabel>Légende Y</FormLabel>
+            </Col>
+            <Col>
+              <FormControl
+                type="text"
+                value={legend_position[1]}
+                onChange={evt => set_legend_position( [ legend_position[0], +evt.target.value ]) }
+                onBlur={() => {
+                  data.legend_position = legend_position
+                  set_data({ ...data })
+                }}
+              />
             </Col>
           </Form.Group>
         </Form>
