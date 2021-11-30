@@ -1779,7 +1779,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#g_legend').selectAll('*').remove()
 
-    const legend = d3.select('#g_legend').style('transform', 'translateY(100px)').append('g')
+    const legend = d3.select('#g_legend').style('transform', 'translate('+data.legend_position[0]+'px,'+data.legend_position[1]+'px)').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -1842,7 +1842,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     let height = 0
     Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
-    height = Math.max(1000,height)
+    height = Math.max(1000,height+200)
 
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
@@ -1890,7 +1890,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
   let height = 0
   Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
-  height = Math.max(1000,height)
+  height = Math.max(1000,height+200)
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
