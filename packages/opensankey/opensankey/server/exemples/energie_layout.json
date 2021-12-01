@@ -1,5 +1,5 @@
 {
-   "version": "0.4",
+   "version": "0.5",
    "nodes": [
       {
          "id": 0,
@@ -16,7 +16,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1800,
-         "input_links": [
+         "inputLinksId": [
             17,
             26,
             45,
@@ -26,7 +26,7 @@
             83,
             4
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 400,
          "idNode": "node0",
          "inputLinksId": [
@@ -55,10 +55,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             48
          ],
-         "output_links": [
+         "outputLinksId": [
             51,
             50,
             49
@@ -88,11 +88,11 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             39,
             40
          ],
-         "output_links": [
+         "outputLinksId": [
             42,
             41
          ],
@@ -121,10 +121,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             42
          ],
-         "output_links": [
+         "outputLinksId": [
             45,
             46,
             43,
@@ -158,10 +158,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             29
          ],
-         "output_links": [
+         "outputLinksId": [
             30,
             31
          ],
@@ -189,10 +189,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             31
          ],
-         "output_links": [
+         "outputLinksId": [
             34,
             35,
             32,
@@ -226,10 +226,10 @@
          "label_visible": true,
          "visible": true,
          "x": 1500,
-         "input_links": [
+         "inputLinksId": [
             78
          ],
-         "output_links": [
+         "outputLinksId": [
             75,
             76,
             72,
@@ -263,12 +263,12 @@
          "label_visible": true,
          "visible": true,
          "x": 1500,
-         "input_links": [
+         "inputLinksId": [
             79,
             69,
             68
          ],
-         "output_links": [
+         "outputLinksId": [
             71,
             70
          ],
@@ -298,10 +298,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             52
          ],
-         "output_links": [
+         "outputLinksId": [
             53,
             54
          ],
@@ -329,10 +329,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             54
          ],
-         "output_links": [
+         "outputLinksId": [
             57,
             58,
             55,
@@ -366,13 +366,13 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             77,
             64,
             63,
             65
          ],
-         "output_links": [
+         "outputLinksId": [
             85,
             81,
             83,
@@ -415,10 +415,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             61
          ],
-         "output_links": [
+         "outputLinksId": [
             64
          ],
          "y": 800,
@@ -445,11 +445,11 @@
          "label_visible": true,
          "visible": true,
          "x": 1200,
-         "input_links": [
+         "inputLinksId": [
             87,
             10
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 1200,
          "idNode": "node12",
          "inputLinksId": [
@@ -474,11 +474,11 @@
          "label_visible": true,
          "visible": true,
          "x": 600,
-         "input_links": [
+         "inputLinksId": [
             20,
             50
          ],
-         "output_links": [
+         "outputLinksId": [
             23,
             22,
             21
@@ -509,10 +509,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             23
          ],
-         "output_links": [
+         "outputLinksId": [
             26,
             27,
             24,
@@ -546,10 +546,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             60
          ],
-         "output_links": [
+         "outputLinksId": [
             63
          ],
          "y": 900,
@@ -575,8 +575,8 @@
          "label_visible": true,
          "visible": true,
          "x": 0,
-         "input_links": [],
-         "output_links": [
+         "inputLinksId": [],
+         "outputLinksId": [
             7,
             12,
             20,
@@ -612,7 +612,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1800,
-         "input_links": [
+         "inputLinksId": [
             18,
             27,
             46,
@@ -623,7 +623,7 @@
             84,
             5
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 800,
          "idNode": "node17",
          "inputLinksId": [
@@ -653,10 +653,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             0
          ],
-         "output_links": [
+         "outputLinksId": [
             1
          ],
          "y": 400,
@@ -682,10 +682,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             1
          ],
-         "output_links": [
+         "outputLinksId": [
             4,
             5,
             2,
@@ -719,10 +719,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             67
          ],
-         "output_links": [
+         "outputLinksId": [
             69
          ],
          "y": 1000,
@@ -748,10 +748,10 @@
          "label_visible": true,
          "visible": true,
          "x": 600,
-         "input_links": [
+         "inputLinksId": [
             49
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 700,
          "idNode": "node21",
          "inputLinksId": [
@@ -773,12 +773,12 @@
          "label_visible": true,
          "visible": true,
          "x": 1698.1455078125,
-         "input_links": [
+         "inputLinksId": [
             72,
             86,
             21
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 1192.1650390625,
          "idNode": "node22",
          "inputLinksId": [
@@ -805,11 +805,11 @@
          "label_visible": true,
          "visible": true,
          "x": 1439.0615539550781,
-         "input_links": [
+         "inputLinksId": [
             80,
             11
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 1198.2593324184418,
          "idNode": "node23",
          "inputLinksId": [
@@ -834,8 +834,8 @@
          "label_visible": true,
          "visible": true,
          "x": 0,
-         "input_links": [],
-         "output_links": [
+         "inputLinksId": [],
+         "outputLinksId": [
             48,
             40,
             52,
@@ -874,10 +874,10 @@
          "label_visible": true,
          "visible": true,
          "x": 295.6472473144531,
-         "input_links": [
+         "inputLinksId": [
             7
          ],
-         "output_links": [
+         "outputLinksId": [
             8
          ],
          "y": 187.9256134033203,
@@ -903,11 +903,11 @@
          "label_visible": true,
          "visible": true,
          "x": 600,
-         "input_links": [
+         "inputLinksId": [
             12,
             9
          ],
-         "output_links": [
+         "outputLinksId": [
             14,
             13
          ],
@@ -936,10 +936,10 @@
          "label_visible": true,
          "visible": true,
          "x": 900,
-         "input_links": [
+         "inputLinksId": [
             14
          ],
-         "output_links": [
+         "outputLinksId": [
             19,
             15,
             17,
@@ -973,10 +973,10 @@
          "label_visible": true,
          "visible": true,
          "x": 600,
-         "input_links": [
+         "inputLinksId": [
             8
          ],
-         "output_links": [
+         "outputLinksId": [
             9,
             10,
             11
@@ -1006,7 +1006,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1800,
-         "input_links": [
+         "inputLinksId": [
             15,
             24,
             43,
@@ -1017,7 +1017,7 @@
             81,
             2
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 300,
          "idNode": "node29",
          "inputLinksId": [
@@ -1047,10 +1047,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             62
          ],
-         "output_links": [
+         "outputLinksId": [
             65
          ],
          "y": 1100,
@@ -1076,10 +1076,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             66
          ],
-         "output_links": [
+         "outputLinksId": [
             68
          ],
          "y": 1200,
@@ -1105,7 +1105,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1800,
-         "input_links": [
+         "inputLinksId": [
             16,
             25,
             44,
@@ -1115,7 +1115,7 @@
             82,
             3
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 600,
          "idNode": "node32",
          "inputLinksId": [
@@ -1145,7 +1145,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1200,
-         "input_links": [
+         "inputLinksId": [
             13,
             22,
             51,
@@ -1154,7 +1154,7 @@
             53,
             38
          ],
-         "output_links": [
+         "outputLinksId": [
             79,
             78,
             80,
@@ -1192,7 +1192,7 @@
          "label_visible": true,
          "visible": true,
          "x": 1800,
-         "input_links": [
+         "inputLinksId": [
             19,
             28,
             47,
@@ -1201,7 +1201,7 @@
             85,
             6
          ],
-         "output_links": [],
+         "outputLinksId": [],
          "y": 200,
          "idNode": "node34",
          "inputLinksId": [
@@ -1229,10 +1229,10 @@
          "label_visible": true,
          "visible": true,
          "x": 300,
-         "input_links": [
+         "inputLinksId": [
             37
          ],
-         "output_links": [
+         "outputLinksId": [
             38
          ],
          "y": 1300,
@@ -1253,8 +1253,8 @@
          "color": "darkgrey",
          "x": 839.782787322998,
          "y": 76.4951434135437,
-         "input_links": [],
-         "output_links": [],
+         "inputLinksId": [],
+         "outputLinksId": [],
          "tags": {
             "Regions": [],
             "Exchanges": [
@@ -1276,8 +1276,8 @@
          "color": "darkgrey",
          "x": 1726.5024242401123,
          "y": 65.10680198669434,
-         "input_links": [],
-         "output_links": [],
+         "inputLinksId": [],
+         "outputLinksId": [],
          "tags": {
             "Regions": [],
             "Exchanges": [
