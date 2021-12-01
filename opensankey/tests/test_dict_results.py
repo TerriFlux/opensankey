@@ -72,8 +72,8 @@ class DictResultTest(unittest.TestCase):
         pass
         # results_dict = nodes_position.generate_sankey_diagram(nodes, links['no_region'])
         # for node in results_dict['nodes']:
-        #     node['total_input_offset'] = node.pop('sum_values_input_links')
-        #     node['total_output_offset'] = node.pop('sum_values_output_links')
+        #     node['total_input_offset'] = node.pop('sum_values_inputLinksId')
+        #     node['total_output_offset'] = node.pop('sum_values_outputLinksId')
         # if not self.generate_results:
         #     self.assertEqual(results_dict['nodes'], expected_results['nodes'])
         #     self.assertEqual(results_dict['links'], expected_results['links'])

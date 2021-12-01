@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
+import re
+import webcolors
 import math
+
+def is_hex(s):
+    return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
 
 def parse_sankey_energie_csv(
     csv_file
@@ -33,7 +38,7 @@ def parse_sankey_energie_csv(
         sankey_dict['nodes'].append(
             {
                 'id': node_id,
-                'color': 'grey',
+                'color': webcolors.name_to_hex('grey'),
                 'name': node_name,
                 'type': 'sector',
                 'orientation': 'vertical'
@@ -47,13 +52,16 @@ def parse_sankey_energie_csv(
         id = id+1
         source_name = row['source']
         target_name = row['target']
+        color = row['colors']
+        if not is_hex(color):
+          color = webcolors.name_to_hex(color)
         sankey_dict['links']. append(
             {
                 'source_name': source_name,
                 'target_name': target_name,
                 'value': [],
                 'display_value': [],
-                'color': row['colors'],
+                'color': color,
                 'curvature' : 1,
                 'label_position' : 'beginning',
                 'left_horiz_shift' : 0.40,
@@ -84,16 +92,20 @@ def parse_simple_excel(
     for i in range(ws.shape[0]):
         name = ws.iat[i, nodes_cols.index('Nodes')].strip()
         new_node = {
-            'id'      : i,
-            'name'    : name,
-            'visible' : True,
-            'type'    : 'sector'
+            'idNode'        : 'node'+str(i),
+            'name'          : name,
+            'type'          : 'sector',
+            'dimensions'    : {'Primaire':{'parent_name': None}},
+            'label_visible' : 1,
+            'shape_visible' : 1
         }
-        color = 'grey'
+        color = '#a9a9a9'
         shape = 'rectangle'
         try:
             color = ws.iat[i, nodes_cols.index('Color')]
             shape = ws.iat[i, nodes_cols.index('Shape')]
+            if not is_hex(color):
+              color = webcolors.name_to_hex(color)   
             new_node['color'] = color
             if shape == 'rectangle' :
                 new_node['type'] = 'sector' 
@@ -102,12 +114,19 @@ def parse_simple_excel(
         except Exception:
             pass
         level = ws.iat[i, nodes_cols.index('Level')]
+        new_node['dimensions']['Primaire']['level'] = int(level)
         if level > previous_level:
             current_node_parent = nodes[i-1]
             current_parent_level = previous_level
         if level > current_parent_level:
-            new_node['parent_name'] = current_node_parent['name']
+            new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['idNode']
         previous_level = level
+        if level == 1:
+          new_node['display'] = 1
+          new_node['node_visible'] = 1
+        else:
+          new_node['display'] = 0
+          new_node['node_visible'] = 0
         nodes.append(new_node)
 
     flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
@@ -123,7 +142,9 @@ def parse_simple_excel(
         if source_node['type'] == 'product':
             color = source_node['color']
         elif target_node['type'] == 'product':
-            color = target_node['color']           
+            color = target_node['color']
+        if not is_hex(color):
+          color = webcolors.name_to_hex(color)      
         links.append({
             'source_name' :  flux_ws.iat[row, flux_cols.index('Origin')],
             'target_name' :  flux_ws.iat[row, flux_cols.index('Destination')],
