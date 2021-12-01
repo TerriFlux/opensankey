@@ -1723,7 +1723,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
           .attr('fill', () => link_color(l, value_index))
           .attr('fill-opacity', () => {
-            const opacity = String(!(data as any).show_uncert && l.display_value[value_index]).includes('[') ? 0.3 : 0.85
+            const opacity = String(!(data as any).show_uncert && l.display_value[value_index]).includes('[') ? 0.85 : 0.85
             return opacity
           })
       }
