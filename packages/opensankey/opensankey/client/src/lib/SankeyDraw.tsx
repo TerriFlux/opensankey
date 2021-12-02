@@ -277,7 +277,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         sankeyTooltip
-          .style('top', (event.layerY - 10) + 'px')
+          .style('top', Math.max(200,event.y - 300) + 'px')
           .style('left', (event.layerX + 10) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -1453,7 +1453,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if ((d as SankeyNode).shape_visible && event.shiftKey) {
           sankeyTooltip
-            .style('top', (event.layerY - 10) + 'px')
+          
+            .style('top', Math.max(200,event.y - 300) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
@@ -1551,7 +1552,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if (d.label_visible && event.shiftKey) {
           sankeyTooltip
-            .style('top', (event.layerY - 10) + 'px')
+            .style('top', Math.max(200,event.y - 300) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
