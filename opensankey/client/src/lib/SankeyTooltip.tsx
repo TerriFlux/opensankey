@@ -1,167 +1,138 @@
-
 import { SankeyNode, SankeyLink, SankeyData } from './types'
-import { cloneSelection } from './SankeyUtils'
+import { getLinkValue, getTotalLinks } from './SankeyUtils'
 import * as d3 from 'd3'
 
-export const add_tooltips = (
+export const nodeTooltipsContent = (
   data: SankeyData,
-  gg_elements: d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>,
-  suffix: string,
-  elements: SankeyNode[] | SankeyLink[],
-  g_elements_origin: SVGGElement | null,
-  node_tooltip: (data: SankeyData, d: SankeyNode | SankeyLink) => string,
-  link_tooltip: (data: SankeyData, d: SankeyNode | SankeyLink) => string
+  node: SankeyNode,
+  getValueIndex: any
 ) => {
-  gg_elements
-    .on('mouseover', (event, d) => {
-      const element_id = elements.indexOf(d)
-      show_node_or_link_tooltip(data, d, suffix, element_id, suffix === 'node' ? node_tooltip : link_tooltip)
-      d3.select('#tooltip_' + suffix + element_id)
-        .attr('transform', 'translate(' + String(d3.pointer(event, g_elements_origin)[0] + 20) + ',' + String(d3.pointer(event, g_elements_origin)[1] + 20) + ')')
-      cloneSelection(d3.select('#tooltip_' + suffix + element_id), 1)
+  if (node.tooltip_text) {
+    return node.tooltip_text
+  }
+  if (data.nodes.length === 0) {
+    return ''
+  }
+  let content = '<p style=\'text-align: center;margin-bottom:0px\'><b>' + node.name.split('\\n').join(' ') + '</b></p>'
+  if (node.inputLinksId && node.inputLinksId.length > 0) {
+    content += '<b>Entrées</b><ul style=\'margin-bottom:0px\'>'
+    node.inputLinksId.forEach(element => {
+      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
+      const value = getLinkValue(data, element)
+      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].source_name + ' : ' + value + ' (' + pcValue + '%)</li>' 
     })
-    .on('mouseout', (_, d) => {
-      if (d.tooltip_text) {
-        const id = elements.indexOf(d)
-        const tooltip_lines = d.tooltip_text.split('\\n')
-        tooltip_lines.forEach((_, r) => d3.select('#text_tooltip_' + suffix + id + 'span' + r).remove())
-        //delete d.tooltip_text
-      }
-      d3.selectAll('#front-0').remove()
+    content += '</ul>Total : ' + getTotalLinks(data, node.inputLinksId) + '<br>'
+  }
+  if (node.outputLinksId && node.outputLinksId.length > 0) {
+    content += '<b>Sorties</b><ul style=\'margin-bottom:0px\'>'
+    node.outputLinksId.forEach(element => {
+      const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[]))as number)) 
+      const value = getLinkValue(data, element)
+      content += '<li>' + data.links.filter(element1 => { return element1.idLink == element })[0].target_name + ' : ' + value + ' (' + pcValue + '%)</li>'
     })
-
-  // .on('mouseover',(_,d)=>{
-  //   if ( !d.visible ) {
-  //     return
-  //   }
-  //   show_node_or_link_tooltip(data,d,'node',d.id,default_node_tooltip)
-  //   d3.select('#tooltip_node'+d.id)
-  //     .attr('transform','translate(' + (d.x+50) + ',' + (d.y+20) + ')')
-  //   cloneSelection(d3.select('#tooltip_node'+d.id), 1)
-  // })
-  // .on('mouseout',(_,node)=> {
-  //   if ( node.tooltip_text !== undefined ) {
-  //     const tooltip_lines = node.tooltip_text.split('\\n')
-  //     tooltip_lines.forEach( (_,r) => d3.selectAll('#text_tooltip_'+'node'+node.id+'span'+r).remove() )
-  //     delete node.tooltip_text
-  //   }
-  //   d3.selectAll('#front-0').remove()
-  // })    
-
-  d3.selectAll('.' + suffix + '_value')
-    .on('mouseover', (e, d) => {
-      const node_or_link = d as SankeyNode & SankeyLink
-      const link_id = elements.indexOf(node_or_link)
-      //if (!node_or_link.tooltip_text ) {
-      show_node_or_link_tooltip(data, node_or_link, suffix, link_id, suffix === 'node' ? node_tooltip : link_tooltip)
-      //}
-      d3.select('#tooltip_link' + link_id)
-        .attr('transform', 'translate(' + String(d3.pointer(e, g_elements_origin)[0] + 20) + ',' + String(d3.pointer(e, g_elements_origin)[1] + 20) + ')')
-      cloneSelection(d3.select('#tooltip_' + suffix + link_id), 1)
-    })
-    .on('mouseout', (_, d) => {
-      const node_or_link = d as SankeyNode & SankeyLink
-      if (node_or_link.tooltip_text) {
-        const id = elements.indexOf(node_or_link)
-        const tooltip_lines = node_or_link.tooltip_text.split('\\n')
-        tooltip_lines.forEach((e, r) => d3.select('#text_tooltip_' + 'link' + id + 'span' + r).remove())
-        //delete node_or_link.tooltip_text
-      }
-      d3.selectAll('#front-0').remove()
-    })
-
-  const tooltips = gg_elements.append('g')
-    .attr('class', 'tooltip')
-    .attr('id', (d, i) => {
-      return 'tooltip_' + suffix + i
-    })
-
-  tooltips.append('rect')
-    .attr('class', 'rect_tooltip')
-    .attr('id', (d, i) => {
-      return 'rect_tooltip_' + suffix + i
-    })
-    .attr('rx', 5)
-    .attr('height', (d) => {
-      if (d.tooltip_text === null || d.tooltip_text === undefined) { // null or undefined
-        return 50
-      }
-      else {
-        d.tooltip_text = d.tooltip_text.split('<br>').join('\\n')
-        const count_br = (d.tooltip_text.match(/\\n/g) || []).length + 1
-        return Math.max(50, count_br * 15)
-      }
-    })
-
-  tooltips.append('text')
-    .attr('class', 'text_tooltip')
-    .attr('id', (d, i) => {
-      return 'text_tooltip_' + suffix + i
-    })
+    content += '</ul>Total : ' + getTotalLinks(data, node.outputLinksId)
+  }
+  return content
 }
 
-export const show_tooltip = (shift: string) => {
-  d3.select('#main_tooltip' + shift)
-    .attr('transform', 'translate(' + shift + ',' + 10 + ')')
-  cloneSelection(
-    d3.select('#main_tooltip' + shift), 1
-  )
-  //tooltip.attr('visibility', 'visible').attr('top',50).attr('left',50)
-  //   .on('mouseover', () => {return tooltip.style('visibility', 'visible')})
-}
+// export const default_node_tooltip = (
+//   data: SankeyData,
+//   d: SankeyNode | SankeyLink
+// ) => {
+//   if (d.tooltip_text) {
+//     return d.tooltip_text
+//   }
+//   let value_index = 0
+//   const tags_group = data.tags.filter(tag => tag.tags_group_name === 'Regions')
+//   if (tags_group.length > 1) {
+//     value_index = tags_group[0].tags_group.indexOf(data.selected_tags['Regions'][0])
+//   }
+//   const n = d as SankeyNode
+//   const { links } = data
+//   let t = '<b>' + n.name.split('\\n').join(' ')
+//   let total = 0
+//   if (n.input_links.length > 0) {
+//     for (let i = 0; i < n.input_links.length; i++) {
+//       const link = links[n.input_links[i]]
+//       if (link === undefined) {
+//         //alert('Corruption du diagramme')
+//         return ''
+//       }
+//       if (link.visible) {
+//         total += +link.value[value_index]
+//       }
+//     }
+//   }
+//   if (n.input_links.length > 0) {
+//     t += '\\n\\n<b>ENTREES\\n\\n '
+//     for (let i = 0; i < n.input_links.length; i++) {
+//       const link = links[n.input_links[i]]
+//       if (link === undefined) {
+//         //alert('Corruption du diagramme')
+//         return ''
+//       }
+//       if (link.visible || link.visible === undefined) {
+//         const source_name = link.source_name.split('\\n').join(' ')
+//         t += ' ' + source_name + ': ' + toPrecision(link.value[value_index])
+//         if (n.input_links.length > 1) {
+//           const percent = Math.round(link.value[value_index] * 100 / total)
+//           t += ' (' + percent + '%)\\n'
+//         } else {
+//           t += '\\n'
+//         }
+//       }
+//     }
+//     t += ' Total: ' + toPrecision(total)
+//   }
+//   total = 0
+//   if (n.output_links.length > 0) {
+//     for (let i = 0; i < n.output_links.length; i++) {
+//       const link = links[n.output_links[i]]
+//       if (link === undefined) {
+//         //alert('Corruption du diagramme')
+//         return ''
+//       }
+//       if (link.visible) {
+//         total += +link.value[value_index]
+//       }
+//     }
+//     if (n.output_links.length > 0) {
+//       t += '\\n\\n<b>SORTIES\\n\\n '
+//       for (let i = 0; i < n.output_links.length; i++) {
+//         const link = links[n.output_links[i]]
+//         if (link === undefined) {
+//           //alert('Corruption du diagramme')
+//           return ''
+//         }
+//         if (link.visible) {
+//           const target_name = link.target_name.split('\\n').join(' ')
+//           t += ' ' + target_name + ': ' + toPrecision(link.value[value_index])
+//           if (n.output_links.length > 1) {
+//             const percent = Math.round(link.value[value_index] * 100 / total)
+//             t += ' (' + percent + '%)\\n'
+//           } else {
+//             t += '\\n'
+//           }
+//         }
+//       }
+//     }
+//     t += ' Total: ' + toPrecision(total)
+//   }
+//   d.tooltip_text = t
+//   return d.tooltip_text
+// }
 
-export const hide_tooltip = () => {
-  d3.selectAll('#front-0').remove()
-}
-
-export const show_node_or_link_tooltip = (
+export const linkTooltipsContent = (
   data: SankeyData,
-  d: SankeyNode | SankeyLink,
-  suffix: string,
-  id: number,
-  default_tooltip_callback: (arg0: SankeyData, arg1: SankeyLink | SankeyNode) => string
+  link: SankeyLink,
+  getValueIndex: any
 ) => {
-  let tooltip_text = d.tooltip_text
-  if (tooltip_text === undefined || tooltip_text === '') {
-    tooltip_text = default_tooltip_callback(data, d)
-    d.tooltip_text = tooltip_text
+  if (link.tooltip_text) {
+    return link.tooltip_text
   }
-  let max_text_length = 0
-  const tooltip_lines: string[] = d.tooltip_text ? d.tooltip_text.split('\\n') : []
-  let dy = '1em'
-  tooltip_lines.forEach(
-    (e: string, r: number) => {
-      let tooltip_class = 'text_tooltip'
-      if (e.includes('<b>')) {
-        e = e.substring(3)
-        tooltip_class = 'text_tooltip_title'
-      }
-      if (e === '') {
-        dy = '2em'
-        return
-      }
-      const el = d3.select('#text_tooltip_' + suffix + id)
-        .append('tspan')
-        .attr('id', 'text_tooltip_' + suffix + id + 'span' + r)
-        .attr('x', 10)
-        .attr('dy', dy)
-        .attr('class', tooltip_class)
-        .text(e)
-      const el_node = el.node()
-      const text_length = el_node ? el_node.getComputedTextLength() : 0
-      if (text_length >= max_text_length) {
-        max_text_length = text_length
-      }
-      dy = '1em'
-    }
-  )
-  if (tooltip_lines.length > 1 || tooltip_lines[0] !== '') {
-    d3.select('#rect_tooltip_' + suffix + id)
-      .attr('width', max_text_length + 80)
-      .attr('height', () => {
-        const tooltip_text = d.tooltip_text ? d.tooltip_text.split('<br>').join('\\n') : ''
-        const count_br = (tooltip_text.match(/\\n/g) || []).length
-        return Math.max(50, count_br * 15)
-      })
+  if (data.links.length === 0) {
+    return ''
   }
+  const content = link.source_name + ' → ' + link.target_name + ' : ' + getLinkValue(data, link.idLink as string)
+  return content
 }
