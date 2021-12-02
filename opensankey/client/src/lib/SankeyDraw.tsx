@@ -1841,7 +1841,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.selectAll('.tmp').remove()
 
     let height = 0
-    Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
+    Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
     height = Math.max(1000,height+200)
 
     const svgSankey = (d3.select('#svg') as any)
@@ -1889,7 +1889,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     console.log(data)
   })
   let height = 0
-  Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
+  Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
   height = Math.max(1000,height+200)
   return (
     <>
