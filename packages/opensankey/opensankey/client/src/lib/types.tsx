@@ -3,6 +3,7 @@ import PropTypes, { InferProps } from 'prop-types'
 export const SankeyNodePropTypes = {
   // identification
   id: PropTypes.number.isRequired,
+  idNode: PropTypes.string,
   name: PropTypes.string.isRequired,
 
   parent_name : PropTypes.string,
@@ -21,7 +22,9 @@ export const SankeyNodePropTypes = {
   tooltip_text: PropTypes.string,
 
   // topology
+  inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
   input_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired),
   output_links: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
 
   // semantic
@@ -32,6 +35,7 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
 export const SankeyLinkPropTypes = {
   // identification
+  idLink: PropTypes.string,
   source_name: PropTypes.string.isRequired,
   target_name: PropTypes.string.isRequired,
 
@@ -68,12 +72,27 @@ export const SankeyLinkPropTypes = {
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
+export const TagsCatalogPropTypes = PropTypes.arrayOf(
+  PropTypes.shape({
+    group_name: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+  }).isRequired
+).isRequired
+
+export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
+
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   node_width: PropTypes.number.isRequired,
   user_scale: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
+  h_space: PropTypes.number.isRequired,
+  v_space: PropTypes.number.isRequired,
+  left_shift: PropTypes.number.isRequired,
+  right_shift: PropTypes.number.isRequired,
+  max_shift: PropTypes.number.isRequired,
 
   nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -93,13 +112,7 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired
   }).isRequired,
 
-  tags: PropTypes.arrayOf(
-    PropTypes.shape({
-      tags_group_name: PropTypes.string.isRequired,
-      tags_group: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
-    }).isRequired
-  ).isRequired,
-  selected_tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
+  tags_catalog: TagsCatalogPropTypes
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
