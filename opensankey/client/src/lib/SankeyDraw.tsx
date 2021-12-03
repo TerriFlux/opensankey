@@ -277,7 +277,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         sankeyTooltip
-          .style('top', (event.layerY - 10) + 'px')
+          .style('top', Math.max(200,event.y - 300) + 'px')
           .style('left', (event.layerX + 10) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -1453,7 +1453,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if ((d as SankeyNode).shape_visible && event.shiftKey) {
           sankeyTooltip
-            .style('top', (event.layerY - 10) + 'px')
+          
+            .style('top', Math.max(200,event.y - 300) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
@@ -1551,7 +1552,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if (d.label_visible && event.shiftKey) {
           sankeyTooltip
-            .style('top', (event.layerY - 10) + 'px')
+            .style('top', Math.max(200,event.y - 300) + 'px')
             .style('left', (event.layerX + 10) + 'px')
         }
       })
@@ -1844,7 +1845,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     let height = 0
     Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
-    height = Math.max(1000,height+200)
+    let max_vert_shift = 0
+    Object.values(data.links).forEach( l=> l.vert_shift && max_vert_shift > l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
+
+    height = Math.max(1000,height+max_vert_shift+200)
 
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
@@ -1892,7 +1896,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
   let height = 0
   Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
-  height = Math.max(1000,height+200)
+  let max_vert_shift = 0
+  Object.values(data.links).forEach( l=> l.vert_shift && max_vert_shift > l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
+
+  height = Math.max(1000,height+max_vert_shift+200)
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
