@@ -18,8 +18,8 @@ def parse_sankey_energie_csv(
     nodes_names = np.unique(np.hstack((csv_data['source'], csv_data['target']))).tolist()
     regions_names = csv_data['nom_territoire'].unique()
     sankey_dict = {
-        'nodes'   : [],
-        'links'   : [],
+        'nodes'   : {},
+        'links'   : {},
         'h_space' : 300,
         'display_style' : {
             'filter' : 1,
@@ -27,54 +27,132 @@ def parse_sankey_energie_csv(
         },
 
     }
-    sankey_dict['tags_catalog'] = [
-        {
-            'group_name'    : 'Regions',
-            'tags'          : regions_names.tolist(),
-            'selected_tags' : [regions_names[0]]            
+    sankey_dict['tags_catalog'] = {
+        'Regions' : {
+            'group_name' : 'Regions',
+            'tags'       : {},
+            'banner'     : 'one'            
+        },
+        'Exchanges' : {
+            'group_name'    : 'Echanges',
+            'tags'          : {
+                'Other' : {
+                    'name'     : 'Intérieur',
+                    'selected' : True,
+                    'color'    : '',
+                },
+                'Echangesimport' : {
+                    'name'     : 'Importations',
+                    'selected' : True,
+                    'color'    : ''
+                },
+                'Echangesexport' : {
+                    'name'     : 'Exportations',
+                    'selected' : True,
+                    'color'    : ''
+                }
+            },
+            'banner'     : 'multi'           
         }
-    ]
-    for node_id, node_name in enumerate(nodes_names):
-        sankey_dict['nodes'].append(
-            {
-                'id': node_id,
-                'color': webcolors.name_to_hex('grey'),
-                'name': node_name,
-                'type': 'sector',
-                'orientation': 'vertical'
-            }
-        )
+    }
+    for region_name in regions_names.tolist():
+        sankey_dict['tags_catalog']['Regions']['tags'][region_name] = {
+            'name'     : region_name,
+            'selected' : region_name == regions_names[0],
+            'color'    : ''            
+        }
 
-    id = 0
+    for node_id, node_name in enumerate(nodes_names):
+        if node_name == 'Importations' or node_name == 'Exportations':
+            continue
+        idNode = 'node' + str(node_id)
+        sankey_dict['nodes'][idNode] = {
+            'idNode'     : idNode,
+            'color'      : webcolors.name_to_hex('grey'),
+            'name'       : node_name,
+            'type'       : 'sector',
+            'orientation': 'vertical',
+            'tags'       : {
+                'Exchanges' : ['Other']
+            }
+        }
 
     territory_data = csv_data[csv_data['nom_territoire'] == regions_names[0]]
     for k, row in territory_data.iterrows():
-        id = id+1
         source_name = row['source']
         target_name = row['target']
+        if source_name == 'Importations':
+            node_id = node_id + 1
+            import_node_name = target_name + ' - Echanges - Importations'
+            idNode = 'node' + str(node_id)
+            sankey_dict['nodes'][idNode] = {
+                'idNode': idNode,
+                'color': webcolors.name_to_hex('grey'),
+                'name': import_node_name,
+                'type': 'sector',
+                'orientation': 'vertical',
+                'tags': { 
+                    'Exchanges' : ['Echangesimport']
+                }
+            }
+            source_name = import_node_name
+
+        if target_name == 'Exportations':
+            node_id = node_id + 1
+            export_node_name = source_name + ' - Echanges - Exportations'
+            idNode = 'node' + str(node_id)
+            sankey_dict['nodes'][idNode] = {
+                'idNode': idNode,
+                'color': webcolors.name_to_hex('grey'),
+                'name': export_node_name,
+                'type': 'sector',
+                'orientation': 'vertical',
+                'tags': { 'Exchanges' : 
+                    ['Echangesexport']
+                }
+            }
+            target_name = export_node_name
+
         color = row['colors']
         if not is_hex(color):
           color = webcolors.name_to_hex(color)
-        sankey_dict['links']. append(
-            {
-                'source_name': source_name,
-                'target_name': target_name,
-                'value': [],
-                'display_value': [],
-                'color': color,
-                'curvature' : 1,
-                'label_position' : 'beginning',
-                'left_horiz_shift' : 0.40,
-                'right_horiz_shift' : 0.50
-            }
-        )
+        idLink = 'link' + str(k)
+        for key,val in sankey_dict['nodes'].items():
+            if val['name'] == source_name:
+                idSource = key
+                break
+        for key,val in sankey_dict['nodes'].items():
+            if val['name'] == target_name:
+                idTarget = key
+                break
+        sankey_dict['links'][idLink] = {
+            'idLink'     : idLink,
+            'idSource'   : idSource,
+            'idTarget'   : idTarget,
+            'value': [],
+            'display_value': [],
+            'color': color,
+            'curvature' : 1,
+            'label_position' : 'beginning',
+            'left_horiz_shift' : 0.40,
+            'right_horiz_shift': 0.50,
+            'natural_unit'     : 'GWh',
+            'conv'             : [1,1]
+        }
+
     for region_name in regions_names:
       territory_data = csv_data[csv_data['nom_territoire'] == region_name]
-      i = 0
+      id = 0
       for k, row in territory_data.iterrows():
-        sankey_dict['links'][i]['value'].append(round(row['value'], 1))         
-        sankey_dict['links'][i]['display_value'].append('default')
-        i = i+1
+        if row['value'] < 1000:
+            sankey_dict['links']['link' + str(id)]['value'].append(round(row['value'], 1))         
+            sankey_dict['links']['link' + str(id)]['display_value'].append('default')
+        else:
+            sankey_dict['links']['link' + str(id)]['value'].append(500)         
+            sankey_dict['links']['link' + str(id)]['display_value'].append(str(round(row['value']))+'*')            
+        id = id + 1
+    sankey_dict['units_names'] = ['GWh','GWh']
+    sankey_dict['unit'] = 1
     return sankey_dict
 
 def parse_simple_excel(
