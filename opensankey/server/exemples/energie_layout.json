@@ -1,49 +1,60 @@
 {
    "version": "0.5",
-   "nodes": [
-      {
-         "id": 0,
-         "color": "grey",
+   "file_path": "sankey_diagram.json",
+   "node_width": 40,
+   "user_scale": 1000,
+   "width": 2100,
+   "h_space": 300,
+   "v_space": 50,
+   "left_shift": 0.4,
+   "right_shift": 0.5,
+   "max_shift": 0.2,
+   "legend_position": [
+      0,
+      100
+   ],
+   "trade_close_hspace": 50,
+   "trade_close_vspace": 20,
+   "trade_hspace": 200,
+   "trade_left_shift": 0.45,
+   "trade_right_shift": 0.55,
+   "trade_max_shift": 0.2,
+   "nodes": {
+      "node0": {
+         "idNode": "node0",
+         "color": "#808080",
          "name": "Agriculture, sylviculture et aquaculture",
          "type": "sector",
          "orientation": "vertical",
          "tags": {
             "Exchanges": [
                "Other"
-            ],
-            "Regions": []
+            ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1800,
-         "inputLinksId": [
-            17,
-            26,
-            45,
-            75,
-            34,
-            57,
-            83,
-            4
-         ],
-         "outputLinksId": [],
-         "y": 400,
-         "idNode": "node0",
          "inputLinksId": [
             "link17",
             "link26",
+            "link4",
             "link45",
             "link75",
-            "link34",
             "link57",
-            "link83",
-            "link4"
+            "link34",
+            "link83"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 1800,
+         "y": 850,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 1,
-         "color": "grey",
+      "node1": {
+         "idNode": "node1",
+         "color": "#808080",
          "name": "Biogaz",
          "type": "sector",
          "orientation": "vertical",
@@ -52,31 +63,27 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            48
-         ],
-         "outputLinksId": [
-            51,
-            50,
-            49
-         ],
-         "y": 300,
-         "idNode": "node1",
          "inputLinksId": [
             "link48"
          ],
          "outputLinksId": [
-            "link51",
             "link50",
-            "link49"
-         ]
+            "link49",
+            "link51"
+         ],
+         "x": 300,
+         "y": 400,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 2,
-         "color": "grey",
+      "node2": {
+         "idNode": "node2",
+         "color": "#808080",
          "name": "Biomasse solide",
          "type": "sector",
          "orientation": "vertical",
@@ -85,19 +92,6 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            39,
-            40
-         ],
-         "outputLinksId": [
-            42,
-            41
-         ],
-         "y": 500,
-         "idNode": "node2",
          "inputLinksId": [
             "link39",
             "link40"
@@ -105,11 +99,20 @@
          "outputLinksId": [
             "link42",
             "link41"
-         ]
+         ],
+         "x": 300,
+         "y": 500,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 3,
-         "color": "grey",
+      "node3": {
+         "idNode": "node3",
+         "color": "#808080",
          "name": "Biomasse solide - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -118,35 +121,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            42
-         ],
-         "outputLinksId": [
-            45,
-            46,
-            43,
-            44,
-            47
-         ],
-         "y": 479.9773254394531,
-         "idNode": "node3",
          "inputLinksId": [
             "link42"
          ],
          "outputLinksId": [
-            "link45",
+            "link47",
             "link46",
             "link43",
-            "link44",
-            "link47"
-         ]
+            "link45",
+            "link44"
+         ],
+         "x": 900,
+         "y": 500,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 4,
-         "color": "grey",
+      "node4": {
+         "idNode": "node4",
+         "color": "#808080",
          "name": "CMS",
          "type": "sector",
          "orientation": "vertical",
@@ -155,29 +152,26 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            29
-         ],
-         "outputLinksId": [
-            30,
-            31
-         ],
-         "y": 600,
-         "idNode": "node4",
          "inputLinksId": [
             "link29"
          ],
          "outputLinksId": [
             "link30",
             "link31"
-         ]
+         ],
+         "x": 300,
+         "y": 600,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 5,
-         "color": "grey",
+      "node5": {
+         "idNode": "node5",
+         "color": "#808080",
          "name": "CMS - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -186,35 +180,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            31
-         ],
-         "outputLinksId": [
-            34,
-            35,
-            32,
-            33,
-            36
-         ],
-         "y": 700,
-         "idNode": "node5",
          "inputLinksId": [
             "link31"
          ],
          "outputLinksId": [
-            "link34",
-            "link35",
+            "link36",
             "link32",
+            "link34",
             "link33",
-            "link36"
-         ]
+            "link35"
+         ],
+         "x": 900,
+         "y": 600,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 6,
-         "color": "grey",
+      "node6": {
+         "idNode": "node6",
+         "color": "#808080",
          "name": "Chaleur RDC",
          "type": "sector",
          "orientation": "vertical",
@@ -223,35 +211,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1500,
-         "inputLinksId": [
-            78
-         ],
-         "outputLinksId": [
-            75,
-            76,
-            72,
-            73,
-            74
-         ],
-         "y": 600,
-         "idNode": "node6",
          "inputLinksId": [
             "link78"
          ],
          "outputLinksId": [
-            "link75",
-            "link76",
-            "link72",
             "link73",
-            "link74"
-         ]
+            "link75",
+            "link74",
+            "link76",
+            "link72"
+         ],
+         "x": 1500,
+         "y": 500,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 7,
-         "color": "grey",
+      "node7": {
+         "idNode": "node7",
+         "color": "#808080",
          "name": "Chaleur locale",
          "type": "sector",
          "orientation": "vertical",
@@ -260,33 +242,28 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1500,
-         "inputLinksId": [
-            79,
-            69,
-            68
-         ],
-         "outputLinksId": [
-            71,
-            70
-         ],
-         "y": 500,
-         "idNode": "node7",
          "inputLinksId": [
             "link79",
             "link69",
             "link68"
          ],
          "outputLinksId": [
-            "link71",
-            "link70"
-         ]
+            "link70",
+            "link71"
+         ],
+         "x": 1500,
+         "y": 600,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 8,
-         "color": "grey",
+      "node8": {
+         "idNode": "node8",
+         "color": "#808080",
          "name": "Déchets",
          "type": "sector",
          "orientation": "vertical",
@@ -295,29 +272,26 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            52
-         ],
-         "outputLinksId": [
-            53,
-            54
-         ],
-         "y": 700,
-         "idNode": "node8",
          "inputLinksId": [
             "link52"
          ],
          "outputLinksId": [
-            "link53",
-            "link54"
-         ]
+            "link54",
+            "link53"
+         ],
+         "x": 300,
+         "y": 650,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 9,
-         "color": "grey",
+      "node9": {
+         "idNode": "node9",
+         "color": "#808080",
          "name": "Déchets - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -326,35 +300,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            54
-         ],
-         "outputLinksId": [
-            57,
-            58,
-            55,
-            56,
-            59
-         ],
-         "y": 600,
-         "idNode": "node9",
          "inputLinksId": [
             "link54"
          ],
          "outputLinksId": [
-            "link57",
-            "link58",
+            "link59",
             "link55",
+            "link57",
             "link56",
-            "link59"
-         ]
+            "link58"
+         ],
+         "x": 900,
+         "y": 650,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 10,
-         "color": "grey",
+      "node10": {
+         "idNode": "node10",
+         "color": "#808080",
          "name": "Electricité",
          "type": "sector",
          "orientation": "vertical",
@@ -363,47 +331,34 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
          "inputLinksId": [
-            77,
-            64,
-            63,
-            65
-         ],
-         "outputLinksId": [
-            85,
-            81,
-            83,
-            86,
-            82,
-            84,
-            87
-         ],
-         "y": 800,
-         "idNode": "node10",
-         "inputLinksId": [
+            "link63",
             "link77",
             "link64",
-            "link63",
             "link65"
          ],
          "outputLinksId": [
             "link85",
             "link81",
             "link83",
-            "link86",
             "link82",
             "link84",
+            "link86",
             "link87"
          ],
-         "x_label": -10.446605682373047,
-         "y_label": 135.0291919708252
+         "x": 1500,
+         "y": 900,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 11,
-         "color": "grey",
+      "node11": {
+         "idNode": "node11",
+         "color": "#808080",
          "name": "Eolien",
          "type": "sector",
          "orientation": "vertical",
@@ -412,57 +367,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            61
-         ],
-         "outputLinksId": [
-            64
-         ],
-         "y": 800,
-         "idNode": "node11",
          "inputLinksId": [
             "link61"
          ],
          "outputLinksId": [
             "link64"
-         ]
-      },
-      {
-         "id": 12,
-         "color": "grey",
-         "name": "Exportations",
-         "type": "sector",
-         "orientation": "vertical",
-         "tags": {
-            "Exchanges": [
-               "Other"
-            ],
-            "Regions": []
-         },
+         ],
+         "x": 300,
+         "y": 700,
          "label_visible": true,
-         "visible": true,
-         "x": 1200,
-         "inputLinksId": [
-            87,
-            10
-         ],
-         "outputLinksId": [],
-         "y": 1200,
-         "idNode": "node12",
-         "inputLinksId": [
-            "link87",
-            "link10"
-         ],
-         "outputLinksId": [],
-         "x_label": -3,
-         "y_label": 20.000000476837158
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 13,
-         "color": "grey",
+      "node13": {
+         "idNode": "node13",
+         "color": "#808080",
          "name": "Gaz",
          "type": "sector",
          "orientation": "vertical",
@@ -471,20 +394,6 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 600,
-         "inputLinksId": [
-            20,
-            50
-         ],
-         "outputLinksId": [
-            23,
-            22,
-            21
-         ],
-         "y": 300,
-         "idNode": "node13",
          "inputLinksId": [
             "link20",
             "link50"
@@ -493,11 +402,20 @@
             "link23",
             "link22",
             "link21"
-         ]
+         ],
+         "x": 600,
+         "y": 306,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 14,
-         "color": "grey",
+      "node14": {
+         "idNode": "node14",
+         "color": "#808080",
          "name": "Gaz - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -506,35 +424,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            23
-         ],
-         "outputLinksId": [
-            26,
-            27,
-            24,
-            25,
-            28
-         ],
-         "y": 300,
-         "idNode": "node14",
          "inputLinksId": [
             "link23"
          ],
          "outputLinksId": [
-            "link26",
-            "link27",
+            "link28",
             "link24",
+            "link26",
             "link25",
-            "link28"
-         ]
+            "link27"
+         ],
+         "x": 900,
+         "y": 307,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 15,
-         "color": "grey",
+      "node15": {
+         "idNode": "node15",
+         "color": "#808080",
          "name": "Hydraulique",
          "type": "sector",
          "orientation": "vertical",
@@ -543,64 +455,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            60
-         ],
-         "outputLinksId": [
-            63
-         ],
-         "y": 900,
-         "idNode": "node15",
          "inputLinksId": [
             "link60"
          ],
          "outputLinksId": [
             "link63"
-         ]
-      },
-      {
-         "id": 16,
-         "color": "grey",
-         "name": "Importations",
-         "type": "sector",
-         "orientation": "vertical",
-         "tags": {
-            "Exchanges": [
-               "Other"
-            ]
-         },
-         "label_visible": true,
-         "visible": true,
-         "x": 0,
-         "inputLinksId": [],
-         "outputLinksId": [
-            7,
-            12,
-            20,
-            0,
-            39,
-            29,
-            37
          ],
-         "y": 100,
-         "idNode": "node16",
-         "inputLinksId": [],
-         "outputLinksId": [
-            "link7",
-            "link12",
-            "link20",
-            "link0",
-            "link39",
-            "link29",
-            "link37"
-         ]
+         "x": 300,
+         "y": 750,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 17,
-         "color": "grey",
+      "node17": {
+         "idNode": "node17",
+         "color": "#808080",
          "name": "Industrie et déchets",
          "type": "sector",
          "orientation": "vertical",
@@ -609,39 +482,31 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1800,
-         "inputLinksId": [
-            18,
-            27,
-            46,
-            76,
-            35,
-            71,
-            58,
-            84,
-            5
-         ],
-         "outputLinksId": [],
-         "y": 800,
-         "idNode": "node17",
          "inputLinksId": [
             "link18",
             "link27",
+            "link5",
             "link46",
             "link76",
-            "link35",
             "link71",
             "link58",
-            "link84",
-            "link5"
+            "link35",
+            "link84"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 1804,
+         "y": 278,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 18,
-         "color": "grey",
+      "node18": {
+         "idNode": "node18",
+         "color": "#808080",
          "name": "Organo-carburants",
          "type": "sector",
          "orientation": "vertical",
@@ -650,27 +515,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            0
-         ],
-         "outputLinksId": [
-            1
-         ],
-         "y": 400,
-         "idNode": "node18",
          "inputLinksId": [
             "link0"
          ],
          "outputLinksId": [
             "link1"
-         ]
+         ],
+         "x": 300,
+         "y": 450,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 19,
-         "color": "grey",
+      "node19": {
+         "idNode": "node19",
+         "color": "#808080",
          "name": "Organo-carburants - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -679,35 +542,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            1
-         ],
-         "outputLinksId": [
-            4,
-            5,
-            2,
-            3,
-            6
-         ],
-         "y": 400,
-         "idNode": "node19",
          "inputLinksId": [
             "link1"
          ],
          "outputLinksId": [
-            "link4",
-            "link5",
+            "link6",
             "link2",
+            "link4",
             "link3",
-            "link6"
-         ]
+            "link5"
+         ],
+         "x": 900,
+         "y": 450,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 20,
-         "color": "grey",
+      "node20": {
+         "idNode": "node20",
+         "color": "#808080",
          "name": "PAC",
          "type": "sector",
          "orientation": "vertical",
@@ -716,27 +573,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            67
-         ],
-         "outputLinksId": [
-            69
-         ],
-         "y": 1000,
-         "idNode": "node20",
          "inputLinksId": [
             "link67"
          ],
          "outputLinksId": [
             "link69"
-         ]
+         ],
+         "x": 300,
+         "y": 800,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 21,
-         "color": "grey",
+      "node21": {
+         "idNode": "node21",
+         "color": "#808080",
          "name": "Pertes ou torchage",
          "type": "sector",
          "orientation": "vertical",
@@ -745,23 +600,23 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 600,
-         "inputLinksId": [
-            49
-         ],
-         "outputLinksId": [],
-         "y": 700,
-         "idNode": "node21",
          "inputLinksId": [
             "link49"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 598.0000267028809,
+         "y": 377.00001335144043,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 22,
-         "color": "grey",
+      "node22": {
+         "idNode": "node22",
+         "color": "#808080",
          "name": "Pertes réseaux",
          "type": "sector",
          "orientation": "vertical",
@@ -770,59 +625,51 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1698.1455078125,
          "inputLinksId": [
-            72,
-            86,
-            21
-         ],
-         "outputLinksId": [],
-         "y": 1192.1650390625,
-         "idNode": "node22",
-         "inputLinksId": [
+            "link21",
             "link72",
-            "link86",
-            "link21"
+            "link86"
          ],
          "outputLinksId": [],
-         "x_label": -31.33981704711914,
-         "y_label": 20.98706817626953
+         "x": 1800,
+         "y": 1150,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 23,
-         "color": "grey",
+      "node23": {
+         "idNode": "node23",
+         "color": "#808080",
          "name": "Pertes transformation",
          "type": "sector",
          "orientation": "vertical",
          "tags": {
             "Exchanges": [
                "Other"
-            ],
-            "Regions": []
+            ]
          },
+         "inputLinksId": [
+            "link11",
+            "link80"
+         ],
+         "outputLinksId": [],
+         "x": 1800,
+         "y": 1050,
          "label_visible": true,
-         "visible": true,
-         "x": 1439.0615539550781,
-         "inputLinksId": [
-            80,
-            11
-         ],
-         "outputLinksId": [],
-         "y": 1198.2593324184418,
-         "idNode": "node23",
-         "inputLinksId": [
-            "link80",
-            "link11"
-         ],
-         "outputLinksId": [],
-         "x_label": -2.6116485595703125,
-         "y_label": 18.375415802001953
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 24,
-         "color": "grey",
+      "node24": {
+         "idNode": "node24",
+         "color": "#808080",
          "name": "Production",
          "type": "sector",
          "orientation": "vertical",
@@ -831,22 +678,6 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 0,
-         "inputLinksId": [],
-         "outputLinksId": [
-            48,
-            40,
-            52,
-            61,
-            60,
-            67,
-            62,
-            66
-         ],
-         "y": 700,
-         "idNode": "node24",
          "inputLinksId": [],
          "outputLinksId": [
             "link48",
@@ -857,41 +688,47 @@
             "link67",
             "link62",
             "link66"
-         ]
+         ],
+         "x": 0,
+         "y": 700,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 25,
-         "color": "grey",
+      "node25": {
+         "idNode": "node25",
+         "color": "#808080",
          "name": "Produits pétroliers primaires",
          "type": "sector",
          "orientation": "vertical",
          "tags": {
             "Exchanges": [
                "Other"
-            ],
-            "Regions": []
+            ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 295.6472473144531,
-         "inputLinksId": [
-            7
-         ],
-         "outputLinksId": [
-            8
-         ],
-         "y": 187.9256134033203,
-         "idNode": "node25",
          "inputLinksId": [
             "link7"
          ],
          "outputLinksId": [
             "link8"
-         ]
+         ],
+         "x": 300,
+         "y": 200,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 26,
-         "color": "grey",
+      "node26": {
+         "idNode": "node26",
+         "color": "#808080",
          "name": "Produits pétroliers secondaires",
          "type": "sector",
          "orientation": "vertical",
@@ -900,19 +737,6 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 600,
-         "inputLinksId": [
-            12,
-            9
-         ],
-         "outputLinksId": [
-            14,
-            13
-         ],
-         "y": 200,
-         "idNode": "node26",
          "inputLinksId": [
             "link12",
             "link9"
@@ -920,11 +744,20 @@
          "outputLinksId": [
             "link14",
             "link13"
-         ]
+         ],
+         "x": 600,
+         "y": 101,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 27,
-         "color": "grey",
+      "node27": {
+         "idNode": "node27",
+         "color": "#808080",
          "name": "Produits pétroliers secondaires - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
@@ -933,21 +766,6 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 900,
-         "inputLinksId": [
-            14
-         ],
-         "outputLinksId": [
-            19,
-            15,
-            17,
-            18,
-            16
-         ],
-         "y": 200,
-         "idNode": "node27",
          "inputLinksId": [
             "link14"
          ],
@@ -955,13 +773,22 @@
             "link19",
             "link15",
             "link17",
-            "link18",
-            "link16"
-         ]
+            "link16",
+            "link18"
+         ],
+         "x": 900,
+         "y": 100,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 28,
-         "color": "grey",
+      "node28": {
+         "idNode": "node28",
+         "color": "#808080",
          "name": "Raffinerie",
          "type": "sector",
          "orientation": "vertical",
@@ -970,31 +797,27 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 600,
-         "inputLinksId": [
-            8
-         ],
-         "outputLinksId": [
-            9,
-            10,
-            11
-         ],
-         "y": 800,
-         "idNode": "node28",
          "inputLinksId": [
             "link8"
          ],
          "outputLinksId": [
             "link9",
-            "link10",
-            "link11"
-         ]
+            "link11",
+            "link10"
+         ],
+         "x": 596,
+         "y": 424.00002551078796,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 29,
-         "color": "grey",
+      "node29": {
+         "idNode": "node29",
+         "color": "#808080",
          "name": "Résidentiel",
          "type": "sector",
          "orientation": "vertical",
@@ -1003,39 +826,31 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1800,
-         "inputLinksId": [
-            15,
-            24,
-            43,
-            73,
-            32,
-            70,
-            55,
-            81,
-            2
-         ],
-         "outputLinksId": [],
-         "y": 300,
-         "idNode": "node29",
          "inputLinksId": [
             "link15",
             "link24",
+            "link2",
             "link43",
             "link73",
-            "link32",
             "link70",
             "link55",
-            "link81",
-            "link2"
+            "link32",
+            "link81"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 1800,
+         "y": 550,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 30,
-         "color": "grey",
+      "node30": {
+         "idNode": "node30",
+         "color": "#808080",
          "name": "Solaire PV",
          "type": "sector",
          "orientation": "vertical",
@@ -1044,27 +859,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            62
-         ],
-         "outputLinksId": [
-            65
-         ],
-         "y": 1100,
-         "idNode": "node30",
          "inputLinksId": [
             "link62"
          ],
          "outputLinksId": [
             "link65"
-         ]
+         ],
+         "x": 300,
+         "y": 850,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 31,
-         "color": "grey",
+      "node31": {
+         "idNode": "node31",
+         "color": "#808080",
          "name": "Solaire thermique",
          "type": "sector",
          "orientation": "vertical",
@@ -1073,27 +886,25 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            66
-         ],
-         "outputLinksId": [
-            68
-         ],
-         "y": 1200,
-         "idNode": "node31",
          "inputLinksId": [
             "link66"
          ],
          "outputLinksId": [
             "link68"
-         ]
+         ],
+         "x": 300,
+         "y": 900,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 32,
-         "color": "grey",
+      "node32": {
+         "idNode": "node32",
+         "color": "#808080",
          "name": "Tertiaire",
          "type": "sector",
          "orientation": "vertical",
@@ -1102,66 +913,38 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1800,
-         "inputLinksId": [
-            16,
-            25,
-            44,
-            74,
-            33,
-            56,
-            82,
-            3
-         ],
-         "outputLinksId": [],
-         "y": 600,
-         "idNode": "node32",
          "inputLinksId": [
             "link16",
             "link25",
+            "link3",
             "link44",
             "link74",
-            "link33",
             "link56",
-            "link82",
-            "link3"
+            "link33",
+            "link82"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 1800,
+         "y": 700,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 33,
-         "color": "grey",
+      "node33": {
+         "idNode": "node33",
+         "color": "#808080",
          "name": "Transformation de l'énergie",
          "type": "sector",
          "orientation": "vertical",
          "tags": {
             "Exchanges": [
                "Other"
-            ],
-            "Regions": []
+            ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1200,
-         "inputLinksId": [
-            13,
-            22,
-            51,
-            41,
-            30,
-            53,
-            38
-         ],
-         "outputLinksId": [
-            79,
-            78,
-            80,
-            77
-         ],
-         "y": 600,
-         "idNode": "node33",
          "inputLinksId": [
             "link13",
             "link22",
@@ -1172,15 +955,24 @@
             "link38"
          ],
          "outputLinksId": [
-            "link79",
             "link78",
-            "link80",
-            "link77"
-         ]
+            "link79",
+            "link77",
+            "link80"
+         ],
+         "x": 1200,
+         "y": 700,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 34,
-         "color": "grey",
+      "node34": {
+         "idNode": "node34",
+         "color": "#808080",
          "name": "Transport",
          "type": "sector",
          "orientation": "vertical",
@@ -1189,35 +981,29 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 1800,
-         "inputLinksId": [
-            19,
-            28,
-            47,
-            36,
-            59,
-            85,
-            6
-         ],
-         "outputLinksId": [],
-         "y": 200,
-         "idNode": "node34",
          "inputLinksId": [
             "link19",
             "link28",
+            "link6",
             "link47",
-            "link36",
             "link59",
-            "link85",
-            "link6"
+            "link36",
+            "link85"
          ],
-         "outputLinksId": []
+         "outputLinksId": [],
+         "x": 1800,
+         "y": 100,
+         "label_visible": true,
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
       },
-      {
-         "id": 35,
-         "color": "grey",
+      "node35": {
+         "idNode": "node35",
+         "color": "#808080",
          "name": "Uranium",
          "type": "sector",
          "orientation": "vertical",
@@ -1226,82 +1012,288 @@
                "Other"
             ]
          },
-         "label_visible": true,
-         "visible": true,
-         "x": 300,
-         "inputLinksId": [
-            37
-         ],
-         "outputLinksId": [
-            38
-         ],
-         "y": 1300,
-         "idNode": "node35",
          "inputLinksId": [
             "link37"
          ],
          "outputLinksId": [
             "link38"
-         ]
-      },
-      {
-         "id": 36,
-         "name": "Vecteurs énergétiques",
-         "type": "product",
-         "visible": false,
+         ],
+         "x": 300,
+         "y": 950,
          "label_visible": true,
-         "color": "darkgrey",
-         "x": 839.782787322998,
-         "y": 76.4951434135437,
-         "inputLinksId": [],
-         "outputLinksId": [],
-         "tags": {
-            "Regions": [],
-            "Exchanges": [
-               "Other"
-            ]
-         },
+         "shape_visible": true,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true
+      },
+      "node36": {
          "idNode": "node36",
-         "inputLinksId": [],
-         "outputLinksId": [],
-         "x_label": -13.058258056640625,
-         "y_label": -16.446606636047363
-      },
-      {
-         "id": 37,
-         "name": "Usages finaux",
-         "type": "product",
-         "visible": false,
-         "label_visible": true,
-         "color": "darkgrey",
-         "x": 1726.5024242401123,
-         "y": 65.10680198669434,
-         "inputLinksId": [],
-         "outputLinksId": [],
+         "color": "#808080",
+         "name": "Organo-carburants - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
          "tags": {
-            "Regions": [],
             "Exchanges": [
-               "Other"
+               "Echangesimport"
             ]
          },
-         "idNode": "node37",
          "inputLinksId": [],
-         "outputLinksId": []
+         "outputLinksId": [
+            "link0"
+         ],
+         "x": 210,
+         "y": 430,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 210,
+         "y_label": 470
+      },
+      "node37": {
+         "idNode": "node37",
+         "color": "#808080",
+         "name": "Produits pétroliers primaires - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link7"
+         ],
+         "x": 210,
+         "y": 180,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 210,
+         "y_label": 220
+      },
+      "node38": {
+         "idNode": "node38",
+         "color": "#808080",
+         "name": "Raffinerie - Echanges - Exportations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesexport"
+            ]
+         },
+         "inputLinksId": [
+            "link10"
+         ],
+         "outputLinksId": [],
+         "x": 686,
+         "y": 444.00002551078796,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 686,
+         "y_label": 454.00002551078796
+      },
+      "node39": {
+         "idNode": "node39",
+         "color": "#808080",
+         "name": "Produits pétroliers secondaires - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link12"
+         ],
+         "x": 510,
+         "y": 81,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 510,
+         "y_label": 121
+      },
+      "node40": {
+         "idNode": "node40",
+         "color": "#808080",
+         "name": "Gaz - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link20"
+         ],
+         "x": 510,
+         "y": 286,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 510,
+         "y_label": 326
+      },
+      "node41": {
+         "idNode": "node41",
+         "color": "#808080",
+         "name": "CMS - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link29"
+         ],
+         "x": 210,
+         "y": 580,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 210,
+         "y_label": 620
+      },
+      "node42": {
+         "idNode": "node42",
+         "color": "#808080",
+         "name": "Uranium - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link37"
+         ],
+         "x": 210,
+         "y": 930,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 210,
+         "y_label": 970
+      },
+      "node43": {
+         "idNode": "node43",
+         "color": "#808080",
+         "name": "Biomasse solide - Echanges - Importations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesimport"
+            ]
+         },
+         "inputLinksId": [],
+         "outputLinksId": [
+            "link39"
+         ],
+         "x": 210,
+         "y": 480,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 210,
+         "y_label": 520
+      },
+      "node44": {
+         "idNode": "node44",
+         "color": "#808080",
+         "name": "Electricité - Echanges - Exportations",
+         "type": "sector",
+         "orientation": "vertical",
+         "tags": {
+            "Exchanges": [
+               "Echangesexport"
+            ]
+         },
+         "inputLinksId": [
+            "link87"
+         ],
+         "outputLinksId": [],
+         "x": 1590,
+         "y": 1045.56,
+         "label_visible": false,
+         "shape_visible": false,
+         "node_parameter": "general",
+         "node_visible": true,
+         "display": true,
+         "tag_favorite": {},
+         "trade_close": true,
+         "x_label": 1590,
+         "y_label": 1055.56
       }
-   ],
-   "links": [
-      {
-         "source_name": "Importations",
-         "target_name": "Organo-carburants",
+   },
+   "links": {
+      "link0": {
+         "idLink": "link0",
+         "idSource": "node36",
+         "idTarget": "node18",
          "value": [
             43.6,
             6.4,
             21.1,
             55.8,
             72,
-            19.3
+            19.3,
+            18.5,
+            15.9,
+            42.5,
+            18.7
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1311,33 +1303,42 @@
          ],
          "color": "#40de48",
          "curvature": 1,
-         "label_position": "frozen",
+         "label_position": "end",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "vh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#40de48",
-         "idLink": "link0",
-         "x_label": 258.7004373779297,
-         "y_label": 419.92896270751953
+         "x_label": 284,
+         "y_label": 446.125,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Organo-carburants",
-         "target_name": "Organo-carburants - vecteur énergétique ",
+      "link1": {
+         "idLink": "link1",
+         "idSource": "node18",
+         "idTarget": "node19",
          "value": [
             43.6,
             6.4,
             21.1,
             55.8,
             72,
-            19.3
+            19.3,
+            18.5,
+            15.9,
+            42.5,
+            18.7
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1351,21 +1352,26 @@
          "left_horiz_shift": 0.3205882352941176,
          "right_horiz_shift": 0.4205882352941177,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#40de49",
-         "idLink": "link1",
          "x_label": 395,
-         "y_label": 396.18
+         "y_label": 446.125,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Organo-carburants - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link2": {
+         "idLink": "link2",
+         "idSource": "node19",
+         "idTarget": "node29",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1374,6 +1380,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1387,19 +1397,23 @@
          "left_horiz_shift": 0.31153846153846154,
          "right_horiz_shift": 0.4115384615384616,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link2"
+         "text_color": "white"
       },
-      {
-         "source_name": "Organo-carburants - vecteur énergétique ",
-         "target_name": "Tertiaire",
+      "link3": {
+         "idLink": "link3",
+         "idSource": "node19",
+         "idTarget": "node32",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1408,6 +1422,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1421,27 +1439,35 @@
          "left_horiz_shift": 0.3038461538461539,
          "right_horiz_shift": 0.40384615384615385,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link3"
+         "text_color": "white"
       },
-      {
-         "source_name": "Organo-carburants - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link4": {
+         "idLink": "link4",
+         "idSource": "node19",
+         "idTarget": "node0",
          "value": [
             0.5,
             1.6,
             3.2,
             2.3,
             0.9,
-            1.1
+            1.1,
+            0.3,
+            1.7,
+            0.8,
+            2.8
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1455,27 +1481,35 @@
          "left_horiz_shift": 0.29615384615384616,
          "right_horiz_shift": 0.3961538461538462,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link4"
+         "text_color": "white"
       },
-      {
-         "source_name": "Organo-carburants - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link5": {
+         "idLink": "link5",
+         "idSource": "node19",
+         "idTarget": "node17",
          "value": [
             0,
             0,
             0,
             0,
             0,
+            0,
+            6.3,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1486,30 +1520,38 @@
          "color": "#40de53",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.28846153846153844,
-         "right_horiz_shift": 0.3884615384615385,
+         "left_horiz_shift": 0.1,
+         "right_horiz_shift": 0.19999999999999998,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link5"
+         "text_color": "white"
       },
-      {
-         "source_name": "Organo-carburants - vecteur énergétique ",
-         "target_name": "Transport",
+      "link6": {
+         "idLink": "link6",
+         "idSource": "node19",
+         "idTarget": "node34",
          "value": [
             43.1,
             4.9,
             17.9,
             53.5,
             71.1,
-            18.2
+            18.2,
+            11.8,
+            14.2,
+            41.7,
+            15.9
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1520,24 +1562,29 @@
          "color": "#40de54",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.335006518904824,
-         "right_horiz_shift": 0.9892438070404173,
+         "left_horiz_shift": 0.75,
+         "right_horiz_shift": 0.8500000000000001,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.05,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link6",
+         "text_color": "#40de54",
          "x_label": 1025,
-         "y_label": 396.205
+         "y_label": 446.085,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Importations",
-         "target_name": "Produits pétroliers primaires",
+      "link7": {
+         "idLink": "link7",
+         "idSource": "node37",
+         "idTarget": "node25",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1546,6 +1593,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1555,23 +1606,29 @@
          ],
          "color": "#c5c9d1",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.4366666666666667,
-         "right_horiz_shift": 0.5366666666666667,
+         "label_position": "end",
+         "left_horiz_shift": 0.41000000000000003,
+         "right_horiz_shift": 0.51,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hh",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link7"
+         "text_color": "#c5c9d1",
+         "x_label": -58.423614501953125,
+         "y_label": 70.83333444595337
       },
-      {
-         "source_name": "Produits pétroliers primaires",
-         "target_name": "Raffinerie",
+      "link8": {
+         "idLink": "link8",
+         "idSource": "node25",
+         "idTarget": "node28",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1580,6 +1637,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1593,19 +1654,23 @@
          "left_horiz_shift": 0.29705882352941176,
          "right_horiz_shift": 0.3970588235294118,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link8"
+         "text_color": "white"
       },
-      {
-         "source_name": "Raffinerie",
-         "target_name": "Produits pétroliers secondaires",
+      "link9": {
+         "idLink": "link9",
+         "idSource": "node28",
+         "idTarget": "node26",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1614,6 +1679,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1627,19 +1696,23 @@
          "left_horiz_shift": 0.2730769230769231,
          "right_horiz_shift": 0.3730769230769231,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link9"
+         "text_color": "white"
       },
-      {
-         "source_name": "Raffinerie",
-         "target_name": "Exportations",
+      "link10": {
+         "idLink": "link10",
+         "idSource": "node28",
+         "idTarget": "node38",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1648,6 +1721,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1658,22 +1735,28 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.2653846153846154,
-         "right_horiz_shift": 0.3653846153846154,
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hh",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hv",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link10"
+         "text_color": "#c5c9d1",
+         "x_label": 886.6493072509766,
+         "y_label": 1494.7222218513489
       },
-      {
-         "source_name": "Raffinerie",
-         "target_name": "Pertes transformation",
+      "link11": {
+         "idLink": "link11",
+         "idSource": "node28",
+         "idTarget": "node23",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1682,6 +1765,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1695,28 +1782,36 @@
          "left_horiz_shift": 0.25769230769230766,
          "right_horiz_shift": 0.35769230769230775,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link11"
+         "text_color": "white"
       },
-      {
-         "source_name": "Importations",
-         "target_name": "Produits pétroliers secondaires",
+      "link12": {
+         "idLink": "link12",
+         "idSource": "node39",
+         "idTarget": "node26",
          "value": [
             697.2,
             134.9,
             311.8,
             952.8,
-            1086.2,
-            287.7
+            500,
+            287.7,
+            958.3,
+            249.6,
+            643.2,
+            293.7
          ],
          "display_value": [
             "default",
+            "default",
+            "default",
+            "default",
+            "1086*",
             "default",
             "default",
             "default",
@@ -1725,33 +1820,42 @@
          ],
          "color": "#c5c9d1",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.42333333333333334,
-         "right_horiz_shift": 0.5233333333333334,
+         "label_position": "end",
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link12",
-         "x_label": 90.374,
-         "y_label": 97
+         "text_color": "#c5c9d1",
+         "x_label": 584,
+         "y_label": 109.685,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Produits pétroliers secondaires",
-         "target_name": "Transformation de l'énergie",
+      "link13": {
+         "idLink": "link13",
+         "idSource": "node26",
+         "idTarget": "node33",
          "value": [
             0.3,
             0,
             0.4,
             0.2,
             0,
-            0
+            0,
+            0,
+            0,
+            0.9,
+            0.3
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1765,28 +1869,36 @@
          "left_horiz_shift": 0.30714285714285716,
          "right_horiz_shift": 0.40714285714285714,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link13"
+         "text_color": "white"
       },
-      {
-         "source_name": "Produits pétroliers secondaires",
-         "target_name": "Produits pétroliers secondaires - vecteur énergétique ",
+      "link14": {
+         "idLink": "link14",
+         "idSource": "node26",
+         "idTarget": "node27",
          "value": [
             696.9,
             134.9,
             311.5,
             952.6,
-            1086.2,
-            287.7
+            500,
+            287.7,
+            967,
+            249.6,
+            642.3,
+            293.4
          ],
          "display_value": [
             "default",
+            "default",
+            "default",
+            "default",
+            "1086*",
             "default",
             "default",
             "default",
@@ -1799,65 +1911,38 @@
          "left_horiz_shift": 0.2785714285714286,
          "right_horiz_shift": 0.3785714285714286,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link14",
+         "text_color": "#c5c9d1",
          "x_label": 665,
-         "y_label": 228.845
+         "y_label": 109.67,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Produits pétroliers secondaires - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link15": {
+         "idLink": "link15",
+         "idSource": "node27",
+         "idTarget": "node29",
          "value": [
             99,
             43.3,
             36.1,
             94.8,
             99.4,
-            33.6
+            33.6,
+            24.1,
+            30.5,
+            80.3,
+            38.5
          ],
          "display_value": [
             "default",
             "default",
             "default",
             "default",
-            "default",
-            "default"
-         ],
-         "color": "#c5c9d1",
-         "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.45,
-         "right_horiz_shift": 0.55,
-         "label_visible": true,
-         "visible": true,
-         "tags": {},
-         "orientation": "hh",
-         "arrow": true,
-         "curved": true,
-         "label_on_path": false,
-         "text_color": "#c5c9d1",
-         "idLink": "link15",
-         "x_label": 1760.7152099609375,
-         "y_label": 285.42247314453124
-      },
-      {
-         "source_name": "Produits pétroliers secondaires - vecteur énergétique ",
-         "target_name": "Tertiaire",
-         "value": [
-            21.8,
-            9.1,
-            6.3,
-            19.1,
-            37.6,
-            7.2
-         ],
-         "display_value": [
             "default",
             "default",
             "default",
@@ -1868,32 +1953,86 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "end",
-         "left_horiz_shift": 0.4277777777777778,
-         "right_horiz_shift": 0.5277777777777778,
+         "left_horiz_shift": 0.7,
+         "right_horiz_shift": 0.8,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link16",
+         "text_color": "#c5c9d1",
          "x_label": 1705,
-         "y_label": 595.09
+         "y_label": 545.925,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Produits pétroliers secondaires - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link16": {
+         "idLink": "link16",
+         "idSource": "node27",
+         "idTarget": "node32",
+         "value": [
+            21.8,
+            9.1,
+            6.3,
+            19.1,
+            37.6,
+            7.2,
+            4.1,
+            5.3,
+            15.4,
+            6.2
+         ],
+         "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default"
+         ],
+         "color": "#c5c9d1",
+         "curvature": 1,
+         "label_position": "middle",
+         "left_horiz_shift": 0.7,
+         "right_horiz_shift": 0.8,
+         "label_visible": true,
+         "tags": {},
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
+         "arrow": true,
+         "curved": true,
+         "label_on_path": true,
+         "text_color": "#c5c9d1",
+         "x_label": 1572.5,
+         "y_label": 446.955,
+         "orthogonal_label_position": "below"
+      },
+      "link17": {
+         "idLink": "link17",
+         "idSource": "node27",
+         "idTarget": "node0",
          "value": [
             6.4,
             19.5,
             39.1,
             29.8,
             12.7,
-            14
+            14,
+            4.8,
+            21.3,
+            10.6,
+            34.5
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1903,33 +2042,42 @@
          ],
          "color": "#c5c9d1",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.41940526480626583,
-         "right_horiz_shift": 0.5649112739948311,
+         "label_position": "middle",
+         "left_horiz_shift": 0.7,
+         "right_horiz_shift": 0.8,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link17",
-         "x_label": 998,
-         "y_label": 266.5741115816608
+         "text_color": "#c5c9d1",
+         "x_label": 1572.5,
+         "y_label": 483.65500000000003,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Produits pétroliers secondaires - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link18": {
+         "idLink": "link18",
+         "idSource": "node27",
+         "idTarget": "node17",
          "value": [
             25.7,
             2.3,
             3.8,
             130.3,
             47,
-            3.4
+            3.4,
+            786.9,
+            13.8,
+            17.1,
+            14.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1939,33 +2087,42 @@
          ],
          "color": "#c5c9d1",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.38333333333333336,
-         "right_horiz_shift": 0.4833333333333334,
+         "label_position": "middle",
+         "left_horiz_shift": 0.55,
+         "right_horiz_shift": 0.6499999999999999,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link18",
-         "x_label": 1025,
-         "y_label": 260.235
+         "text_color": "#c5c9d1",
+         "x_label": 1447.4,
+         "y_label": 232.35500000000002,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Produits pétroliers secondaires - vecteur énergétique ",
-         "target_name": "Transport",
+      "link19": {
+         "idLink": "link19",
+         "idSource": "node27",
+         "idTarget": "node34",
          "value": [
             544.1,
             60.7,
             226.1,
             678.6,
             889.4,
-            229.5
+            229.5,
+            147.2,
+            178.8,
+            518.9,
+            200.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -1976,32 +2133,41 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.3611111111111111,
-         "right_horiz_shift": 0.46111111111111114,
+         "left_horiz_shift": 0.6916993464052287,
+         "right_horiz_shift": 0.8975816993464051,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link19",
+         "text_color": "#c5c9d1",
          "x_label": 1025,
-         "y_label": 221.205
+         "y_label": 104.005,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Importations",
-         "target_name": "Gaz",
+      "link20": {
+         "idLink": "link20",
+         "idSource": "node40",
+         "idTarget": "node13",
          "value": [
             314.6,
             5.4,
             6.3,
             563.6,
             451.4,
-            56.3
+            56.3,
+            172.9,
+            47.2,
+            164.4,
+            0.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2011,64 +2177,35 @@
          ],
          "color": "#f58536",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.41000000000000003,
-         "right_horiz_shift": 0.51,
+         "label_position": "end",
+         "left_horiz_shift": 0.35,
+         "right_horiz_shift": 0.45000000000000007,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link20",
-         "x_label": 135.905,
-         "y_label": 97
+         "text_color": "#f58536",
+         "x_label": 584,
+         "y_label": 308.265,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Gaz",
-         "target_name": "Pertes réseaux",
+      "link21": {
+         "idLink": "link21",
+         "idSource": "node13",
+         "idTarget": "node22",
          "value": [
             1.4,
             0,
             0,
             2.8,
             2.2,
-            0.3
-         ],
-         "display_value": [
-            "default",
-            "default",
-            "default",
-            "default",
-            "default",
-            "default"
-         ],
-         "color": "#f58536",
-         "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.33461538461538465,
-         "right_horiz_shift": 0.4346153846153847,
-         "label_visible": true,
-         "visible": true,
-         "tags": {},
-         "orientation": "hv",
-         "arrow": true,
-         "curved": true,
-         "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link21"
-      },
-      {
-         "source_name": "Gaz",
-         "target_name": "Transformation de l'énergie",
-         "value": [
-            33,
-            0,
-            0,
-            1.3,
-            2,
+            0.3,
+            0.9,
+            0.2,
+            0.8,
             0
          ],
          "display_value": [
@@ -2077,37 +2214,92 @@
             "default",
             "default",
             "default",
+            "default",
+            "default",
+            "default",
+            "default",
             "default"
          ],
          "color": "#f58536",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.3269230769230769,
-         "right_horiz_shift": 0.42692307692307696,
+         "label_position": "beginning",
+         "left_horiz_shift": 0.1,
+         "right_horiz_shift": 0.19999999999999998,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
-         "text_color": "#f58536",
-         "idLink": "link22",
-         "x_label": 649.7313842773438,
-         "y_label": 349.9038415527344
+         "label_on_path": true,
+         "text_color": "white"
       },
-      {
-         "source_name": "Gaz",
-         "target_name": "Gaz - vecteur énergétique ",
+      "link22": {
+         "idLink": "link22",
+         "idSource": "node13",
+         "idTarget": "node33",
+         "value": [
+            33,
+            0,
+            0,
+            1.3,
+            2,
+            0,
+            0,
+            0,
+            9,
+            0
+         ],
+         "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default"
+         ],
+         "color": "#f58536",
+         "curvature": 1,
+         "label_position": "beginning",
+         "left_horiz_shift": 0.3269230769230769,
+         "right_horiz_shift": 0.42692307692307696,
+         "label_visible": true,
+         "tags": {},
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
+         "arrow": true,
+         "curved": true,
+         "label_on_path": true,
+         "text_color": "#f58536",
+         "x_label": 695,
+         "y_label": 329.81,
+         "orthogonal_label_position": "below"
+      },
+      "link23": {
+         "idLink": "link23",
+         "idSource": "node13",
+         "idTarget": "node14",
          "value": [
             281.6,
             5.4,
             6.3,
             562.2,
             449.3,
-            56.3
+            56.3,
+            172.9,
+            47.2,
+            155.5,
+            0.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2121,29 +2313,38 @@
          "left_horiz_shift": 0.3192307692307692,
          "right_horiz_shift": 0.4192307692307693,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link23",
+         "text_color": "#f58536",
          "x_label": 665,
-         "y_label": 308.08
+         "y_label": 307.775,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Gaz - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link24": {
+         "idLink": "link24",
+         "idSource": "node14",
+         "idTarget": "node29",
          "value": [
             144.1,
             4.8,
             5.6,
             143.9,
             215.4,
-            42.5
+            42.5,
+            25.9,
+            29.9,
+            96.1,
+            0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2157,29 +2358,38 @@
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link24",
+         "text_color": "#f58536",
          "x_label": 1025,
-         "y_label": 302.61
+         "y_label": 305.92,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Gaz - vecteur énergétique ",
-         "target_name": "Tertiaire",
+      "link25": {
+         "idLink": "link25",
+         "idSource": "node14",
+         "idTarget": "node32",
          "value": [
             122.2,
             0.6,
             0.6,
             54.7,
             69,
-            11.9
+            11.9,
+            9.3,
+            12.2,
+            55.8,
+            0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2189,33 +2399,42 @@
          ],
          "color": "#f58536",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.5850649350649351,
-         "right_horiz_shift": 0.9646103896103897,
+         "label_position": "end",
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link25",
-         "x_label": 1025,
-         "y_label": 315.925
+         "text_color": "#f58536",
+         "x_label": 1705,
+         "y_label": 698.33,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Gaz - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link26": {
+         "idLink": "link26",
+         "idSource": "node14",
+         "idTarget": "node0",
          "value": [
             0.2,
             0,
             0,
             0.7,
             1.2,
-            0.4
+            0.4,
+            0.1,
+            1.4,
+            0.6,
+            0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2229,27 +2448,35 @@
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link26"
+         "text_color": "white"
       },
-      {
-         "source_name": "Gaz - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link27": {
+         "idLink": "link27",
+         "idSource": "node14",
+         "idTarget": "node17",
          "value": [
             13.1,
             0,
             0,
             360.1,
             160.7,
-            1.2
+            1.2,
+            136.4,
+            3.5,
+            1.4,
+            0.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2260,32 +2487,40 @@
          "color": "#f58536",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.3642857142857143,
-         "right_horiz_shift": 0.4642857142857143,
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.6000000000000001,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link27",
-         "x_label": 998,
-         "y_label": 301.6136991345977
+         "x_label": 1025.4,
+         "y_label": 311.425
       },
-      {
-         "source_name": "Gaz - vecteur énergétique ",
-         "target_name": "Transport",
+      "link28": {
+         "idLink": "link28",
+         "idSource": "node14",
+         "idTarget": "node34",
          "value": [
             0.5,
             0,
             0,
             0,
             0.7,
+            0,
+            0.3,
+            0,
+            0.7,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2299,27 +2534,35 @@
          "left_horiz_shift": 0.33571428571428574,
          "right_horiz_shift": 0.4357142857142858,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link28"
+         "text_color": "white"
       },
-      {
-         "source_name": "Importations",
-         "target_name": "CMS",
+      "link29": {
+         "idLink": "link29",
+         "idSource": "node41",
+         "idTarget": "node4",
          "value": [
             0.6,
             0.4,
             0.1,
             0.9,
             1.3,
-            0.6
+            0.6,
+            0.2,
+            1.6,
+            0.1,
+            0.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2329,23 +2572,29 @@
          ],
          "color": "#211e1c",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.39666666666666667,
-         "right_horiz_shift": 0.4966666666666667,
+         "label_position": "end",
+         "left_horiz_shift": 0.37,
+         "right_horiz_shift": 0.47000000000000003,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hh",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link29"
+         "text_color": "#211e1c",
+         "x_label": -58.423614501953125,
+         "y_label": 96.97444704055786
       },
-      {
-         "source_name": "CMS",
-         "target_name": "Transformation de l'énergie",
+      "link30": {
+         "idLink": "link30",
+         "idSource": "node4",
+         "idTarget": "node33",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2354,6 +2603,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2367,27 +2620,35 @@
          "left_horiz_shift": 0.3911764705882353,
          "right_horiz_shift": 0.4911764705882353,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link30"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS",
-         "target_name": "CMS - vecteur énergétique ",
+      "link31": {
+         "idLink": "link31",
+         "idSource": "node4",
+         "idTarget": "node5",
          "value": [
             0.6,
             0.4,
             0.1,
             0.9,
             1.3,
-            0.6
+            0.6,
+            0.2,
+            1.6,
+            0.1,
+            0.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2401,19 +2662,23 @@
          "left_horiz_shift": 0.37941176470588234,
          "right_horiz_shift": 0.47941176470588237,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link31"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link32": {
+         "idLink": "link32",
+         "idSource": "node5",
+         "idTarget": "node29",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2422,6 +2687,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2435,19 +2704,23 @@
          "left_horiz_shift": 0.4115384615384615,
          "right_horiz_shift": 0.5115384615384616,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link32"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS - vecteur énergétique ",
-         "target_name": "Tertiaire",
+      "link33": {
+         "idLink": "link33",
+         "idSource": "node5",
+         "idTarget": "node32",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2456,6 +2729,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2469,19 +2746,23 @@
          "left_horiz_shift": 0.40384615384615385,
          "right_horiz_shift": 0.5038461538461538,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link33"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link34": {
+         "idLink": "link34",
+         "idSource": "node5",
+         "idTarget": "node0",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2490,6 +2771,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2503,27 +2788,35 @@
          "left_horiz_shift": 0.3961538461538462,
          "right_horiz_shift": 0.49615384615384617,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link34"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link35": {
+         "idLink": "link35",
+         "idSource": "node5",
+         "idTarget": "node17",
          "value": [
             0.6,
             0.4,
             0.1,
             0.9,
             1.3,
-            0.6
+            0.6,
+            0.2,
+            1.6,
+            0.1,
+            0.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2537,19 +2830,23 @@
          "left_horiz_shift": 0.38846153846153847,
          "right_horiz_shift": 0.4884615384615385,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link35"
+         "text_color": "white"
       },
-      {
-         "source_name": "CMS - vecteur énergétique ",
-         "target_name": "Transport",
+      "link36": {
+         "idLink": "link36",
+         "idSource": "node5",
+         "idTarget": "node34",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2558,6 +2855,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2571,22 +2872,26 @@
          "left_horiz_shift": 0.38076923076923075,
          "right_horiz_shift": 0.48076923076923084,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link36"
+         "text_color": "white"
       },
-      {
-         "source_name": "Importations",
-         "target_name": "Uranium",
+      "link37": {
+         "idLink": "link37",
+         "idSource": "node42",
+         "idTarget": "node35",
          "value": [
             0,
             0,
             0,
+            0,
+            0,
+            0,
+            500,
             0,
             0,
             0
@@ -2597,30 +2902,41 @@
             "default",
             "default",
             "default",
+            "default",
+            "68422*",
+            "default",
+            "default",
             "default"
          ],
          "color": "#981ca3",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.38333333333333336,
-         "right_horiz_shift": 0.4833333333333334,
+         "label_position": "end",
+         "left_horiz_shift": 0.33,
+         "right_horiz_shift": 0.43000000000000005,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hh",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "vh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link37"
+         "text_color": "#981ca3",
+         "x_label": 284.5,
+         "y_label": 969,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Uranium",
-         "target_name": "Transformation de l'énergie",
+      "link38": {
+         "idLink": "link38",
+         "idSource": "node35",
+         "idTarget": "node33",
          "value": [
             0,
             0,
             0,
+            0,
+            0,
+            0,
+            500,
             0,
             0,
             0
@@ -2631,35 +2947,49 @@
             "default",
             "default",
             "default",
+            "default",
+            "68422*",
+            "default",
+            "default",
             "default"
          ],
          "color": "#981ca3",
          "curvature": 1,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.26176470588235295,
-         "right_horiz_shift": 0.361764705882353,
+         "label_position": "end",
+         "left_horiz_shift": 0.09877660414751838,
+         "right_horiz_shift": 0.11139910529641545,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link38"
+         "x_label": 1105,
+         "y_label": 744
       },
-      {
-         "source_name": "Importations",
-         "target_name": "Biomasse solide",
+      "link39": {
+         "idLink": "link39",
+         "idSource": "node43",
+         "idTarget": "node2",
          "value": [
             33,
             10.8,
             16.5,
             35.8,
             42.8,
-            15.7
+            15.7,
+            26.6,
+            12.7,
+            15.5,
+            13
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2669,69 +2999,42 @@
          ],
          "color": "#db0d55",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.5414285714285714,
-         "right_horiz_shift": 0.645,
+         "label_position": "end",
+         "left_horiz_shift": 0.29,
+         "right_horiz_shift": 0.39,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "vh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#db0d55",
-         "idLink": "link39",
-         "x_label": 119.37714318847657,
-         "y_label": 123.54046630859375
+         "x_label": 284,
+         "y_label": 495.33,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Biomasse solide",
+      "link40": {
+         "idLink": "link40",
+         "idSource": "node24",
+         "idTarget": "node2",
          "value": [
             77,
             25.1,
             38.4,
             83.5,
             99.9,
-            36.6
+            36.6,
+            62.1,
+            29.7,
+            36.2,
+            30.4
          ],
          "display_value": [
             "default",
             "default",
             "default",
             "default",
-            "default",
-            "default"
-         ],
-         "color": "#db0d55",
-         "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.3566666666666667,
-         "right_horiz_shift": 0.4566666666666667,
-         "label_visible": true,
-         "visible": true,
-         "tags": {},
-         "orientation": "hh",
-         "arrow": true,
-         "curved": true,
-         "label_on_path": true,
-         "text_color": "#db0d55",
-         "idLink": "link40",
-         "x_label": 267.61163330078125,
-         "y_label": 530.3071301269531
-      },
-      {
-         "source_name": "Biomasse solide",
-         "target_name": "Transformation de l'énergie",
-         "value": [
-            48.1,
-            0,
-            1,
-            7.8,
-            13.4,
-            0
-         ],
-         "display_value": [
             "default",
             "default",
             "default",
@@ -2742,32 +3045,86 @@
          "color": "#db0d55",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.34644679921196114,
-         "right_horiz_shift": 0.432597159319383,
+         "left_horiz_shift": 0.3566666666666667,
+         "right_horiz_shift": 0.4566666666666667,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link41",
-         "x_label": 425,
-         "y_label": 502.605
+         "text_color": "#db0d55",
+         "x_label": 65,
+         "y_label": 695.52,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Biomasse solide",
-         "target_name": "Biomasse solide - vecteur énergétique ",
+      "link41": {
+         "idLink": "link41",
+         "idSource": "node2",
+         "idTarget": "node33",
+         "value": [
+            48.1,
+            0,
+            1,
+            7.8,
+            13.4,
+            0,
+            0,
+            0.2,
+            3.8,
+            4.5
+         ],
+         "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "default"
+         ],
+         "color": "#db0d55",
+         "curvature": 1,
+         "label_position": "end",
+         "left_horiz_shift": 0.34644679921196114,
+         "right_horiz_shift": 0.432597159319383,
+         "label_visible": true,
+         "tags": {},
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
+         "arrow": true,
+         "curved": true,
+         "label_on_path": true,
+         "text_color": "#db0d55",
+         "x_label": 1105,
+         "y_label": 699.735,
+         "orthogonal_label_position": "below"
+      },
+      "link42": {
+         "idLink": "link42",
+         "idSource": "node2",
+         "idTarget": "node3",
          "value": [
             62,
             35.8,
             53.8,
             111.4,
             129.3,
-            52.3
+            52.3,
+            88.7,
+            42.3,
+            48,
+            38.9
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2781,29 +3138,38 @@
          "left_horiz_shift": 0.40294117647058825,
          "right_horiz_shift": 0.5029411764705882,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link42",
+         "text_color": "#db0d55",
          "x_label": 395,
-         "y_label": 497.1
+         "y_label": 495.945,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Biomasse solide - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link43": {
+         "idLink": "link43",
+         "idSource": "node3",
+         "idTarget": "node29",
          "value": [
             66,
             35,
             45.8,
             110.1,
             126.3,
-            51.5
+            51.5,
+            33.4,
+            41.8,
+            47,
+            39.3
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2813,33 +3179,42 @@
          ],
          "color": "#db0d55",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.6003678755326705,
-         "right_horiz_shift": 0.7320243141867898,
+         "label_position": "beginning",
+         "left_horiz_shift": 0.4,
+         "right_horiz_shift": 0.5,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#db0d55",
-         "idLink": "link43",
-         "x_label": 944.9093627929688,
-         "y_label": 521.0982580566406
+         "x_label": 1025,
+         "y_label": 495.995,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Biomasse solide - vecteur énergétique ",
-         "target_name": "Tertiaire",
+      "link44": {
+         "idLink": "link44",
+         "idSource": "node3",
+         "idTarget": "node32",
          "value": [
-            -11.4,
+            11.4,
             0.7,
             0.4,
             0,
             0.4,
-            0.6
+            0.6,
+            0.6,
+            0.5,
+            1.1,
+            0.7
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2853,19 +3228,23 @@
          "left_horiz_shift": 0.4423076923076923,
          "right_horiz_shift": 0.5423076923076924,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link44"
+         "text_color": "white"
       },
-      {
-         "source_name": "Biomasse solide - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link45": {
+         "idLink": "link45",
+         "idSource": "node3",
+         "idTarget": "node0",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2874,6 +3253,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2887,27 +3270,35 @@
          "left_horiz_shift": 0.4346153846153846,
          "right_horiz_shift": 0.5346153846153847,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link45"
+         "text_color": "white"
       },
-      {
-         "source_name": "Biomasse solide - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link46": {
+         "idLink": "link46",
+         "idSource": "node3",
+         "idTarget": "node17",
          "value": [
             7.4,
             0.1,
             7.6,
             1.3,
             2.7,
-            0.2
+            0.2,
+            54.7,
+            0,
+            0.1,
+            0.3
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2918,22 +3309,29 @@
          "color": "#db0d55",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.42692307692307696,
-         "right_horiz_shift": 0.5269230769230769,
+         "left_horiz_shift": 0.4637002341920375,
+         "right_horiz_shift": 0.540281030444965,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link46"
+         "text_color": "#db0d55",
+         "x_label": 1025.4,
+         "y_label": 496.735,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Biomasse solide - vecteur énergétique ",
-         "target_name": "Transport",
+      "link47": {
+         "idLink": "link47",
+         "idSource": "node3",
+         "idTarget": "node34",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -2942,6 +3340,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2955,27 +3357,35 @@
          "left_horiz_shift": 0.41923076923076924,
          "right_horiz_shift": 0.5192307692307693,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link47"
+         "text_color": "white"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Biogaz",
+      "link48": {
+         "idLink": "link48",
+         "idSource": "node24",
+         "idTarget": "node1",
          "value": [
             0,
             0,
             0,
             1.6,
             0,
+            0,
+            0,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -2989,19 +3399,23 @@
          "left_horiz_shift": 0.3433333333333333,
          "right_horiz_shift": 0.44333333333333336,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link48"
+         "text_color": "white"
       },
-      {
-         "source_name": "Biogaz",
-         "target_name": "Pertes ou torchage",
+      "link49": {
+         "idLink": "link49",
+         "idSource": "node1",
+         "idTarget": "node21",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3010,6 +3424,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3023,19 +3441,23 @@
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link49"
+         "text_color": "white"
       },
-      {
-         "source_name": "Biogaz",
-         "target_name": "Gaz",
+      "link50": {
+         "idLink": "link50",
+         "idSource": "node1",
+         "idTarget": "node13",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3044,6 +3466,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3057,27 +3483,35 @@
          "left_horiz_shift": 0.43823529411764706,
          "right_horiz_shift": 0.5382352941176471,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link50"
+         "text_color": "white"
       },
-      {
-         "source_name": "Biogaz",
-         "target_name": "Transformation de l'énergie",
+      "link51": {
+         "idLink": "link51",
+         "idSource": "node1",
+         "idTarget": "node33",
          "value": [
             0,
             0,
             0,
             1.5,
             0,
+            0,
+            0,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3091,27 +3525,35 @@
          "left_horiz_shift": 0.42647058823529416,
          "right_horiz_shift": 0.5264705882352941,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link51"
+         "text_color": "white"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Déchets",
+      "link52": {
+         "idLink": "link52",
+         "idSource": "node24",
+         "idTarget": "node8",
          "value": [
             0,
             0,
             0,
             0,
             0,
+            0,
+            134.6,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3125,19 +3567,25 @@
          "left_horiz_shift": 0.33,
          "right_horiz_shift": 0.43000000000000005,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link52"
+         "x_label": 65,
+         "y_label": 706.94
       },
-      {
-         "source_name": "Déchets",
-         "target_name": "Transformation de l'énergie",
+      "link53": {
+         "idLink": "link53",
+         "idSource": "node8",
+         "idTarget": "node33",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3146,6 +3594,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3159,27 +3611,35 @@
          "left_horiz_shift": 0.36764705882352944,
          "right_horiz_shift": 0.46764705882352947,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link53"
+         "text_color": "white"
       },
-      {
-         "source_name": "Déchets",
-         "target_name": "Déchets - vecteur énergétique ",
+      "link54": {
+         "idLink": "link54",
+         "idSource": "node8",
+         "idTarget": "node9",
          "value": [
             0,
             0,
             0,
             0,
             0,
+            0,
+            134.6,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3193,19 +3653,25 @@
          "left_horiz_shift": 0.3558823529411765,
          "right_horiz_shift": 0.4558823529411765,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link54"
+         "x_label": 395,
+         "y_label": 650.73
       },
-      {
-         "source_name": "Déchets - vecteur énergétique ",
-         "target_name": "Résidentiel",
+      "link55": {
+         "idLink": "link55",
+         "idSource": "node9",
+         "idTarget": "node29",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3214,6 +3680,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3227,19 +3697,23 @@
          "left_horiz_shift": 0.3730769230769231,
          "right_horiz_shift": 0.4730769230769231,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link55"
+         "text_color": "white"
       },
-      {
-         "source_name": "Déchets - vecteur énergétique ",
-         "target_name": "Tertiaire",
+      "link56": {
+         "idLink": "link56",
+         "idSource": "node9",
+         "idTarget": "node32",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3248,6 +3722,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3261,19 +3739,23 @@
          "left_horiz_shift": 0.3653846153846154,
          "right_horiz_shift": 0.4653846153846154,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link56"
+         "text_color": "white"
       },
-      {
-         "source_name": "Déchets - vecteur énergétique ",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link57": {
+         "idLink": "link57",
+         "idSource": "node9",
+         "idTarget": "node0",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3282,6 +3764,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3295,27 +3781,35 @@
          "left_horiz_shift": 0.3576923076923077,
          "right_horiz_shift": 0.45769230769230773,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link57"
+         "text_color": "white"
       },
-      {
-         "source_name": "Déchets - vecteur énergétique ",
-         "target_name": "Industrie et déchets",
+      "link58": {
+         "idLink": "link58",
+         "idSource": "node9",
+         "idTarget": "node17",
          "value": [
             0,
             0,
             0,
             0,
             0,
+            0,
+            134.6,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3326,22 +3820,28 @@
          "color": "#db0d55",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.35,
-         "right_horiz_shift": 0.45000000000000007,
+         "left_horiz_shift": 0.4669789227166276,
+         "right_horiz_shift": 0.5716627634660422,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link58"
+         "x_label": 1025.4,
+         "y_label": 650.73
       },
-      {
-         "source_name": "Déchets - vecteur énergétique ",
-         "target_name": "Transport",
+      "link59": {
+         "idLink": "link59",
+         "idSource": "node9",
+         "idTarget": "node34",
          "value": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -3350,6 +3850,10 @@
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3363,27 +3867,35 @@
          "left_horiz_shift": 0.3423076923076923,
          "right_horiz_shift": 0.44230769230769235,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link59"
+         "text_color": "white"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Hydraulique",
+      "link60": {
+         "idLink": "link60",
+         "idSource": "node24",
+         "idTarget": "node15",
          "value": [
             122.1,
             0.5,
             17.3,
             0,
             2.4,
-            0
+            0,
+            56.9,
+            0,
+            0,
+            0.4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3396,30 +3908,38 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
-         "label_visible": true,
-         "visible": true,
+         "label_visible": false,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link60",
          "x_label": 65,
-         "y_label": 708.485
+         "y_label": 717.515
       },
-      {
-         "source_name": "Production",
-         "target_name": "Eolien",
+      "link61": {
+         "idLink": "link61",
+         "idSource": "node24",
+         "idTarget": "node11",
          "value": [
             6.8,
             17.3,
             0,
             0,
             0,
-            0
+            0,
+            10,
+            0,
+            0,
+            31.9
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3429,31 +3949,42 @@
          ],
          "color": "#3474eb",
          "curvature": 1,
-         "label_position": "beginning",
+         "label_position": "end",
          "left_horiz_shift": 0.30333333333333334,
          "right_horiz_shift": 0.4033333333333334,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link61"
+         "text_color": "#3474eb",
+         "x_label": 265,
+         "y_label": 695.595,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Solaire PV",
+      "link62": {
+         "idLink": "link62",
+         "idSource": "node24",
+         "idTarget": "node30",
          "value": [
             2.2,
             2.6,
             4.6,
             5,
             4.4,
-            1.5
+            1.5,
+            8.3,
+            2.4,
+            2.1,
+            4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3467,27 +3998,35 @@
          "left_horiz_shift": 0.29,
          "right_horiz_shift": 0.39,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link62"
+         "text_color": "white"
       },
-      {
-         "source_name": "Hydraulique",
-         "target_name": "Electricité",
+      "link63": {
+         "idLink": "link63",
+         "idSource": "node15",
+         "idTarget": "node10",
          "value": [
             122.1,
             0.5,
             17.3,
             0,
             2.4,
-            0
+            0,
+            56.9,
+            0,
+            0,
+            0.4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3498,32 +4037,41 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.11116650049850454,
-         "right_horiz_shift": 0.24845463609172488,
+         "left_horiz_shift": 0.1,
+         "right_horiz_shift": 0.19999999999999998,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link63",
-         "x_label": 395,
-         "y_label": 900.105
+         "text_color": "#3474eb",
+         "x_label": 455,
+         "y_label": 746.845,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Eolien",
-         "target_name": "Electricité",
+      "link64": {
+         "idLink": "link64",
+         "idSource": "node11",
+         "idTarget": "node10",
          "value": [
             6.8,
             17.3,
             0,
             0,
             0,
-            0
+            0,
+            10,
+            0,
+            0,
+            31.9
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3536,28 +4084,38 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.09750747756729806,
          "right_horiz_shift": 0.2424227318045864,
-         "label_visible": true,
-         "visible": true,
+         "label_visible": false,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link64"
+         "x_label": 455,
+         "y_label": 695.595
       },
-      {
-         "source_name": "Solaire PV",
-         "target_name": "Electricité",
+      "link65": {
+         "idLink": "link65",
+         "idSource": "node30",
+         "idTarget": "node10",
          "value": [
             2.2,
             2.6,
             4.6,
             5,
             4.4,
-            1.5
+            1.5,
+            8.3,
+            2.4,
+            2.1,
+            4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3568,30 +4126,38 @@
          "color": "#faf31e",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.2852941176470588,
-         "right_horiz_shift": 0.3852941176470589,
+         "left_horiz_shift": 0.2618158567774935,
+         "right_horiz_shift": 0.3270332480818416,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link65"
+         "text_color": "white"
       },
-      {
-         "source_name": "Production",
-         "target_name": "Solaire thermique",
+      "link66": {
+         "idLink": "link66",
+         "idSource": "node24",
+         "idTarget": "node31",
          "value": [
             2.2,
             0.4,
             0.6,
             2.2,
             3.3,
-            1.1
+            1.1,
+            0.8,
+            0.8,
+            1.3,
+            0.5
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3605,27 +4171,35 @@
          "left_horiz_shift": 0.27666666666666667,
          "right_horiz_shift": 0.3766666666666667,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link66"
+         "text_color": "white"
       },
-      {
-         "source_name": "Production",
-         "target_name": "PAC",
+      "link67": {
+         "idLink": "link67",
+         "idSource": "node24",
+         "idTarget": "node20",
          "value": [
             19.1,
             8.8,
             9.9,
             27.6,
             30.3,
-            13.2
+            13.2,
+            9.6,
+            10.6,
+            11.5,
+            9.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3635,33 +4209,42 @@
          ],
          "color": "#faf31e",
          "curvature": 1,
-         "label_position": "beginning",
+         "label_position": "end",
          "left_horiz_shift": 0.2633333333333333,
          "right_horiz_shift": 0.3633333333333334,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link67",
-         "x_label": 38,
-         "y_label": 704.8129257963543
+         "text_color": "#faf31e",
+         "x_label": 265,
+         "y_label": 795.515,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Solaire thermique",
-         "target_name": "Chaleur locale",
+      "link68": {
+         "idLink": "link68",
+         "idSource": "node31",
+         "idTarget": "node7",
          "value": [
             2.2,
             0.4,
             0.6,
             2.2,
             3.3,
-            1.1
+            1.1,
+            0.8,
+            0.8,
+            1.3,
+            0.5
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3675,27 +4258,35 @@
          "left_horiz_shift": 0.2735294117647059,
          "right_horiz_shift": 0.3735294117647059,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link68"
+         "text_color": "white"
       },
-      {
-         "source_name": "PAC",
-         "target_name": "Chaleur locale",
+      "link69": {
+         "idLink": "link69",
+         "idSource": "node20",
+         "idTarget": "node7",
          "value": [
             19.1,
             8.8,
             9.9,
             27.6,
             30.3,
-            13.2
+            13.2,
+            9.6,
+            10.6,
+            11.5,
+            9.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3706,32 +4297,40 @@
          "color": "#faf31e",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.3088235294117647,
-         "right_horiz_shift": 0.4088235294117647,
-         "label_visible": true,
-         "visible": true,
+         "left_horiz_shift": 0.26447570332480824,
+         "right_horiz_shift": 0.3496930946291561,
+         "label_visible": false,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link69",
-         "x_label": 428,
-         "y_label": 995.5
+         "x_label": 455,
+         "y_label": 795.515
       },
-      {
-         "source_name": "Chaleur locale",
-         "target_name": "Résidentiel",
+      "link70": {
+         "idLink": "link70",
+         "idSource": "node7",
+         "idTarget": "node29",
          "value": [
             21.3,
             9.2,
             10.5,
             29.8,
             33.6,
-            14.3
+            14.3,
+            10.5,
+            11.4,
+            12.8,
+            9.6
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3741,33 +4340,42 @@
          ],
          "color": "#db0d55",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.37857142857142856,
-         "right_horiz_shift": 0.4785714285714286,
+         "label_position": "beginning",
+         "left_horiz_shift": 0.2,
+         "right_horiz_shift": 0.3,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#db0d55",
-         "idLink": "link70",
-         "x_label": 1545.847900390625,
-         "y_label": 541.6165161132812
+         "x_label": 1565,
+         "y_label": 595.68,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Chaleur locale",
-         "target_name": "Industrie et déchets",
+      "link71": {
+         "idLink": "link71",
+         "idSource": "node7",
+         "idTarget": "node17",
          "value": [
             0,
             0,
             0,
             0.7,
             0,
+            0,
+            0,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3781,27 +4389,35 @@
          "left_horiz_shift": 0.3642857142857143,
          "right_horiz_shift": 0.4642857142857143,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link71"
+         "text_color": "white"
       },
-      {
-         "source_name": "Chaleur RDC",
-         "target_name": "Pertes réseaux",
+      "link72": {
+         "idLink": "link72",
+         "idSource": "node6",
+         "idTarget": "node22",
          "value": [
             3.1,
             0,
             0.1,
             0.5,
             0.8,
-            0
+            0,
+            0,
+            0,
+            0.2,
+            0.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3815,27 +4431,35 @@
          "left_horiz_shift": 0.4779820033482143,
          "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hv",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link72"
+         "text_color": "white"
       },
-      {
-         "source_name": "Chaleur RDC",
-         "target_name": "Résidentiel",
+      "link73": {
+         "idLink": "link73",
+         "idSource": "node6",
+         "idTarget": "node29",
          "value": [
             33.2,
             0,
             0.7,
             5,
             8.5,
-            0
+            0,
+            0,
+            0.1,
+            2.6,
+            2.6
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3845,33 +4469,42 @@
          ],
          "color": "#db0d55",
          "curvature": 1,
-         "label_position": "frozen",
+         "label_position": "beginning",
          "left_horiz_shift": 0.4357142857142857,
          "right_horiz_shift": 0.5357142857142858,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#db0d55",
-         "idLink": "link73",
-         "x_label": 1544.106689453125,
-         "y_label": 625.822099609375
+         "x_label": 1565,
+         "y_label": 545.66,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Chaleur RDC",
-         "target_name": "Tertiaire",
+      "link74": {
+         "idLink": "link74",
+         "idSource": "node6",
+         "idTarget": "node32",
          "value": [
             18.1,
             0,
             0.4,
             2.7,
             4.6,
-            0
+            0,
+            0,
+            0,
+            1.4,
+            1.4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3885,27 +4518,36 @@
          "left_horiz_shift": 0.42142857142857143,
          "right_horiz_shift": 0.5214285714285715,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link74"
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Chaleur RDC",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link75": {
+         "idLink": "link75",
+         "idSource": "node6",
+         "idTarget": "node0",
          "value": [
             1.2,
             0,
             0,
             0.2,
             0.3,
-            0
+            0,
+            0,
+            0,
+            0.1,
+            0.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3917,29 +4559,37 @@
          "curvature": 1,
          "label_position": "beginning",
          "left_horiz_shift": 0.40714285714285714,
-         "right_horiz_shift": 0.5071428571428572,
+         "right_horiz_shift": 0.6151428571428569,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link75"
+         "text_color": "white"
       },
-      {
-         "source_name": "Chaleur RDC",
-         "target_name": "Industrie et déchets",
+      "link76": {
+         "idLink": "link76",
+         "idSource": "node6",
+         "idTarget": "node17",
          "value": [
             5.8,
             0,
             0.1,
             0.9,
             1.5,
-            0
+            0,
+            0,
+            0,
+            0.4,
+            0.5
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -3953,30 +4603,38 @@
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link76"
+         "text_color": "white"
       },
-      {
-         "source_name": "Transformation de l'énergie",
-         "target_name": "Electricité",
+      "link77": {
+         "idLink": "link77",
+         "idSource": "node33",
+         "idTarget": "node10",
          "value": [
             8,
             0,
             0,
             0.6,
             0,
+            0,
+            500,
+            0,
+            3.6,
             0
          ],
          "display_value": [
             "default",
             "default",
             "default",
+            "default",
+            "default",
+            "default",
+            "22807*",
             "default",
             "default",
             "default"
@@ -3984,32 +4642,42 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.9327225942460319,
-         "right_horiz_shift": -5.829214574420234,
+         "left_horiz_shift": 0.30000000000000004,
+         "right_horiz_shift": 0.5,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link77",
-         "recycling": true,
-         "vert_shift": 148.8641357421875
+         "x_label": 1265,
+         "y_label": 719,
+         "recycling": false,
+         "vert_shift": 168.8641357421875
       },
-      {
-         "source_name": "Transformation de l'énergie",
-         "target_name": "Chaleur RDC",
+      "link78": {
+         "idLink": "link78",
+         "idSource": "node33",
+         "idTarget": "node6",
          "value": [
             61.4,
             0,
             1.4,
             9.2,
             15.7,
-            0
+            0,
+            0,
+            0.2,
+            4.7,
+            4.9
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4019,33 +4687,42 @@
          ],
          "color": "#db0d55",
          "curvature": 1,
-         "label_position": "frozen",
+         "label_position": "end",
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#db0d55",
-         "idLink": "link78",
-         "x_label": 1457.3916015625,
-         "y_label": 626.6460498046876
+         "x_label": 1465,
+         "y_label": 547.07,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Transformation de l'énergie",
-         "target_name": "Chaleur locale",
+      "link79": {
+         "idLink": "link79",
+         "idSource": "node33",
+         "idTarget": "node7",
          "value": [
             0,
             0,
             0,
             0.7,
             0,
+            0,
+            0,
+            0,
+            0,
             0
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4059,24 +4736,28 @@
          "left_horiz_shift": 0.29444444444444445,
          "right_horiz_shift": 0.3944444444444445,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link79"
+         "text_color": "white"
       },
-      {
-         "source_name": "Transformation de l'énergie",
-         "target_name": "Pertes transformation",
+      "link80": {
+         "idLink": "link80",
+         "idSource": "node33",
+         "idTarget": "node23",
          "value": [
             12,
             0,
             0,
             0.4,
             0,
+            0,
+            500,
+            0,
+            5.4,
             0
          ],
          "display_value": [
@@ -4085,35 +4766,49 @@
             "default",
             "default",
             "default",
+            "default",
+            "45615*",
+            "default",
+            "default",
             "default"
          ],
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.42145928276909705,
-         "right_horiz_shift": 0.5960782490079364,
+         "left_horiz_shift": 0.05000000000000002,
+         "right_horiz_shift": 0.15,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hv",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link80"
+         "x_label": 1295,
+         "y_label": 769
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Résidentiel",
+      "link81": {
+         "idLink": "link81",
+         "idSource": "node10",
+         "idTarget": "node29",
          "value": [
             151.6,
             29.7,
             36.2,
             166.8,
             258.5,
-            72.7
+            72.7,
+            69.5,
+            57.1,
+            138.3,
+            36.6
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4123,33 +4818,42 @@
          ],
          "color": "#3474eb",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.5107142857142857,
-         "right_horiz_shift": 0.6535714285714286,
+         "label_position": "middle",
+         "left_horiz_shift": 0.25,
+         "right_horiz_shift": 0.35,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#3474eb",
-         "idLink": "link81",
-         "x_label": 943.168212890625,
-         "y_label": 785.2368286132812
+         "x_label": 1610,
+         "y_label": 726.335,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Tertiaire",
+      "link82": {
+         "idLink": "link82",
+         "idSource": "node10",
+         "idTarget": "node32",
          "value": [
             89.9,
             12.5,
             30.3,
             100.1,
             126.3,
-            17.5
+            17.5,
+            16,
+            15,
+            80.7,
+            14.6
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4159,33 +4863,42 @@
          ],
          "color": "#3474eb",
          "curvature": 1,
-         "label_position": "frozen",
-         "left_horiz_shift": 0.41966029575892855,
-         "right_horiz_shift": 0.9984632219587054,
+         "label_position": "end",
+         "left_horiz_shift": 0.35000000000000003,
+         "right_horiz_shift": 0.45,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
-         "label_on_path": false,
+         "label_on_path": true,
          "text_color": "#3474eb",
-         "idLink": "link82",
-         "x_label": 1751.9417724609375,
-         "y_label": 624.4355444335938
+         "x_label": 1765,
+         "y_label": 705.405,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Agriculture, sylviculture et aquaculture",
+      "link83": {
+         "idLink": "link83",
+         "idSource": "node10",
+         "idTarget": "node0",
          "value": [
             1.6,
             3.6,
             6.1,
             8.3,
             4.8,
-            3.9
+            3.9,
+            1.8,
+            6.5,
+            2.7,
+            6.2
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4196,30 +4909,38 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.3214285714285714,
-         "right_horiz_shift": 0.4214285714285715,
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.6000000000000001,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link83"
+         "text_color": "white"
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Industrie et déchets",
+      "link84": {
+         "idLink": "link84",
+         "idSource": "node10",
+         "idTarget": "node17",
          "value": [
             420.4,
             6.8,
             8.9,
             171.4,
             128.9,
-            5.8
+            5.8,
+            160.3,
+            10,
+            21.5,
+            19.4
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4229,33 +4950,42 @@
          ],
          "color": "#3474eb",
          "curvature": 0.5,
-         "label_position": "beginning",
-         "left_horiz_shift": 0.5431425309381565,
-         "right_horiz_shift": 0.6933961314046605,
+         "label_position": "end",
+         "left_horiz_shift": 0.5,
+         "right_horiz_shift": 0.6000000000000001,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link84",
-         "x_label": 1025,
-         "y_label": 840.8
+         "text_color": "#3474eb",
+         "x_label": 1768.6,
+         "y_label": 274.985,
+         "orthogonal_label_position": "below"
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Transport",
+      "link85": {
+         "idLink": "link85",
+         "idSource": "node10",
+         "idTarget": "node34",
          "value": [
             2.2,
             0,
             0.1,
             0.3,
             23.7,
+            0.1,
+            8,
+            2.8,
+            4.4,
             0.1
          ],
          "display_value": [
+            "default",
+            "default",
+            "default",
+            "default",
             "default",
             "default",
             "default",
@@ -4266,30 +4996,35 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.29285714285714287,
-         "right_horiz_shift": 0.3928571428571429,
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link85",
-         "x_label": 1538,
-         "y_label": 795.0909593076782
+         "text_color": "#3474eb",
+         "x_label": 1565,
+         "y_label": 895.185,
+         "orthogonal_label_position": "above"
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Pertes réseaux",
+      "link86": {
+         "idLink": "link86",
+         "idSource": "node10",
+         "idTarget": "node22",
          "value": [
             12.5,
             1.8,
             2,
             0.5,
             0.6,
-            0.1
+            0.1,
+            500,
+            0.2,
+            0.5,
+            3.3
          ],
          "display_value": [
             "default",
@@ -4297,33 +5032,43 @@
             "default",
             "default",
             "default",
+            "default",
+            "2059*",
+            "default",
+            "default",
             "default"
          ],
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.2785714285714286,
-         "right_horiz_shift": 0.3785714285714286,
+         "left_horiz_shift": 0.5465714285714285,
+         "right_horiz_shift": 0.7305714285714284,
          "label_visible": true,
-         "visible": true,
          "tags": {},
-         "orientation": "hv",
+         "shift_gap": 0.04999999999999999,
+         "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
-         "idLink": "link86"
+         "x_label": 1565,
+         "y_label": 944.56
       },
-      {
-         "source_name": "Electricité",
-         "target_name": "Exportations",
+      "link87": {
+         "idLink": "link87",
+         "idSource": "node10",
+         "idTarget": "node44",
          "value": [
             539.1,
             34.1,
             61.7,
             441.7,
             536.1,
-            98.6
+            98.6,
+            500,
+            89.2,
+            242.4,
+            43.8
          ],
          "display_value": [
             "default",
@@ -4331,57 +5076,129 @@
             "default",
             "default",
             "default",
+            "default",
+            "20568*",
+            "default",
+            "default",
             "default"
          ],
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.2642857142857143,
-         "right_horiz_shift": 0.3642857142857143,
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
          "label_visible": true,
-         "visible": true,
          "tags": {},
+         "shift_gap": 0.04999999999999999,
          "orientation": "hv",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
-         "text_color": "white",
-         "idLink": "link87",
-         "x_label": 968.6955,
-         "y_label": 888.775
+         "text_color": "#3474eb",
+         "x_label": 1547,
+         "y_label": 904.21,
+         "orthogonal_label_position": "below"
       }
-   ],
-   "user_scale": 1000,
-   "height": 1500,
-   "width": 2100,
-   "node_width": 40,
-   "h_space": 300,
-   "v_space": 100,
-   "left_shift": 0.45,
-   "right_shift": 0.55,
-   "max_shift": 0.2,
+   },
+   "animation_tooltips": {},
+   "show_uncert": false,
    "display_style": {
       "filter": 1,
       "filter_label": 20,
       "global_curvature": 0.99,
       "font_size": 17,
       "product_bold": true,
-      "product_uppercase": true
+      "product_uppercase": true,
+      "null_flux": false
    },
-   "tags_catalog": [
-      {
+   "static_sankey": false,
+   "tags_catalog": {
+      "Regions": {
          "group_name": "Regions",
-         "tags": [
-            "CA Haut - Bugey Agglomération",
-            "CC Mézenc-Loire-Meygal",
-            "CC Chavanon Combrailles et Volcans",
-            "CC de Forez-Est",
-            "CA du Pays Voironnais",
-            "CC Billom Communauté"
-         ],
-         "selected_tags": [
-            "CA Haut - Bugey Agglomération"
-         ]
+         "tags": {
+            "CA Haut - Bugey Agglomération": {
+               "name": "CA Haut - Bugey Agglomération",
+               "selected": false,
+               "color": ""
+            },
+            "CC Mézenc-Loire-Meygal": {
+               "name": "CC Mézenc-Loire-Meygal",
+               "selected": false,
+               "color": ""
+            },
+            "CC Chavanon Combrailles et Volcans": {
+               "name": "CC Chavanon Combrailles et Volcans",
+               "selected": false,
+               "color": ""
+            },
+            "CC de Forez-Est": {
+               "name": "CC de Forez-Est",
+               "selected": false,
+               "color": ""
+            },
+            "CA du Pays Voironnais": {
+               "name": "CA du Pays Voironnais",
+               "selected": false,
+               "color": ""
+            },
+            "CC Billom Communauté": {
+               "name": "CC Billom Communauté",
+               "selected": false,
+               "color": ""
+            },
+            "CC Ardèche Rhône Coiron": {
+               "name": "CC Ardèche Rhône Coiron",
+               "selected": false,
+               "color": ""
+            },
+            "CC Plaine Limagne": {
+               "name": "CC Plaine Limagne",
+               "selected": false,
+               "color": ""
+            },
+            "CC du Genevois": {
+               "name": "CC du Genevois",
+               "selected": false,
+               "color": ""
+            },
+            "CC Dômes Sancy Artense": {
+               "name": "CC Dômes Sancy Artense",
+               "selected": true,
+               "color": ""
+            }
+         },
+         "banner": "one",
+         "show_legend": false
+      },
+      "Exchanges": {
+         "group_name": "Echanges",
+         "tags": {
+            "Other": {
+               "name": "Intérieur",
+               "selected": true,
+               "color": ""
+            },
+            "Echangesimport": {
+               "name": "Importations",
+               "selected": true,
+               "color": ""
+            },
+            "Echangesexport": {
+               "name": "Exportations",
+               "selected": true,
+               "color": ""
+            }
+         },
+         "banner": "multi",
+         "show_legend": false
       }
-   ]
+   },
+   "tooltip_names": [],
+   "tooltips": [],
+   "units_names": [],
+   "default_tooltip": true,
+   "tags_group_idx": 1,
+   "tag_idx": 1,
+   "node_idx": 43,
+   "link_idx": 88
 }
