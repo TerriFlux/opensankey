@@ -1844,7 +1844,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.selectAll('.tmp').remove()
 
     let height = 0
-    Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
+    Object.values(data.nodes).forEach( n=> n.y ? height = Math.max(height,n.y) : height )
     let max_vert_shift = 0
     Object.values(data.links).forEach( l=> l.vert_shift && max_vert_shift > l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
 
@@ -1895,7 +1895,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     console.log(data)
   })
   let height = 0
-  Object.values(data.nodes).forEach( n=> height > n.y ? Math.max(height,n.y) : height )
+  Object.values(data.nodes).forEach( n=> n.y ? height = Math.max(height,n.y) : height )
   let max_vert_shift = 0
   Object.values(data.links).forEach( l=> l.vert_shift && max_vert_shift > l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
 
