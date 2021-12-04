@@ -50,6 +50,7 @@ export const SankeyNodePropTypes = {
   y: PropTypes.number.isRequired,
   x_label: PropTypes.number,
   y_label: PropTypes.number,
+  show_value: PropTypes.bool.isRequired,
 
   tooltip_text: PropTypes.string,
 

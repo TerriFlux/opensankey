@@ -72,6 +72,7 @@ def parse_sankey_energie_csv(
             'name'       : node_name,
             'type'       : 'sector',
             'orientation': 'vertical',
+            'show_value' : 1,
             'tags'       : {
                 'Exchanges' : ['Other']
             }
@@ -91,6 +92,7 @@ def parse_sankey_energie_csv(
                 'name': import_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'show_value' : 1,
                 'tags': { 
                     'Exchanges' : ['Echangesimport']
                 }
@@ -107,6 +109,7 @@ def parse_sankey_energie_csv(
                 'name': export_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'show_value' : 1,
                 'tags': { 'Exchanges' : 
                     ['Echangesexport']
                 }
@@ -130,6 +133,7 @@ def parse_sankey_energie_csv(
             'idSource'   : idSource,
             'idTarget'   : idTarget,
             'value': [],
+            'label_visible': 0,
             'display_value': [],
             'color': color,
             'curvature' : 1,
@@ -152,7 +156,9 @@ def parse_sankey_energie_csv(
             sankey_dict['links']['link' + str(id)]['display_value'].append(str(round(row['value']))+'*')            
         id = id + 1
     sankey_dict['units_names'] = ['GWh','GWh']
-    sankey_dict['unit'] = 1
+    sankey_dict['display_style'] = {
+        'unit' : 1
+    }
     return sankey_dict
 
 def parse_simple_excel(

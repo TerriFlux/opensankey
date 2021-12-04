@@ -581,7 +581,9 @@ export const updateLayout = (
   if ('width' in new_layout) {
     data.width = new_layout.width
   }
-  data.display_style = new_layout.display_style
+  Object.keys(new_layout.display_style).forEach(
+    key => (data.display_style as any)[key] = (new_layout.display_style as any)[key]
+  )
   if (data.display_style.filter === undefined) {
     data.display_style.filter = 0
   }

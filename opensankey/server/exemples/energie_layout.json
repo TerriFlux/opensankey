@@ -5,7 +5,7 @@
    "user_scale": 1000,
    "width": 2100,
    "h_space": 300,
-   "v_space": 50,
+   "v_space": 10,
    "left_shift": 0.4,
    "right_shift": 0.5,
    "max_shift": 0.2,
@@ -26,6 +26,7 @@
          "name": "Agriculture, sylviculture et aquaculture",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -37,8 +38,8 @@
             "link4",
             "link45",
             "link75",
-            "link57",
             "link34",
+            "link57",
             "link83"
          ],
          "outputLinksId": [],
@@ -58,6 +59,7 @@
          "name": "Biogaz",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -87,6 +89,7 @@
          "name": "Biomasse solide",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -101,7 +104,7 @@
             "link41"
          ],
          "x": 300,
-         "y": 500,
+         "y": 510,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -116,6 +119,7 @@
          "name": "Biomasse solide - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -128,11 +132,11 @@
             "link47",
             "link46",
             "link43",
-            "link45",
-            "link44"
+            "link44",
+            "link45"
          ],
          "x": 900,
-         "y": 500,
+         "y": 510,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -147,6 +151,7 @@
          "name": "CMS",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -156,8 +161,8 @@
             "link29"
          ],
          "outputLinksId": [
-            "link30",
-            "link31"
+            "link31",
+            "link30"
          ],
          "x": 300,
          "y": 600,
@@ -175,6 +180,7 @@
          "name": "CMS - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -185,10 +191,10 @@
          ],
          "outputLinksId": [
             "link36",
+            "link35",
             "link32",
-            "link34",
             "link33",
-            "link35"
+            "link34"
          ],
          "x": 900,
          "y": 600,
@@ -206,6 +212,7 @@
          "name": "Chaleur RDC",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -215,10 +222,10 @@
             "link78"
          ],
          "outputLinksId": [
-            "link73",
-            "link75",
-            "link74",
             "link76",
+            "link73",
+            "link74",
+            "link75",
             "link72"
          ],
          "x": 1500,
@@ -237,6 +244,7 @@
          "name": "Chaleur locale",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -248,8 +256,8 @@
             "link68"
          ],
          "outputLinksId": [
-            "link70",
-            "link71"
+            "link71",
+            "link70"
          ],
          "x": 1500,
          "y": 600,
@@ -267,6 +275,7 @@
          "name": "Déchets",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -295,6 +304,7 @@
          "name": "Déchets - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -305,10 +315,10 @@
          ],
          "outputLinksId": [
             "link59",
+            "link58",
             "link55",
-            "link57",
             "link56",
-            "link58"
+            "link57"
          ],
          "x": 900,
          "y": 650,
@@ -326,23 +336,24 @@
          "name": "Electricité",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
             ]
          },
          "inputLinksId": [
-            "link63",
-            "link77",
             "link64",
+            "link77",
+            "link63",
             "link65"
          ],
          "outputLinksId": [
             "link85",
-            "link81",
-            "link83",
-            "link82",
             "link84",
+            "link81",
+            "link82",
+            "link83",
             "link86",
             "link87"
          ],
@@ -362,6 +373,7 @@
          "name": "Eolien",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -389,6 +401,7 @@
          "name": "Gaz",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -404,7 +417,7 @@
             "link21"
          ],
          "x": 600,
-         "y": 306,
+         "y": 356,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -419,6 +432,7 @@
          "name": "Gaz - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -429,10 +443,10 @@
          ],
          "outputLinksId": [
             "link28",
+            "link27",
             "link24",
-            "link26",
             "link25",
-            "link27"
+            "link26"
          ],
          "x": 900,
          "y": 307,
@@ -450,6 +464,7 @@
          "name": "Hydraulique",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -477,6 +492,7 @@
          "name": "Industrie et déchets",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -488,9 +504,9 @@
             "link5",
             "link46",
             "link76",
+            "link35",
             "link71",
             "link58",
-            "link35",
             "link84"
          ],
          "outputLinksId": [],
@@ -510,6 +526,7 @@
          "name": "Organo-carburants",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -537,6 +554,7 @@
          "name": "Organo-carburants - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -547,10 +565,10 @@
          ],
          "outputLinksId": [
             "link6",
+            "link5",
             "link2",
-            "link4",
             "link3",
-            "link5"
+            "link4"
          ],
          "x": 900,
          "y": 450,
@@ -568,6 +586,7 @@
          "name": "PAC",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -595,6 +614,7 @@
          "name": "Pertes ou torchage",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -605,7 +625,7 @@
          ],
          "outputLinksId": [],
          "x": 598.0000267028809,
-         "y": 377.00001335144043,
+         "y": 277.00001335144043,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -620,6 +640,7 @@
          "name": "Pertes réseaux",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -632,7 +653,7 @@
          ],
          "outputLinksId": [],
          "x": 1800,
-         "y": 1150,
+         "y": 1060,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -647,6 +668,7 @@
          "name": "Pertes transformation",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -658,7 +680,7 @@
          ],
          "outputLinksId": [],
          "x": 1800,
-         "y": 1050,
+         "y": 1120,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -673,6 +695,7 @@
          "name": "Production",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -705,6 +728,7 @@
          "name": "Produits pétroliers primaires",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -717,7 +741,7 @@
             "link8"
          ],
          "x": 300,
-         "y": 200,
+         "y": 100,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -732,6 +756,7 @@
          "name": "Produits pétroliers secondaires",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -761,6 +786,7 @@
          "name": "Produits pétroliers secondaires - vecteur énergétique ",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -771,10 +797,10 @@
          ],
          "outputLinksId": [
             "link19",
+            "link18",
             "link15",
-            "link17",
             "link16",
-            "link18"
+            "link17"
          ],
          "x": 900,
          "y": 100,
@@ -792,6 +818,7 @@
          "name": "Raffinerie",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -802,11 +829,11 @@
          ],
          "outputLinksId": [
             "link9",
-            "link11",
-            "link10"
+            "link10",
+            "link11"
          ],
-         "x": 596,
-         "y": 424.00002551078796,
+         "x": 405.00148582458496,
+         "y": 181.99680638313293,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -821,6 +848,7 @@
          "name": "Résidentiel",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -832,9 +860,9 @@
             "link2",
             "link43",
             "link73",
+            "link32",
             "link70",
             "link55",
-            "link32",
             "link81"
          ],
          "outputLinksId": [],
@@ -854,6 +882,7 @@
          "name": "Solaire PV",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -866,7 +895,7 @@
             "link65"
          ],
          "x": 300,
-         "y": 850,
+         "y": 920,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -881,6 +910,7 @@
          "name": "Solaire thermique",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -893,7 +923,7 @@
             "link68"
          ],
          "x": 300,
-         "y": 900,
+         "y": 850,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -908,6 +938,7 @@
          "name": "Tertiaire",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -917,10 +948,10 @@
             "link16",
             "link25",
             "link3",
-            "link44",
             "link74",
-            "link56",
+            "link44",
             "link33",
+            "link56",
             "link82"
          ],
          "outputLinksId": [],
@@ -940,6 +971,7 @@
          "name": "Transformation de l'énergie",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -976,6 +1008,7 @@
          "name": "Transport",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -986,8 +1019,8 @@
             "link28",
             "link6",
             "link47",
-            "link59",
             "link36",
+            "link59",
             "link85"
          ],
          "outputLinksId": [],
@@ -1007,6 +1040,7 @@
          "name": "Uranium",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Other"
@@ -1019,7 +1053,7 @@
             "link38"
          ],
          "x": 300,
-         "y": 950,
+         "y": 1050,
          "label_visible": true,
          "shape_visible": true,
          "node_parameter": "general",
@@ -1034,6 +1068,7 @@
          "name": "Organo-carburants - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1061,6 +1096,7 @@
          "name": "Produits pétroliers primaires - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1071,7 +1107,7 @@
             "link7"
          ],
          "x": 210,
-         "y": 180,
+         "y": 80,
          "label_visible": false,
          "shape_visible": false,
          "node_parameter": "general",
@@ -1080,7 +1116,7 @@
          "tag_favorite": {},
          "trade_close": true,
          "x_label": 210,
-         "y_label": 220
+         "y_label": 120
       },
       "node38": {
          "idNode": "node38",
@@ -1088,6 +1124,7 @@
          "name": "Raffinerie - Echanges - Exportations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesexport"
@@ -1097,8 +1134,8 @@
             "link10"
          ],
          "outputLinksId": [],
-         "x": 686,
-         "y": 444.00002551078796,
+         "x": 495.00148582458496,
+         "y": 201.99680638313293,
          "label_visible": false,
          "shape_visible": false,
          "node_parameter": "general",
@@ -1106,8 +1143,8 @@
          "display": true,
          "tag_favorite": {},
          "trade_close": true,
-         "x_label": 686,
-         "y_label": 454.00002551078796
+         "x_label": 495.00148582458496,
+         "y_label": 211.99680638313293
       },
       "node39": {
          "idNode": "node39",
@@ -1115,6 +1152,7 @@
          "name": "Produits pétroliers secondaires - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1142,6 +1180,7 @@
          "name": "Gaz - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1152,7 +1191,7 @@
             "link20"
          ],
          "x": 510,
-         "y": 286,
+         "y": 336,
          "label_visible": false,
          "shape_visible": false,
          "node_parameter": "general",
@@ -1161,7 +1200,7 @@
          "tag_favorite": {},
          "trade_close": true,
          "x_label": 510,
-         "y_label": 326
+         "y_label": 376
       },
       "node41": {
          "idNode": "node41",
@@ -1169,6 +1208,7 @@
          "name": "CMS - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1196,6 +1236,7 @@
          "name": "Uranium - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1206,7 +1247,7 @@
             "link37"
          ],
          "x": 210,
-         "y": 930,
+         "y": 1030,
          "label_visible": false,
          "shape_visible": false,
          "node_parameter": "general",
@@ -1215,7 +1256,7 @@
          "tag_favorite": {},
          "trade_close": true,
          "x_label": 210,
-         "y_label": 970
+         "y_label": 1070
       },
       "node43": {
          "idNode": "node43",
@@ -1223,6 +1264,7 @@
          "name": "Biomasse solide - Echanges - Importations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesimport"
@@ -1250,6 +1292,7 @@
          "name": "Electricité - Echanges - Exportations",
          "type": "sector",
          "orientation": "vertical",
+         "show_value": true,
          "tags": {
             "Exchanges": [
                "Echangesexport"
@@ -1260,7 +1303,7 @@
          ],
          "outputLinksId": [],
          "x": 1590,
-         "y": 1045.56,
+         "y": 1041.73,
          "label_visible": false,
          "shape_visible": false,
          "node_parameter": "general",
@@ -1269,7 +1312,7 @@
          "tag_favorite": {},
          "trade_close": true,
          "x_label": 1590,
-         "y_label": 1055.56
+         "y_label": 1051.73
       }
    },
    "links": {
@@ -1289,6 +1332,7 @@
             42.5,
             18.7
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1306,7 +1350,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -1315,7 +1363,7 @@
          "label_on_path": true,
          "text_color": "#40de48",
          "x_label": 284,
-         "y_label": 446.125,
+         "y_label": 446.18,
          "orthogonal_label_position": "above"
       },
       "link1": {
@@ -1334,6 +1382,7 @@
             42.5,
             18.7
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1351,7 +1400,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3205882352941176,
          "right_horiz_shift": 0.4205882352941177,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1360,7 +1413,7 @@
          "label_on_path": true,
          "text_color": "#40de49",
          "x_label": 395,
-         "y_label": 446.125,
+         "y_label": 446.18,
          "orthogonal_label_position": "above"
       },
       "link2": {
@@ -1379,6 +1432,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1396,7 +1450,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.31153846153846154,
          "right_horiz_shift": 0.4115384615384616,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1421,6 +1479,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1438,7 +1497,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3038461538461539,
          "right_horiz_shift": 0.40384615384615385,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1463,6 +1526,7 @@
             0.8,
             2.8
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1478,9 +1542,13 @@
          "color": "#40de52",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.29615384615384616,
-         "right_horiz_shift": 0.3961538461538462,
-         "label_visible": true,
+         "left_horiz_shift": 0.2,
+         "right_horiz_shift": 0.3,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1505,6 +1573,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1522,7 +1591,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.1,
          "right_horiz_shift": 0.19999999999999998,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1547,6 +1620,7 @@
             41.7,
             15.9
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1562,18 +1636,22 @@
          "color": "#40de54",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.75,
-         "right_horiz_shift": 0.8500000000000001,
-         "label_visible": true,
+         "left_horiz_shift": 0.2,
+         "right_horiz_shift": 0.3,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
-         "shift_gap": 0.05,
+         "shift_gap": 0.04999999999999999,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "#40de54",
          "x_label": 1025,
-         "y_label": 446.085,
+         "y_label": 446.155,
          "orthogonal_label_position": "above"
       },
       "link7": {
@@ -1592,6 +1670,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1609,7 +1688,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.41000000000000003,
          "right_horiz_shift": 0.51,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -1636,6 +1719,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1653,7 +1737,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.29705882352941176,
          "right_horiz_shift": 0.3970588235294118,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1678,6 +1766,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1695,7 +1784,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.2730769230769231,
          "right_horiz_shift": 0.3730769230769231,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1720,6 +1813,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1737,7 +1831,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hv",
@@ -1764,6 +1862,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1781,7 +1880,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.25769230769230766,
          "right_horiz_shift": 0.35769230769230775,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -1806,6 +1909,7 @@
             643.2,
             293.7
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1823,7 +1927,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -1831,8 +1939,8 @@
          "curved": true,
          "label_on_path": true,
          "text_color": "#c5c9d1",
-         "x_label": 584,
-         "y_label": 109.685,
+         "x_label": 585.486,
+         "y_label": 129.86,
          "orthogonal_label_position": "below"
       },
       "link13": {
@@ -1851,6 +1959,7 @@
             0.9,
             0.3
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1868,7 +1977,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.30714285714285716,
          "right_horiz_shift": 0.40714285714285714,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1893,6 +2006,7 @@
             642.3,
             293.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1910,7 +2024,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.2785714285714286,
          "right_horiz_shift": 0.3785714285714286,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1919,7 +2037,7 @@
          "label_on_path": true,
          "text_color": "#c5c9d1",
          "x_label": 665,
-         "y_label": 109.67,
+         "y_label": 129.845,
          "orthogonal_label_position": "above"
       },
       "link15": {
@@ -1938,6 +2056,7 @@
             80.3,
             38.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1953,9 +2072,13 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "end",
-         "left_horiz_shift": 0.7,
-         "right_horiz_shift": 0.8,
-         "label_visible": true,
+         "left_horiz_shift": 0.75,
+         "right_horiz_shift": 0.8500000000000001,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -1964,7 +2087,7 @@
          "label_on_path": true,
          "text_color": "#c5c9d1",
          "x_label": 1705,
-         "y_label": 545.925,
+         "y_label": 548.95,
          "orthogonal_label_position": "above"
       },
       "link16": {
@@ -1983,6 +2106,7 @@
             15.4,
             6.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -1998,9 +2122,13 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "middle",
-         "left_horiz_shift": 0.7,
-         "right_horiz_shift": 0.8,
-         "label_visible": true,
+         "left_horiz_shift": 0.75,
+         "right_horiz_shift": 0.8500000000000001,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2008,8 +2136,8 @@
          "curved": true,
          "label_on_path": true,
          "text_color": "#c5c9d1",
-         "x_label": 1572.5,
-         "y_label": 446.955,
+         "x_label": 1615,
+         "y_label": 429.53000000000003,
          "orthogonal_label_position": "below"
       },
       "link17": {
@@ -2028,6 +2156,7 @@
             10.6,
             34.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2043,9 +2172,13 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "middle",
-         "left_horiz_shift": 0.7,
-         "right_horiz_shift": 0.8,
-         "label_visible": true,
+         "left_horiz_shift": 0.8,
+         "right_horiz_shift": 0.8999999999999999,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2053,8 +2186,8 @@
          "curved": true,
          "label_on_path": true,
          "text_color": "#c5c9d1",
-         "x_label": 1572.5,
-         "y_label": 483.65500000000003,
+         "x_label": 1657.5,
+         "y_label": 484.67,
          "orthogonal_label_position": "below"
       },
       "link18": {
@@ -2073,6 +2206,7 @@
             17.1,
             14.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2090,7 +2224,11 @@
          "label_position": "middle",
          "left_horiz_shift": 0.55,
          "right_horiz_shift": 0.6499999999999999,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2099,7 +2237,7 @@
          "label_on_path": true,
          "text_color": "#c5c9d1",
          "x_label": 1447.4,
-         "y_label": 232.35500000000002,
+         "y_label": 212.49,
          "orthogonal_label_position": "above"
       },
       "link19": {
@@ -2118,6 +2256,7 @@
             518.9,
             200.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2135,7 +2274,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.6916993464052287,
          "right_horiz_shift": 0.8975816993464051,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2144,7 +2287,7 @@
          "label_on_path": true,
          "text_color": "#c5c9d1",
          "x_label": 1025,
-         "y_label": 104.005,
+         "y_label": 121.205,
          "orthogonal_label_position": "above"
       },
       "link20": {
@@ -2163,6 +2306,7 @@
             164.4,
             0.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2180,7 +2324,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.35,
          "right_horiz_shift": 0.45000000000000007,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -2189,7 +2337,7 @@
          "label_on_path": true,
          "text_color": "#f58536",
          "x_label": 584,
-         "y_label": 308.265,
+         "y_label": 365.8,
          "orthogonal_label_position": "above"
       },
       "link21": {
@@ -2208,6 +2356,7 @@
             0.8,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2225,7 +2374,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.1,
          "right_horiz_shift": 0.19999999999999998,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2250,6 +2403,7 @@
             9,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2267,7 +2421,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3269230769230769,
          "right_horiz_shift": 0.42692307692307696,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2276,7 +2434,7 @@
          "label_on_path": true,
          "text_color": "#f58536",
          "x_label": 695,
-         "y_label": 329.81,
+         "y_label": 379.81,
          "orthogonal_label_position": "below"
       },
       "link23": {
@@ -2295,6 +2453,7 @@
             155.5,
             0.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2312,7 +2471,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3192307692307692,
          "right_horiz_shift": 0.4192307692307693,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2321,7 +2484,7 @@
          "label_on_path": true,
          "text_color": "#f58536",
          "x_label": 665,
-         "y_label": 307.775,
+         "y_label": 364.08,
          "orthogonal_label_position": "above"
       },
       "link24": {
@@ -2340,6 +2503,7 @@
             96.1,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2357,7 +2521,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2366,7 +2534,7 @@
          "label_on_path": true,
          "text_color": "#f58536",
          "x_label": 1025,
-         "y_label": 305.92,
+         "y_label": 309.64,
          "orthogonal_label_position": "above"
       },
       "link25": {
@@ -2385,6 +2553,7 @@
             55.8,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2402,7 +2571,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2411,7 +2584,7 @@
          "label_on_path": true,
          "text_color": "#f58536",
          "x_label": 1705,
-         "y_label": 698.33,
+         "y_label": 702.29,
          "orthogonal_label_position": "above"
       },
       "link26": {
@@ -2430,6 +2603,7 @@
             0.6,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2447,7 +2621,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2472,6 +2650,7 @@
             1.4,
             0.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2485,20 +2664,24 @@
             "default"
          ],
          "color": "#f58536",
-         "curvature": 1,
+         "curvature": 0.8,
          "label_position": "beginning",
-         "left_horiz_shift": 0.5,
-         "right_horiz_shift": 0.6000000000000001,
-         "label_visible": true,
+         "left_horiz_shift": 0.30000000000000004,
+         "right_horiz_shift": 0.5,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
-         "shift_gap": 0.04999999999999999,
+         "shift_gap": 0.1,
          "orientation": "hh",
          "arrow": true,
          "curved": true,
          "label_on_path": true,
          "text_color": "white",
          "x_label": 1025.4,
-         "y_label": 311.425
+         "y_label": 307.895
       },
       "link28": {
          "idLink": "link28",
@@ -2516,6 +2699,7 @@
             0.7,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2533,7 +2717,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.33571428571428574,
          "right_horiz_shift": 0.4357142857142858,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2558,6 +2746,7 @@
             0.1,
             0.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2575,7 +2764,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.37,
          "right_horiz_shift": 0.47000000000000003,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -2602,6 +2795,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2619,7 +2813,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3911764705882353,
          "right_horiz_shift": 0.4911764705882353,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2644,6 +2842,7 @@
             0.1,
             0.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2661,7 +2860,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.37941176470588234,
          "right_horiz_shift": 0.47941176470588237,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2686,6 +2889,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2703,7 +2907,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4115384615384615,
          "right_horiz_shift": 0.5115384615384616,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2728,6 +2936,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2745,7 +2954,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.40384615384615385,
          "right_horiz_shift": 0.5038461538461538,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2770,6 +2983,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2787,7 +3001,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3961538461538462,
          "right_horiz_shift": 0.49615384615384617,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2812,6 +3030,7 @@
             0.1,
             0.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2829,7 +3048,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.38846153846153847,
          "right_horiz_shift": 0.4884615384615385,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2854,6 +3077,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2871,7 +3095,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.38076923076923075,
          "right_horiz_shift": 0.48076923076923084,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2896,6 +3124,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2913,7 +3142,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.33,
          "right_horiz_shift": 0.43000000000000005,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -2922,7 +3155,7 @@
          "label_on_path": true,
          "text_color": "#981ca3",
          "x_label": 284.5,
-         "y_label": 969,
+         "y_label": 1069,
          "orthogonal_label_position": "below"
       },
       "link38": {
@@ -2941,6 +3174,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -2958,7 +3192,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.09877660414751838,
          "right_horiz_shift": 0.11139910529641545,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -2985,6 +3223,7 @@
             15.5,
             13
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3002,7 +3241,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.29,
          "right_horiz_shift": 0.39,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "vh",
@@ -3011,7 +3254,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 284,
-         "y_label": 495.33,
+         "y_label": 505.655,
          "orthogonal_label_position": "above"
       },
       "link40": {
@@ -3030,6 +3273,7 @@
             36.2,
             30.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3047,7 +3291,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3566666666666667,
          "right_horiz_shift": 0.4566666666666667,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3056,7 +3304,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 65,
-         "y_label": 695.52,
+         "y_label": 697.85,
          "orthogonal_label_position": "above"
       },
       "link41": {
@@ -3075,6 +3323,7 @@
             3.8,
             4.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3092,7 +3341,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.34644679921196114,
          "right_horiz_shift": 0.432597159319383,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3120,6 +3373,7 @@
             48,
             38.9
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3137,7 +3391,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.40294117647058825,
          "right_horiz_shift": 0.5029411764705882,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3146,7 +3404,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 395,
-         "y_label": 495.945,
+         "y_label": 507.1,
          "orthogonal_label_position": "above"
       },
       "link43": {
@@ -3165,6 +3423,7 @@
             47,
             39.3
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3182,7 +3441,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4,
          "right_horiz_shift": 0.5,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3191,7 +3454,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 1025,
-         "y_label": 495.995,
+         "y_label": 508.03999999999996,
          "orthogonal_label_position": "above"
       },
       "link44": {
@@ -3210,6 +3473,7 @@
             1.1,
             0.7
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3225,9 +3489,13 @@
          "color": "#db0d55",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.4423076923076923,
-         "right_horiz_shift": 0.5423076923076924,
-         "label_visible": true,
+         "left_horiz_shift": 0.35000000000000003,
+         "right_horiz_shift": 0.45,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3252,6 +3520,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3269,7 +3538,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4346153846153846,
          "right_horiz_shift": 0.5346153846153847,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3294,6 +3567,7 @@
             0.1,
             0.3
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3309,9 +3583,13 @@
          "color": "#db0d55",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.4637002341920375,
-         "right_horiz_shift": 0.540281030444965,
-         "label_visible": true,
+         "left_horiz_shift": 0.4,
+         "right_horiz_shift": 0.5,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3339,6 +3617,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3356,7 +3635,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.41923076923076924,
          "right_horiz_shift": 0.5192307692307693,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3381,6 +3664,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3398,7 +3682,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3433333333333333,
          "right_horiz_shift": 0.44333333333333336,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3423,6 +3711,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3440,7 +3729,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3465,6 +3758,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3482,7 +3776,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.43823529411764706,
          "right_horiz_shift": 0.5382352941176471,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3507,6 +3805,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3524,7 +3823,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.42647058823529416,
          "right_horiz_shift": 0.5264705882352941,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3549,6 +3852,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3566,7 +3870,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.33,
          "right_horiz_shift": 0.43000000000000005,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3593,6 +3901,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3610,7 +3919,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.36764705882352944,
          "right_horiz_shift": 0.46764705882352947,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3635,6 +3948,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3652,7 +3966,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3558823529411765,
          "right_horiz_shift": 0.4558823529411765,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3679,6 +3997,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3696,7 +4015,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3730769230769231,
          "right_horiz_shift": 0.4730769230769231,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3721,6 +4044,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3738,7 +4062,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3653846153846154,
          "right_horiz_shift": 0.4653846153846154,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3763,6 +4091,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3780,7 +4109,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3576923076923077,
          "right_horiz_shift": 0.45769230769230773,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3805,6 +4138,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3822,7 +4156,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4669789227166276,
          "right_horiz_shift": 0.5716627634660422,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3849,6 +4187,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3866,7 +4205,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3423076923076923,
          "right_horiz_shift": 0.44230769230769235,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3891,6 +4234,7 @@
             0,
             0.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3908,7 +4252,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
-         "label_visible": false,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3917,7 +4265,7 @@
          "label_on_path": true,
          "text_color": "white",
          "x_label": 65,
-         "y_label": 717.515
+         "y_label": 708.485
       },
       "link61": {
          "idLink": "link61",
@@ -3935,6 +4283,7 @@
             0,
             31.9
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3952,7 +4301,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.30333333333333334,
          "right_horiz_shift": 0.4033333333333334,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -3980,6 +4333,7 @@
             2.1,
             4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -3997,7 +4351,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.29,
          "right_horiz_shift": 0.39,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4022,6 +4380,7 @@
             0,
             0.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4039,7 +4398,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.1,
          "right_horiz_shift": 0.19999999999999998,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4048,7 +4411,7 @@
          "label_on_path": true,
          "text_color": "#3474eb",
          "x_label": 455,
-         "y_label": 746.845,
+         "y_label": 750.105,
          "orthogonal_label_position": "above"
       },
       "link64": {
@@ -4067,6 +4430,7 @@
             0,
             31.9
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4084,7 +4448,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.09750747756729806,
          "right_horiz_shift": 0.2424227318045864,
-         "label_visible": false,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4111,6 +4479,7 @@
             2.1,
             4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4128,7 +4497,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.2618158567774935,
          "right_horiz_shift": 0.3270332480818416,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4153,6 +4526,7 @@
             1.3,
             0.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4170,7 +4544,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.27666666666666667,
          "right_horiz_shift": 0.3766666666666667,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4195,6 +4573,7 @@
             11.5,
             9.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4212,7 +4591,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.2633333333333333,
          "right_horiz_shift": 0.3633333333333334,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4240,6 +4623,7 @@
             1.3,
             0.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4257,7 +4641,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.2735294117647059,
          "right_horiz_shift": 0.3735294117647059,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4282,6 +4670,7 @@
             11.5,
             9.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4299,7 +4688,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.26447570332480824,
          "right_horiz_shift": 0.3496930946291561,
-         "label_visible": false,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4326,6 +4719,7 @@
             12.8,
             9.6
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4343,7 +4737,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.2,
          "right_horiz_shift": 0.3,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4352,7 +4750,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 1565,
-         "y_label": 595.68,
+         "y_label": 595.5,
          "orthogonal_label_position": "above"
       },
       "link71": {
@@ -4371,6 +4769,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4388,7 +4787,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.3642857142857143,
          "right_horiz_shift": 0.4642857142857143,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4413,6 +4816,7 @@
             0.2,
             0.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4430,7 +4834,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4779820033482143,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4455,6 +4863,7 @@
             2.6,
             2.6
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4472,7 +4881,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.4357142857142857,
          "right_horiz_shift": 0.5357142857142858,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4481,7 +4894,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 1565,
-         "y_label": 545.66,
+         "y_label": 496.24,
          "orthogonal_label_position": "above"
       },
       "link74": {
@@ -4500,6 +4913,7 @@
             1.4,
             1.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4517,7 +4931,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.42142857142857143,
          "right_horiz_shift": 0.5214285714285715,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4543,6 +4961,7 @@
             0.1,
             0.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4560,7 +4979,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.40714285714285714,
          "right_horiz_shift": 0.6151428571428569,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4585,6 +5008,7 @@
             0.4,
             0.5
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4602,7 +5026,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.39285714285714285,
          "right_horiz_shift": 0.4928571428571429,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4627,6 +5055,7 @@
             3.6,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4642,9 +5071,13 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.30000000000000004,
-         "right_horiz_shift": 0.5,
-         "label_visible": true,
+         "left_horiz_shift": 0.7,
+         "right_horiz_shift": 0.8,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4673,6 +5106,7 @@
             4.7,
             4.9
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4690,7 +5124,11 @@
          "label_position": "end",
          "left_horiz_shift": 0.31666666666666665,
          "right_horiz_shift": 0.41666666666666674,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4699,7 +5137,7 @@
          "label_on_path": true,
          "text_color": "#db0d55",
          "x_label": 1465,
-         "y_label": 547.07,
+         "y_label": 497.07,
          "orthogonal_label_position": "above"
       },
       "link79": {
@@ -4718,6 +5156,7 @@
             0,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4735,7 +5174,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.29444444444444445,
          "right_horiz_shift": 0.3944444444444445,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4760,6 +5203,7 @@
             5.4,
             0
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4775,9 +5219,13 @@
          "color": "#c5c9d1",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.05000000000000002,
-         "right_horiz_shift": 0.15,
-         "label_visible": true,
+         "left_horiz_shift": 0.2,
+         "right_horiz_shift": 0.3,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4804,6 +5252,7 @@
             138.3,
             36.6
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4819,9 +5268,13 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "middle",
-         "left_horiz_shift": 0.25,
-         "right_horiz_shift": 0.35,
-         "label_visible": true,
+         "left_horiz_shift": 0.8,
+         "right_horiz_shift": 0.8999999999999999,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4829,8 +5282,8 @@
          "curved": true,
          "label_on_path": true,
          "text_color": "#3474eb",
-         "x_label": 1610,
-         "y_label": 726.335,
+         "x_label": 1747.5,
+         "y_label": 766.8900000000001,
          "orthogonal_label_position": "above"
       },
       "link82": {
@@ -4849,6 +5302,7 @@
             80.7,
             14.6
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4864,9 +5318,13 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "end",
-         "left_horiz_shift": 0.35000000000000003,
-         "right_horiz_shift": 0.45,
-         "label_visible": true,
+         "left_horiz_shift": 0.8500000000000001,
+         "right_horiz_shift": 0.95,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4875,7 +5333,7 @@
          "label_on_path": true,
          "text_color": "#3474eb",
          "x_label": 1765,
-         "y_label": 705.405,
+         "y_label": 715.845,
          "orthogonal_label_position": "below"
       },
       "link83": {
@@ -4894,6 +5352,7 @@
             2.7,
             6.2
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4909,9 +5368,13 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.5,
-         "right_horiz_shift": 0.6000000000000001,
-         "label_visible": true,
+         "left_horiz_shift": 0.8999999999999999,
+         "right_horiz_shift": 1,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4936,6 +5399,7 @@
             21.5,
             19.4
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4951,9 +5415,13 @@
          "color": "#3474eb",
          "curvature": 0.5,
          "label_position": "end",
-         "left_horiz_shift": 0.5,
-         "right_horiz_shift": 0.6000000000000001,
-         "label_visible": true,
+         "left_horiz_shift": 0.6000000000000001,
+         "right_horiz_shift": 0.7,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -4962,7 +5430,7 @@
          "label_on_path": true,
          "text_color": "#3474eb",
          "x_label": 1768.6,
-         "y_label": 274.985,
+         "y_label": 298.28,
          "orthogonal_label_position": "below"
       },
       "link85": {
@@ -4981,6 +5449,7 @@
             4.4,
             0.1
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -4998,7 +5467,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -5026,6 +5499,7 @@
             0.5,
             3.3
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -5041,9 +5515,13 @@
          "color": "#3474eb",
          "curvature": 1,
          "label_position": "beginning",
-         "left_horiz_shift": 0.5465714285714285,
-         "right_horiz_shift": 0.7305714285714284,
-         "label_visible": true,
+         "left_horiz_shift": 0.45,
+         "right_horiz_shift": 0.55,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hh",
@@ -5070,6 +5548,7 @@
             242.4,
             43.8
          ],
+         "label_visible": false,
          "display_value": [
             "default",
             "default",
@@ -5087,7 +5566,11 @@
          "label_position": "beginning",
          "left_horiz_shift": 0.45,
          "right_horiz_shift": 0.55,
-         "label_visible": true,
+         "natural_unit": "GWh",
+         "conv": [
+            1,
+            1
+         ],
          "tags": {},
          "shift_gap": 0.04999999999999999,
          "orientation": "hv",
@@ -5095,21 +5578,22 @@
          "curved": true,
          "label_on_path": true,
          "text_color": "#3474eb",
-         "x_label": 1547,
-         "y_label": 904.21,
+         "x_label": 1547.6955,
+         "y_label": 988.775,
          "orthogonal_label_position": "below"
       }
    },
    "animation_tooltips": {},
    "show_uncert": false,
    "display_style": {
+      "unit": true,
       "filter": 1,
-      "filter_label": 20,
       "global_curvature": 0.99,
+      "null_flux": false,
+      "filter_label": 20,
       "font_size": 17,
       "product_bold": true,
-      "product_uppercase": true,
-      "null_flux": false
+      "product_uppercase": true
    },
    "static_sankey": false,
    "tags_catalog": {
@@ -5118,7 +5602,7 @@
          "tags": {
             "CA Haut - Bugey Agglomération": {
                "name": "CA Haut - Bugey Agglomération",
-               "selected": false,
+               "selected": true,
                "color": ""
             },
             "CC Mézenc-Loire-Meygal": {
@@ -5163,7 +5647,7 @@
             },
             "CC Dômes Sancy Artense": {
                "name": "CC Dômes Sancy Artense",
-               "selected": true,
+               "selected": false,
                "color": ""
             }
          },
@@ -5195,7 +5679,10 @@
    },
    "tooltip_names": [],
    "tooltips": [],
-   "units_names": [],
+   "units_names": [
+      "GWh",
+      "GWh"
+   ],
    "default_tooltip": true,
    "tags_group_idx": 1,
    "tag_idx": 1,

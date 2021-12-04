@@ -227,7 +227,7 @@ export const toPrecision = (
   v: number
 ) => {
   if (v < 1) {
-    return String(v.toFixed(1))
+    return String(v.toFixed(1).replace(/\.0+$/, ''))
   }
   let new_v = v.toPrecision(3).replace(/\.0+$/, '')
   if (new_v.includes('e+3')) {
@@ -308,6 +308,7 @@ export const default_node = (
     y: 100,
     inputLinksId: [],
     outputLinksId: [],
+    show_value: false,
     tags: {},
     tag_favorite: {},
     colorFavoriteTags: {},
