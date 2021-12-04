@@ -17,7 +17,8 @@ interface ConvertSankeyNode {
   label_visible: number | boolean,
   shape_visible: number | boolean,
   node_visible: number | boolean,  
-  trade_close: boolean
+  trade_close: boolean,
+  show_value: number | boolean
 }
 interface ConvertSankeyLink {
   classif?: any
@@ -52,7 +53,8 @@ interface ConvertSankeyLink {
 interface ConvertSankeyData {
   units_names: string[]
   display_style: {
-    trade_close?: boolean
+    trade_close?: boolean,
+    unit?: boolean | number
   }
   show_uncert?: boolean
   sankey_type?: string,
@@ -286,6 +288,10 @@ export const convert_data = (
     data.show_uncert = false
   }
 
+  if (data.display_style.unit as any === 1) {
+    data.display_style.unit = true
+  }
+
   if (data.node_width === undefined) {
     data.node_width = 10
   }
@@ -356,6 +362,12 @@ export const convert_data = (
       }
       if (n_convert.visible === 0) {
         n.shape_visible = false
+      }
+      if (n_convert.show_value === 0 || n_convert.show_value === undefined) {
+        n.show_value = false
+      }
+      if (n_convert.show_value === 1) {
+        n.show_value = true
       }
       if (n_convert.label_visible === 1) {
         n.label_visible = true

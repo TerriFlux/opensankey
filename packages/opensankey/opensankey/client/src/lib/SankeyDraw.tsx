@@ -4,7 +4,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, setSelectedTags } from './SankeyUtils'
+import { compute_total_offsets, setSelectedTags, toPrecision } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 
 window.d3 = d3
@@ -1522,12 +1522,49 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return 'font-family:' + font + ';font-size:' + display_style.font_size + 'px;font-style: ' + font_style + ';font-weight: ' + font_weight + ';'
       })
       .text(d => {
+        let total = 0
+        if (d.show_value) {
+          if ( d.outputLinksId.length > 0 ) {
+            for (let i=0;i<d.outputLinksId.length;i++) {
+              const link = display_links[d.outputLinksId[i]]
+              if ( link === undefined ) {
+                //alert('Corruption du diagramme')
+                return ''
+              }
+              if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+                total += +link.value[value_index]
+              }
+            }
+          }
+          if (total === 0) {
+            if ( d.inputLinksId.length > 0 ) {
+              for (let i=0;i<d.inputLinksId.length;i++) {
+                const link = display_links[d.inputLinksId[i]]
+                if ( link === undefined ) {
+                  //alert('Corruption du diagramme')
+                  return ''
+                }
+                if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+                  total += +link.value[value_index]
+                }
+              }
+            }            
+          }
+        }
         if (d.type === 'sector' && display_style.sector_uppercase ||
           d.type === 'product' && display_style.product_uppercase
-        ) {        
-          return d.name.split(' - ')[0].toUpperCase()
+        ) {  
+          if (d.show_value) {      
+            return d.name.split(' - ')[0].replace('-',' ').toUpperCase() + ' : ' + toPrecision(total) + (data as any).units_names[0]
+          } else {
+            return d.name.split(' - ')[0].replace('-',' ').toUpperCase()
+          }
         } else {
-          return d.name.split(' - ')[0]
+          if (d.show_value) {   
+            return d.name.split(' - ')[0].replace('-',' ') + ' : ' + toPrecision(total) + (data as any).units_names[0]
+          } else {
+            return d.name.split(' - ')[0].replace('-',' ')
+          }
         }
       })
       .each(d => {
