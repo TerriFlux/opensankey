@@ -574,7 +574,8 @@ export const updateLayout = (
 
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
-  data.legend_position = new_layout.legend_position
+  data.legend_position = new_layout.legend_position;
+  (data as any).welcome_text = (new_layout as any).welcome_text
   // if ('height' in new_layout) {
   //   data.height = new_layout.height
   // }

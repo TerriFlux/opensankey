@@ -1,5 +1,11 @@
 {
    "version": "0.5",
+   "welcome_text" : ["<p>Ces diagrammes concernent les filières lait régionales en 2010 et les flux sont exprimés en milliers de tonnes.</p>",
+      "<p>Ils sont principalement issus du travail de thèse de Michela Bevione (Inria STEEP) et ont été mis à jour pour tenir",
+      "compte de l'étude « Où va le lait ? » réalisée par l'IDELE (disponible au niveau de la France entière seulement).</p>",
+      "<p>Ces estimations n'ont pas encore fait l'objet d'une validation externe et doivent être pris avec prudence :",
+      "des intervalles de confiance sont proposés en passant la souris sur les flux, noeuds ou labels.</p>"
+   ],
    "file_path": "sankey_diagram.json",
    "node_width": 10,
    "user_scale": 24148,

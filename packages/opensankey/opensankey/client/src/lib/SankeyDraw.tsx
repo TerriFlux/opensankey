@@ -1881,15 +1881,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.selectAll('.tmp').remove()
 
     let height = 0
-    Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
+    Object.values(data.nodes).forEach( n=> height = n.y && n.node_visible ? Math.max(height,n.y) : height )
+    let min_height = 2000
+    Object.values(data.nodes).forEach( n=> min_height = n.y && n.node_visible ? Math.min(min_height,n.y) : min_height )
     let max_vert_shift = 0
     Object.values(data.links).forEach( l=> max_vert_shift = l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
 
-    height = Math.max(1000,height+max_vert_shift+200)
+    height = Math.max(500,height+max_vert_shift+200)
 
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
-      .attr('viewBox', [0, 0, data.width, height])
+      .attr('viewBox', [0, min_height+30, data.width, height])
       .attr('cursor', 'grab')
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -1932,11 +1934,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     console.log(data)
   })
   let height = 0
-  Object.values(data.nodes).forEach( n=> height = n.y ? Math.max(height,n.y) : height )
+  Object.values(data.nodes).forEach( n=> height = n.y && n.node_visible ? Math.max(height,n.y) : height )
   let max_vert_shift = 0
   Object.values(data.links).forEach( l=> max_vert_shift = l.vert_shift ? Math.max(max_vert_shift,l.vert_shift) : max_vert_shift )
 
-  height = Math.max(1000,height+max_vert_shift+200)
+  height = Math.max(500,height+max_vert_shift+200)
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'backgroundColor': 'WhiteSmoke', 'marginLeft': '10px' }} id="visualization_div" >
