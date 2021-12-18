@@ -88,7 +88,7 @@ def upload_exemple():
     data_folder = os.environ.get('MFAData')
     # print('data_folder : '+data_folder)
     response = Response(
-        response="'data_folder : '+data_folder",
+        response='data_folder : '+data_folder,
         status=200,
         mimetype='application/json'
     )
