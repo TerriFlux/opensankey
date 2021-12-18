@@ -79,11 +79,14 @@ def upload_data():
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
 def upload_exemple():
-    exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    data_folder = os.environ.get('MFAData')
+    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(exemples_folder, exemple)
+    exemple_file_path = os.path.join(data_folder, exemple)
+    exemple_folder = os.path.dirname(exemple_file_path)
     error=''
-    if exemple == "pommes_poires.xlsx":
+    extension = os.path.splitext(exemple_file_path)[1]
+    if extension == ".xlsx":
         nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
         context = {
             'version': '0.5',
@@ -94,16 +97,16 @@ def upload_exemple():
             'v_space': 250
         }
         json_data = json.dumps(context)
-    elif exemple == "sankeys_territoire_.csv":
+    elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
-        layout_file_name = os.path.join(exemples_folder, "energie_layout.json")
+        layout_file_name = os.path.join(exemple_folder, "energie_layout.json")
         layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
         layout_data = json.load(layout_file)
         sankey_dict["layout"] = layout_data
         sankey_dict['version'] = '0.5'
         json_data = json.dumps(sankey_dict)
-    elif exemple == "foret_bois_savoie.json" or exemple == "foret_bois_grand_est.json" or exemple == "viande_nationale.json" or exemple == "filiere_lait.json":
-        json_file_name = os.path.join(exemples_folder, exemple)
+    elif extension == ".json":
+        json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
         json_data = json.dumps(data)        
@@ -117,9 +120,10 @@ def upload_exemple():
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
-    exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    data_folder = os.environ.get('MFAData')
+    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(exemples_folder, exemple)
+    exemple_file_path = os.path.join(data_folder, exemple)
     if os.path.exists(exemple_file_path):
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')
