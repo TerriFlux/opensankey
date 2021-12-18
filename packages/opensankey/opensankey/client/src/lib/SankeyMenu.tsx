@@ -363,13 +363,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'pommes_poires.xlsx', url_prefix, data, set_data, 
+                  'SyntheticOpenSankey/pommes_poires.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Simple</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'sankeys_territoire_.csv', url_prefix, data, set_data,
+                  'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
                   (server_data : SankeyData) => {
                     compute_default_input_outputLinksId(server_data.nodes, server_data.links)
                     updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
@@ -381,22 +381,22 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }                    
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/foret_bois_savoie.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'foret_bois_grand_est.json', url_prefix, data, set_data,
+                  'Forêt Bois/Grand Est/foret_bois_grand_est.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'viande_nationale.json', url_prefix, data, set_data,
+                  'Viande/viande_nationale.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Viande</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'filiere_lait.json', url_prefix, data, set_data,
+                  'Lait/filiere_lait.json', url_prefix, data, set_data,
                   ()=> 0
                 )}
                 >Lait</Dropdown.Item>
