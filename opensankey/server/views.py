@@ -86,7 +86,13 @@ def upload_exemple():
             mimetype='application/json'
         )
     data_folder = os.environ.get('MFAData')
-    print('data_folder'+data_folder)
+    # print('data_folder : '+data_folder)
+    response = Response(
+        response="'data_folder : '+data_folder",
+        status=200,
+        mimetype='application/json'
+    )
+    return response
     #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
