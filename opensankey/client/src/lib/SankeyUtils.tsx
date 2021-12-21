@@ -1,8 +1,7 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, compute_default_input_outputLinksId, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
-import { linkHorizontal } from 'd3-shape'
+
 
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
@@ -262,7 +261,7 @@ export const default_sankey_data = (): SankeyData => {
     node_width: 10,
     h_space: 200,
     v_space: 100,
-    legend_position: [0,100],
+    legend_position: [0, 100],
 
     left_shift: 0.4,
     right_shift: 0.5,
@@ -284,6 +283,7 @@ export const default_sankey_data = (): SankeyData => {
     },
 
     tags_catalog: {},
+    dataTags: {},
     tags_group_idx: 1,
     tag_idx: 1,
     node_idx: 1,
@@ -310,19 +310,56 @@ export const default_node = (
     outputLinksId: [],
     show_value: false,
     tags: {},
-    tag_favorite: {},
+    tag_favorite: '',
     colorFavoriteTags: {},
     dimensions: { 'Primaire': { parent_name: undefined } }
   }
   return defaultNode
 }
+const create_object = (data: SankeyData, l: string[]) => {
+  const { dataTags } = data
+  if (l.length == 0) {
+    const obj = Object.create({})
+    obj['value'] = 0
+    obj['valueDisplay'] = 'default'
+    return obj
+  } else {
+    const i = l[0]
+    if (i !== undefined) {
+      const o=Object.create({})
+      const tmp = Object.values(dataTags[i].tags).forEach(d => {
+        const obj = Object.create({})
+        const ob = create_object(data, l.slice(1))
+        obj[d.name] = ob
+        Object.assign(o,obj)
+      })
+      return o
+    }
 
-export const default_link = (): SankeyLink => {
+
+  }
+}
+export const default_link = (data: SankeyData): SankeyLink => {
+  const { dataTags } = data
+  let nObjet = Object.create({})
+  const listK = Object.keys(dataTags).filter(d=>{
+
+    if(Object.keys(dataTags[d].tags).length!=0){
+      return true
+    }else{
+      return false
+    }
+  })
+  
+
+  nObjet = create_object(data, listK)
+  
   return {
     idSource: 'node0',
     idTarget: 'node1',
     idLink: 'link0',
     value: [10],
+    valueV2: nObjet,
     display_value: ['default'],
     color: '#a9a9a9',
     curved: false,
@@ -338,7 +375,9 @@ export const default_link = (): SankeyLink => {
     right_horiz_shift: 0,
     vert_shift: 0,
     shift_gap: 0.1,
-    tags: {}
+    tags: {},
+    tag_favorite: ''
+
   }
 }
 
@@ -471,7 +510,7 @@ export const uploadExemple = (
 }
 
 export const set_nodes_level = (
-  display_nodes: { [key : string] : SankeyNode },
+  display_nodes: { [key: string]: SankeyNode },
   level: number
 ) => {
   Object.values(display_nodes).forEach(node => {
