@@ -282,6 +282,8 @@ export const default_sankey_data = (): SankeyData => {
       null_flux: false
     },
 
+    static_sankey: false,
+
     tags_catalog: {},
     dataTags: {},
     tags_group_idx: 1,
