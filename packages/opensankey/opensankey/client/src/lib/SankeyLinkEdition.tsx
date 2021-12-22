@@ -97,7 +97,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           <Form.Select
                             name={d[0]}
                             onChange={
-                              (evt) => {
+                              (evt: React.ChangeEvent<HTMLSelectElement>) => {
                                 //Modifie les paramètres selectionnés 
                                 const { name, value } = evt.target
                                 set_tags_selected(prevState => ({

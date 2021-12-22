@@ -7,7 +7,7 @@ import { compute_auto_sankey, compute_default_input_outputLinksId, updateLayout,
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
+import { FaPlus, FaMinus } from 'react-icons/fa'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
