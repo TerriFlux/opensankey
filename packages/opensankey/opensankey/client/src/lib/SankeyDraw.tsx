@@ -262,7 +262,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //.attr('stroke',d => d.unbounded ? 'darkred' : d.color)
       .attr('stroke', l => link_color(l, value_index))
       .on('mouseover', function (event, d) {
-        if (!event.shiftKey) {
+        if (!static_sankey && !event.shiftKey) {
           return
         }
         sankeyTooltip
@@ -273,7 +273,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', (event) => {
-        if (!event.shiftKey) {
+        if (!static_sankey && !event.shiftKey) {
           return
         }
         sankeyTooltip
@@ -1443,7 +1443,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width', '0')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        if ((d as SankeyNode).shape_visible && event.shiftKey) {
+        if ((d as SankeyNode).shape_visible && (event.shiftKey || static_sankey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1451,7 +1451,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if ((d as SankeyNode).shape_visible && event.shiftKey) {
+        if ((d as SankeyNode).shape_visible && (event.shiftKey || static_sankey)) {
           sankeyTooltip
           
             .style('top' , (event.layerY - 10) + 'px')
@@ -1555,15 +1555,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d.type === 'product' && display_style.product_uppercase
         ) {  
           if (d.show_value) {      
-            return d.name.split(' - ')[0].replace('-',' ').toUpperCase() + ' : ' + toPrecision(total) + (data as any).units_names[0]
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo').toUpperCase() + ' : ' + toPrecision(total) + (data as any).units_names[0]
           } else {
-            return d.name.split(' - ')[0].replace('-',' ').toUpperCase()
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo').toUpperCase()
           }
         } else {
           if (d.show_value) {   
-            return d.name.split(' - ')[0].replace('-',' ') + ' : ' + toPrecision(total) + (data as any).units_names[0]
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo') + ' : ' + toPrecision(total) + (data as any).units_names[0]
           } else {
-            return d.name.split(' - ')[0].replace('-',' ')
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo')
           }
         }
       })
@@ -1579,7 +1579,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .call(wrap)
       })
       .on('mouseover', function (event, d) {
-        if (d.label_visible && event.shiftKey) {
+        if (d.label_visible && (static_sankey || event.shiftKey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1587,7 +1587,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (d.label_visible && event.shiftKey) {
+        if (d.label_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
             .style('top',  (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
@@ -1921,8 +1921,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     update_scale(data.user_scale)
 
-    add_nodes(false, true)
-    add_links(false, true)
+    add_nodes(data.static_sankey, true)
+    add_links(data.static_sankey, true)
     const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_nodes.attr('cursor', 'zoom-in')
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>

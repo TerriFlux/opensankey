@@ -502,9 +502,9 @@ export const updateLayout = (
     if (!node) {
       continue
     }
-    if (!node.node_visible) {
-      continue
-    }
+    // if (!node.node_visible) {
+    //   continue
+    // }
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y

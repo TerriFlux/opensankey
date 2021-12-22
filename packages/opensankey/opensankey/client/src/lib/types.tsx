@@ -154,6 +154,8 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired
   }).isRequired,
+  
+  static_sankey : PropTypes.bool.isRequired,
 
   tags_catalog:TagsCatalogPropTypes,
 

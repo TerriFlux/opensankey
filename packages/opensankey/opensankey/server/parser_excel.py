@@ -236,3 +236,114 @@ def parse_simple_excel(
             'color'       : color
         })
     return nodes, links
+
+def updateLayout(
+  data,
+  new_layout
+):
+  max_vertical_offset = 0
+  for node in data['nodes']:
+      if node['node_visible'] == 1:
+          max_vertical_offset = max(node['y'], max_vertical_offset)
+  max_vertical_offset = max_vertical_offset + 200
+  data['node_width'] = new_layout['node_width']
+
+  # Apply nodes layout
+  for node_layout_key in new_layout['nodes']:
+    node_layout = new_layout['nodes'][node_layout_key]
+    nodes = [node for node in data['nodes'] if node['name'] == node_layout['name'] ]
+    if len(nodes) == 0:
+      if len(node_layout['inputLinksId']) == 0 and len(node_layout['outputLinksId']) == 0 and node_layout['shape_visible'] == False and node_layout['label_visible'] == True:
+        # Case of not a label
+        node = node_layout
+        node['idNode'] = 'node' + data['node_idx']
+        data['node_idx'] = data['node_idx'] + 1
+        data['nodes'][node['idNode']]
+      else:
+        continue
+
+    node = nodes[0]
+    if not node:
+      continue
+    if not node['node_visible']:
+      continue
+    node['name'] = node_layout['name']
+    node['x'] = node_layout['x']
+    node['y'] = node_layout['y']
+    if node['y'] + 200 > max_vertical_offset:
+      max_vertical_offset = node['y'] + 200
+
+    #node.color = node_layout.color
+    node['x_label'] = node_layout['x_label']
+    node['y_label'] = node_layout['y_label']
+    node['label_visible'] = node_layout['label_visible']
+
+  # apply_input_outputLinksId(
+  #   new_layout['nodes,
+  #   new_layout['links,
+  #   data
+  # )
+
+  for link_layout_key in new_layout['links']:
+    link_layout = new_layout['links'][link_layout_key]
+    links = [
+        link for link in data['links']
+        if data['nodes'][link['idSource']['name']] == new_layout['nodes'][link_layout['idSource']['name']] and
+           data['nodes'][link['idTarget']['name']] == new_layout['nodes'][link_layout['idTarget']['name']]
+    ]
+
+    if len(links) == 0:
+      continue
+
+    link = links[0]
+    # if ( link_layout.display_value !== 'default' && 
+    #     !String(link_layout.display_value).includes('[') ) {
+    #   link.value = link_layout.value
+    # }
+    # const node_source = Object.values(data.nodes).filter( n => n.name ===new_layout['nodes[link_layout.idSource].name)
+    # const node_target = Object.values(data.nodes).filter( n => n.name ===new_layout['nodes[link_layout.idTarget].name)
+    # if (node_source && node_target) {
+    #   link.idSource = node_source.idNode
+    #   link.idSource = node_target.idNode
+    # }
+    #x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position = link_layout
+    link['curvature'] = link_layout['curvature']
+    link['curved'] = link_layout['curved']
+    link['arrow'] = link_layout['arrow']
+    link['text_color'] = link_layout['link_layout.text_color']
+    link['label_position'] = link_layout['label_position']
+    link['label_visible'] = link_layout['label_visible']
+    link['x_label'] = link_layout['x_label']
+    link['y_label'] = link_layout['y_label']
+    link['left_horiz_shift'] = link_layout['link_layout.left_horiz_shift']
+    link['right_horiz_shift'] = link_layout['link_layout.right_horiz_shift']
+    link['orientation'] = link_layout['link_layout.orientation']
+    link['recycling'] = link_layout['recycling']
+    link['orthogonal_label_position'] = link_layout['orthogonal_label_position']
+
+    # if (String(link['display_value[0]).includes('*')) {
+    #   link['value[0]'] = link_layout['link_layout.value[0]']
+    # }
+
+    if link_layout['vert_shift']:
+      link['left_horiz_shift'] = link_layout['link_layout.left_horiz_shift']
+      link['right_horiz_shift'] = link_layout['link_layout.right_horiz_shift']
+      link['vert_shift'] = link_layout['link_layout.vert_shift']
+
+  #data.animation_tooltips = new_layout['animation_tooltips
+  data['user_scale'] = new_layout['user_scale']
+  data['legend_position'] = new_layout['legend_position']
+  data['welcome_text'] = new_layout['welcome_text']
+  # if ('height' in new_layout) {
+  #   data.height = new_layout['height
+  # }
+  if 'width' in new_layout:
+    data['width'] = new_layout['width']
+
+#   Object.keys(new_layout['display_style).forEach(
+#     key => (data['display_style as any)[key] = (new_layout['display_style as any)[key]
+#   )
+  if 'filter' not in data['display_style']:
+    data['display_style']['filter'] = 0
+  if 'filter_label' not in data['display_style']:
+    data['display_style']['filter_label'] = 0
