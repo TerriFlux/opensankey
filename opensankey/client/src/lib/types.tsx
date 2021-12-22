@@ -37,11 +37,12 @@ export const SankeyNodePropTypes = {
   }).isRequired
   ).isRequired,
 
-  tag_favorite :PropTypes.objectOf(PropTypes.shape({
-    tagGroup:PropTypes.string.isRequired,
-    tagElement :PropTypes.string.isRequired
-  }).isRequired
-  ).isRequired,
+  // tag_favorite :PropTypes.objectOf(PropTypes.shape({
+  //   tagGroup:PropTypes.string.isRequired,
+  //   tagElement :PropTypes.string.isRequired
+  // }).isRequired
+  // ).isRequired,
+  tag_favorite:PropTypes.string.isRequired,
 
   node_parameter:PropTypes.string.isRequired,
 
@@ -85,6 +86,7 @@ export const SankeyLinkPropTypes = {
 
   // value
   value: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  valueV2:PropTypes.object,
   display_value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   tooltip_text: PropTypes.string,
@@ -92,6 +94,10 @@ export const SankeyLinkPropTypes = {
   // geometry
   x_label: PropTypes.number,
   y_label: PropTypes.number,
+
+  //NEW : Choix du group tag favorie pour changement couleur palette 
+  tag_favorite:PropTypes.string.isRequired,
+
 
   left_horiz_shift  : PropTypes.number.isRequired,
   right_horiz_shift : PropTypes.number.isRequired,
@@ -105,6 +111,7 @@ export const SankeyLinkPropTypes = {
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
+
 
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
@@ -139,7 +146,6 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-
   display_style: PropTypes.shape({
     font_size: PropTypes.number.isRequired,
     sector_uppercase: PropTypes.bool.isRequired,
@@ -158,6 +164,8 @@ export const SankeyDataPropTypes = {
   static_sankey : PropTypes.bool.isRequired,
 
   tags_catalog:TagsCatalogPropTypes,
+
+  dataTags:TagsCatalogPropTypes,
 
   // last indices used to increment in the id's :idNode idLink idTag idTagGroup
   tags_group_idx: PropTypes.number.isRequired,

@@ -1,8 +1,12 @@
 import React, { useState, FunctionComponent } from 'react'
-import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
+import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { arrangeNodes, compute_auto_sankey, updateLayout,reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
+import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
+import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
+
+
+
 
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -10,7 +14,6 @@ const SankeySettingsEditionPropTypes = {
   set_current_filter: PropTypes.func.isRequired,
   getValueIndex: PropTypes.func.isRequired
 }
-
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
 const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
@@ -24,7 +27,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
   const [shift_left, set_shift_left] = useState(100)
   const [shift_top, set_shift_top] = useState(100)
-  const [shift_visible, set_shift_visible] = useState(true)  
+  const [shift_visible, set_shift_visible] = useState(true)
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [width, set_width] = useState(data.width)
@@ -130,12 +133,12 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    if ( shift_visible) {
+                    if (shift_visible) {
                       Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
                       Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.x_label).forEach(l => (l.x_label as number) += shift_left)
                     } else {
                       Object.values(nodes).forEach(n => n.x += shift_left)
-                      Object.values(links).filter(l => l.x_label).forEach(l => (l.x_label as number) += shift_left)                      
+                      Object.values(links).filter(l => l.x_label).forEach(l => (l.x_label as number) += shift_left)
                     }
                     set_data({ ...data })
                   }
@@ -159,12 +162,12 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={
                   () => {
-                    if ( shift_visible) {
+                    if (shift_visible) {
                       Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
                       Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.y_label).forEach(l => (l.y_label as number) += shift_top)
                     } else {
                       Object.values(nodes).forEach(n => n.y += shift_top)
-                      Object.values(links).filter(l => l.y_label).forEach(l => (l.y_label as number) += shift_top)                      
+                      Object.values(links).filter(l => l.y_label).forEach(l => (l.y_label as number) += shift_top)
                     }
                     set_data({ ...data })
                   }
@@ -180,7 +183,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <FormControl
                 type="text"
                 value={legend_position[0]}
-                onChange={evt => set_legend_position( [ +evt.target.value, legend_position[1] ]) }
+                onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
                 onBlur={() => {
                   data.legend_position = legend_position
                   set_data({ ...data })
@@ -196,7 +199,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <FormControl
                 type="text"
                 value={legend_position[1]}
-                onChange={evt => set_legend_position( [ legend_position[0], +evt.target.value ]) }
+                onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
                 onBlur={() => {
                   data.legend_position = legend_position
                   set_data({ ...data })
@@ -304,9 +307,9 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 size="sm"
                 onClick={() => {
                   Object.values(data.nodes).forEach(n => {
-                    reorganize_node_inputLinksId(n,data.nodes,data.links)
-                    reorganize_node_outputLinksId(n,data.nodes,data.links)
-                  })                  
+                    reorganize_node_inputLinksId(n, data.nodes, data.links)
+                    reorganize_node_outputLinksId(n, data.nodes, data.links)
+                  })
                   set_data({ ...data })
                 }}
               >Reorganiser liens entrants et sortant</Button>
@@ -725,22 +728,21 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   })
   max_link_value += 1
 
-  /*   const handleBanner = (i: number, evt: React.ChangeEvent<HTMLSelectElement>) => {
-      tags_catalog[i].banner = evt.target.value
-      set_data({ ...data })
-    } */
+
+  //Permet de modifier le type de bannier pour le groupTag (si ce non None)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
     tags_catalog[tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
   // --------------------------------------------
+  //ajoute un tag au group selectionné 
   const handleAddTagButton = () => {
     const { tags_catalog } = data
     tags_catalog[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '#000000', selected: true }
     data.tag_idx += 1
     set_data({ ...data })
   }
-
+  //Ajoute un groupTag
   const handleAddTagGrpButton = () => {
     const { tags_catalog } = data
     //const tab_key = Object.keys(tags_catalog)
@@ -779,7 +781,42 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       set_tags_group_key(lastElmt)
     }
     set_data({ ...data })
+  }
 
+  const handleUpGrpTag = (i: string) => {
+    const { tags_catalog } = data
+    const tmp = tags_catalog[i]
+    const cpyCat = tags_catalog
+    const listElmt = Object.keys(tags_catalog)
+    const posElemt = listElmt.indexOf(i)
+    listElmt.splice(posElemt, 1)
+    listElmt.splice(posElemt - 1, 0, i)
+    const new_cat = ({} as any)
+    listElmt.forEach(elt => {
+
+      new_cat[elt] = tags_catalog[elt]
+    })
+    for (const member in tags_catalog) delete tags_catalog[member]
+    Object.assign(tags_catalog, new_cat)
+    set_data({ ...data })
+  }
+
+  const handleDownGrpTag = (i: string) => {
+    const { tags_catalog } = data
+    const tmp = tags_catalog[i]
+    const cpyCat = tags_catalog
+    const listElmt = Object.keys(tags_catalog)
+    const posElemt = listElmt.indexOf(i)
+    listElmt.splice(posElemt, 1)
+    listElmt.splice(posElemt + 1, 0, i)
+    const new_cat = ({} as any)
+    listElmt.forEach(elt => {
+
+      new_cat[elt] = tags_catalog[elt]
+    })
+    for (const member in tags_catalog) delete tags_catalog[member]
+    Object.assign(tags_catalog, new_cat)
+    set_data({ ...data })
   }
 
   // const handleBanner = (i: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -827,10 +864,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       </Col>
     </Form.Group>
 
-    <Table striped bordered hover responsive='sm' size='sm'>
+    <Table striped bordered hover responsive='sm' size='sm' className='node_tags_definition'>
       <thead>
         <tr>
-          <th></th>
+
+          <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button> </th>
           <th>Nom</th>
           <th>Visible</th>
           <th>Couleur</th>
@@ -842,10 +880,10 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           (tag_key, i) => {
             return (
               <tr key={i.toString()}>
-                <td style={{ 'width': '10%' }}><Button variant="danger" value='-' onClick={() => { handleDelTag(tag_key) }}>-</Button></td>
+                <td style={{ 'width': '10%' }}><Button variant="danger" value='-' onClick={() => { handleDelTag(tag_key) }}><FaMinus /></Button></td>
 
                 <td style={{ 'width': '33%' }}>
-                  <FormControl size='sm'
+                  <FormControl /* size='sm' */
                     id={i.toString()}
                     type="text"
                     value={tags_catalog[tags_group_key].tags[tag_key].name}
@@ -884,8 +922,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                     }
                   }
                 /></td>
-                <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-                {
+                <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   tags_catalog[tags_group_key].tags[tag_key].shape = evt.target.value
                   set_data({ ...data })
                 }
@@ -900,29 +937,32 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       </tbody>
     </Table>
 
-    <Button variant="success" value='+' onClick={handleAddTagButton}>+</Button> </>
+  </>
   )
+
 
   return (
     <>
-      <Table striped bordered hover>
+      <Table striped bordered hover className='node_group_tags_definition'>
         <thead>
           <tr>
-            <th></th>
+            <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
             <th>Nom</th>
             <th>Legend</th>
             <th>Nb tag</th>
             <th>Bannière</th>
+            <th>Position</th>
           </tr>
         </thead>
         <tbody>
           {
+
             Object.keys(tags_catalog).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
                     <td style={{ 'width': '10%' }}>
-                      <Button variant="danger" onClick={() => handleDelGroupTag(tags_group_key)}>-</Button>
+                      <Button variant="danger" onClick={() => handleDelGroupTag(tags_group_key)}><FaMinus /></Button>
                     </td>
                     <td>
                       <FormControl
@@ -961,6 +1001,12 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                       <option key={'one' + i} id='OneBaner' selected={tags_catalog[tags_group_key].banner === 'one'} value='one'>One</option>
                       <option key={'multi' + i} id='MultipleBaner' selected={tags_catalog[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
                     </Form.Select>
+                    <td style={{ 'width': '10%' }}>
+                      <ButtonGroup className="button_position" size="sm">
+                        <Button variant="info" onClick={() => handleUpGrpTag(tags_group_key)}><FaArrowAltCircleUp /></Button>
+                        <Button variant="info" onClick={() => handleDownGrpTag(tags_group_key)}><FaArrowAltCircleDown /></Button>
+                      </ButtonGroup>
+                    </td>
 
                   </tr>
                 )
@@ -969,7 +1015,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         </tbody>
       </Table>
 
-      <Button variant="success" onClick={handleAddTagGrpButton}>+</Button>
+
 
       <br></br>
 
@@ -978,9 +1024,329 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   )
 }
 
+
+
+
+
+
+const SankeySettingsEditionTagsLinksPropTypes = {
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
+  getValueIndex: PropTypes.func.isRequired
+}
+type SankeySettingsEditionTagsLinksTypes = InferProps<typeof SankeySettingsEditionTagsLinksPropTypes>
+
+const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data, getValueIndex }) => {
+  const [links_tags_group_key, set_links_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
+  //const [tag_key, set_tag_key] = useState('')
+
+  const { links, dataTags } = data
+
+  const value_index = getValueIndex(data)
+  let max_link_value = 0
+  Object.values(links).forEach(link => {
+    if (link.value[value_index] > max_link_value) {
+      max_link_value = link.value[value_index]
+    }
+  })
+  max_link_value += 1
+
+
+  //Permet de modifier le type de bannier pour le groupTag (si ce non None)
+  const handleBanner = (links_tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
+    dataTags[links_tags_group_key].banner = evt.target.value
+    set_data({ ...data })
+  }
+  // --------------------------------------------
+  //ajoute un tag au group selectionné 
+  const handleAddTagButton = () => {
+    const { dataTags } = data
+    //Si le DataTag n'a pas de tag alors le premier crée sera selectionné par defaut
+    const selectedDefault = (Object.keys(dataTags[links_tags_group_key].tags).length == 0) ? true : false
+
+    //création d'un tag par defaut
+    dataTags[links_tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '#000000', selected: selectedDefault }
+    data.tag_idx += 1
+    set_data({ ...data })
+  }
+  //Ajoute un groupTag
+  const handleAddTagGrpButton = () => {
+    const { dataTags } = data
+
+    data.tags_group_idx += 1
+    dataTags['tag_group_' + data.tags_group_idx] = {
+      group_name: 'Tag Group ' + data.tags_group_idx,
+      show_legend: false,
+      tags: {},
+      banner: 'none'
+    }
+
+    set_links_tags_group_key('tag_group_' + data.tags_group_idx)
+    set_data({ ...data })
+  }
+  //supprime tag
+  const handleDelTag = (n: string) => {
+    const { dataTags } = data
+    delete dataTags[links_tags_group_key].tags[n]
+
+    set_data({ ...data })
+  }
+  //supprime groupTag
+  const handleDelGroupTag = (i: string) => {
+    const { dataTags } = data
+    console.log(i)
+    delete dataTags[i]
+    if (Object.keys(dataTags).length > 0) {
+      const lastElmt = Object.keys(dataTags)[Object.keys(dataTags).length - 1]
+      set_links_tags_group_key(lastElmt)
+    }
+    set_data({ ...data })
+  }
+  //Deplace groupeTag vers le haut de l'objet
+  const handleUpGrpTag = (i: string) => {
+    const { dataTags } = data
+    const tmp = dataTags[i]
+    const cpyCat = dataTags
+    const listElmt = Object.keys(dataTags)
+    const posElemt = listElmt.indexOf(i)
+    listElmt.splice(posElemt, 1)
+    listElmt.splice(posElemt - 1, 0, i)
+    const new_cat = ({} as any)
+    listElmt.forEach(elt => {
+
+      new_cat[elt] = dataTags[elt]
+    })
+    for (const member in dataTags) delete dataTags[member]
+    Object.assign(dataTags, new_cat)
+    set_data({ ...data })
+  }
+  //Deplace groupeTag vers le bas de l'objet
+
+  const handleDownGrpTag = (i: string) => {
+    const { dataTags } = data
+    const tmp = dataTags[i]
+    const cpyCat = dataTags
+    const listElmt = Object.keys(dataTags)
+    const posElemt = listElmt.indexOf(i)
+    listElmt.splice(posElemt, 1)
+    listElmt.splice(posElemt + 1, 0, i)
+    const new_cat = ({} as any)
+    listElmt.forEach(elt => {
+
+      new_cat[elt] = dataTags[elt]
+    })
+    for (const member in dataTags) delete dataTags[member]
+    Object.assign(dataTags, new_cat)
+    set_data({ ...data })
+  }
+  const tagSetting = (<>
+    <Form.Group as={Row} >
+      <Col>
+        <FormLabel >Tag Groupe:</FormLabel>
+      </Col>
+      <Col>
+        <Form.Select onChange={
+          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+            set_links_tags_group_key(evt.target.value)
+            set_data({ ...data })
+          }}>
+          {Object.keys(dataTags).map(
+            (key, i) =>
+              <option
+                key={i}
+                value={key}
+                selected={links_tags_group_key === key} >
+                {dataTags[key].group_name}
+              </option>
+          )}
+        </Form.Select>
+      </Col>
+    </Form.Group>
+
+    <Table striped bordered hover responsive='sm' size='sm' className='link_tags_definition'>
+      <thead>
+        <tr>
+          <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
+          <th>Nom</th>
+          {/* <th>Visible</th> */}
+          <th>Selected</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Object.keys(dataTags).length > 0 && links_tags_group_key !== '' ? Object.keys(dataTags[links_tags_group_key].tags).map(
+          (tag_key, i) => {
+            return (
+              <tr key={i.toString()}>
+                <td style={{ 'width': '10%' }}><Button variant="danger" onClick={() => { handleDelTag(tag_key) }}><FaMinus /></Button></td>
+
+                <td /* style={{ 'width': '33%' }} */>
+                  <FormControl size='sm'
+                    id={i.toString()}
+                    type="text"
+                    value={dataTags[links_tags_group_key].tags[tag_key].name}
+                    onChange={
+                      (evt: React.ChangeEvent) => {
+                        const { dataTags } = data
+                        const new_nb_element = evt.target as HTMLInputElement
+                        const name = new_nb_element.value
+                        for (const l in data.links) {
+                          data.links[l].valueV2 = JSON.parse(JSON.stringify(data.links[l].valueV2).replaceAll('"' + dataTags[links_tags_group_key].tags[tag_key].name + '"', '"' + name + '"')) as any
+                          // data.links[l].valueV2 = JSON.parse(JSON.stringify(data.links[l].valueV2).replaceAll(dataTags[links_tags_group_key].tags[tag_key].name, name)) as any
+
+                        }
+                        dataTags[links_tags_group_key].tags[tag_key].name = name
+                        set_data({ ...data })
+
+
+
+                      }
+                    } /></td>
+                {/* <td >
+                  <Form.Check inline={true}
+                    name={'element_visible' + tag_key}
+                    checked={dataTags[links_tags_group_key].tags[tag_key].selected}
+                    id={tag_key}
+                    type='switch'
+                    onChange={
+                      (evt: React.ChangeEvent) => {
+                        const new_nb_element = evt.target as HTMLInputElement
+                        const tag_key = new_nb_element.id
+                        const visible = new_nb_element.checked
+                        dataTags[links_tags_group_key].tags[tag_key].selected = visible
+                        set_data({ ...data })
+                      }
+                    } />
+                </td> */}
+
+                <td /* style={{ 'width': '10%' }} */>
+                  <Form.Check inline={true}
+                    name={'element_selected' + tag_key}
+                    checked={dataTags[links_tags_group_key].tags[tag_key].selected}
+                    id={tag_key}
+                    type='switch'
+                    onChange={
+                      (evt: React.ChangeEvent) => {
+                        const new_nb_element = evt.target as HTMLInputElement
+                        const tag_key = new_nb_element.id
+                        const visible = new_nb_element.checked
+                        Object.values(dataTags[links_tags_group_key].tags).map(d => {
+                          d.selected = false
+
+                        })
+                        dataTags[links_tags_group_key].tags[tag_key].selected = true
+                        set_data({ ...data })
+                        console.log(dataTags)
+                      }
+                    } />
+                </td>
+
+
+              </tr>
+            )
+          }) : (<></>)}
+      </tbody>
+    </Table>
+
+  </>
+  )
+
+
+  return (
+    <>
+      <Table striped bordered responsive='sm' size='sm' hover className='link_group_tag_definition'>
+        <thead>
+          <tr>
+            <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
+            <th>Nom</th>
+            {/* <th>Legend</th> */}
+            <th>Nb tag</th>
+            <th>Bannière</th>
+            {/* <th>Position</th> */}
+          </tr>
+        </thead>
+        <tbody>
+          {
+
+            Object.keys(dataTags).map(
+              (links_tags_group_key, i) => {
+                return (
+                  <tr key={i.toString()}>
+                    <td style={{ 'width': '10%' }}>
+                      <Button variant="danger" onClick={() => handleDelGroupTag(links_tags_group_key)}><FaMinus /></Button>
+                    </td>
+                    <td>
+                      <FormControl
+                        id={i.toString()}
+                        type="text"
+                        value={dataTags[links_tags_group_key].group_name}
+                        onChange={
+                          (evt: React.ChangeEvent) => {
+                            const { dataTags } = data
+                            const new_name = (evt.target as HTMLInputElement).value
+                            dataTags[links_tags_group_key].group_name = new_name
+                            set_data({ ...data })
+                          }
+                        } />
+                    </td>
+                    {/* <td>
+                    -------------------------------
+                      LEGEND
+                    -------------------------------
+
+                      <Form.Check inline={true}
+                        // Permet de selection le tag pour l'affichage dans la légende
+                        name={'element_legend_' + links_tags_group_key}
+                        checked={dataTags[links_tags_group_key].show_legend}
+                        id={links_tags_group_key}
+                        type='switch'
+                        onChange={
+                          (evt: React.ChangeEvent) => {
+                            const new_nb_element = evt.target as HTMLInputElement
+                            const links_tags_group_key = new_nb_element.id
+                            const visible = new_nb_element.checked
+                            dataTags[links_tags_group_key].show_legend = visible
+                            set_data({ ...data })
+                          }
+                        } />
+                    </td> */}
+                    <td>{Object.keys(dataTags[links_tags_group_key].tags).length}</td>
+                    <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(links_tags_group_key, evt)}>
+                      <option key={'none' + i} id='NoneBaner' selected={dataTags[links_tags_group_key].banner === 'none' || !dataTags[links_tags_group_key].banner} value='none'>None</option>
+                      <option key={'one' + i} id='OneBaner' selected={dataTags[links_tags_group_key].banner === 'one'} value='one'>One</option>
+                      {/* <option key={'multi' + i} id='MultipleBaner' selected={dataTags[links_tags_group_key].banner === 'multi'} value='multi'>Multi</option> */}
+                    </Form.Select>
+                    {/* <td style={{ 'width': '10%' }}>
+                      <ButtonGroup className="button_position" size="sm">
+                        <Button variant="info" onClick={() => handleUpGrpTag(links_tags_group_key)}><FaArrowAltCircleUp /></Button>
+                        <Button variant="info" onClick={() => handleDownGrpTag(links_tags_group_key)}><FaArrowAltCircleDown /></Button>
+                      </ButtonGroup>
+                    </td> */}
+
+                  </tr>
+                )
+              })
+          }
+        </tbody>
+      </Table>
+
+
+
+      <br></br>
+
+      {Object.keys(dataTags).length > 0 ? tagSetting : <></>}
+    </>
+  )
+}
+
+
+
+
+
 SankeySettingsEdition.propTypes = SankeySettingsEditionPropTypes
 SankeySettingsEditionTags.propTypes = SankeySettingsEditionPropTypes
+SankeySettingsEditionTagsLinks.propTypes = SankeySettingsEditionPropTypes
+
 
 export default null
 
-export { SankeySettingsEditionTags, SankeySettingsEdition }
+export { SankeySettingsEditionTags, SankeySettingsEdition, SankeySettingsEditionTagsLinks }

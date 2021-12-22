@@ -1,9 +1,9 @@
 import React, { FunctionComponent } from 'react'
 import { Button, Modal, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { reorganize_inputLinksId} from './SankeyLayout'
-import { SankeyDataPropTypes, SankeyLink, SankeyNode, SankeyNodePropTypes } from './types'
-import { delete_link, delete_node } from './SankeyUtils'
+//import { reorganize_inputLinksId} from './SankeyLayout'
+import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
+//import { delete_link, delete_node } from './SankeyUtils'
 
 const SankeyNodeContextMenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -24,7 +24,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
       </Modal.Header>
       <Modal.Body>
         <br></br>
-        <ButtonGroup style={{ 'marginLeft': '10px' }}>
+        {/* <ButtonGroup style={{ 'marginLeft': '10px' }}>
           <Button
             size="sm"
             style={{ 'marginBottom': '3px', 'marginRight' : '3px' }}
@@ -87,7 +87,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
             }
           >Supprimer flux sortant</Button>
         </ButtonGroup>
-        <ButtonGroup style={{ 'marginLeft': '10px' }}> 
+        {<ButtonGroup style={{ 'marginLeft': '10px' }}> 
           <Button 
             size="sm" 
             style={{ 'marginBottom' : '3px', 'marginRight' : '3px'}} 
@@ -120,7 +120,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Descendre</Button>
-        </ButtonGroup>
+        </ButtonGroup>}
         <ButtonGroup style={{ 'marginLeft': '10px' }}> 
           <Button 
             size="sm" 
@@ -154,7 +154,7 @@ const SankeyNodeContextMenu: FunctionComponent<SankeyNodeContextMenuTypes> = ({ 
               }
             }
           >Décaler droite</Button>
-        </ButtonGroup>
+        </ButtonGroup> */}
       </Modal.Body>
     </Modal>
   )
