@@ -1,8 +1,11 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button } from 'react-bootstrap'
+import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes } from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
 import { default_node } from './SankeyUtils'
+import { reorganize_inputLinksId} from './SankeyLayout'
+import { delete_link, delete_node } from './SankeyUtils'
+
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -14,30 +17,54 @@ const SankeyNodeEditionPropTypes = {
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, selected_node, radio_selected, getValueIndex, children }) => {
+const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,
+  selected_node, radio_selected, getValueIndex, children }) => {
   const { tags_catalog } = data
   const tags_visible = Object.keys(tags_catalog).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
+
+  const display_nodes = data.nodes
+  const display_links = data.links
+
 
   let node = selected_node
   if (node === undefined) {
     node = default_node()
   }
 
+  //Si fav, met le boutton du tag favorie en remplie
+  // const outline_Fav_Button = (tag_key: string) => {
+  //   if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
+  //     return 'warning'
+  //   } else {
+  //     return 'outline-warning'
+  //   }
+  // }
   const outline_Fav_Button = (tag_key: string) => {
-    if (node.colorFavoriteTags != undefined && node.colorFavoriteTags[tags_group_key] != undefined && (node.colorFavoriteTags[tags_group_key].tag_associated === tag_key)) {
+    if (node.tag_favorite != undefined && node.tag_favorite == tag_key) {
       return 'warning'
     } else {
       return 'outline-warning'
     }
   }
-
+  //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
     <Tab eventKey="tags" title="Tags" >
       <br></br>
       <Form.Group as={Row} >
         <Col>
           <FormLabel >Tag Groupe:</FormLabel>
+        </Col>
+        <Col>
+          <FormCheck inline
+            type='switch'
+            checked={node.tag_favorite == tags_group_key}
+            onChange={evt => {
+              node.tag_favorite = (node.tag_favorite == tags_group_key) ? '' : tags_group_key
+
+              set_data({ ...data })
+            }}
+          />
         </Col>
         <Col>
           <Form.Select
@@ -56,12 +83,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         </Col>
       </Form.Group>
       <Form.Group as={Row} >
-        <Table striped bordered hover>
+        <Table striped bordered hover className='node_tags_affiliation'>
           <thead>
             <tr>
               <th>Nom</th>
               <th>Appartenance</th>
-              <th>Favoris</th>
             </tr>
           </thead>
           <tbody>
@@ -95,40 +121,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                           }
                         } />
                     </td>
-                    <td>
-                      <Button
-                        size="sm"
-                        variant={outline_Fav_Button(tags[0])}
-                        onClick={
-                          () => {
-                            console.log(node.tag_favorite)
-                            console.log(tags_group_key)
-                            console.log(tags[0])
-                            node.tag_favorite['tagGroup'] =tags_group_key as any
-                            node.tag_favorite['tagElement'] =  tags[0] as any
-                            // Modification
-                            // je ne pense pas qu'il soit necessaire ici de donner la couleur
-                            // le tagGroup et le tag est suffisant
-                            // de plus je ne sais pas si il faut un favori par groupTag sinon ne sait pas quoi prendre
-                            //const newFavColor = {
-                            //  tagGroup_associated : tags_group_key,
-                            //  tag_associated: tags[0],
-                            //  color: tags_catalog[tags_group_key].tags[tags[0]].color
-                            //}
-                            // if (node.colorFavoriteTags === undefined || node.colorFavoriteTags === null) {
-                            //   node.colorFavoriteTags = {}
-                            // }
-                            // if (Object.keys(node.colorFavoriteTags).includes(tags_group_key)) {
-                            //   delete node.colorFavoriteTags[tags_group_key]
-                            // } else {
-                            //   node.colorFavoriteTags[tags_group_key] = newFavColor
-                            // }
-                            //node.colorFavoriteTags= newFavColor
-                            set_data({ ...data })
-                          }
-                        }
-                      >★</Button>
-                    </td>
                   </tr>
                 )
               }) : (<></>)}
@@ -136,11 +128,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         </Table>
       </Form.Group>
     </Tab >)
-
   return (
     <Row>
       <Col sm={12}>
         <Tabs defaultActiveKey="nodes_desc" id="settings-layout">
+
           <Tab eventKey="nodes_desc" title="Description">
             <br></br>
             <Form >
@@ -191,6 +183,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     }}
                   />
                 </Col>
+
                 <Col xs={2}>
                   <FormCheck
                     value="sector"
@@ -245,8 +238,142 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Row>
             </Form>
           </Tab>
+          <Tab eventKey="node_parameter" title="Paramètre">
+            <ButtonGroup style={{ 'marginLeft': '10px' }}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    const current_x = selected_node.x
+                    const current_prev_y = selected_node.y - data.v_space
+                    const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y)[0]
+                    if (node_to_replace !== undefined) {
+                      node_to_replace.y = selected_node.y
+                    }
+                    selected_node.y = selected_node.y - data.v_space
+                    set_data({ ...data })
+                  }
+                }
+              >Monter</Button>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    const current_x = selected_node.x
+                    const current_prev_y = selected_node.y + data.v_space
+                    const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y)[0]
+                    if (node_to_replace !== undefined) {
+                      node_to_replace.y = selected_node.y
+                    }
+                    selected_node.y = selected_node.y + data.v_space
+                    set_data({ ...data })
+                  }
+                }
+              >Descendre</Button>
+            </ButtonGroup>
+            <ButtonGroup style={{ 'marginLeft': '10px' }}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    const current_prev_x = Math.round(selected_node.x / data.h_space) * data.h_space - data.h_space
+                    const current_y = selected_node.y
+                    const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y)[0]
+                    if (node_to_replace !== undefined) {
+                      node_to_replace.x = Math.round(selected_node.x / data.h_space) * data.h_space
+                    }
+                    selected_node.x = current_prev_x
+                    set_data({ ...data })
+                  }
+                }
+              >Décaler gauche</Button>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    const current_prev_x = Math.round(selected_node.x / data.h_space) * data.h_space + data.h_space
+                    const current_y = selected_node.y
+                    const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y)[0]
+                    if (node_to_replace !== undefined) {
+                      node_to_replace.x = Math.round(selected_node.x / data.h_space) * data.h_space
+                    }
+                    selected_node.x = current_prev_x
+                    set_data({ ...data })
+                  }
+                }
+              >Décaler droite</Button>
+            </ButtonGroup>
+            <ButtonGroup style={{ 'marginLeft': '10px' }}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    reorganize_inputLinksId(selected_node, true, false, display_nodes, display_links)
+                  }
+                }
+              >Réorganiser liens entrants</Button>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    reorganize_inputLinksId(selected_node, false, true, display_nodes, display_links)
+                    
+                  }
+                }
+              >Réorganiser liens sortants</Button>
+            </ButtonGroup>
+            {/* <ButtonGroup style={{ 'marginLeft': '10px' }}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    delete_node(data, selected_node)
+                    set_data({ ...data })
+                  }
+                }
+              >Supprimer noeud</Button>
+            </ButtonGroup>
+            <ButtonGroup style={{ 'marginLeft': '10px' }}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    while (selected_node.inputLinksId.length > 0) {
+                      const link = display_links[selected_node.inputLinksId[0]]
+                      delete_link(data, link)
+                    }
+                    set_data({ ...data })
+                  }
+                }
+              >Supprimer flux entrant</Button>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px' }}
+                onClick={
+                  () => {
+                    while (selected_node.outputLinksId.length > 0) {
+                      const link = display_links[selected_node.outputLinksId[0]]
+                      delete_link(data, link)
+                    }
+                    set_data({ ...data })
+                  }
+                }
+              >Supprimer flux sortant</Button>
+            </ButtonGroup> */}
+            
+
+          </Tab>
           {children}
         </Tabs>
+
       </Col>
     </Row >
   )

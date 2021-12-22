@@ -1,7 +1,9 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, DropdownButton, Dropdown } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
+import { default_link } from './SankeyUtils'
+
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -14,13 +16,43 @@ const SankeyLinkEditionPropTypes = {
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link,getValueIndex,children }
+  { data, set_data, selected_link, getValueIndex, children }
 ) => {
-  const { tags_catalog } = data
-  const tags_visible = Object.keys(tags_catalog).length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
+  const { dataTags, links } = data
+  const tags_visible = Object.keys(dataTags).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags)[0] : '')
+
+  const newEntries = new Map(Object.entries(dataTags).map(d => {
+    return (Object.keys(d[1].tags).length > 0) ? [d[0], d[1].tags[Object.keys(d[1].tags)[0]].name] : ['n', 'n']
+
+  }))
+  //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
+  const dataTagsSelected = Object.fromEntries(newEntries)
+  //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
+  delete dataTagsSelected['n']
+  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
 
   const value_index = getValueIndex(data)
+  let link = selected_link
+  if (link === undefined) {
+    link = default_link(data)
+  }
+
+
+  //renvoie la valeur corresponant aux paramètre selectionné 
+  const value_selected_parameter = (): number => {
+
+    let val = JSON.parse(JSON.stringify(Object(selected_link.valueV2)))
+    Object.entries(tags_selected).map(d => {
+      if (val[d[1]] === undefined) {
+        val[d[1]] = {}
+      }
+      val = val[d[1]]
+    })
+    return val['value']
+  }
+
+
   return (
 
     <Row>
@@ -30,7 +62,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             <br></br>
             <Form >
               <br></br>
-              <Row >
+              {/* <Row >
                 <Col>
                   <FormLabel>Affichage</FormLabel>
                 </Col>
@@ -46,7 +78,97 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     }
                   />
                 </Col>
+              </Row> */}
+
+              {
+                //Définition des valeurs selon les paramètre dataTags
+                Object.entries(data.dataTags).map(d => {
+                  if (Object.keys(d[1]['tags']).length != 0) {
+                    return (
+                      <Row key={d[0]}>
+                        <Col >
+                          <FormLabel>
+                            {d[1]['group_name']} :
+                          </FormLabel>
+                        </Col>
+
+                        <Col >
+
+                          <Form.Select
+                            name={d[0]}
+                            onChange={
+                              (evt) => {
+                                //Modifie les paramètres selectionnés 
+                                const { name, value } = evt.target
+                                set_tags_selected(prevState => ({
+                                  ...prevState,
+                                  [name]: value
+                                }))
+                              }
+                            }
+                          >
+                            {Object.values(d[1]['tags']).map(v => {
+                              return (
+                                <option key={v.name} value={v.name}>{v.name}</option>
+                              )
+                            })}
+                          </Form.Select>
+
+
+
+
+                        </Col>
+                      </Row>
+
+                    )
+                  }
+
+                })}
+              <Row >
+                <Col>
+                  <FormLabel>Valeur pour ces paramètres</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Control
+                    type='text'
+                    value={value_selected_parameter()}
+                    onChange={
+                      (evt) => {
+                        let val = Object(selected_link.valueV2)
+                        Object.entries(tags_selected).map(d => {
+                          if (val[d[1]] === undefined) {
+                            val[d[1]] = {}
+                          }
+                          val = val[d[1]]
+                        })
+                        val['value'] = +evt.target.value
+                        console.log(selected_link.valueV2)
+                        console.log(val)
+
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
               </Row>
+              <Row >
+                <Col>
+                  <FormLabel>Affichage</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Control
+                    type='text'
+                    value={selected_link.display_value[value_index]}
+                    onChange={
+                      (evt) => {
+                        /* selected_link.display_value[value_index] = evt.target.value
+                        set_data({ ...data }) */
+                      }
+                    }
+                  />
+                </Col>
+              </Row>
+
             </Form>
           </Tab>
           <Tab eventKey="flux_attributes" title="Apparence">
@@ -77,17 +199,17 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Range
                     min="0" max="1" step="0.05"
-                    value={(selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2}
+                    value={(selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2}
                     onChange={
                       evt => {
-                        selected_link.left_horiz_shift  = +evt.target.value - selected_link.shift_gap
-                        selected_link.right_horiz_shift = +evt.target.value + selected_link.shift_gap                       
+                        selected_link.left_horiz_shift = +evt.target.value - selected_link.shift_gap
+                        selected_link.right_horiz_shift = +evt.target.value + selected_link.shift_gap
                         set_data({ ...data })
                       }
                     }
                   />
                 </Col>
-                <Col sm={2}>{(selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2}</Col>
+                <Col sm={2}>{(selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
@@ -99,10 +221,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={selected_link.shift_gap}
                     onChange={
                       evt => {
-                        selected_link.shift_gap  = +evt.target.value
-                        const center = (selected_link.left_horiz_shift+selected_link.right_horiz_shift)/2
-                        selected_link.left_horiz_shift  = center - selected_link.shift_gap
-                        selected_link.right_horiz_shift = center + selected_link.shift_gap                   
+                        selected_link.shift_gap = +evt.target.value
+                        const center = (selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2
+                        selected_link.left_horiz_shift = center - selected_link.shift_gap
+                        selected_link.right_horiz_shift = center + selected_link.shift_gap
                         set_data({ ...data })
                       }
                     }
@@ -119,7 +241,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='checkbox'
                     label='Courbe'
                     checked={selected_link.curved}
-                    onChange={ 
+                    onChange={
                       evt => {
                         selected_link.curved = evt.target.checked
                         set_data({ ...data })
@@ -319,7 +441,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   label='Milieu'
                   checked={selected_link.label_position === 'middle'}
                   onChange={
-                    evt => {                      
+                    evt => {
                       selected_link.label_position = evt.target.value
                       set_data({ ...data })
                     }
@@ -333,7 +455,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   label='Fin'
                   checked={selected_link.label_position === 'end'}
                   onChange={
-                    evt => {                      
+                    evt => {
                       selected_link.label_position = evt.target.value
                       set_data({ ...data })
                     }
@@ -347,7 +469,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   label='Figé'
                   checked={selected_link.label_position === 'frozen'}
                   onChange={
-                    evt => {                      
+                    evt => {
                       selected_link.label_position = evt.target.value
                       set_data({ ...data })
                     }
@@ -362,7 +484,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 disabled={selected_link.label_position === 'frozen'}
                 checked={selected_link.label_on_path && selected_link.label_position !== 'frozen'}
                 onChange={
-                  evt => {                    
+                  evt => {
                     selected_link.label_on_path = evt.target.checked
                     set_data({ ...data })
                   }
@@ -394,7 +516,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   label='Milieu'
                   checked={selected_link.orthogonal_label_position === 'middle'}
                   onChange={
-                    evt => {                      
+                    evt => {
                       selected_link.orthogonal_label_position = evt.target.value
                       set_data({ ...data })
                     }
@@ -408,7 +530,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   label='Dessus'
                   checked={selected_link.orthogonal_label_position === 'above'}
                   onChange={
-                    evt => {                      
+                    evt => {
                       selected_link.orthogonal_label_position = evt.target.value
                       set_data({ ...data })
                     }
@@ -417,7 +539,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Col>
             </Form.Group>
           </Tab>
-          {Object.keys(tags_catalog).length ? (
+          {Object.keys(dataTags).length ? (
             <Tab eventKey="tags" title="Tags" >
               <br></br>
               <Form.Group as={Row} >
@@ -425,11 +547,22 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormLabel >Tag Groupe:</FormLabel>
                 </Col>
                 <Col>
+                  <FormCheck inline
+                    type='switch'
+                    checked={link.tag_favorite == tags_group_key}
+                    onChange={evt => {
+                      link.tag_favorite = (link.tag_favorite == tags_group_key) ? '' : tags_group_key
+
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col>
                   <Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
-                    {Object.entries(tags_catalog).map(
-                      (tags_group,i) =>
+                    {Object.entries(dataTags).map(
+                      (tags_group, i) =>
                         <option
                           key={i}
                           value={tags_group[0]}
@@ -440,7 +573,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
-                <Table striped bordered hover>
+                <Table striped bordered hover className='link_tags_affiliation'>
                   <thead>
                     <tr>
                       <th>Nom</th>
@@ -448,7 +581,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     </tr>
                   </thead>
                   <tbody>
-                    {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
+                    {tags_visible && tags_group_key != '' ? Object.entries(dataTags[tags_group_key].tags).map(
                       tags => {
                         const link_tags = selected_link.tags[tags_group_key]
                         const checked = link_tags ? link_tags.includes(tags[0]) : true

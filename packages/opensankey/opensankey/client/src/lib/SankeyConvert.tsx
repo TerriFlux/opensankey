@@ -402,7 +402,7 @@ export const convert_data = (
       }
 
       if (n.tag_favorite === undefined) {
-        n.tag_favorite = {}
+        n.tag_favorite = ''
       }
 
       delete n_convert.visible
