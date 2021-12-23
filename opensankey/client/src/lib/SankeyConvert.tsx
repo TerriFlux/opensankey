@@ -134,6 +134,15 @@ export const convert_data = (
       },
       banner : 'multi'
     }
+    delete data_to_convert.tags_catalog['flux_types']
+  }
+  if (data_to_convert.tags_catalog['Regions']) {
+    data_to_convert.dataTags['Regions'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Regions']))
+    delete data_to_convert.tags_catalog['Regions']
+  }
+  if (data_to_convert.tags_catalog['Periods']) {
+    data_to_convert.dataTags['Periods'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Periods']))
+    delete data_to_convert.tags_catalog['Periods']
   }
   if (data_to_convert.tags_catalog['SubChain']) {
     data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
@@ -507,7 +516,7 @@ export const convert_data = (
   }
 
   if (data.flux_types || data.use_flux_types) {
-    if (!data.tags_catalog['flux_types']) {
+    if (!data.dataTags['flux_types']) {
       data.dataTags['flux_types'] = {
         group_name: 'Type de donnée',
         show_legend: false,
@@ -533,7 +542,7 @@ export const convert_data = (
             flux_max = v
           }
         })
-        if (data.flux_types || data.use_flux_types || data.tags_catalog['flux_types'] ) {
+        if (data.flux_types || data.use_flux_types || data.dataTags['flux_types'] ) {
           l.value = {
             computed_data    : {
               value         : (l_convert.value as number[])[0],
