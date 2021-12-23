@@ -570,7 +570,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   </Form.Select>
                 </Col>
               </Form.Group>
-              <Form.Group as={Row} >
+              {/* <Form.Group as={Row} >
                 <Table striped bordered hover className='link_tags_affiliation'>
                   <thead>
                     <tr>
@@ -614,7 +614,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }) : (<></>)}
                   </tbody>
                 </Table>
-              </Form.Group>
+                    </Form.Group> */}
             </Tab>) : (<></>)}
           <Tab eventKey="flux_tooltip" title="Tooltip">
             <Form >

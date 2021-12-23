@@ -12,8 +12,11 @@ export const getLinkValue = (
   const { links,dataTags } = data
   let val = links[idLink].value as any
   const listKey = [] as any
-  Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-    listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
+  // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
+  //   listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
+  // })
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+    listKey.push(Object.entries(dataTag.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
   })
 
   for (const i in listKey) {
@@ -404,9 +407,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     right_horiz_shift: 0,
     vert_shift: 0,
     shift_gap: 0.1,
-    tags: {},
+    //tags: {},
     tag_favorite: ''
-
   }
 }
 
@@ -522,6 +524,7 @@ export const uploadExemple = (
     response.text().then((text) => {
       // try {
       const server_data = JSON.parse(text)
+      data = default_sankey_data()
       Object.assign(data, server_data)
       convert_data(data)
       // data.left_shift = 0.40
