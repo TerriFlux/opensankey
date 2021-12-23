@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, DropdownButton, Dropdown } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link,getLinkValue } from './SankeyUtils'
@@ -17,7 +17,7 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, children }
 ) => {
-  const { dataTags, links } = data
+  const { dataTags } = data
   const tags_visible = Object.keys(dataTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags)[0] : '')
 
@@ -158,7 +158,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='text'
                     value={getLinkValue(data,selected_link.idLink).display_value}
                     onChange={
-                      (evt) => {
+                      () => {
                         /* selected_link.display_value[value_index] = evt.target.value
                         set_data({ ...data }) */
                       }
@@ -548,7 +548,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormCheck inline
                     type='switch'
                     checked={link.tag_favorite == tags_group_key}
-                    onChange={evt => {
+                    onChange={() => {
                       link.tag_favorite = (link.tag_favorite == tags_group_key) ? '' : tags_group_key
 
                       set_data({ ...data })

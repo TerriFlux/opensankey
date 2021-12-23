@@ -1,9 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
-import SankeyLinkContextMenu from './SankeyLinkContextMenu'
-import SankeyNodeContextMenu from './SankeyNodeContextMenu'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
 import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
@@ -23,11 +21,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
-  const [show_node_context, set_show_node_context] = useState(false)
-  const [show_link_context, set_show_link_context] = useState(false)
   const [selected_link, set_selected_link] = useState(start_link)
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
-  const [radio_selected, set_radio_selected] = useState<string>('local')
+  const [radio_selected] = useState<string>('local')
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const [agregation_level, set_agregation_level] = useState(0)
 
@@ -111,21 +107,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         select_node={(n: SankeyNode) => {
           set_selected_node(n)
         }}
-        nodeContextMenu={(n: SankeyNode) => {
-          set_selected_node(n)
-          // set_show_node_context(true)
-          set_show_node_context(false)
-        }}
         node_arrow_visible={
           (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
           set_selected_link(l)
-        }}
-        linkContextMenu={(l: SankeyLink) => {
-          set_selected_link(l)
-          // set_show_link_context(true)
-          set_show_link_context(false)
         }}
         link_color={l => l.color}
         //node_color={n => n.color}
@@ -161,16 +147,18 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           if (data.display_style.null_flux) {
             return true
           }
-          let val = l.value as any
-          const listKey = [] as any
+          let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
+          const listKey = [] as string[]
           Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-            listKey.push(Object.entries(d.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
+            listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 
           for (const i in listKey) {
-            val = val[listKey[i]]
+            //const val_dict = (val as unknown) as SankeyLinkValueDict
+            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
-          if (val['value'] === 0) {
+          const v = (val as unknown) as SankeyLinkValue
+          if (v.value === 0) {
             return false
           }
           return true
@@ -178,43 +166,26 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
 
         test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
           const { dataTags } = data
-          let val = d.value as any
-          const listKey = [] as any
+          let val = ((d.value as unknown) as {[key:string]:SankeyLinkValueDict})
+          const listKey : string[] = [] 
           /* console.log(val)
           console.log(dataTags) */
 
           //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
           Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-            listKey.push(Object.entries(d.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
+            listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 
           for (const i in listKey) {
-            val = val[listKey[i]]
+            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
-          return val['value']
+          return ((val as unknown) as SankeyLinkValue).value
         }}
         set_show_nav={set_show_nav}
         set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
       />
-      <SankeyNodeContextMenu
-        data={data}
-        set_data={set_data}
-        show={show_node_context}
-        closeNodeContextMenu={() => {
-          set_show_node_context(false)
-        }}
-        selected_node={selected_node}
-      />
-      <SankeyLinkContextMenu
-        data={data}
-        set_data={set_data}
-        show={show_link_context}
-        closeLinkContextMenu={() => {
-          set_show_link_context(false)
-        }}
-        selected_link={selected_link} />
     </div >
   )
 }

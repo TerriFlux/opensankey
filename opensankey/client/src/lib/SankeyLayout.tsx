@@ -1,7 +1,7 @@
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, SankeyNodePropTypes, } from './types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue, getLinkValue } from './SankeyUtils'
-import React,{ FunctionComponent, useState } from 'react'
+import { findMaxLinkValue } from './SankeyUtils'
+import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
@@ -307,14 +307,14 @@ export const compute_auto_sankey = (
     }
 
     the_nodes.forEach((node, node_id) => {
-      let total_input_offset = 0
-      node.inputLinksId.forEach(
-        (idLink) => { 
-          if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
-            total_input_offset += getLinkValue(data,idLink).value
-          }
-        }
-      )
+      // let total_input_offset = 0
+      // node.inputLinksId.forEach(
+      //   (idLink) => { 
+      //     if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
+      //       total_input_offset += getLinkValue(data,idLink).value
+      //     }
+      //   }
+      // )
       if (node_id === 0) {
         node.y = 200//0.2 * height;
         vertical_offset = 200 + vertical_space
@@ -581,7 +581,7 @@ export const updateLayout = (
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
   data.legend_position = new_layout.legend_position;
-  (data as any).welcome_text = (new_layout as any).welcome_text
+  ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
   // if ('height' in new_layout) {
   //   data.height = new_layout.height
   // }
@@ -589,7 +589,7 @@ export const updateLayout = (
     data.width = new_layout.width
   }
   Object.keys(new_layout.display_style).forEach(
-    key => (data.display_style as any)[key] = (new_layout.display_style as any)[key]
+    key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
   )
   if (data.display_style.filter === undefined) {
     data.display_style.filter = 0

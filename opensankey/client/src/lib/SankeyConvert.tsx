@@ -1,17 +1,17 @@
-import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode } from './types'
 
 interface ConvertSankeyNode {
   id?: string
   orientation?: string,
   subchain?: string,
-  tooltips: any,
-  total_input_offset: any,
-  input_offsets: any,
-  total_output_offset: any,
+  tooltips: string[],
+  total_input_offset: number,
+  input_offsets: number[],
+  total_output_offset: number,
   input_links?: number[],
   output_links?: number[],
-  output_offsets: any,
-  horizontal_index: any,
+  output_offsets: number[],
+  horizontal_index: number,
   visible?: number | boolean,
   display: number | boolean,
   label_visible: number | boolean,
@@ -21,13 +21,13 @@ interface ConvertSankeyNode {
   show_value: number | boolean
 }
 interface ConvertSankeyLink {
-  classif?: any
-  title_length?: any
-  raw_value?: any
-  old_display_value?: any
-  old_color?: any
-  y_sd_label?: any
-  x_sd_label?: any
+  classif?: string
+  title_length?: number
+  raw_value?: number
+  old_display_value?: string
+  old_color?: string
+  y_sd_label?: string
+  x_sd_label?: string
   visible?: boolean
   label_visible?: boolean
   text_same_color?: boolean | string
@@ -62,17 +62,17 @@ interface ConvertSankeyData {
   use_flux_types?: boolean
   subchains?: string[]
   links?: { [region_name: string]: ConvertSankeyLink[] }
-  nodes2tooltips: any,
-  nodes2units_conv: any
-  error: any,
-  max_vertical_offset: any,
+  nodes2tooltips: unknown,
+  nodes2units_conv: unknown,
+  error: string,
+  max_vertical_offset: number,
   region_names?: string[],
   region_name?: string,
   nodes_names: string[],
-  filtered_nodes: any,
+  filtered_nodes: SankeyNode[],
   filtered_nodes_names: string[],
-  filtered_links: any,
-  previous_filter: any,
+  filtered_links: SankeyLink[],
+  previous_filter: number,
   trade_hspace?: number
   trade_close_hspace?: number
   trade_close_vspace?: number
@@ -93,7 +93,7 @@ export const convert_data = (
   console.log('FUNCTION : convert_data')
 
   if (!data.display_style) {
-    (data.display_style as any) = {}
+    (data.display_style as Record<string,unknown> ) = {}
   }
   if (data_to_convert.tags_catalog === undefined) {
     data_to_convert.tags_catalog = {}
@@ -155,9 +155,9 @@ export const convert_data = (
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
       (link, i) => {
-        link.value = {}
+        ((link.value as unknown) as SankeyLinkValue)= { value : 0, display_value:'default' } 
         //link.display_value = []
-        const convert_link = link as ConvertSankeyLink
+        const convert_link = (link as unknown) as ConvertSankeyLink
         if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
           convert_link.mini = []
           convert_link.maxi = []
@@ -194,8 +194,8 @@ export const convert_data = (
     )
     new_links.forEach((l, i) => l.idLink = 'link' + i)
     data_to_convert.links = Object.assign({}, ...new_links.map(l => ({ [l.idLink]: { ...l } })));
-    (data_to_convert.nodes as any).forEach((n: SankeyNode, i: number) => n.idNode = 'node' + i)
-    data_to_convert.nodes = Object.assign({}, ...(data_to_convert.nodes as any).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
+    ((data_to_convert.nodes as unknown) as SankeyNode[]).forEach((n: SankeyNode, i: number) => n.idNode = 'node' + i)
+    data_to_convert.nodes = Object.assign({}, ...((data_to_convert.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
     if (key_names.length > 1 && !data.periods && data.region_names) {
       data.dataTags['Regions'] = {
         group_name: 'Regions',
@@ -217,14 +217,14 @@ export const convert_data = (
     delete data.region_name
   }
   if (Array.isArray(data.links) && (data.version === '0.5' || data.version === '0.4')) {
-    if ((data.links as any).length > 0 && !data.links[0].idLink) {
-      (data.links as any).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
+    if (((data.links as unknown) as SankeyLink[] ).length > 0 && !data.links[0].idLink) {
+      ((data.links as unknown) as SankeyLink[]).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
     }
-    if ((data.nodes as any).length > 0 && !data.nodes[0].idNode) {
-      (data.nodes as any).forEach((n: SankeyNode) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
+    if (((data.nodes as unknown) as SankeyNode[] ).length > 0 && !data.nodes[0].idNode) {
+      ((data.nodes as unknown) as SankeyNode[] ).forEach((n: SankeyNode) => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
     }
-    data_to_convert.links = Object.assign({}, ...(data.links as any).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
-    data_to_convert.nodes = Object.assign({}, ...(data.nodes as any).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
+    data_to_convert.links = Object.assign({}, ...((data.links as unknown) as SankeyLink[]).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
+    data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
@@ -233,13 +233,13 @@ export const convert_data = (
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
   Object.values(data.links).forEach(l => {
-    if ((l as any).source_name) {
-      const source_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name((l as any).source_name))[0]
-      const target_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name((l as any).target_name))[0]
+    if (((l  as unknown) as {source_name:string}).source_name) {
+      const source_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name(((l  as unknown) as {source_name:string}).source_name))[0]
+      const target_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name(((l  as unknown) as {target_name:string}).target_name))[0]
       l.idSource = source_node.idNode
       l.idTarget = target_node.idNode
-      delete (l as any).source_name
-      delete (l as any).target_name
+      delete ((l  as unknown) as {source_name?:string}).source_name
+      delete ((l  as unknown) as {target_name?:string}).target_name
     }
   })
 
@@ -304,7 +304,7 @@ export const convert_data = (
     data.show_uncert = false
   }
 
-  if (data.display_style.unit as any === 1) {
+  if ((data.display_style.unit as unknown) as number === 1) {
     data.display_style.unit = true
   }
 
@@ -343,7 +343,7 @@ export const convert_data = (
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
   for (const attr in attributes_to_remove) {
     if (attributes_to_remove[attr] in data) {
-      delete (data as any)[attributes_to_remove[attr]]
+      delete ((data as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
     }
   }
 
@@ -428,14 +428,14 @@ export const convert_data = (
       const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
       for (const attr in attributes_to_remove) {
         if (attributes_to_remove[attr] in n_convert) {
-          delete (n_convert as any)[attributes_to_remove[attr]]
+          delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
       if (n.name.includes('(I') && n.outputLinksId.length > 0) {
         import_export = true
         n.node_visible = true
         n.tags['Exchanges'] = ['import']
-        const l = links[n.outputLinksId[0]]
+        //const l = links[n.outputLinksId[0]]
         // if (!l.tags) {
         //   l.tags = {}
         // }
@@ -447,7 +447,7 @@ export const convert_data = (
         import_export = true
         n.node_visible = true
         n.tags['Exchanges'] = ['export']
-        const l = links[n.inputLinksId[0]]
+        //const l = links[n.inputLinksId[0]]
         // if (!l.tags) {
         //   l.tags = {}
         // }
@@ -543,14 +543,14 @@ export const convert_data = (
           }
         })
         if (data.flux_types || data.use_flux_types || data.dataTags['flux_types'] ) {
-          l.value = {
+          ((l.value as unknown)  as {[key:string]:unknown})= {
             computed_data    : {
               value         : (l_convert.value as number[])[0],
               display_value : (l_convert.display_value as string[])[0]
             }
           }
           if (l_convert.data && l_convert.data_value !== undefined) {
-            l.value = {
+            ((l.value as unknown)  as {[key:string]:unknown}) = {
               initial_data  : {
                 value         : (l_convert.data_value as number[])[0],
                 display_value : (l_convert.display_value as string[])[0]
@@ -562,12 +562,12 @@ export const convert_data = (
             }
           }
         } else {
-          l.value = {
+          ((l.value as unknown)  as {[key:string]:unknown}) = {
             value         : (l_convert.value as number[])[0],
             display_value : 'default'
           }
         }
-        delete ((l as any).tags as any)['Exchanges']
+        delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
       }
       const source_node = nodes[l.idSource]
       const target_node = nodes[l.idTarget]
@@ -659,7 +659,7 @@ export const convert_data = (
       const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
       for (const attr in attributes_to_remove) {
         if (attributes_to_remove[attr] in l) {
-          delete (l as any)[attributes_to_remove[attr]]
+          delete ((l as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
 
