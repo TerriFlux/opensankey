@@ -28,11 +28,6 @@ def parse_sankey_energie_csv(
 
     }
     sankey_dict['tags_catalog'] = {
-        'Regions' : {
-            'group_name' : 'Regions',
-            'tags'       : {},
-            'banner'     : 'one'            
-        },
         'Exchanges' : {
             'group_name'    : 'Echanges',
             'tags'          : {
@@ -55,8 +50,15 @@ def parse_sankey_energie_csv(
             'banner'     : 'multi'           
         }
     }
+    sankey_dict['dataTags'] = {
+        'Regions' : {
+            'group_name' : 'Regions',
+            'tags'       : {},
+            'banner'     : 'one'            
+        }
+    }
     for region_name in regions_names.tolist():
-        sankey_dict['tags_catalog']['Regions']['tags'][region_name] = {
+        sankey_dict['dataTags']['Regions']['tags'][region_name] = {
             'name'     : region_name,
             'selected' : region_name == regions_names[0],
             'color'    : ''            
@@ -132,9 +134,8 @@ def parse_sankey_energie_csv(
             'idLink'     : idLink,
             'idSource'   : idSource,
             'idTarget'   : idTarget,
-            'value': [],
+            'value': {},
             'label_visible': 0,
-            'display_value': [],
             'color': color,
             'curvature' : 1,
             'label_position' : 'beginning',
@@ -149,11 +150,15 @@ def parse_sankey_energie_csv(
       id = 0
       for k, row in territory_data.iterrows():
         if row['value'] < 1000:
-            sankey_dict['links']['link' + str(id)]['value'].append(round(row['value'], 1))         
-            sankey_dict['links']['link' + str(id)]['display_value'].append('default')
+            sankey_dict['links']['link' + str(id)]['value'][region_name] = {
+                'value'         : round(row['value'], 1),        
+                'display_value' : 'default'
+            }
         else:
-            sankey_dict['links']['link' + str(id)]['value'].append(500)         
-            sankey_dict['links']['link' + str(id)]['display_value'].append(str(round(row['value']))+'*')            
+            sankey_dict['links']['link' + str(id)]['value'][region_name] = {
+                'value'         : 500,
+                'display_value' : str(round(row['value']))+'*'  
+            }          
         id = id + 1
     sankey_dict['units_names'] = ['GWh','GWh']
     sankey_dict['display_style'] = {

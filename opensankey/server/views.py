@@ -103,7 +103,7 @@ def upload_exemple():
         layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
         layout_data = json.load(layout_file)
         sankey_dict["layout"] = layout_data
-        sankey_dict['version'] = '0.5'
+        sankey_dict['version'] = '0.6'
         json_data = json.dumps(sankey_dict)
     elif extension == ".json":
         json_file_name = os.path.join(data_folder, exemple)
