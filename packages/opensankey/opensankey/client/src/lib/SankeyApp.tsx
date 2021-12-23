@@ -164,7 +164,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           let val = l.value as any
           const listKey = [] as any
           Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-            listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
+            listKey.push(Object.entries(d.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
           })
 
           for (const i in listKey) {
@@ -185,7 +185,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
 
           //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
           Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-            listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
+            listKey.push(Object.entries(d.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
           })
 
           for (const i in listKey) {

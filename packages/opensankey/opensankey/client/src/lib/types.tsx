@@ -107,7 +107,7 @@ export const SankeyLinkPropTypes = {
   curvature: PropTypes.number.isRequired,
   curved: PropTypes.bool.isRequired,
 
-  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
+  //tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>

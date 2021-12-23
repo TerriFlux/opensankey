@@ -43,7 +43,7 @@ interface ConvertSankeyLink {
   conv?: number[]
   natural_unit?: string
   value: number | number[]
-  //display_value: string | string[]
+  display_value?: string | string[]
   data?: boolean
   //unbounded?: boolean,
   subchain?: string,
@@ -98,7 +98,9 @@ export const convert_data = (
   if (data_to_convert.tags_catalog === undefined) {
     data_to_convert.tags_catalog = {}
   }
-
+  if (data_to_convert.dataTags === undefined) {
+    data_to_convert.dataTags = {}
+  }
   // if (data_to_convert.colorFavoriteTags === undefined) {
   //   data_to_convert.colorFavoriteTags = {}
   // }
@@ -123,10 +125,15 @@ export const convert_data = (
     }
   )
   if (data_to_convert.tags_catalog['flux_types']) {
-    data_to_convert.tags_catalog['flux_types'].group_name = 'Type de donnée'
-    data_to_convert.tags_catalog['flux_types'].tags['initial_data'].name = 'Données collectées'
-    data_to_convert.tags_catalog['flux_types'].tags['adjusted_data'].name = 'Données réconciliées'
-    data_to_convert.tags_catalog['flux_types'].tags['computed_data'].name = 'Données déterminées'
+    data_to_convert.dataTags['flux_types'] = {
+      group_name : 'Type de donnée',
+      show_legend: false,
+      tags : {
+        initial_data  : { name : 'Données collectées' , selected: false },
+        computed_data : { name : 'Données calculées'  , selected: true}
+      },
+      banner : 'multi'
+    }
   }
   if (data_to_convert.tags_catalog['SubChain']) {
     data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
@@ -181,7 +188,7 @@ export const convert_data = (
     (data_to_convert.nodes as any).forEach((n: SankeyNode, i: number) => n.idNode = 'node' + i)
     data_to_convert.nodes = Object.assign({}, ...(data_to_convert.nodes as any).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
     if (key_names.length > 1 && !data.periods && data.region_names) {
-      data.tags_catalog['Regions'] = {
+      data.dataTags['Regions'] = {
         group_name: 'Regions',
         show_legend: false,
         tags: Object.assign({}, ...data.region_names.map((region_name) => ({ [region_name]: { name: region_name, color: '', selected: region_name === data.region_name } }))),
@@ -189,7 +196,7 @@ export const convert_data = (
       }
     }
     if (key_names.length > 1 && data.periods) {
-      data.tags_catalog['Periods'] = {
+      data.dataTags['Periods'] = {
         group_name: 'Periods',
         show_legend: false,
         tags: Object.assign({}, ...key_names.map((key_name) => ({ [key_name]: { name: key_name, color: '', selected: key_names[0] } }))),
@@ -420,10 +427,10 @@ export const convert_data = (
         n.node_visible = true
         n.tags['Exchanges'] = ['import']
         const l = links[n.outputLinksId[0]]
-        if (!l.tags) {
-          l.tags = {}
-        }
-        l.tags['Exchanges'] = ['import']
+        // if (!l.tags) {
+        //   l.tags = {}
+        // }
+        //l.tags['Exchanges'] = ['import']
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
@@ -432,10 +439,10 @@ export const convert_data = (
         n.node_visible = true
         n.tags['Exchanges'] = ['export']
         const l = links[n.inputLinksId[0]]
-        if (!l.tags) {
-          l.tags = {}
-        }
-        l.tags['Exchanges'] = ['export']
+        // if (!l.tags) {
+        //   l.tags = {}
+        // }
+        //l.tags['Exchanges'] = ['export']
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
@@ -501,13 +508,12 @@ export const convert_data = (
 
   if (data.flux_types || data.use_flux_types) {
     if (!data.tags_catalog['flux_types']) {
-      data.tags_catalog['flux_types'] = {
+      data.dataTags['flux_types'] = {
         group_name: 'Type de donnée',
         show_legend: false,
         tags: {
           'initial_data' : { name: 'Données collectées', selected: false },
-          'computed_data': { name: 'Données déterminées',selected: true },
-          'adjusted_data': { name: 'Données réconciliées', selected: true },
+          'computed_data': { name: 'Données calculées' , selected: true },
         },
         banner: 'multi'
       }
@@ -527,6 +533,32 @@ export const convert_data = (
             flux_max = v
           }
         })
+        if (data.flux_types || data.use_flux_types || data.tags_catalog['flux_types'] ) {
+          l.value = {
+            computed_data    : {
+              value         : (l_convert.value as number[])[0],
+              display_value : (l_convert.display_value as string[])[0]
+            }
+          }
+          if (l_convert.data && l_convert.data_value !== undefined) {
+            l.value = {
+              initial_data  : {
+                value         : (l_convert.data_value as number[])[0],
+                display_value : (l_convert.display_value as string[])[0]
+              },
+              computed_data    : {
+                value         : (l_convert.value as number[])[0],
+                display_value : (l_convert.display_value as string[])[0]
+              }
+            }
+          }
+        } else {
+          l.value = {
+            value         : (l_convert.value as number[])[0],
+            display_value : 'default'
+          }
+        }
+        delete ((l as any).tags as any)['Exchanges']
       }
       const source_node = nodes[l.idSource]
       const target_node = nodes[l.idTarget]
@@ -540,9 +572,9 @@ export const convert_data = (
       if (l.color === undefined) {
         l.color = source_node.color
       }
-      if (!l.tags) {
-        l.tags = {}
-      }
+      // if (!l.tags) {
+      //   l.tags = {}
+      // }
       if (l.shift_gap === undefined) {
         if (l.left_horiz_shift && l.right_horiz_shift && !l.recycling) {
           l.shift_gap = (l.right_horiz_shift - l.left_horiz_shift)/2
@@ -551,7 +583,7 @@ export const convert_data = (
         }
       }
       if (l_convert.subchain && l_convert.subchain !== '' ) {
-        l.tags['SubChain'] = l_convert.subchain.split(',')
+        //l.tags['SubChain'] = l_convert.subchain.split(',')
         l_convert.subchain.split(',').forEach(s => {
           if (!subchains.includes(s)) {
             subchains.push(s)
@@ -666,46 +698,8 @@ export const convert_data = (
         l.text_color = l.color
       }
       delete l_convert.text_same_color
-
-      // if (Object.values(data.tags_catalog).filter(tags_group => tags_group.group_name === 'Exchanges').length > 0) {
-      //   if (!l.tags['Exchanges']) {
-      //     l.tags['Exchanges'] = ['Other']
-      //   }
-      // }
-
-      if (Object.entries(data.tags_catalog).filter(tags_group => tags_group[0] === 'flux_types').length > 0) {
-        if (!l.tags['flux_types']) {
-          if (l_convert.data && l_convert.data_value !== undefined) {
-            l.tags['flux_types'] = ['initial_data', 'adjusted_data']
-            delete l_convert.data
-          } else {
-            l.tags['flux_types'] = ['computed_data']
-          }
-          // if (l_convert.unbounded) {
-          //   l.tags['flux_types'] = ['unbounded']
-          // }
-          // if ('unbounded' in l_convert) {
-          //   delete l_convert.unbounded
-          // }
-          if (l_convert.value === 0) {
-            l.tags['flux_types'] = ['null_data']
-          }
-
-          source_node.tags['flux_types'] = source_node.tags['flux_types'] ? [...new Set(
-            [...source_node.tags['flux_types'], ...l.tags['flux_types']]
-          )] : [...l.tags['flux_types']]
-
-          target_node.tags['flux_types'] = target_node.tags['flux_types'] ? [...new Set(
-            [...target_node.tags['flux_types'], ...l.tags['flux_types']]
-          )] : [...l.tags['flux_types']]
-        } else if (l.tags['flux_types'].includes('initial_data') && l_convert.data_value === undefined) {
-          l.tags['flux_types'].splice(l.tags['flux_types'].indexOf('initial_data'))
-        }
-      }
     }
   )
-
-
 
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
