@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyNode } from './types'
 
 interface ConvertSankeyNode {
   id?: string
@@ -80,6 +80,26 @@ interface ConvertSankeyData {
   tags_catalog: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
 }
 
+const getValueIndex = (
+  region_names: string[],
+  region_name: string,
+  period_names: string[],
+  period_name: string
+
+) => {
+  const region_index = region_names.indexOf(region_name)
+  const period_index = period_names.indexOf(period_name)
+  if ( period_names.length > 0 && region_names.length > 0) {
+    return region_index * period_names.length + period_index
+  } else if ( region_names.length > 0) {
+    return region_index
+  } else if ( period_names.length > 0) {
+    return period_index
+  } else {
+    return 0
+  }
+}
+
 const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
@@ -124,6 +144,14 @@ export const convert_data = (
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
     }
   )
+  if (data_to_convert.tags_catalog['Regions']) {
+    data_to_convert.dataTags['Regions'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Regions']))
+    delete data_to_convert.tags_catalog['Regions']
+  }
+  if (data_to_convert.tags_catalog['Periods']) {
+    data_to_convert.dataTags['Periods'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Periods']))
+    delete data_to_convert.tags_catalog['Periods']
+  }
   if (data_to_convert.tags_catalog['flux_types']) {
     data_to_convert.dataTags['flux_types'] = {
       group_name : 'Type de donnée',
@@ -136,14 +164,6 @@ export const convert_data = (
     }
     delete data_to_convert.tags_catalog['flux_types']
   }
-  if (data_to_convert.tags_catalog['Regions']) {
-    data_to_convert.dataTags['Regions'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Regions']))
-    delete data_to_convert.tags_catalog['Regions']
-  }
-  if (data_to_convert.tags_catalog['Periods']) {
-    data_to_convert.dataTags['Periods'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Periods']))
-    delete data_to_convert.tags_catalog['Periods']
-  }
   if (data_to_convert.tags_catalog['SubChain']) {
     data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
   }
@@ -155,8 +175,8 @@ export const convert_data = (
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
       (link, i) => {
-        ((link.value as unknown) as SankeyLinkValue)= { value : 0, display_value:'default' } 
-        //link.display_value = []
+        (link as any).value = [];
+        (link as any).display_value = []
         const convert_link = (link as unknown) as ConvertSankeyLink
         if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
           convert_link.mini = []
@@ -171,10 +191,11 @@ export const convert_data = (
         if (convert_link.data_period !== undefined) {
           convert_link.data_period = []
         }
+
         key_names.forEach(
           cur_key_name => {
-            // link.value.push(data.links[cur_key_name][i].value as number)
-            // link.display_value.push(data.links[cur_key_name][i].display_value as string)
+            (link.value as any).push(data.links[cur_key_name][i].value as number);
+            (link as any).display_value.push(data.links[cur_key_name][i].display_value as string)
             if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
               (convert_link.mini as number[]).push(data.links[cur_key_name][i].mini as number);
               (convert_link.maxi as number[]).push(data.links[cur_key_name][i].maxi as number)
@@ -216,6 +237,7 @@ export const convert_data = (
     delete data.region_names
     delete data.region_name
   }
+
   if (Array.isArray(data.links) && (data.version === '0.5' || data.version === '0.4')) {
     if (((data.links as unknown) as SankeyLink[] ).length > 0 && !data.links[0].idLink) {
       ((data.links as unknown) as SankeyLink[]).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
@@ -242,7 +264,6 @@ export const convert_data = (
       delete ((l  as unknown) as {target_name?:string}).target_name
     }
   })
-
 
   if (!data_to_convert.tags_catalog) {
     data_to_convert.tags_catalog = {}
@@ -542,31 +563,31 @@ export const convert_data = (
             flux_max = v
           }
         })
-        if (data.flux_types || data.use_flux_types || data.dataTags['flux_types'] ) {
-          ((l.value as unknown)  as {[key:string]:unknown})= {
-            computed_data    : {
-              value         : (l_convert.value as number[])[0],
-              display_value : (l_convert.display_value as string[])[0]
-            }
-          }
-          if (l_convert.data && l_convert.data_value !== undefined) {
-            ((l.value as unknown)  as {[key:string]:unknown}) = {
-              initial_data  : {
-                value         : (l_convert.data_value as number[])[0],
-                display_value : (l_convert.display_value as string[])[0]
-              },
-              computed_data    : {
-                value         : (l_convert.value as number[])[0],
-                display_value : (l_convert.display_value as string[])[0]
-              }
-            }
-          }
-        } else {
-          ((l.value as unknown)  as {[key:string]:unknown}) = {
-            value         : (l_convert.value as number[])[0],
-            display_value : 'default'
-          }
-        }
+        // if (data.flux_types || data.use_flux_types || data.dataTags['flux_types'] ) {
+        //   ((l.value as unknown)  as {[key:string]:unknown})= {
+        //     computed_data    : {
+        //       value         : (l_convert.value as number[])[0],
+        //       display_value : (l_convert.display_value as string[])[0]
+        //     }
+        //   }
+        //   if (l_convert.data && l_convert.data_value !== undefined) {
+        //     ((l.value as unknown)  as {[key:string]:unknown}) = {
+        //       initial_data  : {
+        //         value         : (l_convert.data_value as number[])[0],
+        //         display_value : (l_convert.display_value as string[])[0]
+        //       },
+        //       computed_data    : {
+        //         value         : (l_convert.value as number[])[0],
+        //         display_value : (l_convert.display_value as string[])[0]
+        //       }
+        //     }
+        //   }
+        // } else {
+        //   ((l.value as unknown)  as {[key:string]:unknown}) = {
+        //     value         : (l_convert.value as number[])[0],
+        //     display_value : 'default'
+        //   }
+        // }
         delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
       }
       const source_node = nodes[l.idSource]
@@ -709,6 +730,111 @@ export const convert_data = (
       delete l_convert.text_same_color
     }
   )
+  if (data.version !== '0.6') {
+    Object.values(data.links).forEach(
+      link => {
+        ((data.links[link.idLink] as any).value2 as unknown)= {}
+      }
+    )
+
+    let region_names : string[] = []
+    let period_names : string[] = []
+    let flux_types   : string[] = []
+    if (data_to_convert.dataTags['Regions']) {
+      region_names = Object.keys(data_to_convert.dataTags['Regions'].tags)
+      region_names.forEach(region_name => 
+        Object.values(data.links).forEach(link=>((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name] = {} ))
+      )
+    }
+    if (data_to_convert.dataTags['Periods']) {
+      period_names = Object.keys(data_to_convert.dataTags['Periods'].tags)
+      if ( region_names.length > 0) {
+        region_names.forEach(region_name =>
+          period_names.forEach(period_name =>
+            Object.values(data.links).forEach(link=> (((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name]as {[key:string]:unknown})[period_name] = {} ))
+          )
+        )
+      } else {
+        period_names.forEach(period_name => 
+          Object.values(data.links).forEach(link=>((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[period_name] = {} )) 
+        )           
+      }
+    }
+    if (data_to_convert.dataTags['flux_types']) {
+      flux_types = Object.keys(data_to_convert.dataTags['flux_types'].tags)
+      if ( region_names.length > 0 && period_names.length > 0) {
+        region_names.forEach(region_name =>
+          period_names.forEach(period_name => {
+            const value_index = getValueIndex(region_names,region_name,period_names,period_name)
+            flux_types.forEach(flux_type => 
+              Object.values(data.links).forEach(
+                link=> {
+                  ((((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name]as {[key:string]:unknown})[period_name]as {[key:string]:unknown}))[flux_type] = {
+                    value : (link.value as any)[value_index],
+                    display_value : ((link as any).display_value as any)[value_index]
+                  }
+                }
+              )               
+            )
+          })
+        )
+      } else if ( region_names.length > 0 ) {
+        region_names.forEach(region_name => {
+          const value_index = getValueIndex(region_names,region_name,period_names,'')
+          flux_types.forEach(flux_type => 
+            Object.values(data.links).forEach(
+              link=> {
+                ((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name] as {[key:string]:unknown})[flux_type] = {
+                  value : (link.value as any)[value_index],
+                  display_value : ((link as any).display_value as any)[value_index]
+                }
+              }
+            )               
+          )
+        })
+      } else if ( period_names.length > 0 ) {
+        period_names.forEach(period_name => {
+          const value_index = getValueIndex(region_names,period_name,period_names,'')
+          flux_types.forEach(flux_type => 
+            Object.values(data.links).forEach(
+              link=> {
+                ((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[period_name] as {[key:string]:unknown})[flux_type] = {
+                  value : (link.value as any)[value_index],
+                  display_value : ((link as any).display_value as any)[value_index]
+                }
+              }
+            )               
+          )
+        })
+      } else if (flux_types.length > 0) {
+        flux_types.forEach(flux_type => 
+          Object.values(data.links).forEach(
+            link=> {
+              (((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[flux_type] = {
+                value : (link.value as any)[0],
+                display_value : ((link as any).display_value as any)[0]
+              }
+            }
+          )               
+        )        
+      } else {
+        Object.values(data.links).forEach(
+          link => {
+            ((data.links[link.idLink] as any).value2 as unknown) = {
+              value : (link.value as any)[0],
+              display_value : ((link as any).display_value as any)[0]
+            }
+          }
+        )          
+      }
+    }
+    Object.values(data.links).forEach(
+      link => {    
+        (data.links[link.idLink] as any).value = (data.links[link.idLink] as any).value2
+        delete (data.links[link.idLink] as any).value2
+      }
+    )
+  }
 
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
