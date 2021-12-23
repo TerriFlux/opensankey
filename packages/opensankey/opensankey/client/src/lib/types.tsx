@@ -1,12 +1,12 @@
 import PropTypes, { InferProps } from 'prop-types'
 
-export const DimensionPropTypes = PropTypes.arrayOf(
-  PropTypes.shape({
-    group_name: PropTypes.string.isRequired,
-    tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
-  }).isRequired
-).isRequired
+// export const DimensionPropTypes = PropTypes.arrayOf(
+//   PropTypes.shape({
+//     group_name: PropTypes.string.isRequired,
+//     tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+//     selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
+//   }).isRequired
+// ).isRequired
 
 export const SankeyNodePropTypes = {
   // identification
@@ -65,6 +65,16 @@ export const SankeyNodePropTypes = {
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
+export const SankeyLinkValueTypes = 
+    {
+      value         : PropTypes.number.isRequired,
+      display_value : PropTypes.string.isRequired
+    }
+export type SankeyLinkValue = InferProps<typeof SankeyLinkValueTypes>
+
+export const SankeyLinkValueDictTypes = PropTypes.objectOf(PropTypes.exact(SankeyLinkValueTypes).isRequired).isRequired
+export type SankeyLinkValueDict = InferProps<typeof SankeyLinkValueDictTypes>
+
 export const SankeyLinkPropTypes = {
   // identification
   idLink: PropTypes.string.isRequired,
@@ -84,10 +94,7 @@ export const SankeyLinkPropTypes = {
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
 
-  // value
-  //value: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-  value: PropTypes.object,
-  //display_value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  value: PropTypes.oneOf([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
   tooltip_text: PropTypes.string,
 

@@ -3,7 +3,7 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, T
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
 import { findMaxLinkValue } from './SankeyUtils'
-import { SankeyDataPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkValueDict, TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
 
 
@@ -783,16 +783,13 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   const handleUpGrpTag = (i: string) => {
     const { tags_catalog } = data
-    const tmp = tags_catalog[i]
-    const cpyCat = tags_catalog
     const listElmt = Object.keys(tags_catalog)
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt - 1, 0, i)
-    const new_cat = ({} as any)
+    const new_cat : {[key:string]:TagsGroup} = {}
     listElmt.forEach(elt => {
-
-      new_cat[elt] = tags_catalog[elt]
+      new_cat [elt] = tags_catalog[elt]
     })
     for (const member in tags_catalog) delete tags_catalog[member]
     Object.assign(tags_catalog, new_cat)
@@ -801,13 +798,11 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   const handleDownGrpTag = (i: string) => {
     const { tags_catalog } = data
-    const tmp = tags_catalog[i]
-    const cpyCat = tags_catalog
     const listElmt = Object.keys(tags_catalog)
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt + 1, 0, i)
-    const new_cat = ({} as any)
+    const new_cat : {[key:string]:TagsGroup} = {}
     listElmt.forEach(elt => {
 
       new_cat[elt] = tags_catalog[elt]
@@ -1022,12 +1017,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   )
 }
 
-const SankeySettingsEditionTagsLinksPropTypes = {
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired
-}
-type SankeySettingsEditionTagsLinksTypes = InferProps<typeof SankeySettingsEditionTagsLinksPropTypes>
-
 const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
   const [links_tags_group_key, set_links_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
@@ -1095,42 +1084,42 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     set_data({ ...data })
   }
   //Deplace groupeTag vers le haut de l'objet
-  const handleUpGrpTag = (i: string) => {
-    const { dataTags } = data
-    const tmp = dataTags[i]
-    const cpyCat = dataTags
-    const listElmt = Object.keys(dataTags)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat = ({} as any)
-    listElmt.forEach(elt => {
+  // const handleUpGrpTag = (i: string) => {
+  //   const { dataTags } = data
+  //   const tmp = dataTags[i]
+  //   const cpyCat = dataTags
+  //   const listElmt = Object.keys(dataTags)
+  //   const posElemt = listElmt.indexOf(i)
+  //   listElmt.splice(posElemt, 1)
+  //   listElmt.splice(posElemt - 1, 0, i)
+  //   const new_cat = ({} as any)
+  //   listElmt.forEach(elt => {
 
-      new_cat[elt] = dataTags[elt]
-    })
-    for (const member in dataTags) delete dataTags[member]
-    Object.assign(dataTags, new_cat)
-    set_data({ ...data })
-  }
+  //     new_cat[elt] = dataTags[elt]
+  //   })
+  //   for (const member in dataTags) delete dataTags[member]
+  //   Object.assign(dataTags, new_cat)
+  //   set_data({ ...data })
+  // }
   //Deplace groupeTag vers le bas de l'objet
 
-  const handleDownGrpTag = (i: string) => {
-    const { dataTags } = data
-    const tmp = dataTags[i]
-    const cpyCat = dataTags
-    const listElmt = Object.keys(dataTags)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat = ({} as any)
-    listElmt.forEach(elt => {
+  // const handleDownGrpTag = (i: string) => {
+  //   const { dataTags } = data
+  //   const tmp = dataTags[i]
+  //   const cpyCat = dataTags
+  //   const listElmt = Object.keys(dataTags)
+  //   const posElemt = listElmt.indexOf(i)
+  //   listElmt.splice(posElemt, 1)
+  //   listElmt.splice(posElemt + 1, 0, i)
+  //   const new_cat = ({} as any)
+  //   listElmt.forEach(elt => {
 
-      new_cat[elt] = dataTags[elt]
-    })
-    for (const member in dataTags) delete dataTags[member]
-    Object.assign(dataTags, new_cat)
-    set_data({ ...data })
-  }
+  //     new_cat[elt] = dataTags[elt]
+  //   })
+  //   for (const member in dataTags) delete dataTags[member]
+  //   Object.assign(dataTags, new_cat)
+  //   set_data({ ...data })
+  // }
   const tagSetting = (<>
     <Form.Group as={Row} >
       <Col>
@@ -1182,7 +1171,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                         const new_nb_element = evt.target as HTMLInputElement
                         const name = new_nb_element.value
                         for (const l in data.links) {
-                          data.links[l].value = JSON.parse(JSON.stringify(data.links[l].value).replaceAll('"' + dataTags[links_tags_group_key].tags[tag_key].name + '"', '"' + name + '"')) as any
+                          ((data.links[l].value as unknown) as SankeyLinkValueDict) = JSON.parse(JSON.stringify(data.links[l].value).replaceAll('"' + dataTags[links_tags_group_key].tags[tag_key].name + '"', '"' + name + '"')) as SankeyLinkValueDict
                           // data.links[l].valueV2 = JSON.parse(JSON.stringify(data.links[l].valueV2).replaceAll(dataTags[links_tags_group_key].tags[tag_key].name, name)) as any
 
                         }
@@ -1220,7 +1209,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                       (evt: React.ChangeEvent) => {
                         const new_nb_element = evt.target as HTMLInputElement
                         const tag_key = new_nb_element.id
-                        const visible = new_nb_element.checked
+                        //const visible = new_nb_element.checked
                         Object.values(dataTags[links_tags_group_key].tags).map(d => {
                           d.selected = false
 

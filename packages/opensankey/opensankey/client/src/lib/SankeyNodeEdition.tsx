@@ -4,8 +4,6 @@ import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
 import { default_node } from './SankeyUtils'
 import { reorganize_inputLinksId} from './SankeyLayout'
-import { delete_link, delete_node } from './SankeyUtils'
-
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -39,13 +37,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   //     return 'outline-warning'
   //   }
   // }
-  const outline_Fav_Button = (tag_key: string) => {
-    if (node.tag_favorite != undefined && node.tag_favorite == tag_key) {
-      return 'warning'
-    } else {
-      return 'outline-warning'
-    }
-  }
+  // const outline_Fav_Button = (tag_key: string) => {
+  //   if (node.tag_favorite != undefined && node.tag_favorite == tag_key) {
+  //     return 'warning'
+  //   } else {
+  //     return 'outline-warning'
+  //   }
+  // }
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
     <Tab eventKey="tags" title="Tags" >
@@ -58,7 +56,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           <FormCheck inline
             type='switch'
             checked={node.tag_favorite == tags_group_key}
-            onChange={evt => {
+            onChange={() => {
               node.tag_favorite = (node.tag_favorite == tags_group_key) ? '' : tags_group_key
 
               set_data({ ...data })

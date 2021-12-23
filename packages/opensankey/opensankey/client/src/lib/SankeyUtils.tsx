@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 
@@ -10,34 +10,31 @@ export const getLinkValue = (
   idLink: string
 ) => {
   const { links,dataTags } = data
-  let val = links[idLink].value as any
-  const listKey = [] as any
-  // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
-  //   listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
-  // })
+  let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
+  const listKey = [] as string[]
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-    listKey.push(Object.entries(dataTag.tags).filter(([tag_key,tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
   })
 
   for (const i in listKey) {
-    val = val[listKey[i]]
+    val = val[listKey[i]] 
   }
-  return val
+  return (val as unknown ) as SankeyLinkValue
 }
 
 export const findMaxLinkValue = ( 
   max_node_value:number, 
-  value_dict: any
+  value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
-      const cur_max_value = findMaxLinkValue(new_max_node_value,v)
+      const cur_max_value = findMaxLinkValue(new_max_node_value,(v as unknown) as SankeyLinkValueDict)
       new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
     })
   } else {
-    new_max_node_value = (value_dict as any).value > new_max_node_value ? (value_dict as any).value : new_max_node_value
+    new_max_node_value = (value_dict as SankeyLinkValue).value > new_max_node_value ? (value_dict as SankeyLinkValue).value : new_max_node_value
   }
   return new_max_node_value
 }
@@ -46,7 +43,6 @@ export const getTotalLinks = (
   data: SankeyData,
   Links: string[],
 ) => {
-  const { links } = data
   let total = 0
   Links.forEach(element => {
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
@@ -267,9 +263,7 @@ export const toPrecision = (
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
-  link_value: any,
-  display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean },
-  reg_index: number
+  link_value: number
 ) => {
   const str_display = String(getLinkValue(data,d.idLink).display_value)
   if (str_display !== 'default') {
@@ -359,7 +353,7 @@ const create_object = (data: SankeyData, l: string[]) => {
     const i = l[0]
     if (i !== undefined) {
       const o=Object.create({})
-      const tmp = Object.values(dataTags[i].tags).forEach(d => {
+      Object.values(dataTags[i].tags).forEach(d => {
         const obj = Object.create({})
         const ob = create_object(data, l.slice(1))
         obj[d.name] = ob
@@ -566,11 +560,4 @@ export const set_nodes_level = (
       node.display = false
     }
   })
-}
-
-export const getColor = (
-  node: SankeyNode,
-  data: SankeyData,
-) => {
-  console.log(node)
 }

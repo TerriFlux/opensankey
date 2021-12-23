@@ -17,7 +17,7 @@ export const nodeTooltipsContent = (
     content += '<b>Entrées</b><ul style=\'margin-bottom:0px\'>'
     node.inputLinksId.forEach(element => {
       if (data.nodes[data.links[element].idSource].node_visible) {
-        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
+        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element).value / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
         const value = getLinkValue(data, element).value
         content += '<li>' + data.nodes[data.links[element].idSource].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
       }
@@ -28,7 +28,7 @@ export const nodeTooltipsContent = (
     content += '<b>Sorties</b><ul style=\'margin-bottom:0px\'>'
     node.outputLinksId.forEach(element => {
       if (data.nodes[data.links[element].idTarget].node_visible) {
-        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[])) as number))
+        const pcValue = d3.format('.1f')(100 * getLinkValue(data, element).value / (getTotalLinks(data, (node.outputLinksId as string[])) as number))
         const value = getLinkValue(data, element).value
         content += '<li>' + data.nodes[data.links[element].idTarget].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
       }
@@ -89,6 +89,6 @@ export const linkTooltipsContent = (
   if (Object.keys(data.links).length === 0) {
     return ''
   }
-  const content = data.nodes[link.idSource].name + ' → ' + data.nodes[link.idTarget].name + ' : ' + getLinkValue(data, link.idLink as string)
+  const content = data.nodes[link.idSource].name + ' → ' + data.nodes[link.idTarget].name + ' : ' + getLinkValue(data, link.idLink).value
   return content
 }

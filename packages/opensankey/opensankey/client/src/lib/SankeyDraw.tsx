@@ -13,12 +13,10 @@ const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   select_node: PropTypes.func.isRequired,
-  nodeContextMenu: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
 
   select_link: PropTypes.func.isRequired,
-  linkContextMenu: PropTypes.func.isRequired,
   link_color: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
   link_visible: PropTypes.func.isRequired,
@@ -37,11 +35,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   set_data,
   select_node,
-  nodeContextMenu,
   node_color,
   node_arrow_visible,
   select_link,
-  linkContextMenu,
   link_color,
   link_text,
   link_visible,
@@ -143,12 +139,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           )
         })
       )
-      paths.on('contextmenu', (event, l) => {
-        event.preventDefault()
-        sankeyTooltip.style('opacity', 0)
-        sankeyTooltip.style('opacity', 0)
-        linkContextMenu(l)
-      })
+      // paths.on('contextmenu', (event, l) => {
+      //   event.preventDefault()
+      //   sankeyTooltip.style('opacity', 0)
+      //   sankeyTooltip.style('opacity', 0)
+      //   linkContextMenu(l)
+      // })
     }
 
     // link value
@@ -251,7 +247,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link')
       .attr('id', d => d.idLink)
       .attr('fill', 'none')
-      .attr('stroke-opacity', d => data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data,d.idLink).value >= display_style.filter ? (!(data as any).show_uncert && (String(getLinkValue(data,d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
+      .attr('stroke-opacity', d => data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data,d.idLink).value >= display_style.filter ? (!((data as unknown) as {show_uncert:boolean}).show_uncert && (String(getLinkValue(data,d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
       .attr('stroke-width', d => {
         const link_value = test_link_value(display_nodes, d, data.tags_catalog)
         return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
@@ -351,7 +347,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(n => node_arrow_visible(n))
       .each(function (n) {
         const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n as any, display_nodes, display_links, display_style, data.tags_catalog, selection)
+        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.tags_catalog, selection)
       })
 
     // if (document.getElementById('front-0')){
@@ -1381,7 +1377,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           Object.keys(n.dimensions).forEach(
             dim=> {
               if (n.dimensions[dim].parent_name) {
-                parent_names.push(n.dimensions[dim].parent_name as any)
+                parent_names.push(n.dimensions[dim].parent_name as string)
                 dim_names.push(dim)
               }
             }
@@ -1402,11 +1398,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
     }
     // Gestion du contextMenu 
-    ggg_nodes.on('contextmenu', (event, node) => {
-      event.preventDefault()
-      sankeyTooltip.style('opacity', 0)
-      nodeContextMenu(node)
-    })
+    // ggg_nodes.on('contextmenu', (event, node) => {
+    //   event.preventDefault()
+    //   sankeyTooltip.style('opacity', 0)
+    //   nodeContextMenu(node)
+    // })
 
     // Gestion du shape (rect ou cicle)
     // A reprendre
@@ -1462,7 +1458,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           sankeyTooltip.style('opacity', 0)
         }
       })
-      .on('click', (event, d: any) => {
+      .on('click', (event, d) => {
 
         if (event.shiftKey) {
           // Animation des flux du Sankey
@@ -1473,8 +1469,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.node').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link_value').style('display', 'none')
-          const nodeDisplay = [d.idNode]
-          branchAnimate(data.nodes, d, nodeDisplay)
+          const nodeDisplay = [(d as SankeyNode).idNode]
+          branchAnimate(data.nodes, (d as SankeyNode), nodeDisplay)
         }
       })
 
@@ -1553,13 +1549,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d.type === 'product' && display_style.product_uppercase
         ) {  
           if (d.show_value) {      
-            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo').toUpperCase() + ' : ' + toPrecision(total) + (data as any).units_names[0]
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo').toUpperCase() + ' : ' + toPrecision(total) + ((data as unknown) as {[key:string]:string[]}).units_names[0]
           } else {
             return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo').toUpperCase()
           }
         } else {
           if (d.show_value) {   
-            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo') + ' : ' + toPrecision(total) + (data as any).units_names[0]
+            return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo') + ' : ' + toPrecision(total) + ((data as unknown) as {[key:string]:string[]}).units_names[0]
           } else {
             return d.name.split(' - ')[0].replace('-',' ').replace('Transformation','Transfo')
           }
@@ -1630,7 +1626,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const branchAnimate = (
     nodes: { [node_id: string]: SankeyNode },
     nodeData: SankeyNode,
-    nodeDisplay: any
+    nodeDisplay: string[]
   ) => {
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
@@ -1651,7 +1647,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         d3.select(this)
           .attr('stroke-dasharray', totalLength + ' ' + totalLength)
           .attr('stroke-dashoffset', totalLength)
-          .style('stroke', function (this, d) {
+          .style('stroke', function (this) {
             // on recupere les paramêtres initiaux du stroke
             return d3.select(this).attr('stroke')
           })
@@ -1660,15 +1656,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .transition()
       .duration(2000)
       .attr('stroke-dashoffset', 0)
-      .on('end', function (this, d: any) {
+      .on('end', function (this) {
         const idLink = d3.select(this).attr('id')
         const idTarget = data.links[idLink].idTarget
         // Modification des arrows après l'animation
-        const arrowInitColor = d3.select((this as any).parentNode).select('.arrow').attr('fill')
-        d3.select((this as any).parentNode).select('.arrow')
+        const arrowInitColor = d3.select(((this as unknown) as {parentNode: d3.BaseType}).parentNode).select('.arrow').attr('fill')
+        d3.select(((this as unknown) as {parentNode: d3.BaseType}).parentNode).select('.arrow')
           .style('fill', arrowInitColor)
         // reaffichage des link value après l'animation
-        d3.select((this as any).parentNode).select('.link_value')
+        d3.select(((this as unknown) as {parentNode: d3.BaseType}).parentNode).select('.link_value')
           .style('display', 'inline')
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
@@ -1761,7 +1757,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
           .attr('fill', () => link_color(l))
           .attr('fill-opacity', () => {
-            const opacity = String(!(data as any).show_uncert && getLinkValue(data,l.idLink).display_value).includes('[') ? 0.85 : 0.85
+            const opacity = String(!((data as unknown) as {show_uncert:boolean}).show_uncert && getLinkValue(data,l.idLink).display_value).includes('[') ? 0.85 : 0.85
             return opacity
           })
       }
@@ -1801,10 +1797,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   })
 
-  const drawLegend = (
-    nodes: { [node_id: string]: SankeyNode },
-    tags_catalog: TagsCatalog,
-  ) => {
+  const drawLegend = () => {
     // Dans le menu tags, les éléments affichés dans la légende sont :
     // les tagGroup pour lesquelles Legend est à true 
     // le selected du tags à true
@@ -1826,8 +1819,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     Object.values(data.tags_catalog).filter(tag_group => tag_group.show_legend).forEach(tag_group => {
 
       // Ajout du tagGroup.name  
-      const legendTitle = legend.append('text')
-        .attr('transform', function (d, i) {
+      legend.append('text')
+        .attr('transform', function () {
           return 'translate(' + dx + ', 0 )'
         })
         .attr('x', 0)
@@ -1856,7 +1849,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('y', 10)
         .attr('rx', 3)
         .attr('ry', 3)
-        .style('fill', function (d: any) { return d[1].color })
+        .style('fill', (d) => { return (d as [string,{color:string}])[1].color })
         .style('fill-opacity', 1)
       // Ajout du label
       legendElements.append('text')
@@ -1926,7 +1919,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
     gg_links.attr('cursor', 'zoom-in')
 
-    drawLegend(data.nodes, data.tags_catalog)
+    drawLegend()
 
     localStorage.setItem('data', JSON.stringify(data))
     console.log(data)

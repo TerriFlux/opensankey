@@ -57,7 +57,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const display_nodes = data.nodes
   const display_links = data.links
-  const { dataTags } = data
+  //const { dataTags } = data
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
     if (!n.dimensions) {
@@ -78,7 +78,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     // en remplacement de node_idx
     //data.node_idx = data.node_idx + 1
     // Méthode pour incrementer idNode
-    const listId = [] as any
+    const listId : number[] = []
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
 
@@ -269,8 +269,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  const link = selected_link
-
   const props = {
     scroll: true,
     backdrop: false,
@@ -430,7 +428,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="1"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '1') {
+                  if (((evt.target as unknown)as {className:string}).className === 'accordion-button' && nav_item_active === '1') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('1')
@@ -449,7 +447,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="2"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -604,7 +602,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="4"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '4') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '4') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('4')
@@ -622,7 +620,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item
               eventKey="3"
               onClick={evt => {
-                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('3')
@@ -726,7 +724,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
             <Accordion.Item eventKey="7"
               onClick={evt => {
-                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('7')
@@ -741,7 +739,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="5"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '5') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('5')
@@ -780,7 +778,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="0"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '0') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '0') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('0')
@@ -797,7 +795,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="6"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '6') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '6') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('6')
