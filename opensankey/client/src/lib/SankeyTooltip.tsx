@@ -4,8 +4,7 @@ import * as d3 from 'd3'
 
 export const nodeTooltipsContent = (
   data: SankeyData,
-  node: SankeyNode,
-  getValueIndex: any
+  node: SankeyNode
 ) => {
   if (node.tooltip_text) {
     return node.tooltip_text
@@ -19,7 +18,7 @@ export const nodeTooltipsContent = (
     node.inputLinksId.forEach(element => {
       if (data.nodes[data.links[element].idSource].node_visible) {
         const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.inputLinksId as string[])) as number))
-        const value = getLinkValue(data, element)
+        const value = getLinkValue(data, element).value
         content += '<li>' + data.nodes[data.links[element].idSource].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
       }
     })
@@ -30,7 +29,7 @@ export const nodeTooltipsContent = (
     node.outputLinksId.forEach(element => {
       if (data.nodes[data.links[element].idTarget].node_visible) {
         const pcValue = d3.format('.1f')(100 * getLinkValue(data, element) / (getTotalLinks(data, (node.outputLinksId as string[])) as number))
-        const value = getLinkValue(data, element)
+        const value = getLinkValue(data, element).value
         content += '<li>' + data.nodes[data.links[element].idTarget].name.split('\\n').join(' ') + ' : ' + value + ' (' + pcValue + '%)</li>'
       }
     })
@@ -82,8 +81,7 @@ export const nodeTooltipsContent = (
 
 export const linkTooltipsContent = (
   data: SankeyData,
-  link: SankeyLink,
-  getValueIndex: any
+  link: SankeyLink
 ) => {
   if (link.tooltip_text) {
     return link.tooltip_text

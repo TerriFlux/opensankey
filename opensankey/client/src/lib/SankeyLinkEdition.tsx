@@ -2,21 +2,20 @@ import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, DropdownButton, Dropdown } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { default_link } from './SankeyUtils'
+import { default_link,getLinkValue } from './SankeyUtils'
 
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
-  show: PropTypes.bool.isRequired,
-  getValueIndex: PropTypes.func.isRequired,
+  show: PropTypes.bool.isRequired
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link, getValueIndex, children }
+  { data, set_data, selected_link, children }
 ) => {
   const { dataTags, links } = data
   const tags_visible = Object.keys(dataTags).length > 0
@@ -32,7 +31,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   delete dataTagsSelected['n']
   const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
 
-  const value_index = getValueIndex(data)
   let link = selected_link
   if (link === undefined) {
     link = default_link(data)
@@ -42,7 +40,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   //renvoie la valeur corresponant aux paramètre selectionné 
   const value_selected_parameter = (): number => {
 
-    let val = JSON.parse(JSON.stringify(Object(selected_link.valueV2)))
+    let val = JSON.parse(JSON.stringify(Object(selected_link.value)))
     Object.entries(tags_selected).map(d => {
       if (val[d[1]] === undefined) {
         val[d[1]] = {}
@@ -134,7 +132,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={value_selected_parameter()}
                     onChange={
                       (evt) => {
-                        let val = Object(selected_link.valueV2)
+                        let val = Object(selected_link.value)
                         Object.entries(tags_selected).map(d => {
                           if (val[d[1]] === undefined) {
                             val[d[1]] = {}
@@ -142,7 +140,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val = val[d[1]]
                         })
                         val['value'] = +evt.target.value
-                        console.log(selected_link.valueV2)
+                        console.log(selected_link.value)
                         console.log(val)
 
                         set_data({ ...data })
@@ -158,7 +156,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type='text'
-                    value={selected_link.display_value[value_index]}
+                    value={getLinkValue(data,selected_link.idLink).display_value}
                     onChange={
                       (evt) => {
                         /* selected_link.display_value[value_index] = evt.target.value

@@ -170,7 +170,7 @@ def parse_simple_excel(
     ]
     ws = pd.read_excel(excel_file, excel_file.sheet_names[0])
 
-    nodes = []
+    nodes = {}
     current_parent_level = 1
     previous_level = 1
     for i in range(ws.shape[0]):
@@ -200,7 +200,7 @@ def parse_simple_excel(
         level = ws.iat[i, nodes_cols.index('Level')]
         new_node['dimensions']['Primaire']['level'] = int(level)
         if level > previous_level:
-            current_node_parent = nodes[i-1]
+            current_node_parent = nodes['node'+str(i-1)]
             current_parent_level = previous_level
         if level > current_parent_level:
             new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['idNode']
@@ -211,30 +211,35 @@ def parse_simple_excel(
         else:
           new_node['display'] = 0
           new_node['node_visible'] = 0
-        nodes.append(new_node)
+        nodes[new_node['idNode']] = new_node
 
     flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
     flux_cols = [
         'Origin', 'Destination', 'Value'
     ]
-    links = []
+    links = {}
     for row in range(flux_ws.shape[0]):
         source_name = flux_ws.iat[row, flux_cols.index('Origin')]
         target_name = flux_ws.iat[row, flux_cols.index('Destination')]
-        source_node = [n for n in nodes if n['name'] == source_name][0]
-        target_node = [n for n in nodes if n['name'] == target_name][0] 
+        source_node = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name][0]
+        target_node = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name][0] 
         if source_node['type'] == 'product':
             color = source_node['color']
         elif target_node['type'] == 'product':
             color = target_node['color']
         if not is_hex(color):
-          color = webcolors.name_to_hex(color)      
-        links.append({
-            'source_name' :  flux_ws.iat[row, flux_cols.index('Origin')],
-            'target_name' :  flux_ws.iat[row, flux_cols.index('Destination')],
-            'value'       : [flux_ws.iat[row, flux_cols.index('Value')]],
+          color = webcolors.name_to_hex(color)    
+        new_link = {
+            'idLink'      : 'link'+str(row),  
+            'source_name' : flux_ws.iat[row, flux_cols.index('Origin')],
+            'target_name' : flux_ws.iat[row, flux_cols.index('Destination')],
+            'value'       : {
+                'value'         :flux_ws.iat[row, flux_cols.index('Value')],
+                'display_value' : 'default'
+            },
             'color'       : color
-        })
+        }
+        links[new_link['idLink']] = new_link
     return nodes, links
 
 def updateLayout(

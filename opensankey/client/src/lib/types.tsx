@@ -85,9 +85,9 @@ export const SankeyLinkPropTypes = {
   color: PropTypes.string.isRequired,
 
   // value
-  value: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-  valueV2:PropTypes.object,
-  display_value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  //value: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  value: PropTypes.object,
+  //display_value: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   tooltip_text: PropTypes.string,
 

@@ -9,8 +9,34 @@ export const getLinkValue = (
   data: SankeyData,
   idLink: string
 ) => {
-  const { links } = data
-  return links[idLink].value[0]
+  const { links,dataTags } = data
+  let val = links[idLink].value as any
+  const listKey = [] as any
+  Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
+    listKey.push(Object.values(d.tags).filter(dd => { return dd['selected'] })[0]['name'])
+  })
+
+  for (const i in listKey) {
+    val = val[listKey[i]]
+  }
+  return val
+}
+
+export const findMaxLinkValue = ( 
+  max_node_value:number, 
+  value_dict: any
+) => {
+  let new_max_node_value = max_node_value
+  const child = Object.values(value_dict)[0]
+  if (typeof child === 'object') {
+    Object.values(value_dict).forEach(v => {
+      const cur_max_value = findMaxLinkValue(new_max_node_value,v)
+      new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
+    })
+  } else {
+    new_max_node_value = (value_dict as any).value > new_max_node_value ? (value_dict as any).value : new_max_node_value
+  }
+  return new_max_node_value
 }
 
 export const getTotalLinks = (
@@ -22,7 +48,7 @@ export const getTotalLinks = (
   Links.forEach(element => {
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
     if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
-      const tmp = links[element].value[0]
+      const tmp = getLinkValue(data,element).value
       total += tmp
     }
   })
@@ -236,12 +262,13 @@ export const toPrecision = (
 }
 
 export const link_text = (
+  data: SankeyData,
   d: SankeyLink,
-  link_value: number,
+  link_value: any,
   display_style: { font_size?: string; filter?: number; filter_label?: number; unit?: boolean },
   reg_index: number
 ) => {
-  const str_display = String(d.display_value[reg_index])
+  const str_display = String(getLinkValue(data,d.idLink).display_value)
   if (str_display !== 'default') {
     return str_display
   }
@@ -251,7 +278,7 @@ export const link_text = (
 
 export const default_sankey_data = (): SankeyData => {
   return {
-    version: '0.5',
+    version: '0.6',
 
     nodes: {},
     links: {},
@@ -360,9 +387,9 @@ export const default_link = (data: SankeyData): SankeyLink => {
     idSource: 'node0',
     idTarget: 'node1',
     idLink: 'link0',
-    value: [10],
-    valueV2: nObjet,
-    display_value: ['default'],
+    //value: [10],
+    value: nObjet,
+    //display_value: ['default'],
     color: '#a9a9a9',
     curved: false,
     arrow: true,

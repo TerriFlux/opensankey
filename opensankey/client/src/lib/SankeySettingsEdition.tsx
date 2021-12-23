@@ -2,6 +2,7 @@ import React, { useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
+import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
 
@@ -11,8 +12,7 @@ import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  set_current_filter: PropTypes.func.isRequired,
-  getValueIndex: PropTypes.func.isRequired
+  set_current_filter: PropTypes.func.isRequired
 }
 type SankeyEditionTypes = InferProps<typeof SankeySettingsEditionPropTypes>
 
@@ -20,7 +20,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   data,
   set_data,
   set_current_filter,
-  getValueIndex,
   children
 }) => {
   let file_layout: Blob[] | undefined
@@ -37,13 +36,13 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const { display_style, links, nodes, node_width } = data
   const { filter } = display_style
 
-  const value_index = getValueIndex(data)
-
   let max_link_value = 0
   Object.values(links).forEach(link => {
-    if (link.value[value_index] > max_link_value) {
-      max_link_value = link.value[value_index]
-    }
+    const new_max_link_value  = findMaxLinkValue(
+      max_link_value, 
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
 
@@ -708,26 +707,25 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
 const SankeySettingsEditionTagsPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  getValueIndex: PropTypes.func.isRequired
+  set_data: PropTypes.func.isRequired
 }
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data, getValueIndex }) => {
+const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
   const { links, tags_catalog } = data
 
-  const value_index = getValueIndex(data)
   let max_link_value = 0
   Object.values(links).forEach(link => {
-    if (link.value[value_index] > max_link_value) {
-      max_link_value = link.value[value_index]
-    }
+    const new_max_link_value  = findMaxLinkValue(
+      max_link_value, 
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
-
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non None)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1024,33 +1022,27 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   )
 }
 
-
-
-
-
-
 const SankeySettingsEditionTagsLinksPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  getValueIndex: PropTypes.func.isRequired
+  set_data: PropTypes.func.isRequired
 }
 type SankeySettingsEditionTagsLinksTypes = InferProps<typeof SankeySettingsEditionTagsLinksPropTypes>
 
-const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data, getValueIndex }) => {
+const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
   const [links_tags_group_key, set_links_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
   //const [tag_key, set_tag_key] = useState('')
 
   const { links, dataTags } = data
 
-  const value_index = getValueIndex(data)
   let max_link_value = 0
   Object.values(links).forEach(link => {
-    if (link.value[value_index] > max_link_value) {
-      max_link_value = link.value[value_index]
-    }
+    const new_max_link_value  = findMaxLinkValue(
+      max_link_value, 
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
-
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non None)
   const handleBanner = (links_tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1190,7 +1182,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                         const new_nb_element = evt.target as HTMLInputElement
                         const name = new_nb_element.value
                         for (const l in data.links) {
-                          data.links[l].valueV2 = JSON.parse(JSON.stringify(data.links[l].valueV2).replaceAll('"' + dataTags[links_tags_group_key].tags[tag_key].name + '"', '"' + name + '"')) as any
+                          data.links[l].value = JSON.parse(JSON.stringify(data.links[l].value).replaceAll('"' + dataTags[links_tags_group_key].tags[tag_key].name + '"', '"' + name + '"')) as any
                           // data.links[l].valueV2 = JSON.parse(JSON.stringify(data.links[l].valueV2).replaceAll(dataTags[links_tags_group_key].tags[tag_key].name, name)) as any
 
                         }
