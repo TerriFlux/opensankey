@@ -43,7 +43,7 @@ interface ConvertSankeyLink {
   conv?: number[]
   natural_unit?: string
   value: number | number[]
-  display_value: string | string[]
+  //display_value: string | string[]
   data?: boolean
   //unbounded?: boolean,
   subchain?: string,
@@ -134,13 +134,13 @@ export const convert_data = (
   if (data_to_convert.tags_catalog['Exchanges']) {
     data_to_convert.tags_catalog['Exchanges'].group_name = 'Echanges'
   }
-  if (!Array.isArray(data.links) && data.version !== '0.5') {
+  if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6') {
     const key_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
       (link, i) => {
-        link.value = []
-        link.display_value = []
+        link.value = {}
+        //link.display_value = []
         const convert_link = link as ConvertSankeyLink
         if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
           convert_link.mini = []
@@ -157,8 +157,8 @@ export const convert_data = (
         }
         key_names.forEach(
           cur_key_name => {
-            link.value.push(data.links[cur_key_name][i].value as number)
-            link.display_value.push(data.links[cur_key_name][i].display_value as string)
+            // link.value.push(data.links[cur_key_name][i].value as number)
+            // link.display_value.push(data.links[cur_key_name][i].display_value as string)
             if (convert_link.mini !== undefined && convert_link.maxi !== undefined) {
               (convert_link.mini as number[]).push(data.links[cur_key_name][i].mini as number);
               (convert_link.maxi as number[]).push(data.links[cur_key_name][i].maxi as number)
@@ -520,13 +520,14 @@ export const convert_data = (
   Object.values(links).forEach(
     l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
-
-      l.value.forEach(v => {
-        v = +v
-        if (flux_max < v) {
-          flux_max = v
-        }
-      })
+      if (data.version !== '0.6' ) {
+        (l_convert.value as number[]).forEach(v => {
+          v = +v
+          if (flux_max < v) {
+            flux_max = v
+          }
+        })
+      }
       const source_node = nodes[l.idSource]
       const target_node = nodes[l.idTarget]
       if (!source_node || !target_node) {
@@ -566,9 +567,9 @@ export const convert_data = (
           (l as SankeyLink).orientation = 'hv'
         }
       }
-      if (!('display_value' in l)) {
-        (l as SankeyLink).display_value = ['default']
-      }
+      // if (!('display_value' in l)) {
+      //   (l as SankeyLink).display_value = ['default']
+      // }
       if (!('arrow' in l)) {
         (l as SankeyLink).arrow = true
       }
@@ -718,5 +719,5 @@ export const convert_data = (
     units_names.splice(1, 0, 'natural')
   }
 
-  data.version = '0.5'
+  data.version = '0.6'
 }

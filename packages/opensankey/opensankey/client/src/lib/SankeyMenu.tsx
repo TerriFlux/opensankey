@@ -32,7 +32,6 @@ const MenuPropTypes = {
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
-  getValueIndex: PropTypes.func.isRequired,
 
   agregation_level: PropTypes.number.isRequired,
   set_agregation_level: PropTypes.func.isRequired
@@ -50,8 +49,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_selected_node, selected_node,
     set_selected_link, selected_link,
     example_menu, url_prefix,
-    getValueIndex,
-
     agregation_level,
     set_agregation_level
   }
@@ -74,7 +71,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     })
   })
 
-  const value_index = getValueIndex(data)
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node()
@@ -363,7 +359,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires.xlsx', url_prefix, data, set_data, 
+                  'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }

@@ -89,7 +89,7 @@ def upload_exemple():
     if extension == ".xlsx":
         nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
         context = {
-            'version': '0.5',
+            'version': '0.6',
             'error'  : error,
             'nodes'  : nodes,
             'links'  : links,
