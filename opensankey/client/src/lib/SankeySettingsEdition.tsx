@@ -32,6 +32,9 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [width, set_width] = useState(data.width)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
+  const [link_tag_favorite,set_link_tag_favorite] = useState('')
+  const tags_visible = Object.keys(data.dataTags).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display')[0]: '')
 
   const { display_style, links, nodes, node_width } = data
   const { filter } = display_style
@@ -461,6 +464,44 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
       <Tab eventKey="flux" title="Flux">
         <br></br>
         <Form >
+          <Form.Group as={Row} >
+            <Col>
+              <FormLabel >Palette:</FormLabel>
+            </Col>
+            <Col>
+              <FormCheck inline
+                type='switch'
+                checked={link_tag_favorite === tags_group_key}
+                onChange={() => {
+                  Object.values(data.links).forEach(link=>link.colormap = (link.colormap === tags_group_key) ? '' : tags_group_key)
+                  set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
+            <Col>
+              <Form.Select
+                onChange={
+                  (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
+                {Object.entries(data.dataTags).filter(tags_group=>tags_group[1].banner === 'display').map(
+                  (tags_group, i) =>
+                    <option
+                      key={i}
+                      value={tags_group[0]}
+                      selected={tags_group_key === tags_group[0]} >
+                      {tags_group[1].group_name}
+                    </option>)}
+                {Object.entries(data.tags_catalog).filter(tags_group=>tags_group[1].banner === 'multi').map(
+                  (tags_group, i) =>
+                    <option
+                      key={i}
+                      value={tags_group[0]}
+                      selected={tags_group_key === tags_group[0]} >
+                      {tags_group[1].group_name}
+                    </option>)}
+              </Form.Select>
+            </Col>
+          </Form.Group>
           <Form.Group as={Row} >
             <Col>
               <FormLabel >Filtre</FormLabel>
@@ -990,8 +1031,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                     </td>
                     <td>{Object.keys(tags_catalog[tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={tags_catalog[tags_group_key].banner === 'none' || !tags_catalog[tags_group_key].banner} value='none'>None</option>
-                      <option key={'one' + i} id='OneBaner' selected={tags_catalog[tags_group_key].banner === 'one'} value='one'>One</option>
+                      <option key={'none' + i}  id='NoneBaner' selected={tags_catalog[tags_group_key].banner === 'none' || !tags_catalog[tags_group_key].banner} value='none'>None</option>
+                      <option key={'one' + i}   id='OneBaner' selected={tags_catalog[tags_group_key].banner === 'one'} value='one'>One</option>
                       <option key={'multi' + i} id='MultipleBaner' selected={tags_catalog[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
@@ -1149,7 +1190,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
         <tr>
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
           <th>Nom</th>
-          {/* <th>Visible</th> */}
+          {dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) :(<></>)}
           <th>Selected</th>
         </tr>
       </thead>
@@ -1177,9 +1218,6 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                         }
                         dataTags[links_tags_group_key].tags[tag_key].name = name
                         set_data({ ...data })
-
-
-
                       }
                     } /></td>
                 {/* <td >
@@ -1198,7 +1236,18 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                       }
                     } />
                 </td> */}
-
+                {dataTags[links_tags_group_key].banner === 'display' ? (
+                  <td><Form.Control
+                    type="color"
+                    value={dataTags[links_tags_group_key].tags[tag_key].color as string}
+                    onChange={
+                      evt => {
+                        dataTags[links_tags_group_key].tags[tag_key].color = evt.target.value
+                        set_data({ ...data })
+                      }
+                    }
+                  /></td>
+                ) : (<></>)}
                 <td /* style={{ 'width': '10%' }} */>
                   <Form.Check inline={true}
                     name={'element_selected' + tag_key}
@@ -1209,12 +1258,13 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                       (evt: React.ChangeEvent) => {
                         const new_nb_element = evt.target as HTMLInputElement
                         const tag_key = new_nb_element.id
-                        //const visible = new_nb_element.checked
-                        Object.values(dataTags[links_tags_group_key].tags).map(d => {
-                          d.selected = false
-
-                        })
-                        dataTags[links_tags_group_key].tags[tag_key].selected = true
+                        const visible = new_nb_element.checked
+                        if (dataTags[links_tags_group_key].banner !== 'display') {
+                          Object.values(dataTags[links_tags_group_key].tags).map(d => {
+                            d.selected = false
+                          })
+                        }
+                        dataTags[links_tags_group_key].tags[tag_key].selected = visible
                         set_data({ ...data })
                         console.log(dataTags)
                       }
@@ -1292,9 +1342,9 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                     </td> */}
                     <td>{Object.keys(dataTags[links_tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(links_tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={dataTags[links_tags_group_key].banner === 'none' || !dataTags[links_tags_group_key].banner} value='none'>None</option>
-                      <option key={'one' + i} id='OneBaner' selected={dataTags[links_tags_group_key].banner === 'one'} value='one'>One</option>
-                      {/* <option key={'multi' + i} id='MultipleBaner' selected={dataTags[links_tags_group_key].banner === 'multi'} value='multi'>Multi</option> */}
+                      <option key={'none' + i}    id='NoneBaner' selected={dataTags[links_tags_group_key].banner === 'none' || !dataTags[links_tags_group_key].banner} value='none'>None</option>
+                      <option key={'one' + i}     id='OneBaner' selected={dataTags[links_tags_group_key].banner === 'one'} value='one'>Donnée</option>
+                      <option key={'display' + i} id='DisplayBaner' selected={dataTags[links_tags_group_key].banner === 'display'} value='display'>Affichage</option>                   
                     </Form.Select>
                     {/* <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">

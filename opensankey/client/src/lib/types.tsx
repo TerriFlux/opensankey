@@ -1,13 +1,5 @@
 import PropTypes, { InferProps } from 'prop-types'
 
-// export const DimensionPropTypes = PropTypes.arrayOf(
-//   PropTypes.shape({
-//     group_name: PropTypes.string.isRequired,
-//     tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-//     selected_tags: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
-//   }).isRequired
-// ).isRequired
-
 export const SankeyNodePropTypes = {
   // identification
   idNode: PropTypes.string.isRequired,
@@ -37,14 +29,11 @@ export const SankeyNodePropTypes = {
   }).isRequired
   ).isRequired,
 
-  // tag_favorite :PropTypes.objectOf(PropTypes.shape({
-  //   tagGroup:PropTypes.string.isRequired,
-  //   tagElement :PropTypes.string.isRequired
-  // }).isRequired
-  // ).isRequired,
-  tag_favorite:PropTypes.string.isRequired,
+  
+  nodeParameter:PropTypes.string.isRequired,
 
-  node_parameter:PropTypes.string.isRequired,
+  tag_favorite:PropTypes.string.isRequired,
+  //node_parameter:PropTypes.string.isRequired,
 
   // geometry
   x: PropTypes.number.isRequired,
@@ -68,7 +57,12 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 export const SankeyLinkValueTypes = 
     {
       value         : PropTypes.number.isRequired,
-      display_value : PropTypes.string.isRequired
+      display_value : PropTypes.string.isRequired,
+      // corresponding to tag_favorite. to be used in conjunction with SankeyLink.tag_favorite
+      // selected_tag = getLinkValue(data,link).tag[link.tag_favorite]
+      color_tag           : PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
+      // for previous_value, data_value, data_source, data_period, mini, maxi ...
+      extension     : PropTypes.objectOf(PropTypes.string.isRequired)
     }
 export type SankeyLinkValue = InferProps<typeof SankeyLinkValueTypes>
 
@@ -103,8 +97,7 @@ export const SankeyLinkPropTypes = {
   y_label: PropTypes.number,
 
   //NEW : Choix du group tag favorie pour changement couleur palette 
-  tag_favorite:PropTypes.string.isRequired,
-
+  colormap:PropTypes.string.isRequired,
 
   left_horiz_shift  : PropTypes.number.isRequired,
   right_horiz_shift : PropTypes.number.isRequired,
