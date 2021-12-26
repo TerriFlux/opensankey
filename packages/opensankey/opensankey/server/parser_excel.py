@@ -31,7 +31,7 @@ def parse_sankey_energie_csv(
         'Exchanges' : {
             'group_name'    : 'Echanges',
             'tags'          : {
-                'Other' : {
+                'interior' : {
                     'name'     : 'Intérieur',
                     'selected' : True,
                     'color'    : '',
@@ -76,7 +76,7 @@ def parse_sankey_energie_csv(
             'orientation': 'vertical',
             'show_value' : 1,
             'tags'       : {
-                'Exchanges' : ['Other']
+                'Exchanges' : ['interior']
             }
         }
 

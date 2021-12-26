@@ -80,26 +80,6 @@ interface ConvertSankeyData {
   tags_catalog: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
 }
 
-const getValueIndex = (
-  region_names: string[],
-  region_name: string,
-  period_names: string[],
-  period_name: string
-
-) => {
-  const region_index = region_names.indexOf(region_name)
-  const period_index = period_names.indexOf(period_name)
-  if ( period_names.length > 0 && region_names.length > 0) {
-    return region_index * period_names.length + period_index
-  } else if ( region_names.length > 0) {
-    return region_index
-  } else if ( period_names.length > 0) {
-    return period_index
-  } else {
-    return 0
-  }
-}
-
 const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
@@ -157,12 +137,17 @@ export const convert_data = (
       group_name : 'Type de donnée',
       show_legend: false,
       tags : {
-        initial_data  : { name : 'Données collectées' , selected: false },
-        computed_data : { name : 'Données calculées'  , selected: true}
+        initial_data  : { name : 'Données collectées' , selected: true, color : 'cyan' },
+        computed_data : { name : 'Données calculées'  , selected: true, color : 'blue' },
       },
-      banner : 'multi'
+      banner : 'display'
     }
     delete data_to_convert.tags_catalog['flux_types']
+  }
+  if (data_to_convert.tags_catalog['Uncert']) {
+    data_to_convert.dataTags['Uncert'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Uncert']))
+    data_to_convert.dataTags['Uncert'].banner = 'display'
+    delete data_to_convert.tags_catalog['Uncert']
   }
   if (data_to_convert.tags_catalog['SubChain']) {
     data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
@@ -418,8 +403,8 @@ export const convert_data = (
       if (n.shape_visible === undefined || n_convert.shape_visible === 1) {
         n.shape_visible =true
       }
-      if (n.node_parameter === undefined) {
-        n.node_parameter = 'general'
+      if (n.nodeParameter === undefined) {
+        n.nodeParameter = 'general'
       }
       delete n_convert.visible
       if (n.node_visible === undefined) {
@@ -477,7 +462,7 @@ export const convert_data = (
           n_convert.trade_close = data.display_style.trade_close
         }
       } //else if (!n.tags['Exchanges']) {
-      //   n.tags['Exchanges'] = ['Other']
+      //   n.tags['Exchanges'] = ['interior']
       // }
 
     }
@@ -488,24 +473,14 @@ export const convert_data = (
   }
 
   if (import_export) {
-
-    // if (data.tags_catalog.filter(tag => tag.group_name === 'Exchanges').length === 0) {
-    //   data.tags_catalog.push({
-    //     group_name: 'Exchanges',
-    //     tags: ['Importations', 'Exportations', 'Other'],
-    //     selected_tags: ['Importations', 'Exportations', 'Other']
-    //   })
-    // }
-
-    //TC v2
     if (Object.entries(data.tags_catalog).filter(tag => tag[0] === 'Exchanges').length === 0) {
       data.tags_catalog['Exchanges'] = {
         group_name: 'Echanges',
         show_legend: false,
         tags: {
-          'import': { name: 'Importations', selected: true }
-          , 'export': { name: 'Exportations', selected: true }
-          , 'Other': { name: 'Other', selected: true }
+          'import': { name: 'Importations', selected: true },
+          'export': { name: 'Exportations', selected: true },
+          'interior' : { name: 'Intérieur', selected: true }
         },
         banner: 'multi'
       }
@@ -542,10 +517,10 @@ export const convert_data = (
         group_name: 'Type de donnée',
         show_legend: false,
         tags: {
-          'initial_data' : { name: 'Données collectées', selected: false },
-          'computed_data': { name: 'Données calculées' , selected: true },
+          'initial_data' : { name: 'Données collectées', selected: true, color:'cyan' },
+          'computed_data': { name: 'Données calculées' , selected: true, color:'blue' },
         },
-        banner: 'multi'
+        banner: 'display'
       }
       delete data.flux_types
       delete data.use_flux_types
@@ -563,31 +538,6 @@ export const convert_data = (
             flux_max = v
           }
         })
-        // if (data.flux_types || data.use_flux_types || data.dataTags['flux_types'] ) {
-        //   ((l.value as unknown)  as {[key:string]:unknown})= {
-        //     computed_data    : {
-        //       value         : (l_convert.value as number[])[0],
-        //       display_value : (l_convert.display_value as string[])[0]
-        //     }
-        //   }
-        //   if (l_convert.data && l_convert.data_value !== undefined) {
-        //     ((l.value as unknown)  as {[key:string]:unknown}) = {
-        //       initial_data  : {
-        //         value         : (l_convert.data_value as number[])[0],
-        //         display_value : (l_convert.display_value as string[])[0]
-        //       },
-        //       computed_data    : {
-        //         value         : (l_convert.value as number[])[0],
-        //         display_value : (l_convert.display_value as string[])[0]
-        //       }
-        //     }
-        //   }
-        // } else {
-        //   ((l.value as unknown)  as {[key:string]:unknown}) = {
-        //     value         : (l_convert.value as number[])[0],
-        //     display_value : 'default'
-        //   }
-        // }
         delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
       }
       const source_node = nodes[l.idSource]
@@ -602,9 +552,6 @@ export const convert_data = (
       if (l.color === undefined) {
         l.color = source_node.color
       }
-      // if (!l.tags) {
-      //   l.tags = {}
-      // }
       if (l.shift_gap === undefined) {
         if (l.left_horiz_shift && l.right_horiz_shift && !l.recycling) {
           l.shift_gap = (l.right_horiz_shift - l.left_horiz_shift)/2
@@ -613,7 +560,6 @@ export const convert_data = (
         }
       }
       if (l_convert.subchain && l_convert.subchain !== '' ) {
-        //l.tags['SubChain'] = l_convert.subchain.split(',')
         l_convert.subchain.split(',').forEach(s => {
           if (!subchains.includes(s)) {
             subchains.push(s)
@@ -731,102 +677,103 @@ export const convert_data = (
     }
   )
   if (data.version !== '0.6') {
-    Object.values(data.links).forEach(
-      link => {
-        ((data.links[link.idLink] as any).value2 as unknown)= {}
+    const links_no_type = data.links as any
+    Object.values(links_no_type).forEach(
+      (link : any) => {
+        links_no_type[link.idLink].value2     = {}
+        //links_no_type[link.idLink].display_value2 = {}
       }
     )
 
     let region_names : string[] = []
     let period_names : string[] = []
-    let flux_types   : string[] = []
     if (data_to_convert.dataTags['Regions']) {
       region_names = Object.keys(data_to_convert.dataTags['Regions'].tags)
       region_names.forEach(region_name => 
-        Object.values(data.links).forEach(link=>((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name] = {} ))
+        Object.values(links_no_type).forEach((link : any)=> links_no_type[link.idLink].value2[region_name] = {} )
       )
-    }
-    if (data_to_convert.dataTags['Periods']) {
+    } else if (data_to_convert.dataTags['Periods']) {
       period_names = Object.keys(data_to_convert.dataTags['Periods'].tags)
-      if ( region_names.length > 0) {
-        region_names.forEach(region_name =>
-          period_names.forEach(period_name =>
-            Object.values(data.links).forEach(link=> (((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name]as {[key:string]:unknown})[period_name] = {} ))
-          )
-        )
-      } else {
-        period_names.forEach(period_name => 
-          Object.values(data.links).forEach(link=>((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[period_name] = {} )) 
-        )           
-      }
+      period_names.forEach(period_name => 
+        Object.values(links_no_type).forEach((link : any) => links_no_type[link.idLink].value2[period_name] = {} )
+      )           
     }
-    if (data_to_convert.dataTags['flux_types']) {
-      flux_types = Object.keys(data_to_convert.dataTags['flux_types'].tags)
-      if ( region_names.length > 0 && period_names.length > 0) {
-        region_names.forEach(region_name =>
-          period_names.forEach(period_name => {
-            const value_index = getValueIndex(region_names,region_name,period_names,period_name)
-            flux_types.forEach(flux_type => 
-              Object.values(data.links).forEach(
-                link=> {
-                  ((((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name]as {[key:string]:unknown})[period_name]as {[key:string]:unknown}))[flux_type] = {
-                    value : (link.value as any)[value_index],
-                    display_value : ((link as any).display_value as any)[value_index]
-                  }
-                }
-              )               
-            )
-          })
-        )
-      } else if ( region_names.length > 0 ) {
-        region_names.forEach(region_name => {
-          const value_index = getValueIndex(region_names,region_name,period_names,'')
-          flux_types.forEach(flux_type => 
-            Object.values(data.links).forEach(
-              link=> {
-                ((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[region_name] as {[key:string]:unknown})[flux_type] = {
-                  value : (link.value as any)[value_index],
-                  display_value : ((link as any).display_value as any)[value_index]
-                }
-              }
-            )               
-          )
-        })
-      } else if ( period_names.length > 0 ) {
-        period_names.forEach(period_name => {
-          const value_index = getValueIndex(region_names,period_name,period_names,'')
-          flux_types.forEach(flux_type => 
-            Object.values(data.links).forEach(
-              link=> {
-                ((((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[period_name] as {[key:string]:unknown})[flux_type] = {
-                  value : (link.value as any)[value_index],
-                  display_value : ((link as any).display_value as any)[value_index]
-                }
-              }
-            )               
-          )
-        })
-      } else if (flux_types.length > 0) {
-        flux_types.forEach(flux_type => 
-          Object.values(data.links).forEach(
-            link=> {
-              (((data.links[link.idLink] as any).value2 as unknown) as {[key:string]:unknown})[flux_type] = {
-                value : (link.value as any)[0],
-                display_value : ((link as any).display_value as any)[0]
+
+    if ( region_names.length > 0 || period_names.length > 0) {
+      const reg_or_period_names = region_names.length > 0 ? region_names : period_names
+      reg_or_period_names.forEach((region_name,value_index) => {
+        Object.values(links_no_type).forEach(
+          (link : any)=> {
+            const editable_link = links_no_type[link.idLink]
+            editable_link.value2[region_name] = {
+              value          : (link.value as any)[value_index],
+              display_value  : ((link as any).display_value as any)[value_index],
+              tag            : {},
+              extension : {}
+            }
+            if (editable_link.mini !== undefined && editable_link.mini !== null) {
+              editable_link.value2[region_name].extension.mini = editable_link.mini
+              editable_link.value2[region_name].extension.maxi = editable_link.maxi
+              editable_link.value2[region_name]['tag']['Uncert'] = {}
+              const p = (editable_link.maxi[value_index] - editable_link.mini[value_index])/editable_link.value[value_index]
+              if (p <= 0.1) {
+                editable_link.value2[region_name]['tag']['Uncert'] ='10_percent'
+              } else if (p <= 0.25) {
+                editable_link.value2[region_name]['tag']['Uncert'] ='25_percent'
+              } else if (p <= 0.5) {
+                editable_link.value2[region_name]['tag']['Uncert'] ='50_percent'
+              } else {
+                editable_link.value2[region_name]['tag']['Uncert'] ='50+_percent'
               }
             }
-          )               
-        )        
-      } else {
-        Object.values(data.links).forEach(
-          link => {
-            ((data.links[link.idLink] as any).value2 as unknown) = {
-              value : (link.value as any)[0],
-              display_value : ((link as any).display_value as any)[0]
+            if (data_to_convert.dataTags['flux_types']) {
+              editable_link.value2[region_name]['tag']['flux_types'] = 'computed_data'
+            }
+            if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
+              editable_link.value2[region_name].extension.data_value  = editable_link.data_value
+              editable_link.value2[region_name].extension.data_source = editable_link.data_source
+              editable_link.value2[region_name].extension.data_period = editable_link.data_period
+              editable_link.value2[region_name]['tag']['flux_types'] = 'initial_data'
             }
           }
-        )          
-      }
+        )               
+      })
+    } else {
+      Object.values(links_no_type).forEach(
+        (link : any) => {
+          const editable_link = links_no_type[link.idLink]
+          editable_link.value2 = {
+            value : (link.value as any)[0],
+            display_value : ((link as any).display_value as any)[0],
+            tag            : {},
+            extension : {}
+          }
+          if (editable_link.mini !== undefined && editable_link.mini !== null) {
+            editable_link.value2.extension.mini = editable_link.mini
+            editable_link.value2.extension.maxi = editable_link.maxi
+            editable_link.value2['tag']['Uncert'] = {}
+            const p = (editable_link.maxi[0] - editable_link.mini[0])/editable_link.value[0]
+            if (p <= 0.1) {
+              editable_link.value2['tag']['Uncert'] ='10_percent'
+            } else if (p <= 0.25) {
+              editable_link.value2['tag']['Uncert'] ='25_percent'
+            } else if (p <= 0.5) {
+              editable_link.value2['tag']['Uncert'] ='50_percent'
+            } else {
+              editable_link.value2['tag']['Uncert'] ='50+_percent'
+            }
+          }
+          if (data_to_convert.dataTags['flux_types']) {
+            editable_link.value2['tag']['flux_types'] = 'computed_data'
+          }
+          if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
+            editable_link.value2.extension.data_value  = editable_link.data_value
+            editable_link.value2.extension.data_source = editable_link.data_source
+            editable_link.value2.extension.data_period = editable_link.data_period
+            editable_link.value2['tag']['flux_types'] = 'initial_data'
+          }
+        }
+      )          
     }
     Object.values(data.links).forEach(
       link => {    

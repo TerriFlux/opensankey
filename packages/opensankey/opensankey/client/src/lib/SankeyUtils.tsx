@@ -12,7 +12,7 @@ export const getLinkValue = (
   const { links,dataTags } = data
   let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
   const listKey = [] as string[]
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner === 'one' ? true : false }).map(dataTag => {
     listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
   })
 
@@ -329,7 +329,7 @@ export const default_node = (
     shape_visible: true,
     label_visible: true,
     color: '#a9a9a9',
-    node_parameter: 'general',
+    nodeParameter: 'general',
     x: 100,
     y: 100,
     inputLinksId: [],
@@ -361,8 +361,6 @@ const create_object = (data: SankeyData, l: string[]) => {
       })
       return o
     }
-
-
   }
 }
 export const default_link = (data: SankeyData): SankeyLink => {
@@ -401,8 +399,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     right_horiz_shift: 0,
     vert_shift: 0,
     shift_gap: 0.1,
-    //tags: {},
-    tag_favorite: ''
+    colormap: ''
   }
 }
 

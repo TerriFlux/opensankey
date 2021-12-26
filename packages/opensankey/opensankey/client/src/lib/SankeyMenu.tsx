@@ -541,10 +541,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="general"
                         type='radio'
                         label='Général'
-                        checked={node.node_parameter === 'general'}
+                        checked={node.nodeParameter === 'general'}
                         onChange={evt => {
                           console.log(evt.target.value)
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -554,9 +554,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="groupTag"
                         type='radio'
                         label='Groupe Tag'
-                        checked={node.node_parameter === 'groupTag'}
+                        checked={node.nodeParameter === 'groupTag'}
                         onChange={evt => {
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -566,10 +566,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="local"
                         type='radio'
                         label='local'
-                        checked={node.node_parameter === 'local'}
+                        checked={node.nodeParameter === 'local'}
                         onChange={evt => {
                           console.log(evt.target.value)
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />

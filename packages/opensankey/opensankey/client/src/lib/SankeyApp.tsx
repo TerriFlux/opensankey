@@ -10,6 +10,7 @@ import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col } from 'react-bootstrap'
+import { getLinkValue } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -113,25 +114,24 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         select_link={(l: SankeyLink) => {
           set_selected_link(l)
         }}
-        link_color={l => l.color}
         //node_color={n => n.color}
-        node_color={n => {
+        node_color={(n: SankeyNode) => {
           let colorNode
           // Le couleur est définie dans l'onglet général
-          if (n.node_parameter === 'general') {
+          if (n.nodeParameter === 'general') {
             colorNode = '#808080'
           }
-          if (n.node_parameter === 'groupTag') {
-            // Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-            // on controle ici qu'il y a bien un favorite tag
-            if (n.tag_favorite['tagGroup'] !== undefined) {
-              const tagGroup = n.tag_favorite['tagGroup']
-              const tagElement = n.tag_favorite['tagElement']
-              colorNode = data.tags_catalog[tagGroup].tags[tagElement].color
+          if (n.nodeParameter === 'groupTag') {
+            //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+            //on controle ici qu'il y a bien un favorite tag
+            if (n.tag_favorite !== undefined && n.tag_favorite !== '') {
+              const tagGroup = n.tag_favorite
+              //const tagElement = n.tag_favorite['tagElement']
+              colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
             }
 
           }
-          if (n.node_parameter === 'local') {
+          if (n.nodeParameter === 'local') {
             // Le couleur est définie dans les parametres locaux du noeud
             colorNode = n.color
           }
@@ -144,12 +144,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
             return false
           }
-          if (data.display_style.null_flux) {
-            return true
-          }
           let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
           const listKey = [] as string[]
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
+          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner === 'one' ? true : false }).map(d => {
             listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 
@@ -158,12 +155,42 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
           const v = (val as unknown) as SankeyLinkValue
+          if (l.colormap !== undefined && l.colormap !== '' ) {
+            const selected_tag = v.color_tag[l.colormap]
+            if ( l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
+              return false
+            }
+          }
           if (v.value === 0) {
+            if (data.display_style.null_flux) {
+              return true
+            }
             return false
           }
           return true
         }}
-
+        link_color={(l : SankeyLink)=> {
+          if (!l.colormap || l.colormap === '') {
+            return l.color
+          } else {
+            if (l.colormap in  data.dataTags) {
+              const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
+              return data.dataTags[l.colormap].tags[selected_tag].color
+            } else {
+              const source_node = data.nodes[l.idSource]
+              const target_node = data.nodes[l.idTarget]
+              let selected_tag = ''
+              if (source_node.tags[l.colormap].length === 1) {
+                selected_tag = source_node.tags[l.colormap][0]
+                return data.tags_catalog[l.colormap].tags[selected_tag].color
+              } else if (  target_node.tags[l.colormap].length === 1) {
+                selected_tag = source_node.tags[l.colormap][0]   
+                return data.tags_catalog[l.colormap].tags[selected_tag].color             
+              } 
+              return l.color
+            }
+          }
+        }}
         test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
           const { dataTags } = data
           let val = ((d.value as unknown) as {[key:string]:SankeyLinkValueDict})
@@ -172,7 +199,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           console.log(dataTags) */
 
           //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) ? true : false }).map(d => {
+          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner === 'one' ? true : false }).map(d => {
             listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 

@@ -547,9 +547,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <FormCheck inline
                     type='switch'
-                    checked={link.tag_favorite == tags_group_key}
+                    checked={link.colormap === tags_group_key}
                     onChange={() => {
-                      link.tag_favorite = (link.tag_favorite == tags_group_key) ? '' : tags_group_key
+                      link.colormap = (link.colormap === tags_group_key) ? '' : tags_group_key
 
                       set_data({ ...data })
                     }}
@@ -614,7 +614,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }) : (<></>)}
                   </tbody>
                 </Table>
-                    </Form.Group> */}
+              </Form.Group> */}
             </Tab>) : (<></>)}
           <Tab eventKey="flux_tooltip" title="Tooltip">
             <Form >
