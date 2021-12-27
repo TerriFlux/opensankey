@@ -63,7 +63,7 @@ export const  linkTooltipsContent = (
   t += '<tbody><br><tr><th>Valeur</th>'
   let the_value = link_info.value
 
-  if ('display_value' in d && link_info.display_value !== 'default') {
+  if ('display_value' in d && link_info.display_value !== 'default' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
   t += '<td>' + toPrecision(the_value) +'</td>'

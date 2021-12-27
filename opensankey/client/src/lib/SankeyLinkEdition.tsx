@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link,getLinkValue } from './SankeyUtils'
 
@@ -21,7 +21,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const tags_visible = Object.keys(dataTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags)[0] : '')
 
-  const newEntries = new Map(Object.entries(dataTags).map(d => {
+  const newEntries = new Map(Object.entries(dataTags).filter(d=>d[1].banner !== 'display').map(d => {
     return (Object.keys(d[1].tags).length > 0) ? [d[0], d[1].tags[Object.keys(d[1].tags)[0]].name] : ['n', 'n']
 
   }))
@@ -80,7 +80,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
               {
                 //Définition des valeurs selon les paramètre dataTags
-                Object.entries(data.dataTags).map(d => {
+                Object.entries(data.dataTags).filter(tag=>tag[1].banner !== 'display').map(d => {
                   if (Object.keys(d[1]['tags']).length != 0) {
                     return (
                       <Row key={d[0]}>
