@@ -101,9 +101,6 @@ export const convert_data = (
   if (data_to_convert.dataTags === undefined) {
     data_to_convert.dataTags = {}
   }
-  // if (data_to_convert.colorFavoriteTags === undefined) {
-  //   data_to_convert.colorFavoriteTags = {}
-  // }
 
   if (Array.isArray(data.tags_catalog)) {
     data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
@@ -423,8 +420,8 @@ export const convert_data = (
         n.display = true
       }
 
-      if (n.tag_favorite === undefined) {
-        n.tag_favorite = ''
+      if (n.colorTag === undefined) {
+        n.colorTag = ''
       }
 
       delete n_convert.visible

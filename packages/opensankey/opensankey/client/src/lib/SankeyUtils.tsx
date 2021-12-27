@@ -336,8 +336,7 @@ export const default_node = (
     outputLinksId: [],
     show_value: false,
     tags: {},
-    tag_favorite: '',
-    colorFavoriteTags: {},
+    colorTag: '',
     dimensions: { 'Primaire': { parent_name: undefined } }
   }
   return defaultNode
