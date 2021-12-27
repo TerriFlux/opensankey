@@ -124,9 +124,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           if (n.nodeParameter === 'groupTag') {
             //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
             //on controle ici qu'il y a bien un favorite tag
-            if (n.tag_favorite !== undefined && n.tag_favorite !== '') {
-              const tagGroup = n.tag_favorite
-              //const tagElement = n.tag_favorite['tagElement']
+            if (n.colorTag !== undefined && n.colorTag !== '') {
+              const tagGroup = n.colorTag
               colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
             }
 

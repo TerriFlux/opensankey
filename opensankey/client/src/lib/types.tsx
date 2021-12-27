@@ -23,17 +23,9 @@ export const SankeyNodePropTypes = {
   label_visible: PropTypes.bool.isRequired,
   
   color: PropTypes.string.isRequired,
-  colorFavoriteTags:PropTypes.objectOf(PropTypes.shape({
-    tag_associated:PropTypes.string.isRequired,
-    color:PropTypes.string
-  }).isRequired
-  ).isRequired,
 
-  
   nodeParameter:PropTypes.string.isRequired,
-
-  tag_favorite:PropTypes.string.isRequired,
-  //node_parameter:PropTypes.string.isRequired,
+  colorTag:PropTypes.string.isRequired,
 
   // geometry
   x: PropTypes.number.isRequired,
