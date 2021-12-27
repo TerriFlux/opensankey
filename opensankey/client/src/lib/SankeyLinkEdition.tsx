@@ -18,27 +18,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, children }
 ) => {
   const { dataTags } = data
-  const tags_visible = Object.keys(dataTags).length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags)[0] : '')
-
-  // const newEntries = new Map(Object.entries(dataTags).filter(d=>d[1].banner !== 'display').map(d => {
-  //   if ( (Object.keys(d[1].tags).length > 0) ) {
-  //     const selected_tag_key = Object.entries(d[1].tags).filter(tag=>tag[1].selected)[0][0]
-  //     return [d[0], d[1].tags[selected_tag_key].name]
-  //   }
-  //   return ['n', 'n']
-  // }))
-  // //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
-  // const dataTagsSelected = Object.fromEntries(newEntries)
-  // //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
-  // delete dataTagsSelected['n']
-  // const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
+  const tags_visible = Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display').length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display')[0] : '')
 
   let link = selected_link
   if (link === undefined) {
     link = default_link(data)
   }
-
 
   //renvoie la valeur corresponant aux paramètre selectionné 
   const value_selected_parameter = (): number => {
@@ -132,19 +118,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='text'
                     value={value_selected_parameter()}
                     onChange={
-                      (evt) => {
+                      evt => {
                         let val = Object(selected_link.value)
-                        //let val = selected_link.value as any
                         Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
                           const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
                           val = val[selected_tag]
                         })
-                        // Object.entries(tags_selected).map(d => {
-                        //   if (val[d[1]] === undefined) {
-                        //     val[d[1]] = {}
-                        //   }
-                        //   val = val[d[1]]
-                        // })
                         val['value'] = +evt.target.value
                         console.log(selected_link.value)
                         console.log(val)
@@ -164,9 +143,17 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='text'
                     value={getLinkValue(data,selected_link.idLink).display_value}
                     onChange={
-                      () => {
-                        /* selected_link.display_value[value_index] = evt.target.value
-                        set_data({ ...data }) */
+                      evt => {
+                        let val = Object(selected_link.value)
+                        Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
+                          const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
+                          val = val[selected_tag]
+                        })
+                        val['display_value'] = +evt.target.value
+                        console.log(selected_link.value)
+                        console.log(val)
+
+                        set_data({ ...data })
                       }
                     }
                   />
@@ -565,7 +552,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
-                    {Object.entries(dataTags).map(
+                    {Object.entries(dataTags).filter(d=>d[1].banner === 'display').map(
                       (tags_group, i) =>
                         <option
                           key={i}
