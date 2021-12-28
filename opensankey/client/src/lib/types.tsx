@@ -88,7 +88,7 @@ export const SankeyLinkPropTypes = {
   x_label: PropTypes.number,
   y_label: PropTypes.number,
 
-  //NEW : Choix du group tag favorie pour changement couleur palette 
+  //NEW : Choix du group tag pour changement couleur palette 
   colormap:PropTypes.string.isRequired,
 
   left_horiz_shift  : PropTypes.number.isRequired,

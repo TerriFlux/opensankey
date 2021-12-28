@@ -35,7 +35,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return val['value']
   }
-
+  const display_value_selected_parameter = (): number => {
+    let val = selected_link.value as any
+    Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
+      const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
+      val = val[selected_tag]
+    })
+    return val['display_value']
+  }
 
   return (
 
@@ -141,7 +148,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type='text'
-                    value={getLinkValue(data,selected_link.idLink).display_value}
+                    value={Object.keys(data.links).length > 0 ? getLinkValue(data,selected_link.idLink).display_value : 'default'}
                     onChange={
                       evt => {
                         let val = Object(selected_link.value)

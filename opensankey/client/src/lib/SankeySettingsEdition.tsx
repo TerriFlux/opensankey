@@ -1190,7 +1190,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
         <tr>
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
           <th>Nom</th>
-          {dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) :(<></>)}
+          {Object.keys(dataTags).length > 0 && dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) :(<></>)}
           <th>Selected</th>
         </tr>
       </thead>
