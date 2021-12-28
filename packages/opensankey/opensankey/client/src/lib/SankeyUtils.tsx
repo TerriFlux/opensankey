@@ -345,8 +345,8 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 0
-    obj['valueDisplay'] = 'default'
+    obj['value'] = 10
+    obj['display_value'] = 'default'
     return obj
   } else {
     const i = l[0]
