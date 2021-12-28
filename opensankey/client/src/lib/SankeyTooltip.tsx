@@ -1,6 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData } from './types'
 import { getLinkValue, toPrecision } from './SankeyUtils'
-import * as d3 from 'd3'
 
 function write_children_table(
   desagregate_source_nodes : SankeyNode[], 
