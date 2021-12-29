@@ -724,7 +724,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
             <Accordion.Item eventKey="7"
               onClick={evt => {
-                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '7') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('7')

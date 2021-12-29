@@ -122,7 +122,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   }
 
   const addPalette = () => {
-    if ( Object.entries(data.dataTags).length === 0 && Object.entries(data.tags_catalog).length == 0 ) {
+    if ( Object.entries(data.dataTags).filter(tags=>tags[1].banner === 'display').length === 0 && Object.entries(data.tags_catalog).length == 0 ) {
       return (<></>)
     }
     return (
