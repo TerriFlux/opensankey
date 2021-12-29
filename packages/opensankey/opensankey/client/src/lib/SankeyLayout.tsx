@@ -496,8 +496,11 @@ export const updateLayout = (
       if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
-        node.idNode = 'node' + data.node_idx
-        data.node_idx = data.node_idx + 1
+        // Méthode pour incrementer idNode
+        const listId : number[] = []
+        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+        node.idNode = 'idNode'
         data.nodes[node.idNode]
       } else {
         continue

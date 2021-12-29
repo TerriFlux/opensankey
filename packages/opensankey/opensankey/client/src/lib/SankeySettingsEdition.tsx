@@ -777,21 +777,22 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   //ajoute un tag au group selectionné 
   const handleAddTagButton = () => {
     const { tags_catalog } = data
-    tags_catalog[tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '#000000', selected: true }
-    data.tag_idx += 1
+    // Méthode pour incrementer idElement
+    const listId : number[] = []
+    Object.keys(tags_catalog[tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
+    const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    tags_catalog[tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: true }
     set_data({ ...data })
   }
   //Ajoute un groupTag
   const handleAddTagGrpButton = () => {
     const { tags_catalog } = data
-    //const tab_key = Object.keys(tags_catalog)
-    // let tmp_key = key_group_tag
-    // if (tab_key.length > 0) {
-    //   tmp_key = parseInt(tab_key[tab_key.length - 1].slice(10)) + 1
-    // }
-    data.tags_group_idx += 1
-    tags_catalog['tag_group_' + data.tags_group_idx] = {
-      group_name: 'Tag Group ' + data.tags_group_idx,
+    // Méthode pour incrementer idGroup
+    const listId : number[] = []
+    Object.keys(tags_catalog).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
+    const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    tags_catalog['tag_group_' + idGroup] = {
+      group_name: 'Tag Group ' + idGroup,
       show_legend: false,
       tags: {},
       banner: 'none'
@@ -800,7 +801,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     // if (Object.keys(tags_catalog).length == 1) {
     //   set_tags_group_key(tmp_key)
     // }
-    set_tags_group_key('tag_group_' + data.tags_group_idx)
+    set_tags_group_key('tag_group_' + idGroup)
     set_data({ ...data })
   }
 
@@ -1087,23 +1088,29 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     const selectedDefault = (Object.keys(dataTags[links_tags_group_key].tags).length == 0) ? true : false
 
     //création d'un tag par defaut
-    dataTags[links_tags_group_key].tags['element' + data.tag_idx] = { name: 'tag' + data.tag_idx, color: '#000000', selected: selectedDefault }
-    data.tag_idx += 1
+    // Méthode pour incrementer idElement
+    const listId : number[] = []
+    Object.keys(dataTags[links_tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
+    const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    dataTags[links_tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: selectedDefault }
     set_data({ ...data })
   }
   //Ajoute un groupTag
   const handleAddTagGrpButton = () => {
     const { dataTags } = data
 
-    data.tags_group_idx += 1
-    dataTags['tag_group_' + data.tags_group_idx] = {
-      group_name: 'Tag Group ' + data.tags_group_idx,
+    // Méthode pour incrementer idGroup
+    const listId : number[] = []
+    Object.keys(dataTags).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
+    const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    dataTags['tag_group_' + idGroup] = {
+      group_name: 'Tag Group ' + idGroup,
       show_legend: false,
       tags: {},
       banner: 'none'
     }
 
-    set_links_tags_group_key('tag_group_' + data.tags_group_idx)
+    set_links_tags_group_key('tag_group_' + idGroup)
     set_data({ ...data })
   }
   //supprime tag

@@ -97,9 +97,7 @@ export const SankeyLinkPropTypes = {
   shift_gap         : PropTypes.number.isRequired,
 
   curvature: PropTypes.number.isRequired,
-  curved: PropTypes.bool.isRequired,
-
-  //tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
+  curved: PropTypes.bool.isRequired
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
@@ -157,13 +155,7 @@ export const SankeyDataPropTypes = {
 
   tags_catalog:TagsCatalogPropTypes,
 
-  dataTags:TagsCatalogPropTypes,
-
-  // last indices used to increment in the id's :idNode idLink idTag idTagGroup
-  tags_group_idx: PropTypes.number.isRequired,
-  tag_idx: PropTypes.number.isRequired,
-  node_idx: PropTypes.number.isRequired,
-  link_idx: PropTypes.number.isRequired
+  dataTags:TagsCatalogPropTypes
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
