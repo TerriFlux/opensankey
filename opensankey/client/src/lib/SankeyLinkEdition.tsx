@@ -148,7 +148,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
                           val = val[selected_tag]
                         })
-                        val['display_value'] = +evt.target.value
+                        val['display_value'] = evt.target.value
                         console.log(selected_link.value)
                         console.log(val)
 
