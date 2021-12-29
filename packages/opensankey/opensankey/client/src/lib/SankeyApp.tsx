@@ -145,7 +145,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           }
           let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
           const listKey = [] as string[]
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner === 'one' ? true : false }).map(d => {
+          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
             listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 
@@ -198,7 +198,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           console.log(dataTags) */
 
           //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner === 'one' ? true : false }).map(d => {
+          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
             listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
 

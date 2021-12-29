@@ -12,7 +12,7 @@ export const getLinkValue = (
   const { links,dataTags } = data
   let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
   const listKey = [] as string[]
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner === 'one' ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
     listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
   })
 
@@ -352,10 +352,10 @@ const create_object = (data: SankeyData, l: string[]) => {
     const i = l[0]
     if (i !== undefined) {
       const o=Object.create({})
-      Object.values(dataTags[i].tags).forEach(d => {
+      Object.keys(dataTags[i].tags).forEach(tag_key => {
         const obj = Object.create({})
         const ob = create_object(data, l.slice(1))
-        obj[d.name] = ob
+        obj[tag_key] = ob
         Object.assign(o,obj)
       })
       return o
