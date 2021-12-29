@@ -309,11 +309,7 @@ export const default_sankey_data = (): SankeyData => {
     static_sankey: false,
 
     tags_catalog: {},
-    dataTags: {},
-    tags_group_idx: 1,
-    tag_idx: 1,
-    node_idx: 1,
-    link_idx: 1
+    dataTags: {}
   }
 }
 
@@ -381,9 +377,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     idSource: 'node0',
     idTarget: 'node1',
     idLink: 'link0',
-    //value: [10],
     value: nObjet,
-    //display_value: ['default'],
     color: '#a9a9a9',
     curved: false,
     arrow: true,
@@ -487,8 +481,6 @@ const downloadExamples = (
     })
 }
 
-
-
 export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
@@ -519,8 +511,6 @@ export const uploadExemple = (
       convert_data(data)
       // data.left_shift = 0.40
       // data.right_shift = 0.50
-      data.node_idx = Object.keys(data.nodes).length
-      data.link_idx = Object.keys(data.links).length
       example_callback(data)
       set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)

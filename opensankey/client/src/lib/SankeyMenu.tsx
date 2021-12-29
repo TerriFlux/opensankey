@@ -75,13 +75,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     const { nodes } = data
     const node: SankeyNode = default_node()
 
-    // en remplacement de node_idx
-    //data.node_idx = data.node_idx + 1
     // Méthode pour incrementer idNode
     const listId : number[] = []
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-
     node.idNode = 'node' + idNode
     node.name = node.idNode
     node.x = Object.keys(nodes).length * 50
@@ -200,7 +197,11 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
     const link: SankeyLink = default_link(data)
     console.log(link)
-    link.idLink = 'link' + Object.keys(links).length
+    // Méthode pour incrementer idNode
+    const listId : number[] = []
+    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    link.idLink = 'link' + idLink
     links[link.idLink] = link
     const node_keys = Object.keys(nodes)
     link.idSource = nodes[node_keys[0]].idNode
@@ -316,8 +317,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                       Object.assign(data, server_data)
                       convert_data(data)
-                      data.node_idx = Object.keys(data.nodes).length
-                      data.link_idx = Object.keys(data.links).length
                       compute_auto_sankey(data, 200)
                       set_data({ ...data })
                     }
