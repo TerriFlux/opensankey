@@ -26,12 +26,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     link = default_link(data)
   }
 
-  //renvoie la valeur corresponant aux paramètre selectionné 
+  //renvoie la valeur correspondant aux paramètre selectionné 
   const value_selected_parameter = (): number => {
     let val = selected_link.value as any
-    Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
+    Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display' && Object.keys(dataTags[key].tags).length > 0).forEach(key => {
       const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
-      val = val[selected_tag]
+      if ( val[selected_tag] ) {
+        val = val[selected_tag]
+      }
     })
     return val['value']
   }
