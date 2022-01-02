@@ -1783,6 +1783,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   // ALT KEY INTERACTION: MOVE LABELS
   alt_key_pressed = false
+  
   window.focus()
   d3.select(window).on('keydown', (event) => {
     if (event.keyCode === 18) {

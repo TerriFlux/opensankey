@@ -58,7 +58,7 @@ export const SankeyLinkValueTypes =
     }
 export type SankeyLinkValue = InferProps<typeof SankeyLinkValueTypes>
 
-export const SankeyLinkValueDictTypes = PropTypes.objectOf(PropTypes.exact(SankeyLinkValueTypes).isRequired).isRequired
+export const SankeyLinkValueDictTypes = PropTypes.objectOf(PropTypes.shape(SankeyLinkValueTypes).isRequired).isRequired
 export type SankeyLinkValueDict = InferProps<typeof SankeyLinkValueDictTypes>
 
 export const SankeyLinkPropTypes = {
@@ -80,7 +80,7 @@ export const SankeyLinkPropTypes = {
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
 
-  value: PropTypes.oneOf([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
+  value: PropTypes.oneOfType([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
   tooltip_text: PropTypes.string,
 

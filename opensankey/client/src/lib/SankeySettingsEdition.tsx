@@ -1381,8 +1381,8 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
 
 
 SankeySettingsEdition.propTypes = SankeySettingsEditionPropTypes
-SankeySettingsEditionTags.propTypes = SankeySettingsEditionPropTypes
-SankeySettingsEditionTagsLinks.propTypes = SankeySettingsEditionPropTypes
+SankeySettingsEditionTags.propTypes = SankeySettingsEditionTagsPropTypes
+SankeySettingsEditionTagsLinks.propTypes = SankeySettingsEditionTagsPropTypes
 
 
 export default null
