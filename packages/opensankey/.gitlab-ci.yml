@@ -57,10 +57,17 @@ test:
   stage: test
   tags:
     - dev, test, prod
+  cache: 
+    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+    paths:
+      - opensankey/client/node_modules/
+    policy: pull
+
   variables:
     GIT_STRATEGY: none
   script:
     - cd opensankey/client
+    - npm install
     - npm run test
 #  artifacts:
 #    when: always
