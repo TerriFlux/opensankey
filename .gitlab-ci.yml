@@ -1,7 +1,7 @@
 stages:
     #- install_dependencies
     # - build
-    # - test
+    - test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -53,22 +53,19 @@ cache:
 #     - pip install .
 #     - mv ../node_modules opensankey/client
 
-# test:
-#   stage: test
-#   tags:
-#     - dev, test, prod
-#   variables:
-#     GIT_STRATEGY: none
-#   script:
-#     - source /home/gitlab-runner/gitlab/bin/activate
-#     - echo $CI_PROJECT_DIR
-#     - cd ..
-#     #- pip install OpenSankey
-#     #- python -m unittest discover opensankey.tests
-#     #- cd opensankey
-#     #- flake8 --exit-zero
-#   dependencies:
-#     - build
+test:
+  stage: test
+  tags:
+    - dev, test, prod
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - 'jest --ci --reporters=default --reporters=jest-junit'
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - junit.xml
 
 dev.opensankey.fr:
   stage: deploy
