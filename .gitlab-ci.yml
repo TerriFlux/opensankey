@@ -60,12 +60,13 @@ test:
   variables:
     GIT_STRATEGY: none
   script:
-    - 'jest --ci --reporters=default --reporters=jest-junit'
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - junit.xml
+    - cd opensankey/client
+    - npm run test
+#  artifacts:
+#    when: always
+#    reports:
+#      junit:
+#        - junit.xml
 
 dev.opensankey.fr:
   stage: deploy
