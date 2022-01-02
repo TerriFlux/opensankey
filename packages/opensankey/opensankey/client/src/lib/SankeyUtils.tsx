@@ -343,6 +343,9 @@ const create_object = (data: SankeyData, l: string[]) => {
     const obj = Object.create({})
     obj['value'] = 10
     obj['display_value'] = 'default'
+    obj['color_tag'] = {}
+    obj['extension'] = {}
+
     return obj
   } else {
     const i = l[0]
@@ -488,6 +491,7 @@ export const uploadExemple = (
   set_data: (data: SankeyData) => void,
   example_callback: (data: SankeyData) => void
 ) => {
+  
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
