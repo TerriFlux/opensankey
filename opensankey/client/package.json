@@ -45,6 +45,7 @@
     "@types/react-test-renderer": "^17.0.1",
     "acorn": "^8.2.2",
     "bootstrap": "^5.1.1",
+    "colormap": "^2.3.2",
     "cross-env": "^7.0.3",
     "d3": "^6.7.0",
     "d3-textwrap": "^3.0.0",
