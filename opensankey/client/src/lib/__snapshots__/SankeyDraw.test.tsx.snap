@@ -1,0 +1,829 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`adds 1 + 2 to equal 3 1`] = `
+<div>
+  <div
+    class="span12"
+    id="visualization_div"
+    style="color: black; background-color: WhiteSmoke; margin-left: 10px;"
+  >
+    <svg
+      cursor="grab"
+      height="700"
+      id="svg"
+      viewBox="0,0,600,700"
+      width="100%"
+    >
+      <g
+        class="g_legend"
+        id="g_legend"
+        style="transform: translate(0px,100px);"
+      >
+        <g />
+      </g>
+      <g
+        class="g_nodes"
+        id="g_nodes"
+      >
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node0"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node0"
+            transform="translate(250, 200)"
+          >
+            <ellipse
+              class="node node_shape"
+              cx="5"
+              cy="32.25806451612903"
+              fill="green"
+              height="64.51612903225806"
+              id="node0"
+              rx="5"
+              ry="32.25806451612903"
+              stroke="black"
+              stroke-opacity="0"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node0_text"
+              style="font-family:Arial;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="77.51612903225806"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Pommes
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node1"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node1"
+            transform="translate(250, 300)"
+          >
+            <ellipse
+              class="node node_shape"
+              cx="5"
+              cy="32.25806451612903"
+              fill="orange"
+              height="64.51612903225806"
+              id="node1"
+              rx="5"
+              ry="32.25806451612903"
+              stroke="black"
+              stroke-opacity="0"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node1_text"
+              style="font-family:Arial;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="77.51612903225806"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Poires
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node2"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node2"
+            transform="translate(50, 200)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="32.25806451612903"
+              id="node2"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node2_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="45.25806451612903"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Importations
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                de
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                poires
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node3"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node3"
+            transform="translate(50, 300)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="32.25806451612903"
+              id="node3"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node3_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="45.25806451612903"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Importations
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                de
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                pommes
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node4"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node4"
+            transform="translate(50, 400)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="32.25806451612903"
+              id="node4"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node4_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="45.25806451612903"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Production
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                de
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                poires
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node5"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node5"
+            transform="translate(50, 500)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="32.25806451612903"
+              id="node5"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node5_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="45.25806451612903"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Production
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                de
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                pommes
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node6"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node6"
+            transform="translate(450, 200)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="32.25806451612903"
+              id="node6"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node6_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="45.25806451612903"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Exportations
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                de
+              </tspan>
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                pommes
+              </tspan>
+            </text>
+          </g>
+        </g>
+        <g
+          class="gg_nodes"
+          cursor="zoom-in"
+          id="gg_node7"
+          style="display: inline;"
+        >
+          <g
+            class="ggg_nodes"
+            id="ggg_node7"
+            transform="translate(450, 300)"
+          >
+            <rect
+              class="node node_shape"
+              fill="grey"
+              height="64.51612903225806"
+              id="node7"
+              stroke="black"
+              stroke-width="0"
+              visibility="visible"
+              width="10"
+            />
+            <text
+              class="node node_text"
+              id="node7_text"
+              style="font-family:Calibri;font-size:undefinedpx;font-style: normal;font-weight: normal;"
+              text-anchor="center"
+              visibility="visible"
+              x="0"
+              y="77.51612903225806"
+            >
+              <tspan
+                dx="0"
+                dy="0"
+              />
+              <tspan
+                dx="-200"
+                dy="1em"
+              >
+                Consommation
+              </tspan>
+            </text>
+          </g>
+        </g>
+      </g>
+      <g
+        class="g_links"
+        id="g_links"
+      >
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link0"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 60,516.1290322580645 L 120,516.1290322580645 C 150,516.1290322580645 150,248.38709677419354 180,248.38709677419354 L 240,248.38709677419354"
+            fill="none"
+            id="link0"
+            stroke="green"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link0"
+              id="link0_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink0"
+            transform="translate(120, 511.1290322580645)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink0"
+            transform="translate(180, 243.38709677419354)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 240,232.25806451612902 L 250,232.25806451612902 L 250,232.25806451612902 L 240,264.51612903225805 L 240,264.51612903225805 Z"
+            fill="green"
+            fill-opacity="0.85"
+            id="link0_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link1"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 60,316.1290322580645 L 120,316.1290322580645 C 150,316.1290322580645 150,216.1290322580645 180,216.1290322580645 L 240,216.1290322580645"
+            fill="none"
+            id="link1"
+            stroke="green"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link1"
+              id="link1_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink1"
+            transform="translate(120, 311.1290322580645)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink1"
+            transform="translate(180, 211.1290322580645)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 240,200 L 240,200 L 250,232.25806451612902 L 250,232.25806451612902 L 240,232.25806451612902 Z"
+            fill="green"
+            fill-opacity="0.85"
+            id="link1_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link2"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 60,416.1290322580645 L 120,416.1290322580645 C 150,416.1290322580645 150,348.38709677419354 180,348.38709677419354 L 240,348.38709677419354"
+            fill="none"
+            id="link2"
+            stroke="orange"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link2"
+              id="link2_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink2"
+            transform="translate(120, 411.1290322580645)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink2"
+            transform="translate(180, 343.38709677419354)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 240,332.258064516129 L 250,332.258064516129 L 250,332.258064516129 L 240,364.51612903225805 L 240,364.51612903225805 Z"
+            fill="orange"
+            fill-opacity="0.85"
+            id="link2_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link3"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 60,216.1290322580645 L 120,216.1290322580645 C 150,216.1290322580645 150,316.1290322580645 180,316.1290322580645 L 240,316.1290322580645"
+            fill="none"
+            id="link3"
+            stroke="orange"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link3"
+              id="link3_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink3"
+            transform="translate(120, 211.1290322580645)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink3"
+            transform="translate(180, 311.1290322580645)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 240,300 L 240,300 L 250,332.258064516129 L 250,332.258064516129 L 240,332.258064516129 Z"
+            fill="orange"
+            fill-opacity="0.85"
+            id="link3_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link4"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 260,248.38709677419354 L 320,248.38709677419354 C 350,248.38709677419354 350,316.1290322580645 380,316.1290322580645 L 440,316.1290322580645"
+            fill="none"
+            id="link4"
+            stroke="green"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link4"
+              id="link4_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink4"
+            transform="translate(320, 243.38709677419354)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink4"
+            transform="translate(380, 311.1290322580645)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 440,300 L 440,300 L 450,332.258064516129 L 450,332.258064516129 L 440,332.258064516129 Z"
+            fill="green"
+            fill-opacity="0.85"
+            id="link4_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link5"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 260,216.1290322580645 L 320,216.1290322580645 C 350,216.1290322580645 350,216.1290322580645 380,216.1290322580645 L 440,216.1290322580645"
+            fill="none"
+            id="link5"
+            stroke="green"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link5"
+              id="link5_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink5"
+            transform="translate(320, 211.1290322580645)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink5"
+            transform="translate(380, 211.1290322580645)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 440,200 L 440,200 L 450,216.1290322580645 L 440,232.25806451612902 L 440,232.25806451612902 Z"
+            fill="green"
+            fill-opacity="0.85"
+            id="link5_arrow"
+          />
+        </g>
+        <g
+          class="gg_links"
+          cursor="zoom-in"
+          id="gg_link6"
+          style="display: inline;"
+        >
+          <path
+            class="link"
+            d="M 260,332.258064516129 L 320,332.258064516129 C 350,332.258064516129 350,348.38709677419354 380,348.38709677419354 L 440,348.38709677419354"
+            fill="none"
+            id="link6"
+            stroke="orange"
+            stroke-opacity="0.85"
+            stroke-width="32.25806451612903"
+          />
+          <text
+            dy="0.3em"
+            fill="black"
+            pointer-events="none"
+            style="font-weight: bold;font-family:Arial; font-size:undefinedpx;"
+          >
+            <textpath
+              class="link_value"
+              href="#link6"
+              id="link6_text"
+              startOffset="50%"
+              text-anchor="start"
+              visibility="visible"
+            >
+              tutu
+            </textpath>
+          </text>
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="left_horiz_shiftlink6"
+            transform="translate(320, 327.258064516129)"
+            width="10"
+          />
+          <rect
+            fill-opacity="0"
+            height="10"
+            id="right_horiz_shiftlink6"
+            transform="translate(380, 343.38709677419354)"
+            width="10"
+          />
+          <path
+            class="arrow"
+            d=" M 440,332.258064516129 L 450,332.258064516129 L 450,332.258064516129 L 440,364.51612903225805 L 440,364.51612903225805 Z"
+            fill="orange"
+            fill-opacity="0.85"
+            id="link6_arrow"
+          />
+        </g>
+      </g>
+    </svg>
+  </div>
+</div>
+`;

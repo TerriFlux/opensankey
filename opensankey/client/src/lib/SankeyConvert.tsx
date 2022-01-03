@@ -1,4 +1,5 @@
 import { SankeyData, SankeyLink, SankeyNode } from './types'
+import {compute_default_input_outputLinksId} from './SankeyLayout'
 
 interface ConvertSankeyNode {
   id?: string
@@ -100,6 +101,9 @@ export const convert_data = (
   }
   if (data_to_convert.dataTags === undefined) {
     data_to_convert.dataTags = {}
+  }
+  if (data.width === undefined) {
+    data.width = 1500
   }
 
   if (Array.isArray(data.tags_catalog)) {
@@ -220,7 +224,7 @@ export const convert_data = (
     delete data.region_name
   }
 
-  if (Array.isArray(data.links) && (data.version === '0.5' || data.version === '0.4')) {
+  if (Array.isArray(data.links) && (data.version === '0.5' || data.version === '0.4' || !data.version)) {
     if (((data.links as unknown) as SankeyLink[] ).length > 0 && !data.links[0].idLink) {
       ((data.links as unknown) as SankeyLink[]).forEach((l: SankeyLink, i: number) => l.idLink = 'link' + i)
     }
@@ -266,7 +270,11 @@ export const convert_data = (
       delete ((n as unknown) as ConvertSankeyNode).id
     }
   })
+  let recompute_input_output_links = true
   Object.values(data.nodes).forEach(n => {
+    if (n.inputLinksId || n.outputLinksId) {
+      recompute_input_output_links = false
+    }
     if (!n.inputLinksId) {
       n.inputLinksId = []
     }
@@ -274,6 +282,9 @@ export const convert_data = (
       n.outputLinksId = []
     }
   })
+  if (recompute_input_output_links) {
+    compute_default_input_outputLinksId(data.nodes,data.links)
+  }
   const { display_style, nodes, links, node_width, units_names } = data
 
 
