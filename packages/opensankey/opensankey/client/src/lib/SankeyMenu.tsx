@@ -166,6 +166,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         const new_data = JSON.parse(result)
         data.tags_catalog = {}
         Object.assign(data, new_data)
+        data.version = new_data.version
         convert_data(data)
         set_data({ ...data })
       }

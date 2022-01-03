@@ -4,7 +4,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, toPrecision } from './SankeyUtils'
+import { compute_total_offsets, default_sankey_data, getLinkValue, setSelectedTags, toPrecision } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 
 window.d3 = d3
@@ -29,23 +29,43 @@ const SankeyDrawPropTypes = {
   linkTooltipsContent: PropTypes.func.isRequired
 }
 
+export const SankeyDrawDefaultProps = {
+  //data: default_sankey_data(),
+  set_data: ()=>null,
+  select_node: ()=>null,
+  node_color: (n:SankeyNode) => n.color,
+  node_arrow_visible: (n:SankeyNode)=>true,
+
+  select_link: ()=>null,
+  link_color: (l:SankeyLink) => l.color,
+  //link_text: (l:SankeyLink) => getLinkValue(data,l).value,
+  link_visible: (l:SankeyLink) => true,
+  //test_link_value: (nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => getLinkValue(data,l).value,
+
+  set_show_nav: ()=>null,
+  set_nav_item_active: ()=>null,
+
+  nodeTooltipsContent: ()=>null,
+  linkTooltipsContent: ()=>null
+}
+
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
-  set_data,
-  select_node,
-  node_color,
-  node_arrow_visible,
-  select_link,
-  link_color,
   link_text,
-  link_visible,
   test_link_value,
-  set_show_nav,
-  set_nav_item_active,
-  nodeTooltipsContent,
-  linkTooltipsContent
+  set_data = SankeyDrawDefaultProps.set_data,
+  select_node = SankeyDrawDefaultProps.select_node,
+  node_color = SankeyDrawDefaultProps.node_color,
+  node_arrow_visible= SankeyDrawDefaultProps.node_arrow_visible,
+  select_link= SankeyDrawDefaultProps.select_link,
+  link_color= SankeyDrawDefaultProps.link_color,
+  link_visible= SankeyDrawDefaultProps.link_visible,
+  set_show_nav= SankeyDrawDefaultProps.set_show_nav,
+  set_nav_item_active= SankeyDrawDefaultProps.set_nav_item_active,
+  nodeTooltipsContent= SankeyDrawDefaultProps.nodeTooltipsContent,
+  linkTooltipsContent= SankeyDrawDefaultProps.linkTooltipsContent,
 }) => {
   const [show_agregation, set_show_agregation] = useState(false)
   const [agregation_parent_names,set_agregation_parent_names] = useState<string[]>([])
@@ -1783,7 +1803,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   // ALT KEY INTERACTION: MOVE LABELS
   alt_key_pressed = false
-  
+
   window.focus()
   d3.select(window).on('keydown', (event) => {
     if (event.keyCode === 18) {
@@ -1954,5 +1974,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 }
 
 SankeyDraw.propTypes = SankeyDrawPropTypes
+SankeyDraw.defaultProps = SankeyDrawDefaultProps
 
 export default SankeyDraw

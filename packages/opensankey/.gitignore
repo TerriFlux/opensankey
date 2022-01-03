@@ -24,4 +24,5 @@ package-lock.json
 debug.log
 opensankey/client/.eslintcache
 tests/output_references/.gitkeep.json
-opensankey/client/src/lib/__snapshots__/*
+opensankey/client/coverage/*
+opensankey/client/.vscode/launch.json
