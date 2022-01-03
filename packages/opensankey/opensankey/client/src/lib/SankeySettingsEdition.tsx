@@ -5,7 +5,7 @@ import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputL
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValueDict, TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
-
+import colormap from 'colormap'
 
 
 
@@ -754,6 +754,7 @@ type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTag
 
 const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
+  const [tagColorMap, setTagColorMap] = useState('custom')
   //const [tag_key, set_tag_key] = useState('')
 
   const { links, tags_catalog } = data
@@ -767,6 +768,19 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
+
+  const colormaps = [
+    'custom',
+    'jet', 'hsv','hot','cool','spring','summer','autumn','winter','bone',
+    'copper','greys','YIGnBu','greens','YIOrRd','bluered','RdBu','picnic',
+    'rainbow','portland','blackbody','earth','electric',
+
+    'viridis', 'inferno', 'magma', 'plasma', 'warm', 'cool', 'rainbow-soft',
+
+    'bathymetry', 'cdom', 'chlorophyll', 'density', 'freesurface-blue', 'freesurface-red', 'oxygen', 'par', 'phase', 'salinity', 'temperature', 'turbidity', 'velocity-blue', 'velocity-green',
+
+    'cubehelix'
+  ]
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non None)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -893,6 +907,36 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                 value={key}
                 selected={tags_group_key === key} >
                 {tags_catalog[key].group_name}
+              </option>
+          )}
+        </Form.Select>
+      </Col>
+      <Col>
+        <Form.Select onChange={
+          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+            setTagColorMap(evt.target.value)
+            const nb_tags = Object.keys(tags_catalog[tags_group_key].tags).length
+            if (evt.target.value === 'custom') {
+              return
+            }
+            const colors = colormap({
+              colormap: evt.target.value,
+              nshades: Math.max(11,nb_tags),
+              format: 'hex',
+              alpha: 1
+            })
+            Object.keys(tags_catalog[tags_group_key].tags).forEach(
+              (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i]
+            )
+            set_data({ ...data })
+          }}>
+          {colormaps.map(
+            (cur_colormap, i) =>
+              <option
+                key={i}
+                value={cur_colormap}
+                selected={tagColorMap === cur_colormap} >
+                {cur_colormap}
               </option>
           )}
         </Form.Select>
