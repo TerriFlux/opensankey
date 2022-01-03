@@ -22,7 +22,9 @@
     "lint": "eslint --fix --ext .js,.jsx,.tsx ."
   },
   "jest": {
-    "snapshotSerializers": ["jest-html"]
+    "snapshotSerializers": [
+      "jest-html"
+    ]
   },
   "eslintConfig": {
     "extends": [
