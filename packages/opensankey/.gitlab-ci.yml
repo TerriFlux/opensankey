@@ -68,6 +68,7 @@ test:
   script:
     - cd opensankey/client
     - npm install
+    - npm link mfa-data
     - npm run test
 #  artifacts:
 #    when: always
