@@ -101,6 +101,7 @@ dev.opensankey.fr:
     - git checkout opensankey/server/views.py
     - cd opensankey/client
     - npm install
+    - sudo npm link mfa-data
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
