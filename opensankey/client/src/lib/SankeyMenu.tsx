@@ -390,12 +390,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Viande/filiere_viande.json', url_prefix, data, set_data,
+                  'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Viande</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Lait/filiere_lait.json', url_prefix, data, set_data,
+                  'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )}
                 >Lait</Dropdown.Item>

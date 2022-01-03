@@ -1343,7 +1343,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             data.tags_catalog,
             this, event
           )
-          localStorage.setItem('data', JSON.stringify(data))
+          try {
+            localStorage.setItem('data', JSON.stringify(data))
+          } catch (e) {
+            localStorage.clear()
+          }
         })
       )
       // Gestion du click  
@@ -1942,7 +1946,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     drawLegend()
 
-    localStorage.setItem('data', JSON.stringify(data))
+    try {
+      localStorage.setItem('data', JSON.stringify(data))
+    } catch (e) {
+      localStorage.clear()
+    }
     console.log(data)
   })
   let height = 0
