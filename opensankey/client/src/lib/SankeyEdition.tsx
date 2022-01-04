@@ -139,6 +139,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
                 Object.values(data.links).forEach(link=>link.colormap = '')                  
               }
               set_use_colormap(evt.target.checked)
+              if (colormap in tags_catalog) {
+                Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+                tags_catalog[colormap].show_legend = evt.target.checked
+              }
               set_data({ ...data })
             }}
           />
@@ -151,6 +155,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
                 Object.values(data.links).forEach(link=>link.colormap = evt.target.value)
                 //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
                 set_colormap(evt.target.value)
+                if (evt.target.value in tags_catalog) {
+                  Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+                  tags_catalog[evt.target.value].show_legend = true
+                }
                 set_data({...data})
               }}>
             {Object.entries(data.dataTags).filter(tags_group=>tags_group[1].banner === 'display').map(
