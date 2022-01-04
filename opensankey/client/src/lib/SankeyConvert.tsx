@@ -472,7 +472,14 @@ export const convert_data = (
       } //else if (!n.tags['Exchanges']) {
       //   n.tags['Exchanges'] = ['interior']
       // }
-
+      if (n.tags && n.tags['Exchanges'] && (n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
+        n.position = 'relative'
+        n.x = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_hspace as number) : data.trade_close_hspace as number
+        n.y = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_vspace as number) : data.trade_close_vspace as number      
+      }
+      if (!n.position) {
+        n.position = 'absolute'        
+      }
     }
   )
 
