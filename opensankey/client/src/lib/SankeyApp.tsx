@@ -179,11 +179,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
               const source_node = data.nodes[l.idSource]
               const target_node = data.nodes[l.idTarget]
               let selected_tag = ''
-              if (source_node.tags[l.colormap].length === 1) {
+              if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
                 selected_tag = source_node.tags[l.colormap][0]
                 return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (  target_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]   
+              } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
+                selected_tag = target_node.tags[l.colormap][0]   
                 return data.tags_catalog[l.colormap].tags[selected_tag].color             
               } 
               return Object.values(data.tags_catalog[l.colormap].tags)[0].color
