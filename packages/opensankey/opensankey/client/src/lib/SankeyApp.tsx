@@ -186,7 +186,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
                 selected_tag = source_node.tags[l.colormap][0]   
                 return data.tags_catalog[l.colormap].tags[selected_tag].color             
               } 
-              return l.color
+              return Object.values(data.tags_catalog[l.colormap].tags)[0].color
             }
           }
         }}
