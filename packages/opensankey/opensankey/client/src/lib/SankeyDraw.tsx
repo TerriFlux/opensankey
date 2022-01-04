@@ -941,14 +941,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
     const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
 
-    let xs = +source_node.x
-    let ys = +source_node.y
-    let xt = +target_node.x
-    let yt = +target_node.y
+    const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select('#' + source_node.idNode).attr('width')
+    const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y
+    const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select('#' + source_node.idNode).attr('width')
+    const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select('#' + source_node.idNode).attr('height')
+
+    let xs = source_node_x
+    let ys = source_node_y
+    let xt = target_node_x
+    let yt = target_node_y
 
     if (link.orientation === 'hh') {
       //side to side
-      if (source_node.x > target_node.x && !link.recycling || source_node.x < target_node.x && link.recycling) {
+      if (source_node_x > target_node_x && !link.recycling || source_node_x < target_node_x && link.recycling) {
         // source is after target arrow point leftward. Start is on the left of side of source
         // source -> left
         //xs = xs
@@ -974,7 +979,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (link.orientation === 'vv') {
       //side to side
-      if (source_node.y > target_node.y) {
+      if (source_node_y > target_node_y) {
         // source is bottom target. Flux goes up
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         //ys = ys
@@ -997,8 +1002,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (link.orientation === 'hv') {
       //vertical to horizontal
-      if (source_node.x > target_node.x) {
-        if (source_node.y > target_node.y) {
+      if (source_node_x > target_node_x) {
+        if (source_node_y > target_node_y) {
           //source is bottom right target. left and up  
           //xs = xs
           ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
@@ -1022,7 +1027,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         }
       } else {
-        if (source_node.y > target_node.y) {
+        if (source_node_y > target_node_y) {
           //source is bottom left target. right and up
           xs += scale(node_size_s_width)
           ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
@@ -1050,8 +1055,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (link.orientation === 'vh') {
       //vertical to horizontal
-      if (source_node.x > target_node.x) {
-        if (source_node.y > target_node.y) {
+      if (source_node_x > target_node_x) {
+        if (source_node_y > target_node_y) {
           //source is bottom right target. up and left
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
           //ys = ys
@@ -1071,7 +1076,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         }
       } else {
-        if (source_node.y > target_node.y) {
+        if (source_node_y > target_node_y) {
           //source is bottom left target. Arrow goes left and go down to the top side 
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
           //ys = ys
@@ -1330,7 +1335,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', d => 'ggg_' + d.idNode)
       .attr('class', 'ggg_nodes')
       .attr('transform', d => {
+      //   // if (d.position === 'absolute' || !d.node_visible) {
         return 'translate(' + d.x + ', ' + d.y + ')'
+      //   // }
+      //   // try {
+      //   //   setNodeHeight(d,display_nodes,display_links,data.tags_catalog)
+      //   //   const other_node = d.inputLinksId.length > 0 ? data.nodes[data.links[d.inputLinksId[0]].idSource] : data.nodes[data.links[d.outputLinksId[0]].idTarget]
+      //   //   const x = d.inputLinksId.length > 0 ? other_node.x + d.x - +d3.select('#' + d.idNode).attr('width'): other_node.x + d.x - +d3.select('#' + d.idNode).attr('width')
+      //   //   const y = d.inputLinksId.length > 0 ? other_node.y + d.y + +d3.select('#' + other_node.idNode).attr('height'): other_node.y + d.y
+      //   //   return 'translate(' + x + ', ' + y + ')'
+      //   // } catch (e) {
+      //   return 'translate(' + d.x + ', ' + d.y + ')'
+      //   // }
       })
 
     if (!static_sankey) {
@@ -1735,10 +1751,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         is_v = false
       }
+      const source_node_x = source_node.position === 'absolute' ? source_node.x : +n.x + +source_node.x
+      const source_node_y = source_node.position === 'absolute' ? source_node.y : +n.y + +source_node.y
+      const node_x = n.position === 'absolute' ? n.x : +source_node.x + +n.x + +d3.select('#' + source_node.idNode).attr('width')
+      const node_y = n.position === 'absolute' ? n.y : +source_node.y + +n.y + +d3.select('#' + source_node.idNode).attr('height')
       if (!display_style.filter || link_value >= display_style.filter) {
         //selection
         d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
         setNodeHeight(n, nodes, links, tags_catalog)
+
         d3.select('#gg_' + l.idLink)
           .append('path')
           .attr('class', 'arrow')
@@ -1748,29 +1769,29 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             let yt
             let p5
             if (l.orientation === 'hh' || l.orientation === 'vh') {
-              if (n.x <= source_node.x && l.recycling || n.x > source_node.x && !l.recycling) {
-                xt = +n.x
-                yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+              if (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling) {
+                xt = +node_x
+                yt = +node_y + +d3.select('#' + n.idNode).attr('height') / 2
                 p5 = [xt, yt]
                 is_v = true
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
-                xt = +n.x + +d3.select('#' + n.idNode).attr('width')
-                yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+                xt = +node_x + +d3.select('#' + n.idNode).attr('width')
+                yt = +node_y + +d3.select('#' + n.idNode).attr('height') / 2
                 p5 = [xt, yt]
                 is_v = true
                 return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
               }
             } else if (l.orientation === 'vv' || l.orientation === 'hv') {
-              if (n.y > source_node.y) {
-                xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
-                yt = +n.y
+              if (node_y > source_node_y) {
+                xt = +node_x + +d3.select('#' + n.idNode).attr('width') / 2
+                yt = +node_y
                 p5 = [xt, yt]
                 is_v = false
                 return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false)
               } else {
-                xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
-                yt = +n.y + +d3.select('#' + n.idNode).attr('height')
+                xt = +node_x + +d3.select('#' + n.idNode).attr('width') / 2
+                yt = +node_y + +d3.select('#' + n.idNode).attr('height')
                 p5 = [xt, yt]
                 is_v = false
                 return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true)
@@ -1785,13 +1806,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return opacity
           })
       }
-      if (is_v && (n.x > source_node.x && !l.recycling || n.x < source_node.x && l.recycling) ) {
+      if (is_v && (node_x > source_node_x && !l.recycling || node_x < source_node_x && l.recycling) ) {
         cum_v_left += link_value
-      } else if (is_v && n.x < source_node.x && !l.recycling || n.x > source_node.x && l.recycling) {
         cum_v_right += link_value
-      } else if (!is_v && n.y > source_node.y) {
+      } else if (!is_v && node_y > source_node_y) {
         cum_h_top += link_value
-      } else if (!is_v && n.y < source_node.y) {
+      } else if (!is_v && node_y < source_node_y) {
         cum_h_bottom += link_value
       }
     }

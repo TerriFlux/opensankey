@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-
+import * as d3 from 'd3'
 
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
@@ -84,26 +84,31 @@ export const compute_total_offsets = (
         } catch {
           return
         }
+        
+        const node_x = node.position === 'absolute'               ? +node.x        : +target_node.x + +node.x
+        const node_y = node.position === 'absolute'               ? +node.y        : +target_node.y + +node.y 
+        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x        + +target_node.x 
+        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y        + +target_node.y
         if (link.orientation === 'hh') {
-          if (target_node.x > node.x && !link.recycling || target_node.x <= node.x && link.recycling) {
+          if (target_node_x > node_x && !link.recycling || target_node_x <= node_x && link.recycling) {
             right_flux.push(idLink)
           } else {
             left_flux.push(idLink)
           }
         } else if (link.orientation === 'vv') {
-          if (target_node.y > node.y) {
+          if (target_node_y > node_y) {
             bottom_flux.push(idLink)
           } else {
             top_flux.push(idLink)
           }
         } else if (link.orientation === 'hv') {
-          if (target_node.x > node.x) {
+          if (target_node_x > node_x) {
             right_flux.push(idLink)
           } else {
             left_flux.push(idLink)
           }
         } else if (link.orientation === 'vh') {
-          if (target_node.y > node.y) {
+          if (target_node_y > node_y) {
             bottom_flux.push(idLink)
           } else {
             top_flux.push(idLink)
@@ -123,8 +128,12 @@ export const compute_total_offsets = (
         } catch {
           return
         }
+        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x        + +source_node.x 
+        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y        + +source_node.y 
+        const node_x = node.position === 'absolute'               ? +node.x        : +source_node.x + +node.x 
+        const node_y = node.position === 'absolute'               ? +node.y        : +source_node.y + +node.y
         if (link.orientation === 'vv') {
-          if (source_node.y < node.y) {
+          if (source_node_y < node_y) {
             // flux goes down
             top_flux.push(idLink)
           } else {
@@ -132,7 +141,7 @@ export const compute_total_offsets = (
             bottom_flux.push(idLink)
           }
         } else if (link.orientation === 'hh') {
-          if (source_node.x >= node.x && link.recycling || source_node.x < node.x && !link.recycling) {
+          if (source_node_x >= node_x && link.recycling || source_node_x < node_x && !link.recycling) {
             // flux goes right
             left_flux.push(idLink)
           } else {
@@ -140,7 +149,7 @@ export const compute_total_offsets = (
             right_flux.push(idLink)
           }
         } else if (link.orientation === 'hv') {
-          if (source_node.y < node.y) {
+          if (source_node_y < node_y) {
             // flux goes right
             top_flux.push(idLink)
           } else {
@@ -148,7 +157,7 @@ export const compute_total_offsets = (
             bottom_flux.push(idLink)
           }
         } else if (link.orientation === 'vh') {
-          if (source_node.x < node.x) {
+          if (source_node_x < node_x) {
             // flux goes right
             left_flux.push(idLink)
           } else {
@@ -326,6 +335,7 @@ export const default_node = (
     label_visible: true,
     color: '#a9a9a9',
     nodeParameter: 'general',
+    position: 'absolute',
     x: 100,
     y: 100,
     inputLinksId: [],
