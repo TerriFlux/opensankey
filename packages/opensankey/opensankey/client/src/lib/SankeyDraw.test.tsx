@@ -1,41 +1,69 @@
 import React from 'react'
 import { render } from "@testing-library/react";
 //import renderer from 'react-test-renderer';
-import {default_sankey_data, getLinkValue} from './SankeyUtils'
+//import {default_sankey_data, getLinkValue} from './SankeyUtils'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
 import { SankeyData, SankeyLink, SankeyNode } from './types';
 import { convert_data } from './SankeyConvert';
-import new_data from 'mfa-data/SyntheticAFMSankey/sankey/pommes_poires.json'
 import { compute_auto_sankey } from './SankeyLayout';
 
 beforeEach(() => {
   (window.SVGElement.prototype as any).getComputedTextLength = () => 200;
 });
 
-test('adds 1 + 2 to equal 3', () => {
+var fs = require('fs');
+var path = require('path');
+const the_tests : string[] = []
+const mfadata = process.env.MFAData as string
+const parse_folder = (current_dir : string) => {
+  const folder_content = fs.readdirSync(current_dir)
+  for (let idx in folder_content) {
+    const file_or_folder = folder_content[idx]
+    if ( file_or_folder.includes('.vscode') || file_or_folder.includes('.git') || file_or_folder.includes('.md') || file_or_folder.includes('Archive') || file_or_folder.includes('not_tested') || file_or_folder.includes('artefacts')) {
+       continue
+    }
+    const new_path = path.join(current_dir,file_or_folder)
+    const stats = fs.statSync(new_path)
+    if (stats.isFile()) {
+      continue
+    }
+    if (file_or_folder !== 'sankey') {
+      parse_folder(new_path)
+    } else {
+      if (!new_path.includes('Exercices')) {
+        continue
+      }
+      const file_names = fs.readdirSync(new_path)
+      for (const file_idx in file_names) {
+        if (file_names[file_idx].includes('layout')) {
+            continue
+        }
+        const full_path = path.join(new_path,file_names[file_idx])
+        the_tests.push(full_path)
+      }
+    }
+  }
+}
+parse_folder(mfadata)
+
+test.each(the_tests)( 'tyty',(full_path) => {
   let x = jest.spyOn(window, 'focus') 
   x.mockImplementation(() => {})
-  //let data : SankeyData = default_sankey_data()
-  // fetch("./test2.json")
-  //   .then(response => response.json())
-  //   .then(new_data => {
-  //data = Object.assign(data,new_data)
+
+  const new_data = require(full_path)
   convert_data(new_data as any)
   compute_auto_sankey(new_data as any,200)
-  console.log(new_data)
-    //   })
-    // .catch( ()=>
-    //   expect(1).toBe(2)
-    // )
-  
-  // const tree = render(
-  //   <SankeyDraw 
-  //     data={(new_data as unknown) as SankeyData}
-  //     link_text={(l:SankeyLink) => getLinkValue((new_data as unknown) as SankeyData,l.idLink).value}
-  //     test_link_value= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => getLinkValue((new_data as unknown) as SankeyData,l.idLink).value}
-  //     {...SankeyDrawDefaultProps}
-  //   />
-  // )
+  const base_file_name = path.basename(full_path,'.json')
+  const sankey_file_name = path.join(path.dirname(full_path),base_file_name+'_auto_layout.json')
+  fs.writeFile(
+    sankey_file_name,
+    JSON.stringify(new_data, null, 3),
+    function (err:any) {
+      if (err) throw err;
+      console.log('File is created successfully.');
+    }
+  )
+
   const component = render(
     <SankeyDraw 
       data={(new_data as unknown) as SankeyData}
