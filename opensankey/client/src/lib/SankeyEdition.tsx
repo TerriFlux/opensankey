@@ -128,7 +128,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     return (
       <Row>
         <Col>
-          <FormCheck inline
+          <FormCheck
             type='switch'
             label='Palette'
             checked={use_colormap === true}
