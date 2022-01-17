@@ -137,6 +137,7 @@ export const convert_data = (
     data_to_convert.dataTags['flux_types'] = {
       group_name : 'Type de donnée',
       show_legend: false,
+      color_map: 'custom',
       tags : {
         initial_data  : { name : 'Données collectées' , selected: true, color : 'cyan' },
         computed_data : { name : 'Données calculées'  , selected: true, color : 'blue' },
@@ -206,6 +207,7 @@ export const convert_data = (
     if (key_names.length > 1 && !data.periods && data.region_names) {
       data.dataTags['Regions'] = {
         group_name: 'Regions',
+        color_map: 'jet',
         show_legend: false,
         tags: Object.assign({}, ...data.region_names.map((region_name) => ({ [region_name]: { name: region_name, color: '', selected: region_name === data.region_name } }))),
         banner: 'one'
@@ -214,6 +216,7 @@ export const convert_data = (
     if (key_names.length > 1 && data.periods) {
       data.dataTags['Periods'] = {
         group_name: 'Periods',
+        color_map: 'jet',
         show_legend: false,
         tags: Object.assign({}, ...key_names.map((key_name) => ({ [key_name]: { name: key_name, color: '', selected: key_names[0] } }))),
         banner: 'one'
@@ -492,6 +495,7 @@ export const convert_data = (
       data.tags_catalog['Exchanges'] = {
         group_name: 'Echanges',
         show_legend: false,
+        color_map: 'jet',
         tags: {
           'import': { name: 'Importations', selected: true },
           'export': { name: 'Exportations', selected: true },
@@ -508,6 +512,7 @@ export const convert_data = (
       const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({ [subchain]: { name: subchain, color: 'red', selected: true } })))
       data.tags_catalog['SubChain'] = {
         group_name: 'Sous-Filières',
+        color_map: 'jet',
         show_legend: false,
         tags: tags_dict,
         banner: 'multi'
@@ -520,6 +525,7 @@ export const convert_data = (
       data.tags_catalog['SubChain'] = {
         group_name: 'Sous-Filières',
         show_legend: false,
+        color_map: 'jet',
         tags: tags_dict,
         banner: 'multi'
       }
@@ -531,6 +537,7 @@ export const convert_data = (
       data.dataTags['flux_types'] = {
         group_name: 'Type de donnée',
         show_legend: false,
+        color_map: 'custom',
         tags: {
           'initial_data' : { name: 'Données collectées', selected: true, color:'cyan' },
           'computed_data': { name: 'Données calculées' , selected: true, color:'blue' },

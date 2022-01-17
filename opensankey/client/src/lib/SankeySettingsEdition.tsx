@@ -754,7 +754,7 @@ type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTag
 
 const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
-  const [tagColorMap, setTagColorMap] = useState('custom')
+  //const [tagColorMap, setTagColorMap] = useState('jet')
   //const [tag_key, set_tag_key] = useState('')
 
   const { links, tags_catalog } = data
@@ -796,6 +796,20 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     Object.keys(tags_catalog[tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
     const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
     tags_catalog[tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: true }
+    const nb_tags = Object.keys(tags_catalog[tags_group_key].tags).length
+    const colors = colormap({
+      colormap: tags_catalog[tags_group_key].color_map,
+      nshades: Math.max(11,nb_tags),
+      format: 'hex',
+      alpha: 1
+    })
+    let step = 1
+    if (nb_tags<11) {
+      step = Math.round(11/nb_tags)
+    }
+    Object.keys(tags_catalog[tags_group_key].tags).forEach(
+      (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i*step]
+    )
     set_data({ ...data })
   }
   //Ajoute un groupTag
@@ -808,9 +822,15 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     tags_catalog['tag_group_' + idGroup] = {
       group_name: 'Tag Group ' + idGroup,
       show_legend: false,
+      color_map: 'jet',
       tags: {},
       banner: 'none'
     }
+    Object.values(data.nodes).forEach(n => n.tags['tag_group_' + idGroup]=[])
+    if (Object.keys(tags_catalog).length === 1) {
+      Object.values(data.nodes).forEach(n => n.colorTag = Object.keys(tags_catalog)[0] )      
+    }
+     
     //set_key_group_tag(tmp_key + 1)
     // if (Object.keys(tags_catalog).length == 1) {
     //   set_tags_group_key(tmp_key)
@@ -914,7 +934,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       <Col>
         <Form.Select onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
-            setTagColorMap(evt.target.value)
+            //setTagColorMap(evt.target.value)
+            tags_catalog[tags_group_key].color_map = evt.target.value
             const nb_tags = Object.keys(tags_catalog[tags_group_key].tags).length
             if (evt.target.value === 'custom') {
               return
@@ -925,8 +946,12 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
               format: 'hex',
               alpha: 1
             })
+            let step = 1
+            if (nb_tags<11) {
+              step = Math.round(11/nb_tags)
+            }
             Object.keys(tags_catalog[tags_group_key].tags).forEach(
-              (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i]
+              (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i*step]
             )
             set_data({ ...data })
           }}>
@@ -935,7 +960,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
               <option
                 key={i}
                 value={cur_colormap}
-                selected={tagColorMap === cur_colormap} >
+                selected={tags_catalog[tags_group_key] && tags_catalog[tags_group_key].color_map === cur_colormap} >
                 {cur_colormap}
               </option>
           )}
@@ -1150,6 +1175,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     dataTags['tag_group_' + idGroup] = {
       group_name: 'Tag Group ' + idGroup,
       show_legend: false,
+      color_map: 'jet',
       tags: {},
       banner: 'none'
     }
