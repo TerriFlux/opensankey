@@ -7,7 +7,8 @@ import * as d3 from 'd3'
 // utile pour pouvoir ensuite gérer les dataTag
 export const getLinkValue = (
   data: SankeyData,
-  idLink: string
+  idLink: string,
+  up = false
 ) => {
   const { links,dataTags } = data
   let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
@@ -17,7 +18,10 @@ export const getLinkValue = (
   })
 
   for (const i in listKey) {
-    val = val[listKey[i]] 
+    if ( up && +i === (listKey.length - 1) ) {
+      break
+    }
+    val = val[listKey[i]]
   }
   return (val as unknown ) as SankeyLinkValue
 }

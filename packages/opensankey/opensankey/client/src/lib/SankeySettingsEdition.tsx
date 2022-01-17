@@ -5,6 +5,7 @@ import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputL
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValueDict, TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
+import { getLinkValue } from './SankeyUtils'
 import colormap from 'colormap'
 
 
@@ -846,10 +847,15 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     set_data({ ...data })
   }
 
-  const handleDelGroupTag = (i: string) => {
+  const handleDelGroupTag = (tags_group_key: string) => {
     const { tags_catalog } = data
-    console.log(i)
-    delete tags_catalog[i]
+    //console.log(i)
+    delete tags_catalog[tags_group_key]
+    Object.values(data.nodes).forEach(
+      n=> {
+        if (n.colorTag === tags_group_key) { 
+          n.colorTag = ''   
+        }})
     if (Object.keys(tags_catalog).length > 0) {
       const lastElmt = Object.keys(tags_catalog)[Object.keys(tags_catalog).length - 1]
       set_tags_group_key(lastElmt)
@@ -1155,13 +1161,35 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     const { dataTags } = data
     //Si le DataTag n'a pas de tag alors le premier crée sera selectionné par defaut
     const selectedDefault = (Object.keys(dataTags[links_tags_group_key].tags).length == 0) ? true : false
-
     //création d'un tag par defaut
     // Méthode pour incrementer idElement
     const listId : number[] = []
     Object.keys(dataTags[links_tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
     const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    Object.values(data.links).forEach(
+      l=> {
+        const v = getLinkValue(data,l.idLink,true) as any
+        if (v['element' + 0]) {
+          v['element' + idElement] = {
+            value         : v.value,
+            display_value : v.display_value,
+            color_tag     : {},
+            extension     : {}
+          }
+        } else {
+          const v = getLinkValue(data,l.idLink) as any
+          v['element' + idElement] = {
+            value         : v.value,
+            display_value : v.display_value,
+            color_tag     : {},
+            extension     : {}
+          }          
+        }
+      }
+    )
+
     dataTags[links_tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: selectedDefault }
+
     set_data({ ...data })
   }
   //Ajoute un groupTag
@@ -1191,10 +1219,10 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     set_data({ ...data })
   }
   //supprime groupTag
-  const handleDelGroupTag = (i: string) => {
+  const handleDelGroupTag = (tags_group_key: string) => {
     const { dataTags } = data
-    console.log(i)
-    delete dataTags[i]
+    //console.log(i)
+    delete dataTags[tags_group_key]
     if (Object.keys(dataTags).length > 0) {
       const lastElmt = Object.keys(dataTags)[Object.keys(dataTags).length - 1]
       set_links_tags_group_key(lastElmt)
