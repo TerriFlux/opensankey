@@ -228,7 +228,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Row>
             </Form>
           </Tab>
-          <Tab eventKey="node_parameter" title="Paramètre">
+          <Tab eventKey="node_parameter" title="Déplacements">
             <ButtonGroup style={{ 'marginLeft': '10px' }}>
               <Button
                 size="sm"
