@@ -126,9 +126,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             //on controle ici qu'il y a bien un favorite tag
             if (n.colorTag !== undefined && n.colorTag !== '') {
               const tagGroup = n.colorTag
-              colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+              if (n.tags[tagGroup].length > 0) {
+                colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+              } else {
+                colorNode = n.color
+              }
+            } else {
+              colorNode = n.color
             }
-
           }
           if (n.nodeParameter === 'local') {
             // Le couleur est définie dans les parametres locaux du noeud
