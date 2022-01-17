@@ -5,7 +5,7 @@ import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputL
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValueDict, TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
-import { getLinkValue } from './SankeyUtils'
+import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
 
 
@@ -1166,29 +1166,14 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
     const listId : number[] = []
     Object.keys(dataTags[links_tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
     const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    dataTags[links_tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: selectedDefault }
+
+    const dataTagsArray = Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false })
     Object.values(data.links).forEach(
       l=> {
-        const v = getLinkValue(data,l.idLink,true) as any
-        if (v['element' + 0]) {
-          v['element' + idElement] = {
-            value         : v.value,
-            display_value : v.display_value,
-            color_tag     : {},
-            extension     : {}
-          }
-        } else {
-          const v = getLinkValue(data,l.idLink) as any
-          v['element' + idElement] = {
-            value         : v.value,
-            display_value : v.display_value,
-            color_tag     : {},
-            extension     : {}
-          }          
-        }
+        addDataTags(dataTagsArray,l.value,0)
       }
     )
-
-    dataTags[links_tags_group_key].tags['element' + idElement] = { name: 'tag' + idElement, color: '#000000', selected: selectedDefault }
 
     set_data({ ...data })
   }

@@ -1,7 +1,28 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import * as d3 from 'd3'
+
+export const addDataTags =(
+  dataTags: TagsGroup[],
+  v:any,
+  depth:number  
+) => {
+  const dataTag = Object.values(dataTags)[depth]
+  const listKey = Object.keys(dataTag.tags)
+  for (const i in listKey) {
+    if (depth === dataTags.length-1) {
+      v[listKey[i]] = {
+        value         : v.value,
+        display_value : v.display_value,
+        color_tag     : {},
+        extension     : {}        
+      }
+    } else {
+      addDataTags(dataTags,v[listKey[i]],depth+1)  
+    }
+  }
+}
 
 // Getter pour récupérer la valeur du link
 // utile pour pouvoir ensuite gérer les dataTag
