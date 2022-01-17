@@ -22,11 +22,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   const display_nodes = data.nodes
   const display_links = data.links
+  if (tags_group_key == '' && Object.keys(tags_catalog).length > 0) {
+    set_tags_group_key(Object.keys(tags_catalog)[0])
+  }
 
 
-  let node = selected_node
+  let node = data.nodes[selected_node.idNode]
   if (node === undefined) {
     node = default_node()
+    for (const tag_group_key in tags_catalog) {
+      node.tags[tag_group_key] = []
+    }
   }
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent

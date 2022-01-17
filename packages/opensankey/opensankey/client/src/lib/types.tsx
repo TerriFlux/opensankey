@@ -52,7 +52,7 @@ export const SankeyLinkValueTypes =
       value         : PropTypes.number.isRequired,
       display_value : PropTypes.string.isRequired,
       // corresponding to tag_favorite. to be used in conjunction with SankeyLink.tag_favorite
-      // selected_tag = getLinkValue(data,link).tag[link.tag_favorite]
+      //  const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
       color_tag           : PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
       // for previous_value, data_value, data_source, data_period, mini, maxi ...
       extension     : PropTypes.objectOf(PropTypes.string.isRequired)
@@ -107,6 +107,7 @@ export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
   show_legend: PropTypes.bool.isRequired,
+  color_map:  PropTypes.string.isRequired,
   tags:PropTypes.objectOf(PropTypes.shape({
     name:PropTypes.string.isRequired,
     shape:PropTypes.string,
