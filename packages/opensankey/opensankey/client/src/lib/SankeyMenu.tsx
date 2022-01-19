@@ -3,10 +3,11 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey,compute_default_input_outputLinksId,updateLayout,reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
+import { compute_auto_sankey, compute_default_input_outputLinksId, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
+import { FaPlus, FaMinus } from 'react-icons/fa'
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -17,6 +18,7 @@ const MenuPropTypes = {
   right_menu: PropTypes.element,
   settings_edition: PropTypes.element,
   settings_edition_tags: PropTypes.element,
+  settings_edition_tags_links: PropTypes.element,
   node_edition: PropTypes.element,
   link_edition: PropTypes.element,
   app_name: PropTypes.string.isRequired,
@@ -30,9 +32,7 @@ const MenuPropTypes = {
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
-  getValueIndex: PropTypes.func.isRequired,
-  radio_selected: PropTypes.string.isRequired,
-  set_radio_selected: PropTypes.func.isRequired,  
+
   agregation_level: PropTypes.number.isRequired,
   set_agregation_level: PropTypes.func.isRequired
 }
@@ -43,15 +43,12 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
-    settings_edition, settings_edition_tags, node_edition, link_edition,
+    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
     app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_selected_link, selected_link,
     example_menu, url_prefix,
-    getValueIndex,
-    radio_selected, 
-    set_radio_selected,
     agregation_level,
     set_agregation_level
   }
@@ -60,13 +57,13 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const display_nodes = data.nodes
   const display_links = data.links
-
+  //const { dataTags } = data
   let nb_agregation_level = 0
-  Object.values(data.nodes).forEach( n => {
-    if ( !n.dimensions) {
+  Object.values(data.nodes).forEach(n => {
+    if (!n.dimensions) {
       return
     }
-    Object.entries(n.dimensions).forEach( dim => { 
+    Object.entries(n.dimensions).forEach(dim => {
       if (!dim[1].level) {
         return
       }
@@ -74,22 +71,21 @@ const Menu: FunctionComponent<MenuTypes> = (
     })
   })
 
-  const value_index = getValueIndex(data)
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node()
-    
-    // en remplacement de node_idx
-    //data.node_idx = data.node_idx + 1
-    // Méthode pour incrementer idNode
-    const listId = [] as any
-    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    const idNode = listId.length > 0 ? Math.max(...listId)+1 : 0
 
+    // Méthode pour incrementer idNode
+    const listId : number[] = []
+    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
     node.idNode = 'node' + idNode
     node.name = node.idNode
-    node.x = Object.keys(nodes).length * 50
+    node.x = Object.keys(nodes).length * 200 + 200
     nodes[node.idNode] = node
+    for (const tag_group_key in data.tags_catalog) {
+      node.tags[tag_group_key] = []
+    }
     set_selected_node(node)
     set_data({ ...data })
   }
@@ -156,30 +152,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       .then(showFile).then(cleanFile)
   }
 
-  const uploadJSON = () => {
-    if (_load_json.current) {
-      _load_json.current.name = ''
-      _load_json.current.click()
-    }
-  }
-
-  const uploadJSONImpl = (evt: ChangeEvent) => {
-    const files = (evt.target as HTMLFormElement).files
-    const reader = new FileReader()
-    reader.onload = (() => {
-      return (e: ProgressEvent<FileReader>) => {
-        let result = String((e.target as FileReader).result)
-        result = result.split('<br>').join('\\\\n')
-        const new_data = JSON.parse(result)
-        data.tags_catalog = {}
-        Object.assign(data, new_data)
-        convert_data(data)
-        set_data({ ...data })
-      }
-    })()
-    reader.readAsText(files[0])
-  }
-
   const reinitialization = () => {
     const data = default_sankey_data()
     set_data({ ...data })
@@ -202,9 +174,13 @@ const Menu: FunctionComponent<MenuTypes> = (
     if (Object.keys(nodes).length < 2) {
       return
     }
-    const link: SankeyLink = default_link()
-
-    link.idLink = 'link' + Object.keys(links).length
+    const link: SankeyLink = default_link(data)
+    console.log(link)
+    // Méthode pour incrementer idNode
+    const listId : number[] = []
+    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    link.idLink = 'link' + idLink
     links[link.idLink] = link
     const node_keys = Object.keys(nodes)
     link.idSource = nodes[node_keys[0]].idNode
@@ -218,7 +194,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_link(true)
   }
 
-  let node = selected_node
+  let node = data.nodes[selected_node.idNode]
   if (node === undefined) {
     node = default_node()
   }
@@ -273,8 +249,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  const link = selected_link
-
   const props = {
     scroll: true,
     backdrop: false,
@@ -287,25 +261,46 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item onClick={uploadJSON} >JSON</Dropdown.Item>
+                <Dropdown.Item 
+                  onClick={() => {
+                    if (_load_json.current) {
+                      _load_json.current.name = ''
+                      _load_json.current.click()
+                    }
+                  }} >JSON</Dropdown.Item>
                 <Form.Control
                   type="file"
                   ref={_load_json}
                   style={{ display: 'none' }}
-                  onChange={uploadJSONImpl}
+                  onChange={(evt: ChangeEvent) => {
+                    const files = (evt.target as HTMLFormElement).files
+                    const reader = new FileReader()
+                    reader.onload = (() => {
+                      return (e: ProgressEvent<FileReader>) => {
+                        let result = String((e.target as FileReader).result)
+                        result = result.split('<br>').join('\\\\n')
+                        const new_data = JSON.parse(result)
+                        data.tags_catalog = {}
+                        Object.assign(data, new_data)
+                        data.version = new_data.version
+                        convert_data(data)
+                        set_data({ ...data })
+                      }
+                    })()
+                    reader.readAsText(files[0])
+                  }}
                 />
-                <Dropdown.Item onClick={() => {
-                  if (_load_simple_excel && _load_simple_excel.current) {
-                    _load_simple_excel.current.name = ''
-                    _load_simple_excel.current.click()
-                  }
-                }}
-                >Excel simple
-                </Dropdown.Item>
+                <Dropdown.Item 
+                  onClick={() => {
+                    if (_load_simple_excel && _load_simple_excel.current) {
+                      _load_simple_excel.current.name = ''
+                      _load_simple_excel.current.click()
+                    }
+                  }}>Excel simple</Dropdown.Item>
                 <Form.Control
-                  style={{ display: 'none' }}
-                  ref={_load_simple_excel}
                   type="file"
+                  ref={_load_simple_excel}
+                  style={{ display: 'none' }}
                   onChange={(evt: ChangeEvent) => {
                     const files = (evt.target as HTMLFormElement).files
                     const form_data = new FormData()
@@ -322,8 +317,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                       Object.assign(data, server_data)
                       convert_data(data)
-                      data.node_idx = Object.keys(data.nodes).length
-                      data.link_idx = Object.keys(data.links).length
                       compute_auto_sankey(data, 200)
                       set_data({ ...data })
                     }
@@ -331,7 +324,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     if (root.includes('sankey-diagrams')) {
                       root = root.replace('sankey-diagrams/', '')
                     }
-                    const url = root + url_prefix + 'sankey/upload_simple_excel'
+                    const url = root + url_prefix + '/sankey/upload_simple_excel'
                     fetch(url, fetchData).then(response => {
                       response.text().then(text => {
                         // try {
@@ -363,13 +356,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
               <NavDropdown title="Exemples" id="exemples" >
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'pommes_poires.xlsx', url_prefix, data, set_data, 
+                  'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Simple</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'sankeys_territoire_.csv', url_prefix, data, set_data,
+                  'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
                   (server_data : SankeyData) => {
                     compute_default_input_outputLinksId(server_data.nodes, server_data.links)
                     updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
@@ -378,25 +371,30 @@ const Menu: FunctionComponent<MenuTypes> = (
                       reorganize_node_outputLinksId(n, data.nodes, data.links)
                     })
                     delete (data as SankeyData & { layout?: SankeyData }).layout
-                  }                    
+                  }
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v1/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
-                >Forêt Bois Savoie</Dropdown.Item>
+                >Forêt Bois Savoie v1</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'foret_bois_grand_est.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v2/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  ()=> 0
+                )} 
+                >Forêt Bois Savoie v2</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'Forêt Bois/Grand Est/filiere_foret_bois_grand_est.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'viande_nationale.json', url_prefix, data, set_data,
+                  'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Viande</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'filiere_lait.json', url_prefix, data, set_data,
+                  'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )}
                 >Lait</Dropdown.Item>
@@ -422,34 +420,23 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
           <Accordion activeKey={nav_item_active as string} >
-            <Accordion.Item
-              eventKey="0"
-              onClick={
-                evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '0') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('0')
-                  }
-                }
-              }>
-              <Accordion.Header>Shortcut</Accordion.Header>
-              <Accordion.Body>
-                <p>Fonctionnement des clics :</p><br />
-                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds click dans l onglet Noeuds du menu</p>
-              </Accordion.Body>
-            </Accordion.Item>
+            {//MENU AIDE 
+            }
+
             <Accordion.Item
               eventKey="1"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '1') {
+                  if (((evt.target as unknown)as {className:string}).className === 'accordion-button' && nav_item_active === '1') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('1')
                   }
                 }
               }>
+              {
+                //MENU PARAMETRE GENERAUX
+              }
               <Accordion.Header>Paramêtres généraux</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
@@ -459,20 +446,23 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="2"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
                   }
                 }
               }>
+              {
+                //PARAMETRE NOEUD
+              }
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
                 <br />
 
                 <Row >
                   <Col xs={1}>
-                    <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}>+</Button>
+                    <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}><FaPlus /></Button>
                   </Col>
                   <Col xs={10}>
                     <Form.Select id="selectionNode"
@@ -494,12 +484,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                       style={{ 'marginBottom': '3px' }}
                       onClick={
                         () => {
+                          //Boutton pour supprimer le noeud selectionné
                           delete_node(data, selected_node)
                           set_selected_node(default_node())
                           set_data({ ...data })
                         }
                       }
-                    >-</Button>
+                    ><FaMinus /></Button>
 
                   </Col>
                 </Row>
@@ -549,10 +540,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="general"
                         type='radio'
                         label='Général'
-                        checked={node.node_parameter === 'general'}
+                        checked={node.nodeParameter === 'general'}
                         onChange={evt => {
                           console.log(evt.target.value)
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -562,9 +553,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="groupTag"
                         type='radio'
                         label='Groupe Tag'
-                        checked={node.node_parameter === 'groupTag'}
+                        checked={node.nodeParameter === 'groupTag'}
                         onChange={evt => {
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -574,10 +565,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value="local"
                         type='radio'
                         label='local'
-                        checked={node.node_parameter === 'local'}
+                        checked={node.nodeParameter === 'local'}
                         onChange={evt => {
                           console.log(evt.target.value)
-                          node.node_parameter = evt.target.value
+                          node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
                       />
@@ -607,16 +598,35 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
+              eventKey="4"
+              onClick={
+                evt => {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '4') {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('4')
+                  }
+                }
+              }>
+              <Accordion.Header>Étiquette Noeuds</Accordion.Header>
+              <Accordion.Body>
+                {settings_edition_tags}
+              </Accordion.Body>
+            </Accordion.Item>
+
+
+
+            <Accordion.Item
               eventKey="3"
               onClick={evt => {
-                if ((evt.target as any).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('3')
                 }
               }}
             >
-              <Accordion.Header>Links</Accordion.Header>
+              <Accordion.Header>Flux</Accordion.Header>
               <Accordion.Body>
                 <Row>
                   <Col xs={1}>
@@ -630,7 +640,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           set_data({ ...data })
                         }
                       }
-                    >+</Button>
+                    ><FaPlus /></Button>
 
                   </Col>
                   <Col xs={10}>
@@ -654,12 +664,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                       onClick={
                         () => {
                           delete_link(data, selected_link)
-                          set_selected_link(default_link())
+                          set_selected_link(default_link(data))
 
                           set_data({ ...data })
                         }
                       }
-                    >-</Button>
+                    ><FaMinus /></Button>
                   </Col>
 
                 </Row>
@@ -687,7 +697,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Row>
                 <br></br>
-                <Row>
+                {/* <Row>
                   <Col>
                     <FormLabel>Valeur</FormLabel>
                   </Col>
@@ -697,39 +707,38 @@ const Menu: FunctionComponent<MenuTypes> = (
                       value={link.value[value_index]}
                       onChange={
                         (evt) => {
-                          console.log(selected_link)
-                          console.log(selected_link.value[value_index])
                           selected_link.value[value_index] = +evt.target.value
                           set_data({ ...data })
                         }
                       }
                     />
                   </Col>
-                </Row>
+                  
+                </Row> */}
                 {link_edition}
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item
-              eventKey="4"
-              onClick={
-                evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '4') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('4')
-                  }
+
+
+
+            <Accordion.Item eventKey="7"
+              onClick={evt => {
+                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '7') {
+                  set_nav_item_active('')
+                } else {
+                  set_nav_item_active('7')
                 }
-              }>
-              <Accordion.Header>Tags</Accordion.Header>
-              <Accordion.Body>
-                {settings_edition_tags}
-              </Accordion.Body>
+              }}
+            >
+              <Accordion.Header>Étiquette Flux</Accordion.Header>
+              <Accordion.Body>{settings_edition_tags_links}</Accordion.Body>
             </Accordion.Item>
+
             <Accordion.Item
               eventKey="5"
               onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '5') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('5')
@@ -746,31 +755,49 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Select id="selectionNode"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value ==='') {
+                          if (evt.target.value === '') {
                             return
                           }
-                          for (let level = 1; level <= +evt.target.value+1; level++) {
-                            set_nodes_level(display_nodes,level)
+                          for (let level = 1; level <= +evt.target.value + 1; level++) {
+                            set_nodes_level(display_nodes, level)
                           }
                           set_agregation_level(+evt.target.value)
-                          set_data({...data})
+                          set_data({ ...data })
                         }
                       }
                     >
-                      {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={(level as unknown) as string} selected={level === agregation_level} >{'Niveau ' + (level+1)}</option>)}
+                      {[...Array(nb_agregation_level).keys()].map(level => <option key={level} value={(level as unknown) as string} selected={level === agregation_level} >{'Niveau ' + (level + 1)}</option>)}
                     </Form.Select>
                   </Col>
                 </Row>
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item 
-              eventKey="6" 
-              onClick={ 
+
+            <Accordion.Item
+              eventKey="0"
+              onClick={
                 evt => {
-                  if ((evt.target as any).className === 'accordion-button' && nav_item_active === '6' ) {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '0') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('6')                  
+                    set_nav_item_active('0')
+                  }
+                }
+              }>
+              <Accordion.Header>Raccourci Clavier</Accordion.Header>
+              <Accordion.Body>
+                <p>Fonctionnement des clics :</p><br />
+                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds click dans l onglet Noeuds du menu</p>
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item
+              eventKey="6"
+              onClick={
+                evt => {
+                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '6') {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('6')
                   }
                 }
               }>
