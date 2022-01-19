@@ -1,7 +1,7 @@
 stages:
     #- install_dependencies
     # - build
-    - test
+    #- test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -53,23 +53,23 @@ cache:
 #     - pip install .
 #     - mv ../node_modules opensankey/client
 
-test:
-  stage: test
-  tags:
-    - dev, test, prod
-  cache: 
-    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-    paths:
-      - opensankey/client/node_modules/
-    policy: pull
+#test:
+#  stage: test
+#  tags:
+#    - dev, test, prod
+#  cache: 
+#    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+#    paths:
+#      - opensankey/client/node_modules/
+#    policy: pull
 
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - cd opensankey/client
-    - npm install
-    - npm link mfa-data
-    - npm run test
+#  variables:
+#    GIT_STRATEGY: none
+#  script:
+#    - cd opensankey/client
+#    - npm install
+#    - npm link mfa-data
+#   - npm run test
 #  artifacts:
 #    when: always
 #    reports:
