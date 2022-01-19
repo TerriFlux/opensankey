@@ -1,6 +1,7 @@
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, SankeyNodePropTypes, } from './types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import React,{ FunctionComponent, useState } from 'react'
+import { findMaxLinkValue } from './SankeyUtils'
+import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
@@ -238,7 +239,6 @@ export const compute_auto_sankey = (
   //sankey.update_scale(data.user_scale)
   // var alerte = false
   // var message = ''
-  let max_node_value = 0
   // Horizontal position of vertical nodes
   let max_horizontal_index = 0
   // var list_of_x_before : number[] = []
@@ -250,11 +250,16 @@ export const compute_auto_sankey = (
   // if (!positions) {
   //   return
   // }
-
-
-  // Use a relevant scale
-  Object.values(data.links).forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
-  data.user_scale = max_node_value
+  let max_link_value = 0
+  Object.values(data.links).forEach(link => {
+    const new_max_link_value  = findMaxLinkValue(
+      max_link_value, 
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
+  })
+  max_link_value += 1
+  data.user_scale = max_link_value
 
   const vspace = data.v_space
   const horizontal_indices: { [node_id:string]:number} = {}
@@ -302,14 +307,14 @@ export const compute_auto_sankey = (
     }
 
     the_nodes.forEach((node, node_id) => {
-      let total_input_offset = 0
-      node.inputLinksId.forEach(
-        (idLink) => { 
-          if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
-            total_input_offset += +data.links[idLink].value[0]
-          }
-        }
-      )
+      // let total_input_offset = 0
+      // node.inputLinksId.forEach(
+      //   (idLink) => { 
+      //     if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
+      //       total_input_offset += getLinkValue(data,idLink).value
+      //     }
+      //   }
+      // )
       if (node_id === 0) {
         node.y = 200//0.2 * height;
         vertical_offset = 200 + vertical_space
@@ -491,8 +496,11 @@ export const updateLayout = (
       if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
-        node.idNode = 'node' + data.node_idx
-        data.node_idx = data.node_idx + 1
+        // Méthode pour incrementer idNode
+        const listId : number[] = []
+        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+        node.idNode = 'idNode'
         data.nodes[node.idNode]
       } else {
         continue
@@ -502,9 +510,9 @@ export const updateLayout = (
     if (!node) {
       continue
     }
-    if (!node.node_visible) {
-      continue
-    }
+    // if (!node.node_visible) {
+    //   continue
+    // }
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y
@@ -547,7 +555,7 @@ export const updateLayout = (
     //   link.idSource = node_source.idNode
     //   link.idSource = node_target.idNode
     // }
-    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow } = link_layout
+    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position } = link_layout
     link.curvature = curvature
     link.curved = curved
     link.arrow = arrow
@@ -560,9 +568,11 @@ export const updateLayout = (
     link.right_horiz_shift = link_layout.right_horiz_shift
     link.orientation = link_layout.orientation
     link.recycling = recycling
-    if (String(link.display_value[0]).includes('*')) {
-      link.value[0] = link_layout.value[0]
-    }
+    link.orthogonal_label_position = orthogonal_label_position
+
+    // if (String(link.display_value[0]).includes('*')) {
+    //   link.value[0] = getLinkValue(new_layout,link_layout.idLink)
+    // }
 
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift
@@ -573,13 +583,17 @@ export const updateLayout = (
 
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
+  data.legend_position = new_layout.legend_position;
+  ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
   // if ('height' in new_layout) {
   //   data.height = new_layout.height
   // }
   if ('width' in new_layout) {
     data.width = new_layout.width
   }
-  data.display_style = new_layout.display_style
+  Object.keys(new_layout.display_style).forEach(
+    key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
+  )
   if (data.display_style.filter === undefined) {
     data.display_style.filter = 0
   }

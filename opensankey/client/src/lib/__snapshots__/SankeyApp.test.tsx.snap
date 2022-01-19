@@ -1,0 +1,324 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`adds 1 + 2 to equal 3 1`] = `
+<div
+  style={
+    Object {
+      "backgroundColor": "WhiteSmoke",
+    }
+  }
+>
+  <nav
+    className="bg-light navbar navbar-expand-xl navbar-light fixed-top"
+  >
+    <div
+      className="container"
+    >
+      <a
+        className="navbar-brand"
+        href="#"
+      >
+        Open-Sankey
+      </a>
+      <div
+        className="navbar-nav"
+        onKeyDown={[Function]}
+      >
+        <div
+          className="nav-item dropdown"
+        >
+          <a
+            aria-expanded={false}
+            className="dropdown-toggle nav-link"
+            data-rr-ui-event-key={null}
+            id="files"
+            onClick={[Function]}
+            onKeyDown={[Function]}
+            role="button"
+            tabIndex={0}
+          >
+            Fichiers
+          </a>
+        </div>
+        <div
+          className="nav-item dropdown"
+        >
+          <a
+            aria-expanded={false}
+            className="dropdown-toggle nav-link"
+            data-rr-ui-event-key={null}
+            id="edition"
+            onClick={[Function]}
+            onKeyDown={[Function]}
+            role="button"
+            tabIndex={0}
+          >
+            Edition
+          </a>
+        </div>
+        <div
+          className="nav-item dropdown"
+        >
+          <a
+            aria-expanded={false}
+            className="dropdown-toggle nav-link"
+            data-rr-ui-event-key={null}
+            id="help"
+            onClick={[Function]}
+            onKeyDown={[Function]}
+            role="button"
+            tabIndex={0}
+          >
+            Aide
+          </a>
+        </div>
+        <div
+          className="mb-2 btn-group"
+          role="group"
+          style={
+            Object {
+              "width": "480px",
+            }
+          }
+        >
+          <input
+            autoComplete="off"
+            checked={false}
+            className="btn-check"
+            disabled={false}
+            id="toggle-check"
+            onChange={[Function]}
+            type="checkbox"
+            value="1"
+          />
+          <label
+            className="btn btn-outline-primary"
+            htmlFor="toggle-check"
+            onClick={[Function]}
+            onKeyDown={[Function]}
+            role="button"
+            tabIndex={0}
+          >
+            Configuration Sankey
+          </label>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div />
+  <div
+    className="row"
+  >
+    <div
+      className="col-sm-11"
+      style={
+        Object {
+          "color": "black",
+        }
+      }
+    >
+      <div
+        className="herowrap"
+        style={
+          Object {
+            "backgroundColor": "gainsboro",
+            "marginLeft": "0",
+          }
+        }
+      >
+        <div
+          className="row"
+          style={
+            Object {
+              "marginBottom": "10px",
+              "marginTop": "90px",
+            }
+          }
+        >
+          <div
+            className="col-sm-4"
+          >
+            <form
+              className="dropdown_banner_node"
+              id="dropdown_banner_node"
+            />
+          </div>
+          <div
+            className="col-sm-4"
+          >
+            <form
+              className="dropdown_banner_node"
+              id="dropdown_banner_node"
+            />
+          </div>
+          <div
+            className="col-sm-4"
+          >
+            <form
+              className="dropdown_banner_node"
+              id="dropdown_banner_node"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    className="span12"
+    id="visualization_div"
+    style={
+      Object {
+        "backgroundColor": "WhiteSmoke",
+        "color": "black",
+        "marginLeft": "10px",
+      }
+    }
+  >
+    <svg
+      height={500}
+      id="svg"
+      width="100%"
+    >
+      <g
+        className="g_legend"
+        id="g_legend"
+      />
+      <g
+        className="g_nodes"
+        id="g_nodes"
+      />
+      <g
+        className="g_links"
+        id="g_links"
+      />
+    </svg>
+  </div>
+</div>
+------------HTML PREVIEW---------------
+<div style="background-color:WhiteSmoke;">
+  <nav class="bg-light navbar navbar-expand-xl navbar-light fixed-top">
+    <div class="container">
+      <a
+        class="navbar-brand"
+        href="#"
+      >
+        Open-Sankey
+      </a>
+      <div class="navbar-nav">
+        <div class="nav-item dropdown">
+          <a
+            class="dropdown-toggle nav-link"
+            id="files"
+            role="button"
+          >
+            Fichiers
+          </a>
+        </div>
+        <div class="nav-item dropdown">
+          <a
+            class="dropdown-toggle nav-link"
+            id="edition"
+            role="button"
+          >
+            Edition
+          </a>
+        </div>
+        <div class="nav-item dropdown">
+          <a
+            class="dropdown-toggle nav-link"
+            id="help"
+            role="button"
+          >
+            Aide
+          </a>
+        </div>
+        <div
+          class="mb-2 btn-group"
+          role="group"
+          style="width:480px;"
+        >
+          <input
+            autoComplete="off"
+            class="btn-check"
+            id="toggle-check"
+            type="checkbox"
+            value="1"
+          >
+          <label
+            class="btn btn-outline-primary"
+            for="toggle-check"
+            role="button"
+          >
+            Configuration Sankey
+          </label>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div></div>
+  <div class="row">
+    <div
+      class="col-sm-11"
+      style="color:black;"
+    >
+      <div
+        class="herowrap"
+        style="background-color:gainsboro;margin-left:0;"
+      >
+        <div
+          class="row"
+          style="margin-bottom:10px;margin-top:90px;"
+        >
+          <div class="col-sm-4">
+            <form
+              class="dropdown_banner_node"
+              id="dropdown_banner_node"
+            >
+            </form>
+          </div>
+          <div class="col-sm-4">
+            <form
+              class="dropdown_banner_node"
+              id="dropdown_banner_node"
+            >
+            </form>
+          </div>
+          <div class="col-sm-4">
+            <form
+              class="dropdown_banner_node"
+              id="dropdown_banner_node"
+            >
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="span12"
+    id="visualization_div"
+    style="background-color:WhiteSmoke;color:black;margin-left:10px;"
+  >
+    <svg
+      id="svg"
+      width="100%"
+    >
+      <g
+        class="g_legend"
+        id="g_legend"
+      >
+      </g>
+      <g
+        class="g_nodes"
+        id="g_nodes"
+      >
+      </g>
+      <g
+        class="g_links"
+        id="g_links"
+      >
+      </g>
+    </svg>
+  </div>
+</div>
+`;
