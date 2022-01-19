@@ -152,31 +152,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       .then(showFile).then(cleanFile)
   }
 
-  const uploadJSON = () => {
-    if (_load_json.current) {
-      _load_json.current.name = ''
-      _load_json.current.click()
-    }
-  }
-
-  const uploadJSONImpl = (evt: ChangeEvent) => {
-    const files = (evt.target as HTMLFormElement).files
-    const reader = new FileReader()
-    reader.onload = (() => {
-      return (e: ProgressEvent<FileReader>) => {
-        let result = String((e.target as FileReader).result)
-        result = result.split('<br>').join('\\\\n')
-        const new_data = JSON.parse(result)
-        data.tags_catalog = {}
-        Object.assign(data, new_data)
-        data.version = new_data.version
-        convert_data(data)
-        set_data({ ...data })
-      }
-    })()
-    reader.readAsText(files[0])
-  }
-
   const reinitialization = () => {
     const data = default_sankey_data()
     set_data({ ...data })
@@ -286,25 +261,46 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item onClick={uploadJSON} >JSON</Dropdown.Item>
+                <Dropdown.Item 
+                  onClick={() => {
+                    if (_load_json.current) {
+                      _load_json.current.name = ''
+                      _load_json.current.click()
+                    }
+                  }} >JSON</Dropdown.Item>
                 <Form.Control
                   type="file"
                   ref={_load_json}
                   style={{ display: 'none' }}
-                  onChange={uploadJSONImpl}
+                  onChange={(evt: ChangeEvent) => {
+                    const files = (evt.target as HTMLFormElement).files
+                    const reader = new FileReader()
+                    reader.onload = (() => {
+                      return (e: ProgressEvent<FileReader>) => {
+                        let result = String((e.target as FileReader).result)
+                        result = result.split('<br>').join('\\\\n')
+                        const new_data = JSON.parse(result)
+                        data.tags_catalog = {}
+                        Object.assign(data, new_data)
+                        data.version = new_data.version
+                        convert_data(data)
+                        set_data({ ...data })
+                      }
+                    })()
+                    reader.readAsText(files[0])
+                  }}
                 />
-                <Dropdown.Item onClick={() => {
-                  if (_load_simple_excel && _load_simple_excel.current) {
-                    _load_simple_excel.current.name = ''
-                    _load_simple_excel.current.click()
-                  }
-                }}
-                >Excel simple
-                </Dropdown.Item>
+                <Dropdown.Item 
+                  onClick={() => {
+                    if (_load_simple_excel && _load_simple_excel.current) {
+                      _load_simple_excel.current.name = ''
+                      _load_simple_excel.current.click()
+                    }
+                  }}>Excel simple</Dropdown.Item>
                 <Form.Control
-                  style={{ display: 'none' }}
-                  ref={_load_simple_excel}
                   type="file"
+                  ref={_load_simple_excel}
+                  style={{ display: 'none' }}
                   onChange={(evt: ChangeEvent) => {
                     const files = (evt.target as HTMLFormElement).files
                     const form_data = new FormData()
@@ -328,7 +324,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     if (root.includes('sankey-diagrams')) {
                       root = root.replace('sankey-diagrams/', '')
                     }
-                    const url = root + url_prefix + 'sankey/upload_simple_excel'
+                    const url = root + url_prefix + '/sankey/upload_simple_excel'
                     fetch(url, fetchData).then(response => {
                       response.text().then(text => {
                         // try {

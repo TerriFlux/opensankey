@@ -55,13 +55,13 @@ def clean_pdf():
 @opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
 def upload_data():
     excel_input_file = request.files['file']
-    nodes, links = parser_excel.parse_simple_excel(excel_input_file)
-    context = {
-        'nodes': nodes,
-        'links': links
-    }
+    sankey_data = parser_excel.parse_simple_excel(excel_input_file)
+    # context = {
+    #     'nodes': nodes,
+    #     'links': links
+    # }
     try:
-        json_data = json.dumps(context)
+        json_data = json.dumps(sankey_data)
         response = Response(
             response=json_data,
             status=200,
@@ -87,16 +87,16 @@ def upload_exemple():
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
-        context = {
-            'version': '0.6',
-            'error'  : error,
-            'nodes'  : nodes,
-            'links'  : links,
-            'h_space': 500,
-            'v_space': 250
-        }
-        json_data = json.dumps(context)
+        sankey_data = parser_excel.parse_simple_excel(exemple_file_path)
+        # context = {
+        #     'version': '0.6',
+        #     'error'  : error,
+        #     'nodes'  : nodes,
+        #     'links'  : links,
+        #     'h_space': 500,
+        #     'v_space': 250
+        # }
+        json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
         layout_file_name = os.path.join(exemple_folder, "energie_layout.json")
