@@ -32,6 +32,15 @@ export const getLinkValue = (
   up = false
 ) => {
   const { links,dataTags } = data
+  if (!(idLink in links)) {
+    console.log('idLink: ' + idLink + ' not in links')
+    return {
+      value        : 0,
+      display_value: 'default',
+      color_tag    : {},
+      extension    : {}          
+    }
+  }
   let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
   const listKey = [] as string[]
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {

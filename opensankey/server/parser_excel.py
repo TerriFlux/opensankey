@@ -3,6 +3,7 @@ import numpy as np
 import re
 import webcolors
 import math
+import mfa_problem.io_excel as io_excel
 
 def is_hex(s):
     return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
@@ -166,66 +167,170 @@ def parse_sankey_energie_csv(
     }
     return sankey_dict
 
+def set_value(
+    tags:list,
+    depth: int,
+    v: dict,
+    value: float,
+    display_value: str
+):
+    if depth == len(tags):
+        v['value'] = value
+        v['display_value'] = display_value
+        v['color_tag'] = {}
+        v['extension'] = {}        
+    else:
+        tag = tags[depth]
+        v[tag] = {}
+        set_value(tags,depth+1,v[tag],value,display_value)
+
+
+
 def parse_simple_excel(
     filepath
 ):
-    excel_file = pd.ExcelFile(filepath)
-    nodes_cols = [
-        'Level', 'Nodes', 'Color', 'Shape', 'Group'
+    mfa_input = io_excel.load_simple_excel(filepath)
+    base_cols =  [
+        'Level', 'Element','Couleur', 'Forme'
     ]
-    ws = pd.read_excel(excel_file, excel_file.sheet_names[0])
-
+    nodes_cols = mfa_input['nodes'][0]
+    # tag_names are disposed between the column Dimensions and the column Définition
+    tag_names = []
     nodes = {}
     current_parent_level = 1
     previous_level = 1
-    for i in range(ws.shape[0]):
-        name = ws.iat[i, nodes_cols.index('Nodes')].strip()
-        new_node = {
-            'idNode'        : 'node'+str(i),
-            'name'          : name,
-            'type'          : 'sector',
-            'dimensions'    : {'Primaire':{'parent_name': None}},
-            'label_visible' : 1,
-            'shape_visible' : 1
-        }
-        color = '#a9a9a9'
-        shape = 'rectangle'
-        try:
-            color = ws.iat[i, nodes_cols.index('Color')]
-            shape = ws.iat[i, nodes_cols.index('Shape')]
-            if not is_hex(color):
-              color = webcolors.name_to_hex(color)   
-            new_node['color'] = color
-            if shape == 'rectangle' :
-                new_node['type'] = 'sector' 
-            else:
-                new_node['type'] = 'product'
-        except Exception:
-            pass
-        level = ws.iat[i, nodes_cols.index('Level')]
-        new_node['dimensions']['Primaire']['level'] = int(level)
+    nb_cols = len(nodes_cols)
+    has_definition_col = False
+    if nb_cols > len(base_cols):
+        for i in range(len(base_cols),len(nodes_cols)):
+           if nodes_cols[i] == 'Définition':
+               has_definition_col = True
+               break
+           tag_names.append(nodes_cols[i])
+
+    dataTags = {}
+    nodeTags = {}
+    linkTags = {}
+    if len(mfa_input['tags']) != 0:
+       for i in range(len(mfa_input['tags'])):
+           if mfa_input['tags'][i][1] == 'dataTags':
+                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = [s.strip() for s in tmp]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                tags = { s : {'name':s,'selected': 0, 'color' : ''} for i,s in enumerate(tmp)}
+                tags[tmp[0]]['selected'] = 1
+                if color_tmp[0] != '':
+                    for i,tag_key in enumerate(tags.keys()):
+                        color = color_tmp[i]
+                        if not is_hex(color):
+                            color = webcolors.name_to_hex(color)
+                        tags[tag_key]['color'] = color
+                dataTags[mfa_input['tags'][i][0]] = {
+                    'group_name'  : mfa_input['tags'][i][0],
+                    'show_legend' : 0,
+                    'tags'        : tags,
+                    'banner'      : 'one'                   
+                }
+           elif mfa_input['tags'][i][1] == 'nodeTags':
+                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = [s.strip() for s in tmp]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
+                if color_tmp[0] != '':
+                    for i,tag_key in enumerate(tags.keys()):
+                        color = color_tmp[i]
+                        if not is_hex(color):
+                            color = webcolors.name_to_hex(color)
+                        tags[tag_key]['color'] = color
+                nodeTags[mfa_input['tags'][i][0]] = {
+                    'group_name'  : mfa_input['tags'][i][0],
+                    'show_legend' : 0,
+                    'tags'        : tags,
+                    'banner'      : 'multi'                   
+                }              
+           elif mfa_input['tags'][i][1] == 'linkTags':
+                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = [s.strip() for s in tmp]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
+                if color_tmp[0] != '':
+                    for i,tag_key in enumerate(tags.keys()):
+                        color = color_tmp[i]
+                        if not is_hex(color):
+                            color = webcolors.name_to_hex(color)
+                        tags[tag_key]['color'] = color
+                linkTags[mfa_input['tags'][i][0]] = {
+                    'group_name'  : mfa_input['tags'][i][0],
+                    'show_legend' : 0,
+                    'tags'        : tags,
+                    'banner'      : 'multi'                   
+                }
+
+    for i in range(1,len(mfa_input['nodes'])):
+        name  = mfa_input['nodes'][i][nodes_cols.index('Element')]
+        shape = mfa_input['nodes'][i][nodes_cols.index('Forme')]
+        if shape == 'rectangle' :
+            shape = 'sector' 
+        else:
+            shape = 'product'
+        color =mfa_input['nodes'][i][nodes_cols.index('Couleur')]
+        if type(color) != str and math.isnan(color) or color == '':
+            color = 'grey'
+        if not is_hex(color):
+            color = webcolors.name_to_hex(color)
+        node_definition = None
+        if has_definition_col and type(mfa_input['nodes'][i][nb_cols-1]) == str:
+            node_definition = mfa_input['nodes'][i][nb_cols-1]
+        node_tags = {}
+        for _,tag_name in enumerate(tag_names):
+            tag_value = mfa_input['nodes'][i][mfa_input['nodes'][0].index(tag_name)]
+            if type(tag_value) != str and math.isnan(tag_value):
+                continue
+            node_tags[tag_name] = tag_value.split(',')
+
+        level = mfa_input['nodes'][i][nodes_cols.index('Level')]
+        #new_node['dimensions']['Primaire']['level'] = int(level)
+        parent_name = None
         if level > previous_level:
-            current_node_parent = nodes['node'+str(i-1)]
+            current_node_parent = nodes['node'+str(i-2)]
             current_parent_level = previous_level
         if level > current_parent_level:
-            new_node['dimensions']['Primaire']['parent_name'] = current_node_parent['idNode']
+            parent_name = current_node_parent['idNode']
         previous_level = level
-        if level == 1:
-          new_node['display'] = 1
-          new_node['node_visible'] = 1
-        else:
-          new_node['display'] = 0
-          new_node['node_visible'] = 0
+        display = 1
+        node_visible = 1
+        if level != 1:
+          display = 0
+          node_visible = 0
+        new_node = {
+            'idNode'        : 'node'+str(i-1),
+            'name'          : name,
+            'definition'    : node_definition,
+            'type'          : shape,
+            'tags'          : node_tags,
+            'dimensions'    : {
+                'Primaire':{
+                    'parent_name': parent_name,
+                    'level'      : int(level)
+                }
+            },
+            'label_visible' : 1,
+            'shape_visible' : 1,
+            'display'       : display,
+            'node_visible'  : node_visible,
+            'color'         : color
+        }
         nodes[new_node['idNode']] = new_node
 
-    flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
+    #flux_ws = pd.read_excel(excel_file, excel_file.sheet_names[1])
     flux_cols = [
         'Origin', 'Destination', 'Value'
     ]
     links = {}
-    for row in range(flux_ws.shape[0]):
-        source_name = flux_ws.iat[row, flux_cols.index('Origin')]
-        target_name = flux_ws.iat[row, flux_cols.index('Destination')]
+    nb_tags = len(dataTags.keys())
+    for row in range(1,len(mfa_input['flux_data'])):
+        source_name = mfa_input['flux_data'][row][flux_cols.index('Origin')]
+        target_name =  mfa_input['flux_data'][row][flux_cols.index('Destination')]
         source_node = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name][0]
         target_node = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name][0] 
         if source_node['type'] == 'product':
@@ -233,19 +338,34 @@ def parse_simple_excel(
         elif target_node['type'] == 'product':
             color = target_node['color']
         if not is_hex(color):
-          color = webcolors.name_to_hex(color)    
-        new_link = {
-            'idLink'      : 'link'+str(row),  
-            'source_name' : flux_ws.iat[row, flux_cols.index('Origin')],
-            'target_name' : flux_ws.iat[row, flux_cols.index('Destination')],
-            'value'       : {
-                'value'         :flux_ws.iat[row, flux_cols.index('Value')],
-                'display_value' : 'default'
-            },
-            'color'       : color
-        }
-        links[new_link['idLink']] = new_link
-    return nodes, links
+          color = webcolors.name_to_hex(color)
+        link_tags= []
+        for i in range(nb_tags):
+            if len(mfa_input['flux_data'][row]) > 3+i:
+                link_tags.append(mfa_input['flux_data'][row][3+i])
+
+        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
+        if len(existing_links) > 0:
+            new_link = existing_links[0]
+            set_value(link_tags,0,new_link['value'], mfa_input['flux_data'][row][flux_cols.index('Value')],'default')
+        else:
+            value = {}
+            set_value(link_tags,0,value, mfa_input['flux_data'][row][flux_cols.index('Value')],'default')
+            new_link = {
+                'idLink'   : 'link'+str(row-1),  
+                'idSource' : source_node['idNode'],
+                'idTarget' : target_node['idNode'],
+                'value'    : value,
+                'color'    : color
+            }
+            links[new_link['idLink']] = new_link
+    return {
+        'version'      : '0.6',
+        'nodes'        : nodes,
+        'links'        : links,
+        'dataTags'     : dataTags,
+        'tags_catalog' : nodeTags
+    }
 
 def updateLayout(
   data,
