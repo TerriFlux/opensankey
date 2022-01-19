@@ -181,7 +181,8 @@ def set_value(
         v['extension'] = {}        
     else:
         tag = tags[depth]
-        v[tag] = {}
+        if tag not in v:
+            v[tag] = {}
         set_value(tags,depth+1,v[tag],value,display_value)
 
 
@@ -214,9 +215,9 @@ def parse_simple_excel(
     if len(mfa_input['tags']) != 0:
        for i in range(len(mfa_input['tags'])):
            if mfa_input['tags'][i][1] == 'dataTags':
-                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = mfa_input['tags'][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
-                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
                 tags = { s : {'name':s,'selected': 0, 'color' : ''} for i,s in enumerate(tmp)}
                 tags[tmp[0]]['selected'] = 1
                 if color_tmp[0] != '':
@@ -232,9 +233,9 @@ def parse_simple_excel(
                     'banner'      : 'one'                   
                 }
            elif mfa_input['tags'][i][1] == 'nodeTags':
-                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = mfa_input['tags'][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
-                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
                 tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
                 if color_tmp[0] != '':
                     for i,tag_key in enumerate(tags.keys()):
@@ -249,9 +250,9 @@ def parse_simple_excel(
                     'banner'      : 'multi'                   
                 }              
            elif mfa_input['tags'][i][1] == 'linkTags':
-                tmp = mfa_input['tags'][i][2].split(',')
+                tmp = mfa_input['tags'][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
-                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(',')]
+                color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
                 tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
                 if color_tmp[0] != '':
                     for i,tag_key in enumerate(tags.keys()):
@@ -286,7 +287,7 @@ def parse_simple_excel(
             tag_value = mfa_input['nodes'][i][mfa_input['nodes'][0].index(tag_name)]
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
-            node_tags[tag_name] = tag_value.split(',')
+            node_tags[tag_name] = tag_value.split(':')
 
         level = mfa_input['nodes'][i][nodes_cols.index('Level')]
         #new_node['dimensions']['Primaire']['level'] = int(level)
