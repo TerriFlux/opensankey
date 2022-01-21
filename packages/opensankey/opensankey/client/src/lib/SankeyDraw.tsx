@@ -819,10 +819,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
-    let node_size_s_height = Math.max(
+    const node_size_s_height = Math.max(
       inv_scale(3), total_offset_height_left, total_offset_height_right
     )
-    let node_size_s_width = Math.max(
+    const node_size_s_width = Math.max(
       inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     )
     // Hauteur des noeuds
