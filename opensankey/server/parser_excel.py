@@ -368,113 +368,74 @@ def parse_simple_excel(
         'tags_catalog' : nodeTags
     }
 
-def updateLayout(
-  data,
-  new_layout
+def save_simple_excel(
+    sankey_data : dict
 ):
-  max_vertical_offset = 0
-  for node in data['nodes']:
-      if node['node_visible'] == 1:
-          max_vertical_offset = max(node['y'], max_vertical_offset)
-  max_vertical_offset = max_vertical_offset + 200
-  data['node_width'] = new_layout['node_width']
+    nodes_cols =  ['Level', 'Element','Couleur', 'Forme']
+    #nodes_cols = mfa_input['nodes'][0]
+    # tag_names are disposed between the column Dimensions and the column Définition
+    tag_names = list(sankey_data['dataTags']) + list(sankey_data['tags_catalog'])
+    nodes = {}
+    if len(tag_names) != 0:
+       tags = [[""] * 6] * (len(tag_names)+1)
+       tags[0] = ["Name","Type","Tags","isPalette","Colormap","Color"]
+       for i in range(len(tag_names)):
+           if tag_names[i] in sankey_data['dataTags']:
+                tags[i+1]=[tag_names[i],'dataTags',(':').join([ tag['name'] for tag in sankey_data['dataTags'][tag_names[i]]['tags'].values()]),'','','']
+           elif tag_names[i] in sankey_data['tags_catalog']:
+                tags[i+1]=[tag_names[i],'nodeTags',(':').join([ tag['name'] for tag in sankey_data['tags_catalog'][tag_names[i]]['tags'].values()]),'','','']
 
-  # Apply nodes layout
-  for node_layout_key in new_layout['nodes']:
-    node_layout = new_layout['nodes'][node_layout_key]
-    nodes = [node for node in data['nodes'] if node['name'] == node_layout['name'] ]
-    if len(nodes) == 0:
-      if len(node_layout['inputLinksId']) == 0 and len(node_layout['outputLinksId']) == 0 and node_layout['shape_visible'] == False and node_layout['label_visible'] == True:
-        # Case of not a label
-        node = node_layout
-        node['idNode'] = 'node' + data['node_idx']
-        data['node_idx'] = data['node_idx'] + 1
-        data['nodes'][node['idNode']]
-      else:
-        continue
+    nb_cols_nodes = 4 + len(sankey_data['tags_catalog'].keys()) + 1
 
-    node = nodes[0]
-    if not node:
-      continue
-    if not node['node_visible']:
-      continue
-    node['name'] = node_layout['name']
-    node['x'] = node_layout['x']
-    node['y'] = node_layout['y']
-    if node['y'] + 200 > max_vertical_offset:
-      max_vertical_offset = node['y'] + 200
+    nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
+    nodes[0] = ["Level","Element","Couleur","Forme"]+list(sankey_data['tags_catalog'])
 
-    #node.color = node_layout.color
-    node['x_label'] = node_layout['x_label']
-    node['y_label'] = node_layout['y_label']
-    node['label_visible'] = node_layout['label_visible']
+    for i,node in enumerate(sankey_data['nodes'].values()):
+        nodes[i+1][nodes_cols.index('Element')] = node['name']
+        shape   = node['type']
+        if shape == 'sector' :
+            nodes[i+1][nodes_cols.index('Forme')] = 'rectangle' 
+        else:
+            nodes[i+1][nodes_cols.index('Forme')] = 'circle'
+        nodes[i+1][nodes_cols.index('Couleur')] = node['color']
+        if 'definition' in node:
+            nodes[i+1][nb_cols_nodes-1] = node['definition']             
+        for j,tag_name in enumerate(sankey_data['tags_catalog']):
+            nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
 
-  # apply_input_outputLinksId(
-  #   new_layout['nodes,
-  #   new_layout['links,
-  #   data
-  # )
+        nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
-  for link_layout_key in new_layout['links']:
-    link_layout = new_layout['links'][link_layout_key]
-    links = [
-        link for link in data['links']
-        if data['nodes'][link['idSource']['name']] == new_layout['nodes'][link_layout['idSource']['name']] and
-           data['nodes'][link['idTarget']['name']] == new_layout['nodes'][link_layout['idTarget']['name']]
+    flux_cols = [
+        'Origin', 'Destination', 'Value'
     ]
 
-    if len(links) == 0:
-      continue
+    nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys())
+    nb_vals = 1
+    for dataTag in sankey_data['dataTags']:
+        nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
+    links = [ [""] * nb_cols_nodes for i in range(len(sankey_data['links'].keys())*nb_vals+1) ]
+    links[0] = flux_cols + list(sankey_data['dataTags'])
+    row=1
+    for _,link in enumerate(sankey_data['links'].values()):
+        val = link['value']
+        row = add_links(sankey_data, flux_cols, links, row, link, val,0)        
+    mfa_output = {
+        'nodes' : nodes,
+        'tags'  : tags,
+        'flux'  : links
+    }
+    return mfa_output
 
-    link = links[0]
-    # if ( link_layout.display_value !== 'default' && 
-    #     !String(link_layout.display_value).includes('[') ) {
-    #   link.value = link_layout.value
-    # }
-    # const node_source = Object.values(data.nodes).filter( n => n.name ===new_layout['nodes[link_layout.idSource].name)
-    # const node_target = Object.values(data.nodes).filter( n => n.name ===new_layout['nodes[link_layout.idTarget].name)
-    # if (node_source && node_target) {
-    #   link.idSource = node_source.idNode
-    #   link.idSource = node_target.idNode
-    # }
-    #x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position = link_layout
-    link['curvature'] = link_layout['curvature']
-    link['curved'] = link_layout['curved']
-    link['arrow'] = link_layout['arrow']
-    link['text_color'] = link_layout['link_layout.text_color']
-    link['label_position'] = link_layout['label_position']
-    link['label_visible'] = link_layout['label_visible']
-    link['x_label'] = link_layout['x_label']
-    link['y_label'] = link_layout['y_label']
-    link['left_horiz_shift'] = link_layout['link_layout.left_horiz_shift']
-    link['right_horiz_shift'] = link_layout['link_layout.right_horiz_shift']
-    link['orientation'] = link_layout['link_layout.orientation']
-    link['recycling'] = link_layout['recycling']
-    link['orthogonal_label_position'] = link_layout['orthogonal_label_position']
-
-    # if (String(link['display_value[0]).includes('*')) {
-    #   link['value[0]'] = link_layout['link_layout.value[0]']
-    # }
-
-    if link_layout['vert_shift']:
-      link['left_horiz_shift'] = link_layout['link_layout.left_horiz_shift']
-      link['right_horiz_shift'] = link_layout['link_layout.right_horiz_shift']
-      link['vert_shift'] = link_layout['link_layout.vert_shift']
-
-  #data.animation_tooltips = new_layout['animation_tooltips
-  data['user_scale'] = new_layout['user_scale']
-  data['legend_position'] = new_layout['legend_position']
-  data['welcome_text'] = new_layout['welcome_text']
-  # if ('height' in new_layout) {
-  #   data.height = new_layout['height
-  # }
-  if 'width' in new_layout:
-    data['width'] = new_layout['width']
-
-#   Object.keys(new_layout['display_style).forEach(
-#     key => (data['display_style as any)[key] = (new_layout['display_style as any)[key]
-#   )
-  if 'filter' not in data['display_style']:
-    data['display_style']['filter'] = 0
-  if 'filter_label' not in data['display_style']:
-    data['display_style']['filter_label'] = 0
+def add_links(sankey_data, flux_cols, links, row, link, val,depth):
+    if ( 'value' in val):
+        links[row][flux_cols.index('Origin')] = sankey_data['nodes'][link['idSource']]['name']
+        links[row][flux_cols.index('Destination')] = sankey_data['nodes'][link['idTarget']]['name']
+        links[row][flux_cols.index('Value')] = val['value']
+        return row+1
+    for i,tag_name in enumerate(val.keys()):
+        links[row][3+depth] = tag_name
+        new_row = add_links(sankey_data, flux_cols, links, row, link, val[tag_name],depth+1)
+        for i in range(row,new_row):
+            links[i][3+depth] = tag_name
+        row = new_row
+    return row
