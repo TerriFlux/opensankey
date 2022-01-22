@@ -150,9 +150,18 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           }
           let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
           const listKey = [] as string[]
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
-            listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          let missing_key = false
+          Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            if (selected_tags.length == 0 || missing_key) {
+              missing_key = true
+              return 
+            }
+            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
+          if (missing_key) {
+            return false
+          }
 
           for (const i in listKey) {
             //const val_dict = (val as unknown) as SankeyLinkValueDict
@@ -161,7 +170,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           const v = (val as unknown) as SankeyLinkValue
           if (l.colormap !== undefined && l.colormap !== '' ) {
             const selected_tag = v.color_tag[l.colormap]
-            if ( l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
+            if ( selected_tag && l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
               return false
             }
           }
@@ -179,29 +188,30 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           } else {
             if (l.colormap in  data.dataTags) {
               const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
-              return data.dataTags[l.colormap].tags[selected_tag].color
-            } else {
-              const source_node = data.nodes[l.idSource]
-              const target_node = data.nodes[l.idTarget]
-              let selected_tag = ''
-              if (source_node.type === 'sector' && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if ( target_node.type === 'sector' &&  target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]   
-                return data.tags_catalog[l.colormap].tags[selected_tag].color             
-              } else if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]   
-                return data.tags_catalog[l.colormap].tags[selected_tag].color             
+              if (selected_tag) {
+                return data.dataTags[l.colormap].tags[selected_tag].color
               }
-              if ( Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
-                return Object.values(data.tags_catalog[l.colormap].tags)[0].color
-              }
-              return l.color
             }
+            const source_node = data.nodes[l.idSource]
+            const target_node = data.nodes[l.idTarget]
+            let selected_tag = ''
+            if (source_node.type === 'sector' && source_node.tags[l.colormap].length === 1) {
+              selected_tag = source_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
+            } else if ( target_node.type === 'sector' &&  target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]   
+              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            } else if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
+              selected_tag = source_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
+            } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]   
+              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            }
+            if ( Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
+              return Object.values(data.tags_catalog[l.colormap].tags)[0].color
+            }
+            return l.color
           }
         }}
         test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
@@ -210,11 +220,27 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           const listKey : string[] = [] 
           /* console.log(val)
           console.log(dataTags) */
-
-          //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-          Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
-            listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          let missing_key = false
+          Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            if (selected_tags.length == 0 || missing_key) {
+              missing_key = true
+              return 
+            }
+            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
           })
+          if (missing_key) {
+            return {
+              value        : 0,
+              display_value: 'default',
+              color_tag    : {},
+              extension    : {}          
+            }    
+          }
+          // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
+          // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
+          //   listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          // })
 
           for (const i in listKey) {
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 

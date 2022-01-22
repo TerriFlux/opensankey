@@ -43,9 +43,23 @@ export const getLinkValue = (
   }
   let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
   const listKey = [] as string[]
+  let missing_key = false
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+    const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+    if (selected_tags.length == 0 || missing_key) {
+      missing_key = true
+      return 
+    }
     listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
   })
+  if (missing_key) {
+    return {
+      value        : 0,
+      display_value: 'default',
+      color_tag    : {},
+      extension    : {}          
+    }    
+  }
 
   for (const i in listKey) {
     if ( up && +i === (listKey.length - 1) ) {
