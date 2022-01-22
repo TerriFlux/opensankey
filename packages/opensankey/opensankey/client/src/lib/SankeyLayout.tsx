@@ -57,6 +57,9 @@ export const reorganize_node_outputLinksId = (
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
+      if (n2.position == 'relative' ) {
+        return -1
+      }
       if (n1 && n2 && n1.y < n2.y) {
         return -1
       }

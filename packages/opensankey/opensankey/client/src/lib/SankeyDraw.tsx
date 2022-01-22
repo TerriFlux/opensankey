@@ -825,7 +825,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let node_size_s_width = Math.max(
       inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     )
-    // Hauteur des noeuds
+    //Hauteur des noeuds
     if ( res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) {
       // Hauteur des noeuds
       node_size_s_height = Math.max(

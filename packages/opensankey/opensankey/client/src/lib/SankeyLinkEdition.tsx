@@ -30,13 +30,22 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const value_selected_parameter = (): number => {
     let val = selected_link.value as any
     Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display' && Object.keys(dataTags[key].tags).length > 0).forEach(key => {
-      const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
+      let selected_tag = ''
+      const selected_tags = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)
+      if (selected_tags.length>0) {
+        selected_tag = selected_tags[0][0]
+      }
+      if (selected_tag === '') {
+        return 0
+      }
+      //const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
       if ( val[selected_tag] ) {
         val = val[selected_tag]
       }
     })
     return val['value']
   }
+
 
   return (
 
@@ -69,6 +78,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 //Définition des valeurs selon les paramètre dataTags
                 Object.entries(data.dataTags).filter(tag=>tag[1].banner !== 'display').map(d => {
                   if (Object.keys(d[1]['tags']).length != 0) {
+                    let tag_selected_name = ''
+                    const tags_selected = Object.entries(d[1].tags).filter(tag=>tag[1].selected)
+                    if (tags_selected.length>0) {
+                      tag_selected_name = tags_selected[0][0]
+                    }
                     return (
                       <Row key={d[0]}>
                         <Col >
@@ -81,7 +95,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
                           <Form.Select
                             name={d[0]}
-                            value={d[1].tags[Object.entries(d[1].tags).filter(tag=>tag[1].selected)[0][0]].name}
+                            value={tag_selected_name}
                             // onChange={
                             //   (evt: React.ChangeEvent<HTMLSelectElement>) => {
                             //     //Modifie les paramètres selectionnés 

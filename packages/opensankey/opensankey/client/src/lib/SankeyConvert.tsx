@@ -483,6 +483,10 @@ export const convert_data = (
       if (!n.position) {
         n.position = 'absolute'        
       }
+      if (!n.dimensions) {
+        n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
+      }
+      
     }
   )
 
