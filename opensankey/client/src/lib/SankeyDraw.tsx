@@ -819,22 +819,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
-    const node_size_s_height = Math.max(
+    let node_size_s_height = Math.max(
       inv_scale(3), total_offset_height_left, total_offset_height_right
     )
-    const node_size_s_width = Math.max(
+    let node_size_s_width = Math.max(
       inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     )
-    // Hauteur des noeuds
-    // if ( res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) {
-    //   // Hauteur des noeuds
-    //   node_size_s_height = Math.max(
-    //     inv_scale(40), total_offset_height_left, total_offset_height_right
-    //   )
-    //   node_size_s_width = Math.max(
-    //     inv_scale(40), total_offset_width_top, total_offset_width_bottom
-    //   )
-    // }
+    //Hauteur des noeuds
+    if ( res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) {
+      // Hauteur des noeuds
+      node_size_s_height = Math.max(
+        inv_scale(40), total_offset_height_left, total_offset_height_right
+      )
+      node_size_s_width = Math.max(
+        inv_scale(40), total_offset_width_top, total_offset_width_bottom
+      )
+    }
 
     d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
     d3.select('#' + n.idNode).attr('height', scale(node_size_s_height))

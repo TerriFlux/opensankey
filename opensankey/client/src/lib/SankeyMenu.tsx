@@ -178,7 +178,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     console.log(link)
     // Méthode pour incrementer idNode
     const listId : number[] = []
-    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
     const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
     link.idLink = 'link' + idLink
     links[link.idLink] = link

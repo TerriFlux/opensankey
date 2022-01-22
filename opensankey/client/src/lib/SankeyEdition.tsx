@@ -12,8 +12,8 @@ type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }) => {
   const { tags_catalog, dataTags } = data
-  const tags_visible = Object.keys(data.dataTags).length > 0
-  const [colormap, set_colormap] = useState(tags_visible ? Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display')[0]: '')
+  const tags_visible = Object.keys(data.tags_catalog).length > 0
+  const [colormap, set_colormap] = useState(tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0]: '')
   const [use_colormap,set_use_colormap] = useState(false)
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
@@ -133,16 +133,21 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             label='Palette'
             checked={use_colormap === true}
             onChange={ evt => {
+              let the_colormap = colormap
+              if (colormap === '') {
+                the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0] :''
+              }
               if (evt.target.checked) {
-                Object.values(data.links).forEach(link=>link.colormap = colormap)
+                Object.values(data.links).forEach(link=>link.colormap = the_colormap)
               } else {
                 Object.values(data.links).forEach(link=>link.colormap = '')                  
               }
               set_use_colormap(evt.target.checked)
               if (colormap in tags_catalog) {
                 Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
-                tags_catalog[colormap].show_legend = evt.target.checked
+                tags_catalog[the_colormap].show_legend = evt.target.checked
               }
+              set_colormap(the_colormap)
               set_data({ ...data })
             }}
           />
