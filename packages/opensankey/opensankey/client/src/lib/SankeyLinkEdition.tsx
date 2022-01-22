@@ -53,9 +53,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       <Col sm={12}>
         <Tabs defaultActiveKey="flux_data" id="settings-layout">
           <Tab eventKey="flux_data" title="Données">
-            <br></br>
             <Form >
-              <br></br>
               {/* <Row >
                 <Col>
                   <FormLabel>Affichage</FormLabel>
@@ -113,13 +111,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                               )
                             })}
                           </Form.Select>
-
-
-
-
                         </Col>
                       </Row>
-
                     )
                   }
 
@@ -178,7 +171,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form>
           </Tab>
           <Tab eventKey="flux_attributes" title="Apparence">
-            <br></br>
             <Form >
 
               <Form.Group as={Row} >
