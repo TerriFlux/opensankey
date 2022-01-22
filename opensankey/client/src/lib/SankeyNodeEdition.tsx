@@ -304,6 +304,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 onClick={
                   () => {
                     reorganize_inputLinksId(selected_node, true, false, display_nodes, display_links)
+                    set_data({ ...data })                    
                   }
                 }
               >Réorganiser liens entrants</Button>
@@ -313,7 +314,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 onClick={
                   () => {
                     reorganize_inputLinksId(selected_node, false, true, display_nodes, display_links)
-                    
+                    set_data({ ...data })                    
                   }
                 }
               >Réorganiser liens sortants</Button>
