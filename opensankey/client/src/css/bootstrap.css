@@ -4211,7 +4211,8 @@ fieldset:disabled .btn {
 
 .nav-tabs .nav-link {
   margin-bottom: -1px;
-  background: none;
+  background: #78c2ad /* none*/;
+  color : white;
   border: 1px solid transparent;
   border-top-left-radius: 0.4rem;
   border-top-right-radius: 0.4rem;
@@ -4219,20 +4220,25 @@ fieldset:disabled .btn {
 
 .nav-tabs .nav-link:hover, .nav-tabs .nav-link:focus {
   border-color: #f7f7f9 #f7f7f9 #eceeef;
-  isolation: isolate;
+  /*isolation: isolate;*/
+  color: #5a5a5a;
+  background-color: #fff;
+  border-color: #78c2ad /*#eceeef #eceeef #fff*/;
 }
 
 .nav-tabs .nav-link.disabled {
-  color: #888;
-  background-color: transparent;
-  border-color: transparent;
+  color: white /*#888*/;
+  background-color: #cccccc/*transparent*/;
+  border-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-item.show .nav-link {
-  color: #5a5a5a;
+  /*color: #5a5a5a;
   background-color: #fff;
-  border-color: #eceeef #eceeef #fff;
+  border-color: #78c2ad /*#eceeef #eceeef #fff*/
+  border-color: #78c2ad
 }
 
 .nav-tabs .dropdown-menu {
@@ -4280,6 +4286,12 @@ fieldset:disabled .btn {
 
 .tab-content > .active {
   display: block;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border: 1px solid #78c2ad;
+  padding-left: 5px;
+  border-radius: 5px;
+
 }
 
 .navbar {
