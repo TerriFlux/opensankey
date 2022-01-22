@@ -3,7 +3,7 @@ import { Row, Form, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button, ButtonG
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
 import { default_node } from './SankeyUtils'
-import { reorganize_inputLinksId} from './SankeyLayout'
+import { reorganize_inputLinksId } from './SankeyLayout'
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -35,9 +35,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }
   }
 
+  console.log('test')
+  console.log(node.nodeParameter)
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
-    <Tab eventKey="tags" title="Tags" >
+    <Tab eventKey="tags" title="Tags"
+      disabled={node.nodeParameter !== 'groupTag'} >
       <br></br>
       <Form.Group as={Row} >
         <Col>
@@ -46,7 +49,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Col>
           <FormCheck inline
             type='switch'
-            disabled={node.nodeParameter!=='groupTag'}
+            disabled={node.nodeParameter !== 'groupTag'}
             checked={node.colorTag == tags_group_key}
             label='Palette'
             onChange={() => {
@@ -123,7 +126,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       <Col sm={12}>
         <Tabs defaultActiveKey="nodes_desc" id="settings-layout">
 
-          <Tab eventKey="nodes_desc" title="Description">
+          <Tab eventKey="nodes_desc" title="Description" 
+            disabled={!(node.nodeParameter == 'local')}> 
             <br></br>
             <Form >
               <Form.Group as={Row} >
@@ -313,7 +317,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 onClick={
                   () => {
                     reorganize_inputLinksId(selected_node, false, true, display_nodes, display_links)
-                    
+
                   }
                 }
               >Réorganiser liens sortants</Button>
@@ -358,7 +362,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 }
               >Supprimer flux sortant</Button>
             </ButtonGroup> */}
-            
+
 
           </Tab>
           {children}
