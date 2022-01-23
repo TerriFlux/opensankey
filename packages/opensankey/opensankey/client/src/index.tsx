@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import './css/bootstrap.css'
 import './css/main.css'
 import React from 'react'
@@ -6,6 +7,10 @@ import { render } from 'react-dom'
 import SankeyApp from './lib/SankeyApp'
 import { convert_data } from './lib/SankeyConvert'
 import { default_sankey_data } from './lib/SankeyUtils'
+import { Col, Row } from 'react-bootstrap'
+const logo = require('./css/logo_terriflux.jpg')
+const logo_auraee = require('./css/logo_energie.jpg')
+const logo_scan = require('./css/scandatamining.jpg')
 
 window.React = React
 
@@ -38,8 +43,29 @@ if (json_data !== null) {
 
 
 render(
-  <SankeyApp 
-    sankey_data={data} 
-  />,
+  <>
+    <SankeyApp 
+      sankey_data={data} 
+    />
+    <div id="copyright">
+      <div className="container">
+        <Row style={{ 'marginTop' : '0px' }} >
+          <Col>
+            <h4>Contributeurs</h4>
+          </Col>
+          <Col>
+            <img src={logo.replace('static/', 'static/opensankey/')} width="200" />
+          </Col>
+          <Col>
+            <img src={logo_auraee.replace('static/', 'static/opensankey/')} width="150" />
+          </Col>
+          <Col>
+            <img src={logo_scan.replace('static/', 'static/opensankey/')} width="100" />
+          </Col>
+        </Row>
+        <br></br>
+      </div>
+    </div>
+  </>,
   document.getElementById('react-container')
 )

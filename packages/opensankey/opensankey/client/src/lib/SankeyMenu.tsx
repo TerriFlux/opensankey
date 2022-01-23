@@ -1,4 +1,5 @@
-﻿import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
+﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
@@ -8,6 +9,7 @@ import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus } from 'react-icons/fa'
+const logo = require('../css/opensankey.png')
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -285,7 +287,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          <Navbar.Brand href="#"><img src="opensankey.png" width="100"/></Navbar.Brand>
+          <Navbar.Brand href="#"><img src={logo.replace('static/', 'static/opensankey/')} width="100"/> version beta 0.8 </Navbar.Brand>
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
