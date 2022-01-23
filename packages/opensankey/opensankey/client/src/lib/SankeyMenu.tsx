@@ -113,7 +113,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       body: JSON.stringify(data)
     }
     const showFile = (blob: BlobPart) => {
-      const newBlob = new Blob([blob], { type: 'application/pdf' })
+      const newBlob = new Blob([blob], { type: 'application/vnd.ms-excel' })
       FileSaver.saveAs(newBlob, 'sankey.xlsx')
     }
     const cleanFile = () => {
