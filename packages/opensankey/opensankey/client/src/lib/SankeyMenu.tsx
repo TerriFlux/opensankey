@@ -389,18 +389,27 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
+                    set_nodes_level(server_data.nodes,2)
+                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                    set_nodes_level(server_data.nodes,1)
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_regions_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
+                    set_nodes_level(server_data.nodes,2)
+                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                    set_nodes_level(server_data.nodes,1)
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Regions</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_regions_periods_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
+                    set_nodes_level(server_data.nodes,2)
+                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                    set_nodes_level(server_data.nodes,1)
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Regions Periods</Dropdown.Item>
