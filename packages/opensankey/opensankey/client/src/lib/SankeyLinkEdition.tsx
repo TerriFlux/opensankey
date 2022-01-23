@@ -1,8 +1,8 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { default_link,getLinkValue } from './SankeyUtils'
+import { default_link } from './SankeyUtils'
 
 
 const SankeyLinkEditionPropTypes = {
@@ -20,32 +20,34 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const { dataTags } = data
   const tags_visible = Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display').length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display')[0] : '')
-
   let link = selected_link
   if (link === undefined) {
     link = default_link(data)
   }
 
-  //renvoie la valeur correspondant aux paramètre selectionné 
-  const value_selected_parameter = (): number => {
-    let val = selected_link.value as any
-    Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display' && Object.keys(dataTags[key].tags).length > 0).forEach(key => {
-      let selected_tag = ''
-      const selected_tags = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)
-      if (selected_tags.length>0) {
-        selected_tag = selected_tags[0][0]
-      }
-      if (selected_tag === '') {
-        return 0
-      }
-      //const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
-      if ( val[selected_tag] ) {
-        val = val[selected_tag]
-      }
-    })
-    return val['value']
+  const newEntries = new Map(Object.entries(dataTags).filter(([,dataTag])=>dataTag.banner !== 'display').map(([dataTagKey,dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [dataTagKey, Object.entries(dataTag.tags).filter(tag=>tag[1].selected)[0][0]] : ['n', 'n']
+  }))
+  //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
+  const dataTagsSelected = Object.fromEntries(newEntries)
+  //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
+  delete dataTagsSelected['n']
+  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
+  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length ) {
+    set_tags_selected(dataTagsSelected)
   }
 
+  //renvoie la valeur correspondant aux paramètre selectionné 
+  const value_selected_parameter = (): SankeyLinkValue => {
+    let val = JSON.parse(JSON.stringify(Object(selected_link.value)))
+    Object.values(tags_selected).map(tag_selected => {
+      if (val[tag_selected] === undefined) {
+        val[tag_selected] = {}
+      }
+      val = val[tag_selected]
+    })
+    return val
+  }
 
   return (
 
@@ -74,40 +76,36 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
               {
                 //Définition des valeurs selon les paramètre dataTags
-                Object.entries(data.dataTags).filter(tag=>tag[1].banner !== 'display').map(d => {
-                  if (Object.keys(d[1]['tags']).length != 0) {
-                    let tag_selected_name = ''
-                    const tags_selected = Object.entries(d[1].tags).filter(tag=>tag[1].selected)
-                    if (tags_selected.length>0) {
-                      tag_selected_name = tags_selected[0][0]
-                    }
+                Object.entries(data.dataTags).filter(([,dataTag])=>dataTag.banner !== 'display').map(([dataTagKey,dataTag]) => {
+                  if (Object.keys(dataTag.tags).length != 0) {
+
                     return (
-                      <Row key={d[0]}>
+                      <Row key={dataTagKey}>
                         <Col >
                           <FormLabel>
-                            {d[1]['group_name']} :
+                            {dataTag.group_name} :
                           </FormLabel>
                         </Col>
 
                         <Col >
 
                           <Form.Select
-                            name={d[0]}
-                            value={tag_selected_name}
-                            // onChange={
-                            //   (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            //     //Modifie les paramètres selectionnés 
-                            //     const { name, value } = evt.target
-                            //     set_tags_selected(prevState => ({
-                            //       ...prevState,
-                            //       [name]: value
-                            //     }))
-                            //   }
-                            // }
+                            name={dataTagKey}
+                            value={tags_selected[dataTagKey]}
+                            onChange={
+                              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                                //Modifie les paramètres selectionnés 
+                                const { name, value } = evt.target
+                                set_tags_selected(prevState => ({
+                                  ...prevState,
+                                  [name]: value
+                                }))
+                              }
+                            }
                           >
-                            {Object.values(d[1]['tags']).map(v => {
+                            {Object.entries(dataTag.tags).map(([tag_key,tag]) => {
                               return (
-                                <option key={v.name} value={v.name}>{v.name}</option>
+                                <option key={tag.name} value={tag_key}>{tag.name}</option>
                               )
                             })}
                           </Form.Select>
@@ -124,17 +122,19 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type='text'
-                    value={value_selected_parameter()}
+                    value={value_selected_parameter().value}
                     onChange={
                       evt => {
                         let val = Object(selected_link.value)
-                        Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
-                          const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
-                          val = val[selected_tag]
+                        Object.values(tags_selected).forEach(tag => {
+                          if (val[tag] === undefined) {
+                            val[tag] = {}
+                          }
+                          val = val[tag]
                         })
-                        val['value'] = +evt.target.value
+                        val.value = +evt.target.value
                         console.log(selected_link.value)
-                        console.log(val)
+
 
                         set_data({ ...data })
                       }
@@ -149,17 +149,19 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type='text'
-                    value={Object.keys(data.links).length > 0 ? getLinkValue(data,selected_link.idLink).display_value : 'default'}
+                    value={value_selected_parameter().display_value}
                     onChange={
                       evt => {
                         let val = Object(selected_link.value)
-                        Object.keys(dataTags).filter(key=>dataTags[key].banner !== 'display').forEach(key => {
-                          const selected_tag = Object.entries(dataTags[key].tags).filter(tag=>tag[1].selected)[0][0]
-                          val = val[selected_tag]
+                        Object.values(tags_selected).forEach(tag => {
+                          if (val[tag] === undefined) {
+                            val[tag] = {}
+                          }
+                          val = val[tag]
                         })
-                        val['display_value'] = evt.target.value
+                        val.display_value = evt.target.value
                         console.log(selected_link.value)
-                        console.log(val)
+
 
                         set_data({ ...data })
                       }
