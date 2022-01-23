@@ -102,6 +102,34 @@ const Menu: FunctionComponent<MenuTypes> = (
     FileSaver.saveAs(blob, 'sankey_diagram.json')
   }
 
+  const clickSaveExcel = () => {
+    let root = window.location.href
+    if (root.includes('sankey-diagrams') && url_prefix !== '') {
+      root = root.replace('sankey-diagrams/', '')
+    }
+    let url = root + url_prefix + 'sankey/save_excel'
+    const fetchData = {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }
+    const showFile = (blob: BlobPart) => {
+      const newBlob = new Blob([blob], { type: 'application/vnd.ms-excel' })
+      FileSaver.saveAs(newBlob, 'sankey.xlsx')
+    }
+    const cleanFile = () => {
+      const fetchData = {
+        method: 'POST'
+      }
+      url = root + url_prefix + 'sankey/clean_excel'
+      fetch(url, fetchData)
+    }
+
+    fetch(url, fetchData).then(
+      r => r.blob()
+    )
+      .then(showFile).then(cleanFile)
+  }
+
   const clickSaveSVG = () => {
     const svg = window.d3.select('svg')
     svg.selectAll('.tooltip').remove()
@@ -341,6 +369,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown>
               <NavDropdown id='enregistrer' title="Enregistrer" >
                 <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
+                <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
                 {save_menu}
               </NavDropdown>
               <NavDropdown id='exporter' title="Exporter" >
