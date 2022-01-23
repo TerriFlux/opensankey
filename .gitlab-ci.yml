@@ -1,7 +1,7 @@
 stages:
     #- install_dependencies
     # - build
-    # - test
+    #- test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -53,22 +53,28 @@ cache:
 #     - pip install .
 #     - mv ../node_modules opensankey/client
 
-# test:
-#   stage: test
-#   tags:
-#     - dev, test, prod
-#   variables:
-#     GIT_STRATEGY: none
-#   script:
-#     - source /home/gitlab-runner/gitlab/bin/activate
-#     - echo $CI_PROJECT_DIR
-#     - cd ..
-#     #- pip install OpenSankey
-#     #- python -m unittest discover opensankey.tests
-#     #- cd opensankey
-#     #- flake8 --exit-zero
-#   dependencies:
-#     - build
+#test:
+#  stage: test
+#  tags:
+#    - dev, test, prod
+#  cache: 
+#    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+#    paths:
+#      - opensankey/client/node_modules/
+#    policy: pull
+
+#  variables:
+#    GIT_STRATEGY: none
+#  script:
+#    - cd opensankey/client
+#    - npm install
+#    - npm link mfa-data
+#   - npm run test
+#  artifacts:
+#    when: always
+#    reports:
+#      junit:
+#        - junit.xml
 
 dev.opensankey.fr:
   stage: deploy
@@ -94,7 +100,8 @@ dev.opensankey.fr:
     - git pull
     - git checkout opensankey/server/views.py
     - cd opensankey/client
-    - npm install
+    - sudo npm install
+    - sudo npm link mfa-data
     - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
     - CI= npm run build
     - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html

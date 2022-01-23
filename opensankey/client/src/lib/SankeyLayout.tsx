@@ -1,52 +1,35 @@
-import { SankeyNode, SankeyLink, SankeyData, } from './types'
-import { find_link, find_node, normalize_name } from './SankeyUtils'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import * as d3 from 'd3'
+import { findMaxLinkValue } from './SankeyUtils'
+import React,{ FunctionComponent } from 'react'
+import PropTypes, { InferProps } from 'prop-types'
+import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
-interface ExtendedSankeyLink {
-  target?: number
-  source?: number
-}
-
-export const reorganize_node_input_links = (
+export const reorganize_node_inputLinksId = (
   node: SankeyNode,
-  nodes: SankeyNode[],
-  links: SankeyLink[]
+  nodes: { [idNode:string]:SankeyNode},
+  links: { [idLink:string]:SankeyLink}
 ) => {
-  const input_links = links.filter(
-    l => l.target_name === node.name
+  const input_links = Object.values(links).filter(
+    l => l.idTarget === node.idNode
   )
-  const input_links_indices: number[] = []
-  input_links.forEach(
-    ol => {
-      const idx = links.indexOf(ol)
-      input_links_indices.push(idx)
-    }
-  )
-
-  node.input_links = input_links_indices
-  node.input_links.sort((l1, l2) => {
-    const l1_index = node.input_links.indexOf(l1)
-    const l2_index = node.input_links.indexOf(l2)
-    const link1 = links[node.input_links[l1_index]]
-    const link2 = links[node.input_links[l2_index]]
-    if (link1 === undefined || link2 === undefined) {
-      return 1
-    }
-    const n1_name = links[node.input_links[l1_index]].source_name
-    const n2_name = links[node.input_links[l2_index]].source_name
-    if (n1_name !== n2_name) {
-      const n1 = find_node(n1_name, nodes)
-      const n2 = find_node(n2_name, nodes)
+  input_links.sort((l1, l2) => {
+    const n1Id = l1.idSource
+    const n2Id = l2.idSource
+    if (n1Id !== n2Id) {
+      const n1 = nodes[n1Id]
+      const n2 = nodes[n2Id]
       if (n1 && n2 && n1.y < n2.y) {
         return -1
       }
       return 1
     } else {
-      const n1 = find_node(n1_name, nodes)
+      const n1 = nodes[n1Id]
       if (n1) {
-        const output_l1_index = n1.output_links.indexOf(l1)
-        const output_l2_index = n1.output_links.indexOf(l2)
+        const output_l1_index = n1.outputLinksId.indexOf(l1.idLink)
+        const output_l2_index = n1.outputLinksId.indexOf(l2.idLink)
+        const l1_index = input_links.indexOf(l1)
+        const l2_index = input_links.indexOf(l1)
         if ((output_l1_index < output_l2_index && l1_index < l2_index) ||
           (output_l1_index > output_l2_index && l1_index > l2_index)) {
           return 1
@@ -57,48 +40,37 @@ export const reorganize_node_input_links = (
       }
     }
   })
+  node.inputLinksId = input_links.map(l=>l.idLink)
 }
 
-export const reorganize_node_output_links = (
+export const reorganize_node_outputLinksId = (
   node: SankeyNode,
-  nodes: SankeyNode[],
-  links: SankeyLink[]
+  nodes: { [idNode:string]:SankeyNode},
+  links: { [idLink:string]:SankeyLink}
 ) => {
-  const output_links = links.filter(
-    l => l.source_name === node.name
+  const output_links = Object.values(links).filter(
+    l => l.idSource === node.idNode
   )
-  const output_links_indices: number[] = []
-
-  output_links.forEach(
-    ol => {
-      const idx = links.indexOf(ol)
-      output_links_indices.push(idx)
-    }
-  )
-
-  node.output_links = output_links_indices
-  node.output_links.sort((l1, l2) => {
-    const l1_index = node.output_links.indexOf(l1)
-    const l2_index = node.output_links.indexOf(l2)
-    const link1 = links[node.output_links[l1_index]]
-    const link2 = links[node.output_links[l2_index]]
-    if (link1 === undefined || link2 === undefined) {
-      return 1
-    }
-    const n1_name = links[node.output_links[l1_index]].target_name
-    const n2_name = links[node.output_links[l2_index]].target_name
-    if (n1_name !== n2_name) {
-      const n1 = find_node(n1_name, nodes)
-      const n2 = find_node(n2_name, nodes)
+  output_links.sort((l1, l2) => {
+    const n1Id = l1.idTarget
+    const n2Id = l2.idTarget
+    if (n1Id !== n2Id) {
+      const n1 = nodes[n1Id]
+      const n2 = nodes[n2Id]
+      if (n2.position == 'relative' ) {
+        return -1
+      }
       if (n1 && n2 && n1.y < n2.y) {
         return -1
       }
       return 1
     } else {
-      const n1 = find_node(n1_name, nodes)
+      const n1 = nodes[n1Id]
       if (n1) {
-        const input_l1_index = n1.input_links.indexOf(l1)
-        const input_l2_index = n1.input_links.indexOf(l2)
+        const input_l1_index = n1.inputLinksId.indexOf(l1.idLink)
+        const input_l2_index = n1.inputLinksId.indexOf(l2.idLink)
+        const l1_index = output_links.indexOf(l1)
+        const l2_index = output_links.indexOf(l1)
         if ((input_l1_index < input_l2_index && l1_index < l2_index) ||
           (input_l1_index > input_l2_index && l1_index > l2_index)) {
           return 1
@@ -109,145 +81,127 @@ export const reorganize_node_output_links = (
       }
     }
   })
+  node.outputLinksId = output_links.map(l=>l.idLink)
 }
 
-export const reorganize_input_links = (
-  node_id: number,
+export const reorganize_inputLinksId = (
+  node: SankeyNode,
   input: boolean,
   output: boolean,
-  nodes: SankeyNode[],
-  links: SankeyLink[]
+  nodes: { [idNode:string]:SankeyNode},
+  links: { [idLink:string]:SankeyLink}
 ) => {
-  const node = nodes[node_id]
+  //const node = nodes[node_id]
 
   if (input) {
-    reorganize_node_input_links(node, nodes, links)
+    reorganize_node_inputLinksId(node, nodes, links)
   }
   if (output) {
-    reorganize_node_output_links(node, nodes, links)
+    reorganize_node_outputLinksId(node, nodes, links)
   }
 }
 
-export const reorder_links = (
-  nodes: SankeyNode[],
-  links: SankeyLink[]
+export const compute_default_input_outputLinksId = (
+  nodes: { [node_id : string]:SankeyNode},
+  links: { [link_id : string]:SankeyLink},
 ) => {
-  const prev_link = [...links]
-  const new_links = prev_link.sort(
-    (l1, l2) => {
-      const node1 = nodes.filter(n => normalize_name(n.name) === normalize_name(l1.source_name))[0]
-      const node2 = nodes.filter(n => normalize_name(n.name) === normalize_name(l2.source_name))[0]
-      if (node1.x < node2.x) {
-        return -1
-      } else {
-        return 1
-      }
-    }
-  )
-  links = [...new_links]
-}
-
-export const compute_default_input_output_links = (
-  nodes: SankeyNode[],
-  links: SankeyLink[]
-) => {
-  nodes.forEach(node => {
-    node.input_links = []
-    node.output_links = []
-    links.forEach((link, link_id) => {
-      if (link.target_name === node.name) {
-        node.input_links.push(link_id)
-      }
-      if (link.source_name === node.name) {
-        node.output_links.push(link_id)
-      }
-    })
+  Object.values(nodes).forEach( n => {
+    n.inputLinksId = []
+    n.outputLinksId = []
+  })
+  Object.values(links).forEach(link => {
+    nodes[link.idTarget].inputLinksId.push(link.idLink)
+    nodes[link.idSource].outputLinksId.push(link.idLink)
   })
 }
+const normalize_name = (name: string) => {
+  const new_name = name.split('\\n').join('').split(' ').join('')
+  return new_name
+}
 
-export const apply_input_output_links = (
-  ref_nodes: SankeyNode[],
-  ref_links: SankeyLink[],
+export const apply_input_outputLinksId = (
+  ref_nodes: { [node_id : string]:SankeyNode},
+  ref_links: { [link_id : string]:SankeyLink},
   data: SankeyData
 ) => {
-  const { nodes, links } = data
+  const display_nodes = data.nodes
+  const display_links = data.links
 
-
-  ref_nodes.forEach(
+  Object.values(ref_nodes).forEach(
     (ref_node) => {
-      const node = nodes.filter(n2 => normalize_name(n2.name) === normalize_name(ref_node.name))[0]
+      const node = display_nodes[ref_node.idNode]
       if (node === undefined) {
         return
       }
-      const new_input_links: number[] = []
-      ref_node.input_links.forEach(
-        (link_id) => {
-          const ref_link = ref_links[link_id]
+      const new_inputLinksId: string[] = []
+      ref_node.inputLinksId.forEach(
+        (idLink) => {
+          const ref_link = ref_links[idLink]
           if (ref_link === undefined) {
             return
           }
-          const link_and_idx = find_link(
-            ref_link.source_name,
-            ref_link.target_name,
-            links
+          const links = Object.values(display_links).filter(
+            l=> {
+              return normalize_name(data.nodes[l.idSource].name) === normalize_name(ref_nodes[ref_link.idSource].name) && 
+                     normalize_name(data.nodes[l.idTarget].name) === normalize_name(ref_nodes[ref_link.idTarget].name)
+            }
           )
-          if (link_and_idx === undefined) {
+          if (links.length === 0) {
             return
           }
-          new_input_links.push(link_and_idx[1] as number)
+          //node.inputLinksId.splice(node.inputLinksId.indexOf(link.idLink),1)
+          new_inputLinksId.push(links[0].idLink)
         }
       )
-      node.input_links = new_input_links
-      const new_output_links: number[] = []
-      ref_node.output_links.forEach(
-        (link_id) => {
-          const ref_link = ref_links[link_id]
+      //const result_inputLinksId = node.inputLinksId.concat(new_inputLinksId)
+      node.inputLinksId = new_inputLinksId //result_inputLinksId.filter(function (item, pos) {return node.inputLinksId.indexOf(item) == pos})
+      const new_outputLinksId: string[] = []
+      ref_node.outputLinksId.forEach(
+        (idLink) => {
+          const ref_link = ref_links[idLink]
           if (ref_link === undefined) {
             return
           }
-          const link_and_idx = find_link(
-            ref_link.source_name,
-            ref_link.target_name,
-            links
+          const links = Object.values(display_links).filter(
+            l => {
+              return normalize_name(data.nodes[l.idSource].name) === normalize_name(ref_nodes[ref_link.idSource].name) && 
+                     normalize_name(data.nodes[l.idTarget].name) === normalize_name(ref_nodes[ref_link.idTarget].name)
+            }
           )
-          if (link_and_idx === undefined) {
+          if (links.length === 0) {
             return
           }
-          new_output_links.push(link_and_idx[1] as number)
+          //node.outputLinksId.splice(node.outputLinksId.indexOf(link.idLink),1)
+          new_outputLinksId.push(links[0].idLink)
         }
       )
-      node.output_links = new_output_links
+      //const result_outputLinksId = node.outputLinksId.concat(new_outputLinksId)
+      node.outputLinksId = new_outputLinksId//result_outputLinksId.filter(function (item, pos) {return node.outputLinksId.indexOf(item) == pos})
     }
   )
 }
 
 export const explore_branch = (
-  node_id: number,
+  idNode: string,
   current_length: number,
-  visited_nodes: number[],
-  //trade_sectors: string[],
-  links: (SankeyLink & ExtendedSankeyLink)[]
+  visited_nodes: string[],
+  links: { [link_id : string]:SankeyLink},
+  nodes: { [node_id : string]:SankeyNode}
 ) => {
   let no_input_link = true
   let highest_branch_length = current_length
-  links.forEach(link => {
-    if (link.target === node_id) {
-      //if (link.target === node_id && !trade_sectors.includes(link.source_name) ) {
-      //if (link.target === node_id ) {
+  Object.values(links).forEach(link => {
+    if (link.idTarget === idNode && nodes[link.idSource].node_visible ) {
       // if the node has never been visited, continue to explore the branch, otherwise stop (for recycling flows).
-      if (visited_nodes.indexOf(node_id) === -1) {
+      if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
-        const new_visited_nodes = visited_nodes.slice()
-        new_visited_nodes.push(node_id)
-        const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes, links) : 0
-        //const branch_length = link.source !== undefined && link.source !== null ? explore_branch(link.source, current_length + 1, new_visited_nodes,trade_sectors,region_name,links) : 0
+        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes)
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
       }
     }
   })
-  //    console.log('end_explore: ' + node_id);
   if (no_input_link === true) {
     return current_length
   }
@@ -261,9 +215,9 @@ export const arrangeNodes = (
   h_space: number,
   v_space: number
 ) => {
-  const { nodes } = data
-  nodes.forEach(node => {
-    if ( !node.visible ) {
+  // const display_nodes : SankeyNode[] = Object.values(data.nodes).filter( n=> n.display )
+  Object.values(data.nodes).forEach(node => {
+    if ( !node.node_visible ) {
       return
     }
     const x = Math.round(node.x / h_space) * h_space
@@ -277,13 +231,17 @@ export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number
 ) => {
-  const { nodes, links } = data
+  //let display_nodes : { [node_id : string]:SankeyNode} = Object.assign({}, ...Object.values(data.nodes).filter( n=> n.n ).map(n=> ({[n.idNode] : {...n} })))
+  // const display_links : { [link_id : string]:SankeyLink}  = Object.assign({}, ...Object.values(data.links).filter( l=> {
+  //   const source_node = data.nodes[l.idSource]
+  //   const target_node = data.nodes[l.idTarget]
+  //   return source_node.display &&  target_node.display
+  // }).map(l=> ({[l.idLink] : {...l} })))
 
-  const extended_links = links as (SankeyLink & ExtendedSankeyLink)[]
+  //const extended_links = display_links as (SankeyLink & ExtendedSankeyLink)[]
   //sankey.update_scale(data.user_scale)
   // var alerte = false
   // var message = ''
-  let max_node_value = 0
   // Horizontal position of vertical nodes
   let max_horizontal_index = 0
   // var list_of_x_before : number[] = []
@@ -295,58 +253,46 @@ export const compute_auto_sankey = (
   // if (!positions) {
   //   return
   // }
-
-
-  // Use a relevant scale
-  links.forEach(link => link.value.forEach(v => max_node_value = v > max_node_value ? v : max_node_value))
-  data.user_scale = max_node_value
-  const scale = d3.scaleLinear()
-    .domain([0, data.user_scale])
-    .range([0, 100])
-  const vspace = data.v_space
-  //sankey.update_scale(max_node_value)
-  //const set_horizontal_indices : Set<number> = new Set()
-  extended_links.forEach(l => {
-    let n = nodes.filter(n => normalize_name(n.name) === normalize_name(l.source_name))[0]
-    l.source = n.id
-    n = nodes.filter(n => normalize_name(n.name) === normalize_name(l.target_name))[0]
-    l.target = n.id
+  let max_link_value = 0
+  Object.values(data.links).forEach(link => {
+    const new_max_link_value  = findMaxLinkValue(
+      max_link_value, 
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
-  const horizontal_indices: number[] = []
-  nodes.forEach((node) => {
-    const horizontal_index = explore_branch(node.id, 0, [], extended_links)
-    //const horizontal_index = explore_branch(node.id, 0, [],trade_sectors,region_name,links)
-    horizontal_indices.push(horizontal_index)
-    //set_horizontal_indices.add(horizontal_index)
+  max_link_value += 1
+  data.user_scale = max_link_value
+
+  const vspace = data.v_space
+  const horizontal_indices: { [node_id:string]:number} = {}
+  Object.values(data.nodes).filter(n=>n.node_visible).forEach(node => {
+    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes)
+    horizontal_indices[node.idNode] = horizontal_index
     if (horizontal_index > max_horizontal_index) {
       max_horizontal_index = horizontal_index
     }
   })
-  extended_links.forEach(l => {
-    if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]) {
-      //if (l.source && l.target && horizontal_indices[l.source] >= horizontal_indices[l.target]  && !trade_sectors.includes(l.source_name)) {
+  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(l => {
+    if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
       l.recycling = true
     }
-    delete l.source
-    delete l.target
   })
 
   const width = max_horizontal_index * h_space
-  // const array_horizontal_indices = Array.from(set_horizontal_indices)
-  // array_horizontal_indices.sort((a, b) => a - b)
-  // nodes.forEach((node)=>{
-  //   node.horizontal_index = array_horizontal_indices.indexOf(node.horizontal_index )
-  // })
 
-  nodes.forEach((node, i) => {
-    node.x = 50 + horizontal_indices[i] / max_horizontal_index * width //* 0.9
+
+  Object.values(data.nodes).forEach(node => {
+    if (!node.node_visible) {
+      return
+    }
+    node.x = 50 + horizontal_indices[node.idNode] / max_horizontal_index * width //* 0.9
   })
 
   // Reorder links using the x of source name as criteria 
-  // Compute input_output_links
-
-  reorder_links(nodes, links)
-  compute_default_input_output_links(nodes, links)
+  // Compute input_outputLinksId
+  Object.values(data.nodes).filter(n=>n.node_visible).forEach(n => data.nodes[n.idNode] = {...n})
+  compute_default_input_outputLinksId(data.nodes, data.links)
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
@@ -354,7 +300,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = nodes.filter((n, ii) => horizontal_indices[ii] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
     if (the_nodes.length > 1) {
       //vertical_space = (0.6 * height - total_height) / (total_nb - 1)
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
@@ -364,10 +310,14 @@ export const compute_auto_sankey = (
     }
 
     the_nodes.forEach((node, node_id) => {
-      let total_input_offset = 0
-      node.input_links.forEach(
-        (id) => total_input_offset += +links[id].value[0]
-      )
+      // let total_input_offset = 0
+      // node.inputLinksId.forEach(
+      //   (idLink) => { 
+      //     if (data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible) {
+      //       total_input_offset += getLinkValue(data,idLink).value
+      //     }
+      //   }
+      // )
       if (node_id === 0) {
         node.y = 200//0.2 * height;
         vertical_offset = 200 + vertical_space
@@ -382,23 +332,22 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = nodes.filter((n, ii) => horizontal_indices[ii] === i)
-    let total_nb_output_links_up = 0
-    let total_nb_output_links_down = 0
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
+    let total_nb_outputLinksId_up = 0
+    let total_nb_outputLinksId_down = 0
     the_nodes.forEach((node) => {
-
-      node.output_links.forEach(
-        id => {
-          if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+      node.outputLinksId.forEach(
+        (idLink) => {
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
+            const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
-              console.log(links[id].target_name)
+              console.log(data.links[idLink].idTarget)
               return
             }
             if ( target_node.y < node.y ) {
-              total_nb_output_links_up += 1
+              total_nb_outputLinksId_up += 1
             } else {
-              total_nb_output_links_down += 1              
+              total_nb_outputLinksId_down += 1              
             }
           }
         }
@@ -407,21 +356,21 @@ export const compute_auto_sankey = (
     let current_output_link_up = 0
     let current_output_link_down = 0
     the_nodes.forEach(node => {
-      node.output_links.forEach(
-        id => {
-          if ( links[id].visible ) {
-            const target_node = nodes.filter(n=>normalize_name(n.name) === normalize_name(links[id].target_name))[0]
+      node.outputLinksId.forEach(
+        (idLink) => {
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
+            const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
-              console.log(links[id].target_name)
+              console.log(data.links[idLink].idTarget)
               return
             }
             if ( target_node.y < node.y ) {
-              links[id].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
-              links[id].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_output_links_up)*data.max_shift
+              data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+              data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
               current_output_link_up += 1
             } else {
-              links[id].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
-              links[id].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_output_links_down)*data.max_shift
+              data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+              data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
               current_output_link_down += 1
             }
 
@@ -446,10 +395,10 @@ export const compute_auto_sankey = (
   // associate position constraint to each horizontal node and order nodes by constraints   
   // nodes.forEach(node => {
   //   if (node.orientation === 'horizontal') {
-  //     if (node.output_links.length > 0) {
+  //     if (node.outputLinksId.length > 0) {
   //       var min_x = width
-  //       node.output_links.forEach(output_link=>{
-  //         var output_node = nodes.filter(n=>normalize_name(n.name)===normalize_name(output_link.target_name))[0]
+  //       node.outputLinksId.forEach(output_link=>{
+  //         var output_node = nodes.filter(n=>n.idNode===output_link.idTarget)[0]
   //         if (output_node.x < min_x) {
   //           min_x = output_node.x
   //         }
@@ -461,10 +410,10 @@ export const compute_auto_sankey = (
   //       }
   //       the_nodes_min[min_x].push(node)
   //     }        
-  //     else if (node.input_links.length > 0) {
+  //     else if (node.inputLinksId.length > 0) {
   //       var max_x = 0
-  //       node.input_links.forEach(input_link=>{
-  //         var input_node = nodes.filter(n=>normalize_name(n.name)===normalize_name(input_link.source_name))[0]
+  //       node.inputLinksId.forEach(input_link=>{
+  //         var input_node = nodes.filter(n=>n.idNode===input_link.idSource)[0]
   //         if (nodes[input_node].x > max_x) {
   //           max_x = nodes[input_node].x
   //         }
@@ -484,7 +433,7 @@ export const compute_auto_sankey = (
   //   the_nodes_min[x_before].forEach(
   //     node => {
   //       let total_output_offset = 0
-  //       node.output_links.forEach(
+  //       node.outputLinksId.forEach(
   //         (id) => total_output_offset += +links[id].value
   //       )
   //       node.x = horizontal_offset - that.sankey.scale(total_output_offset)
@@ -497,7 +446,7 @@ export const compute_auto_sankey = (
   //   var horizontal_offset = x_after + 3 * default_node_size
   //   the_nodes_max[x_after].forEach(node => {
   //     let total_input_offset = 0
-  //     node.input_links.forEach(
+  //     node.inputLinksId.forEach(
   //       (id) => total_input_offset += +links[id].value
   //     )
   //     node.x = horizontal_offset
@@ -506,19 +455,21 @@ export const compute_auto_sankey = (
   // })
   //data.max_vertical_offset = max_vertical_offset
 
-  reorganize_all_input_output_links(nodes, links)
   data.width = width + h_space
-  data.height = max_vertical_offset + 100
+  //data.height = Math.max(1500,max_vertical_offset + 100)
+  
+  reorganize_all_input_outputLinksId(data.nodes, data.links)
+
   return []
 }
 
-export const reorganize_all_input_output_links = (
-  nodes: SankeyNode[],
-  links: SankeyLink[]
+export const reorganize_all_input_outputLinksId = (
+  nodes: { [idNode:string]:SankeyNode},
+  links: { [idLink:string]:SankeyLink}
 ) => {
-  nodes.forEach((node) => {
-    reorganize_node_input_links(node, nodes, links)
-    reorganize_node_output_links(node, nodes, links)
+  Object.values(nodes).forEach( node => {
+    reorganize_node_inputLinksId(node, nodes, links)
+    reorganize_node_outputLinksId(node, nodes, links)
   })
 }
 
@@ -527,36 +478,48 @@ export const updateLayout = (
   new_layout: SankeyData
 ) => {
   convert_data(new_layout)
-  const { nodes, links } = data
 
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
-    if (node.tags['Exchanges'].includes('Importations') || node.tags['Exchanges'].includes('Exportations')) {
+    if (!node.node_visible) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
   }
-  nodes.forEach(compute_offset)
+  Object.values(data.nodes).forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
+  data.node_width = new_layout.node_width
   // Apply nodes layout
-  for (let i = 0; i < new_layout.nodes.length; i++) {
-    const node_layout = new_layout.nodes[i]
-    let node = find_node(node_layout.name, nodes)
-    if (node === undefined) {
-      if (node_layout.input_links.length === 0 && node_layout.output_links.length === 0 && node_layout.visible === false && node_layout.label_visible === true) {
+  for (const node_layout_key in new_layout.nodes) {
+    const node_layout = new_layout.nodes[node_layout_key]
+    const nodes = Object.values(data.nodes).filter(n=>normalize_name(n.name) === normalize_name(node_layout.name) )
+    let node : SankeyNode | undefined
+    if (nodes.length === 0) {
+      if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
         // Case of not a label
         node = {...node_layout}
-        nodes.push(node)
+        // Méthode pour incrementer idNode
+        const listId : number[] = []
+        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+        node.idNode = 'idNode'
+        data.nodes[node.idNode]
       } else {
         continue
       }
     }
-
+    node = nodes[0]
+    if (!node) {
+      continue
+    }
+    // if (!node.node_visible) {
+    //   continue
+    // }
     node.name = node_layout.name
     node.x = node_layout.x
     node.y = node_layout.y
-    if (!node.tags['Exchanges'].includes('Exportations') && node.y + 200 > max_vertical_offset) {
+    if (node.y + 200 > max_vertical_offset) {
       max_vertical_offset = node.y + 200
     }
     //node.color = node_layout.color
@@ -564,35 +527,38 @@ export const updateLayout = (
     node.y_label = node_layout.y_label
     node.label_visible = node_layout.label_visible
   }
-  apply_input_output_links(
-    new_layout.nodes,
-    new_layout.links,
-    data
-  )
+  // apply_input_outputLinksId(
+  //   new_layout.nodes,
+  //   new_layout.links,
+  //   data
+  // )
 
 
-  for (let i = 0; i < new_layout.links.length; i++) {
-    const link_layout = new_layout.links[i]
-    const link_and_idx = find_link(
-      link_layout.source_name,
-      link_layout.target_name,
-      links
+  for (const link_layout_key in new_layout.links) {
+    const link_layout = new_layout.links[link_layout_key]
+    const links = Object.values(data.links).filter(
+      l=> {
+        return normalize_name(data.nodes[l.idSource].name) === normalize_name(new_layout.nodes[link_layout.idSource].name) && 
+        normalize_name(data.nodes[l.idTarget].name) === normalize_name(new_layout.nodes[link_layout.idTarget].name)
+      }
     )
-    if (link_and_idx === undefined) {
+
+
+    if (links.length === 0) {
       continue
     }
-    const link = link_and_idx[0] as SankeyLink
+    const link = links[0]
     // if ( link_layout.display_value !== 'default' && 
     //     !String(link_layout.display_value).includes('[') ) {
     //   link.value = link_layout.value
     // }
-    const node_source = find_node(link_layout.source_name, nodes)
-    const node_target = find_node(link_layout.target_name, nodes)
-    if (node_source && node_target) {
-      link.source_name = node_source.name
-      link.target_name = node_target.name
-    }
-    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow } = link_layout
+    // const node_source = Object.values(data.nodes).filter( n => n.name ===new_layout.nodes[link_layout.idSource].name)
+    // const node_target = Object.values(data.nodes).filter( n => n.name ===new_layout.nodes[link_layout.idTarget].name)
+    // if (node_source && node_target) {
+    //   link.idSource = node_source.idNode
+    //   link.idSource = node_target.idNode
+    // }
+    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position } = link_layout
     link.curvature = curvature
     link.curved = curved
     link.arrow = arrow
@@ -604,8 +570,12 @@ export const updateLayout = (
     link.left_horiz_shift = link_layout.left_horiz_shift
     link.right_horiz_shift = link_layout.right_horiz_shift
     link.orientation = link_layout.orientation
-    //link.type = type
     link.recycling = recycling
+    link.orthogonal_label_position = orthogonal_label_position
+
+    // if (String(link.display_value[0]).includes('*')) {
+    //   link.value[0] = getLinkValue(new_layout,link_layout.idLink)
+    // }
 
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift
@@ -616,17 +586,140 @@ export const updateLayout = (
 
   //data.animation_tooltips = new_layout.animation_tooltips
   data.user_scale = new_layout.user_scale
-  if ('height' in new_layout) {
-    data.height = new_layout.height
-  }
+  data.legend_position = new_layout.legend_position;
+  ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
+  // if ('height' in new_layout) {
+  //   data.height = new_layout.height
+  // }
   if ('width' in new_layout) {
     data.width = new_layout.width
   }
-  data.display_style = new_layout.display_style
+  Object.keys(new_layout.display_style).forEach(
+    key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
+  )
   if (data.display_style.filter === undefined) {
     data.display_style.filter = 0
   }
   if (data.display_style.filter_label === undefined) {
     data.display_style.filter_label = 0
   }
+}
+
+export const desagregation = (
+  data: SankeyData,   
+  idChildNode: string, 
+  cur_dimension: string
+) => {
+  const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
+  if (!idParent) {
+    return
+  }
+  const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
+  desagregate_nodes.forEach( n => {
+    n.display = true
+    n.node_visible = true
+  })
+  const nb_desagregated = desagregate_nodes.length
+  let current_y = data.v_space/2
+  const delta_y = data.v_space / (nb_desagregated-1)
+  desagregate_nodes.forEach(n => {
+    if (n.x === undefined || (n.x === 0 && n.y === 0)) {
+      n.x = data.nodes[idParent].x
+      n.y = data.nodes[idParent].y - current_y
+    }
+    current_y = current_y - delta_y
+  })
+  // Hides agregated nodes
+  data.nodes[idParent].display = false
+  data.nodes[idParent].node_visible = false
+}
+
+export const agregation = (
+  data : SankeyData, 
+  idParent: string,
+  cur_dimension: string
+) =>  {
+  const agregated_node = data.nodes[idParent]    
+  const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
+  // show agregated node
+  agregated_node.display = true
+  agregated_node.node_visible = true
+
+  let mean_x = 0
+  let mean_y = 0
+  desagregate_nodes.forEach(n => {
+    data.nodes[n.idNode].display = false
+    data.nodes[n.idNode].node_visible = false
+    if (n.x) {
+      mean_x += n.x  
+      mean_y += n.y
+    }
+  })
+  mean_x = mean_x/desagregate_nodes.length
+  mean_y = mean_y/desagregate_nodes.length
+
+  if (agregated_node.x === undefined || (agregated_node.x === 0 && agregated_node.y === 0) ) {
+    agregated_node.x = mean_x
+    agregated_node.y = mean_y
+  }
+}
+
+const AgregationModalPropTypes = {
+  data : PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data : PropTypes.func.isRequired,
+  parent_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  dimension_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  set_show_agregation : PropTypes.func.isRequired,
+  show_agregation : PropTypes.bool.isRequired,
+  is_agregation: PropTypes.bool.isRequired
+}
+
+type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
+
+export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
+  {data, set_data, parent_names, dimension_names, set_show_agregation,show_agregation,is_agregation}
+) => {
+  let idParent = parent_names[0]
+
+  return (
+    <Modal 
+      show={show_agregation} 
+      onHide={ () => set_show_agregation(false) } >
+      <Modal.Header closeButton>
+        <Modal.Title>{is_agregation ? 'Noeuds agrégation' : 'Noeuds desagrégation'}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group>
+            <Row>
+              <Col>    
+                <Form.Select
+                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idParent = evt.target.value}
+                >
+                  {parent_names.map(
+                    (curIdParent, i) => <option key={i} value={curIdParent} selected={idParent === curIdParent} >{data.nodes[curIdParent].name}</option>
+                  )}
+                </Form.Select>
+              </Col>
+            </Row>      
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button 
+          variant="secondary" 
+          onClick={()=> {
+            if (is_agregation) {
+              agregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
+            } else {
+              desagregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
+            }
+            set_data({...data})
+            set_show_agregation(false)
+          }}
+        >{is_agregation ? 'Agrégation' : 'Désagrégation'}</Button>
+        <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
+      </Modal.Footer>
+    </Modal>
+  )
 }
