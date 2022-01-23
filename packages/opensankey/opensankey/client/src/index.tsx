@@ -51,10 +51,13 @@ render(
       <div className="container">
         <Row style={{ 'marginTop' : '0px' }} >
           <Col>
-            <h4>Contributeurs</h4>
+            <h4>Réalisé par:</h4>
           </Col>
           <Col>
             <img src={logo.replace('static/', 'static/opensankey/')} width="200" />
+          </Col>
+          <Col>
+            <h4>Contributeurs:</h4>
           </Col>
           <Col>
             <img src={logo_auraee.replace('static/', 'static/opensankey/')} width="150" />
