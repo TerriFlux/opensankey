@@ -287,7 +287,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          <Navbar.Brand href="#"><img src={logo.replace('static/', 'static/opensankey/')} width="100"/> version beta</Navbar.Brand>
+          <Navbar.Brand href="#"><img src={logo.replace('static/', 'static/opensankey/')} width="100"/> version beta 0.8 </Navbar.Brand>
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
