@@ -402,8 +402,9 @@ def save_simple_excel(
             nodes[i+1][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['tags_catalog']):
             nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
-
-        nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
+        nodes[i+1][nodes_cols.index('Level')] = 1
+        if 'level' in node['dimensions']['Primaire']:
+            nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
     flux_cols = [
         'Origin', 'Destination', 'Value'
