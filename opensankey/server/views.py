@@ -51,6 +51,37 @@ def clean_pdf():
     )
     return response
 
+def write_mfa_problem_output_to_excel(
+    output_file_name: str,
+    mfa_problem_output: dict
+):
+    with pd.ExcelWriter(output_file_name, engine='openpyxl', mode='w') as writer:
+        for tab_name, tab_content in mfa_problem_output.items():
+            sheet_content = tab_content
+            if type(sheet_content) is dict:
+                df = pd.Series(sheet_content).to_frame()
+            else:
+                df = pd.DataFrame(sheet_content)
+            df.to_excel(writer, sheet_name=tab_name, index=False, header=False)
+
+@opensankey.route('/sankey/save_excel', methods=['POST'])
+def save_excel():
+    cwd = os.getcwd()
+    excel_file = os.path.join(cwd, "tutu.xlsx")
+    sankey_data =  request.get_data().decode("utf-8")
+    mfa_output = parser_excel.save_simple_excel(json.loads(sankey_data))
+    write_mfa_problem_output_to_excel(excel_file,mfa_output)
+    return send_file(excel_file, as_attachment=True)
+
+@opensankey.route('/sankey/clean_excel', methods=['POST'])
+def clean_excel():
+    cwd = os.getcwd()
+    excel_file = os.path.join(cwd, "tutu.xlsx")
+    os.remove(excel_file)
+    response = Response(
+        status=200
+    )
+    return response
 
 @opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
 def upload_data():
