@@ -51,17 +51,48 @@ def clean_pdf():
     )
     return response
 
+def write_mfa_problem_output_to_excel(
+    output_file_name: str,
+    mfa_problem_output: dict
+):
+    with pd.ExcelWriter(output_file_name, engine='openpyxl', mode='w') as writer:
+        for tab_name, tab_content in mfa_problem_output.items():
+            sheet_content = tab_content
+            if type(sheet_content) is dict:
+                df = pd.Series(sheet_content).to_frame()
+            else:
+                df = pd.DataFrame(sheet_content)
+            df.to_excel(writer, sheet_name=tab_name, index=False, header=False)
+
+@opensankey.route('/sankey/save_excel', methods=['POST'])
+def save_excel():
+    cwd = os.getcwd()
+    excel_file = os.path.join(cwd, "tutu.xlsx")
+    sankey_data =  request.get_data().decode("utf-8")
+    mfa_output = parser_excel.save_simple_excel(json.loads(sankey_data))
+    write_mfa_problem_output_to_excel(excel_file,mfa_output)
+    return send_file(excel_file, as_attachment=True)
+
+@opensankey.route('/sankey/clean_excel', methods=['POST'])
+def clean_excel():
+    cwd = os.getcwd()
+    excel_file = os.path.join(cwd, "tutu.xlsx")
+    os.remove(excel_file)
+    response = Response(
+        status=200
+    )
+    return response
 
 @opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
 def upload_data():
     excel_input_file = request.files['file']
-    nodes, links = parser_excel.parse_simple_excel(excel_input_file)
-    context = {
-        'nodes': nodes,
-        'links': links
-    }
+    sankey_data = parser_excel.parse_simple_excel(excel_input_file)
+    # context = {
+    #     'nodes': nodes,
+    #     'links': links
+    # }
     try:
-        json_data = json.dumps(context)
+        json_data = json.dumps(sankey_data)
         response = Response(
             response=json_data,
             status=200,
@@ -79,27 +110,37 @@ def upload_data():
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
 def upload_exemple():
-    exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    data_folder = os.environ.get('MFAData')
+    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(exemples_folder, exemple)
+    exemple_file_path = os.path.join(data_folder, exemple)
+    exemple_folder = os.path.dirname(exemple_file_path)
     error=''
-    if exemple == "pommes_poires.xlsx":
-        nodes, links = parser_excel.parse_simple_excel(exemple_file_path)
-        context = {
-            'error'  : error,
-            'nodes'  : nodes,
-            'links'  : links,
-            'h_space': 500,
-            'v_space': 250
-        }
-        json_data = json.dumps(context)
-    elif exemple == "sankeys_territoire_.csv":
+    extension = os.path.splitext(exemple_file_path)[1]
+    if extension == ".xlsx":
+        sankey_data = parser_excel.parse_simple_excel(exemple_file_path)
+        # context = {
+        #     'version': '0.6',
+        #     'error'  : error,
+        #     'nodes'  : nodes,
+        #     'links'  : links,
+        #     'h_space': 500,
+        #     'v_space': 250
+        # }
+        json_data = json.dumps(sankey_data)
+    elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
-        layout_file_name = os.path.join(exemples_folder, "energie_layout.json")
+        layout_file_name = os.path.join(exemple_folder, "sankey","energie_layout.json")
         layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
         layout_data = json.load(layout_file)
         sankey_dict["layout"] = layout_data
+        sankey_dict['version'] = '0.6'
         json_data = json.dumps(sankey_dict)
+    elif extension == ".json":
+        json_file_name = os.path.join(data_folder, exemple)
+        json_file = open(json_file_name,encoding="utf-8", mode= "r")
+        data = json.load(json_file)
+        json_data = json.dumps(data)        
 
     response = Response(
         response=json_data,
@@ -110,9 +151,10 @@ def upload_exemple():
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
-    exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    data_folder = os.environ.get('MFAData')
+    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(exemples_folder, exemple)
+    exemple_file_path = os.path.join(data_folder, exemple)
     if os.path.exists(exemple_file_path):
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')

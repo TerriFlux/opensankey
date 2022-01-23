@@ -1,17 +1,16 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Col, Row } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
-import SankeyLinkEdition from './SankeyLinkEdition'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
+import SankeyEdition from './SankeyEdition'
+import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeySettingsEdition from './SankeySettingsEdition'
-import SankeyLinkContextMenu from './SankeyLinkContextMenu'
-import SankeyNodeContextMenu from './SankeyNodeContextMenu'
+import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
+import { Row, Col } from 'react-bootstrap'
+import { getLinkValue } from './SankeyUtils'
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -20,14 +19,22 @@ const SankeyAppPropTypes = {
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
-  const [show_node, set_show_node] = useState(false)
-  const [show_link, set_show_link] = useState(false)
-  const [show_graphic_attributes, set_show_graphic_attributes] = useState(false)
-  const [show_node_context, set_show_node_context] = useState(false)
-  const [show_link_context, set_show_link_context] = useState(false)
-  const [selected_link, set_selected_link] = useState(0)
-  const [selected_node, set_selected_node] = useState(0)
+  const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
+  const [show_nav, set_show_nav] = useState(false)
+  const [nav_item_active, set_nav_item_active] = useState<string>('')
+  const [selected_link, set_selected_link] = useState(start_link)
+  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
+  const [radio_selected] = useState<string>('local')
   const [data, set_data] = useState<SankeyData>(sankey_data)
+  const [agregation_level, set_agregation_level] = useState(0)
+
+  //Selectionne le premier flux par default si il y en a un 
+  /*  if(Object.keys(sankey_data.links).length!=0){
+     set_selected_link(sankey_data.links[Object.keys(sankey_data.links)[0]])
+   } */
+
+
+  const display_links = data.links
 
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
@@ -35,106 +42,217 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
         data={data}
         set_data={set_data}
         app_name='Open-Sankey'
+        set_show_nav={set_show_nav}
+        show_nav={show_nav}
+        set_nav_item_active={set_nav_item_active}
+        nav_item_active={nav_item_active}
+        set_selected_node={set_selected_node}
+        selected_node={selected_node}
+        set_selected_link={set_selected_link}
+        selected_link={selected_link}
+        agregation_level={agregation_level}
+        set_agregation_level={set_agregation_level}
         url_prefix=''
+        settings_edition={
+          <SankeySettingsEdition
+            data={data}
+            set_data={set_data}
+            set_current_filter={(
+              new_current_filter: number
+            ) => {
+              const { display_style } = data
+              display_style.filter = +new_current_filter
+              set_data({ ...data })
+            }}
+          />
+        }
+        node_edition={
+          <SankeyNodeEdition
+            data={data}
+            set_data={set_data}
+            selected_node={selected_node}
+            radio_selected={radio_selected}
+          />
+        }
+        link_edition={
+          <SankeyLinkEdition
+            show={true}
+            data={data}
+            set_data={set_data}
+            selected_link={selected_link}
+          />
+        }
+        settings_edition_tags={
+          <SankeySettingsEditionTags
+            data={data}
+            set_data={set_data}
+          />
+        }
+        settings_edition_tags_links={
+          <SankeySettingsEditionTagsLinks
+            data={data}
+            set_data={set_data}
+          />
+        }
       />
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition
             data={data}
-            set_selected_node={set_selected_node}
-            set_selected_link={set_selected_link}
-            set_show_link={set_show_link}
-            set_show_graphic_attributes={set_show_graphic_attributes}
             set_data={set_data} />
         </Col>
       </Row>
       <SankeyDraw
         data={data}
-        select_node={(i: number) => {
-          set_selected_node(i)
-          set_show_node(true)
+        set_data={set_data}
+        select_node={(n: SankeyNode) => {
+          set_selected_node(n)
         }}
-        nodeContextMenu={(i: number) => {
-          set_selected_node(i)
-          set_show_node_context(true)
-        }}
-        node_visible={
-          (n: SankeyNode) => n.visible ? 'visible' : 'hidden'
-        }
-        node_label_visible={
-          (n: SankeyNode) => n.label_visible ? 'visible' : 'hidden'
-        }
         node_arrow_visible={
-          (n: SankeyNode) => (n.input_links.length === 0) || (!data.links[n.input_links[0]].arrow) ? false : true
+          (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
-        select_link={(i: number) => {
-          set_selected_link(i)
-          set_show_link(true)
+        select_link={(l: SankeyLink) => {
+          set_selected_link(l)
         }}
-        linkContextMenu={(i: number) => {
-          set_selected_link(i)
-          set_show_link_context(true)
+        //node_color={n => n.color}
+        node_color={(n: SankeyNode) => {
+          let colorNode
+          // Le couleur est définie dans l'onglet général
+          if (n.nodeParameter === 'general') {
+            colorNode = '#808080'
+          }
+          if (n.nodeParameter === 'groupTag') {
+            //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+            //on controle ici qu'il y a bien un favorite tag
+            if (n.colorTag !== undefined && n.colorTag !== '') {
+              const tagGroup = n.colorTag
+              if (n.tags[tagGroup].length > 0) {
+                colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+              } else {
+                colorNode = n.color
+              }
+            } else {
+              colorNode = n.color
+            }
+          }
+          if (n.nodeParameter === 'local') {
+            // Le couleur est définie dans les parametres locaux du noeud
+            colorNode = n.color
+          }
+
+          return colorNode
         }}
-        link_color={l => l.color}
-        node_color={n => n.color}
         link_text={SankeyUtils.link_text}
-        link_visible={(l: SankeyLink) => l.visible }
-        test_link_value={ (nodes: SankeyNode[], d: SankeyLink, /*selected_tags: string[]*/) => {
-          return d.value[0]
+        link_visible={(l: SankeyLink) => {
+          const { dataTags } = data
+          if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
+            return false
+          }
+          let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
+          const listKey = [] as string[]
+          let missing_key = false
+          Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            if (selected_tags.length == 0 || missing_key) {
+              missing_key = true
+              return 
+            }
+            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          })
+          if (missing_key) {
+            return false
+          }
+
+          for (const i in listKey) {
+            //const val_dict = (val as unknown) as SankeyLinkValueDict
+            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
+          }
+          const v = (val as unknown) as SankeyLinkValue
+          if (l.colormap !== undefined && l.colormap !== '' ) {
+            const selected_tag = v.color_tag[l.colormap]
+            if ( selected_tag && l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
+              return false
+            }
+          }
+          if (v.value === 0) {
+            if (data.display_style.null_flux) {
+              return true
+            }
+            return false
+          }
+          return true
         }}
-        more_processing={() => void 0}
+        link_color={(l : SankeyLink)=> {
+          if (!l.colormap || l.colormap === '') {
+            return l.color
+          } else {
+            if (l.colormap in  data.dataTags) {
+              const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
+              if (selected_tag) {
+                return data.dataTags[l.colormap].tags[selected_tag].color
+              }
+            }
+            const source_node = data.nodes[l.idSource]
+            const target_node = data.nodes[l.idTarget]
+            let selected_tag = ''
+            if (source_node.type === 'sector' && source_node.tags[l.colormap].length === 1) {
+              selected_tag = source_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
+            } else if ( target_node.type === 'sector' &&  target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]   
+              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            } else if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
+              selected_tag = source_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
+            } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]   
+              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            }
+            if ( Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
+              return Object.values(data.tags_catalog[l.colormap].tags)[0].color
+            }
+            return l.color
+          }
+        }}
+        test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
+          const { dataTags } = data
+          let val = ((d.value as unknown) as {[key:string]:SankeyLinkValueDict})
+          const listKey : string[] = [] 
+          /* console.log(val)
+          console.log(dataTags) */
+          let missing_key = false
+          Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            if (selected_tags.length == 0 || missing_key) {
+              missing_key = true
+              return 
+            }
+            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          })
+          if (missing_key) {
+            return {
+              value        : 0,
+              display_value: 'default',
+              color_tag    : {},
+              extension    : {}          
+            }    
+          }
+          // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
+          // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
+          //   listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
+          // })
+
+          for (const i in listKey) {
+            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
+          }
+          return ((val as unknown) as SankeyLinkValue).value
+        }}
+        set_show_nav={set_show_nav}
+        set_nav_item_active={set_nav_item_active}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
-        getValueIndex={() => 0 }
       />
-      <SankeyNodeEdition
-        show={show_node}
-        data={data}
-        set_data={set_data}
-        set_show_node={set_show_node}
-        selected_node={selected_node}
-        getValueIndex={() => 0 }
-      />
-      <SankeyLinkEdition
-        show={show_link}
-        data={data}
-        set_data={set_data}
-        set_show_link={set_show_link}
-        selected_link={selected_link}
-        getValueIndex={() => 0 }
-      />
-      <SankeySettingsEdition
-        show={show_graphic_attributes}
-        set_show_graphic_attributes={set_show_graphic_attributes}
-        data={data}
-        set_data={set_data}
-        set_current_filter={(
-          new_current_filter: number
-        ) => {
-          const { display_style } = data
-          display_style.filter = +new_current_filter
-          set_data({ ...data })
-        }}
-        getValueIndex={() => 0 }
-      />
-      <SankeyNodeContextMenu
-        data={data}
-        set_data={set_data}
-        show={show_node_context}
-        closeNodeContextMenu={() => {
-          set_show_node_context(false)
-        }}
-        selected_node={selected_node}
-      />
-      <SankeyLinkContextMenu
-        data={data}
-        set_data={set_data}
-        show={show_link_context}
-        closeLinkContextMenu={() => {
-          set_show_link_context(false)
-        }}
-        selected_link={selected_link} />
-    </div>
+    </div >
   )
 }
 
