@@ -41,25 +41,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const node_tag = (
     <Tab eventKey="tags" title="Tags"
       disabled={node.nodeParameter !== 'groupTag'} >
-      <br></br>
       <Form.Group as={Row} >
-        <Col>
-          <FormLabel >Tag Groupe:</FormLabel>
+        <Col  xs={2}>
+          <FormLabel >TagGroupe:</FormLabel>
         </Col>
-        <Col>
-          <FormCheck inline
-            type='switch'
-            disabled={node.nodeParameter !== 'groupTag'}
-            checked={node.colorTag == tags_group_key}
-            label='Palette'
-            onChange={() => {
-              node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key
-
-              set_data({ ...data })
-            }}
-          />
-        </Col>
-        <Col>
+        <Col   xs={6}>
           <Form.Select
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
@@ -74,6 +60,19 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </option>)}
           </Form.Select>
         </Col>
+        <Col>
+          <FormCheck inline
+            type='switch'
+            disabled={node.nodeParameter !== 'groupTag'}
+            checked={node.colorTag == tags_group_key}
+            label='Palette'
+            onChange={() => {
+              node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key
+
+              set_data({ ...data })
+            }}
+          />
+        </Col>        
       </Form.Group>
       <Form.Group as={Row} >
         <Table striped bordered hover className='node_tags_affiliation'>
@@ -125,10 +124,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     <Row>
       <Col sm={12}>
         <Tabs defaultActiveKey="nodes_desc" id="settings-layout">
-
           <Tab eventKey="nodes_desc" title="Description" 
             disabled={!(node.nodeParameter == 'local')}> 
-            <br></br>
             <Form >
               <Form.Group as={Row} >
                 <Col xs={2}>

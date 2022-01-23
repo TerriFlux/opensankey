@@ -53,10 +53,9 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   return (
     <Tabs defaultActiveKey="geometry" id="settings-layout">
       <Tab eventKey="geometry" title="Géometrie">
-        <br></br>
         <Form>
           <Form.Group as={Row} >
-            <Col>
+            <Col  xs={3}>
               <FormLabel >Echelle</FormLabel>
             </Col>
             <Col>
@@ -90,7 +89,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group> */}
           <Form.Group as={Row} >
-            <Col>
+            <Col  xs={3}>
               <FormLabel>Largeur</FormLabel>
             </Col>
             <Col>
@@ -121,7 +120,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col   xs={3}>
               <FormLabel>Shift horizontal</FormLabel>
             </Col>
             <Col>
@@ -150,7 +149,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col   xs={3}>
               <FormLabel>Shift vertical</FormLabel>
             </Col>
             <Col>
@@ -179,7 +178,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col   xs={3}>
               <FormLabel >Légende X</FormLabel>
             </Col>
             <Col>
@@ -195,7 +194,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col   xs={3}>
               <FormLabel>Légende Y</FormLabel>
             </Col>
             <Col>
@@ -213,19 +212,18 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
         </Form>
       </Tab>
       <Tab eventKey="layout" title="Positionnement">
-        <br></br>
         <Form >
           <Form.Group as={Row} >
-            <Col>
+            <Col  xs={3}>
               <FormLabel>Layout</FormLabel>
             </Col>
-            <Col>
+            <Col   xs={5}>
               <Form.Control
                 type="file"
                 onChange={(evt: React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
               />
             </Col>
-            <Col>
+            <Col  xs={4}>
               <Button
                 size="sm"
                 onClick={
@@ -254,13 +252,13 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col   xs={3}>
               <FormLabel>Définition de la Grille</FormLabel>
             </Col>
-            <Col>
+            <Col xs={2}>
               <FormLabel>Horizontal</FormLabel>
             </Col>
-            <Col>
+            <Col xs={2}>
               <FormControl
                 type="text"
                 value={node_hspace}
@@ -270,10 +268,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }}
               />
             </Col>
-            <Col>
+            <Col  xs={2}>
               <FormLabel>Vertical</FormLabel>
             </Col>
-            <Col>
+            <Col  xs={2}>
               <FormControl
                 type="text"
                 value={node_vspace}
@@ -285,7 +283,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col  xs={3}>
               <Button
                 size="sm"
                 onClick={() => {
@@ -294,7 +292,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }}
               >Arranger noeuds</Button>
             </Col>
-            <Col>
+            <Col xs={4}>
               <Button
                 size="sm"
                 onClick={() => {
@@ -303,9 +301,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }}
               > Positionnement automatique</Button>
             </Col>
-          </Form.Group>
-          <Form.Group as={Row} >
-            <Col>
+            <Col xs={5}>
               <Button
                 size="sm"
                 onClick={() => {
@@ -321,7 +317,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
         </Form>
       </Tab>
       <Tab eventKey="nodes" title="Noeuds">
-        <br></br>
         <Form >
           <Form.Group as={Row} >
             <Col>
@@ -463,7 +458,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
         </Form>
       </Tab>
       <Tab eventKey="flux" title="Flux">
-        <br></br>
         <Form >
           <Form.Group as={Row} >
             <Col>
@@ -1059,7 +1053,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
             <th>Nom</th>
             <th>Legend</th>
-            <th>Nb tag</th>
+            <th>Tag</th>
             <th>Bannière</th>
             <th>Position</th>
           </tr>
@@ -1124,11 +1118,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           }
         </tbody>
       </Table>
-
-
-
-      <br></br>
-
       {Object.keys(tags_catalog).length > 0 ? tagSetting : <></>}
     </>
   )
@@ -1253,8 +1242,8 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
   // }
   const tagSetting = (<>
     <Form.Group as={Row} >
-      <Col>
-        <FormLabel >Tag Groupe:</FormLabel>
+      <Col xs={2}>
+        <FormLabel >TagGroupe:</FormLabel>
       </Col>
       <Col>
         <Form.Select onChange={
@@ -1380,7 +1369,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
             <th>Nom</th>
             {/* <th>Legend</th> */}
-            <th>Nb tag</th>
+            <th>Tag</th>
             <th>Bannière</th>
             {/* <th>Position</th> */}
           </tr>
@@ -1449,11 +1438,6 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
           }
         </tbody>
       </Table>
-
-
-
-      <br></br>
-
       {Object.keys(dataTags).length > 0 ? tagSetting : <></>}
     </>
   )
