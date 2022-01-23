@@ -391,7 +391,19 @@ const Menu: FunctionComponent<MenuTypes> = (
                   (server_data : SankeyData)=>{
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
-                )} >Pommes Poires Simple</Dropdown.Item>
+                )} >Pommes Poires</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'SyntheticOpenSankey/pommes_poires_regions_simple.xlsx', url_prefix, data, set_data, 
+                  (server_data : SankeyData)=>{
+                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                  }
+                )} >Pommes Poires Regions</Dropdown.Item>
+                <Dropdown.Item onClick={() => uploadExemple(
+                  'SyntheticOpenSankey/pommes_poires_regions_periods_simple.xlsx', url_prefix, data, set_data, 
+                  (server_data : SankeyData)=>{
+                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                  }
+                )} >Pommes Poires Regions Periods</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
                   (server_data : SankeyData) => {
