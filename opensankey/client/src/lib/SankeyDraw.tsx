@@ -135,6 +135,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (link_visible(d)) { display = 'inline' } else { display = 'none' }
         return display
       })
+      .attr('pointer-events', 'auto')
 
     const paths = gg_links.append('path')
 
@@ -677,6 +678,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .on('mouseover', function () {
+        d3.select(this).attr('cursor', 'grab')
         d3.select(this).attr('fill-opacity', '0.7')
       })
       .on('mouseout', function () {
@@ -1496,6 +1498,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width', '0')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
+        d3.select(this).attr('cursor', 'grab')
         if ((d as SankeyNode).shape_visible && (event.shiftKey || static_sankey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
@@ -1632,6 +1635,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .call(wrap)
       })
       .on('mouseover', function (event, d) {
+        d3.select(this).attr('cursor', 'grab')
         if (d.label_visible && (static_sankey || event.shiftKey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
@@ -1963,7 +1967,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const svgSankey = (d3.select('#svg') as any)
     svgSankey
       .attr('viewBox', [0, 0, data.width, height])
-      .attr('cursor', 'grab')
+      //.attr('cursor', 'grab')
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
           return event.ctrlKey
@@ -1995,9 +1999,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
     const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
-    gg_nodes.attr('cursor', 'zoom-in')
+    //gg_nodes.attr('cursor', 'zoom-in')
     const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
-    gg_links.attr('cursor', 'zoom-in')
+    //gg_links.attr('cursor', 'zoom-in')
 
     drawLegend()
 
