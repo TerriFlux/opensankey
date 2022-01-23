@@ -54,13 +54,13 @@ render(
             <h4>Contributeurs</h4>
           </Col>
           <Col>
-            <img src={logo} width="200" />
+            <img src={logo.replace('static/', 'static/opensankey/')} width="200" />
           </Col>
           <Col>
-            <img src={logo_auraee} width="150" />
+            <img src={logo_auraee.replace('static/', 'static/opensankey/')} width="150" />
           </Col>
           <Col>
-            <img src={logo_scan} width="100" />
+            <img src={logo_scan.replace('static/', 'static/opensankey/')} width="100" />
           </Col>
         </Row>
         <br></br>
