@@ -487,11 +487,9 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
-                <br />
-
                 <Row >
                   <Col xs={1}>
-                    <Button size="sm" style={{ 'marginBottom': '3px' }} onClick={add_new_node}><FaPlus /></Button>
+                    <Button size="sm"  onClick={add_new_node}><FaPlus /></Button>
                   </Col>
                   <Col xs={10}>
                     <Form.Select id="selectionNode"
@@ -510,7 +508,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button
                       size="sm"
                       variant='danger'
-                      style={{ 'marginBottom': '3px' }}
                       onClick={
                         () => {
                           //Boutton pour supprimer le noeud selectionné
@@ -525,10 +522,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Row>
                 <Form>
                   <Form.Group as={Row} >
-                    <Col xs={2} >
+                    <Col xs={1} >
                       <FormLabel >Nom</FormLabel>
                     </Col>
-                    <Col xs={7} >
+                    <Col xs={10} >
                       <FormControl
                         value={selected_node.name}
                         onChange={evt => {
@@ -538,7 +535,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                       />
                     </Col>
                     <Col xs={3}>
-                      <FormLabel >(id : {addLabelId()})</FormLabel>
                     </Col>
                   </Form.Group>
                   {/* <Form.Group as={Row} >
@@ -604,8 +600,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Col>
                   </Form.Group>
                 </Form>
-
-
                 {/* 
                   {(radio_selected === 'GroupTag') ? (
                     < Form.Select >
@@ -618,10 +612,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Form.Select>
                     
                   ) : (<></>)} */}
-
-
-
-                <br />
                 {node_edition}
 
               </Accordion.Body>
@@ -642,9 +632,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                 {settings_edition_tags}
               </Accordion.Body>
             </Accordion.Item>
-
-
-
             <Accordion.Item
               eventKey="3"
               onClick={evt => {
@@ -702,8 +689,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
 
                 </Row>
-                <br />
-
                 <Row>
                   <Col>
                     <FormLabel>Source</FormLabel>
@@ -714,7 +699,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Form.Select>
                   </Col>
                 </Row>
-                <br></br>
                 <Row>
                   <Col>
                     <FormLabel>Cible</FormLabel>
@@ -725,7 +709,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Form.Select>
                   </Col>
                 </Row>
-                <br></br>
                 {/* <Row>
                   <Col>
                     <FormLabel>Valeur</FormLabel>

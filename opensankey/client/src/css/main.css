@@ -60,7 +60,7 @@
 
 
 /* BASIC CONFIGURATION */
-body{background-color:#f2f2f2;font-family:'Open Sans',sans-serif;font-size:14px;letter-spacing:0px;color:#151515;}
+body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;}
 h2,h3,h4,h5,h6{font-family:'Open Sans',sans-serif;color:#666;}
 h1 {
 	font-family: 'Open Sans Condensed', sans-serif;
@@ -91,10 +91,43 @@ h1 small,h2 small,h3 small,h4 small,h5 small,h6 small{margin-left:12px;font-size
 
 /********** BOOTSTRAP MODIFICATIONS **********/
 
+.row {
+	align-items: center;
+	padding-bottom: 2px;
+}
+
+.col {
+	margin-left : 10px;
+	margin-right : 10px;
+}
+.form-label {
+	display : flex;
+}
+.form-check-inline {
+	display : flex;
+}
+.form-check-label {
+	display : flex;
+}
 /* Table */
 
 td {
 	padding: 5px;
+}
+
+.table td, .table th {
+	vertical-align: middle;
+	text-align: center;
+}
+
+.table select {
+	height: 53px;
+}
+
+.table-bordered thead td, .table-bordered thead th {
+	border-bottom-width: 2px;
+	text-align: center;
+	vertical-align: middle;
 }
 
 /* Navbar Tweaks */

@@ -358,7 +358,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form>
           </Tab>
           <Tab eventKey="label" title="Label">
-            <br />
             <Form.Group as={Row} >
               <Col>
                 <FormCheck
@@ -541,7 +540,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
           </Tab>
           {Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display').length ? (
             <Tab eventKey="tags" title="Tags" >
-              <br></br>
               <Form.Group as={Row} >
                 <Col>
                   <FormLabel >Tag Groupe:</FormLabel>
