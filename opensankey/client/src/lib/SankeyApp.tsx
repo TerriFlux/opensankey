@@ -11,6 +11,12 @@ import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col } from 'react-bootstrap'
 import { getLinkValue } from './SankeyUtils'
+let logo = ''
+try {
+  logo = require('../css/opensankey.png')
+} catch (expt) {
+  console.log('opensankey.png not found')
+}
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -41,7 +47,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
       <Menu
         data={data}
         set_data={set_data}
-        app_name='Open-Sankey'
+        app_name='version beta 0.8'
+        logo={logo.replace('static/', 'static/opensankey/')}
         set_show_nav={set_show_nav}
         show_nav={show_nav}
         set_nav_item_active={set_nav_item_active}

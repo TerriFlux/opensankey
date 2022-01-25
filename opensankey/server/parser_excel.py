@@ -95,6 +95,8 @@ def parse_sankey_energie_csv(
                 'name': import_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'trade_close': 1,
+                'position'   : 'relative',
                 'show_value' : 1,
                 'tags': { 
                     'Exchanges' : ['Echangesimport']
@@ -112,6 +114,8 @@ def parse_sankey_energie_csv(
                 'name': export_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'trade_close': 1,
+                'position'   : 'relative',
                 'show_value' : 1,
                 'tags': { 'Exchanges' : 
                     ['Echangesexport']
