@@ -288,7 +288,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          <Navbar.Brand href="#"><img src={logo} width="100"/> {app_name} </Navbar.Brand>
+          { logo !== '' ? (<Navbar.Brand href="#"><img src={logo} width="100"/> {app_name} </Navbar.Brand>) : (<Navbar.Brand href="#">{app_name} </Navbar.Brand>)}
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
