@@ -384,9 +384,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
               {edition_menu}
             </NavDropdown >
-            <NavDropdown title="Aide" id="help">
-              <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
-              <NavDropdown title="Exemples" id="exemples" >
+            <NavDropdown title="Exemples" id="exemples" >
+              <NavDropdown title="Pommes Poires" id="pommes_poires" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
@@ -414,6 +413,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Regions Periods</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Energie" id="energie" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
                   (server_data : SankeyData) => {
@@ -426,6 +427,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                     delete (server_data as SankeyData & { layout?: SankeyData }).layout
                   }
                 )} >Energie</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Forêt Bois" id="bois" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Forêt Bois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
@@ -441,20 +444,24 @@ const Menu: FunctionComponent<MenuTypes> = (
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Viande" id="viande" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
-                )} 
+                )}
                 >Viande</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Lait" id="lait" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )}
                 >Lait</Dropdown.Item>
-                <NavDropdown.Divider />
-                {example_menu}
-              </NavDropdown>
-            </NavDropdown>
+              </NavDropdown >
+              <NavDropdown.Divider />
+              {example_menu}
+            </NavDropdown >
             <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
               <ToggleButton
                 id="toggle-check"
