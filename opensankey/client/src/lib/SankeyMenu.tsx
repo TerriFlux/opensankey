@@ -9,7 +9,12 @@ import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus } from 'react-icons/fa'
-const logo = require('../css/opensankey.png')
+let logo = ''
+try {
+  logo = require('../css/opensankey.png')
+} catch (expt) {
+
+}
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -426,17 +431,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v1/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v1</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v2/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v2</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Grand Est/filiere_foret_bois_grand_est.json', url_prefix, data, set_data,
+                  'Forêt Bois/Grand Est/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
