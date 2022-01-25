@@ -47,7 +47,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
       <Menu
         data={data}
         set_data={set_data}
-        app_name='Open-Sankey'
+        app_name='version beta 0.8'
         logo={logo.replace('static/', 'static/opensankey/')}
         set_show_nav={set_show_nav}
         show_nav={show_nav}
