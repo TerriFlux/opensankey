@@ -13,7 +13,7 @@ let logo = ''
 try {
   logo = require('../css/opensankey.png')
 } catch (expt) {
-
+  console.log('opensankey.png not found')
 }
 
 const MenuPropTypes = {
