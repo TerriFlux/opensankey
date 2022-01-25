@@ -47,28 +47,6 @@ render(
     <SankeyApp 
       sankey_data={data} 
     />
-    <div id="copyright">
-      <div className="container">
-        <Row style={{ 'marginTop' : '0px' }} >
-          <Col>
-            <h4>Réalisé par:</h4>
-          </Col>
-          <Col>
-            <img src={logo.replace('static/', 'static/opensankey/')} width="200" />
-          </Col>
-          <Col>
-            <h4>Contributeurs:</h4>
-          </Col>
-          <Col>
-            <img src={logo_auraee.replace('static/', 'static/opensankey/')} width="150" />
-          </Col>
-          <Col>
-            <img src={logo_scan.replace('static/', 'static/opensankey/')} width="100" />
-          </Col>
-        </Row>
-        <br></br>
-      </div>
-    </div>
   </>,
   document.getElementById('react-container')
 )

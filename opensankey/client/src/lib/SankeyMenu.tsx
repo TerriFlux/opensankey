@@ -9,7 +9,7 @@ import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus } from 'react-icons/fa'
-const logo = require('../css/opensankey.png')
+
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -23,6 +23,7 @@ const MenuPropTypes = {
   settings_edition_tags_links: PropTypes.element,
   node_edition: PropTypes.element,
   link_edition: PropTypes.element,
+  logo: PropTypes.string.isRequired,
   app_name: PropTypes.string.isRequired,
   set_show_nav: PropTypes.func.isRequired,
   show_nav: PropTypes.bool,
@@ -46,7 +47,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
     settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
-    app_name,
+    logo,app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_selected_link, selected_link,
@@ -287,7 +288,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          <Navbar.Brand href="#"><img src={logo.replace('static/', 'static/opensankey/')} width="100"/> version beta 0.8 </Navbar.Brand>
+          { logo !== '' ? (<Navbar.Brand href="#"><img src={logo} width="100"/> {app_name} </Navbar.Brand>) : (<Navbar.Brand href="#">{app_name} </Navbar.Brand>)}
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -383,9 +384,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
               {edition_menu}
             </NavDropdown >
-            <NavDropdown title="Aide" id="help">
-              <Dropdown.Item eventKey="documentation" href="../../doc/user_su-model-sankey.html" target="_blank">Documentation</Dropdown.Item>
-              <NavDropdown title="Exemples" id="exemples" >
+            <NavDropdown title="Exemples" id="exemples" >
+              <NavDropdown title="Pommes Poires" id="pommes_poires" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
@@ -413,47 +413,55 @@ const Menu: FunctionComponent<MenuTypes> = (
                     compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
                   }
                 )} >Pommes Poires Regions Periods</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Energie" id="energie" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
                   (server_data : SankeyData) => {
                     compute_default_input_outputLinksId(server_data.nodes, server_data.links)
                     updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
                     Object.values(server_data.nodes).forEach(function (n) {
-                      reorganize_node_inputLinksId(n, data.nodes, data.links)
-                      reorganize_node_outputLinksId(n, data.nodes, data.links)
+                      reorganize_node_inputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
+                      reorganize_node_outputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
                     })
-                    delete (data as SankeyData & { layout?: SankeyData }).layout
+                    delete (server_data as SankeyData & { layout?: SankeyData }).layout
                   }
                 )} >Energie</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Forêt Bois" id="bois" >
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v1/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v1</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v2/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'Forêt Bois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v2</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Grand Est/filiere_foret_bois_grand_est.json', url_prefix, data, set_data,
+                  'Forêt Bois/Grand Est/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Viande" id="viande" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
-                )} 
+                )}
                 >Viande</Dropdown.Item>
+              </NavDropdown >
+              <NavDropdown title="Lait" id="lait" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )}
                 >Lait</Dropdown.Item>
-                <NavDropdown.Divider />
-                {example_menu}
-              </NavDropdown>
-            </NavDropdown>
+              </NavDropdown >
+              <NavDropdown.Divider />
+              {example_menu}
+            </NavDropdown >
             <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
               <ToggleButton
                 id="toggle-check"
