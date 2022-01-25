@@ -420,10 +420,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                     compute_default_input_outputLinksId(server_data.nodes, server_data.links)
                     updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
                     Object.values(server_data.nodes).forEach(function (n) {
-                      reorganize_node_inputLinksId(n, data.nodes, data.links)
-                      reorganize_node_outputLinksId(n, data.nodes, data.links)
+                      reorganize_node_inputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
+                      reorganize_node_outputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
                     })
-                    delete (data as SankeyData & { layout?: SankeyData }).layout
+                    delete (server_data as SankeyData & { layout?: SankeyData }).layout
                   }
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
