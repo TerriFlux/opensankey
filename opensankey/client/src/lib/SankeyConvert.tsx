@@ -564,7 +564,9 @@ export const convert_data = (
             flux_max = v
           }
         })
-        delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
+        if ('tags' in l) {
+          delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
+        }
       }
       const source_node = nodes[l.idSource]
       const target_node = nodes[l.idTarget]
@@ -738,8 +740,8 @@ export const convert_data = (
               extension : {}
             }
             if (editable_link.mini !== undefined && editable_link.mini !== null) {
-              editable_link.value2[region_name].extension.mini = editable_link.mini
-              editable_link.value2[region_name].extension.maxi = editable_link.maxi
+              editable_link.value2[region_name].extension.mini = editable_link.mini[value_index]
+              editable_link.value2[region_name].extension.maxi = editable_link.maxi[value_index]
               editable_link.value2[region_name]['color_tag']['Uncert'] = {}
               const p = (editable_link.maxi[value_index] - editable_link.mini[value_index])/editable_link.value[value_index]
               if (p <= 0.1) {
@@ -756,9 +758,9 @@ export const convert_data = (
               editable_link.value2[region_name]['color_tag']['flux_types'] = 'computed_data'
             }
             if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
-              editable_link.value2[region_name].extension.data_value  = editable_link.data_value
-              editable_link.value2[region_name].extension.data_source = editable_link.data_source
-              editable_link.value2[region_name].extension.data_period = editable_link.data_period
+              editable_link.value2[region_name].extension.data_value  = editable_link.data_value[value_index]
+              editable_link.value2[region_name].extension.data_source = editable_link.data_source[value_index]
+              editable_link.value2[region_name].extension.data_period = editable_link.data_period[value_index]
               editable_link.value2[region_name]['color_tag']['flux_types'] = 'initial_data'
             }
           }
@@ -775,8 +777,8 @@ export const convert_data = (
             extension : {}
           }
           if (editable_link.mini !== undefined && editable_link.mini !== null) {
-            editable_link.value2.extension.mini = editable_link.mini
-            editable_link.value2.extension.maxi = editable_link.maxi
+            editable_link.value2.extension.mini = editable_link.mini[0]
+            editable_link.value2.extension.maxi = editable_link.maxi[0]
             editable_link.value2['color_tag']['Uncert'] = {}
             const p = (editable_link.maxi[0] - editable_link.mini[0])/editable_link.value[0]
             if (p <= 0.1) {
@@ -793,9 +795,9 @@ export const convert_data = (
             editable_link.value2['color_tag']['flux_types'] = 'computed_data'
           }
           if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
-            editable_link.value2.extension.data_value  = editable_link.data_value
-            editable_link.value2.extension.data_source = editable_link.data_source
-            editable_link.value2.extension.data_period = editable_link.data_period
+            editable_link.value2.extension.data_value  = editable_link.data_value[0]
+            editable_link.value2.extension.data_source = editable_link.data_source[0]
+            editable_link.value2.extension.data_period = editable_link.data_period[0]
             editable_link.value2['color_tag']['flux_types'] = 'initial_data'
           }
         }
