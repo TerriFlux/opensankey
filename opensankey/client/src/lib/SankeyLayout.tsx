@@ -129,10 +129,16 @@ export const apply_input_outputLinksId = (
 
   Object.values(ref_nodes).forEach(
     (ref_node) => {
-      const node = display_nodes[ref_node.idNode]
-      if (node === undefined) {
+      //const node = display_nodes[ref_node.idNode]
+      const nodes_found = Object.values(display_nodes).filter(
+        n=> {
+          return normalize_name(ref_node.name) === normalize_name(n.name) 
+        }
+      )
+      if (nodes_found.length === 0) {
         return
       }
+      const node = nodes_found[0]
       const new_inputLinksId: string[] = []
       ref_node.inputLinksId.forEach(
         (idLink) => {
