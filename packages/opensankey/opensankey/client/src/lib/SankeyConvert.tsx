@@ -564,7 +564,9 @@ export const convert_data = (
             flux_max = v
           }
         })
-        delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
+        if ('tags' in l) {
+          delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
+        }
       }
       const source_node = nodes[l.idSource]
       const target_node = nodes[l.idTarget]
