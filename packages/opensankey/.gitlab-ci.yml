@@ -90,11 +90,12 @@ deploy_opensankey:
   before_script:
     - sudo systemctl stop dev_opensankey || true
   after_script:
+    - cd "$folder"
     - bash restart_site.sh
   variables:
     NODE_ENV: "production"
   script:
-    - cd $folder
+    - cd "$folder"
     - source dev_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
