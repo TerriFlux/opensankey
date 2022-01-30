@@ -17,85 +17,43 @@ cache:
   paths:
     - .cache/pip
 
-# install_dependencies:
-#   stage: install_dependencies
-#   tags:
-#     - dev, test, prod
-#   cache: 
-#     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#     paths:
-#       - opensankey/client/node_modules/
-#   script:
-#     - cd opensankey/client
-#     - echo $CI_COMMIT_REF_SLUG
-#     - echo $CI_PROJECT_DIR
-#     - npm install
-#   only:
-#     changes:
-#       - opensankey/client/package.json
-
-# build:
-#   stage: build
-#   tags:
-#     - dev, test, prod
-#   cache: 
-#     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#     paths:
-#       - opensankey/client/node_modules/
-#     policy: pull
-#   script:
-#     - source /home/gitlab-runner/gitlab/bin/activate
-#     - echo $CI_PROJECT_DIR
-#     - cd opensankey/client
-#     - CI= npm run build
-#     - mv node_modules ../../..
-#     - cd ../..
-#     - pip install .
-#     - mv ../node_modules opensankey/client
-
-#test:
-#  stage: test
-#  tags:
-#    - dev, test, prod
-#  cache: 
-#    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#    paths:
-#      - opensankey/client/node_modules/
-#    policy: pull
-
-#  variables:
-#    GIT_STRATEGY: none
-#  script:
-#    - cd opensankey/client
-#    - npm install
-#    - npm link mfa-data
-#   - npm run test
-#  artifacts:
-#    when: always
-#    reports:
-#      junit:
-#        - junit.xml
-
 deploy_opensankey:
   stage: deploy
-  tags:
-    - dev
+  variables:
+    NODE_ENV: "production"
+    FOLDER: "/home/ubuntu/dev_opensankey"
+    ENV   : "dev"
+    APP_NAME : "dev_opensankey"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:                              
+        FOLDER: "/home/ubuntu/dev_opensankey"
+        ENV: "dev" 
+        APP_NAME : "dev_opensankey"
+    - if: $CI_COMMIT_REF_NAME == "test"
+      variables:
+        FOLDER: "/home/ubuntu/test_opensankey"
+        ENV: "test"
+        APP_NAME : "test_opensankey"
+    - if: $CI_COMMIT_REF_NAME == "test"
+      variables:
+        FOLDER: "/home/ubuntu/prod_opensankey"
+        ENV: "prod" 
+        APP_NAME : "opensankey"
   environment:
-    name: dev
+    name: $ENV
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
-      - $folder/opensankey/opensankey/client/node_modules/
+      - $FOLDER/opensankey/opensankey/client/node_modules/
     policy: pull
   before_script:
-    - sudo systemctl stop dev_opensankey || true
+    - sudo systemctl stop $APP_NAME || true
   after_script:
-    - cd "$folder"
+    - cd $FOLDER
     - bash restart_site.sh
-  variables:
-    NODE_ENV: "production"
   script:
     - cd "$folder"
-    - source dev_opensankey/bin/activate
+    - source $ENV_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
