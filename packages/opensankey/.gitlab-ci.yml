@@ -1,7 +1,4 @@
 stages:
-    #- install_dependencies
-    # - build
-    #- test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -53,7 +50,7 @@ deploy_opensankey:
     - cd $FOLDER
     - bash restart_site.sh
   script:
-    - cd "$folder"
+    - cd $FOLDER
     - source $ENV_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
