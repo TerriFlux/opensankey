@@ -19,7 +19,20 @@
     "test_regenerate": "react-scripts test -u",
     "jest-html": "jest-html -c **/main.css,**/bootstrap.css",
     "eject": "react-scripts eject",
-    "lint": "eslint --fix --ext .js,.jsx,.tsx ."
+    "lint": "eslint --fix --ext .js,.jsx,.tsx .",
+    "publish": "npm run retrieve_index_html && npm run publish_build && npm run copy_data && npm run restore_index_html && npm run publish2",
+    "publish_build": "react-scripts build && shx sed -i \"s/\\/static/static/g\" build/index.html",
+    "restore_index_html": "cpr public/index_keep.html public/index.html -o && shx rm -f public/index_keep.html && shx rm -f build/index_keep.html",
+    "retrieve_index_html": "cpr public/index.html public/index_keep.html -o && cross-conf-env cpr $npm_config_datapath/index.html public/index.html -o",
+    "copy_excel": "cross-conf-env shx --silent cp $npm_config_datapath/*simple.xlsx build || shx true",
+    "copy_layout": "cross-conf-env shx cp $npm_config_datapath/sankey/*layout.json build",
+    "copy_logo": "cross-conf-env shx cp $npm_config_datapath/*.png  build || shx true",
+    "copy_data": "npm run copy_logo && npm run copy_excel && npm run copy_layout",
+    "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name.zip && shx rm -f build/index_keep.html && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts",
+    "unzip": "cross-conf-env extract-zip $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name.zip $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name",
+    "echo": "cross-conf-env echo $npm_config_datapath",
+    "publish2": "node publish.js",
+    "remove_header": "node remove_header_footer.js"
   },
   "jest": {
     "snapshotSerializers": [
@@ -46,6 +59,8 @@
     "acorn": "^8.2.2",
     "bootstrap": "^5.1.1",
     "colormap": "^2.3.2",
+    "cpr": "^3.0.1",
+    "cross-conf-env": "^1.2.1",
     "cross-env": "^7.0.3",
     "d3": "^6.7.0",
     "d3-textwrap": "^3.0.0",
@@ -59,6 +74,7 @@
     "react-multiselect-dropdown-bootstrap": "^1.1.0",
     "react-scripts": "^5.0.0",
     "react-test-renderer": "^17.0.2",
+    "shx": "^0.3.4",
     "ts-jest": "^27.1.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.3.5",

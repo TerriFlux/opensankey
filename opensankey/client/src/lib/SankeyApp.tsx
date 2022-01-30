@@ -18,6 +18,11 @@ try {
   console.log('opensankey.png not found')
 }
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
 }
@@ -44,64 +49,66 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
 
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
-      <Menu
-        data={data}
-        set_data={set_data}
-        app_name='version beta 0.8'
-        logo={logo.replace('static/', 'static/opensankey/')}
-        set_show_nav={set_show_nav}
-        show_nav={show_nav}
-        set_nav_item_active={set_nav_item_active}
-        nav_item_active={nav_item_active}
-        set_selected_node={set_selected_node}
-        selected_node={selected_node}
-        set_selected_link={set_selected_link}
-        selected_link={selected_link}
-        agregation_level={agregation_level}
-        set_agregation_level={set_agregation_level}
-        url_prefix=''
-        settings_edition={
-          <SankeySettingsEdition
-            data={data}
-            set_data={set_data}
-            set_current_filter={(
-              new_current_filter: number
-            ) => {
-              const { display_style } = data
-              display_style.filter = +new_current_filter
-              set_data({ ...data })
-            }}
-          />
-        }
-        node_edition={
-          <SankeyNodeEdition
-            data={data}
-            set_data={set_data}
-            selected_node={selected_node}
-            radio_selected={radio_selected}
-          />
-        }
-        link_edition={
-          <SankeyLinkEdition
-            show={true}
-            data={data}
-            set_data={set_data}
-            selected_link={selected_link}
-          />
-        }
-        settings_edition_tags={
-          <SankeySettingsEditionTags
-            data={data}
-            set_data={set_data}
-          />
-        }
-        settings_edition_tags_links={
-          <SankeySettingsEditionTagsLinks
-            data={data}
-            set_data={set_data}
-          />
-        }
-      />
+      { !window.SankeyToolsStatic ? (
+        <Menu
+          data={data}
+          set_data={set_data}
+          app_name='version beta 0.8'
+          logo={logo.replace('static/', 'static/opensankey/')}
+          set_show_nav={set_show_nav}
+          show_nav={show_nav}
+          set_nav_item_active={set_nav_item_active}
+          nav_item_active={nav_item_active}
+          set_selected_node={set_selected_node}
+          selected_node={selected_node}
+          set_selected_link={set_selected_link}
+          selected_link={selected_link}
+          agregation_level={agregation_level}
+          set_agregation_level={set_agregation_level}
+          url_prefix=''
+          settings_edition={
+            <SankeySettingsEdition
+              data={data}
+              set_data={set_data}
+              set_current_filter={(
+                new_current_filter: number
+              ) => {
+                const { display_style } = data
+                display_style.filter = +new_current_filter
+                set_data({ ...data })
+              }}
+            />
+          }
+          node_edition={
+            <SankeyNodeEdition
+              data={data}
+              set_data={set_data}
+              selected_node={selected_node}
+              radio_selected={radio_selected}
+            />
+          }
+          link_edition={
+            <SankeyLinkEdition
+              show={true}
+              data={data}
+              set_data={set_data}
+              selected_link={selected_link}
+            />
+          }
+          settings_edition_tags={
+            <SankeySettingsEditionTags
+              data={data}
+              set_data={set_data}
+            />
+          }
+          settings_edition_tags_links={
+            <SankeySettingsEditionTagsLinks
+              data={data}
+              set_data={set_data}
+            />
+          }
+        />
+      ) : (<></>)}
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition

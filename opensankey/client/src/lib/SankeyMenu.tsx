@@ -462,20 +462,31 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown.Divider />
               {example_menu}
             </NavDropdown >
-            <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
-              <ToggleButton
-                id="toggle-check"
-                type="checkbox"
-                variant="outline-primary"
-                checked={checked}
-                onChange={(e) => { setChecked(e.currentTarget.checked) }}
-                onClick={toggleShow}
-                value="1">Configuration Sankey
-              </ToggleButton>
-            </ButtonGroup>
+            {!data.static_sankey ? (
+              <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
+                <ToggleButton
+                  id="toggle-check"
+                  type="checkbox"
+                  variant="outline-primary"
+                  checked={checked}
+                  onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                  onClick={toggleShow}
+                  value="1">Configuration Sankey
+                </ToggleButton>
+              </ButtonGroup>) : (<></>)
+            }
             {right_menu}
           </Nav>
         </Container>
+        <Form.Check 
+          type="switch"
+          checked={data.static_sankey}
+          onClick={(evt:any)=> {
+            data.static_sankey=evt.target.checked
+            set_data({...data})
+          }}
+          label="Static"
+        />
       </Navbar>
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
