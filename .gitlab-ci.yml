@@ -42,8 +42,6 @@ deploy_opensankey:
     - dev
   environment:
     name: dev
-  only:
-    -main,test,prod
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
@@ -58,6 +56,6 @@ deploy_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source $ENV_opensankey/bin/activate
+    - source "$ENV"_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
