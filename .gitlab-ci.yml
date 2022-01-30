@@ -1,7 +1,4 @@
 stages:
-    #- install_dependencies
-    # - build
-    #- test
     - deploy
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -17,170 +14,48 @@ cache:
   paths:
     - .cache/pip
 
-# install_dependencies:
-#   stage: install_dependencies
-#   tags:
-#     - dev, test, prod
-#   cache: 
-#     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#     paths:
-#       - opensankey/client/node_modules/
-#   script:
-#     - cd opensankey/client
-#     - echo $CI_COMMIT_REF_SLUG
-#     - echo $CI_PROJECT_DIR
-#     - npm install
-#   only:
-#     changes:
-#       - opensankey/client/package.json
 
-# build:
-#   stage: build
-#   tags:
-#     - dev, test, prod
-#   cache: 
-#     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#     paths:
-#       - opensankey/client/node_modules/
-#     policy: pull
-#   script:
-#     - source /home/gitlab-runner/gitlab/bin/activate
-#     - echo $CI_PROJECT_DIR
-#     - cd opensankey/client
-#     - CI= npm run build
-#     - mv node_modules ../../..
-#     - cd ../..
-#     - pip install .
-#     - mv ../node_modules opensankey/client
-
-#test:
-#  stage: test
-#  tags:
-#    - dev, test, prod
-#  cache: 
-#    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-#    paths:
-#      - opensankey/client/node_modules/
-#    policy: pull
-
-#  variables:
-#    GIT_STRATEGY: none
-#  script:
-#    - cd opensankey/client
-#    - npm install
-#    - npm link mfa-data
-#   - npm run test
-#  artifacts:
-#    when: always
-#    reports:
-#      junit:
-#        - junit.xml
-
-dev.opensankey.fr:
+deploy_opensankey:
   stage: deploy
+  variables:
+    NODE_ENV: "production"
+    FOLDER: /home/ubuntu/dev_opensankey
+    ENV   : dev
+    APP_NAME : dev_opensankey
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:                              
+        FOLDER: /home/ubuntu/dev_opensankey
+        ENV: dev 
+        APP_NAME : dev_opensankey
+    - if: $CI_COMMIT_REF_NAME == "test"
+      variables:
+        FOLDER: "/home/ubuntu/test_opensankey"
+        ENV: "test"
+        APP_NAME : "test_opensankey"
+    - if: $CI_COMMIT_REF_NAME == "prod"
+      variables:
+        FOLDER: "/home/ubuntu/prod_opensankey"
+        ENV: "prod" 
+        APP_NAME : "opensankey"
   tags:
-    - dev
+    - $ENV
   environment:
-    name: dev
-  only:
-    - main
+    name: $ENV
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
-      - /home/ubuntu/dev_opensankey/opensankey/opensankey/client/node_modules/
+      - $FOLDER/opensankey/opensankey/client/node_modules/
     policy: pull
   before_script:
-    - sudo systemctl stop dev_opensankey || true
-  variables:
-    NODE_ENV: "production"
+    - sudo systemctl stop $APP_NAME || true
+  after_script:
+    - echo "$FOLDER"
+    - cd "$FOLDER"
+    - bash restart_site.sh
   script:
-    - cd /home/ubuntu/dev_opensankey
-    - source dev_opensankey/bin/activate
-    - cd opensankey
-    - git pull
-    - git checkout opensankey/server/views.py
-    - cd opensankey/client
-    - sudo npm install
-    - sudo npm link mfa-data
-    - sudo npm link /home/ubuntu/dev_terriflux/su-model-sankey/sankeytools/client/node_modules/react
-    - CI= npm run build
-    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
-    - CI= sudo npm run dist
-    - sudo npm link .
-    - mv node_modules ../../..
-    - cd ../..
-    - pip install .
-    - source ../../dev_terriflux/dev_terriflux/bin/activate
-    - pip install .  
-    - mv ../node_modules opensankey/client
-    - sudo systemctl restart dev_opensankey
-#  dependencies:
-#    - test
+    - echo "$FOLDER"
+    - cd "$FOLDER"
+    - source "$ENV"_opensankey/bin/activate
+    - bash update_build_opensankey.sh
 
-test.opensankey.fr:
-  stage: deploy
-  tags:
-    - test
-  environment:
-    name: test
-  only:
-    - test
-  except:
-    - tags
-  before_script:
-    - sudo systemctl stop test_opensankey || true
-  script:
-    - cd /home/ubuntu/test_opensankey
-    - source test_opensankey/bin/activate
-    - cd opensankey
-    - git pull
-    - git checkout opensankey/server/views.py
-    - cd opensankey/client
-    - npm install
-    - sudo npm link /home/ubuntu/test_terriflux/su-model-sankey/sankeytools/client/node_modules/react
-    - CI= npm run build
-    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
-    - CI= sudo npm run dist
-    - sudo npm link .
-    - mv node_modules ../../..
-    - cd ../..
-    - pip install .
-    - source ../../test_terriflux/test_terriflux/bin/activate
-    - pip install .  
-    - mv ../node_modules opensankey/client
-    - sudo systemctl restart test_opensankey
-#dependencies:
-#    - test
-
-prod.opensankey.fr:
-  stage: deploy
-  tags:
-    - prod
-  environment:
-    name: prod
-  only:
-    - prod
-  before_script:
-    - sudo systemctl stop opensankey || true
-  script:
-    - cd /home/ubuntu/prod_opensankey
-    - source prod_opensankey/bin/activate
-    - cd opensankey
-    - git pull
-    - git checkout opensankey/server/views.py
-    - cd opensankey/client
-    - npm install
-    - sudo npm link /home/ubuntu/terriflux/su-model-sankey/sankeytools/client/node_modules/react
-    - CI= npm run build
-    - sed -i -e 's/\/static\//\/static\/opensankey\//g' ./build/index.html
-    - CI= sudo npm run dist
-    - sudo npm link .
-    - mv node_modules ../../..
-    - cd ../..
-    - pip install .
-    - source ../../terriflux/terrifluxenv/bin/activate
-    - pip install .    
-    - mv ../node_modules opensankey/client
-    - sudo systemctl restart opensankey
-#  dependencies:
-#    - test
