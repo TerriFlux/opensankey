@@ -39,15 +39,15 @@ deploy_opensankey:
         APP_NAME : "opensankey"
   environment:
     name: $ENV
-  cache: 
-    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-    paths:
-      - $FOLDER/opensankey/opensankey/client/node_modules/
-    policy: pull
-  before_script:
-    - sudo systemctl stop $APP_NAME || true
+#  cache: 
+#    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
+#    paths:
+#      - $FOLDER/opensankey/opensankey/client/node_modules/
+#    policy: pull
+#  before_script:
+#    - sudo systemctl stop $APP_NAME || true
   after_script:
-    - cd $FOLDER
+    - echo "$FOLDER"
     - bash restart_site.sh
   script:
     - cd $FOLDER
