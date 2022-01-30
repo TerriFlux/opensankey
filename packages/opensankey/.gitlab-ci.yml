@@ -48,9 +48,11 @@ deploy_opensankey:
 #    - sudo systemctl stop $APP_NAME || true
   after_script:
     - echo "$FOLDER"
+    - cd "$FOLDER"
     - bash restart_site.sh
   script:
-    - cd $FOLDER
+    - echo "$FOLDER"
+    - cd "$FOLDER"
     - source $ENV_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
