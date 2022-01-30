@@ -87,6 +87,7 @@ publish_exercice_AFM:
     - $ENV
   environment:
     name: $ENV
+    url: https://dev.terriflux.fr/fm/userfiles/Exercices/artefacts/opensankey_1.0.0.ExercicesAFM/index.html
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
