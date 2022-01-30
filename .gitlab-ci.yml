@@ -39,7 +39,7 @@ deploy_opensankey:
         ENV: "prod" 
         APP_NAME : "opensankey"
   environment:
-    name: $ENV
+    name: dev
 #  cache: 
 #    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
 #    paths:
