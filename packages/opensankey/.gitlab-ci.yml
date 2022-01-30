@@ -38,6 +38,8 @@ deploy_opensankey:
         FOLDER: "/home/ubuntu/prod_opensankey"
         ENV: "prod" 
         APP_NAME : "opensankey"
+  tags:
+    - dev
   environment:
     name: dev
 #  cache: 
