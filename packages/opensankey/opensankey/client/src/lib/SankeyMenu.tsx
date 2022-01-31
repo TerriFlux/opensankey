@@ -385,6 +385,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               {edition_menu}
             </NavDropdown >
             <NavDropdown title="Exemples" id="exemples" >
+              <Dropdown.Item eventKey="data_repo" href="https://dev.terriflux.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
               <NavDropdown title="Pommes Poires" id="pommes_poires" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
