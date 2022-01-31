@@ -1,11 +1,19 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck } from 'react-bootstrap'
+import { Row, Col, Form, FormCheck, FormLabel, FormControl } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import DropdownMultiselect from 'react-multiselect-dropdown-bootstrap'
+import { convert_data } from './SankeyConvert'
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired
+}
+
+declare const window: Window &
+typeof globalThis & {
+  sankey: {
+    sous_filieres : { [ key : string ] : string }
+  }
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
@@ -22,6 +30,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
       : ''
   )
   const [use_colormap,set_use_colormap] = useState(false)
+  const [diagram,set_diagram] = useState('')
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
     const val = evt.target.value
@@ -198,21 +207,63 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     )
   }
 
+  const setDiagram = (evt : React.ChangeEvent) => {
+    
+    const the_diagram = (evt.target as HTMLInputElement).value as string
+    const sous_filieres = window.sankey.sous_filieres
+    const new_data = JSON.parse(JSON.stringify((window.sankey as any)[sous_filieres[the_diagram] as any]))
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    //set_level(agregation_level)
+    set_diagram(the_diagram)
+    set_data({...new_data})
+  }
+
+  let sous_filieres = undefined
+  if (window.sankey  && window.sankey.sous_filieres  ) {
+    console.log(window.sankey.sous_filieres)
+    sous_filieres = window.sankey.sous_filieres
+  }
+  const diagram_label = 'Diagrammes'
+  const marginTop = data.static_sankey ? '0px' : '90px'
+
   return (
     <>
-      <div className='herowrap' style={{ 'backgroundColor': 'gainsboro', 'marginLeft': '0' }}>
-        <Row style={{ 'marginTop': '0px', 'marginBottom': '10px' }}>
-          <Col sm={4}  >
+      <div className='herowrap' 
+        style={{
+          backgroundColor: 'gainsboro', 
+          marginLeft: '0',          
+          paddingBottom : '3px', 
+          justifyContent: 'space-evenly',
+          alignItems: '<baseline-position>' 
+        }}>
+        <Row style={{ marginTop: marginTop, 'marginBottom': '10px' }}>
+          { (data.static_sankey && sous_filieres)  ? (
+            <Col>
+              <Form.Group as={Col} style={{marginLeft : '30px'}}>
+                <Row>
+                  <FormLabel className="text-center" >{diagram_label}</FormLabel>
+                </Row>
+                <Row>
+                  <Form.Select 
+                    onChange={setDiagram}>
+                    {Object.keys(sous_filieres).map( (name,i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
+                  </Form.Select>
+                </Row>
+              </Form.Group>
+            </Col>): (<div/>)}
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addAllDropDownNode()}
             </Form>
           </Col>
-          <Col sm={4}>
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addAllDropDownLinks()}
             </Form>
           </Col>
-          <Col sm={4}>
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
             </Form>
