@@ -91,7 +91,7 @@ publish_exercice_AFM:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Exercices" --publish_name="ExercicesAFM"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Exercices" --publish_name="ExercicesAFM"
-    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Exercices" --publish_name="ExercicesAFM"
+    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
   when: manual
