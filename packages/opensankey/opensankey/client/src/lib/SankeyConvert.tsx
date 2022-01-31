@@ -558,12 +558,18 @@ export const convert_data = (
     l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
       if (data.version !== '0.6' ) {
-        (l_convert.value as number[]).forEach(v => {
-          v = +v
-          if (flux_max < v) {
-            flux_max = v
-          }
-        })
+        if ( Array.isArray(l_convert.value) ) {
+          (l_convert.value as number[]).forEach(v => {
+            v = +v
+            if (flux_max < v) {
+              flux_max = v
+            }
+          })
+        } else {
+          if (flux_max < l_convert.value) {
+            flux_max = l_convert.value
+          }          
+        }
         if ('tags' in l) {
           delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
         }
@@ -770,17 +776,29 @@ export const convert_data = (
       Object.values(links_no_type).forEach(
         (link : any) => {
           const editable_link = links_no_type[link.idLink]
+          let the_value = link.value
+          let the_display_value = link.display_value
+          if ( Array.isArray(link.value) ) {
+            the_value = link.value[0]
+            the_display_value = link.display_value[0]
+          }
           editable_link.value2 = {
-            value : (link.value as any)[0],
-            display_value : ((link as any).display_value as any)[0],
+            value : the_value,
+            display_value : the_display_value,
             color_tag            : {},
             extension : {}
           }
           if (editable_link.mini !== undefined && editable_link.mini !== null) {
-            editable_link.value2.extension.mini = editable_link.mini[0]
-            editable_link.value2.extension.maxi = editable_link.maxi[0]
+            let the_mini = editable_link.mini
+            let the_maxi = editable_link.maxi
+            if ( Array.isArray(editable_link.mini) ) {
+              the_mini = editable_link.mini[0]
+              the_maxi = editable_link.maxi[0]
+            }
+            editable_link.value2.extension.mini = the_mini
+            editable_link.value2.extension.maxi = the_maxi
             editable_link.value2['color_tag']['Uncert'] = {}
-            const p = (editable_link.maxi[0] - editable_link.mini[0])/editable_link.value[0]
+            const p = (the_maxi - the_mini)/the_value
             if (p <= 0.1) {
               editable_link.value2['color_tag']['Uncert'] ='10_percent'
             } else if (p <= 0.25) {
