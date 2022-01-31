@@ -615,9 +615,9 @@ export const convert_data = (
       if (!('label_on_path' in l)) {
         (l as SankeyLink).label_on_path = true
       }
-      if (l_convert.frozen) {
-        l.label_position = 'frozen'
-      }
+      // if (l_convert.frozen) {
+      //   l.label_position = 'frozen'
+      // }
       if ('frozen' in l) {
         delete l_convert.frozen
       }
