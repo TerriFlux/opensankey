@@ -43,6 +43,7 @@ deploy_opensankey:
     - $ENV
   environment:
     name: $ENV
+    url: dev.opensankey.fr
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
