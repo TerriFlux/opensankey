@@ -29,7 +29,7 @@
     "copy_logo": "cross-conf-env shx cp $npm_config_datapath/*.png  build || shx true",
     "copy_data": "npm run copy_logo && npm run copy_excel && npm run copy_layout",
     "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name.zip && shx rm -f build/index_keep.html && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts",
-    "unzip": "cross-conf-env extract-zip $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name.zip $npm_config_datapath/artefacts/opensankey_1.0.0.$npm_config_publish_name",
+    "unzip": "cross-conf-env extract-zip $npm_config_datapath/artefacts/open-sankey_1.0.0.$npm_config_publish_name.zip $npm_config_datapath/artefacts/open-sankey_1.0.0.$npm_config_publish_name",
     "echo": "cross-conf-env echo $npm_config_datapath",
     "publish2": "node publish.js",
     "remove_header": "node remove_header_footer.js"
