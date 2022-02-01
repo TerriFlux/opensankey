@@ -91,7 +91,7 @@ ExercicesAFM:
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM/index.html
   artifacts:
     paths:
-      - /home/ubuntu/MFAData/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM.zip
+      - open-sankey_0.1.9.ExercicesAFM.zip
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
@@ -168,6 +168,6 @@ FiliereVegetal:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run build_zip --datapath="build" --publish_name="FiliereVegetal"
     - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
   when: manual
