@@ -91,7 +91,7 @@ ExercicesAFM:
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM/index.html
   artifacts:
     paths:
-      - open-sankey_0.1.9.ExercicesAFM.zip
+      - build/open-sankey_0.1.9.ExercicesAFM.zip
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
