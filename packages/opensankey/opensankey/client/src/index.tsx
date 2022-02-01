@@ -37,16 +37,31 @@ if (!window.SankeyToolsStatic) {
     data.tags_catalog = {}
     Object.assign(data, new_data)
   }
+  const fetchData = {
+    method: 'POST'
+  }
+
+  let exemple_menu = {}
+  const path = window.location.href
+  const url = path + 'sankey/menu_examples'
+  fetch(url, fetchData).then(response => {
+    response.text().then(text => {
+      const json_data = JSON.parse(text)
+      exemple_menu = json_data
+      render(
+        <>
+          <SankeyApp 
+            sankey_data={data}
+            exemple_menu={exemple_menu}
+          />
+        </>,
+        document.getElementById('react-container')
+      )
+    })
+  })
 
 
-  render(
-    <>
-      <SankeyApp 
-        sankey_data={data} 
-      />
-    </>,
-    document.getElementById('react-container')
-  )
+
 } else {
   localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
   const json_data = localStorage.getItem('data')
@@ -77,6 +92,7 @@ if (!window.SankeyToolsStatic) {
       }
       <SankeyApp 
         sankey_data={data}
+        exemple_menu={{}}
       />
       {window.sankey.footer ? (
         <div id="copyright">

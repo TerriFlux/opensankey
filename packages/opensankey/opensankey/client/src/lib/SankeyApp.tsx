@@ -25,11 +25,12 @@ typeof globalThis & {
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  exemple_menu:  PropTypes.object.isRequired
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -54,6 +55,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           data={data}
           set_data={set_data}
           app_name='version beta 0.8'
+          exemple_menu={exemple_menu}
           logo={logo.replace('static/', 'static/opensankey/')}
           set_show_nav={set_show_nav}
           show_nav={show_nav}
