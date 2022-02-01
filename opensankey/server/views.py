@@ -166,6 +166,12 @@ def parse_folder(current_dir,menus,key=None):
     for file_or_folder in folder_content:
         if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'artefacts' in file_or_folder or '.vscode' in file_or_folder:
             continue
+        if 'simple.xlsx' in file_or_folder:
+            if key not in menus:
+                menus[key] = []
+            menus[key].append(file_or_folder)
+            found = True
+            continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
             continue
         if file_or_folder != 'sankey':
@@ -179,16 +185,14 @@ def parse_folder(current_dir,menus,key=None):
             else:
                 found = parse_folder(os.path.join(current_dir,file_or_folder),menus,child_key)                
         else:
-            layout_found = False
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             for file_name in file_names:
                 if 'auto_layout' in file_name:
                     continue
-                if 'layout.json' not in file_name:
+                if 'layout.json' not in file_name and 'simple.xlsx' not in file_name:
                     continue
-                if not layout_found:
+                if key not in menus or type(menus[key]) is dict:
                     menus[key] = []
-                    layout_found = True
                 menus[key].append(file_name)
                 found = True
     if not found and key in menus:
