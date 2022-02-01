@@ -49,12 +49,24 @@ const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) =
     <>
       { Array.isArray(exemple_menu) 
         ? exemple_menu.map( (item,index)=> {
+          let callback = (server_data : SankeyData)=> 0
+          let path = current_path+'/sankey/'+item
+          if (item.includes('simple.xlsx')) {
+            path = current_path+'/'+item
+            callback = (server_data : SankeyData)=>{
+              set_nodes_level(server_data.nodes,2)
+              compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+              set_nodes_level(server_data.nodes,1)
+              compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+              return 0
+            }
+          }
           return (
             <Dropdown.Item 
               onClick={() => uploadExemple(
-                current_path+'/sankey/'+item, url_prefix, data, set_data,()=> 0
+                path, url_prefix, data, set_data,callback
               )} 
-            >{item.split('.')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC')}</Dropdown.Item>
+            >{item.split('.')[0].replace(/_/g, ' ').replace(' layout','').replace('simple.xlsx',' xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC')}</Dropdown.Item>
           )}
         ) : Object.keys(exemple_menu).map(
           (key,index)=> {
