@@ -88,7 +88,7 @@ ExercicesAFM:
     - $ENV
   environment:
     name: $ENV
-    url: https://dev.terriflux.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM/index.html
+    url: http://dev.open-sankey.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM/index.html
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
@@ -124,7 +124,7 @@ ExercicesReconciliation:
     - $ENV
   environment:
     name: $ENV
-    url: https://dev.terriflux.fr/fm/userfiles/Exercices/Reconciliation/artefacts/open-sankey_0.1.9.ExercicesReconciliation/index.html
+    url: http://dev.open-sankey.fr/fm/userfiles/Exercices/Reconciliation/artefacts/open-sankey_0.1.9.ExercicesReconciliation/index.html
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
@@ -160,7 +160,7 @@ FiliereVegetal:
     - $ENV
   environment:
     name: $ENV
-    url: https://dev.terriflux.fr/fm/userfiles/Végétal/artefacts/open-sankey_0.1.9.FiliereVegetal/index.html
+    url: http://dev.open-sankey.fr/fm/userfiles/Végétal/artefacts/open-sankey_0.1.9.FiliereVegetal/index.html
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
