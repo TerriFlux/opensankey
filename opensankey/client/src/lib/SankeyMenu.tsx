@@ -309,13 +309,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                     reader.onload = (() => {
                       return (e: ProgressEvent<FileReader>) => {
                         let result = String((e.target as FileReader).result)
+                        const new_data = default_sankey_data()
                         result = result.split('<br>').join('\\\\n')
-                        const new_data = JSON.parse(result)
-                        data.tags_catalog = {}
-                        Object.assign(data, new_data)
-                        data.version = new_data.version
-                        convert_data(data)
-                        set_data({ ...data })
+                        Object.assign(new_data, JSON.parse(result))
+                        //new_data.version = new_data.version
+                        convert_data(new_data)
+                        set_data(new_data)
                       }
                     })()
                     reader.readAsText(files[0])
