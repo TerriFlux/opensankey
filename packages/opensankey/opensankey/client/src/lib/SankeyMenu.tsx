@@ -44,7 +44,7 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
-const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) => {
+export const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
@@ -431,90 +431,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               {edition_menu}
             </NavDropdown >
             <NavDropdown title="Exemples" id="exemples" >
-              <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
-              <ExempleItem 
-                exemple_menu={exemple_menu}
-                url_prefix={url_prefix}
-                data={data}
-                set_data={set_data}
-                current_path={''}
-              />
-              {/* <NavDropdown title="Pommes Poires" id="pommes_poires" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_regions_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires Regions</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_regions_periods_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires Regions Periods</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Energie" id="energie" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
-                  (server_data : SankeyData) => {
-                    compute_default_input_outputLinksId(server_data.nodes, server_data.links)
-                    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                    Object.values(server_data.nodes).forEach(function (n) {
-                      reorganize_node_inputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
-                      reorganize_node_outputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
-                    })
-                    delete (server_data as SankeyData & { layout?: SankeyData }).layout
-                  }
-                )} >Energie</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Forêt Bois" id="bois" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Savoie v1</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Savoie v2</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Grand Est/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Grand Est</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Viande" id="viande" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )}
-                >Viande</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Lait" id="lait" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )}
-                >Lait</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown.Divider />
-              {example_menu} */}
+              {example_menu}
             </NavDropdown >
             {!data.static_sankey ? (
               <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
