@@ -8,6 +8,7 @@ import pandas as pd
 import cloudconvert
 import numpy as np
 from shutil import copyfile
+from os import listdir
 
 import os
 import json
@@ -158,6 +159,54 @@ def download_examples():
     if os.path.exists(exemple_file_path):
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')
+
+def parse_folder(current_dir,menus,key=None):
+    folder_content = listdir(current_dir)
+    found = False
+    for file_or_folder in folder_content:
+        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'artefacts' in file_or_folder or '.vscode' in file_or_folder:
+            continue
+        if os.path.isfile(os.path.join(current_dir,file_or_folder)):
+            continue
+        if file_or_folder != 'sankey':
+            child_key = file_or_folder
+            if key != None:
+                if key not in menus:
+                    menus[key] = {}
+                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],child_key)
+                if folder_found:
+                    found = True
+            else:
+                found = parse_folder(os.path.join(current_dir,file_or_folder),menus,child_key)                
+        else:
+            layout_found = False
+            file_names = listdir(os.path.join(current_dir, file_or_folder))
+            for file_name in file_names:
+                if 'auto_layout' in file_name:
+                    continue
+                if 'layout.json' not in file_name:
+                    continue
+                if not layout_found:
+                    menus[key] = []
+                    layout_found = True
+                menus[key].append(file_name)
+                found = True
+    if not found and key in menus:
+        del menus[key]
+    return found
+
+@opensankey.route('/sankey/menu_examples', methods=['POST'])
+def menus_examples():
+    data_folder = os.environ.get('MFAData')
+    menus = {}
+    parse_folder(data_folder,menus)
+    json_data = json.dumps(menus)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @opensankey.route('/')
 def start():

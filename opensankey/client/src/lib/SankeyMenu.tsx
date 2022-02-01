@@ -14,6 +14,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
+  exemple_menu:  PropTypes.object.isRequired,
   open_menu: PropTypes.element,
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
@@ -43,8 +44,42 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
+const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) => {
+  return (
+    <>
+      { Array.isArray(exemple_menu) 
+        ? exemple_menu.map( (item,index)=> {
+          return (
+            <Dropdown.Item 
+              onClick={() => uploadExemple(
+                current_path+'/sankey/'+item, url_prefix, data, set_data,()=> 0
+              )} 
+            >{item.split('.')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC')}</Dropdown.Item>
+          )}
+        ) : Object.keys(exemple_menu).map(
+          (key,index)=> {
+            return (
+              <>
+                <NavDropdown title={key} id={key} >
+                  <ExempleItem 
+                    exemple_menu={exemple_menu[key]}
+                    url_prefix={url_prefix}
+                    data={data}
+                    set_data={set_data}
+                    current_path={current_path !== '' ? current_path+'/'+key : key}
+                  />
+                </NavDropdown>
+              </>
+            )}          
+        )
+      }
+    </>      
+  )
+}
+
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
+    exemple_menu,
     open_menu, save_menu, edition_menu, right_menu,
     settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
     logo,app_name,
@@ -385,7 +420,14 @@ const Menu: FunctionComponent<MenuTypes> = (
             </NavDropdown >
             <NavDropdown title="Exemples" id="exemples" >
               <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
-              <NavDropdown title="Pommes Poires" id="pommes_poires" >
+              <ExempleItem 
+                exemple_menu={exemple_menu}
+                url_prefix={url_prefix}
+                data={data}
+                set_data={set_data}
+                current_path={''}
+              />
+              {/* <NavDropdown title="Pommes Poires" id="pommes_poires" >
                 <Dropdown.Item onClick={() => uploadExemple(
                   'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
                   (server_data : SankeyData)=>{
@@ -460,7 +502,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 >Lait</Dropdown.Item>
               </NavDropdown >
               <NavDropdown.Divider />
-              {example_menu}
+              {example_menu} */}
             </NavDropdown >
             {!data.static_sankey ? (
               <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
