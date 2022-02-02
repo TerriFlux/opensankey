@@ -6,10 +6,10 @@ import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu from './SankeyMenu'
+import Menu, { ExempleItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Row, Col } from 'react-bootstrap'
+import { Row, Col, Dropdown } from 'react-bootstrap'
 import { getLinkValue } from './SankeyUtils'
 let logo = ''
 try {
@@ -56,6 +56,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           set_data={set_data}
           app_name='version beta 0.8'
           exemple_menu={exemple_menu}
+          example_menu={<>
+            <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+            <ExempleItem 
+              exemple_menu={exemple_menu}
+              url_prefix=''
+              data={data}
+              set_data={set_data}
+              current_path={''}
+            /></>}
           logo={logo.replace('static/', 'static/opensankey/')}
           set_show_nav={set_show_nav}
           show_nav={show_nav}
