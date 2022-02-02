@@ -89,9 +89,6 @@ ExercicesAFM:
   environment:
     name: $ENV
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM/index.html
-  artifacts:
-    paths:
-      - http://dev.open-sankey.fr/fm/userfiles/Exercices/AFM/artefacts/open-sankey_0.1.9.ExercicesAFM.zip
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
