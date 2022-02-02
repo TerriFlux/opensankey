@@ -57,10 +57,18 @@ if (!window.SankeyToolsStatic) {
         </>,
         document.getElementById('react-container')
       )
-    })
+    }).catch( ()=> 
+      render(
+        <>
+          <SankeyApp 
+            sankey_data={data}
+            exemple_menu={{}}
+          />
+        </>,
+        document.getElementById('react-container')
+      )    
+    )
   })
-
-
 
 } else {
   localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
