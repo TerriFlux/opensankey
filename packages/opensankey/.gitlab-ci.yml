@@ -165,6 +165,6 @@ FiliereVegetal:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run build_zip --datapath="build" --publish_name="FiliereVegetal"
     - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
   when: manual
