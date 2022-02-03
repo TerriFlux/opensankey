@@ -94,7 +94,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     exemple_menu,
     open_menu, save_menu, edition_menu, right_menu,
     settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
-    logo,app_name,
+    logo, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_selected_link, selected_link,
@@ -126,7 +126,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const node: SankeyNode = default_node()
 
     // Méthode pour incrementer idNode
-    const listId : number[] = []
+    const listId: number[] = []
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
     node.idNode = 'node' + idNode
@@ -255,7 +255,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const link: SankeyLink = default_link(data)
     console.log(link)
     // Méthode pour incrementer idNode
-    const listId : number[] = []
+    const listId: number[] = []
     Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
     const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
     link.idLink = 'link' + idLink
@@ -331,15 +331,58 @@ const Menu: FunctionComponent<MenuTypes> = (
     scroll: true,
     backdrop: false,
   }
+
+
+  const [modalshow, setModalShow] = useState(false)
+
+  const handleModalClose = () => setModalShow(false)
+  const handleModalShow = () => setModalShow(true)
+
+
   return (
     <>
+      <Modal show={modalshow} onHide={handleModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Suppression noeud connecté</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Êtes-vous sûr de vouloir supprimer ce noeud ? Il est relié à différents flux:
+
+        Entrant:
+        {
+          selected_node.inputLinksId.map(k => {
+            return <> <br /> -{data.nodes[data.links[k].idSource].name} </>
+          })}
+        <br/>
+
+        Sortant:
+        {
+          selected_node.outputLinksId.map(k => {
+            return <> <br /> -{data.nodes[data.links[k].idTarget].name} </>
+          })}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleModalClose}>
+            Refuse
+          </Button>
+          <Button variant="primary" onClick={() => {
+            delete_node(data, selected_node)
+            set_selected_node(default_node())
+            set_data({ ...data })
+            handleModalClose()
+          }}>
+            Accept
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          { logo !== '' ? (<Navbar.Brand href="#"><img src={logo} width="100"/> {app_name} </Navbar.Brand>) : (<Navbar.Brand href="#">{app_name} </Navbar.Brand>)}
+          {console.log(logo)}
+          <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item 
+                <Dropdown.Item
                   onClick={() => {
                     if (_load_json.current) {
                       _load_json.current.name = ''
@@ -367,7 +410,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     reader.readAsText(files[0])
                   }}
                 />
-                <Dropdown.Item 
+                <Dropdown.Item
                   onClick={() => {
                     if (_load_simple_excel && _load_simple_excel.current) {
                       _load_simple_excel.current.name = ''
@@ -469,7 +512,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="1"
               onClick={
                 evt => {
-                  if (((evt.target as unknown)as {className:string}).className === 'accordion-button' && nav_item_active === '1') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '1') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('1')
@@ -488,7 +531,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="2"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -502,7 +545,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Body>
                 <Row >
                   <Col xs={1}>
-                    <Button size="sm"  onClick={add_new_node}><FaPlus /></Button>
+                    <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
                   </Col>
                   <Col xs={10}>
                     <Form.Select id="selectionNode"
@@ -523,10 +566,18 @@ const Menu: FunctionComponent<MenuTypes> = (
                       variant='danger'
                       onClick={
                         () => {
-                          //Boutton pour supprimer le noeud selectionné
-                          delete_node(data, selected_node)
-                          set_selected_node(default_node())
-                          set_data({ ...data })
+                          if (selected_node.inputLinksId.length > 0 || selected_node.outputLinksId.length > 0) {
+                            setModalShow(true)
+
+                          } else {
+                            //Boutton pour supprimer le noeud selectionné
+                            delete_node(data, selected_node)
+                            set_selected_node(default_node())
+                            set_data({ ...data })
+                          }
+
+
+
                         }
                       }
                     ><FaMinus /></Button>
@@ -633,7 +684,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="4"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '4') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '4') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('4')
@@ -648,7 +699,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item
               eventKey="3"
               onClick={evt => {
-                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('3')
@@ -682,6 +733,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     >
+                      {/*Object.values(data.links).map((l, i) => console.log(l,l.idTarget,display_nodes))*/}
                       {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
                   </Col>
@@ -748,7 +800,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
             <Accordion.Item eventKey="7"
               onClick={evt => {
-                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '7') {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('7')
@@ -763,7 +815,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="5"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '5') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('5')
@@ -802,7 +854,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="0"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '0') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '0') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('0')
@@ -819,7 +871,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="6"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '6') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '6') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('6')

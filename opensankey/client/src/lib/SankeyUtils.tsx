@@ -1,25 +1,24 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import * as d3 from 'd3'
 
-export const addDataTags =(
+export const addDataTags = (
   dataTags: TagsGroup[],
-  v:any,
-  depth:number  
+  v: any,
+  depth: number
 ) => {
   const dataTag = Object.values(dataTags)[depth]
   const listKey = Object.keys(dataTag.tags)
   for (const i in listKey) {
-    if (depth === dataTags.length-1) {
+    if (depth === dataTags.length - 1) {
       v[listKey[i]] = {
-        value         : v.value,
-        display_value : v.display_value,
-        color_tag     : {},
-        extension     : {}        
+        value: v.value,
+        display_value: v.display_value,
+        color_tag: {},
+        extension: {}
       }
     } else {
-      addDataTags(dataTags,v[listKey[i]],depth+1)  
+      addDataTags(dataTags, v[listKey[i]], depth + 1)
     }
   }
 }
@@ -31,54 +30,54 @@ export const getLinkValue = (
   idLink: string,
   up = false
 ) => {
-  const { links,dataTags } = data
+  const { links, dataTags } = data
   if (!(idLink in links)) {
     console.log('idLink: ' + idLink + ' not in links')
     return {
-      value        : 0,
+      value: 0,
       display_value: 'default',
-      color_tag    : {},
-      extension    : {}          
+      color_tag: {},
+      extension: {}
     }
   }
-  let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
+  let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
-    const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+    const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
-      return 
+      return
     }
-    listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
   })
   if (missing_key) {
     return {
-      value        : 0,
+      value: 0,
       display_value: 'default',
-      color_tag    : {},
-      extension    : {}          
-    }    
+      color_tag: {},
+      extension: {}
+    }
   }
 
   for (const i in listKey) {
-    if ( up && +i === (listKey.length - 1) ) {
+    if (up && +i === (listKey.length - 1)) {
       break
     }
     val = val[listKey[i]]
   }
-  return (val as unknown ) as SankeyLinkValue
+  return (val as unknown) as SankeyLinkValue
 }
 
-export const findMaxLinkValue = ( 
-  max_node_value:number, 
+export const findMaxLinkValue = (
+  max_node_value: number,
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
-      const cur_max_value = findMaxLinkValue(new_max_node_value,(v as unknown) as SankeyLinkValueDict)
+      const cur_max_value = findMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
       new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
     })
   } else {
@@ -95,7 +94,7 @@ export const getTotalLinks = (
   Links.forEach(element => {
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
     if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
-      const tmp = getLinkValue(data,element).value
+      const tmp = getLinkValue(data, element).value
       total += tmp
     }
   })
@@ -121,10 +120,10 @@ export const compute_total_offsets = (
   const bottom_flux: string[] = []
 
   //const link_id = link ? links.indexOf(link) : -1
-
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
+
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let target_node
         try {
@@ -132,11 +131,11 @@ export const compute_total_offsets = (
         } catch {
           return
         }
-        
-        const node_x = node.position === 'absolute'               ? +node.x        : +target_node.x + +node.x
-        const node_y = node.position === 'absolute'               ? +node.y        : +target_node.y + +node.y 
-        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x        + +target_node.x 
-        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y        + +target_node.y
+
+        const node_x = node.position === 'absolute' ? +node.x : +target_node.x + +node.x
+        const node_y = node.position === 'absolute' ? +node.y : +target_node.y + +node.y
+        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x + +target_node.x
+        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y + +target_node.y
         if (link.orientation === 'hh') {
           if (target_node_x > node_x && !link.recycling || target_node_x <= node_x && link.recycling) {
             right_flux.push(idLink)
@@ -176,10 +175,10 @@ export const compute_total_offsets = (
         } catch {
           return
         }
-        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x        + +source_node.x 
-        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y        + +source_node.y 
-        const node_x = node.position === 'absolute'               ? +node.x        : +source_node.x + +node.x 
-        const node_y = node.position === 'absolute'               ? +node.y        : +source_node.y + +node.y
+        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x + +source_node.x
+        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
+        const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
+        const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
         if (link.orientation === 'vv') {
           if (source_node_y < node_y) {
             // flux goes down
@@ -322,7 +321,7 @@ export const link_text = (
   d: SankeyLink,
   link_value: number
 ) => {
-  const str_display = String(getLinkValue(data,d.idLink).display_value)
+  const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== 'default') {
     return str_display
   }
@@ -408,12 +407,12 @@ const create_object = (data: SankeyData, l: string[]) => {
   } else {
     const i = l[0]
     if (i !== undefined) {
-      const o=Object.create({})
+      const o = Object.create({})
       Object.keys(dataTags[i].tags).forEach(tag_key => {
         const obj = Object.create({})
         const ob = create_object(data, l.slice(1))
         obj[tag_key] = ob
-        Object.assign(o,obj)
+        Object.assign(o, obj)
       })
       return o
     }
@@ -422,18 +421,18 @@ const create_object = (data: SankeyData, l: string[]) => {
 export const default_link = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
-  const listK = Object.keys(dataTags).filter(d=>{
+  const listK = Object.keys(dataTags).filter(d => {
 
-    if(Object.keys(dataTags[d].tags).length!=0){
+    if (Object.keys(dataTags[d].tags).length != 0) {
       return true
-    }else{
+    } else {
       return false
     }
   })
-  
+
 
   nObjet = create_object(data, listK)
-  
+
   return {
     idSource: 'node0',
     idTarget: 'node1',
@@ -470,14 +469,39 @@ export const delete_link = (
   target_node.inputLinksId.splice(idx, 1)
 
   delete data.links[link.idLink]
+  console.log(link.idLink, data.links)
 }
 
 export const delete_node = (
   data: SankeyData,
   node: SankeyNode
 ) => {
-  node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
-  node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
+
+  //Ne fait plus appel à delete_link car la fonction modifie le tableau des output/input du node 
+  //et ne supprime pas des flux qui devrait l'être 
+
+  //node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
+  node.inputLinksId.forEach(idLink => {
+    Object.values(data.nodes).map((k) => {
+      k.outputLinksId = k.outputLinksId.filter(function (value) {
+        return value != idLink
+      })      
+    })
+    delete data.links[idLink]
+  })
+
+  //node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
+  node.outputLinksId.forEach(idLink => {
+    console.log
+    Object.values(data.nodes).map((k) => {
+      k.inputLinksId = k.inputLinksId.filter(function (value) {
+        return value != idLink
+      })
+    })
+    delete data.links[idLink]
+  })
+
+
   delete data.nodes[node.idNode]
 }
 
@@ -549,7 +573,7 @@ export const uploadExemple = (
   set_data: (data: SankeyData) => void,
   example_callback: (data: SankeyData) => void
 ) => {
-  
+
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
