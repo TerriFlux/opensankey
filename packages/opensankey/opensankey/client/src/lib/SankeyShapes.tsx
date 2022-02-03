@@ -18,6 +18,7 @@ export const draw_arrow = (
       d = ' M ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum)
       d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum)) + ',' + String(p5[1] - w + w * ratio_cum)
       d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum) + coeff * arrow_length * ratio_cur) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur)
+      //d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum) + coeff * arrow_length * ratio_cur) + ',' +String((p5[1] - w + w * ratio_cum)+((p5[1] - w + w * ratio_cum + w * ratio_cur)-(p5[1] - w + w * ratio_cum))/2)
       d += ' L ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur) + ' Z'
     } else if (ratio_cum > 1) {
       d = ' M ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum)
