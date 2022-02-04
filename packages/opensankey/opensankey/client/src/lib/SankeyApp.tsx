@@ -221,20 +221,21 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
               if (selected_tag) {
                 return data.dataTags[l.colormap].tags[selected_tag].color
               }
+              return l.color
             }
             const source_node = data.nodes[l.idSource]
             const target_node = data.nodes[l.idTarget]
             let selected_tag = ''
-            if (source_node.type === 'sector' && source_node.tags[l.colormap].length === 1) {
+            if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'sector' &&  target_node.tags[l.colormap].length === 1) {
+            } else if ( target_node.type === 'sector'  && l.colormap in target_node.tags &&  target_node.tags[l.colormap].length === 1) {
               selected_tag = target_node.tags[l.colormap][0]   
               return data.tags_catalog[l.colormap].tags[selected_tag].color             
-            } else if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
+            } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
+            } else if ( target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
               selected_tag = target_node.tags[l.colormap][0]   
               return data.tags_catalog[l.colormap].tags[selected_tag].color             
             }
