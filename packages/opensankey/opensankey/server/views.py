@@ -171,7 +171,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if file_name == '.gitkeep':
+                if 'open-sankey' not in file_name:
                     continue
                 if key not in artefacts or type(artefacts[key]) is dict:
                     artefacts[key] = []
