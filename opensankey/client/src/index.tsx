@@ -42,17 +42,20 @@ if (!window.SankeyToolsStatic) {
   }
 
   let exemple_menu = {}
-  const path = window.location.href
-  const url = path + 'sankey/menu_examples'
+  let artefacts_menu = {}
+  const path = window.location.origin
+  const url = path + '/sankey/menu_examples'
   fetch(url, fetchData).then(response => {
     response.text().then(text => {
       const json_data = JSON.parse(text)
-      exemple_menu = json_data
+      exemple_menu = json_data.exemples_menu
+      artefacts_menu = json_data.artefacts_menu
       render(
         <>
           <SankeyApp 
             sankey_data={data}
             exemple_menu={exemple_menu}
+            artefacts_menu={artefacts_menu}
           />
         </>,
         document.getElementById('react-container')
@@ -63,6 +66,7 @@ if (!window.SankeyToolsStatic) {
           <SankeyApp 
             sankey_data={data}
             exemple_menu={{}}
+            artefacts_menu={{}}
           />
         </>,
         document.getElementById('react-container')
@@ -101,6 +105,7 @@ if (!window.SankeyToolsStatic) {
       <SankeyApp 
         sankey_data={data}
         exemple_menu={{}}
+        artefacts_menu={{}}
       />
       {window.sankey.footer ? (
         <div id="copyright">
