@@ -6,7 +6,7 @@ import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu, { ExempleItem } from './SankeyMenu'
+import Menu, { ExempleItem,ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col, Dropdown } from 'react-bootstrap'
@@ -25,12 +25,13 @@ typeof globalThis & {
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  exemple_menu:  PropTypes.object.isRequired
+  exemple_menu:  PropTypes.object.isRequired,
+  artefacts_menu: PropTypes.object.isRequired
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu,artefacts_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -55,7 +56,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           data={data}
           set_data={set_data}
           app_name='version beta 0.8'
-          exemple_menu={exemple_menu}
           example_menu={<>
             <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
             <ExempleItem 
@@ -63,6 +63,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
               url_prefix=''
               data={data}
               set_data={set_data}
+              current_path={''}
+            /></>}
+          portfolio_menu={<>
+            <ArtefactsItem 
+              artefacts_menu={artefacts_menu}
               current_path={''}
             /></>}
           logo={logo.replace('static/', 'static/opensankey/')}

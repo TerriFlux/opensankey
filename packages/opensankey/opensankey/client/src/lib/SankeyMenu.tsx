@@ -14,7 +14,6 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  exemple_menu:  PropTypes.object.isRequired,
   open_menu: PropTypes.element,
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
@@ -35,6 +34,7 @@ const MenuPropTypes = {
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
+  portfolio_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
   agregation_level: PropTypes.number.isRequired,
@@ -43,6 +43,33 @@ const MenuPropTypes = {
 
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
+
+export const ArtefactsItem = ({artefacts_menu,current_path}:any) => {
+  return (
+    <>
+      { Array.isArray(artefacts_menu) 
+        ? artefacts_menu.map( (item,index)=> {
+          const url = window.location.origin + '/fm/userfiles/' + current_path + '/'+ item + '/index.html'
+          return (
+            <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
+          )}
+        ) : Object.keys(artefacts_menu).map(
+          (key,index)=> {
+            return (
+              <>
+                <NavDropdown key={key} title={key} id={key} >
+                  <ArtefactsItem 
+                    artefacts_menu={artefacts_menu[key]}
+                    current_path={current_path !== '' ? current_path+'/'+key : key}
+                  />
+                </NavDropdown>
+              </>
+            )}          
+        )
+      }
+    </>      
+  )
+}
 
 export const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) => {
   return (
@@ -91,14 +118,13 @@ export const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}
 
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
-    exemple_menu,
     open_menu, save_menu, edition_menu, right_menu,
     settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
     logo, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_selected_link, selected_link,
-    example_menu, url_prefix,
+    example_menu,portfolio_menu, url_prefix,
     agregation_level,
     set_agregation_level
   }
@@ -475,6 +501,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             </NavDropdown >
             <NavDropdown title="Exemples" id="exemples" >
               {example_menu}
+            </NavDropdown >
+            <NavDropdown title="Portfolio" id="portfolio" >
+              {portfolio_menu}
             </NavDropdown >
             {!data.static_sankey ? (
               <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
