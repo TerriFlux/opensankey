@@ -832,9 +832,13 @@ export const convert_data = (
           }
           if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
             editable_link.value2.extension.data_value  = editable_link.data_value[0]
-            editable_link.value2.extension.data_source = editable_link.data_source[0]
-            editable_link.value2.extension.data_period = editable_link.data_period[0]
             editable_link.value2['color_tag']['flux_types'] = 'initial_data'
+          }
+          if ( 'data_source' in editable_link) {
+            editable_link.value2.extension.data_source = editable_link.data_source[0]
+          }
+          if ( 'data_period' in editable_link) {
+            editable_link.value2.extension.data_period = editable_link.data_period[0]
           }
         }
       )          
