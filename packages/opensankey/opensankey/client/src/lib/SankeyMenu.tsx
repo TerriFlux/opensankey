@@ -49,7 +49,10 @@ export const ArtefactsItem = ({artefacts_menu,current_path}:any) => {
     <>
       { Array.isArray(artefacts_menu) 
         ? artefacts_menu.map( (item,index)=> {
-          const url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/'+ item + '/index.html'
+          let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/'+ item
+          if (!item.includes('zip')) {
+            url = url + '/index.html'           
+          }
           return (
             <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
           )}
