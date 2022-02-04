@@ -162,6 +162,7 @@ def download_examples():
 
 def parse_folder(current_dir,menus,artefacts,key=None):
     folder_content = listdir(current_dir)
+    folder_content.sort()
     exemple_found = False
     artefact_found = False
     for file_or_folder in folder_content:
@@ -206,6 +207,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                     artefact_found = True              
         else:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
+            file_names.sort()
             for file_name in file_names:
                 if 'auto_layout' in file_name:
                     continue
