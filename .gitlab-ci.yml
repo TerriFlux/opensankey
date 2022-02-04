@@ -114,7 +114,7 @@ PublishExercicesReconciliation:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/Reconciliation/artefacts/open-sankey_0.1.9.ExercicesReconciliation/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
@@ -146,7 +146,7 @@ PublishExercicesAgePoidsTaille:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/AgePoidsTaille/artefacts/open-sankey_0.1.9.ExercicesAgePoidsTaille/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
@@ -178,7 +178,7 @@ PublishExercicesFormesCouleurs:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Exercices/FormesCouleurs/artefacts/open-sankey_0.1.9.ExercicesFormesCouleurs/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
@@ -210,7 +210,7 @@ PublishFiliereVegetal:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Végétal/artefacts/open-sankey_0.1.9.FiliereVegetal/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Végétal" --publish_name="FiliereVegetal"
@@ -242,7 +242,7 @@ PublishFiliereBoisSavoie1:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Forêt Bois/Savoie/v1/artefacts/open-sankey_0.1.9.FiliereBoisSavoie1/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt Bois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt Bois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
@@ -274,7 +274,7 @@ PublishFiliereBoisSavoie2:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Forêt Bois/Savoie/v1/artefacts/open-sankey_0.1.9.FiliereBoisSavoie2/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt Bois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt Bois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
@@ -306,7 +306,7 @@ PublishFiliereBoisGrandEst:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Forêt Bois/Grand Est/artefacts/open-sankey_0.1.9.FiliereBoisGrandEst/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt Bois/Grand Est" --publish_name="FiliereBoisGrandEst"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt Bois/Grand Est" --publish_name="FiliereBoisGrandEst"
@@ -338,7 +338,7 @@ PublishFiliereBoisRegions:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Forêt Bois/France et Régions/artefacts/open-sankey_0.1.9.FiliereBoisRegions/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt Bois/France et Régions" --publish_name="FiliereBoisRegions"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt Bois/France et Régions" --publish_name="FiliereBoisRegions"
@@ -370,7 +370,7 @@ PublishFiliereLait:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Lait/artefacts/open-sankey_0.1.9.FiliereLait/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Lait" --publish_name="FiliereLait"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Lait" --publish_name="FiliereLait"
@@ -402,7 +402,7 @@ PublishFiliereViande:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Viande/artefacts/open-sankey_0.1.9.FiliereViande/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Viande" --publish_name="FiliereViande"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Viande" --publish_name="FiliereViande"
@@ -434,7 +434,7 @@ PublishFilierePaille:
     name: dev
     url: http://dev.open-sankey.fr/fm/userfiles/Paille/artefacts/open-sankey_0.1.9.FilierePaille/index.html
   script:
-    - cd $FOLDER/su-model-sankey/sankeytools/client
+    - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Paille" --publish_name="FilierePaille"
     - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Paille" --publish_name="FilierePaille"
