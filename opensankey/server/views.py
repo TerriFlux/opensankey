@@ -228,24 +228,24 @@ def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
     artefacts = {}
-    # try:
-    parse_folder(data_folder,menus,artefacts)
-    context = {
-        'exemples_menu'    : menus,
-        'artefacts_menu': artefacts 
-    }
-    json_data = json.dumps(context)
-    response = Response(
-        response=json_data,
-        status=200,
-        mimetype='application/json'
-    )
-    # except Exception as expt:
-    #     response = Response(
-    #         response=str(expt),
-    #         status=500,
-    #         mimetype='application/json'
-    #     )  
+    try:
+        parse_folder(data_folder,menus,artefacts)
+        context = {
+            'exemples_menu'    : menus,
+            'artefacts_menu': artefacts 
+        }
+        json_data = json.dumps(context)
+        response = Response(
+            response=json_data,
+            status=200,
+            mimetype='application/json'
+        )
+    except Exception as expt:
+        response = Response(
+            response=str(expt),
+            status=500,
+            mimetype='application/json'
+        )  
     return response
 
 @opensankey.route('/')
