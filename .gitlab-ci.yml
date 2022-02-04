@@ -426,7 +426,7 @@ PublishFilierePaille:
         APP_NAME : "test_opensankey"
     - if: $CI_COMMIT_REF_NAME == "prod"
       variables:
-        FOLDER: "/home/ubuntu/prod_opensankey'
+        FOLDER: "/home/ubuntu/prod_opensankey"
         APP_NAME : "prod_opensankey"
   tags:
     - dev
