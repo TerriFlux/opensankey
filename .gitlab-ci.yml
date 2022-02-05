@@ -238,9 +238,9 @@ PublishFiliereBoisSavoie1:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
-    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
   when: manual
 
 PublishFiliereBoisSavoie2:
@@ -269,9 +269,9 @@ PublishFiliereBoisSavoie2:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
-    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie2"
   when: manual
 
 PublishFiliereBoisGrandEst:
@@ -300,9 +300,9 @@ PublishFiliereBoisGrandEst:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Grand\ Est" --publish_name="FiliereBoisGrandEst"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Grand\ Est" --publish_name="FiliereBoisGrandEst"
-    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Forêt\ Bois/Grand\ Est" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
   when: manual
 
 PublishFiliereBoisRegions:
@@ -331,9 +331,9 @@ PublishFiliereBoisRegions:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/Forêt\ Bois/France\ et\ Régions" --publish_name="FiliereBoisRegions"
-    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/Forêt\ Bois/France\ et\ Régions" --publish_name="FiliereBoisRegions"
-    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/Forêt\ Bois/France\ et\ Régions" --publish_name="FiliereBoisRegions"
+    - CI= npm run publish   --datapath="/home/ubuntu/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run build_zip --datapath="/home/ubuntu/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run unzip     --datapath="/home/ubuntu/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
   when: manual
 
 PublishFiliereLait:
