@@ -18,7 +18,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
     const val = evt.target.value
-    Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[1].name)
+    Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
     set_data({ ...data })
     // Zoom sur les parties du SANKEY affichées à l'écran
     // A faire, et il y a sans doute mieux
