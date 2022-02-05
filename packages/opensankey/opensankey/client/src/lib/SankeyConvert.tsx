@@ -857,7 +857,7 @@ export const convert_data = (
     depth:number,
     flux_max:number  
   ) => {
-    if (dataTags.length == 0 || depth === dataTags.length-1 ) {
+    if (dataTags.length == 0 || depth === dataTags.length ) {
       if (v.display_value === undefined) {
         v.display_value = 'default'
       } else if (v.display_value.includes('[')) {
