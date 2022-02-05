@@ -876,7 +876,14 @@ export const convert_data = (
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
         v.extension.free_mini = free_mini
         v.extension.free_maxi = free_maxi 
-        v.display_value = 'default'           
+        v.display_value = 'default'   
+      }
+      if (data_to_convert.dataTags['flux_types']) {
+        if ( v.extension.data_value ) {
+          v['color_tag']['flux_types'] = 'initial_data'
+        } else {
+          v['color_tag']['flux_types'] = 'computed_data'
+        }
       }
       if (v.value > flux_max) {
         flux_max = v.value
