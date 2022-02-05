@@ -1970,6 +1970,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //.attr('cursor', 'grab')
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
+          if (!event.ctrlKey) {
+            set_data({...data})
+          }
           return event.ctrlKey
         })
         .wheelDelta(function wheelDelta(event) { // Permet de regler la vitesse du zoom

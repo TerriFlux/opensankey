@@ -95,6 +95,8 @@ def parse_sankey_energie_csv(
                 'name': import_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'trade_close': 1,
+                'position'   : 'relative',
                 'show_value' : 1,
                 'tags': { 
                     'Exchanges' : ['Echangesimport']
@@ -112,6 +114,8 @@ def parse_sankey_energie_csv(
                 'name': export_node_name,
                 'type': 'sector',
                 'orientation': 'vertical',
+                'trade_close': 1,
+                'position'   : 'relative',
                 'show_value' : 1,
                 'tags': { 'Exchanges' : 
                     ['Echangesexport']
@@ -413,7 +417,8 @@ def save_simple_excel(
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys())
     nb_vals = 1
     for dataTag in sankey_data['dataTags']:
-        nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
+        if len(sankey_data['dataTags'][dataTag]['tags']) != 0:
+            nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
     links = [ [""] * nb_cols_nodes for i in range(len(sankey_data['links'].keys())*nb_vals+1) ]
     links[0] = flux_cols + list(sankey_data['dataTags'])
     row=1
