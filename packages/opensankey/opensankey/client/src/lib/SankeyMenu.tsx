@@ -60,7 +60,7 @@ export const ArtefactsItem = ({artefacts_menu,current_path}:any) => {
           (key,index)=> {
             return (
               <>
-                <NavDropdown key={key} title={key} id={key} >
+                <NavDropdown key={index} title={key} id={key} >
                   <ArtefactsItem 
                     artefacts_menu={artefacts_menu[key]}
                     current_path={current_path !== '' ? current_path+'/'+key : key}
