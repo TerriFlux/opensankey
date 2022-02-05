@@ -252,6 +252,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           for (const i in listKey) {
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
+          if (val === undefined ) {
+            return 0
+          }
           return ((val as unknown) as SankeyLinkValue).value
         }}
         set_show_nav={set_show_nav}

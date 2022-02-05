@@ -857,7 +857,7 @@ export const convert_data = (
     depth:number,
     flux_max:number  
   ) => {
-    if (dataTags.length == 0 || depth === dataTags.length-1 ) {
+    if (dataTags.length == 0 || depth === dataTags.length ) {
       if (v.display_value === undefined) {
         v.display_value = 'default'
       } else if (v.display_value.includes('[')) {
@@ -876,7 +876,14 @@ export const convert_data = (
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
         v.extension.free_mini = free_mini
         v.extension.free_maxi = free_maxi 
-        v.display_value = 'default'           
+        v.display_value = 'default'   
+      }
+      if (data_to_convert.dataTags['flux_types']) {
+        if ( v.extension.data_value ) {
+          v['color_tag']['flux_types'] = 'initial_data'
+        } else {
+          v['color_tag']['flux_types'] = 'computed_data'
+        }
       }
       if (v.value > flux_max) {
         flux_max = v.value
@@ -887,7 +894,9 @@ export const convert_data = (
     const listKey = Object.keys(dataTag.tags)
 
     for (const i in listKey) {
-      flux_max = convert_display(dataTags,v[listKey[i]],depth+1,flux_max)  
+      if (v[listKey[i]]) {
+        flux_max = convert_display(dataTags,v[listKey[i]],depth+1,flux_max)
+      }
     }
     return flux_max
   }
