@@ -1,6 +1,7 @@
 *.pyc
 **/node_modules/*
 **/dist/*
+**/dist2/*
 package-lock.json
 **/build/**
 **/users-folders/**

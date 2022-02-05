@@ -429,17 +429,17 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown >
               <NavDropdown title="Forêt Bois" id="bois" >
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
+                  'ForetBois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v1</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
+                  'ForetBois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v2</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Grand Est/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
+                  'ForetBois/GrandEst/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
