@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyNode,TagsGroup } from './types'
 import {compute_default_input_outputLinksId} from './SankeyLayout'
 
 interface ConvertSankeyNode {
@@ -157,7 +157,7 @@ export const convert_data = (
   if (data_to_convert.tags_catalog['Exchanges']) {
     data_to_convert.tags_catalog['Exchanges'].group_name = 'Echanges'
   }
-  if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6') {
+  if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6' && data.version !== '0.7') {
     const key_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
@@ -557,13 +557,19 @@ export const convert_data = (
   Object.values(links).forEach(
     l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
-      if (data.version !== '0.6' ) {
-        (l_convert.value as number[]).forEach(v => {
-          v = +v
-          if (flux_max < v) {
-            flux_max = v
-          }
-        })
+      if (data.version !== '0.6' && data.version !== '0.7') {
+        if ( Array.isArray(l_convert.value) ) {
+          (l_convert.value as number[]).forEach(v => {
+            v = +v
+            if (flux_max < v) {
+              flux_max = v
+            }
+          })
+        } else {
+          if (flux_max < l_convert.value) {
+            flux_max = l_convert.value
+          }          
+        }
         if ('tags' in l) {
           delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
         }
@@ -615,9 +621,9 @@ export const convert_data = (
       if (!('label_on_path' in l)) {
         (l as SankeyLink).label_on_path = true
       }
-      if (l_convert.frozen) {
-        l.label_position = 'frozen'
-      }
+      // if (l_convert.frozen) {
+      //   l.label_position = 'frozen'
+      // }
       if ('frozen' in l) {
         delete l_convert.frozen
       }
@@ -704,7 +710,7 @@ export const convert_data = (
       delete l_convert.text_same_color
     }
   )
-  if (data.version !== '0.6') {
+  if (data.version !== '0.6' && data.version !== '0.7') {
     const links_no_type = data.links as any
     Object.values(links_no_type).forEach(
       (link : any) => {
@@ -770,17 +776,47 @@ export const convert_data = (
       Object.values(links_no_type).forEach(
         (link : any) => {
           const editable_link = links_no_type[link.idLink]
+          let the_value = link.value
+          let the_display_value = link.display_value
+          if ( Array.isArray(link.value) ) {
+            the_value = link.value[0]
+            the_display_value = link.display_value[0]
+          }
           editable_link.value2 = {
-            value : (link.value as any)[0],
-            display_value : ((link as any).display_value as any)[0],
+            value : the_value,
+            display_value : the_display_value,
             color_tag            : {},
             extension : {}
           }
+          if (the_display_value.includes('[')) {
+            // Variables libres
+            let tmp 
+            if (the_display_value.includes('-')) {
+              tmp = the_display_value.split('-')
+            } else if (the_display_value.includes(',')) {
+              tmp = the_display_value.split(',')                
+            } else if (the_display_value.includes('...')) {
+              tmp = the_display_value.split('...')           
+            } else {
+              tmp = the_display_value.split('  ')          
+            }
+            const free_mini = Number(tmp[0].substring(1))
+            const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
+            editable_link.value2.extension.free_mini = free_mini
+            editable_link.value2.extension.free_maxi = free_maxi 
+            editable_link.value2.display_value = 'default'           
+          }
           if (editable_link.mini !== undefined && editable_link.mini !== null) {
-            editable_link.value2.extension.mini = editable_link.mini[0]
-            editable_link.value2.extension.maxi = editable_link.maxi[0]
+            let the_mini = editable_link.mini
+            let the_maxi = editable_link.maxi
+            if ( Array.isArray(editable_link.mini) ) {
+              the_mini = editable_link.mini[0]
+              the_maxi = editable_link.maxi[0]
+            }
+            editable_link.value2.extension.mini = the_mini
+            editable_link.value2.extension.maxi = the_maxi
             editable_link.value2['color_tag']['Uncert'] = {}
-            const p = (editable_link.maxi[0] - editable_link.mini[0])/editable_link.value[0]
+            const p = (the_maxi - the_mini)/the_value
             if (p <= 0.1) {
               editable_link.value2['color_tag']['Uncert'] ='10_percent'
             } else if (p <= 0.25) {
@@ -796,9 +832,13 @@ export const convert_data = (
           }
           if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
             editable_link.value2.extension.data_value  = editable_link.data_value[0]
-            editable_link.value2.extension.data_source = editable_link.data_source[0]
-            editable_link.value2.extension.data_period = editable_link.data_period[0]
             editable_link.value2['color_tag']['flux_types'] = 'initial_data'
+          }
+          if ( 'data_source' in editable_link) {
+            editable_link.value2.extension.data_source = editable_link.data_source[0]
+          }
+          if ( 'data_period' in editable_link) {
+            editable_link.value2.extension.data_period = editable_link.data_period[0]
           }
         }
       )          
@@ -811,11 +851,69 @@ export const convert_data = (
     )
   }
 
+  const convert_display =(
+    dataTags: TagsGroup[],
+    v:any,
+    depth:number,
+    flux_max:number  
+  ) => {
+    if (dataTags.length == 0 || depth === dataTags.length-1 ) {
+      if (v.display_value === undefined) {
+        v.display_value = 'default'
+      } else if (v.display_value.includes('[')) {
+        // Variables libres
+        let tmp 
+        if (v.display_value.includes('-')) {
+          tmp = v.display_value.split('-')
+        } else if (v.display_value.includes(',')) {
+          tmp = v.display_value.split(',')                
+        } else if (v.display_value.includes('...')) {
+          tmp = v.display_value.split('...')           
+        } else {
+          tmp = v.display_value.split('  ')          
+        }
+        const free_mini = Number(tmp[0].substring(1))
+        const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
+        v.extension.free_mini = free_mini
+        v.extension.free_maxi = free_maxi 
+        v.display_value = 'default'   
+      }
+      if (data_to_convert.dataTags['flux_types']) {
+        if ( v.extension.data_value ) {
+          v['color_tag']['flux_types'] = 'initial_data'
+        } else {
+          v['color_tag']['flux_types'] = 'computed_data'
+        }
+      }
+      if (v.value > flux_max) {
+        flux_max = v.value
+      }
+      return flux_max
+    }
+    const dataTag = Object.values(dataTags)[depth]
+    const listKey = Object.keys(dataTag.tags)
+
+    for (const i in listKey) {
+      if (v[listKey[i]]) {
+        flux_max = convert_display(dataTags,v[listKey[i]],depth+1,flux_max)
+      }
+    }
+    return flux_max
+  }
+
+  const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false })
+  flux_max=0
+  Object.values(data.links).forEach(
+    l=> {
+      flux_max = convert_display(dataTagsArray,l.value,0,flux_max)
+    }
+  )
+
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
   }
 
-  if (display_style.filter_label === undefined) {
+  if (display_style.filter_label === undefined || display_style.filter_label === 0) {
     display_style.filter_label = flux_max / 10
   }
 
@@ -823,5 +921,5 @@ export const convert_data = (
     units_names.splice(1, 0, 'natural')
   }
 
-  data.version = '0.6'
+  data.version = '0.7'
 }
