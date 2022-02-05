@@ -426,17 +426,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 )} >Energie</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v1/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'ForetBois/Savoie/v1/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v1</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Savoie/v2/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
+                  'ForetBois/Savoie/v2/filiere_foret_bois_savoie.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Savoie v2</Dropdown.Item>
                 <Dropdown.Item onClick={() => uploadExemple(
-                  'Forêt Bois/Grand Est/filiere_foret_bois_grand_est.json', url_prefix, data, set_data,
+                  'ForetBois/GrandEst/filiere_foret_bois_grand_est.json', url_prefix, data, set_data,
                   ()=> 0
                 )} 
                 >Forêt Bois Grand Est</Dropdown.Item>
