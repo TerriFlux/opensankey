@@ -1835,28 +1835,29 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const res = compute_total_offsets(n, nodes, links, tags_catalog, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
+    for (let i = 0; i < n.inputLinksId.length; i++) {
+      const l = links[n.inputLinksId[i]]
+      //Permet de rearranger les flêches pour qu'elles soient dans le même ordre que les flux 
+      //si les noeuds source sont à droite des target
+      // const new_array = []
+      // let cumule = 0
+      // for (const i in n.inputLinksId) {
+      //   if (!links[n.inputLinksId[i]].recycling && (links[n.inputLinksId[i]].orientation == 'hh' || links[n.inputLinksId[i]].orientation == 'hv')) {
+      //     const source_node_x = nodes[links[n.inputLinksId[i]].idSource].position === 'absolute' ? nodes[links[n.inputLinksId[i]].idSource].x : +n.x + +nodes[links[n.inputLinksId[i]].idSource].x
+      //     const node_x = n.position === 'absolute' ? n.x : +nodes[links[n.inputLinksId[i]].idSource].x + +n.x + +d3.select('#' + nodes[links[n.inputLinksId[i]].idSource].idNode).attr('width')
 
-    //Permet de rearranger les flêches pour qu'elles soient dans le même ordre que les flux 
-    //si les noeuds source sont à droite des target
-    const new_array = []
-    let cumule = 0
-    for (const i in n.inputLinksId) {
-      if (!links[n.inputLinksId[i]].recycling && (links[n.inputLinksId[i]].orientation == 'hh' || links[n.inputLinksId[i]].orientation == 'hv')) {
-        const source_node_x = nodes[links[n.inputLinksId[i]].idSource].position === 'absolute' ? nodes[links[n.inputLinksId[i]].idSource].x : +n.x + +nodes[links[n.inputLinksId[i]].idSource].x
-        const node_x = n.position === 'absolute' ? n.x : +nodes[links[n.inputLinksId[i]].idSource].x + +n.x + +d3.select('#' + nodes[links[n.inputLinksId[i]].idSource].idNode).attr('width')
-
-        if (source_node_x >= node_x) {
-          new_array.unshift(n.inputLinksId[i])
-          cumule += +links[n.inputLinksId[i]].value.value
-        } else {
-          new_array.push(n.inputLinksId[i])
-        }
-      }
-    }
-    // for (let i = 0; i < n.inputLinksId.length; i++) {
-    for (let i = 0; i < new_array.length; i++) {
-      // const l = links[n.inputLinksId[i]]
-      const l = links[new_array[i]]
+      //     if (source_node_x >= node_x) {
+      //       new_array.unshift(n.inputLinksId[i])
+      //       cumule += +links[n.inputLinksId[i]].value.value
+      //     } else {
+      //       new_array.push(n.inputLinksId[i])
+      //     }
+      //   }
+      // }
+      // // for (let i = 0; i < n.inputLinksId.length; i++) {
+      // for (let i = 0; i < new_array.length; i++) {
+      //   // const l = links[n.inputLinksId[i]]
+      //   const l = links[new_array[i]]
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
         continue
       }
@@ -1895,27 +1896,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 is_v = true
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
-                const prev_c_r = cum_v_right
-                cum_v_right += link_value
-                const shift_top = (total_height_left > total_height_right) ? (total_height_left - total_height_right) / 2 : 0
-                const ratio_cum = (scale(prev_c_r) / (scale(total_height_right) - scale(link_value)))
+                // const prev_c_r = cum_v_right
+                // cum_v_right += link_value
+                // const shift_top = (total_height_left > total_height_right) ? (total_height_left - total_height_right) / 2 : 0
+                // const ratio_cum = (scale(prev_c_r) / (scale(total_height_right) - scale(link_value)))
 
                 xt = +node_x + +d3.select('#' + n.idNode).attr('width')
-                // yt = (node_y + +d3.select('#' + n.idNode).attr('height') / 2)
-                yt = (node_y + +d3.select('#' + n.idNode).attr('height')) - scale(prev_c_r) - scale(shift_top)
+                yt = (node_y + +d3.select('#' + n.idNode).attr('height') / 2)
+                //yt = (node_y + +d3.select('#' + n.idNode).attr('height')) - scale(prev_c_r) - scale(shift_top)
 
                 p5 = [xt, yt]
                 is_v = true
 
                 //A modifier selon les spécificitées
-                let d = ''
-                d += 'M ' + (xt + 10) + ',' + yt
-                d += ' L ' + (xt) + ',' + (yt - scale(link_value) / 2)
-                d += 'L ' + (xt + 10) + ',' + (yt - scale(link_value)) + ' Z'
+                // let d = ''
+                // d += 'M ' + (xt + 10) + ',' + yt
+                // d += ' L ' + (xt) + ',' + (yt - scale(link_value) / 2)
+                // d += 'L ' + (xt + 10) + ',' + (yt - scale(link_value)) + ' Z'
 
 
-                return d
-                //return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
+                //return d
+                return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
                 //return SankeyShapes.draw_arrow((-scale(total_height_right)  / 2), p5, -scale(link_value), scale(prev_c_r), true, true)
               }
             } else if (l.orientation === 'vv' || l.orientation === 'hv') {
