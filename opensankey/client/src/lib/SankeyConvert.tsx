@@ -894,7 +894,9 @@ export const convert_data = (
     const listKey = Object.keys(dataTag.tags)
 
     for (const i in listKey) {
-      flux_max = convert_display(dataTags,v[listKey[i]],depth+1,flux_max)  
+      if (v[listKey[i]]) {
+        flux_max = convert_display(dataTags,v[listKey[i]],depth+1,flux_max)
+      }
     }
     return flux_max
   }
