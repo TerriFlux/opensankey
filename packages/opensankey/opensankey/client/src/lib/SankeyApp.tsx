@@ -174,6 +174,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             //const val_dict = (val as unknown) as SankeyLinkValueDict
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
+          if (val === undefined) {
+            return false
+          }
           const v = (val as unknown) as SankeyLinkValue
           if (l.colormap !== undefined && l.colormap !== '' ) {
             const selected_tag = v.color_tag[l.colormap]
