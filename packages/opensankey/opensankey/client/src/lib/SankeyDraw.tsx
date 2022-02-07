@@ -1563,7 +1563,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
-        if ((d as SankeyNode).shape_visible && (event.shiftKey)) {
+        if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1571,7 +1571,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if ((d as SankeyNode).shape_visible && (event.shiftKey)) {
+        if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
 
             .style('top', (event.layerY - 10) + 'px')
@@ -1586,7 +1586,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('click', (event, d) => {
 
-        if (event.shiftKey) {
+        if (static_sankey || event.shiftKey) {
           // Animation des flux du Sankey
           sankeyTooltip.style('opacity', 0)
           d3.selectAll('#svg .tmp').remove()
@@ -1700,7 +1700,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
-        if (d.label_visible && (event.shiftKey)) {
+        if (d.label_visible && (static_sankey || event.shiftKey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1708,7 +1708,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if (d.label_visible && (event.shiftKey)) {
+        if (d.label_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
             .style('top', (event.layerY - 10) + 'px')
             .style('left', (event.layerX + 10) + 'px')
