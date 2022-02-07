@@ -1433,10 +1433,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //   // }
       })
 
-    if (!static_sankey) {
-      // Gestion du drag 
-      ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
-        .subject(Object).on('drag', function (event) {
+    // Gestion du drag 
+    ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
+      .subject(Object).on('drag', function (event) {
+        if (!static_sankey) {
           drag_node(
             display_nodes, display_links,
             display_style,
@@ -1448,79 +1448,80 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } catch (e) {
             localStorage.clear()
           }
-        })
-      )
-      // Gestion du click  
-      ggg_nodes.on('click', (event, d) => {
-        /* sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
-        select_node(d.id)
-        deselect_nodes_and_links()
-        const node_to_select = '#ggg_node' + node_idx + ' rect'
-        d3.select(node_to_select).attr('class', 'selected_node')
-        return */
-        if (event.ctrlKey) {
-          // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
-          sankeyTooltip.style('opacity', 0)
-          select_node(d)
-          set_nav_item_active('2')
-          set_show_nav(true)
         }
       })
-      ggg_nodes.on('dblclick', (ev, n) => {
-        if (!n.dimensions) {
-          return
-        }
-        if (ev.altKey) {
-          const child_names: string[] = []
-          const dim_names: string[] = []
-          Object.values(data.nodes).forEach(n2 => {
-            for (const dim in n2.dimensions) {
-              if (n2.dimensions[dim].parent_name == n.idNode) {
-                if (dim_names.indexOf(dim) === -1) {
-                  child_names.push(n2.idNode)
-                  dim_names.push(dim)
-                }
-              }
-            }
-            return false
-          })
-          if (child_names.length === 0) {
-            return
-          }
-          if (child_names.length > 1) {
-            set_agregation_parent_names(child_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(false)
-            set_show_agregation(true)
-          } else {
-            desagregation(data, child_names[0], dim_names[0])
-          }
-        } else {
-          const parent_names: string[] = []
-          const dim_names: string[] = []
-          Object.keys(n.dimensions).forEach(
-            dim => {
-              if (n.dimensions[dim].parent_name) {
-                parent_names.push(n.dimensions[dim].parent_name as string)
+    )
+    // Gestion du click  
+    ggg_nodes.on('click', (event, d) => {
+      /* sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
+      select_node(d.id)
+      deselect_nodes_and_links()
+      const node_to_select = '#ggg_node' + node_idx + ' rect'
+      d3.select(node_to_select).attr('class', 'selected_node')
+      return */
+      if (!static_sankey && event.ctrlKey) {
+        // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
+        sankeyTooltip.style('opacity', 0)
+        select_node(d)
+        set_nav_item_active('2')
+        set_show_nav(true)
+      }
+    })
+ 
+    ggg_nodes.on('dblclick', (ev, n) => {
+      if (!n.dimensions) {
+        return
+      }
+      if (ev.altKey) {
+        const child_names: string[] = []
+        const dim_names: string[] = []
+        Object.values(data.nodes).forEach(n2 => {
+          for (const dim in n2.dimensions) {
+            if (n2.dimensions[dim].parent_name == n.idNode) {
+              if (dim_names.indexOf(dim) === -1) {
+                child_names.push(n2.idNode)
                 dim_names.push(dim)
               }
             }
-          )
-          if (parent_names.length === 0) {
-            return
           }
-          if (parent_names.length > 1) {
-            set_agregation_parent_names(parent_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(true)
-            set_show_agregation(true)
-          } else {
-            agregation(data, parent_names[0], dim_names[0])
-          }
+          return false
+        })
+        if (child_names.length === 0) {
+          return
         }
-        set_data({ ...data })
-      })
-    }
+        if (child_names.length > 1) {
+          set_agregation_parent_names(child_names)
+          set_agregation_dimension_names(dim_names)
+          set_is_agregation(false)
+          set_show_agregation(true)
+        } else {
+          desagregation(data, child_names[0], dim_names[0])
+        }
+      } else {
+        const parent_names: string[] = []
+        const dim_names: string[] = []
+        Object.keys(n.dimensions).forEach(
+          dim => {
+            if (n.dimensions[dim].parent_name) {
+              parent_names.push(n.dimensions[dim].parent_name as string)
+              dim_names.push(dim)
+            }
+          }
+        )
+        if (parent_names.length === 0) {
+          return
+        }
+        if (parent_names.length > 1) {
+          set_agregation_parent_names(parent_names)
+          set_agregation_dimension_names(dim_names)
+          set_is_agregation(true)
+          set_show_agregation(true)
+        } else {
+          agregation(data, parent_names[0], dim_names[0])
+        }
+      }
+      set_data({ ...data })
+    })
     // Gestion du contextMenu 
     // ggg_nodes.on('contextmenu', (event, node) => {
     //   event.preventDefault()
