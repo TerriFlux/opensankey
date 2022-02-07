@@ -281,7 +281,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
       )
       .on('mouseover', function (event, d) {
-        if (!event.shiftKey) {
+        if (!event.shiftKey && !static_sankey) {
           return
         }
         sankeyTooltip
@@ -292,7 +292,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', (event) => {
-        if (!event.shiftKey) {
+        if (!event.shiftKey && !static_sankey) {
           return
         }
         sankeyTooltip
@@ -1586,7 +1586,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('click', (event, d) => {
 
-        if (static_sankey || event.shiftKey) {
+        if (event.shiftKey) {
           // Animation des flux du Sankey
           sankeyTooltip.style('opacity', 0)
           d3.selectAll('#svg .tmp').remove()
