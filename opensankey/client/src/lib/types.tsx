@@ -80,6 +80,7 @@ export const SankeyLinkPropTypes = {
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
+  gradient:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
@@ -129,6 +130,7 @@ export const SankeyDataPropTypes = {
   user_scale: PropTypes.number.isRequired,
   //height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
   h_space: PropTypes.number.isRequired,
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
