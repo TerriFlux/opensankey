@@ -105,6 +105,9 @@ export const convert_data = (
   if (data.width === undefined) {
     data.width = 1500
   }
+  if (data.height === undefined) {
+    data.height = 500
+  }
 
   if (Array.isArray(data.tags_catalog)) {
     data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (

@@ -347,7 +347,6 @@ export const compute_auto_sankey = (
           if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
-              console.log(data.links[idLink].idTarget)
               return
             }
             if ( target_node.y < node.y ) {
@@ -367,7 +366,6 @@ export const compute_auto_sankey = (
           if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
-              console.log(data.links[idLink].idTarget)
               return
             }
             if ( target_node.y < node.y ) {
