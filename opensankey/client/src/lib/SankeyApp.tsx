@@ -198,11 +198,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
           const v = (val as unknown) as SankeyLinkValue
-          if (l.colormap !== undefined && l.colormap !== '' ) {
-            const selected_tag = v.color_tag[l.colormap]
-            if ( selected_tag && l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
-              return false
+          let visible = true
+          Object.keys(v.color_tag).forEach(tag=> {
+            const selected_tag = v.color_tag[tag]
+            if ( selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
+              visible = false
             }
+          })
+          if (!visible) {
+            return false
           }
           if (v.value === 0) {
             if (data.display_style.null_flux) {
