@@ -150,7 +150,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             checked={use_colormap === true}
             onChange={ evt => {
               let the_colormap = colormap
-              let apply_to_node= Object.keys(data.tags_catalog).includes(colormap)
+              const apply_to_node= Object.keys(data.tags_catalog).includes(colormap)
               if (colormap === '' || colormap === undefined) {
                 the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0] :''
                 if (the_colormap === '' || colormap === undefined) {
@@ -192,7 +192,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             disabled={!use_colormap}
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                let apply_to_node= Object.keys(data.tags_catalog).includes(evt.target.value)
+                const apply_to_node= Object.keys(data.tags_catalog).includes(evt.target.value)
                 Object.values(data.links).forEach(link=>link.colormap = evt.target.value)
                 if (apply_to_node) {
                   Object.values(data.nodes).forEach(node=> {
