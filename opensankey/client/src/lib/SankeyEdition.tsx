@@ -150,6 +150,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             checked={use_colormap === true}
             onChange={ evt => {
               let the_colormap = colormap
+              const apply_to_node= Object.keys(data.tags_catalog).includes(colormap)
               if (colormap === '' || colormap === undefined) {
                 the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0] :''
                 if (the_colormap === '' || colormap === undefined) {
@@ -158,8 +159,23 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
               }
               if (evt.target.checked) {
                 Object.values(data.links).forEach(link=>link.colormap = the_colormap)
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'groupTag'
+                    node.colorTag = the_colormap
+                  })
+                }
               } else {
-                Object.values(data.links).forEach(link=>link.colormap = '')                  
+                Object.values(data.links).forEach(link=>link.colormap = '') 
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    node.nodeParameter = 'local'
+                    //node.colorTag = the_colormap
+                  })  
+                }              
               }
               set_use_colormap(evt.target.checked)
               if (colormap in tags_catalog) {
@@ -176,7 +192,24 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             disabled={!use_colormap}
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                const apply_to_node= Object.keys(data.tags_catalog).includes(evt.target.value)
                 Object.values(data.links).forEach(link=>link.colormap = evt.target.value)
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'groupTag'
+                    node.colorTag = evt.target.value
+                  })
+                } else {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'general'
+                  })
+                }
                 //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
                 set_colormap(evt.target.value)
                 if (evt.target.value in tags_catalog) {

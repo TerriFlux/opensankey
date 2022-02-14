@@ -350,7 +350,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
       )
       .on('mouseover', function (event, d) {
-        if (!static_sankey && !event.shiftKey) {
+        if (!event.shiftKey && !static_sankey) {
           return
         }
         sankeyTooltip
@@ -361,7 +361,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', (event) => {
-        if (!static_sankey && !event.shiftKey) {
+        if (!event.shiftKey && !static_sankey) {
           return
         }
         sankeyTooltip
@@ -1582,10 +1582,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //   // }
       })
 
-    if (!static_sankey) {
-      // Gestion du drag 
-      ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
-        .subject(Object).on('drag', function (event) {
+    // Gestion du drag 
+    ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
+      .subject(Object).on('drag', function (event) {
+        if (!static_sankey) {
           drag_node(
             display_nodes, display_links,
             display_style,
@@ -1597,79 +1597,80 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } catch (e) {
             localStorage.clear()
           }
-        })
-      )
-      // Gestion du click  
-      ggg_nodes.on('click', (event, d) => {
-        /* sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
-        select_node(d.id)
-        deselect_nodes_and_links()
-        const node_to_select = '#ggg_node' + node_idx + ' rect'
-        d3.select(node_to_select).attr('class', 'selected_node')
-        return */
-        if (event.ctrlKey) {
-          // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
-          sankeyTooltip.style('opacity', 0)
-          select_node(d)
-          set_nav_item_active('2')
-          set_show_nav(true)
         }
       })
-      ggg_nodes.on('dblclick', (ev, n) => {
-        if (!n.dimensions) {
-          return
-        }
-        if (ev.altKey) {
-          const child_names: string[] = []
-          const dim_names: string[] = []
-          Object.values(data.nodes).forEach(n2 => {
-            for (const dim in n2.dimensions) {
-              if (n2.dimensions[dim].parent_name == n.idNode) {
-                if (dim_names.indexOf(dim) === -1) {
-                  child_names.push(n2.idNode)
-                  dim_names.push(dim)
-                }
-              }
-            }
-            return false
-          })
-          if (child_names.length === 0) {
-            return
-          }
-          if (child_names.length > 1) {
-            set_agregation_parent_names(child_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(false)
-            set_show_agregation(true)
-          } else {
-            desagregation(data, child_names[0], dim_names[0])
-          }
-        } else {
-          const parent_names: string[] = []
-          const dim_names: string[] = []
-          Object.keys(n.dimensions).forEach(
-            dim => {
-              if (n.dimensions[dim].parent_name) {
-                parent_names.push(n.dimensions[dim].parent_name as string)
+    )
+    // Gestion du click  
+    ggg_nodes.on('click', (event, d) => {
+      /* sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
+      select_node(d.id)
+      deselect_nodes_and_links()
+      const node_to_select = '#ggg_node' + node_idx + ' rect'
+      d3.select(node_to_select).attr('class', 'selected_node')
+      return */
+      if (!static_sankey && event.ctrlKey) {
+        // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
+        sankeyTooltip.style('opacity', 0)
+        select_node(d)
+        set_nav_item_active('2')
+        set_show_nav(true)
+      }
+    })
+ 
+    ggg_nodes.on('dblclick', (ev, n) => {
+      if (!n.dimensions) {
+        return
+      }
+      if (ev.altKey) {
+        const child_names: string[] = []
+        const dim_names: string[] = []
+        Object.values(data.nodes).forEach(n2 => {
+          for (const dim in n2.dimensions) {
+            if (n2.dimensions[dim].parent_name == n.idNode) {
+              if (dim_names.indexOf(dim) === -1) {
+                child_names.push(n2.idNode)
                 dim_names.push(dim)
               }
             }
-          )
-          if (parent_names.length === 0) {
-            return
           }
-          if (parent_names.length > 1) {
-            set_agregation_parent_names(parent_names)
-            set_agregation_dimension_names(dim_names)
-            set_is_agregation(true)
-            set_show_agregation(true)
-          } else {
-            agregation(data, parent_names[0], dim_names[0])
-          }
+          return false
+        })
+        if (child_names.length === 0) {
+          return
         }
-        set_data({ ...data })
-      })
-    }
+        if (child_names.length > 1) {
+          set_agregation_parent_names(child_names)
+          set_agregation_dimension_names(dim_names)
+          set_is_agregation(false)
+          set_show_agregation(true)
+        } else {
+          desagregation(data, child_names[0], dim_names[0])
+        }
+      } else {
+        const parent_names: string[] = []
+        const dim_names: string[] = []
+        Object.keys(n.dimensions).forEach(
+          dim => {
+            if (n.dimensions[dim].parent_name) {
+              parent_names.push(n.dimensions[dim].parent_name as string)
+              dim_names.push(dim)
+            }
+          }
+        )
+        if (parent_names.length === 0) {
+          return
+        }
+        if (parent_names.length > 1) {
+          set_agregation_parent_names(parent_names)
+          set_agregation_dimension_names(dim_names)
+          set_is_agregation(true)
+          set_show_agregation(true)
+        } else {
+          agregation(data, parent_names[0], dim_names[0])
+        }
+      }
+      set_data({ ...data })
+    })
     // Gestion du contextMenu 
     // ggg_nodes.on('contextmenu', (event, node) => {
     //   event.preventDefault()
@@ -1711,7 +1712,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
-        if ((d as SankeyNode).shape_visible && (event.shiftKey || static_sankey)) {
+        if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           //d3.select(this).attr('class', 'selected_node')
           sankeyTooltip
             .style('opacity', 1)
@@ -1719,7 +1720,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
-        if ((d as SankeyNode).shape_visible && (event.shiftKey || static_sankey)) {
+        if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
 
             .style('top', (event.layerY - 10) + 'px')
@@ -1985,28 +1986,29 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const res = compute_total_offsets(n, nodes, links, tags_catalog, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
+    for (let i = 0; i < n.inputLinksId.length; i++) {
+      const l = links[n.inputLinksId[i]]
+      //Permet de rearranger les flêches pour qu'elles soient dans le même ordre que les flux 
+      //si les noeuds source sont à droite des target
+      // const new_array = []
+      // let cumule = 0
+      // for (const i in n.inputLinksId) {
+      //   if (!links[n.inputLinksId[i]].recycling && (links[n.inputLinksId[i]].orientation == 'hh' || links[n.inputLinksId[i]].orientation == 'hv')) {
+      //     const source_node_x = nodes[links[n.inputLinksId[i]].idSource].position === 'absolute' ? nodes[links[n.inputLinksId[i]].idSource].x : +n.x + +nodes[links[n.inputLinksId[i]].idSource].x
+      //     const node_x = n.position === 'absolute' ? n.x : +nodes[links[n.inputLinksId[i]].idSource].x + +n.x + +d3.select('#' + nodes[links[n.inputLinksId[i]].idSource].idNode).attr('width')
 
-    //Permet de rearranger les flêches pour qu'elles soient dans le même ordre que les flux 
-    //si les noeuds source sont à droite des target
-    const new_array = []
-    let cumule = 0
-    for (const i in n.inputLinksId) {
-      if (!links[n.inputLinksId[i]].recycling && (links[n.inputLinksId[i]].orientation == 'hh' || links[n.inputLinksId[i]].orientation == 'hv')) {
-        const source_node_x = nodes[links[n.inputLinksId[i]].idSource].position === 'absolute' ? nodes[links[n.inputLinksId[i]].idSource].x : +n.x + +nodes[links[n.inputLinksId[i]].idSource].x
-        const node_x = n.position === 'absolute' ? n.x : +nodes[links[n.inputLinksId[i]].idSource].x + +n.x + +d3.select('#' + nodes[links[n.inputLinksId[i]].idSource].idNode).attr('width')
-
-        if (source_node_x >= node_x) {
-          new_array.unshift(n.inputLinksId[i])
-          cumule += +links[n.inputLinksId[i]].value.value
-        } else {
-          new_array.push(n.inputLinksId[i])
-        }
-      }
-    }
-    // for (let i = 0; i < n.inputLinksId.length; i++) {
-    for (let i = 0; i < new_array.length; i++) {
-      // const l = links[n.inputLinksId[i]]
-      const l = links[new_array[i]]
+      //     if (source_node_x >= node_x) {
+      //       new_array.unshift(n.inputLinksId[i])
+      //       cumule += +links[n.inputLinksId[i]].value.value
+      //     } else {
+      //       new_array.push(n.inputLinksId[i])
+      //     }
+      //   }
+      // }
+      // // for (let i = 0; i < n.inputLinksId.length; i++) {
+      // for (let i = 0; i < new_array.length; i++) {
+      //   // const l = links[n.inputLinksId[i]]
+      //   const l = links[new_array[i]]
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
         continue
       }
@@ -2046,27 +2048,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 is_v = true
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
-                const prev_c_r = cum_v_right
-                cum_v_right += link_value
-                const shift_top = (total_height_left > total_height_right) ? (total_height_left - total_height_right) / 2 : 0
-                const ratio_cum = (scale(prev_c_r) / (scale(total_height_right) - scale(link_value)))
+                // const prev_c_r = cum_v_right
+                // cum_v_right += link_value
+                // const shift_top = (total_height_left > total_height_right) ? (total_height_left - total_height_right) / 2 : 0
+                // const ratio_cum = (scale(prev_c_r) / (scale(total_height_right) - scale(link_value)))
 
                 xt = +node_x + +d3.select('#' + n.idNode).attr('width')
-                // yt = (node_y + +d3.select('#' + n.idNode).attr('height') / 2)
-                yt = (node_y + +d3.select('#' + n.idNode).attr('height')) - scale(prev_c_r) - scale(shift_top)
+                yt = (node_y + +d3.select('#' + n.idNode).attr('height') / 2)
+                //yt = (node_y + +d3.select('#' + n.idNode).attr('height')) - scale(prev_c_r) - scale(shift_top)
 
                 p5 = [xt, yt]
                 is_v = true
 
                 //A modifier selon les spécificitées
-                let d = ''
-                d += 'M ' + (xt + 10) + ',' + yt
-                d += ' L ' + (xt) + ',' + (yt - scale(link_value) / 2)
-                d += 'L ' + (xt + 10) + ',' + (yt - scale(link_value)) + ' Z'
+                // let d = ''
+                // d += 'M ' + (xt + 10) + ',' + yt
+                // d += ' L ' + (xt) + ',' + (yt - scale(link_value) / 2)
+                // d += 'L ' + (xt + 10) + ',' + (yt - scale(link_value)) + ' Z'
 
 
-                return d
-                //return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
+                //return d
+                return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
                 //return SankeyShapes.draw_arrow((-scale(total_height_right)  / 2), p5, -scale(link_value), scale(prev_c_r), true, true)
               }
             } else if (l.orientation === 'vv' || l.orientation === 'hv') {
