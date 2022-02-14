@@ -2277,17 +2277,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         let val_scale=parseFloat(tr_scale.substring(6,tr_scale.length-1))
         val_scale=(isNaN(val_scale))?1:val_scale
 
-        console.log('---------------------------------')
-        console.log('Offset ',offset)
-        console.log('oldPos ',old_pos.x,old_pos.y)
-        console.log('Mouse_Pos: ',mousePosition.x,mousePosition.y)
-        console.log('transform : ',((mousePosition.x - offset[0]) + old_pos.x))
+        // console.log('---------------------------------')
+        // console.log('Offset ',offset)
+        // console.log('oldPos ',old_pos.x,old_pos.y)
+        // console.log('Mouse_Pos: ',mousePosition.x,mousePosition.y)
+        // console.log('transform : ',((mousePosition.x - offset[0]) + old_pos.x))
         //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
         //la position de la souris au click avant drag, pos de la souris lors du drag 
         //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
         //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
-
-
 
         //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
         const shift_x = ((mousePosition.x - offset[0]) + old_pos.x/val_scale) 
@@ -2298,12 +2296,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)'+' '+tr_scale)
       }
     }, true)
-
-
-
-
-
-
 
     // const dragHandler = d3.drag()
     //   .on('drag', function (event) {

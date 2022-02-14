@@ -605,6 +605,7 @@ export const uploadExemple = (
       // } catch (err) {
       //   alert(err)
       // }
+      //
     })
   })
 }
