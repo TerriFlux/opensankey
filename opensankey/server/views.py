@@ -25,22 +25,42 @@ except Exception:
 @opensankey.route('/sankey/save_pdf', methods=['POST'])
 def save_pdf():
     cwd = os.getcwd()
-    data_file = request.files['svg']
-    data_file.save("tutu.svg")
-    api = cloudconvert.Api('aYSafXTMawnwDr7I0rhviAKJSHLyzZBGbDpTD44Rwdst1r4Lr2YjJm75IG9v7C9u')
-    process = api.createProcess({
-      "inputformat": "svg",
-      "outputformat": "pdf"
+    data_content = request.files['svg'].read().decode('UTF-8') 
+    #data_file.save("tutu.svg")
+    cloudconvert.configure(api_key = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiZWUwZDA5Mjg2NmY0OGZhZTQ5NTk1Y2M1YzViZDg2YmIwZWU3ZjE0MGRiMGFmZjY2NDAxYTI5MzU3MzBkOTUyNDRhNjMxNjI3MzRmZGRhYTIiLCJpYXQiOjE2NDQ4MTUzNjYuNjIxODYyLCJuYmYiOjE2NDQ4MTUzNjYuNjIxODY0LCJleHAiOjQ4MDA0ODg5NjYuNjE3NzYyLCJzdWIiOiIzNjYwMDY0NCIsInNjb3BlcyI6WyJ1c2VyLnJlYWQiLCJ1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSIsIndlYmhvb2sucmVhZCIsIndlYmhvb2sud3JpdGUiLCJwcmVzZXQucmVhZCIsInByZXNldC53cml0ZSJdfQ.RtQx3edfk3Zu74rn71Soi5H-dNEpNjaVoSgrxHkuqq1K082v3nncIpe_0qo9KXJc-KrdsWWD5V_OLZsFdS1kU_Y9VzAtqg-ozTZzywXaNPZ6TlZA5AdYa33Jg24cUQSc1c5tcBl2TqcWlTO87Nj53pLO7pKpU5VsNvYqA0POXExUdgeBfruOcjjnMS-_M0ovY1kxV3hsm302bF2By4QdaYiH5ixz5vCBKPvYOvcqo1WhpgVQlcYWHyj-XBnLwTJ1X7gbrnHY3KKsnuZXhkNc9CRtL97yz1yIhWztcwNyMNUs20NJ1f2XDvEAmeLoB-pB0WodLrseihyo1uJUicjIch7No3G6xt3BlzSnzleuMIMBEv2MLBCLRo7QQXCxwrVreQQZZrjYrGLL8ZP-iGJ9eOmfgmNYKWYn37_h69CDC1cvz2Ln4A7k6N-HvDHGHRTqHDc9-fUC-GL7vZUFRHQLgZd8btFZyBvfj4RjDlYcgWMDqJ_5a4Q3-FLnnUwgWAy2EJHI68MwbQ9NTfEIfj2l7bi3En9EQv0_iU5Vn-9srL0zJ6u2nCL52wn8F6ZaO203EQcjymjQ1PhjXeE556HQtdJ9EF_dSHom8ox-lFfBVZHmFtqfH-gFvlb0P5d9ueqR3woeKCFj7onf2OuCsdx-m4EvRN51P1Rit8m51431gIo')
+
+    tutu = cloudconvert.Job.create(payload={
+        "tasks": {
+            "import-2": {
+                "operation": "import/raw",
+                "file": data_content,
+                "filename": "tutu.svg"
+            },
+            "task-1": {
+                "operation": "convert",
+                "input_format": "svg",
+                "output_format": "pdf",
+                "engine": "inkscape",
+                "input": [
+                    "import-2"
+                ],
+                "text_to_path": False,
+                "engine_version": "1.1.1"
+            },
+            "export-1": {
+                "operation": "export/url",
+                "input": [
+                    "task-1"
+                ]
+            }
+        }
     })
-    process.start({
-        "input": "upload",
-        "file": open("tutu.svg", 'rb'),
-        "outputformat": "pdf"
-    })
-    process.wait()  # wait until conversion finished
-    os.remove("tutu.svg")
+    exported_url_task_id = tutu['tasks'][2]['id']
+    res = cloudconvert.Task.wait(id=exported_url_task_id)
+    file = res.get("result").get("files")[0]
+    res = cloudconvert.download(filename=file['filename'], url=file['url'])
+    #os.remove("tutu.svg")
     filename = "tutu.pdf"
-    process.download(filename)  # download output file
     return send_file(os.path.join(cwd, filename), as_attachment=True)
 
 
@@ -141,7 +161,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
-        json_data = json.dumps(data)        
+        json_data = json.dumps(data)
 
     response = Response(
         response=json_data,
@@ -160,17 +180,30 @@ def download_examples():
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')
 
-def parse_folder(current_dir,menus,key=None):
+def parse_folder(current_dir,menus,artefacts,key=None):
     folder_content = listdir(current_dir)
-    found = False
+    folder_content.sort()
+    exemple_found = False
+    artefact_found = False
     for file_or_folder in folder_content:
-        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'artefacts' in file_or_folder or '.vscode' in file_or_folder:
+        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+            continue
+        if 'artefacts' in file_or_folder:
+            file_names = listdir(os.path.join(current_dir, file_or_folder))
+            file_names.sort()
+            for file_name in file_names:
+                if 'open-sankey' not in file_name:
+                    continue
+                if key not in artefacts or type(artefacts[key]) is dict:
+                    artefacts[key] = []
+                artefacts[key].append(file_name)
+                artefact_found = True
             continue
         if 'simple.xlsx' in file_or_folder:
             if key not in menus:
                 menus[key] = []
             menus[key].append(file_or_folder)
-            found = True
+            exemple_found = True
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
             continue
@@ -179,13 +212,22 @@ def parse_folder(current_dir,menus,key=None):
             if key != None:
                 if key not in menus:
                     menus[key] = {}
-                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],child_key)
+                if key not in artefacts:
+                    artefacts[key] = {}
+                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],artefacts[key],child_key)
                 if folder_found:
-                    found = True
+                    exemple_found = True
+                if art_found:
+                    artefact_found = True
             else:
-                found = parse_folder(os.path.join(current_dir,file_or_folder),menus,child_key)                
+                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,artefacts,child_key)
+                if folder_found:
+                    exemple_found = True
+                if art_found:
+                    artefact_found = True
         else:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
+            file_names.sort()
             for file_name in file_names:
                 if 'auto_layout' in file_name:
                     continue
@@ -194,22 +236,36 @@ def parse_folder(current_dir,menus,key=None):
                 if key not in menus or type(menus[key]) is dict:
                     menus[key] = []
                 menus[key].append(file_name)
-                found = True
-    if not found and key in menus:
+                exemple_found = True
+    if not exemple_found and key in menus:
         del menus[key]
-    return found
+    if not artefact_found and key in artefacts:
+        del artefacts[key]
+    return exemple_found,artefact_found
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
 def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
-    parse_folder(data_folder,menus)
-    json_data = json.dumps(menus)
-    response = Response(
-        response=json_data,
-        status=200,
-        mimetype='application/json'
-    )
+    artefacts = {}
+    try:
+        parse_folder(data_folder,menus,artefacts)
+        context = {
+            'exemples_menu'    : menus,
+            'artefacts_menu': artefacts
+        }
+        json_data = json.dumps(context)
+        response = Response(
+            response=json_data,
+            status=200,
+            mimetype='application/json'
+        )
+    except Exception as expt:
+        response = Response(
+            response=str(expt),
+            status=500,
+            mimetype='application/json'
+        )
     return response
 
 @opensankey.route('/')
@@ -218,6 +274,6 @@ def start():
         'index.html',
         filename='',
         static_site='false'
-    )     
+    )
 
-      
+

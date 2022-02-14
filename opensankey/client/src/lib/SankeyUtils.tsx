@@ -539,7 +539,7 @@ export const setSelectedTags = (
       node.node_visible = true
     }
   })
-
+  hideNullFluxNodes(sankey_data)
 }
 
 const downloadExamples = (
@@ -633,6 +633,44 @@ export const set_nodes_level = (
     } else if (node.dimensions['Primaire'].level > level) {
       node.node_visible = false
       node.display = false
+    }
+  })
+}
+
+export const hideNullFluxNodes = (
+  sankey_data: SankeyData
+) => {
+  const { nodes, links } = sankey_data
+  const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
+  display_nodes.forEach(node => {
+    let total_input=0
+    if ( node.inputLinksId.length > 0 ) {
+      for (let i=0;i<node.inputLinksId.length;i++) {
+        const link = links[node.inputLinksId[i]]
+        if ( link === undefined ) {
+          //alert('Corruption du diagramme')
+          return ''
+        }
+        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+          total_input += getLinkValue(sankey_data,link.idLink).value
+        }
+      }
+    }
+    let total_output=0
+    if ( node.outputLinksId.length > 0 ) {
+      for (let i=0;i<node.outputLinksId.length;i++) {
+        const link = sankey_data.links[node.outputLinksId[i]]
+        if (link === undefined ) {
+          //alert('Corruption du diagramme')
+          return ''
+        }
+        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+          total_output += getLinkValue(sankey_data,link.idLink).value
+        }
+      }
+    }
+    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+      nodes[node.idNode].node_visible = false
     }
   })
 }
