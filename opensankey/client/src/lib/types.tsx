@@ -80,6 +80,7 @@ export const SankeyLinkPropTypes = {
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
+  // Ajout
   gradient:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,

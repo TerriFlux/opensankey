@@ -784,7 +784,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     set_data({ ...data })
   }
   // --------------------------------------------
-  //ajoute un tag au group selectionné 
+  //ajoute un tag au groupe selectionné 
   const handleAddTagButton = () => {
     const { tags_catalog } = data
     // Méthode pour incrementer idElement
