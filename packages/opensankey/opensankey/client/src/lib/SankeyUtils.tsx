@@ -337,7 +337,8 @@ export const default_sankey_data = (): SankeyData => {
     links: {},
     user_scale: 20,
     //height: 1500,
-    width: 2150,
+    width: window.innerWidth,
+    height:500,
     node_width: 10,
     h_space: 200,
     v_space: 100,
@@ -439,6 +440,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     idLink: 'link0',
     value: nObjet,
     color: '#a9a9a9',
+    gradient:false,
     curved: false,
     arrow: true,
     text_color: 'black',
@@ -603,6 +605,7 @@ export const uploadExemple = (
       // } catch (err) {
       //   alert(err)
       // }
+      //
     })
   })
 }

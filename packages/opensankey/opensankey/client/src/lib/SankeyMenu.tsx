@@ -282,7 +282,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       return
     }
     const link: SankeyLink = default_link(data)
-    console.log(link)
     // Méthode pour incrementer idNode
     const listId: number[] = []
     Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
@@ -308,7 +307,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = selected_link
-    console.log('========1=============')
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
     // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
     const previous_node = data.nodes[link.idSource]
@@ -663,7 +661,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         label='Général'
                         checked={node.nodeParameter === 'general'}
                         onChange={evt => {
-                          console.log(evt.target.value)
                           node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
@@ -688,7 +685,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         label='local'
                         checked={node.nodeParameter === 'local'}
                         onChange={evt => {
-                          console.log(evt.target.value)
                           node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
@@ -765,7 +761,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     >
-                      {/*Object.values(data.links).map((l, i) => console.log(l,l.idTarget,display_nodes))*/}
                       {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
                   </Col>
