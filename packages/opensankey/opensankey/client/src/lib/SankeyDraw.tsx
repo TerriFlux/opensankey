@@ -2220,6 +2220,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     height = Math.max(500, height + max_vert_shift + 200)
 
     const svgSankey = (d3.select('#svg') as any)
+    if (data.static_sankey) {
+      svgSankey.attr('viewBox', [0, 0, data.width, height])
+    }
     svgSankey
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -2344,11 +2347,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
 
   height = Math.max(500, height + max_vert_shift + 200)
+  const width = data.static_sankey ? '100%' : data.width
+  const position = data.static_sankey ? 'relative' : 'absolute'
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
-        <div id="svg-container" >
-          <svg id='svg' style={{  'margin': '20px','height': height, 'width': data.width ,'border': '2px solid #78c2ad'  }}>
+        <div id="svg-container" style={{ 'position': position}}>
+          <svg id='svg' style={{  'margin': '20px','height': height, 'width': width ,'border': '2px solid #78c2ad'  }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
