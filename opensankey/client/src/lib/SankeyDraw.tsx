@@ -2347,7 +2347,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
-        <div id="svg-container" style={{ 'position': 'absolute'}}>
+        <div id="svg-container" >
           <svg id='svg' style={{  'margin': '20px','height': data.height, 'width': data.width ,'border': '2px solid #78c2ad'  }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
