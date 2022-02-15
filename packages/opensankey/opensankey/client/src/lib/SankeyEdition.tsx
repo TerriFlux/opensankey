@@ -178,9 +178,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
                 }              
               }
               set_use_colormap(evt.target.checked)
-              if (colormap in tags_catalog) {
-                Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+              Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+              Object.values(dataTags).forEach(tags_group=>tags_group.show_legend = false)
+              if (the_colormap in tags_catalog) {
                 tags_catalog[the_colormap].show_legend = evt.target.checked
+              }
+              if (the_colormap in dataTags) {
+                dataTags[the_colormap].show_legend = evt.target.checked
               }
               set_colormap(the_colormap)
               set_data({ ...data })
@@ -215,6 +219,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
                 if (evt.target.value in tags_catalog) {
                   Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
                   tags_catalog[evt.target.value].show_legend = true
+                }
+                Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+                Object.values(dataTags).forEach(tags_group=>tags_group.show_legend = false)
+                if (evt.target.value in tags_catalog) {
+                  tags_catalog[evt.target.value].show_legend = true
+                }
+                if (evt.target.value in dataTags) {
+                  dataTags[evt.target.value].show_legend = true
                 }
                 set_data({...data})
               }}>
