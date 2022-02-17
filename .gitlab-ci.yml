@@ -54,7 +54,7 @@ deploy_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source dev_opensankey/bin/activate
+    - source test_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 PublishExercicesAFM:
