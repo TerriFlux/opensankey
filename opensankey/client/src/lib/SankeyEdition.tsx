@@ -252,7 +252,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     )
   }
 
-  const setDiagram = (evt : React.ChangeEvent) => {
+  const setDiagram = (evt : any) => {
     
     const the_diagram = (evt.target as HTMLInputElement).value as string
     const sous_filieres = window.sankey.sous_filieres
