@@ -406,6 +406,15 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Container>
           {console.log(logo)}
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+          <Form.Check 
+            type="switch"
+            checked={data.static_sankey}
+            onClick={(evt:any)=> {
+              data.static_sankey=evt.target.checked
+              set_data({...data})
+            }}
+            label="Static"
+          />
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -522,15 +531,6 @@ const Menu: FunctionComponent<MenuTypes> = (
             {right_menu}
           </Nav>
         </Container>
-        <Form.Check 
-          type="switch"
-          checked={data.static_sankey}
-          onClick={(evt:any)=> {
-            data.static_sankey=evt.target.checked
-            set_data({...data})
-          }}
-          label="Static"
-        />
       </Navbar>
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
