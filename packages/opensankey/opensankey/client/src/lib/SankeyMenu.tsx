@@ -376,14 +376,14 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         Entrant:
         {
-          selected_node.inputLinksId.map(k => {
+          node.inputLinksId.map(k => {
             return <> <br /> -{data.nodes[data.links[k].idSource].name} </>
           })}
         <br/>
 
         Sortant:
         {
-          selected_node.outputLinksId.map(k => {
+          node.outputLinksId.map(k => {
             return <> <br /> -{data.nodes[data.links[k].idTarget].name} </>
           })}
         </Modal.Body>
