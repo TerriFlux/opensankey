@@ -105,6 +105,9 @@ export const convert_data = (
   if (data.width === undefined) {
     data.width = 1500
   }
+  if (data.height === undefined) {
+    data.height = 500
+  }
 
   if (Array.isArray(data.tags_catalog)) {
     data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
@@ -765,8 +768,12 @@ export const convert_data = (
             }
             if (editable_link.data_value !== undefined && editable_link.data_value !== null ) {
               editable_link.value2[region_name].extension.data_value  = editable_link.data_value[value_index]
-              editable_link.value2[region_name].extension.data_source = editable_link.data_source[value_index]
-              editable_link.value2[region_name].extension.data_period = editable_link.data_period[value_index]
+              if ( 'data_source' in editable_link) {
+                editable_link.value2[region_name].extension.data_source = editable_link.data_source[value_index]
+              }
+              if ( 'data_period' in editable_link) {
+                editable_link.value2[region_name].extension.data_period = editable_link.data_period[value_index]
+              }
               editable_link.value2[region_name]['color_tag']['flux_types'] = 'initial_data'
             }
           }

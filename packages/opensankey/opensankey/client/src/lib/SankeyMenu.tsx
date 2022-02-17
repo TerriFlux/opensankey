@@ -4,7 +4,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, compute_default_input_outputLinksId, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
+import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
@@ -34,6 +34,7 @@ const MenuPropTypes = {
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
+  portfolio_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
   agregation_level: PropTypes.number.isRequired,
@@ -43,15 +44,90 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
+export const ArtefactsItem = ({artefacts_menu,current_path}:any) => {
+  return (
+    <>
+      { Array.isArray(artefacts_menu) 
+        ? artefacts_menu.map( (item,index)=> {
+          let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/'+ item
+          if (!item.includes('zip')) {
+            url = url + '/index.html'           
+          }
+          return (
+            <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
+          )}
+        ) : Object.keys(artefacts_menu).map(
+          (key,index)=> {
+            return (
+              <>
+                <NavDropdown key={index} title={key} id={key} >
+                  <ArtefactsItem 
+                    artefacts_menu={artefacts_menu[key]}
+                    current_path={current_path !== '' ? current_path+'/'+key : key}
+                  />
+                </NavDropdown>
+              </>
+            )}          
+        )
+      }
+    </>      
+  )
+}
+
+export const ExempleItem = ({exemple_menu,url_prefix,data,set_data,current_path}:any) => {
+  return (
+    <>
+      { Array.isArray(exemple_menu) 
+        ? exemple_menu.map( (item,index)=> {
+          let callback = (server_data : SankeyData)=> 0
+          let path = current_path+'/sankey/'+item
+          if (item.includes('simple.xlsx')) {
+            path = current_path+'/'+item
+            callback = (server_data : SankeyData)=>{
+              set_nodes_level(server_data.nodes,2)
+              compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+              set_nodes_level(server_data.nodes,1)
+              compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+              return 0
+            }
+          }
+          return (
+            <Dropdown.Item 
+              onClick={() => uploadExemple(
+                path, url_prefix, data, set_data,callback
+              )} 
+            >{item.split('.')[0].replace(/_/g, ' ').replace(' layout','').replace('simple.xlsx',' xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC')}</Dropdown.Item>
+          )}
+        ) : Object.keys(exemple_menu).map(
+          (key,index)=> {
+            return (
+              <>
+                <NavDropdown title={key} id={key} >
+                  <ExempleItem 
+                    exemple_menu={exemple_menu[key]}
+                    url_prefix={url_prefix}
+                    data={data}
+                    set_data={set_data}
+                    current_path={current_path !== '' ? current_path+'/'+key : key}
+                  />
+                </NavDropdown>
+              </>
+            )}          
+        )
+      }
+    </>      
+  )
+}
+
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
     settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
-    logo,app_name,
+    logo, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_selected_link, selected_link,
-    example_menu, url_prefix,
+    example_menu,portfolio_menu, url_prefix,
     agregation_level,
     set_agregation_level
   }
@@ -79,7 +155,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const node: SankeyNode = default_node()
 
     // Méthode pour incrementer idNode
-    const listId : number[] = []
+    const listId: number[] = []
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
     node.idNode = 'node' + idNode
@@ -206,9 +282,8 @@ const Menu: FunctionComponent<MenuTypes> = (
       return
     }
     const link: SankeyLink = default_link(data)
-    console.log(link)
     // Méthode pour incrementer idNode
-    const listId : number[] = []
+    const listId: number[] = []
     Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
     const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
     link.idLink = 'link' + idLink
@@ -232,7 +307,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = selected_link
-    console.log('========1=============')
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
     // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
     const previous_node = data.nodes[link.idSource]
@@ -284,15 +358,58 @@ const Menu: FunctionComponent<MenuTypes> = (
     scroll: true,
     backdrop: false,
   }
+
+
+  const [modalshow, setModalShow] = useState(false)
+
+  const handleModalClose = () => setModalShow(false)
+  const handleModalShow = () => setModalShow(true)
+
+
   return (
     <>
+      <Modal show={modalshow} onHide={handleModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Suppression noeud connecté</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Êtes-vous sûr de vouloir supprimer ce noeud ? Il est relié à différents flux:
+
+        Entrant:
+        {
+          node.inputLinksId.map(k => {
+            return <> <br /> -{data.nodes[data.links[k].idSource].name} </>
+          })}
+        <br/>
+
+        Sortant:
+        {
+          node.outputLinksId.map(k => {
+            return <> <br /> -{data.nodes[data.links[k].idTarget].name} </>
+          })}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleModalClose}>
+            Refuse
+          </Button>
+          <Button variant="primary" onClick={() => {
+            delete_node(data, selected_node)
+            set_selected_node(default_node())
+            set_data({ ...data })
+            handleModalClose()
+          }}>
+            Accept
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Navbar className='bg-light' fixed='top' expand="xl" >
         <Container>
-          { logo !== '' ? (<Navbar.Brand href="#"><img src={logo} width="100"/> {app_name} </Navbar.Brand>) : (<Navbar.Brand href="#">{app_name} </Navbar.Brand>)}
+          {console.log(logo)}
+          <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
           <Nav>
             <NavDropdown title="Fichiers" id="files" >
               <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item 
+                <Dropdown.Item
                   onClick={() => {
                     if (_load_json.current) {
                       _load_json.current.name = ''
@@ -309,19 +426,18 @@ const Menu: FunctionComponent<MenuTypes> = (
                     reader.onload = (() => {
                       return (e: ProgressEvent<FileReader>) => {
                         let result = String((e.target as FileReader).result)
+                        const new_data = default_sankey_data()
                         result = result.split('<br>').join('\\\\n')
-                        const new_data = JSON.parse(result)
-                        data.tags_catalog = {}
-                        Object.assign(data, new_data)
-                        data.version = new_data.version
-                        convert_data(data)
-                        set_data({ ...data })
+                        Object.assign(new_data, JSON.parse(result))
+                        //new_data.version = new_data.version
+                        convert_data(new_data)
+                        set_data(new_data)
                       }
                     })()
                     reader.readAsText(files[0])
                   }}
                 />
-                <Dropdown.Item 
+                <Dropdown.Item
                   onClick={() => {
                     if (_load_simple_excel && _load_simple_excel.current) {
                       _load_simple_excel.current.name = ''
@@ -385,97 +501,36 @@ const Menu: FunctionComponent<MenuTypes> = (
               {edition_menu}
             </NavDropdown >
             <NavDropdown title="Exemples" id="exemples" >
-              <NavDropdown title="Pommes Poires" id="pommes_poires" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_regions_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires Regions</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'SyntheticOpenSankey/pommes_poires_regions_periods_simple.xlsx', url_prefix, data, set_data, 
-                  (server_data : SankeyData)=>{
-                    set_nodes_level(server_data.nodes,2)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                    set_nodes_level(server_data.nodes,1)
-                    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                  }
-                )} >Pommes Poires Regions Periods</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Energie" id="energie" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Energie/sankeys_territoire_.csv', url_prefix, data, set_data,
-                  (server_data : SankeyData) => {
-                    compute_default_input_outputLinksId(server_data.nodes, server_data.links)
-                    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                    Object.values(server_data.nodes).forEach(function (n) {
-                      reorganize_node_inputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
-                      reorganize_node_outputLinksId(n, (server_data as SankeyData & { layout: SankeyData }).layout.nodes, (server_data as SankeyData & { layout: SankeyData }).layout.links)
-                    })
-                    delete (server_data as SankeyData & { layout?: SankeyData }).layout
-                  }
-                )} >Energie</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Forêt Bois" id="bois" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'ForetBois/Savoie/v1/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Savoie v1</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'ForetBois/Savoie/v2/sankey/filiere_foret_bois_savoie_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Savoie v2</Dropdown.Item>
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'ForetBois/GrandEst/sankey/filiere_foret_bois_grand_est_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )} 
-                >Forêt Bois Grand Est</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Viande" id="viande" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Viande/sankey/Viande_TEC_reg_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )}
-                >Viande</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown title="Lait" id="lait" >
-                <Dropdown.Item onClick={() => uploadExemple(
-                  'Lait/sankey/lait_reg_layout.json', url_prefix, data, set_data,
-                  ()=> 0
-                )}
-                >Lait</Dropdown.Item>
-              </NavDropdown >
-              <NavDropdown.Divider />
               {example_menu}
             </NavDropdown >
-            <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
-              <ToggleButton
-                id="toggle-check"
-                type="checkbox"
-                variant="outline-primary"
-                checked={checked}
-                onChange={(e) => { setChecked(e.currentTarget.checked) }}
-                onClick={toggleShow}
-                value="1">Configuration Sankey
-              </ToggleButton>
-            </ButtonGroup>
+            <NavDropdown title="Portfolio" id="portfolio" >
+              {portfolio_menu}
+            </NavDropdown >
+            {!data.static_sankey ? (
+              <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
+                <ToggleButton
+                  id="toggle-check"
+                  type="checkbox"
+                  variant="outline-primary"
+                  checked={checked}
+                  onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                  onClick={toggleShow}
+                  value="1">Configuration Sankey
+                </ToggleButton>
+              </ButtonGroup>) : (<></>)
+            }
             {right_menu}
           </Nav>
         </Container>
+        <Form.Check 
+          type="switch"
+          checked={data.static_sankey}
+          onClick={(evt:any)=> {
+            data.static_sankey=evt.target.checked
+            set_data({...data})
+          }}
+          label="Static"
+        />
       </Navbar>
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
@@ -487,7 +542,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="1"
               onClick={
                 evt => {
-                  if (((evt.target as unknown)as {className:string}).className === 'accordion-button' && nav_item_active === '1') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '1') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('1')
@@ -506,7 +561,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="2"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -520,7 +575,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Body>
                 <Row >
                   <Col xs={1}>
-                    <Button size="sm"  onClick={add_new_node}><FaPlus /></Button>
+                    <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
                   </Col>
                   <Col xs={10}>
                     <Form.Select id="selectionNode"
@@ -541,10 +596,18 @@ const Menu: FunctionComponent<MenuTypes> = (
                       variant='danger'
                       onClick={
                         () => {
-                          //Boutton pour supprimer le noeud selectionné
-                          delete_node(data, selected_node)
-                          set_selected_node(default_node())
-                          set_data({ ...data })
+                          if (selected_node.inputLinksId.length > 0 || selected_node.outputLinksId.length > 0) {
+                            setModalShow(true)
+
+                          } else {
+                            //Boutton pour supprimer le noeud selectionné
+                            delete_node(data, selected_node)
+                            set_selected_node(default_node())
+                            set_data({ ...data })
+                          }
+
+
+
                         }
                       }
                     ><FaMinus /></Button>
@@ -598,7 +661,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         label='Général'
                         checked={node.nodeParameter === 'general'}
                         onChange={evt => {
-                          console.log(evt.target.value)
                           node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
@@ -623,7 +685,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         label='local'
                         checked={node.nodeParameter === 'local'}
                         onChange={evt => {
-                          console.log(evt.target.value)
                           node.nodeParameter = evt.target.value
                           set_data({ ...data })
                         }}
@@ -651,7 +712,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="4"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '4') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '4') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('4')
@@ -666,7 +727,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item
               eventKey="3"
               onClick={evt => {
-                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '3') {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '3') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('3')
@@ -766,7 +827,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
             <Accordion.Item eventKey="7"
               onClick={evt => {
-                if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '7') {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('7')
@@ -781,7 +842,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="5"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '5') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('5')
@@ -820,7 +881,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="0"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '0') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '0') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('0')
@@ -837,7 +898,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="6"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as {className:string}).className === 'accordion-button' && nav_item_active === '6') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '6') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('6')

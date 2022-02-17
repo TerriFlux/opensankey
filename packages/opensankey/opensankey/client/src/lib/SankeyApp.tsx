@@ -6,10 +6,10 @@ import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu from './SankeyMenu'
+import Menu, { ExempleItem,ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Row, Col } from 'react-bootstrap'
+import { Row, Col, Dropdown } from 'react-bootstrap'
 import { getLinkValue } from './SankeyUtils'
 let logo = ''
 try {
@@ -18,13 +18,20 @@ try {
   console.log('opensankey.png not found')
 }
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  exemple_menu:  PropTypes.object.isRequired,
+  artefacts_menu: PropTypes.object.isRequired
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu,artefacts_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -44,64 +51,80 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
 
   return (
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
-      <Menu
-        data={data}
-        set_data={set_data}
-        app_name='version beta 0.8'
-        logo={logo.replace('static/', 'static/opensankey/')}
-        set_show_nav={set_show_nav}
-        show_nav={show_nav}
-        set_nav_item_active={set_nav_item_active}
-        nav_item_active={nav_item_active}
-        set_selected_node={set_selected_node}
-        selected_node={selected_node}
-        set_selected_link={set_selected_link}
-        selected_link={selected_link}
-        agregation_level={agregation_level}
-        set_agregation_level={set_agregation_level}
-        url_prefix=''
-        settings_edition={
-          <SankeySettingsEdition
-            data={data}
-            set_data={set_data}
-            set_current_filter={(
-              new_current_filter: number
-            ) => {
-              const { display_style } = data
-              display_style.filter = +new_current_filter
-              set_data({ ...data })
-            }}
-          />
-        }
-        node_edition={
-          <SankeyNodeEdition
-            data={data}
-            set_data={set_data}
-            selected_node={selected_node}
-            radio_selected={radio_selected}
-          />
-        }
-        link_edition={
-          <SankeyLinkEdition
-            show={true}
-            data={data}
-            set_data={set_data}
-            selected_link={selected_link}
-          />
-        }
-        settings_edition_tags={
-          <SankeySettingsEditionTags
-            data={data}
-            set_data={set_data}
-          />
-        }
-        settings_edition_tags_links={
-          <SankeySettingsEditionTagsLinks
-            data={data}
-            set_data={set_data}
-          />
-        }
-      />
+      { !window.SankeyToolsStatic ? (
+        <Menu
+          data={data}
+          set_data={set_data}
+          app_name='version beta 0.8'
+          example_menu={<>
+            <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+            <ExempleItem 
+              exemple_menu={exemple_menu}
+              url_prefix=''
+              data={data}
+              set_data={set_data}
+              current_path={''}
+            /></>}
+          portfolio_menu={<>
+            <ArtefactsItem 
+              artefacts_menu={artefacts_menu}
+              current_path={''}
+            /></>}
+          logo={logo.replace('static/', 'static/opensankey/')}
+          set_show_nav={set_show_nav}
+          show_nav={show_nav}
+          set_nav_item_active={set_nav_item_active}
+          nav_item_active={nav_item_active}
+          set_selected_node={set_selected_node}
+          selected_node={selected_node}
+          set_selected_link={set_selected_link}
+          selected_link={selected_link}
+          agregation_level={agregation_level}
+          set_agregation_level={set_agregation_level}
+          url_prefix=''
+          settings_edition={
+            <SankeySettingsEdition
+              data={data}
+              set_data={set_data}
+              set_current_filter={(
+                new_current_filter: number
+              ) => {
+                const { display_style } = data
+                display_style.filter = +new_current_filter
+                set_data({ ...data })
+              }}
+            />
+          }
+          node_edition={
+            <SankeyNodeEdition
+              data={data}
+              set_data={set_data}
+              selected_node={selected_node}
+              radio_selected={radio_selected}
+            />
+          }
+          link_edition={
+            <SankeyLinkEdition
+              show={true}
+              data={data}
+              set_data={set_data}
+              selected_link={selected_link}
+            />
+          }
+          settings_edition_tags={
+            <SankeySettingsEditionTags
+              data={data}
+              set_data={set_data}
+            />
+          }
+          settings_edition_tags_links={
+            <SankeySettingsEditionTagsLinks
+              data={data}
+              set_data={set_data}
+            />
+          }
+        />
+      ) : (<></>)}
       <Row>
         <Col sm={11} style={{ 'color': 'black' }} >
           <SankeyEdition
@@ -175,11 +198,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
           const v = (val as unknown) as SankeyLinkValue
-          if (l.colormap !== undefined && l.colormap !== '' ) {
-            const selected_tag = v.color_tag[l.colormap]
-            if ( selected_tag && l.colormap in dataTags && !dataTags[l.colormap].tags[selected_tag].selected) {
-              return false
+          let visible = true
+          Object.keys(v.color_tag).forEach(tag=> {
+            const selected_tag = v.color_tag[tag]
+            if ( selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
+              visible = false
             }
+          })
+          if (!visible) {
+            return false
           }
           if (v.value === 0) {
             if (data.display_style.null_flux) {
@@ -198,20 +225,21 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
               if (selected_tag) {
                 return data.dataTags[l.colormap].tags[selected_tag].color
               }
+              return l.color
             }
             const source_node = data.nodes[l.idSource]
             const target_node = data.nodes[l.idTarget]
             let selected_tag = ''
-            if (source_node.type === 'sector' && source_node.tags[l.colormap].length === 1) {
+            if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'sector' &&  target_node.tags[l.colormap].length === 1) {
+            } else if ( target_node.type === 'sector'  && l.colormap in target_node.tags &&  target_node.tags[l.colormap].length === 1) {
               selected_tag = target_node.tags[l.colormap][0]   
               return data.tags_catalog[l.colormap].tags[selected_tag].color             
-            } else if (source_node.type === 'product' && source_node.tags[l.colormap].length === 1) {
+            } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'product' &&  target_node.tags[l.colormap].length === 1) {
+            } else if ( target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
               selected_tag = target_node.tags[l.colormap][0]   
               return data.tags_catalog[l.colormap].tags[selected_tag].color             
             }
@@ -252,7 +280,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data }) => {
           for (const i in listKey) {
             val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
           }
-          if (val === undefined ) {
+          if ( val === undefined ) {
             return 0
           }
           return ((val as unknown) as SankeyLinkValue).value
