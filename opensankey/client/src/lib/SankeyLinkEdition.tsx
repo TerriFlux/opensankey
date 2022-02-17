@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab} from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
@@ -18,22 +18,22 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, children }
 ) => {
   const { dataTags } = data
-  const tags_visible = Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display').length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display')[0] : '')
+  const tags_visible = Object.keys(dataTags).filter(key => dataTags[key].banner === 'display').length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags).filter(key => dataTags[key].banner === 'display')[0] : '')
   let link = selected_link
   if (link === undefined) {
     link = default_link(data)
   }
 
-  const newEntries = new Map(Object.entries(dataTags).filter(([,dataTag])=>dataTag.banner !== 'display').map(([dataTagKey,dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [dataTagKey, Object.entries(dataTag.tags).filter(tag=>tag[1].selected)[0][0]] : ['n', 'n']
+  const newEntries = new Map(Object.entries(dataTags).filter(([, dataTag]) => dataTag.banner !== 'display').map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [dataTagKey, Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0]] : ['n', 'n']
   }))
   //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
   const dataTagsSelected = Object.fromEntries(newEntries)
   //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
   delete dataTagsSelected['n']
   const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
-  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length ) {
+  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_tags_selected(dataTagsSelected)
   }
 
@@ -76,7 +76,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
               {
                 //Définition des valeurs selon les paramètre dataTags
-                Object.entries(data.dataTags).filter(([,dataTag])=>dataTag.banner !== 'display').map(([dataTagKey,dataTag]) => {
+                Object.entries(data.dataTags).filter(([, dataTag]) => dataTag.banner !== 'display').map(([dataTagKey, dataTag]) => {
                   if (Object.keys(dataTag.tags).length != 0) {
 
                     return (
@@ -103,7 +103,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                               }
                             }
                           >
-                            {Object.entries(dataTag.tags).map(([tag_key,tag]) => {
+                            {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                               return (
                                 <option key={tag.name} value={tag_key}>{tag.name}</option>
                               )
@@ -133,9 +133,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val = val[tag]
                         })
                         val.value = +evt.target.value
-                        console.log(selected_link.value)
-
-
                         set_data({ ...data })
                       }
                     }
@@ -160,7 +157,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val = val[tag]
                         })
                         val.display_value = evt.target.value
-                        console.log(selected_link.value)
 
 
                         set_data({ ...data })
@@ -192,6 +188,26 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   />
                 </Col>
               </Form.Group>
+
+
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Gradient:</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Check
+                    type="checkbox"
+                    checked={selected_link.gradient}
+                    onChange={
+                      evt => {
+                        selected_link.gradient = evt.target.checked
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Form.Group>
+
               <Form.Group as={Row} >
                 <Col>
                   <FormLabel >Position du centre</FormLabel>
@@ -538,7 +554,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Col>
             </Form.Group>
           </Tab>
-          {Object.keys(dataTags).filter(key=>dataTags[key].banner === 'display').length ? (
+          {Object.keys(dataTags).filter(key => dataTags[key].banner === 'display').length ? (
             <Tab eventKey="tags" title="Tags" >
               <Form.Group as={Row} >
                 <Col>
@@ -559,7 +575,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
-                    {Object.entries(dataTags).filter(d=>d[1].banner === 'display').map(
+                    {Object.entries(dataTags).filter(d => d[1].banner === 'display').map(
                       (tags_group, i) =>
                         <option
                           key={i}

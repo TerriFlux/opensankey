@@ -31,6 +31,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [width, set_width] = useState(data.width)
+  const [height, set_height] = useState(data.height)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
   const [link_tag_favorite,set_link_tag_favorite] = useState('')
@@ -72,8 +73,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Form.Text>    (valeur pour 100px)</Form.Text>
             </Col>
           </Form.Group>
-          {/* <Form.Group as={Row} >
-            <Col>
+          <Form.Group as={Row} >
+            <Col xs={3}>
               <FormLabel >Hauteur</FormLabel>
             </Col>
             <Col>
@@ -87,7 +88,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 }}
               />
             </Col>
-          </Form.Group> */}
+          </Form.Group>
           <Form.Group as={Row} >
             <Col  xs={3}>
               <FormLabel>Largeur</FormLabel>
@@ -783,7 +784,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     set_data({ ...data })
   }
   // --------------------------------------------
-  //ajoute un tag au group selectionné 
+  //ajoute un tag au groupe selectionné 
   const handleAddTagButton = () => {
     const { tags_catalog } = data
     // Méthode pour incrementer idElement
@@ -1195,7 +1196,6 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
   //supprime groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
     const { dataTags } = data
-    //console.log(i)
     delete dataTags[tags_group_key]
     if (Object.keys(dataTags).length > 0) {
       const lastElmt = Object.keys(dataTags)[Object.keys(dataTags).length - 1]
@@ -1345,7 +1345,6 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
                         }
                         dataTags[links_tags_group_key].tags[tag_key].selected = visible
                         set_data({ ...data })
-                        console.log(dataTags)
                       }
                     } />
                 </td>

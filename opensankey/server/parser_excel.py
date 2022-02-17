@@ -380,6 +380,7 @@ def save_simple_excel(
     # tag_names are disposed between the column Dimensions and the column Définition
     tag_names = list(sankey_data['dataTags']) + list(sankey_data['tags_catalog'])
     nodes = {}
+    tags =[]
     if len(tag_names) != 0:
        tags = [[""] * 6] * (len(tag_names)+1)
        tags[0] = ["Name","Type","Tags","isPalette","Colormap","Color"]
@@ -407,7 +408,7 @@ def save_simple_excel(
         for j,tag_name in enumerate(sankey_data['tags_catalog']):
             nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
         nodes[i+1][nodes_cols.index('Level')] = 1
-        if 'level' in node['dimensions']['Primaire']:
+        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
             nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
     flux_cols = [
@@ -424,11 +425,14 @@ def save_simple_excel(
     row=1
     for _,link in enumerate(sankey_data['links'].values()):
         val = link['value']
-        row = add_links(sankey_data, flux_cols, links, row, link, val,0)        
+        try:
+            row = add_links(sankey_data, flux_cols, links, row, link, val,0)      
+        except Exception as expt:
+            print( expt)  
     mfa_output = {
         'nodes' : nodes,
         'tags'  : tags,
-        'flux'  : links
+        'flux_data'  : links
     }
     return mfa_output
 

@@ -1,20 +1,36 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck } from 'react-bootstrap'
+import { Row, Col, Form, FormCheck, FormLabel, FormControl } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import DropdownMultiselect from 'react-multiselect-dropdown-bootstrap'
+import { convert_data } from './SankeyConvert'
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired
+}
+
+declare const window: Window &
+typeof globalThis & {
+  sankey: {
+    sous_filieres : { [ key : string ] : string }
+  }
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }) => {
   const { tags_catalog, dataTags } = data
-  const tags_visible = Object.keys(data.tags_catalog).length > 0
-  const [colormap, set_colormap] = useState(tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0]: '')
+  const tags_visible = Object.keys(data.tags_catalog).length > 0 || Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display').length > 0
+  const [colormap, set_colormap] = useState(
+    tags_visible ? 
+      (Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display').length > 0 ?
+        Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display')[0]
+        : (Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one').length > 0 ?
+          Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0] : ''))
+      : ''
+  )
   const [use_colormap,set_use_colormap] = useState(false)
+  const [diagram,set_diagram] = useState('')
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
     const val = evt.target.value
@@ -134,18 +150,41 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             checked={use_colormap === true}
             onChange={ evt => {
               let the_colormap = colormap
-              if (colormap === '') {
+              const apply_to_node= Object.keys(data.tags_catalog).includes(colormap)
+              if (colormap === '' || colormap === undefined) {
                 the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key=>data.tags_catalog[tags_key].banner !== 'one')[0] :''
+                if (the_colormap === '' || colormap === undefined) {
+                  the_colormap = tags_visible ? Object.keys(data.dataTags).filter(tags_key=>data.dataTags[tags_key].banner === 'display')[0] :''
+                }
               }
               if (evt.target.checked) {
                 Object.values(data.links).forEach(link=>link.colormap = the_colormap)
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'groupTag'
+                    node.colorTag = the_colormap
+                  })
+                }
               } else {
-                Object.values(data.links).forEach(link=>link.colormap = '')                  
+                Object.values(data.links).forEach(link=>link.colormap = '') 
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    node.nodeParameter = 'local'
+                    //node.colorTag = the_colormap
+                  })  
+                }              
               }
               set_use_colormap(evt.target.checked)
-              if (colormap in tags_catalog) {
-                Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+              Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+              Object.values(dataTags).forEach(tags_group=>tags_group.show_legend = false)
+              if (the_colormap in tags_catalog) {
                 tags_catalog[the_colormap].show_legend = evt.target.checked
+              }
+              if (the_colormap in dataTags) {
+                dataTags[the_colormap].show_legend = evt.target.checked
               }
               set_colormap(the_colormap)
               set_data({ ...data })
@@ -157,12 +196,37 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             disabled={!use_colormap}
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                const apply_to_node= Object.keys(data.tags_catalog).includes(evt.target.value)
                 Object.values(data.links).forEach(link=>link.colormap = evt.target.value)
+                if (apply_to_node) {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'groupTag'
+                    node.colorTag = evt.target.value
+                  })
+                } else {
+                  Object.values(data.nodes).forEach(node=> {
+                    if (node.type === 'sector') {
+                      return
+                    }
+                    node.nodeParameter = 'general'
+                  })
+                }
                 //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
                 set_colormap(evt.target.value)
                 if (evt.target.value in tags_catalog) {
                   Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
                   tags_catalog[evt.target.value].show_legend = true
+                }
+                Object.values(tags_catalog).forEach(tags_group=>tags_group.show_legend = false)
+                Object.values(dataTags).forEach(tags_group=>tags_group.show_legend = false)
+                if (evt.target.value in tags_catalog) {
+                  tags_catalog[evt.target.value].show_legend = true
+                }
+                if (evt.target.value in dataTags) {
+                  dataTags[evt.target.value].show_legend = true
                 }
                 set_data({...data})
               }}>
@@ -188,21 +252,63 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     )
   }
 
+  const setDiagram = (evt : React.ChangeEvent) => {
+    
+    const the_diagram = (evt.target as HTMLInputElement).value as string
+    const sous_filieres = window.sankey.sous_filieres
+    const new_data = JSON.parse(JSON.stringify((window.sankey as any)[sous_filieres[the_diagram] as any]))
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    //set_level(agregation_level)
+    set_diagram(the_diagram)
+    set_data({...new_data})
+  }
+
+  let sous_filieres = undefined
+  if (window.sankey  && window.sankey.sous_filieres  ) {
+    console.log(window.sankey.sous_filieres)
+    sous_filieres = window.sankey.sous_filieres
+  }
+  const diagram_label = 'Diagrammes'
+  const marginTop = data.static_sankey ? '0px' : '90px'
+
   return (
     <>
-      <div className='herowrap' style={{ 'backgroundColor': 'gainsboro', 'marginLeft': '0' }}>
-        <Row style={{ 'marginTop': '90px', 'marginBottom': '10px' }}>
-          <Col sm={4}  >
+      <div className='herowrap' 
+        style={{
+          backgroundColor: 'gainsboro', 
+          marginLeft: '0',          
+          paddingBottom : '3px', 
+          justifyContent: 'space-evenly',
+          alignItems: '<baseline-position>' 
+        }}>
+        <Row style={{ marginTop: marginTop, 'marginBottom': '10px' }}>
+          { (data.static_sankey && sous_filieres)  ? (
+            <Col>
+              <Form.Group as={Col} style={{marginLeft : '30px'}}>
+                <Row>
+                  <FormLabel className="text-center" >{diagram_label}</FormLabel>
+                </Row>
+                <Row>
+                  <Form.Select 
+                    onChange={setDiagram}>
+                    {Object.keys(sous_filieres).map( (name,i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
+                  </Form.Select>
+                </Row>
+              </Form.Group>
+            </Col>): (<div/>)}
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addAllDropDownNode()}
             </Form>
           </Col>
-          <Col sm={4}>
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addAllDropDownLinks()}
             </Form>
           </Col>
-          <Col sm={4}>
+          <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
             </Form>
