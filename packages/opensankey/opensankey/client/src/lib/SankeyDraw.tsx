@@ -143,6 +143,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return display
       })
       .attr('pointer-events', 'auto')
+      .attr('stroke-dasharray', d => {
+        const display_value = getLinkValue(data,d.idLink).display_value
+        if ( display_value.includes('*') ) {
+          return '40, 5'
+        } else {
+          return ''
+        }
+      })
 
     const paths = gg_links.append('path')
     if (!static_sankey) {
@@ -713,7 +721,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
       const number_of_links = node.outputLinksId.length
       const value = getLinkValue(data, idLink).value
-      if (links[idLink].orientation === 'hh') {
+      if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
           swap(node.outputLinksId, source_order, source_order + 1)
         }
