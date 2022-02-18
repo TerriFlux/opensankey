@@ -137,10 +137,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 onClick={
                   () => {
                     if (shift_visible) {
-                      Object.values(nodes).filter(n => n.node_visible).forEach(n => n.x += shift_left)
+                      Object.values(nodes).filter(n => n.node_visible).filter(n => n.position !== 'relative' ).forEach(n => n.x += shift_left)
                       Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.x_label).forEach(l => (l.x_label as number) += shift_left)
                     } else {
-                      Object.values(nodes).forEach(n => n.x += shift_left)
+                      Object.values(nodes).filter(n => n.position !== 'relative' ).forEach(n => n.x += shift_left)
                       Object.values(links).filter(l => l.x_label).forEach(l => (l.x_label as number) += shift_left)
                     }
                     set_data({ ...data })
@@ -166,10 +166,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 onClick={
                   () => {
                     if (shift_visible) {
-                      Object.values(nodes).filter(n => n.node_visible).forEach(n => n.y += shift_top)
+                      Object.values(nodes).filter(n => n.node_visible).filter(n => n.position !== 'relative' ).forEach(n => n.y += shift_top)
                       Object.values(links).filter(l => nodes[l.idSource].node_visible && nodes[l.idTarget].node_visible && l.y_label).forEach(l => (l.y_label as number) += shift_top)
                     } else {
-                      Object.values(nodes).forEach(n => n.y += shift_top)
+                      Object.values(nodes).filter(n => n.position !== 'relative' ).forEach(n => n.y += shift_top)
                       Object.values(links).filter(l => l.y_label).forEach(l => (l.y_label as number) += shift_top)
                     }
                     set_data({ ...data })

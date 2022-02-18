@@ -126,7 +126,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
         />
       ) : (<></>)}
       <Row>
-        <Col sm={11} style={{ 'color': 'black' }} >
+        <Col sm={12} style={{ 'color': 'black' }} >
           <SankeyEdition
             data={data}
             set_data={set_data} />
