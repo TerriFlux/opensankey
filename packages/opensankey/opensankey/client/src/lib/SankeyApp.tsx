@@ -148,10 +148,10 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
         node_color={(n: SankeyNode) => {
           let colorNode
           // Le couleur est définie dans l'onglet général
-          if (n.nodeParameter === 'general') {
+          if (n.nodeParameter === 'general' && !data.show_structure) {
             colorNode = '#808080'
           }
-          if (n.nodeParameter === 'groupTag') {
+          if (n.nodeParameter === 'groupTag' || data.show_structure) {
             //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
             //on controle ici qu'il y a bien un favorite tag
             if (n.colorTag !== undefined && n.colorTag !== '') {
