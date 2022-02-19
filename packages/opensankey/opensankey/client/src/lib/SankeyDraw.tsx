@@ -1403,7 +1403,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift,
+        data.show_structure ? 0.02 : link.left_horiz_shift, 
+        data.show_structure ? 0.98 : link.right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         false,
         data.show_structure ? false : link.curved,
