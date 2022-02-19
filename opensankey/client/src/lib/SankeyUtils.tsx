@@ -344,6 +344,8 @@ export const default_sankey_data = (): SankeyData => {
     v_space: 100,
     legend_position: [0, 100],
 
+    show_structure: false,
+
     left_shift: 0.4,
     right_shift: 0.5,
     max_shift: 0.2,
@@ -539,7 +541,9 @@ export const setSelectedTags = (
       node.node_visible = true
     }
   })
-  hideNullFluxNodes(sankey_data)
+  if ( !sankey_data.show_structure) {
+    hideNullFluxNodes(sankey_data)
+  }
 }
 
 const downloadExamples = (
