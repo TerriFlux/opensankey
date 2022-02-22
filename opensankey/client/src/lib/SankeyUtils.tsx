@@ -75,6 +75,9 @@ export const findMaxLinkValue = (
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
+  if ( !value_dict || Object.values(value_dict).length ===0) {
+    return max_node_value
+  }
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
