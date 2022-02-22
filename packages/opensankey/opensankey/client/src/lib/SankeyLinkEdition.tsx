@@ -26,7 +26,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const newEntries = new Map(Object.entries(dataTags).filter(([, dataTag]) => dataTag.banner !== 'display').map(([dataTagKey, dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [dataTagKey, Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0]] : ['n', 'n']
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey, 
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length>0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
   }))
   //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
   const dataTagsSelected = Object.fromEntries(newEntries)

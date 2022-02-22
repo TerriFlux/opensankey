@@ -256,7 +256,7 @@ export const arrangeNodes = (
 ) => {
   // const display_nodes : SankeyNode[] = Object.values(data.nodes).filter( n=> n.display )
   Object.values(data.nodes).forEach(node => {
-    if ( !node.node_visible ) {
+    if ( !node.node_visible || node.position === 'relative' ) {
       return
     }
     const x = Math.round(node.x / h_space) * h_space
