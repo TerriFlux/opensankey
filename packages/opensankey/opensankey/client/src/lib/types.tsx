@@ -94,9 +94,9 @@ export const SankeyLinkPropTypes = {
   //NEW : Choix du group tag pour changement couleur palette 
   colormap:PropTypes.string.isRequired,
 
-  left_horiz_shift  : PropTypes.number.isRequired,
-  right_horiz_shift : PropTypes.number.isRequired,
-  vert_shift        : PropTypes.number.isRequired,
+  left_horiz_shift  : PropTypes.number,
+  right_horiz_shift : PropTypes.number,
+  vert_shift        : PropTypes.number,
   shift_gap         : PropTypes.number.isRequired,
 
   curvature: PropTypes.number.isRequired,

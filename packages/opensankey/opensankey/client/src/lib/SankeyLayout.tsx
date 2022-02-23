@@ -23,13 +23,13 @@ export const reorganize_node_inputLinksId = (
         return -1
       }
       if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift < 0) {
+        if (l1.vert_shift && l1.vert_shift < 0) {
           return -1
         }
         return 1        
       }
       if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift < 0) {
+        if (l2.vert_shift && l2.vert_shift < 0) {
           return 1
         }
         return -1       
@@ -76,13 +76,13 @@ export const reorganize_node_outputLinksId = (
         return 1
       }
       if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift < 0) {
+        if (l1.vert_shift && l1.vert_shift < 0) {
           return 1
         }
         return -1        
       }
       if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift < 0) {
+        if (l2.vert_shift && l2.vert_shift < 0) {
           return 1
         }
         return -1       

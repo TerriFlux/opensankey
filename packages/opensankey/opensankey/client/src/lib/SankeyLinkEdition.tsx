@@ -50,6 +50,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return val
   }
+  const center = selected_link.left_horiz_shift && selected_link.right_horiz_shift ? (selected_link.left_horiz_shift + selected_link.right_horiz_shift)/2 : 0.5
 
   return (
 
@@ -216,10 +217,16 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col>
                   <Form.Range
-                    min="0" max="1" step="0.05"
-                    value={(selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2}
+                    min="0" max="1" step="0.01"
+                    value={center}
                     onChange={
                       evt => {
+                        if ( +evt.target.value - selected_link.shift_gap < 0 ) {
+                          return
+                        }
+                        if ( +evt.target.value + selected_link.shift_gap > 1 ) {
+                          return
+                        }                        
                         selected_link.left_horiz_shift = +evt.target.value - selected_link.shift_gap
                         selected_link.right_horiz_shift = +evt.target.value + selected_link.shift_gap
                         set_data({ ...data })
@@ -227,7 +234,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     }
                   />
                 </Col>
-                <Col sm={2}>{(selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2}</Col>
+                <Col sm={2}>{center}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
@@ -235,12 +242,17 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col>
                   <Form.Range
-                    min="0" max="0.5" step="0.05"
+                    min="0" max="0.5" step="0.01"
                     value={selected_link.shift_gap}
                     onChange={
                       evt => {
+                        if ( center - +evt.target.value < 0 ) {
+                          return
+                        }
+                        if ( center + +evt.target.value > 1 ) {
+                          return
+                        }                            
                         selected_link.shift_gap = +evt.target.value
-                        const center = (selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2
                         selected_link.left_horiz_shift = center - selected_link.shift_gap
                         selected_link.right_horiz_shift = center + selected_link.shift_gap
                         set_data({ ...data })
@@ -288,6 +300,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         selected_link.recycling = evt.target.checked
+                        selected_link.left_horiz_shift = undefined
+                        selected_link.right_horiz_shift = undefined
                         set_data({ ...data })
                       }
                     }
