@@ -508,7 +508,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const new_x = old_x + event.dx
     const new_y = old_y + event.dy
 
-    if (new_x < 0 || new_x > (width - default_node_size) || new_y < 0 || new_y > (height - default_node_size)) {
+    if (new_x < 0 || new_x > (width - default_node_size) || new_y < 0 || new_y > (data.height - default_node_size)) {
       return
     }
 
@@ -847,7 +847,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     } else if (handle_type === 'vert') {
       const vert_shift = d.vert_shift ? d.vert_shift : 0
       //if (d.vert_shift + event.dy > -0.5 * scale(getLinkValue(data,d.idLink)) && new_y < height - scale(getLinkValue(data,d.idLink))/2) {
-      if (new_y < height - scale(getLinkValue(data, d.idLink).value) / 2) {
+      if (new_y < data.height - scale(getLinkValue(data, d.idLink).value) / 2) {
         d.vert_shift = vert_shift + the_event.dy
       } else {
         return
@@ -2280,15 +2280,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //d3.selectAll('.tmp').remove()
     removeAnimate()
 
-    let height = 0
-    Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-    let min_height = 2000
-    Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-    let max_vert_shift = 0
-    Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-    height = Math.max(500, height + max_vert_shift + 200)
-
     const svgSankey = (d3.select('#svg') as any)
     if (data.static_sankey) {
       svgSankey.attr('viewBox', [0, 0, data.width, data.height])
@@ -2411,12 +2402,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       localStorage.clear()
     }
   })
-  let height = 0
-  Object.values(data.nodes).forEach(n => height = n.y && n.node_visible ? Math.max(height, n.y) : height)
-  let max_vert_shift = 0
-  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-  height = Math.max(500, height + max_vert_shift + 200)
   const width = data.static_sankey ? '100%' : data.width
   const position = data.static_sankey ? 'relative' : 'absolute'
   return (
