@@ -315,6 +315,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
     source_node.outputLinksId.push(selected_link.idLink)
+    
+    if ( link.idTarget === link.idSource ) {
+      link.recycling = true
+    }
 
     set_data({ ...data })
   }
@@ -343,6 +347,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
+    if ( link.idTarget === link.idSource ) {
+      link.recycling = true
+    }
     target_node.inputLinksId.push(selected_link.idLink)
 
     set_data({ ...data })
