@@ -832,8 +832,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (u_center_new >= 0 && u_center_new <= 1) {
         if (handle_type === 'left') {
           d.left_horiz_shift = u_center_new
+          if ( d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift ) {
+            d.right_horiz_shift = d.left_horiz_shift
+          }
         } else {
           d.right_horiz_shift = u_center_new
+          if ( d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift ) {
+            d.left_horiz_shift = d.right_horiz_shift
+          }
         }
       } else {
         return
