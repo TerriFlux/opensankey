@@ -316,6 +316,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     link.idSource = source_node.idNode
     source_node.outputLinksId.push(selected_link.idLink)
 
+    if ( link.idTarget === link.idSource ) {
+      link.recycling = true
+    }
+
     set_data({ ...data })
   }
 
@@ -343,6 +347,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
+    if ( link.idTarget === link.idSource ) {
+      link.recycling = true
+    }
     target_node.inputLinksId.push(selected_link.idLink)
 
     set_data({ ...data })
@@ -440,6 +447,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                         Object.assign(new_data, JSON.parse(result))
                         //new_data.version = new_data.version
                         convert_data(new_data)
+                        let height = 0
+                        Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                        let min_height = 2000
+                        Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                        let max_vert_shift = 0
+                        Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                    
+                        new_data.height = Math.max(500, height + max_vert_shift + 200)
                         set_data(new_data)
                       }
                     })()
