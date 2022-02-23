@@ -214,6 +214,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .append('textPath')
       .attr('id', d => d.idLink + '_text')
+      .attr('side', link => {
+        if (link.recycling ) {
+          if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            return 'left'
+          } else {
+            return 'right'
+          }
+        } else {
+          if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            return 'left'
+          } else {
+            return 'right'
+          }            
+        }
+      })
       .attr('class', 'link_value')
       .attr('href', d => '#' + d.idLink)
 
@@ -562,7 +577,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select(dragged).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
     d3.select('#tooltip_node' + idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
-
     const error_msg: { [text: string]: string } = {}
     Object.values(links).forEach(
       link => {
@@ -637,6 +651,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
+        if (link.label_on_path) {
+          if (link.recycling ) {
+            if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+              d3.select('#' + link.idLink + '_text').attr('side','left')
+            } else {
+              d3.select('#' + link.idLink + '_text').attr('side','right')
+            }
+          } else {
+            if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+              d3.select('#' + link.idLink + '_text').attr('side','left')
+            } else {
+              d3.select('#' + link.idLink + '_text').attr('side','right')
+            }            
+          }
+        }
 
         if (link.idSource === node.idNode || link.idTarget === node.idNode) {
           // Redraw link
@@ -810,21 +839,24 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return
       }
     } else if (handle_type === 'vert') {
+      const vert_shift = d.vert_shift ? d.vert_shift : 0
       //if (d.vert_shift + event.dy > -0.5 * scale(getLinkValue(data,d.idLink)) && new_y < height - scale(getLinkValue(data,d.idLink))/2) {
       if (new_y < height - scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.vert_shift += the_event.dy
+        d.vert_shift = vert_shift + the_event.dy
       } else {
         return
       }
     } else if (handle_type === 'left') {
-      if (d.left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.left_horiz_shift += the_event.dx
+      const left_horiz_shift = d.left_horiz_shift ? d.left_horiz_shift : 0
+      if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(getLinkValue(data, d.idLink).value) / 2) {
+        d.left_horiz_shift = left_horiz_shift + the_event.dx
       } else {
         return
       }
     } else if (handle_type === 'right') {
-      if (d.right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.right_horiz_shift += the_event.dx
+      const right_horiz_shift = d.right_horiz_shift ? d.right_horiz_shift : 0
+      if (right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(getLinkValue(data, d.idLink).value) / 2) {
+        d.right_horiz_shift = right_horiz_shift + the_event.dx
       } else {
         return
       }
@@ -1400,11 +1432,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hh' && !link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        data.show_structure ? 0.5 : link.left_horiz_shift, 
-        data.show_structure ? 0.5 : link.right_horiz_shift,
+        data.show_structure ? 0.5 : left_horiz_shift, 
+        data.show_structure ? 0.5 : right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         false,
         data.show_structure ? false : link.curved,
@@ -1412,10 +1446,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'vv' && !link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift,
+        left_horiz_shift, right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         true,
         data.show_structure ? false : link.curved,
@@ -1423,11 +1459,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
+      const vert_shift = link.vert_shift ? link.vert_shift : 0
       return SankeyShapes.bezier_link_classic_recycling(
         link.idSource, link.idTarget,
         link_value,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift, link.vert_shift,
+        left_horiz_shift, right_horiz_shift, vert_shift,
         data.show_structure ? false : link.curved,
         link.orientation === 'vv',
         error_msg, scale
@@ -1605,6 +1644,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             data.tags_catalog,
             this, event
           )
+          //set_data({...data})
           try {
             localStorage.setItem('data', JSON.stringify(data))
           } catch (e) {
@@ -2235,7 +2275,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = (d3.select('#svg') as any)
     if (data.static_sankey) {
-      svgSankey.attr('viewBox', [0, 0, data.width, height])
+      svgSankey.attr('viewBox', [0, 0, data.width, data.height])
     }
     svgSankey
       .call(d3.zoom()
@@ -2367,7 +2407,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
         <div id="svg-container" style={{ 'position': position}}>
-          <svg id='svg' style={{  'margin': '20px','height': height, 'width': width ,'border': '2px solid #78c2ad'  }}>
+          <svg id='svg' style={{  'margin': '20px','height': data.height, 'width': width ,'border': '2px solid #78c2ad'  }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
