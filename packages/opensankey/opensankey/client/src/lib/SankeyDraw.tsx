@@ -218,15 +218,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (link.recycling ) {
           if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
             return 'left'
-          } else {
+          } else if (link.label_position === 'middle' && link.orientation === 'hh') {
             return 'right'
           }
+          return 'left'
         } else {
           if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
             return 'left'
-          } else {
+          } else if (link.orientation === 'hh' ) {
             return 'right'
-          }            
+          }
+          return 'left'      
         }
       })
       .attr('class', 'link_value')
@@ -655,13 +657,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (link.recycling ) {
             if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
               d3.select('#' + link.idLink + '_text').attr('side','left')
-            } else {
+            } else if (link.label_position === 'middle' && link.orientation === 'hh') {
               d3.select('#' + link.idLink + '_text').attr('side','right')
             }
           } else {
             if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
               d3.select('#' + link.idLink + '_text').attr('side','left')
-            } else {
+            } else if (link.label_position === 'middle' && link.orientation === 'hh') {
               d3.select('#' + link.idLink + '_text').attr('side','right')
             }            
           }
