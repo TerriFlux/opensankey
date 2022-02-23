@@ -260,9 +260,14 @@ export const bezier_link_classic_recycling = (
   }
 
   const curved_sign = curved ? 1 : 0
-
-  const [x1, y1] = [x0 + factor * default_horiz_shift + factor * right_horiz_shift, y0]
-  const [x16, y16] = [x17 - factor * default_horiz_shift + factor * left_horiz_shift, y17]
+  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift 
+  const y1 = y0
+  let x16 = x17 - factor * default_horiz_shift + factor * left_horiz_shift
+  const y16 = y17
+  if (origin[0] < destination[0] ) {
+    x1 = x0 + factor * default_horiz_shift - factor * left_horiz_shift
+    x16 = x17 - factor * default_horiz_shift - factor * right_horiz_shift
+  }
   const [x14, y14] = [x16 - factor * curved_sign * scale(link_value), y17] // controle b�zier
   const [x8, y8] = [x1, Math.max(y0, y17) + scale(2 * link_value) + vert_shift]
   const [x2, y2] = [x1 + factor * curved_sign * scale(link_value), y0] // controle b�zier

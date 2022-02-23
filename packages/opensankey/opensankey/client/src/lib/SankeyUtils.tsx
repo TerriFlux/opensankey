@@ -344,6 +344,8 @@ export const default_sankey_data = (): SankeyData => {
     v_space: 100,
     legend_position: [0, 100],
 
+    show_structure: false,
+
     left_shift: 0.4,
     right_shift: 0.5,
     max_shift: 0.2,
@@ -539,7 +541,9 @@ export const setSelectedTags = (
       node.node_visible = true
     }
   })
-  hideNullFluxNodes(sankey_data)
+  if ( !sankey_data.show_structure) {
+    hideNullFluxNodes(sankey_data)
+  }
 }
 
 const downloadExamples = (
@@ -600,6 +604,14 @@ export const uploadExemple = (
       // data.left_shift = 0.40
       // data.right_shift = 0.50
       example_callback(data)
+      let height = 0
+      Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+      let min_height = 2000
+      Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+      let max_vert_shift = 0
+      Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+  
+      data.height = Math.max(500, height + max_vert_shift + 200)
       set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)
       // } catch (err) {
