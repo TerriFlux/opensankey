@@ -143,6 +143,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return display
       })
       .attr('pointer-events', 'auto')
+      .attr('stroke-dasharray', d => {
+        const display_value = getLinkValue(data,d.idLink).display_value
+        if ( display_value.includes('*') && !data.show_structure ) {
+          return '40, 5'
+        } else {
+          return ''
+        }
+      })
 
     const paths = gg_links.append('path')
     if (!static_sankey) {
@@ -206,6 +214,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .append('textPath')
       .attr('id', d => d.idLink + '_text')
+      .attr('side', link => {
+        if (link.recycling ) {
+          if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            return 'left'
+          } else {
+            return 'right'
+          }
+        } else {
+          if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            return 'left'
+          } else {
+            return 'right'
+          }            
+        }
+      })
       .attr('class', 'link_value')
       .attr('href', d => '#' + d.idLink)
 
@@ -485,7 +508,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const new_x = old_x + event.dx
     const new_y = old_y + event.dy
 
-    if (new_x < 0 || new_x > (width - default_node_size) || new_y < 0 || new_y > (height - default_node_size)) {
+    if (new_x < 0 || new_x > (width - default_node_size) || new_y < 0 || new_y > (data.height - default_node_size)) {
       return
     }
 
@@ -554,7 +577,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select(dragged).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
     d3.select('#tooltip_node' + idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
-
     const error_msg: { [text: string]: string } = {}
     Object.values(links).forEach(
       link => {
@@ -629,6 +651,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
+        if (link.label_on_path) {
+          if (link.recycling ) {
+            if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+              d3.select('#' + link.idLink + '_text').attr('side','left')
+            } else {
+              d3.select('#' + link.idLink + '_text').attr('side','right')
+            }
+          } else {
+            if ( data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+              d3.select('#' + link.idLink + '_text').attr('side','left')
+            } else {
+              d3.select('#' + link.idLink + '_text').attr('side','right')
+            }            
+          }
+        }
 
         if (link.idSource === node.idNode || link.idTarget === node.idNode) {
           // Redraw link
@@ -713,7 +750,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
       const number_of_links = node.outputLinksId.length
       const value = getLinkValue(data, idLink).value
-      if (links[idLink].orientation === 'hh') {
+      if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
           swap(node.outputLinksId, source_order, source_order + 1)
         }
@@ -795,28 +832,37 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (u_center_new >= 0 && u_center_new <= 1) {
         if (handle_type === 'left') {
           d.left_horiz_shift = u_center_new
+          if ( d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift ) {
+            d.right_horiz_shift = d.left_horiz_shift
+          }
         } else {
           d.right_horiz_shift = u_center_new
+          if ( d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift ) {
+            d.left_horiz_shift = d.right_horiz_shift
+          }
         }
       } else {
         return
       }
     } else if (handle_type === 'vert') {
+      const vert_shift = d.vert_shift ? d.vert_shift : 0
       //if (d.vert_shift + event.dy > -0.5 * scale(getLinkValue(data,d.idLink)) && new_y < height - scale(getLinkValue(data,d.idLink))/2) {
-      if (new_y < height - scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.vert_shift += the_event.dy
+      if (new_y < data.height - scale(getLinkValue(data, d.idLink).value) / 2) {
+        d.vert_shift = vert_shift + the_event.dy
       } else {
         return
       }
     } else if (handle_type === 'left') {
-      if (d.left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.left_horiz_shift += the_event.dx
+      const left_horiz_shift = d.left_horiz_shift ? d.left_horiz_shift : 0
+      if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(getLinkValue(data, d.idLink).value) / 2) {
+        d.left_horiz_shift = left_horiz_shift + the_event.dx
       } else {
         return
       }
     } else if (handle_type === 'right') {
-      if (d.right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.right_horiz_shift += the_event.dx
+      const right_horiz_shift = d.right_horiz_shift ? d.right_horiz_shift : 0
+      if (right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(getLinkValue(data, d.idLink).value) / 2) {
+        d.right_horiz_shift = right_horiz_shift + the_event.dx
       } else {
         return
       }
@@ -1040,7 +1086,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
-    if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) {
+    if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
       // Hauteur des noeuds
       node_size_s_height = Math.max(
         inv_scale(40), total_offset_height_left, total_offset_height_right
@@ -1088,7 +1134,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(3), t_total_offset_height_left, t_total_offset_height_right
     )
     // Hauteur des noeuds
-    if (res === [0, 0, 0, 0]) {
+    if (res === [0, 0, 0, 0] || data.show_structure) {
       node_size_s_height = Math.max(
         inv_scale(40), s_total_offset_height_left, s_total_offset_height_right
       )
@@ -1150,12 +1196,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const node_size_t_width = Math.max(
       inv_scale(default_node_size), t_total_offset_width_bottom, t_total_offset_width_top
     )
-    const node_size_s_height = Math.max(
-      inv_scale(3), s_total_offset_height_left, s_total_offset_height_right
-    )
-    const node_size_t_height = Math.max(
-      inv_scale(3), t_total_offset_height_left, t_total_offset_height_right
-    )
+    let node_size_s_height = inv_scale(default_node_size)
+    let node_size_t_height = inv_scale(default_node_size)
+    if ( !data.show_structure) {
+      node_size_s_height = Math.max(
+        inv_scale(3), s_total_offset_height_left, s_total_offset_height_right
+      )
+      node_size_t_height = Math.max(
+        inv_scale(3), t_total_offset_height_left, t_total_offset_height_right
+      )
+    }
 
     res = compute_total_offsets(source_node, nodes, links, selected_tags, test_link_value, link)
     const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
@@ -1388,34 +1438,42 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hh' && !link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift,
+        data.show_structure ? 0.5 : left_horiz_shift, 
+        data.show_structure ? 0.5 : right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         false,
-        link.curved,
+        data.show_structure ? false : link.curved,
         error_msg
       )
     }
     if (link.orientation === 'vv' && !link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift,
+        left_horiz_shift, right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         true,
-        link.curved,
+        data.show_structure ? false : link.curved,
         error_msg
       )
     }
     if (link.recycling) {
+      const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
+      const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
+      const vert_shift = link.vert_shift ? link.vert_shift : 0
       return SankeyShapes.bezier_link_classic_recycling(
         link.idSource, link.idTarget,
         link_value,
         [xs, ys], [xt, yt],
-        link.left_horiz_shift, link.right_horiz_shift, link.vert_shift,
-        link.curved,
+        left_horiz_shift, right_horiz_shift, vert_shift,
+        data.show_structure ? false : link.curved,
         link.orientation === 'vv',
         error_msg, scale
       )
@@ -1448,13 +1506,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!link.vert_shift) {
         link.vert_shift = 0
       }
-      const x_left = xt - default_horiz_shift + link.left_horiz_shift - scale(getLinkValue(data, link.idLink).value) // x14 
-      const x_right = xs + default_horiz_shift + link.right_horiz_shift + scale(getLinkValue(data, link.idLink).value) // x2 
-      const y_vert = Math.max(ys, yt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
-      const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-      const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-      const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-      return [vert, left, right]
+      if (xt < xs) {
+        const x_left = xt - default_horiz_shift + link.left_horiz_shift // x14 
+        const x_right = xs + default_horiz_shift + link.right_horiz_shift  // x2 
+        const y_vert = Math.max(ys, yt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
+        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
+        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
+        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
+        return [vert, left, right]
+      } else {
+        const x_right = xt + default_horiz_shift + link.right_horiz_shift  // x14 
+        const x_left = xs - default_horiz_shift + link.left_horiz_shift // x2 
+        const y_vert = Math.max(ys, yt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
+        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
+        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
+        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
+        return [vert, left, right]        
+      }
     } else if (link.orientation === 'vv' && link.recycling) {
       // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
       if (!link.left_horiz_shift) {
@@ -1592,6 +1660,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             data.tags_catalog,
             this, event
           )
+          //set_data({...data})
           try {
             localStorage.setItem('data', JSON.stringify(data))
           } catch (e) {
@@ -2211,18 +2280,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //d3.selectAll('.tmp').remove()
     removeAnimate()
 
-    let height = 0
-    Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-    let min_height = 2000
-    Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-    let max_vert_shift = 0
-    Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-    height = Math.max(500, height + max_vert_shift + 200)
-
     const svgSankey = (d3.select('#svg') as any)
     if (data.static_sankey) {
-      svgSankey.attr('viewBox', [0, 0, data.width, height])
+      svgSankey.attr('viewBox', [0, 0, data.width, data.height])
     }
     svgSankey
       .call(d3.zoom()
@@ -2342,19 +2402,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       localStorage.clear()
     }
   })
-  let height = 0
-  Object.values(data.nodes).forEach(n => height = n.y && n.node_visible ? Math.max(height, n.y) : height)
-  let max_vert_shift = 0
-  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-  height = Math.max(500, height + max_vert_shift + 200)
   const width = data.static_sankey ? '100%' : data.width
   const position = data.static_sankey ? 'relative' : 'absolute'
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
         <div id="svg-container" style={{ 'position': position}}>
-          <svg id='svg' style={{  'margin': '20px','height': height, 'width': width ,'border': '2px solid #78c2ad'  }}>
+          <svg id='svg' style={{  'margin': '20px','height': data.height, 'width': width ,'border': '2px solid #78c2ad'  }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
