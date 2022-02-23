@@ -300,8 +300,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         selected_link.recycling = evt.target.checked
-                        selected_link.left_horiz_shift = undefined
-                        selected_link.right_horiz_shift = undefined
+                        delete selected_link.left_horiz_shift
+                        delete selected_link.right_horiz_shift
                         set_data({ ...data })
                       }
                     }
