@@ -454,7 +454,8 @@ export const convert_data = (
       if (n.name.includes('(I') && n.outputLinksId.length > 0) {
         import_export = true
         n.node_visible = true
-        n.tags['Exchanges'] = ['import']
+        const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('import'))
+        n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['import']
         //const l = links[n.outputLinksId[0]]
         // if (!l.tags) {
         //   l.tags = {}
@@ -466,7 +467,8 @@ export const convert_data = (
       } else if (n.name.includes('(E')) {
         import_export = true
         n.node_visible = true
-        n.tags['Exchanges'] = ['export']
+        const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('export'))
+        n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['export']
         //const l = links[n.inputLinksId[0]]
         // if (!l.tags) {
         //   l.tags = {}
