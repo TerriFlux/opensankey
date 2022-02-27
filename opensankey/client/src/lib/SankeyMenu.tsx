@@ -448,11 +448,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                         //new_data.version = new_data.version
                         convert_data(new_data)
                         let height = 0
-                        Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                        Object.values(new_data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
                         let min_height = 2000
-                        Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                        Object.values(new_data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
                         let max_vert_shift = 0
-                        Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                        Object.values(new_data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
                     
                         new_data.height = Math.max(500, height + max_vert_shift + 200)
                         set_data(new_data)
