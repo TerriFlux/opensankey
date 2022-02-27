@@ -418,7 +418,7 @@ def save_simple_excel(
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys())
     nb_vals = 1
     for dataTag in sankey_data['dataTags']:
-        if len(sankey_data['dataTags'][dataTag]['tags']) != 0:
+        if len(sankey_data['dataTags'][dataTag]['tags']) != 0 and sankey_data['dataTags'][dataTag]['banner'] != 'display':
             nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
     links = [ [""] * nb_cols_nodes for i in range(len(sankey_data['links'].keys())*nb_vals+1) ]
     links[0] = flux_cols + list(sankey_data['dataTags'])
@@ -428,13 +428,43 @@ def save_simple_excel(
         try:
             row = add_links(sankey_data, flux_cols, links, row, link, val,0)      
         except Exception as expt:
-            print( expt)  
+            print( expt)
+
+    products = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'product']
+    sectors  = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'sector']
+    nb_products = len(products)
+    nb_sectors = len(sectors)
+
+    ter = {
+        'use': [[None for x in range(nb_sectors + 1)] for y in range(nb_products + 1)],
+        'supply': [[None for x in range(nb_sectors + 1)] for y in range(nb_products + 1)]
+    }
+
+    for i in range(0, nb_products):
+        ter['supply'][i+1][0] = products[i]
+        ter['use'][i+1][0] = products[i]
+    for j in range(0, nb_sectors):
+        ter['supply'][0][j+1] = sectors[j]
+        ter['use'][0][j+1] = sectors[j]
+    for row in range(1,len(links)):
+        origin      = links[row][flux_cols.index('Origin')]
+        destination = links[row][flux_cols.index('Destination')]
+        if origin in products:
+            product_idx = products.index(origin)
+            sector_idx = sectors.index(destination)
+            ter['use'][product_idx+1][sector_idx+1] = 1
+        else:
+            product_idx = products.index(destination)
+            sector_idx = sectors.index(origin)
+            ter['supply'][product_idx+1][sector_idx+1] = 1           
+
     mfa_output = {
         'nodes' : nodes,
         'tags'  : tags,
-        'flux_data'  : links
+        'flux_data'  : links,
+        'ter_base'   : ter
     }
-    return mfa_output
+    return mfa_output,products,sectors
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     if ( 'value' in val):
