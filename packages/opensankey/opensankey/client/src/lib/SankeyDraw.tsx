@@ -1052,7 +1052,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       !link.label_on_path || link.label_on_path === undefined) {
       (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
-        .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
+        .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label : y_pos + default_handle_size)
         .text(d => link_text(data, d, link_value, display_style))
         .attr('visibility', link.label_visible ? 'visible' : 'hidden')
     } else {
