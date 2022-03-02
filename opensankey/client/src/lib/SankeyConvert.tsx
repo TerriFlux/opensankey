@@ -922,7 +922,7 @@ export const convert_data = (
     delete (data as ConvertSankeyData).sankey_type
   }
 
-  if (display_style.filter_label === undefined || display_style.filter_label === 0) {
+  if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10
   }
 
