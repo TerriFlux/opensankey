@@ -433,7 +433,15 @@ def save_simple_excel(
     products = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'product']
     sectors  = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'sector']
     nb_products = len(products)
-    nb_sectors = len(sectors)
+    nb_sectors  = len(sectors)
+
+    if nb_products == 0 or nb_sectors == 0:
+        mfa_output = {
+            'nodes' : nodes,
+            'tags'  : tags,
+            'flux_data'  : links,
+        }
+        return mfa_output,products,sectors
 
     ter = {
         'use': [[None for x in range(nb_sectors + 1)] for y in range(nb_products + 1)],
@@ -457,13 +465,13 @@ def save_simple_excel(
             product_idx = products.index(destination)
             sector_idx = sectors.index(origin)
             ter['supply'][product_idx+1][sector_idx+1] = 1           
-
     mfa_output = {
         'nodes' : nodes,
         'tags'  : tags,
         'flux_data'  : links,
         'ter_base'   : ter
     }
+
     return mfa_output,products,sectors
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
