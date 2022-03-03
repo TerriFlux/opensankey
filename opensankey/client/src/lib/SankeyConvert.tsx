@@ -491,6 +491,10 @@ export const convert_data = (
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
       }
+      if (!n.label_box_width) {
+        n.label_box_width = 110      
+      }
+      
       
     }
   )
