@@ -128,6 +128,12 @@ export const nodeTooltipsContent = (
   const display_links = data.links
 
   let t =  '<p style=\'text-align: center;margin-bottom:0px\' ><b>'  + n.name.split('\\n').join(' ') + '</b></p>'
+
+  if (n.tooltip_text) {
+    //t += '<p><b>Définition'+ '</b></p>' 
+    t += '<p>'+n.tooltip_text+ '</p>' 
+  }
+
   let total=0
   if ( n.inputLinksId.length > 0 ) {
     for (let i=0;i<n.inputLinksId.length;i++) {
