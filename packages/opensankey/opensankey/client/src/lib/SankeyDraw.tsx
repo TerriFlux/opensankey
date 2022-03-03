@@ -1895,23 +1895,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d.type === 'product' && display_style.product_uppercase
         ) {
           if (d.show_value) {
-            return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo').toUpperCase() + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
+            return d.name.split(' - ')[0].replace('-', ' ').toUpperCase() + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
           } else {
-            return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo').toUpperCase()
+            return d.name.split(' - ')[0].replace('-', ' ').toUpperCase()
           }
         } else {
           if (d.show_value) {
-            return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo') + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
+            return d.name.split(' - ')[0].replace('-', ' ') + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
           } else {
-            return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo')
+            return d.name.split(' - ')[0].replace('-', ' ')
           }
         }
       })
       .each(d => {
-        let width = 110
-        if (d.name.split(' - ').length === 3) {
-          width = 250
-        }
+        const width = d.label_box_width
+        // if (d.name.split(' - ').length === 3) {
+        //   width = 250
+        // }
         const wrap = textwrap()
           .bounds({ height: 100, width: width })
           .method('tspans')

@@ -383,6 +383,7 @@ export const default_node = (
     node_visible: true,
     shape_visible: true,
     label_visible: true,
+    label_box_width: 110,
     color: '#a9a9a9',
     nodeParameter: 'general',
     position: 'absolute',

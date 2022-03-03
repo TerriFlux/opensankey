@@ -206,6 +206,21 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   />
                 </Col>
               </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel>Largeur label</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Control
+                    type='text'
+                    value={node.label_box_width}
+                    onChange={evt => {
+                      node.label_box_width = +evt.target.value
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
             </Form>
           </Tab>}
           {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
