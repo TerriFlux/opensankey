@@ -897,7 +897,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const target_x_max = target_x_min + parseInt(d3.select('#' + target_node.idNode).attr('width'))
     const target_y_min = target_node.y
     const target_y_max = target_y_min + parseInt(d3.select('#' + target_node.idNode).attr('height'))
-    const tolerance = 3 * default_node_size
+    const tolerance = 100
 
     if ((link.orientation === 'hh' || link.orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
       return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }
