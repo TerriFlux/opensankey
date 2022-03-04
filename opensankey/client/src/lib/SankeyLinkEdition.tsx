@@ -59,23 +59,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
         <Tabs defaultActiveKey="flux_data" id="settings-layout">
           <Tab eventKey="flux_data" title="Données">
             <Form >
-              {/* <Row >
-                <Col>
-                  <FormLabel>Affichage</FormLabel>
-                </Col>
-                <Col>
-                  <Form.Control
-                    type='text'
-                    value={selected_link.display_value[value_index]}
-                    onChange={
-                      (evt) => {
-                        selected_link.display_value[value_index] = evt.target.value
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-              </Row> */}
+              
 
               {
                 //Définition des valeurs selon les paramètre dataTags
@@ -602,51 +586,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   </Form.Select>
                 </Col>
               </Form.Group>
-              {/* <Form.Group as={Row} >
-                <Table striped bordered hover className='link_tags_affiliation'>
-                  <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Appartenance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tags_visible && tags_group_key != '' ? Object.entries(dataTags[tags_group_key].tags).map(
-                      tags => {
-                        const link_tags = selected_link.tags[tags_group_key]
-                        const checked = link_tags ? link_tags.includes(tags[0]) : true
-                        return (
-                          <tr key={tags[0]}>
-                            <td><FormLabel>{tags[1].name}</FormLabel></td>
-                            <td>
-                              <FormCheck
-                                name={'element_visible' + tags[0]}
-                                checked={checked}
-                                id={tags[0]}
-                                type='checkbox'
-                                onChange={
-                                  (evt: React.ChangeEvent) => {
-                                    const new_nb_element = evt.target as HTMLInputElement
-                                    const tag_key = new_nb_element.id
-                                    const visible = new_nb_element.checked
-                                    if (visible) {
-                                      if (!selected_link.tags[tags_group_key]) {
-                                        selected_link.tags[tags_group_key] = []
-                                      }
-                                      selected_link.tags[tags_group_key].push(tag_key)
-                                    } else {
-                                      selected_link.tags[tags_group_key].splice(selected_link.tags[tags_group_key].indexOf(tag_key))
-                                    }
-                                    set_data({ ...data })
-                                  }
-                                } />
-                            </td>
-                          </tr>
-                        )
-                      }) : (<></>)}
-                  </tbody>
-                </Table>
-              </Form.Group> */}
+              
             </Tab>) : (<></>)}
           <Tab eventKey="flux_tooltip" title="Tooltip">
             <Form >
