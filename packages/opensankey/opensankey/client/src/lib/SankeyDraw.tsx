@@ -2292,7 +2292,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // if (!event.ctrlKey) {
           //   set_data({ ...data })
           // }
-          return event.ctrlKey && event.buttons == 0
+          return event.altKey && event.buttons == 0
         })
         .wheelDelta(function wheelDelta(event) { // Permet de regler la vitesse du zoom
           return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002)
@@ -2300,90 +2300,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .on('zoom', function (transform) {
           transform.transform.x = 0
           transform.transform.y = 0
-          d3.select('#svg').attr('transform', transform.transform)
+          d3.select('#g_links').attr('transform', transform.transform)
+          d3.select('#g_nodes').attr('transform', transform.transform)
 
-          // d3.select('#svg-container').style('transform', transform.transform)
-
+          d3.select('#svg').style('width', data.width*transform.transform.k)
+          d3.select('#svg').style('height', data.height*transform.transform.k)
         }))
 
-
-
-
-
-    let mousePosition
-    let offset = [0, 0]
-    let isDown = false
-    const div = document.getElementById('svg-container') as any
-    let old_pos = div.getBoundingClientRect()
-    const div_banner = document.getElementById('react-container') as any
-    const height_banner = div_banner.getBoundingClientRect().height
-    //div.style.position = 'absolute'
-
-    div.addEventListener('mousedown', function (event: any) {
-      isDown = true
-      old_pos = div.getBoundingClientRect()
-      const rect=event.target.getBoundingClientRect()
-      offset = [
-        event.clientX,
-        event.clientY
-      ]
-      
-
-    }, true)
-    document.addEventListener('mouseup', function () {
-      isDown = false
-    }, true)
-    document.addEventListener('mousemove', function (event: any) {
-      if (isDown && event.ctrlKey) {
-        mousePosition = {
-          x: event.clientX,
-          y: event.clientY
-        }
-        const tr=d3.select(div).style('transform')
-        const index=tr.indexOf('scale')
-        const tr_scale=(index!=-1)?tr.substring(index):'' 
-        let val_scale=parseFloat(tr_scale.substring(6,tr_scale.length-1))
-        val_scale=(isNaN(val_scale))?1:val_scale
-
-        // console.log('---------------------------------')
-        // console.log('Offset ',offset)
-        // console.log('oldPos ',old_pos.x,old_pos.y)
-        // console.log('Mouse_Pos: ',mousePosition.x,mousePosition.y)
-        // console.log('transform : ',((mousePosition.x - offset[0]) + old_pos.x))
-        //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
-        //la position de la souris au click avant drag, pos de la souris lors du drag 
-        //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
-        //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
-
-        //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
-        const shift_x = ((mousePosition.x - offset[0]) + old_pos.x/val_scale) 
-        const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
-        // const shift_y = 0
-        // console.log([shift_x,shift_y])
-
-        d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)'+' '+tr_scale)
-      }
-    }, true)
-
-    // const dragHandler = d3.drag()
-    //   .on('drag', function (event) {
-    //     console.log(event.x)
-    //     console.log(this)
-
-    //     d3.select(this)
-    //       .style('transform', 'translate(' + event.x + ',0)')
-    //   })
-    // d3.select('#svg').call(dragHandler())
-
-    // // svgSankey.call(d3.zoom().filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
-    //   if (!event.ctrlKey) {
-    //     set_data({ ...data })
-    //   }
-    //   return event.ctrlKey && event.buttons == 1
-    // }).on('zoom', function (e) {
-    //   svgSankey.attr('transform', e.transform)
-    // })
-    // )
 
 
     update_scale(data.user_scale)
@@ -2391,10 +2314,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
-    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
-    //gg_nodes.attr('cursor', 'zoom-in')
-    const gg_links = d3.select('#g_links').selectAll('.gg_links') as d3.Selection<SVGGElement, SankeyNode & SankeyLink, SVGGElement, SankeyNode & SankeyLink>
-    //gg_links.attr('cursor', 'zoom-in')
+
 
     drawLegend()
 
