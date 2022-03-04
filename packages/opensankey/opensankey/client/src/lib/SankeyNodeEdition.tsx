@@ -211,8 +211,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <FormLabel>Largeur label</FormLabel>
                 </Col>
                 <Col>
-                  <Form.Control
-                    type='text'
+                  <Form.Range
+                    min="0" max="500"
                     value={node.label_box_width}
                     onChange={evt => {
                       node.label_box_width = +evt.target.value
