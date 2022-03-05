@@ -371,7 +371,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   />
                 </Col>
                 <Col>px</Col>
-
               </Form.Group>
               <Form.Group as={Row} >
                 <Col xs={4}>
