@@ -6,11 +6,13 @@ import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu, { ExempleItem,ArtefactsItem } from './SankeyMenu'
+import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Row, Col, Dropdown } from 'react-bootstrap'
 import { getLinkValue } from './SankeyUtils'
+import GoogleFontLoader from 'react-google-font-loader'
+
 let logo = ''
 try {
   logo = require('../css/opensankey.png')
@@ -19,26 +21,27 @@ try {
 }
 
 declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
 
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  exemple_menu:  PropTypes.object.isRequired,
+  exemple_menu: PropTypes.object.isRequired,
   artefacts_menu: PropTypes.object.isRequired
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu,artefacts_menu }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [selected_link, set_selected_link] = useState(start_link)
-  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node())
-  const [radio_selected] = useState<string>('local')
   const [data, set_data] = useState<SankeyData>(sankey_data)
+  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(data))
+  const [multi_selected_node, set_multi_selected_node] = useState([])
+  const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
 
   //Selectionne le premier flux par default si il y en a un 
@@ -48,17 +51,24 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
 
 
   const display_links = data.links
-
+  console.log(data)
   return (
+
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
+      <GoogleFontLoader
+        fonts={data.display_style.font_family.map((d) => {
+          return { 'font': d }
+        })}
+      />
       { !window.SankeyToolsStatic ? (
         <Menu
           data={data}
           set_data={set_data}
           app_name='version beta 0.8'
+
           example_menu={<>
             <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
-            <ExempleItem 
+            <ExempleItem
               exemple_menu={exemple_menu}
               url_prefix=''
               data={data}
@@ -66,7 +76,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
               current_path={''}
             /></>}
           portfolio_menu={<>
-            <ArtefactsItem 
+            <ArtefactsItem
               artefacts_menu={artefacts_menu}
               current_path={''}
             /></>}
@@ -77,6 +87,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           nav_item_active={nav_item_active}
           set_selected_node={set_selected_node}
           selected_node={selected_node}
+          set_multi_selected_node={set_multi_selected_node}
+          multi_selected_node={multi_selected_node}
           set_selected_link={set_selected_link}
           selected_link={selected_link}
           agregation_level={agregation_level}
@@ -101,6 +113,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
               set_data={set_data}
               selected_node={selected_node}
               radio_selected={radio_selected}
+              set_multi_selected_node={set_multi_selected_node}
+              multi_selected_node={multi_selected_node}
             />
           }
           link_edition={
@@ -127,14 +141,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
       ) : (<></>)}
       <Row>
         <Col sm={12} style={{ 'color': 'black' }} >
-          <SankeyEdition
-            data={data}
-            set_data={set_data} />
+
         </Col>
       </Row>
       <SankeyDraw
         data={data}
         set_data={set_data}
+        set_multi_selected_node={set_multi_selected_node}
+        multi_selected_node={multi_selected_node}
         select_node={(n: SankeyNode) => {
           set_selected_node(n)
         }}
@@ -178,16 +192,16 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
             return false
           }
-          let val = ((l.value as unknown) as {[key:string]:SankeyLinkValueDict})
+          let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
           const listKey = [] as string[]
           let missing_key = false
           Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
-            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
             if (selected_tags.length == 0 || missing_key) {
               missing_key = true
-              return 
+              return
             }
-            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+            listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
           })
           if (missing_key) {
             return false
@@ -195,13 +209,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
 
           for (const i in listKey) {
             //const val_dict = (val as unknown) as SankeyLinkValueDict
-            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
+            val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
           }
           const v = (val as unknown) as SankeyLinkValue
           let visible = true
-          Object.keys(v.color_tag).forEach(tag=> {
+          Object.keys(v.color_tag).forEach(tag => {
             const selected_tag = v.color_tag[tag]
-            if ( selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
+            if (selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
               visible = false
             }
           })
@@ -216,12 +230,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           }
           return true
         }}
-        link_color={(l : SankeyLink)=> {
+        link_color={(l: SankeyLink) => {
           if (!l.colormap || l.colormap === '') {
             return l.color
           } else {
-            if (l.colormap in  data.dataTags) {
-              const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
+            if (l.colormap in data.dataTags) {
+              const selected_tag = getLinkValue(data, l.idLink).color_tag[l.colormap]
               if (selected_tag) {
                 return data.dataTags[l.colormap].tags[selected_tag].color
               }
@@ -233,17 +247,17 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
             if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'sector'  && l.colormap in target_node.tags &&  target_node.tags[l.colormap].length === 1) {
-              selected_tag = target_node.tags[l.colormap][0]   
-              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            } else if (target_node.type === 'sector' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
             } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
               selected_tag = source_node.tags[l.colormap][0]
               return data.tags_catalog[l.colormap].tags[selected_tag].color
-            } else if ( target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
-              selected_tag = target_node.tags[l.colormap][0]   
-              return data.tags_catalog[l.colormap].tags[selected_tag].color             
+            } else if (target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
+              selected_tag = target_node.tags[l.colormap][0]
+              return data.tags_catalog[l.colormap].tags[selected_tag].color
             }
-            if ( Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
+            if (Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
               return Object.values(data.tags_catalog[l.colormap].tags)[0].color
             }
             return l.color
@@ -251,26 +265,26 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
         }}
         test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
           const { dataTags } = data
-          let val = ((d.value as unknown) as {[key:string]:SankeyLinkValueDict})
-          const listKey : string[] = [] 
+          let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
+          const listKey: string[] = []
           /* console.log(val)
           console.log(dataTags) */
           let missing_key = false
           Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
-            const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+            const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
             if (selected_tags.length == 0 || missing_key) {
               missing_key = true
-              return 
+              return
             }
-            listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+            listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
           })
           if (missing_key) {
             return {
-              value        : 0,
+              value: 0,
               display_value: 'default',
-              color_tag    : {},
-              extension    : {}          
-            }    
+              color_tag: {},
+              extension: {}
+            }
           }
           // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
           // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
@@ -278,9 +292,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data,exemple_menu
           // })
 
           for (const i in listKey) {
-            val = ((val as unknown) as {[key:string]:SankeyLinkValueDict})[listKey[i]] 
+            val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
           }
-          if ( val === undefined ) {
+          if (val === undefined) {
             return 0
           }
           return ((val as unknown) as SankeyLinkValue).value

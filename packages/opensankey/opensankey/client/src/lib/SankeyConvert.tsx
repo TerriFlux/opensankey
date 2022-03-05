@@ -297,6 +297,10 @@ export const convert_data = (
   if (display_style.filter === undefined) {
     display_style.filter = 0
   }
+  if (display_style.font_family === undefined) {
+    display_style.font_family = ['Arial','Roboto','Cormorant','Cantarell']
+    display_style.font_family_selected = 'Cormorant'
+  }
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
   }
@@ -374,6 +378,25 @@ export const convert_data = (
       const n_convert = (n as unknown) as ConvertSankeyNode
       if (!n.tags) {
         n.tags = {}
+      }
+      if (n.display_style === undefined ) {
+        n.display_style = {
+          font_size: data.display_style.font_size,
+          uppercase: true,
+          bold: true,
+          italic: false,
+          unit: false,
+          filter: 0,
+          filter_label: 0,
+          global_curvature: 0.5,
+          null_flux: false,
+          label_vert:'bas',
+          label_horiz:'milieu',
+          label_box_width:110,
+        }
+      }
+      if (n.node_width === undefined) {
+        n.node_width = data.node_width
       }
       if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')
@@ -456,11 +479,7 @@ export const convert_data = (
         n.node_visible = true
         const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('import'))
         n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['import']
-        //const l = links[n.outputLinksId[0]]
-        // if (!l.tags) {
-        //   l.tags = {}
-        // }
-        //l.tags['Exchanges'] = ['import']
+        
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
@@ -469,11 +488,7 @@ export const convert_data = (
         n.node_visible = true
         const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('export'))
         n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['export']
-        //const l = links[n.inputLinksId[0]]
-        // if (!l.tags) {
-        //   l.tags = {}
-        // }
-        //l.tags['Exchanges'] = ['export']
+       
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
@@ -490,12 +505,7 @@ export const convert_data = (
       }
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
-      }
-      if (!n.label_box_width) {
-        n.label_box_width = 110      
-      }
-      
-      
+      }      
     }
   )
 
@@ -618,9 +628,7 @@ export const convert_data = (
           (l as SankeyLink).orientation = 'hv'
         }
       }
-      // if (!('display_value' in l)) {
-      //   (l as SankeyLink).display_value = ['default']
-      // }
+
       if (!('arrow' in l)) {
         (l as SankeyLink).arrow = true
       }
@@ -630,18 +638,14 @@ export const convert_data = (
       if (!('label_on_path' in l)) {
         (l as SankeyLink).label_on_path = true
       }
-      // if (l_convert.frozen) {
-      //   l.label_position = 'frozen'
-      // }
+
       if ('frozen' in l) {
         delete l_convert.frozen
       }
       if ('link_reverse' in l) {
         delete l_convert.link_reverse
       }
-      // if ( 'tooltip_text' in l_convert ) {
-      //   delete l_convert.tooltip_text
-      // }
+
       if ('display_unit' in l_convert) {
         l_convert.natural_unit = l_convert.display_unit
         delete l_convert.display_unit
@@ -650,12 +654,7 @@ export const convert_data = (
         l_convert.data_value = l_convert.agregated_data_value
         delete l_convert.agregated_data_value
       }
-      // if (!('visible' in l_convert)) {
-      //   l.visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
-      // }
-      // if (!('label_visible' in l_convert)) {
-      //   l.label_visible = (source_node.visible || source_node.label_visible) && (target_node.visible || target_node.label_visible)
-      // }
+   
       if (l_convert.type === 'short_link_arrow') {
         l.curved = false
         l.arrow = true
@@ -724,7 +723,6 @@ export const convert_data = (
     Object.values(links_no_type).forEach(
       (link : any) => {
         links_no_type[link.idLink].value2     = {}
-        //links_no_type[link.idLink].display_value2 = {}
       }
     )
 
