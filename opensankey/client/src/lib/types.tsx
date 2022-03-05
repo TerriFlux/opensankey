@@ -6,10 +6,10 @@ export const SankeyNodePropTypes = {
   name: PropTypes.string.isRequired,
 
   //- level attributes
-  dimensions : PropTypes.objectOf(
+  dimensions: PropTypes.objectOf(
     PropTypes.shape({
-      parent_name : PropTypes.string,
-      level       : PropTypes.number,
+      parent_name: PropTypes.string,
+      level: PropTypes.number,
     }).isRequired
   ).isRequired,
 
@@ -21,14 +21,16 @@ export const SankeyNodePropTypes = {
   // shape_visible and label_visible control the visibility of the element of the node
   shape_visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
-  
+
+  node_width: PropTypes.number.isRequired,
+
   color: PropTypes.string.isRequired,
 
-  nodeParameter:PropTypes.string.isRequired,
-  colorTag:PropTypes.string.isRequired,
+  nodeParameter: PropTypes.string.isRequired,
+  colorTag: PropTypes.string.isRequired,
 
   // geometry
-  position: PropTypes.oneOf(['absolute','relative']).isRequired,
+  position: PropTypes.oneOf(['absolute', 'relative']).isRequired,
   x: PropTypes.number.isRequired,
   y: PropTypes.number.isRequired,
   x_label: PropTypes.number,
@@ -37,28 +39,42 @@ export const SankeyNodePropTypes = {
 
   tooltip_text: PropTypes.string,
 
-  label_box_width: PropTypes.number.isRequired,
-
   // topology
   inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   // semantic
   type: PropTypes.oneOf(['product', 'sector']),
-  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired
+  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
+
+  //display
+  display_style: PropTypes.shape({
+    font_size: PropTypes.number.isRequired,
+    uppercase: PropTypes.bool.isRequired,
+    bold: PropTypes.bool.isRequired,
+    italic: PropTypes.bool.isRequired,
+    unit: PropTypes.bool.isRequired,
+    filter: PropTypes.number.isRequired,
+    filter_label: PropTypes.number.isRequired,
+    global_curvature: PropTypes.number.isRequired,
+    null_flux: PropTypes.bool.isRequired,
+    label_vert:PropTypes.string.isRequired,
+    label_horiz:PropTypes.string.isRequired,
+    label_box_width:PropTypes.number.isRequired
+  }).isRequired,
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
-export const SankeyLinkValueTypes = 
-    {
-      value         : PropTypes.number.isRequired,
-      display_value : PropTypes.string.isRequired,
-      // corresponding to tag_favorite. to be used in conjunction with SankeyLink.tag_favorite
-      //  const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
-      color_tag           : PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
-      // for previous_value, data_value, data_source, data_period, mini, maxi ...
-      extension     : PropTypes.objectOf(PropTypes.string.isRequired)
-    }
+export const SankeyLinkValueTypes =
+{
+  value: PropTypes.number.isRequired,
+  display_value: PropTypes.string.isRequired,
+  // corresponding to tag_favorite. to be used in conjunction with SankeyLink.tag_favorite
+  //  const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
+  color_tag: PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
+  // for previous_value, data_value, data_source, data_period, mini, maxi ...
+  extension: PropTypes.objectOf(PropTypes.string.isRequired)
+}
 export type SankeyLinkValue = InferProps<typeof SankeyLinkValueTypes>
 
 export const SankeyLinkValueDictTypes = PropTypes.objectOf(PropTypes.shape(SankeyLinkValueTypes).isRequired).isRequired
@@ -77,15 +93,15 @@ export const SankeyLinkPropTypes = {
 
   // display_attribute
   label_position: PropTypes.string.isRequired,
-  orthogonal_label_position : PropTypes.string.isRequired,
+  orthogonal_label_position: PropTypes.string.isRequired,
   label_on_path: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
   // Ajout
-  gradient:PropTypes.bool.isRequired,
+  gradient: PropTypes.bool.isRequired,
 
-  value: PropTypes.oneOfType([SankeyLinkValueDictTypes,PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
+  value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
   tooltip_text: PropTypes.string,
 
@@ -94,12 +110,12 @@ export const SankeyLinkPropTypes = {
   y_label: PropTypes.number,
 
   //NEW : Choix du group tag pour changement couleur palette 
-  colormap:PropTypes.string.isRequired,
+  colormap: PropTypes.string.isRequired,
 
-  left_horiz_shift  : PropTypes.number,
-  right_horiz_shift : PropTypes.number,
-  vert_shift        : PropTypes.number,
-  shift_gap         : PropTypes.number.isRequired,
+  left_horiz_shift: PropTypes.number,
+  right_horiz_shift: PropTypes.number,
+  vert_shift: PropTypes.number,
+  shift_gap: PropTypes.number.isRequired,
 
   curvature: PropTypes.number.isRequired,
   curved: PropTypes.bool.isRequired
@@ -111,14 +127,14 @@ export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
   show_legend: PropTypes.bool.isRequired,
-  color_map:  PropTypes.string.isRequired,
-  tags:PropTypes.objectOf(PropTypes.shape({
-    name:PropTypes.string.isRequired,
-    shape:PropTypes.string,
-    color:PropTypes.string,
-    selected:PropTypes.bool.isRequired,
+  color_map: PropTypes.string.isRequired,
+  tags: PropTypes.objectOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    shape: PropTypes.string,
+    color: PropTypes.string,
+    selected: PropTypes.bool.isRequired,
   }).isRequired).isRequired,
-  banner:PropTypes.string.isRequired
+  banner: PropTypes.string.isRequired
 }
 export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 
@@ -141,7 +157,7 @@ export const SankeyDataPropTypes = {
   left_shift: PropTypes.number.isRequired,
   right_shift: PropTypes.number.isRequired,
   max_shift: PropTypes.number.isRequired,
-  legend_position: PropTypes.arrayOf( PropTypes.number.isRequired).isRequired,
+  legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -157,14 +173,16 @@ export const SankeyDataPropTypes = {
     filter: PropTypes.number.isRequired,
     filter_label: PropTypes.number.isRequired,
     global_curvature: PropTypes.number.isRequired,
-    null_flux: PropTypes.bool.isRequired
+    null_flux: PropTypes.bool.isRequired,
+    font_family:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    font_family_selected:PropTypes.string.isRequired
   }).isRequired,
-  
-  static_sankey : PropTypes.bool.isRequired,
 
-  tags_catalog:TagsCatalogPropTypes,
+  static_sankey: PropTypes.bool.isRequired,
 
-  dataTags:TagsCatalogPropTypes
+  tags_catalog: TagsCatalogPropTypes,
+
+  dataTags: TagsCatalogPropTypes
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
