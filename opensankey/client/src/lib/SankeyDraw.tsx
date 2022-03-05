@@ -2434,6 +2434,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#g_links').attr('transform', transform.transform)
           d3.select('#g_nodes').attr('transform', transform.transform)
 
+          d3.select('#svg').style('width', data.width*transform.transform.k)
+          d3.select('#svg').style('height', data.height*transform.transform.k)
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
@@ -2456,7 +2458,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //div.style.position = 'absolute'
 
     div.addEventListener('mousedown', function (event: any) {
-      if (event.ctrlKey) {
+      if (event.altKey) {
         isDown = true
         old_pos = div.getBoundingClientRect()
         const rect = event.target.getBoundingClientRect()
@@ -2473,7 +2475,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       isDown = false
     }, true)
     document.addEventListener('mousemove', function (event: any) {
-      if (isDown && event.ctrlKey) {
+      if (isDown && event.altKey) {
 
         mousePosition = {
           x: event.clientX,
@@ -2496,7 +2498,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
 
 
-        d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+        d3.select('#g_links').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+        d3.select('#g_nodes').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
       }
     }, true)
 

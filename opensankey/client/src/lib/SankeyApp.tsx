@@ -39,7 +39,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [selected_link, set_selected_link] = useState(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
-  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(data))
+  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
   const [multi_selected_node, set_multi_selected_node] = useState([])
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
@@ -141,7 +141,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       ) : (<></>)}
       <Row>
         <Col sm={12} style={{ 'color': 'black' }} >
-
+          <SankeyEdition
+          data={data}
+          set_data={set_data} />
         </Col>
       </Row>
       <SankeyDraw
