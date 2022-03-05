@@ -2026,16 +2026,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .each(d => {
-        const width = d.label_box_width
-        // if (d.name.split(' - ').length === 3) {
-        //   width = 250
-        // }
         const wrap = textwrap()
           .bounds({ height: 100, width: (d.display_style.label_box_width!=0)?d.display_style.label_box_width:110 })
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
-
 
         d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx',0).attr('x',()=>{
           if(d.display_style.label_horiz=='milieu'){

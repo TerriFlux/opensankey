@@ -297,6 +297,10 @@ export const convert_data = (
   if (display_style.filter === undefined) {
     display_style.filter = 0
   }
+  if (display_style.font_family === undefined) {
+    display_style.font_family = ['Arial','Roboto','Cormorant','Cantarell']
+    display_style.font_family_selected = 'Cormorant'
+  }
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
   }
@@ -374,6 +378,25 @@ export const convert_data = (
       const n_convert = (n as unknown) as ConvertSankeyNode
       if (!n.tags) {
         n.tags = {}
+      }
+      if (n.display_style === undefined ) {
+        n.display_style = {
+          font_size: data.display_style.font_size,
+          uppercase: true,
+          bold: true,
+          italic: false,
+          unit: false,
+          filter: 0,
+          filter_label: 0,
+          global_curvature: 0.5,
+          null_flux: false,
+          label_vert:'bas',
+          label_horiz:'milieu',
+          label_box_width:110,
+        }
+      }
+      if (n.node_width === undefined) {
+        n.node_width = data.node_width
       }
       if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')
@@ -482,12 +505,7 @@ export const convert_data = (
       }
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
-      }
-      if (!n.label_box_width) {
-        n.label_box_width = 110      
-      }
-      
-      
+      }      
     }
   )
 
