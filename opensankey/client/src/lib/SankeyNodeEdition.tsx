@@ -371,7 +371,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   />
                 </Col>
                 <Col>px</Col>
-
               </Form.Group>
               <Form.Group as={Row} >
                 <Col xs={4}>
@@ -542,21 +541,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         set_data({ ...data })
                       }
                     }
-                  />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row} >
-                <Col>
-                  <FormLabel>Largeur label</FormLabel>
-                </Col>
-                <Col>
-                  <Form.Range
-                    min="0" max="500"
-                    value={node.label_box_width}
-                    onChange={evt => {
-                      node.label_box_width = +evt.target.value
-                      set_data({ ...data })
-                    }}
                   />
                 </Col>
               </Form.Group>

@@ -2,7 +2,6 @@ import React, { FunctionComponent, useState } from 'react'
 import { Row, Col, Form, FormCheck, FormLabel, FormControl } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import DropdownMultiselect from 'react-multiselect-dropdown-bootstrap'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
 const SankeyEditionPropTypes = {
@@ -81,8 +80,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
                 handleOnChange={(selected: string[]) => { handleMultiDropdown(selected, tags_group) }} />
                  */}
               <MultiSelect
-                valueRenderer={(selected, _options) => {
-                  return selected.length? selected.map(({ label }) => label+', '): 'Aucun tag sélectionné'
+                valueRenderer={(selected : any, _options :any) => {
+                  return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
                 }}
                 labelledBy={'hello'}
                 // hasSelectAll={false}

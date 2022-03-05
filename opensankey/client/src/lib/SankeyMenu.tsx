@@ -9,7 +9,6 @@ import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus } from 'react-icons/fa'
-import DropdownMultiselect from 'react-multiselect-dropdown-bootstrap'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
@@ -383,8 +382,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
         <MultiSelect
-          valueRenderer={(selected, _options) => {
-            return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun noeud sélectionné'
+          valueRenderer={(selected :any, _options:any) => {
+            return selected.length ? selected.map(({ label }:any) => label + ', ') : 'Aucun noeud sélectionné'
           }}
           options={INITIAL_OPTIONS}
           value={selected}

@@ -39,8 +39,6 @@ export const SankeyNodePropTypes = {
 
   tooltip_text: PropTypes.string,
 
-  label_box_width: PropTypes.number.isRequired,
-
   // topology
   inputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
