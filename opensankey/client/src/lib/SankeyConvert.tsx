@@ -299,7 +299,7 @@ export const convert_data = (
   }
   if (display_style.font_family === undefined) {
     display_style.font_family = ['Arial','Roboto','Cormorant','Cantarell']
-    display_style.font_family_selected = 'Cormorant'
+    display_style.font_family_selected = 'Arial'
   }
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
@@ -382,16 +382,16 @@ export const convert_data = (
       if (n.display_style === undefined ) {
         n.display_style = {
           font_size: data.display_style.font_size,
-          uppercase: true,
-          bold: true,
-          italic: false,
+          uppercase: n.type === 'product' ? false : true,
+          bold: n.type === 'product' ? false : true,
+          italic: n.type === 'product' ? true : false,
           unit: false,
           filter: 0,
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
           label_vert:'bas',
-          label_horiz:'milieu',
+          label_horiz:'gauche',
           label_box_width:110,
         }
       }

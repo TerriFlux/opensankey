@@ -1042,7 +1042,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(3), total_offset_height_left, total_offset_height_right
     )
     let node_size_s_width = Math.max(
-      inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
+      inv_scale( n.node_width), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
@@ -1055,8 +1055,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    // d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
-    d3.select('#' + n.idNode).attr('width', n.node_width)
+    d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
+    //d3.select('#' + n.idNode).attr('width', n.node_width)
     d3.select('#' + n.idNode).attr('height', scale(node_size_s_height))
 
     if (n.type === 'product') {
@@ -1089,10 +1089,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_height = Math.max(
-      inv_scale(3), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale(source_node.node_width), s_total_offset_height_left, s_total_offset_height_right
     )
     let node_size_t_height = Math.max(
-      inv_scale(3), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale(target_node.node_width), t_total_offset_height_left, t_total_offset_height_right
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
@@ -1933,8 +1933,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .classed('node_text', true)
       .attr('id', n => n.idNode + '_text')
       .attr('x', (n) => {
+        if ( n.x_label) {
+          return n.x_label
+        }
         if (n.display_style.label_horiz == 'milieu') {
-          return n.x_label ? n.x_label : 0
+          return 0
         } else if (n.display_style.label_horiz == 'gauche') {
           return 0
         } else if (n.display_style.label_horiz == 'droite') {
@@ -1946,6 +1949,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('y', n => {
         setNodeHeight(n, display_nodes, display_links, data.tags_catalog)
         const height = +d3.select('#' + n.idNode).attr('height')
+        if ( n.y_label) {
+          return n.y_label
+        }
         if (n.display_style.label_vert == 'milieu') {
           return height / 2
         } else if (n.display_style.label_vert == 'haut') {
@@ -1957,6 +1963,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('text-anchor', n=>{
+        if (n.x_label) {
+          return 'center'
+        }
         if (n.display_style.label_horiz == 'milieu') {
           return 'middle'
         } else if (n.display_style.label_horiz == 'gauche') {
@@ -2031,28 +2040,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
-
-        d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx',0).attr('x',()=>{
-          if(d.display_style.label_horiz=='milieu'){
-            return d.node_width/2
-          }else if(d.display_style.label_horiz=='droite'){
-            return d.node_width
-          }else{
-            return 0
-          }        
-        })
-        //Nombre de tspan dans la balise text
-        const nb_tspan=d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
-        if(d.display_style.label_vert=='milieu'){
-          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY('+(0.25-0.5*(nb_tspan-1))+'em)')
-        }else if(d.display_style.label_vert=='bas'){
-          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY(1em)')
-        }else if(d.display_style.label_vert=='haut'){
-          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY('+(-(nb_tspan-1))+'em)')
-  
+        if ( !d.x_label) {
+          d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx',0).attr('x',()=>{
+            if(d.display_style.label_horiz=='milieu'){
+              return d.node_width/2
+            }else if(d.display_style.label_horiz=='droite'){
+              return d.node_width
+            }else{
+              return 0
+            }        
+          })
+          //Nombre de tspan dans la balise text
+          const nb_tspan=d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
+          if(d.display_style.label_vert=='milieu'){
+            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY('+(0.25-0.5*(nb_tspan-1))+'em)')
+          }else if(d.display_style.label_vert=='bas'){
+            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY(1em)')
+          }else if(d.display_style.label_vert=='haut'){
+            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform','translateY('+(-(nb_tspan-1))+'em)')
+          }
         }
-        
-
       })
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
