@@ -1,4 +1,4 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
+﻿/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
@@ -223,7 +223,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const clickSaveSVG = () => {
-    const svg = window.d3.select('svg')
+    const svg = window.d3.select('#svg-container svg')
     svg.selectAll('.tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     const html = ((svg.attr('title', 'test2')
@@ -235,23 +235,24 @@ const Menu: FunctionComponent<MenuTypes> = (
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
   }
   const clickSavePDF = () => {
-    const svg = window.d3.select('svg')
+    const svg = window.d3.select('#svg-container svg')
     svg.selectAll('.tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
+    svg.attr('viewBox', [0, 0, data.width, data.height])
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
       .node() as HTMLElement).parentNode as HTMLElement).innerHTML
 
     const blob = new Blob([html], { type: 'image/svg+xml' })
-    const data = new FormData()
-    data.append('svg', blob)
+    const form_data = new FormData()
+    form_data.append('svg', blob)
 
     const path = window.location.href
     let url = path + 'sankey/save_pdf'
     const fetchData = {
       method: 'POST',
-      body: data
+      body: form_data
     }
 
     const showFile = (blob: BlobPart) => {
