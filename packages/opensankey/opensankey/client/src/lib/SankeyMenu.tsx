@@ -470,8 +470,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                         let result = String((e.target as FileReader).result)
                         const new_data = default_sankey_data()
                         result = result.split('<br>').join('\\\\n')
-                        Object.assign(new_data, JSON.parse(result))
-                        //new_data.version = new_data.version
+                        const result_data = JSON.parse(result)
+                        Object.assign(new_data, result_data)
+                        if ( result_data.version === undefined ) {
+                          (new_data.version as any) = undefined
+                        }
                         convert_data(new_data)
                         let height = 0
                         Object.values(new_data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)

@@ -474,7 +474,7 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
-      if (n.name.includes('(I') && n.outputLinksId.length > 0) {
+      if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.tags_catalog['Exchanges']) {
         import_export = true
         n.node_visible = true
         const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('import'))
@@ -483,7 +483,7 @@ export const convert_data = (
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
-      } else if (n.name.includes('(E')) {
+      } else if (n.name.includes('(E') && data.tags_catalog['Exchanges']) {
         import_export = true
         n.node_visible = true
         const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('export'))
