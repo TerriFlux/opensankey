@@ -1941,7 +1941,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else if (n.display_style.label_horiz == 'gauche') {
           return 0
         } else if (n.display_style.label_horiz == 'droite') {
-          return n.node_width 
+          return 0//n.node_width 
         } else {
           return 0
         }
@@ -2045,7 +2045,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             if(d.display_style.label_horiz=='milieu'){
               return d.node_width/2
             }else if(d.display_style.label_horiz=='droite'){
-              return d.node_width
+              return 0//d.node_width
             }else{
               return 0
             }        

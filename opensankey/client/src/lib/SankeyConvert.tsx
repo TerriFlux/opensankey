@@ -391,7 +391,7 @@ export const convert_data = (
           global_curvature: 0.5,
           null_flux: false,
           label_vert:'bas',
-          label_horiz:'gauche',
+          label_horiz:'droite',
           label_box_width:110,
         }
       }
