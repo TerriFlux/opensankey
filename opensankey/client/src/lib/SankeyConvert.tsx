@@ -483,7 +483,7 @@ export const convert_data = (
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
-      } else if (n.name.includes('(E') && data.tags_catalog['Exchanges']) {
+      } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.tags_catalog['Exchanges']) {
         import_export = true
         n.node_visible = true
         const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('export'))
