@@ -20,7 +20,7 @@ export const reorganize_node_inputLinksId = (
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
       if (n2.position == 'relative' || n1.position == 'relative') {
-        return -1
+        return 1
       }
       if ( l1.recycling && !l2.recycling) {
         if (l1.vert_shift && l1.vert_shift < 0) {
@@ -73,7 +73,7 @@ export const reorganize_node_outputLinksId = (
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
       if (n2.position == 'relative' || n1.position == 'relative') {
-        return 1
+        return -1
       }
       if ( l1.recycling && !l2.recycling) {
         if (l1.vert_shift && l1.vert_shift < 0) {
