@@ -563,6 +563,7 @@ export const updateLayout = (
     node.x_label = node_layout.x_label
     node.y_label = node_layout.y_label
     node.label_visible = node_layout.label_visible
+    node.display_style = {...node_layout.display_style}
   }
   apply_input_outputLinksId(
     new_layout.nodes,
