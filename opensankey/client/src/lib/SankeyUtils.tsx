@@ -671,6 +671,9 @@ export const hideNullFluxNodes = (
 ) => {
   const { nodes, links } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
+  if (display_nodes.length == 0) {
+    return
+  } 
   display_nodes.forEach(node => {
     let total_input = 0
     if (node.inputLinksId.length > 0) {
