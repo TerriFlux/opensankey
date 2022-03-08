@@ -435,7 +435,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Modal.Footer>
       </Modal>
 
-      <Navbar className='bg-light' expand="xl" style={{ 'display': 'block' }} >
+      <Navbar className='bg-light' fixed='top' expand="xl" style={{ 'display': 'block' }} >
         <Container>
 
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
@@ -583,6 +583,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             {right_menu}
           </Nav>
         </Container>
+        <SankeyEdition
+          data={data}
+          set_data={set_data} />
       </Navbar>
 
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
