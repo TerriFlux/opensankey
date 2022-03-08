@@ -111,8 +111,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .style('position', 'absolute')
     .style('pointer-events', 'none')
 
-  let alt_key_pressed = false
-
   setSelectedTags(data)
 
 
@@ -257,7 +255,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // A voir avec Julien
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
-          if (alt_key_pressed) {
+          if (event.sourceEvent.metaKey) {
             drag_link_text(link, event)
           }
         })
@@ -276,7 +274,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!static_sankey) {
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
-          if (alt_key_pressed) {
+          if (event.sourceEvent.metaKey) {
             drag_link_text(link, event)
           } else {
             const text_id = d3.select(this).attr('id')
@@ -2091,7 +2089,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
         .call(d3.drag<SVGTextElement, SankeyNode>()
           .subject(Object).on('drag', function (event, node) {
-            if (alt_key_pressed === true) {
+            if (event.sourceEvent.metaKey === true) {
               drag_node_text(node, event)
             }
             else {
@@ -2330,22 +2328,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .domain([0, 100])
     .range([0, 100])
 
-  // ALT KEY INTERACTION: MOVE LABELS
-  alt_key_pressed = false
-
-  window.focus()
-  d3.select(window).on('keydown', (event) => {
-    if (event.keyCode === 18) {
-      alt_key_pressed = true
-      window.focus()
-    }
-  })
-  d3.select(window).on('keyup', (event) => {
-    if (event.keyCode === 18) {
-      alt_key_pressed = false
-      window.focus()
-    }
-  })
 
   const drawLegend = () => {
     // Dans le menu tags, les éléments affichés dans la légende sont :
