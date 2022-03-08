@@ -255,7 +255,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // A voir avec Julien
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
-          if (event.sourceEvent.metaKey === true) {
+          if (event.sourceEvent.ctrlKey) {
             drag_link_text(link, event)
           }
         })
@@ -274,7 +274,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!static_sankey) {
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
-          if (event.sourceEvent.metaKey === true) {
+          if (event.sourceEvent.ctrlKey) {
             drag_link_text(link, event)
           } else {
             const text_id = d3.select(this).attr('id')
@@ -2089,7 +2089,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
         .call(d3.drag<SVGTextElement, SankeyNode>()
           .subject(Object).on('drag', function (event, node) {
-            if (event.sourceEvent.metaKey === true) {
+            if (event.sourceEvent.ctrlKey) {
               drag_node_text(node, event)
             }
             else {
