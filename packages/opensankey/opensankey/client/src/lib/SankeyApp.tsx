@@ -139,13 +139,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }
         />
       ) : (<></>)}
-      <Row>
-        <Col sm={12} style={{ 'color': 'black' }} >
-          <SankeyEdition
-            data={data}
-            set_data={set_data} />
-        </Col>
-      </Row>
       <SankeyDraw
         data={data}
         set_data={set_data}
