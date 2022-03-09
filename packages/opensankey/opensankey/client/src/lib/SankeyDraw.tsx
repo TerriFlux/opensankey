@@ -14,7 +14,6 @@ window.d3 = d3
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  select_node: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
 
@@ -24,14 +23,14 @@ const SankeyDrawPropTypes = {
   link_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
-  set_show_nav: PropTypes.func.isRequired,
-  set_nav_item_active: PropTypes.func.isRequired,
+  //set_show_nav: PropTypes.func.isRequired,
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
 
   nodeTooltipsContent: PropTypes.func.isRequired,
   linkTooltipsContent: PropTypes.func.isRequired,
 
-  set_multi_selected_node: PropTypes.func.isRequired,
-  multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes)).isRequired
+  multi_selected_node: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
 }
 
 export const SankeyDrawDefaultProps = {
@@ -47,14 +46,14 @@ export const SankeyDrawDefaultProps = {
   link_visible: (l: SankeyLink) => true,
   //test_link_value: (nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => getLinkValue(data,l).value,
 
-  set_show_nav: () => null,
-  set_nav_item_active: () => null,
+  button_ref: null,
+  accordion_ref: null,
 
   nodeTooltipsContent: () => null,
   linkTooltipsContent: () => null,
 
-  set_multi_selected_node: () => SankeyDrawDefaultProps.set_multi_selected_node,
-  multi_selected_node: []
+  //set_multi_selected_node: () => SankeyDrawDefaultProps.set_multi_selected_node,
+  multi_selected_node: {current : []}
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -64,17 +63,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   link_text,
   test_link_value,
   set_data = SankeyDrawDefaultProps.set_data,
-  select_node = SankeyDrawDefaultProps.select_node,
   node_color = SankeyDrawDefaultProps.node_color,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
   select_link = SankeyDrawDefaultProps.select_link,
   link_color = SankeyDrawDefaultProps.link_color,
   link_visible = SankeyDrawDefaultProps.link_visible,
-  set_show_nav = SankeyDrawDefaultProps.set_show_nav,
-  set_nav_item_active = SankeyDrawDefaultProps.set_nav_item_active,
+  button_ref = SankeyDrawDefaultProps.button_ref,
+  accordion_ref = SankeyDrawDefaultProps.accordion_ref,
   nodeTooltipsContent = SankeyDrawDefaultProps.nodeTooltipsContent,
   linkTooltipsContent = SankeyDrawDefaultProps.linkTooltipsContent,
-  set_multi_selected_node = SankeyDrawDefaultProps.set_multi_selected_node,
   multi_selected_node = SankeyDrawDefaultProps.multi_selected_node,
 
 
@@ -396,9 +393,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     paths.on('click', function (event, d) {
       if (event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        }
         select_link(d)
-        set_nav_item_active('3')
-        set_show_nav(true)
+        if ( accordion_ref && accordion_ref.current) {
+          (accordion_ref.current.children[2] as any).click();
+          (accordion_ref.current.children[3] as any).click()
+        } 
       } else {
         sankeyTooltip.style('opacity', 0)
         if (firing) {
@@ -1654,28 +1656,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
         sankeyTooltip.style('opacity', 0)
 
-        multi_selected_node = multi_selected_node.filter(d => (d != null && d.name != ''))
+        //select_node(d)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        } 
+        multi_selected_node.current = multi_selected_node.current.filter(d => (d != null && d.name != ''))
 
-        if (multi_selected_node.includes(d)) {
-          multi_selected_node.splice(multi_selected_node.indexOf(d), 1)
+        if (multi_selected_node.current.includes(d)) {
+          multi_selected_node.current.splice(multi_selected_node.current.indexOf(d), 1)
         } else {
-          multi_selected_node.push(d)
+          multi_selected_node.current.push(d)
         }
-
-
-        set_multi_selected_node(multi_selected_node)
-
-        select_node(d)
-        set_nav_item_active('2')
-        set_show_nav(true)
+        if ( accordion_ref && accordion_ref.current) {
+          //accordion_ref.current.setAttribute('activeKey','2');
+          (accordion_ref.current.children[2] as any).click();
+          (accordion_ref.current.children[1] as any).click()
+        }
+        //multi_selected_node.current = multi_selected_node              
       }
 
     })
 
     ggg_nodes.on('dblclick', (ev, n) => {
-      set_multi_selected_node([n])
+      multi_selected_node.current = [n]
       if (!static_sankey && ev.ctrlKey) {
-        set_multi_selected_node([n])
+        multi_selected_node.current = [n]
       }
       if (!n.dimensions) {
         return
@@ -1746,7 +1751,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .classed('node_shape', true)
       .attr('width', (d) => {
 
-        const n = multi_selected_node.filter(n => n?.name == d.name)[0]
+        const n = multi_selected_node.current.filter(n => n?.name == d.name)[0]
         const n_size = (n) ? n.node_width : 10
         // return default_node_size
         return n_size
@@ -2082,7 +2087,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (!static_sankey) {
       select.on('click', (event, n) => {
-        select_node(n)
+        multi_selected_node.current = [n]
         deselect_nodes_and_links()
         d3.select('#ggg_' + n.idNode + ' rect').attr('class', 'selected_node')
         return
@@ -2429,13 +2434,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.on('click', function (ev: any) {
       if (!ev.ctrlKey) {
-        set_multi_selected_node([])
+        multi_selected_node.current = []
       }
     })
-
-
-
-
 
     let mousePosition
     let offset = [0, 0]
