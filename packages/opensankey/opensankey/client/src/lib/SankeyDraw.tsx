@@ -191,9 +191,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style', 'font-weight: bold; font-size:' + display_style.font_size + 'px;')
       .attr('fill', l => {
-        if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
-          return 'white'
-        }
+        // if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
+        //   return 'white'
+        // }
         return l.text_color
       })
       .attr('dy', l => {
