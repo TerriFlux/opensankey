@@ -110,14 +110,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               multi_selected_node={multi_selected_node}
             />
           }
-          link_edition={
-            <SankeyLinkEdition
-              show={true}
-              data={data}
-              set_data={set_data}
-              selected_link={selected_link}
-            />
-          }
           settings_edition_tags={
             <SankeySettingsEditionTags
               data={data}
