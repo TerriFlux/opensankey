@@ -12,6 +12,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 
 
 const MenuPropTypes = {
@@ -25,7 +26,6 @@ const MenuPropTypes = {
   settings_edition_tags: PropTypes.element,
   settings_edition_tags_links: PropTypes.element,
   node_edition: PropTypes.element,
-  link_edition: PropTypes.element,
   logo: PropTypes.string.isRequired,
   app_name: PropTypes.string.isRequired,
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
@@ -126,7 +126,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
-    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
+    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition,
     logo, app_name,
     button_ref, accordion_ref,
     // set_selected_node, selected_node,
@@ -824,7 +824,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   
                 </Row> */}
-                {link_edition}
+                <SankeyLinkEdition
+                  show={true}
+                  data={data}
+                  set_data={set_data}
+                  selected_link={selected_link}
+                />
               </Accordion.Body>
             </Accordion.Item>
 

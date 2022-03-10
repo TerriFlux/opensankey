@@ -2509,11 +2509,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const width = data.static_sankey ? '100%' : data.width
   const position = data.static_sankey ? 'relative' : 'absolute'
   const font=data.display_style.font_family_selected
+  const marginTop = data.static_sankey ? '20px' : '200px'
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
         <div id="svg-container" style={{'position':position,'fontFamily':font}}>
-          <svg id='svg' style={{ 'margin': '20px','marginTop':'200px', 'height': data.height, 'width': width, 'border': '2px solid #78c2ad' }}>
+          <svg id='svg' style={{ 'margin': '20px','marginTop':marginTop, 'height': data.height, 'width': width, 'border': '2px solid #78c2ad' }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
