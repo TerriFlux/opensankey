@@ -589,9 +589,11 @@ const Menu: FunctionComponent<MenuTypes> = (
             {right_menu}
           </Nav>
         </Container>
-        <SankeyEdition
-          data={data}
-          set_data={set_data} />
+        { !data.static_sankey ? 
+          (<SankeyEdition
+            data={data}
+            set_data={set_data} />):(<></>)
+        }
       </Navbar>
 
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
