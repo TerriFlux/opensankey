@@ -378,11 +378,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     backdrop: false,
   }
 
+  const INITIAL_OPTIONS = Object.values(data.nodes).map((d) => { return { 'label': d.name, 'value': d.name } })
+  const selected = multi_selected_node.current.map((d) => { return { 'label': d.name, 'value': d.name } })
+
   const dropdownMultiNode = () => {
-
-    const INITIAL_OPTIONS = Object.values(data.nodes).map((d) => { return { 'label': d.name, 'value': d.name } })
-    const selected = multi_selected_node.current.map((d) => { return { 'label': d.name, 'value': d.name } })
-
     const DD = (
       <div id='DD_multi_node'>
 
