@@ -14,7 +14,6 @@ window.d3 = d3
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  select_node: PropTypes.func.isRequired,
   node_color: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
 
@@ -24,14 +23,14 @@ const SankeyDrawPropTypes = {
   link_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
-  set_show_nav: PropTypes.func.isRequired,
-  set_nav_item_active: PropTypes.func.isRequired,
+  //set_show_nav: PropTypes.func.isRequired,
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
 
   nodeTooltipsContent: PropTypes.func.isRequired,
   linkTooltipsContent: PropTypes.func.isRequired,
 
-  set_multi_selected_node: PropTypes.func.isRequired,
-  multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes)).isRequired
+  multi_selected_node: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
 }
 
 export const SankeyDrawDefaultProps = {
@@ -47,14 +46,14 @@ export const SankeyDrawDefaultProps = {
   link_visible: (l: SankeyLink) => true,
   //test_link_value: (nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => getLinkValue(data,l).value,
 
-  set_show_nav: () => null,
-  set_nav_item_active: () => null,
+  button_ref: null,
+  accordion_ref: null,
 
   nodeTooltipsContent: () => null,
   linkTooltipsContent: () => null,
 
-  set_multi_selected_node: () => SankeyDrawDefaultProps.set_multi_selected_node,
-  multi_selected_node: []
+  //set_multi_selected_node: () => SankeyDrawDefaultProps.set_multi_selected_node,
+  multi_selected_node: {current : []}
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -64,17 +63,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   link_text,
   test_link_value,
   set_data = SankeyDrawDefaultProps.set_data,
-  select_node = SankeyDrawDefaultProps.select_node,
   node_color = SankeyDrawDefaultProps.node_color,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
   select_link = SankeyDrawDefaultProps.select_link,
   link_color = SankeyDrawDefaultProps.link_color,
   link_visible = SankeyDrawDefaultProps.link_visible,
-  set_show_nav = SankeyDrawDefaultProps.set_show_nav,
-  set_nav_item_active = SankeyDrawDefaultProps.set_nav_item_active,
+  button_ref = SankeyDrawDefaultProps.button_ref,
+  accordion_ref = SankeyDrawDefaultProps.accordion_ref,
   nodeTooltipsContent = SankeyDrawDefaultProps.nodeTooltipsContent,
   linkTooltipsContent = SankeyDrawDefaultProps.linkTooltipsContent,
-  set_multi_selected_node = SankeyDrawDefaultProps.set_multi_selected_node,
   multi_selected_node = SankeyDrawDefaultProps.multi_selected_node,
 
 
@@ -194,9 +191,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style', 'font-weight: bold; font-size:' + display_style.font_size + 'px;')
       .attr('fill', l => {
-        if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
-          return 'white'
-        }
+        // if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
+        //   return 'white'
+        // }
         return l.text_color
       })
       .attr('dy', l => {
@@ -396,9 +393,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     paths.on('click', function (event, d) {
       if (event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        }
         select_link(d)
-        set_nav_item_active('3')
-        set_show_nav(true)
+        if ( accordion_ref && accordion_ref.current) {
+          (accordion_ref.current.children[2] as any).click();
+          (accordion_ref.current.children[3] as any).click()
+        } 
       } else {
         sankeyTooltip.style('opacity', 0)
         if (firing) {
@@ -1045,12 +1047,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
       // Hauteur des noeuds
-      node_size_s_height = Math.max(
-        inv_scale(40), total_offset_height_left, total_offset_height_right
-      )
-      node_size_s_width = Math.max(
-        inv_scale(40), total_offset_width_top, total_offset_width_bottom
-      )
+      node_size_s_height = inv_scale(40) 
+      node_size_s_width  = inv_scale(40)
     }
 
     d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
@@ -1094,12 +1092,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
-      node_size_s_height = Math.max(
-        inv_scale(40), s_total_offset_height_left, s_total_offset_height_right
-      )
-      node_size_t_height = Math.max(
-        inv_scale(40), t_total_offset_height_left, t_total_offset_height_right
-      )
+      node_size_s_height = inv_scale(40) 
+      node_size_t_height = inv_scale(40) 
     }
     // const node_size_s_width = Math.max(
     //   inv_scale(default_node_size), s_total_offset_width_top, s_total_offset_width_bottom
@@ -1377,9 +1371,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (outputLinksId === undefined || inputLinksId === undefined) {
       return ''
     }
-
-    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
-
+ 
+    const res = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+    const xs  = res[0]
+    const xt = res[2]
+    let [ys,yt] = [res[1],res[3]] 
+    if (data.show_structure) {
+      [ys, yt] = [source_node.y+20,target_node.y+20]
+    }
 
     if (link.orientation === 'hh' || link.orientation === 'vv') {
       add_shift_handles(
@@ -1416,11 +1415,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return SankeyShapes.bezier_link_classic_vv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
-        data.show_structure ? 0.5 : left_horiz_shift,
-        data.show_structure ? 0.5 : right_horiz_shift,
+        left_horiz_shift,
+        right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         false,
-        data.show_structure ? false : link.curved,
+        link.curved,
         error_msg
       )
     }
@@ -1433,7 +1432,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         left_horiz_shift, right_horiz_shift,
         link.curvature !== undefined ? link.curvature : 0.5,
         true,
-        data.show_structure ? false : link.curved,
+        link.curved,
         error_msg
       )
     }
@@ -1654,28 +1653,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // set_selected_node(nodes.filter(f => { return f.name == event.target.value })[0].id)
         sankeyTooltip.style('opacity', 0)
 
-        multi_selected_node = multi_selected_node.filter(d => (d != null && d.name != ''))
+        //select_node(d)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        } 
+        multi_selected_node.current = multi_selected_node.current.filter(d => (d != null && d.name != ''))
 
-        if (multi_selected_node.includes(d)) {
-          multi_selected_node.splice(multi_selected_node.indexOf(d), 1)
+        if (multi_selected_node.current.includes(d)) {
+          multi_selected_node.current.splice(multi_selected_node.current.indexOf(d), 1)
         } else {
-          multi_selected_node.push(d)
+          multi_selected_node.current.push(d)
         }
-
-
-        set_multi_selected_node(multi_selected_node)
-
-        select_node(d)
-        set_nav_item_active('2')
-        set_show_nav(true)
+        if ( accordion_ref && accordion_ref.current) {
+          //accordion_ref.current.setAttribute('activeKey','2');
+          (accordion_ref.current.children[2] as any).click();
+          (accordion_ref.current.children[1] as any).click()
+        }
+        //multi_selected_node.current = multi_selected_node              
       }
 
     })
 
     ggg_nodes.on('dblclick', (ev, n) => {
-      set_multi_selected_node([n])
+      multi_selected_node.current = [n]
       if (!static_sankey && ev.ctrlKey) {
-        set_multi_selected_node([n])
+        multi_selected_node.current = [n]
       }
       if (!n.dimensions) {
         return
@@ -1746,7 +1748,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .classed('node_shape', true)
       .attr('width', (d) => {
 
-        const n = multi_selected_node.filter(n => n?.name == d.name)[0]
+        const n = multi_selected_node.current.filter(n => n?.name == d.name)[0]
         const n_size = (n) ? n.node_width : 10
         // return default_node_size
         return n_size
@@ -2082,7 +2084,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (!static_sankey) {
       select.on('click', (event, n) => {
-        select_node(n)
+        multi_selected_node.current = [n]
         deselect_nodes_and_links()
         d3.select('#ggg_' + n.idNode + ' rect').attr('class', 'selected_node')
         return
@@ -2256,6 +2258,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 yt = +node_y + +d3.select('#' + n.idNode).attr('height') / 2
                 p5 = [xt, yt]
                 is_v = true
+                if (data.show_structure) {
+                  return SankeyShapes.draw_arrow(20, [xt, +node_y+20], 10, 15, true, false)
+                }
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
                 // const prev_c_r = cum_v_right
@@ -2429,13 +2434,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.on('click', function (ev: any) {
       if (!ev.ctrlKey) {
-        set_multi_selected_node([])
+        multi_selected_node.current = []
       }
     })
-
-
-
-
 
     let mousePosition
     let offset = [0, 0]
@@ -2508,11 +2509,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const width = data.static_sankey ? '100%' : data.width
   const position = data.static_sankey ? 'relative' : 'absolute'
   const font=data.display_style.font_family_selected
+  const marginTop = data.static_sankey ? '20px' : '200px'
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id="visualization_div" >
         <div id="svg-container" style={{'position':position,'fontFamily':font}}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': width, 'border': '2px solid #78c2ad' }}>
+          <svg id='svg' style={{ 'margin': '20px','marginTop':marginTop, 'height': data.height, 'width': width, 'border': '2px solid #78c2ad' }}>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
