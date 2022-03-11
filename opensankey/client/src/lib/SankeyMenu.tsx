@@ -290,6 +290,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   //   //setShow(!show_nav)
   // }
   const [checked, setChecked] = useState(false)
+  const [fakeState,setFakeState] = useState(false)
 
   const add_new_link = () => {
     const { nodes, links } = data
@@ -396,6 +397,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
             multi_selected_node.current = m_s
+            setFakeState(!fakeState)
           }}
           labelledBy={'hello'}
         />
