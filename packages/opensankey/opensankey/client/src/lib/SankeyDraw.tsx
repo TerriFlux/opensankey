@@ -1371,10 +1371,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (outputLinksId === undefined || inputLinksId === undefined) {
       return ''
     }
-
-    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+ 
+    const res = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+    const xs  = res[0]
+    const xt = res[2]
+    let [ys,yt] = [res[1],res[3]] 
     if (data.show_structure) {
-      [xs, ys, xt, yt] = [xs,source_node.y+20,xt,target_node.y+20]
+      [ys, yt] = [source_node.y+20,target_node.y+20]
     }
 
     if (link.orientation === 'hh' || link.orientation === 'vv') {
