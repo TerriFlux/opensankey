@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
@@ -35,12 +35,12 @@ type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
-  const [show_nav, set_show_nav] = useState(false)
-  const [nav_item_active, set_nav_item_active] = useState<string>('')
-  const [selected_link, set_selected_link] = useState(start_link)
+  const button_ref = useRef<HTMLLabelElement>(null)
+  const accordion_ref = useRef<HTMLDivElement>(null)
+  const selected_link = useRef(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
-  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
-  const [multi_selected_node, set_multi_selected_node] = useState([])
+  //const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
+  const multi_selected_node = useRef([])
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
 
@@ -81,15 +81,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               current_path={''}
             /></>}
           logo={logo.replace('static/', 'static/opensankey/')}
-          set_show_nav={set_show_nav}
-          show_nav={show_nav}
-          set_nav_item_active={set_nav_item_active}
-          nav_item_active={nav_item_active}
-          set_selected_node={set_selected_node}
-          selected_node={selected_node}
-          set_multi_selected_node={set_multi_selected_node}
+          button_ref={button_ref}
+          accordion_ref={accordion_ref}
           multi_selected_node={multi_selected_node}
-          set_selected_link={set_selected_link}
           selected_link={selected_link}
           agregation_level={agregation_level}
           set_agregation_level={set_agregation_level}
@@ -111,18 +105,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             <SankeyNodeEdition
               data={data}
               set_data={set_data}
-              selected_node={selected_node}
+              //selected_node={selected_node}
               radio_selected={radio_selected}
-              set_multi_selected_node={set_multi_selected_node}
               multi_selected_node={multi_selected_node}
-            />
-          }
-          link_edition={
-            <SankeyLinkEdition
-              show={true}
-              data={data}
-              set_data={set_data}
-              selected_link={selected_link}
             />
           }
           settings_edition_tags={
@@ -142,16 +127,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       <SankeyDraw
         data={data}
         set_data={set_data}
-        set_multi_selected_node={set_multi_selected_node}
         multi_selected_node={multi_selected_node}
-        select_node={(n: SankeyNode) => {
-          set_selected_node(n)
-        }}
+        // select_node={(n: SankeyNode) => {
+        //   set_selected_node(n)
+        // }}
         node_arrow_visible={
           (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
         }
         select_link={(l: SankeyLink) => {
-          set_selected_link(l)
+          selected_link.current = l
         }}
         //node_color={n => n.color}
         node_color={(n: SankeyNode) => {
@@ -294,8 +278,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }
           return ((val as unknown) as SankeyLinkValue).value
         }}
-        set_show_nav={set_show_nav}
-        set_nav_item_active={set_nav_item_active}
+        button_ref={button_ref}
+        accordion_ref={accordion_ref}
         nodeTooltipsContent={nodeTooltipsContent}
         linkTooltipsContent={linkTooltipsContent}
       />

@@ -1,5 +1,5 @@
 ﻿/* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
@@ -12,6 +12,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 
 
 const MenuPropTypes = {
@@ -25,21 +26,13 @@ const MenuPropTypes = {
   settings_edition_tags: PropTypes.element,
   settings_edition_tags_links: PropTypes.element,
   node_edition: PropTypes.element,
-  link_edition: PropTypes.element,
   logo: PropTypes.string.isRequired,
   app_name: PropTypes.string.isRequired,
-  set_show_nav: PropTypes.func.isRequired,
-  show_nav: PropTypes.bool,
-  set_nav_item_active: PropTypes.func.isRequired,
-  nav_item_active: PropTypes.string.isRequired,
-  set_selected_node: PropTypes.func.isRequired,
-  selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
 
-  set_multi_selected_node: PropTypes.func.isRequired,
-  multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-
-  set_selected_link: PropTypes.func.isRequired,
-  selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
+  multi_selected_node: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
+  selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   example_menu: PropTypes.element,
   portfolio_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
@@ -133,18 +126,20 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
-    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
+    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition,
     logo, app_name,
-    set_show_nav, show_nav, set_nav_item_active, nav_item_active,
-    set_selected_node, selected_node,
-    set_multi_selected_node, multi_selected_node,
-    set_selected_link, selected_link,
+    button_ref, accordion_ref,
+    // set_selected_node, selected_node,
+    multi_selected_node,
+    selected_link,
     example_menu, portfolio_menu, url_prefix,
     agregation_level,
     set_agregation_level
   }
 ) => {
   const set_show_link = useState(true)[1]
+  const [show_nav,set_show_nav] = useState(false)
+  const [nav_item_active, set_nav_item_active] = useState<string>('')
 
   const display_nodes = data.nodes
   const display_links = data.links
@@ -177,8 +172,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     for (const tag_group_key in data.tags_catalog) {
       node.tags[tag_group_key] = []
     }
-    set_selected_node(node)
-    set_multi_selected_node([node])
+    // set_selected_node(node)
+    multi_selected_node.current = [node]
     set_data({ ...data })
   }
 
@@ -275,19 +270,27 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const reinitialization = () => {
     const data = default_sankey_data()
+    multi_selected_node.current = []
     set_data({ ...data })
   }
 
   const setShow = (t: boolean) => {
-    set_show_nav(t)
+    //set_show_nav(t)
+    if (button_ref && button_ref.current ) {
+      button_ref.current.click()
+    }
   }
 
   const handleClose = () => setShow(true)
 
-  const toggleShow = () => {
-    setShow(!show_nav)
-  }
+  // const toggleShow = () => {
+  //   if (button_ref && button_ref.current ) {
+  //     button_ref.current.click()
+  //   }
+  //   //setShow(!show_nav)
+  // }
   const [checked, setChecked] = useState(false)
+  const [fakeState,setFakeState] = useState(false)
 
   const add_new_link = () => {
     const { nodes, links } = data
@@ -309,29 +312,31 @@ const Menu: FunctionComponent<MenuTypes> = (
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
     nodes[node_keys[1]].inputLinksId.push(link.idLink)
 
-    set_selected_link(link)
+    selected_link.current = link
     set_data({ ...data })
     set_show_link(true)
   }
-
-  let node = data.nodes[selected_node.idNode]
-  if (node === undefined) {
-    node = default_node(data)
+  let node = default_node(data)
+  if (multi_selected_node.current.length > 0) {
+    node = data.nodes[multi_selected_node.current[0].idNode]
+    if (node === undefined) {
+      node = default_node(data)
+    }
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = selected_link
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
     // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
-    const previous_node = data.nodes[link.idSource]
-    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
+    const previous_node = data.nodes[selected_link.current.idSource]
+    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.current.idLink), 1)
 
     const source_node = data.nodes[changeEvent.target.value]
-    link.idSource = source_node.idNode
-    source_node.outputLinksId.push(selected_link.idLink)
+    selected_link.current.idSource = source_node.idNode
+    source_node.outputLinksId.push(selected_link.current.idLink)
 
-    if (link.idTarget === link.idSource) {
-      link.recycling = true
+    if (selected_link.current.idTarget === selected_link.current.idSource) {
+      selected_link.current.recycling = true
     }
 
     set_data({ ...data })
@@ -340,7 +345,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const addDropSource = () => {
     if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idSource === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.current.idSource === n.idNode} >{n.name}</option>)
       )
     }
   }
@@ -348,7 +353,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
 
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idTarget === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.current.idTarget === n.idNode} >{n.name}</option>)
       )
     }
   }
@@ -356,28 +361,28 @@ const Menu: FunctionComponent<MenuTypes> = (
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
     const link = selected_link
-    const previous_node = nodes[link.idTarget]
-    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
+    const previous_node = nodes[selected_link.current.idTarget]
+    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.current.idLink), 1)
 
     const target_node = nodes[changeEvent.target.value]
-    link.idTarget = target_node.idNode
-    if (link.idTarget === link.idSource) {
-      link.recycling = true
+    selected_link.current.idTarget = target_node.idNode
+    if (selected_link.current.idTarget === selected_link.current.idSource) {
+      selected_link.current.recycling = true
     }
-    target_node.inputLinksId.push(selected_link.idLink)
+    target_node.inputLinksId.push(selected_link.current.idLink)
 
     set_data({ ...data })
   }
 
-  const INITIAL_OPTIONS = Object.values(data.nodes).map((d) => { return { 'label': d.name, 'value': d.name } })
-  const selected = multi_selected_node.map((d) => { return { 'label': d.name, 'value': d.name } })
   const props = {
     scroll: true,
     backdrop: false,
   }
+
+  const INITIAL_OPTIONS = Object.values(data.nodes).map((d) => { return { 'label': d.name, 'value': d.name } })
+  const selected = multi_selected_node.current.map((d) => { return { 'label': d.name, 'value': d.name } })
+
   const dropdownMultiNode = () => {
-
-
     const DD = (
       <div id='DD_multi_node'>
 
@@ -391,7 +396,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
-            set_multi_selected_node(m_s)
+            multi_selected_node.current = m_s
+            setFakeState(!fakeState)
           }}
           labelledBy={'hello'}
         />
@@ -425,8 +431,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             Refuse
           </Button>
           <Button variant="primary" onClick={() => {
-            delete_node(data, selected_node)
-            set_selected_node(default_node(data))
+            delete_node(data, multi_selected_node.current[0])
+            // set_selected_node(default_node(data))
             set_data({ ...data })
             handleModalClose()
           }}>
@@ -570,12 +576,13 @@ const Menu: FunctionComponent<MenuTypes> = (
             {!data.static_sankey ? (
               <ButtonGroup className="mb-2" style={{ 'width': '480px' }}>
                 <ToggleButton
+                  ref={button_ref as Ref<HTMLLabelElement>}
                   id="toggle-check"
                   type="checkbox"
                   variant="outline-primary"
                   checked={checked}
                   onChange={(e) => { setChecked(e.currentTarget.checked) }}
-                  onClick={toggleShow}
+                  onClick={evt => set_show_nav(!show_nav)}
                   value="1">Configuration Sankey
                 </ToggleButton>
               </ButtonGroup>) : (<></>)
@@ -583,14 +590,16 @@ const Menu: FunctionComponent<MenuTypes> = (
             {right_menu}
           </Nav>
         </Container>
-        <SankeyEdition
-          data={data}
-          set_data={set_data} />
+        { !data.static_sankey ? 
+          (<SankeyEdition
+            data={data}
+            set_data={set_data} />):(<></>)
+        }
       </Navbar>
 
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
-          <Accordion activeKey={nav_item_active as string} >
+          <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
             {//MENU AIDE 
             }
 
@@ -653,17 +662,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button
                       size="sm"
                       variant='danger'
-                      disabled={multi_selected_node.length != 1}
+                      disabled={multi_selected_node.current.length != 1}
                       onClick={
                         () => {
-                          if (selected_node.inputLinksId.length > 0 || selected_node.outputLinksId.length > 0) {
+                          if (multi_selected_node.current[0].inputLinksId.length > 0 || multi_selected_node.current[0].outputLinksId.length > 0) {
                             setModalShow(true)
 
                           } else {
                             //Boutton pour supprimer le noeud selectionné
-                            delete_node(data, selected_node)
-                            set_selected_node(default_node(data))
-                            set_multi_selected_node([])
+                            delete_node(data, multi_selected_node.current[0])
+                            //set_selected_node(default_node(data))
+                            multi_selected_node.current = []
                             set_data({ ...data })
                           }
 
@@ -686,22 +695,22 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <FormControl
 
                         value={
-                          (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
+                          (multi_selected_node.current.length != 1) ? '' : multi_selected_node.current[0].name
                         }
                         onChange={evt => {
-                          const sel = (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
+                          const sel = (multi_selected_node.current.length != 1) ? '' : multi_selected_node.current[0].name
                           // sel = evt.target.value
                           Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
                           set_data({ ...data })
                         }}
-                        disabled={(multi_selected_node.length == 1) ? false : true} />
+                        disabled={(multi_selected_node.current.length == 1) ? false : true} />
                     </Col>
                     <Col xs={3}>
                     </Col>
                   </Form.Group>
                 </Form>
 
-                <div style={{ 'display': (multi_selected_node.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
+                <div style={{ 'display': (multi_selected_node.current.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
@@ -753,12 +762,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
                           const newLink = Object.values(display_links).filter(f => { return f.idLink == evt.target.value })[0]
-                          set_selected_link(newLink)
+                          selected_link.current = newLink
                           set_data({ ...data })
                         }
                       }
                     >
-                      {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
+                      {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.current.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
                   </Col>
 
@@ -768,8 +777,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       variant="danger"
                       onClick={
                         () => {
-                          delete_link(data, selected_link)
-                          set_selected_link(default_link(data))
+                          delete_link(data, selected_link.current)
+                          selected_link.current = default_link(data)
 
                           set_data({ ...data })
                         }
@@ -816,7 +825,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   
                 </Row> */}
-                {link_edition}
+                <SankeyLinkEdition
+                  show={true}
+                  data={data}
+                  set_data={set_data}
+                  selected_link={selected_link}
+                />
               </Accordion.Body>
             </Accordion.Item>
 
