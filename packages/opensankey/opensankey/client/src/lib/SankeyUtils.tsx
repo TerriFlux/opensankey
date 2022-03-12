@@ -325,6 +325,9 @@ export const link_text = (
   if (str_display !== 'default') {
     return str_display
   }
+  if ( data.show_structure) {
+    return
+  }
   const the_link_value = toPrecision(link_value)
   return the_link_value
 }

@@ -524,6 +524,19 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               </Col>
             </Form.Group>
             <Form.Group as={Row} >
+              <Col >
+                <FormCheck
+                  type='checkbox'
+                  label='Mode structure'
+                  checked={data.show_structure}
+                  onChange={evt => {
+                    data.show_structure = evt.target.checked
+                    set_data({ ...data })
+                  }}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} >
               <Col>
                 <FormLabel >Filtre</FormLabel>
               </Col>
