@@ -2,14 +2,13 @@ import React, { FunctionComponent, useRef, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
-import SankeyEdition from './SankeyEdition'
 import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
 import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Row, Col, Dropdown } from 'react-bootstrap'
+import { Dropdown } from 'react-bootstrap'
+import * as d3 from 'd3'
 import { getLinkValue } from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
 
@@ -48,7 +47,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   /*  if(Object.keys(sankey_data.links).length!=0){
      set_selected_link(sankey_data.links[Object.keys(sankey_data.links)[0]])
    } */
-
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
 
   const display_links = data.links
   console.log(data)
@@ -168,6 +169,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         link_text={SankeyUtils.link_text}
         link_visible={(l: SankeyLink) => {
           const { dataTags } = data
+          if (data.show_structure) {
+            if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
+              return false
+            }
+          }
           if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
             return false
           }
@@ -244,6 +250,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         }}
         test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
           const { dataTags } = data
+          if ( data.show_structure ) {
+            return inv_scale(10)
+          }
           let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
           const listKey: string[] = []
           /* console.log(val)

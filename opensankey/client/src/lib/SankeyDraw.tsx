@@ -1090,10 +1090,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let node_size_t_height = Math.max(
       inv_scale(target_node.node_width), t_total_offset_height_left, t_total_offset_height_right
     )
+    let node_size_s_width = Math.max(
+      inv_scale(source_node.node_width), s_total_offset_width_top, s_total_offset_width_bottom
+    )
+    let node_size_t_width = Math.max(
+      inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
+    )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
       node_size_s_height = inv_scale(40) 
       node_size_t_height = inv_scale(40) 
+      node_size_s_width = inv_scale(40) 
+      node_size_t_width = inv_scale(40) 
     }
     // const node_size_s_width = Math.max(
     //   inv_scale(default_node_size), s_total_offset_width_top, s_total_offset_width_bottom
@@ -1102,12 +1110,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //   inv_scale(default_node_size), t_total_offset_width_top, t_total_offset_width_bottom
     // )
 
-    const node_size_s_width = Math.max(
-      inv_scale(source_node.node_width), s_total_offset_width_top, s_total_offset_width_bottom
-    )
-    const node_size_t_width = Math.max(
-      inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
-    )
+
     d3.select('#' + source_node.idNode).attr('width', scale(node_size_s_width))
     d3.select('#' + source_node.idNode).attr('height', scale(node_size_s_height))
     if (source_node.type === 'product') {
@@ -1149,21 +1152,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     res = compute_total_offsets(target_node, nodes, links, selected_tags, test_link_value)
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
-
-    // const node_size_s_width = Math.max(
-    //   inv_scale(default_node_size), s_total_offset_width_bottom, s_total_offset_width_top
-    // )
-    const node_size_s_width = Math.max(
-      inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
-    )
-    // const node_size_t_width = Math.max(
-    //   inv_scale(default_node_size), t_total_offset_width_bottom, t_total_offset_width_top
-    // )
-    const node_size_t_width = Math.max(
-      inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
-    )
-    // let node_size_s_height = inv_scale(default_node_size)
-    // let node_size_t_height = inv_scale(default_node_size)
+    let node_size_s_width = inv_scale(source_node.node_width)
+    let node_size_t_width = inv_scale(target_node.node_width)
+    if (!data.show_structure) {
+      node_size_s_width = Math.max(
+        inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
+      )
+      node_size_t_width = Math.max(
+        inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
+      )
+    }
     let node_size_s_height = inv_scale(source_node.node_width)
     let node_size_t_height = inv_scale(target_node.node_width)
     if (!data.show_structure) {
@@ -1372,13 +1370,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return ''
     }
  
-    const res = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
-    const xs  = res[0]
-    const xt = res[2]
-    let [ys,yt] = [res[1],res[3]] 
-    if (data.show_structure) {
-      [ys, yt] = [source_node.y+20,target_node.y+20]
-    }
+    let [xs,ys,xt,yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
 
     if (link.orientation === 'hh' || link.orientation === 'vv') {
       add_shift_handles(
@@ -1392,6 +1384,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     if (link.orientation === 'vh' && !link.recycling) {
+      if (data.show_structure) {
+        [xs, yt] = [source_node.x+20,target_node.y+20]
+        if (source_node.x > target_node.x) {
+          xt = xt+30
+        }
+      }
       return SankeyShapes.bezier_link_classic_hv(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
@@ -1401,6 +1399,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hv' && !link.recycling) {
+      if (data.show_structure) {
+        [ys, xt] = [source_node.y+20,target_node.x+20]
+        if (source_node.y > target_node.y) {
+          yt = yt+30
+        }
+      }
       return SankeyShapes.bezier_link_classic_vh(
         link.idSource, link.idTarget,
         [xs, ys], [xt, yt],
@@ -1410,6 +1414,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hh' && !link.recycling) {
+      if (data.show_structure) {
+        [ys, yt] = [source_node.y+20,target_node.y+20]
+        if (source_node.x > target_node.x) {
+          xt = xt+30
+        }
+      }
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
@@ -1424,6 +1434,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'vv' && !link.recycling) {
+      if (data.show_structure) {
+        [xs, xt] = [source_node.x+20,target_node.x+20]
+        if (source_node.y > target_node.y) {
+          yt = yt+30
+        }
+      }
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       return SankeyShapes.bezier_link_classic_vv(
@@ -1440,6 +1456,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       const vert_shift = link.vert_shift ? link.vert_shift : 0
+      if (data.show_structure) {
+        [ys, yt] = [source_node.y+20,target_node.y+20]
+      }
       return SankeyShapes.bezier_link_classic_recycling(
         link.idSource, link.idTarget,
         link_value,
@@ -2259,7 +2278,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 p5 = [xt, yt]
                 is_v = true
                 if (data.show_structure) {
-                  return SankeyShapes.draw_arrow(20, [xt, +node_y+20], 10, 15, true, false)
+                  return SankeyShapes.draw_arrow(20, p5, 10, 15, true, false)
                 }
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
@@ -2292,12 +2311,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 yt = +node_y
                 p5 = [xt, yt]
                 is_v = false
+                if (data.show_structure) {
+                  return SankeyShapes.draw_arrow(20, p5, 10, 15, false, false)
+                }
                 return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false)
               } else {
                 xt = +node_x + +d3.select('#' + n.idNode).attr('width') / 2
                 yt = +node_y + +d3.select('#' + n.idNode).attr('height')
                 p5 = [xt, yt]
                 is_v = false
+                if (data.show_structure) {
+                  return SankeyShapes.draw_arrow(20, p5, 10, 15, false, true)
+                }
                 return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true)
               }
             }
