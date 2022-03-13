@@ -12,6 +12,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 
 
 const MenuPropTypes = {
