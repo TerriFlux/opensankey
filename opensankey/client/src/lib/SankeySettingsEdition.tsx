@@ -524,6 +524,19 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               </Col>
             </Form.Group>
             <Form.Group as={Row} >
+              <Col >
+                <FormCheck
+                  type='checkbox'
+                  label='Mode structure'
+                  checked={data.show_structure}
+                  onChange={evt => {
+                    data.show_structure = evt.target.checked
+                    set_data({ ...data })
+                  }}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} >
               <Col>
                 <FormLabel >Filtre</FormLabel>
               </Col>
@@ -1296,7 +1309,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
         <tr>
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
           <th>Nom</th>
-          {Object.keys(dataTags).length > 0 && dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) : (<></>)}
+          {Object.keys(dataTags).length > 0 && dataTags[links_tags_group_key] && dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) : (<></>)}
           <th>Selected</th>
         </tr>
       </thead>

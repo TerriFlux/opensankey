@@ -1,4 +1,4 @@
-﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, FormCheck, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
@@ -816,7 +816,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   
                 </Row> */}
-                {link_edition}
+                <SankeyLinkEdition
+                  show={true}
+                  data={data}
+                  set_data={set_data}
+                  selected_link={selected_link}
+                />
               </Accordion.Body>
             </Accordion.Item>
 
