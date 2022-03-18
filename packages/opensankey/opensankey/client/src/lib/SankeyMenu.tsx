@@ -38,6 +38,10 @@ const MenuPropTypes = {
   set_multi_selected_node: PropTypes.func.isRequired,
   multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
 
+  set_multi_selected_links: PropTypes.func.isRequired,
+  multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
+
+
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
@@ -46,6 +50,7 @@ const MenuPropTypes = {
 
   agregation_level: PropTypes.number.isRequired,
   set_agregation_level: PropTypes.func.isRequired
+
 }
 
 
@@ -138,10 +143,11 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_multi_selected_node, multi_selected_node,
+    set_multi_selected_links, multi_selected_links,
     set_selected_link, selected_link,
     example_menu, portfolio_menu, url_prefix,
     agregation_level,
-    set_agregation_level
+    set_agregation_level,
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -310,6 +316,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     nodes[node_keys[1]].inputLinksId.push(link.idLink)
 
     set_selected_link(link)
+    set_multi_selected_links([link])
     set_data({ ...data })
     set_show_link(true)
   }
@@ -320,51 +327,57 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const link = selected_link
+    // const link = selected_link
+    const link = multi_selected_links[0]
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
     // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
     const previous_node = data.nodes[link.idSource]
-    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
+    // previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
+    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links[0].idLink), 1)
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
-    source_node.outputLinksId.push(selected_link.idLink)
+    // source_node.outputLinksId.push(selected_link.idLink)
+    source_node.outputLinksId.push(multi_selected_links[0].idLink)
 
     if (link.idTarget === link.idSource) {
       link.recycling = true
     }
-
     set_data({ ...data })
   }
 
   const addDropSource = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
+    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.length != 0) {
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idSource === n.idNode} >{n.name}</option>)
+        // Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idSource === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links[0].idSource === n.idNode} >{n.name}</option>)
       )
     }
   }
   const addDropCible = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0) {
-
+    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.length != 0) {
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idTarget === n.idNode} >{n.name}</option>)
+        // Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={selected_link.idTarget === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links[0].idTarget === n.idNode} >{n.name}</option>)
       )
     }
   }
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
-    const link = selected_link
+    // const link = selected_link
+    const link = multi_selected_links[0]
     const previous_node = nodes[link.idTarget]
-    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
+    // previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
+    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links[0].idLink), 1)
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
     if (link.idTarget === link.idSource) {
       link.recycling = true
     }
-    target_node.inputLinksId.push(selected_link.idLink)
+    // target_node.inputLinksId.push(selected_link.idLink)
+    target_node.inputLinksId.push(multi_selected_links[0].idLink)
 
     set_data({ ...data })
   }
@@ -376,15 +389,13 @@ const Menu: FunctionComponent<MenuTypes> = (
     backdrop: false,
   }
   const dropdownMultiNode = () => {
-
-
     const DD = (
       <div id='DD_multi_node'>
 
 
         <MultiSelect
-          valueRenderer={(selected :any, _options:any) => {
-            return selected.length ? selected.map(({ label }:any) => label + ', ') : 'Aucun noeud sélectionné'
+          valueRenderer={(selected: any, _options: any) => {
+            return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun noeud sélectionné'
           }}
           options={INITIAL_OPTIONS}
           value={selected}
@@ -392,6 +403,30 @@ const Menu: FunctionComponent<MenuTypes> = (
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
             set_multi_selected_node(m_s)
+          }}
+          labelledBy={'hello'}
+        />
+      </div>)
+    return DD
+  }
+
+
+
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).map((d) => { return { 'label': d.idLink, 'value': d.idLink } })
+  const selected_links = multi_selected_links.map((d) => { return { 'label': d.idLink, 'value': d.idLink } })
+  const dropdownMultiLinks = () => {
+    const DD = (
+      <div id='DD_multi_links'>
+        <MultiSelect
+          valueRenderer={(selected: any, _options: any) => {
+            return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun flux sélectionné'
+          }}
+          options={INITIAL_OPTIONS_LINKS}
+          value={selected_links}
+          onChange={(selected: [{ label: string, value: string }]) => {
+            const new_sel = selected.map(d => d.value)
+            const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
+            set_multi_selected_links(m_s)
           }}
           labelledBy={'hello'}
         />
@@ -435,7 +470,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Modal.Footer>
       </Modal>
 
-      <Navbar className='bg-light' fixed='top' expand="xl" style={{ 'display': 'block' }} >
+      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
 
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
@@ -472,7 +507,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         result = result.split('<br>').join('\\\\n')
                         const result_data = JSON.parse(result)
                         Object.assign(new_data, result_data)
-                        if ( result_data.version === undefined ) {
+                        if (result_data.version === undefined) {
                           (new_data.version as any) = undefined
                         }
                         convert_data(new_data)
@@ -587,7 +622,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           data={data}
           set_data={set_data} />
       </Navbar>
-
       <Offcanvas show={show_nav} placement='end' onHide={handleClose} {...props} style={{ 'width': '540px', 'margin-top': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
           <Accordion activeKey={nav_item_active as string} >
@@ -653,7 +687,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button
                       size="sm"
                       variant='danger'
-                      disabled={multi_selected_node.length != 1}
+                      disabled={multi_selected_node.length ==0}
                       onClick={
                         () => {
                           if (selected_node.inputLinksId.length > 0 || selected_node.outputLinksId.length > 0) {
@@ -661,7 +695,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                           } else {
                             //Boutton pour supprimer le noeud selectionné
-                            delete_node(data, selected_node)
+                            multi_selected_node.map(d=>delete_node(data, d))
                             set_selected_node(default_node(data))
                             set_multi_selected_node([])
                             set_data({ ...data })
@@ -688,6 +722,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value={
                           (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
                         }
+
                         onChange={evt => {
                           const sel = (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
                           // sel = evt.target.value
@@ -748,7 +783,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     ><FaPlus /></Button>
 
                   </Col>
-                  <Col xs={10}>
+                  {/* <Col xs={10}>
                     <Form.Select id="selectionLink"
                       onChange={
                         (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -760,6 +795,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                     >
                       {Object.values(data.links).map((l, i) => <option key={i} value={l.idLink} selected={l.idLink == selected_link.idLink}  >{display_nodes[l.idSource].name + ' -> ' + display_nodes[l.idTarget].name}</option>)}
                     </Form.Select>
+                  </Col> */}
+                  <Col xs={10}>
+                    {dropdownMultiLinks()}
                   </Col>
 
                   <Col xs={1}>
@@ -778,12 +816,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
 
                 </Row>
+
                 <Row>
                   <Col>
                     <FormLabel>Source</FormLabel>
                   </Col>
                   <Col>
-                    <Form.Select onChange={source_change}>
+                    <Form.Select disabled={multi_selected_links.length != 1} onChange={source_change}>
                       {addDropSource()}
                     </Form.Select>
                   </Col>
@@ -793,7 +832,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormLabel>Cible</FormLabel>
                   </Col>
                   <Col>
-                    <Form.Select onChange={target_change}>
+                    <Form.Select disabled={multi_selected_links.length != 1} onChange={target_change}>
                       {addDropCible()}
                     </Form.Select>
                   </Col>
@@ -816,11 +855,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   
                 </Row> */}
-                {link_edition}
+                <div style={{ 'display': (multi_selected_links.length == 0) ? 'none' : 'block' }}>{link_edition}</div>
               </Accordion.Body>
             </Accordion.Item>
-
-
 
             <Accordion.Item eventKey="7"
               onClick={evt => {
@@ -915,8 +952,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Modal.Dialog >
             <Button className="btn btn-sm btn-warning col-md-12">
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
-            </Button></Modal.Dialog>) : (<div></div>)
+            </Button></Modal.Dialog>) : (<></>)
       }
+
     </>
   )
 }
