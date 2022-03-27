@@ -74,6 +74,9 @@ export const findMaxLinkValue = (
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
+  if ( value_dict === undefined || Object.values(value_dict).length == 0) {
+    return new_max_node_value
+  }
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
@@ -324,6 +327,9 @@ export const link_text = (
   const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== 'default') {
     return str_display
+  }
+  if ( data.show_structure) {
+    return
   }
   const the_link_value = toPrecision(link_value)
   return the_link_value

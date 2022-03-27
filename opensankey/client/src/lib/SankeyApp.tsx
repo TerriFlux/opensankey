@@ -9,7 +9,8 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Row, Col, Dropdown, Container } from 'react-bootstrap'
+import { Dropdown } from 'react-bootstrap'
+import * as d3 from 'd3'
 import { getLinkValue } from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
 
@@ -202,12 +203,16 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               // Le couleur est définie dans les parametres locaux du noeud
               colorNode = n.color
             }
-
             return colorNode
           }}
           link_text={SankeyUtils.link_text}
           link_visible={(l: SankeyLink) => {
             const { dataTags } = data
+            if (data.show_structure) {
+              if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
+                return false
+              }
+            }
             if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
               return false
             }
