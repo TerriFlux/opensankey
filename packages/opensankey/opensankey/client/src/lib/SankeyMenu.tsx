@@ -12,6 +12,7 @@ import { FaPlus, FaMinus } from 'react-icons/fa'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
+import SankeyLinkEdition from './SankeyLinkEdition'
 
 
 const MenuPropTypes = {
@@ -178,7 +179,11 @@ const Menu: FunctionComponent<MenuTypes> = (
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
     node.idNode = 'node' + idNode
     node.name = node.idNode
-    node.x = Object.keys(nodes).length * 200 + 200
+    if (Object.keys(nodes).length < 5 ) {
+      node.x = Object.keys(nodes).length * 200 + 200
+    } else {
+      node.x = 200      
+    }
     nodes[node.idNode] = node
     for (const tag_group_key in data.tags_catalog) {
       node.tags[tag_group_key] = []
