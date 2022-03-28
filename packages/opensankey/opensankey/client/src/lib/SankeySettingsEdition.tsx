@@ -1,4 +1,4 @@
-import React, {ChangeEvent ,useState, FunctionComponent } from 'react'
+import React, { ChangeEvent, useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
@@ -30,8 +30,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [shift_visible, set_shift_visible] = useState(true)
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [legend_position, set_legend_position] = useState(data.legend_position)
-  const [width, set_width] = useState(data.width)
-  const [height, set_height] = useState(data.height)
+  const [width, set_width] = useState(data.width_min)
+  const [height, set_height] = useState(data.height_min)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
   const [link_tag_favorite, set_link_tag_favorite] = useState('')
@@ -79,18 +79,18 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
 
           <Col xs={6}>Font Charger des icones</Col>
           <Col xs={6}><FormControl
-          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
+            //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
             type='file'
-            onChange={(evt:ChangeEvent) => {
+            onChange={(evt: ChangeEvent) => {
               const files = (evt.target as HTMLFormElement).files
               const reader = new FileReader()
               reader.onload = (() => {
                 return (e: ProgressEvent<FileReader>) => {
                   const result = String((e.target as FileReader).result)
-                  const js=JSON.parse(result)
-                  js.icons.map((d :any)=>{
-                    const name=d.properties.name as string
-                    data.icon_catalog[name]=d.icon.paths[0]
+                  const js = JSON.parse(result)
+                  js.icons.map((d: any) => {
+                    const name = d.properties.name as string
+                    data.icon_catalog[name] = d.icon.paths[0]
                   })
                 }
               })()
@@ -126,7 +126,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Form.Group>
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel >Hauteur</FormLabel>
+                <FormLabel >Hauteur Minimu</FormLabel>
               </Col>
               <Col>
                 <FormControl
@@ -134,7 +134,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   value={height}
                   onChange={evt => set_height(+evt.target.value)}
                   onBlur={() => {
-                    data.height = height
+                    data.height_min = height
+                    // data.height = height
                     set_data({ ...data })
                   }}
                 />
@@ -142,7 +143,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Form.Group>
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel>Largeur</FormLabel>
+                <FormLabel>Largeur Minimum</FormLabel>
               </Col>
               <Col>
                 <FormControl
@@ -150,7 +151,8 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   value={width}
                   onChange={evt => set_width(+evt.target.value)}
                   onBlur={() => {
-                    data.width = width
+                    data.width_min = width
+                    // data.width = width
                     set_data({ ...data })
                   }}
                 />
@@ -171,9 +173,45 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 />
               </Col>
             </Form.Group>
+
+
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel>Shift horizontal</FormLabel>
+                <FormLabel >Taille Carré Grille</FormLabel>
+              </Col>
+              <Col xs={4}>
+                <FormControl
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={data.grid_square_size}
+                  onChange={evt => {
+                    data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
+                    set_data({ ...data })
+                  }}
+
+                />
+              </Col>
+
+              <Col >
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.grid_visible}
+                  label='Grille visible'
+                  onChange={() => {
+                    data.grid_visible = !data.grid_visible
+                    set_data({ ...data })
+                  }}
+                />
+              </Col>
+            </Form.Group>
+
+
+            <Form.Group as={Row} >
+              <Col xs={3}>
+                <FormLabel>Déplacement horizontal</FormLabel>
               </Col>
               <Col>
                 <FormControl
@@ -202,7 +240,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Form.Group>
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel>Shift vertical</FormLabel>
+                <FormLabel>Déplacement vertical</FormLabel>
               </Col>
               <Col>
                 <FormControl
@@ -267,7 +305,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           <Form >
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel>Layout</FormLabel>
+                <FormLabel>Plan</FormLabel>
               </Col>
               <Col xs={5}>
                 <Form.Control
@@ -427,7 +465,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Bold'
+                  label='Gras'
                   checked={display_style.sector_bold}
                   onChange={
                     evt => {
@@ -440,7 +478,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Upper'
+                  label='Majuscule'
                   checked={display_style.sector_uppercase}
                   onChange={
                     evt => {
@@ -453,7 +491,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Italic'
+                  label='Italique'
                   checked={display_style.sector_italic}
                   onChange={
                     evt => {
@@ -471,7 +509,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Bold'
+                  label='Gras'
                   checked={display_style.product_bold}
                   onChange={
                     evt => {
@@ -484,7 +522,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Upper'
+                  label='Majuscule'
                   checked={display_style.product_uppercase}
                   onChange={
                     evt => {
@@ -497,7 +535,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <FormCheck
                   type='checkbox'
-                  label='Italic'
+                  label='Italique'
                   checked={display_style.product_italic}
                   onChange={
                     evt => {
@@ -521,7 +559,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                       })
                     }
                   }
-                >Reset label position</Button>
+                >Réinitialiser la position des labels</Button>
               </Col>
             </Form.Group>
           </Form>
@@ -1047,7 +1085,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           <th>Nom</th>
           <th>Visible</th>
           <th>Couleur</th>
-          <th>Shape</th>
+          <th>Forme</th>
         </tr>
       </thead>
       <tbody>
@@ -1123,7 +1161,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           <tr>
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
             <th>Nom</th>
-            <th>Legend</th>
+            <th>Légende</th>
             <th>Tag</th>
             <th>Bannière</th>
             <th>Position</th>
@@ -1340,7 +1378,7 @@ const SankeySettingsEditionTagsLinks: FunctionComponent<SankeySettingsEditionTag
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
           <th>Nom</th>
           {Object.keys(dataTags).length > 0 && dataTags[links_tags_group_key].banner === 'display' ? (<th>Color</th>) : (<></>)}
-          <th>Selected</th>
+          <th>Sélectionné</th>
         </tr>
       </thead>
       <tbody>
