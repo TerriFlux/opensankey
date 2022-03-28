@@ -36,6 +36,7 @@ type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
+  const [show_toast, set_show_toast] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [selected_link, set_selected_link] = useState(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
@@ -47,6 +48,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [agregation_level, set_agregation_level] = useState(0)
   const [show_draw, set_show_draw] = useState(false)
 
+  const [view, set_view] = useState('none')
 
   //Selectionne le premier flux par default si il y en a un 
   /*  if(Object.keys(sankey_data.links).length!=0){
@@ -60,6 +62,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   //   console.log(document.getElementsByClassName('navbar') as any)
   //   return d
   // }
+
+
+
+
+
   return (
 
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
@@ -68,7 +75,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           return { 'font': d }
         })}
       />
-      { !window.SankeyToolsStatic ? (
+      { !window.SankeyToolsStatic? (
         <Menu
           data={data}
           set_data={set_data}
@@ -91,6 +98,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           logo={logo.replace('static/', 'static/opensankey/')}
           set_show_nav={set_show_nav}
           show_nav={show_nav}
+          set_show_toast={set_show_toast}
+          show_toast={show_toast}
           set_nav_item_active={set_nav_item_active}
           nav_item_active={nav_item_active}
           set_selected_node={set_selected_node}
@@ -149,7 +158,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               set_data={set_data}
             />
           }
-
+          view={view}
+          set_view={set_view}
         />
       ) : (<></>)}
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -161,7 +171,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         return () => clearTimeout(timer)
       }, [])}
       {
-        (show_draw) ? (<SankeyDraw
+        (show_draw && view=='none') ? (<SankeyDraw
           data={data}
           set_data={set_data}
           set_multi_selected_node={set_multi_selected_node}
@@ -322,6 +332,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_nav_item_active={set_nav_item_active}
           nodeTooltipsContent={nodeTooltipsContent}
           linkTooltipsContent={linkTooltipsContent}
+          set_show_toast={set_show_toast}
+          current={true}
         />) : (<></>)
       }
 

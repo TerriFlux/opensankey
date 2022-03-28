@@ -281,12 +281,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
 
   let sous_filieres = undefined
   if (window.sankey && window.sankey.sous_filieres) {
-    console.log(window.sankey.sous_filieres)
     sous_filieres = window.sankey.sous_filieres
   }
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
-
+  const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
   return (
     <>
       <div className='herowrap'
@@ -295,7 +294,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
           marginLeft: '0',
           paddingBottom: '3px',
           justifyContent: 'space-evenly',
-          alignItems: '<baseline-position>'
+          alignItems: '<baseline-position>',
+          display:(display_banner)?'none':'block'
         }}>
         <Row style={{ marginTop: marginTop, 'paddingBottom': '5px', 'paddingTop': '5px' }}>
           {(data.static_sankey && sous_filieres) ? (

@@ -25,10 +25,10 @@ export const SankeyNodePropTypes = {
   node_width: PropTypes.number.isRequired,
   node_height: PropTypes.number.isRequired,
 
-  iconName:PropTypes.string.isRequired,
-  iconColor:PropTypes.string.isRequired,
-  iconRatio:PropTypes.number.isRequired,
-  iconVisible:PropTypes.bool.isRequired,
+  iconName: PropTypes.string.isRequired,
+  iconColor: PropTypes.string.isRequired,
+  iconRatio: PropTypes.number.isRequired,
+  iconVisible: PropTypes.bool.isRequired,
 
   color: PropTypes.string.isRequired,
 
@@ -163,7 +163,9 @@ export const SankeyDataPropTypes = {
   show_structure: PropTypes.bool.isRequired,
   //height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
+  width_min:PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  height_min:PropTypes.number.isRequired,
   h_space: PropTypes.number.isRequired,
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
@@ -190,11 +192,23 @@ export const SankeyDataPropTypes = {
     font_family_selected: PropTypes.string.isRequired
   }).isRequired,
 
+  grid_square_size: PropTypes.number.isRequired,
+  grid_visible: PropTypes.bool.isRequired,
+
   static_sankey: PropTypes.bool.isRequired,
 
   tags_catalog: TagsCatalogPropTypes,
 
-  dataTags: TagsCatalogPropTypes
+  dataTags: TagsCatalogPropTypes,
+
+  view: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      view_data: PropTypes.object.isRequired,
+      nom:PropTypes.string.isRequired
+
+    }).isRequired
+  ).isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
