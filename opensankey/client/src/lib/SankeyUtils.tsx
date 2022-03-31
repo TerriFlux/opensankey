@@ -346,11 +346,14 @@ export const default_sankey_data = (): SankeyData => {
     width: window.innerWidth - 40,
     height: 500,
     node_width: 10,
+    node_height: 10,
     h_space: 200,
     v_space: 100,
     legend_position: [0, 100],
 
     show_structure: false,
+
+    icon_catalog:{},
 
     left_shift: 0.4,
     right_shift: 0.5,
@@ -383,7 +386,7 @@ export const default_sankey_data = (): SankeyData => {
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
-  console.log('-> Affectation du default_node')
+  // console.log('-> Affectation du default_node')
   const defaultNode = {
     name: '',
     idNode: 'default',
@@ -393,6 +396,12 @@ export const default_node = (
     shape_visible: true,
     label_visible: true,
     node_width: data.node_width,
+    node_height: data.node_height,
+    iconName:'none',
+    iconColor:'#fff',
+    iconRatio:80,
+    iconVisible:true,
+
     color: '#a9a9a9',
     nodeParameter: 'local',
     position: 'absolute',

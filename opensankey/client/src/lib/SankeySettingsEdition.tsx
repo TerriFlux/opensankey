@@ -1,4 +1,4 @@
-import React, { useState, FunctionComponent } from 'react'
+import React, {ChangeEvent ,useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab, Table, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
@@ -38,7 +38,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const tags_visible = Object.keys(data.dataTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
 
-  const { display_style, links, nodes, node_width } = data
+  const { display_style, links, nodes, node_width, node_height } = data
   const { filter } = display_style
 
   let max_link_value = 0
@@ -74,6 +74,33 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               })}
             </Form.Select></Col>
           </Row>
+        </Form.Group>
+        <Form.Group as={Row}>
+
+          <Col xs={6}>Font Charger des icones</Col>
+          <Col xs={6}><FormControl
+          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
+            type='file'
+            onChange={(evt:ChangeEvent) => {
+              const files = (evt.target as HTMLFormElement).files
+              const reader = new FileReader()
+              reader.onload = (() => {
+                return (e: ProgressEvent<FileReader>) => {
+                  const result = String((e.target as FileReader).result)
+                  const js=JSON.parse(result)
+                  js.icons.map((d :any)=>{
+                    const name=d.properties.name as string
+                    data.icon_catalog[name]=d.icon.paths[0]
+                  })
+                }
+              })()
+              reader.readAsText(files[0])
+              set_data(data)
+            }}
+          >
+          </FormControl>
+          </Col>
+
         </Form.Group>
       </Form>
       <Tabs defaultActiveKey="geometry" id="settings-layout">
@@ -345,7 +372,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           <Form >
             <Form.Group as={Row} >
               <Col>
-                <FormLabel >Taille minimum</FormLabel>
+                <FormLabel >Taille minimum Largeur</FormLabel>
               </Col>
               <Col>
                 <Form.Range
@@ -359,6 +386,23 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   } />
               </Col>
               <Col>{node_width}</Col>
+            </Form.Group>
+            <Form.Group as={Row} >
+              <Col>
+                <FormLabel >Taille minimum Hauteur</FormLabel>
+              </Col>
+              <Col>
+                <Form.Range
+                  min="0" max="100"
+                  value={node_height}
+                  onChange={
+                    evt => {
+                      data.node_height = +evt.target.value
+                      set_data({ ...data })
+                    }
+                  } />
+              </Col>
+              <Col>{node_height}</Col>
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
@@ -883,7 +927,6 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   const handleDelGroupTag = (tags_group_key: string) => {
     const { tags_catalog } = data
-    //console.log(i)
     delete tags_catalog[tags_group_key]
     Object.values(data.nodes).forEach(
       n => {

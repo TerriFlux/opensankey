@@ -26,13 +26,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const { tags_catalog } = data
   const tags_visible = Object.keys(tags_catalog).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
-
+  // let tags_group_key = tags_visible ? Object.keys(tags_catalog)[0] : ''
   const display_nodes = data.nodes
   const display_links = data.links
-  if (tags_group_key == '' && Object.keys(tags_catalog).length > 0) {
+  if ((tags_group_key == '' && Object.keys(tags_catalog).length > 0) || (!Object.keys(tags_catalog).includes(tags_group_key) && Object.keys(tags_catalog).length > 0)) {
     set_tags_group_key(Object.keys(tags_catalog)[0])
   }
-
 
   let node = data.nodes[selected_node.idNode]
   if (node === undefined) {
@@ -81,6 +80,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       display_width = (d.node_width == width) ? display_width : false
     })
     return (display_width) ? width : 0
+  }
+  const displayedValueNodeHeight = () => {
+    let display_height = true
+    let width = 0
+    if (multi_selected_node.length != 0) {
+      width = multi_selected_node[0].node_height
+    }
+    multi_selected_node.map((d) => {
+      display_height = (d.node_height == width) ? display_height : false
+    })
+    return (display_height) ? width : 0
   }
 
   const allNodeLabelFontSize = () => {
@@ -136,6 +146,34 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     const d = (size == 0) ? '' : size
     return (display_size) ? d : 110
   }
+  const isAllIconSame = (param: string) => {
+    let icon = true
+
+    multi_selected_node.map(d => {
+      icon = (d.iconName == param) ? icon : false
+    })
+    return icon
+  }
+
+  const valueAllIconRatio = () => {
+    let display_ratio = true
+    let ratio = 100
+    if (multi_selected_node.length != 0) {
+      ratio = multi_selected_node[0].iconRatio
+    }
+    multi_selected_node.map((d) => {
+      display_ratio = (d.iconRatio == ratio) ? display_ratio : false
+    })
+    const d = (ratio == 0) ? '' : ratio
+    return (display_ratio) ? d : 100
+  }
+  const isAllIconVisible = () => {
+    let visible = false
+    multi_selected_node.map(d => visible = (d.iconVisible) ? true : visible)
+    return visible
+  }
+
+
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
@@ -148,7 +186,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Col xs={6}>
           <Form.Select
             onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+              (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
+
+            }
           >
             {Object.entries(tags_catalog).map(
               (tags_group, i) =>
@@ -174,7 +214,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           />
         </Col>
       </Form.Group>
-      <Form.Group as={Row} >
+      <Form.Group xs={12} as={Row} >
         <Table striped bordered hover className='node_tags_affiliation'>
           <thead>
             <tr>
@@ -183,9 +223,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </tr>
           </thead>
           <tbody>
-            {tags_visible && tags_group_key != '' ? Object.entries(tags_catalog[tags_group_key].tags).map(
+            {tags_visible && tags_group_key != '' && Object.keys(tags_catalog).includes(tags_group_key) ? Object.entries(tags_catalog[tags_group_key].tags).map(
               tags => {
                 const node_tags = node.tags[tags_group_key]
+                const verif = tags[0]
+                let allChecked = true
+                multi_selected_node.map((d) => {
+                  allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
+                })
                 const checked = node_tags ? node_tags.includes(tags[0]) : false
                 return (
                   <tr key={tags[0]}>
@@ -193,7 +238,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <td>
                       <FormCheck
                         name={'element_visible' + tags[0]}
-                        checked={checked}
+                        checked={allChecked}
                         id={tags[0]}
                         type='checkbox'
                         onChange={
@@ -311,7 +356,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             <Form >
               <Form.Group as={Row} >
                 <Col xs={4}>
-                  <FormLabel >Taille minimum</FormLabel>
+                  <FormLabel >Taille minimum Largeur</FormLabel>
                 </Col>
                 <Col>
                   <FormControl
@@ -323,6 +368,26 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         multi_selected_node.map(d => d.node_width = +evt.target.value)
                         set_multi_selected_node(multi_selected_node)
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.node_width = +evt.target.value)
+                        set_data({ ...data })
+                      }
+                    } />
+                </Col>
+                <Col>px</Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={4}>
+                  <FormLabel >Taille minimum Hauteur</FormLabel>
+                </Col>
+                <Col>
+                  <FormControl
+                    min={0} max={100}
+                    type={'number'}
+                    value={displayedValueNodeHeight()}
+                    onChange={
+                      evt => {
+                        // multi_selected_node.map(d => d.node_width = +evt.target.value)
+                        set_multi_selected_node(multi_selected_node)
+                        Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.node_height = +evt.target.value)
                         set_data({ ...data })
                       }
                     } />
@@ -363,7 +428,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     type={'number'}
                     value={allNodeLabelFontSize()}
                     onChange={evt => {
-                      console.log(evt.target.value)
                       // data.display_style.font_size = +evt.target.value
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.font_size = +evt.target.value)
                       set_data({ ...data })
@@ -570,6 +634,91 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Form.Group>
             </Form>
           </Tab>}
+          <Tab eventKey="node_icon" title="Icon">
+            <Form >
+              <Form.Group as={Row}>
+                <Col xs={4}>
+                  <FormLabel >Visibilité</FormLabel>
+                </Col>
+                <Col xs={5}>
+                  <FormCheck inline
+                    type='switch'
+                    checked={isAllIconVisible()}
+                    onChange={evt => {
+                      // node.shape_visible = evt.target.checked
+                      // node.node_visible = node.label_visible || node.shape_visible
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.iconVisible = evt.target.checked)
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+
+
+              <Form.Group as={Row}>
+                <Col xs={4}>
+                  <FormLabel>Sélection Icon</FormLabel>
+                </Col>
+                <Col xs={5}>
+                  <Form.Select
+
+                    onChange={evt => {
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
+                        d.iconName = evt.target.value
+                      })
+                      set_data({ ...data })
+                    }}
+                  >
+                    <option key={0} value={'none'} selected={isAllIconSame('none')}>{'Aucun'}</option>
+
+                    {Object.keys(data.icon_catalog).map((n, i) => {
+                      return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
+                    })}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Col xs={4}>
+                  <FormLabel >Couleur</FormLabel>
+                </Col>
+                <Col xs={3}>
+                  <Form.Control
+                    type='color'
+                    disabled={radio_selected !== 'local'}
+                    value={(multi_selected_node.length == 1) ? multi_selected_node[0].iconColor : '#ffffff'}
+                    onChange={evt => {
+                      const color = evt.target.value
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.iconColor = color)
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Col xs={4}>
+                  <FormLabel >Ratio ICON/NOEUD</FormLabel>
+                </Col>
+                <Col xs={3}>
+                  <Form.Control
+                    type='number'
+                    disabled={radio_selected !== 'local'}
+                    value={valueAllIconRatio()}
+                    onChange={evt => {
+                      let ratio = +evt.target.value
+                      ratio = (ratio > 100) ? 100 : ratio
+                      ratio = (ratio < 0) ? 0 : ratio
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.iconRatio = ratio)
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+                <Col xs={4}>
+                  <FormLabel >%</FormLabel>
+                </Col>
+              </Form.Group>
+            </Form>
+          </Tab>
+
           {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
           <Tab eventKey="node_tooltip" title="Tooltip">
             <Form >
