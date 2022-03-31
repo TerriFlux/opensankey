@@ -7,7 +7,7 @@
     "url": "git@gitlab.com:greel/su-model.git"
   },
   "author": "Alapetite Julien",
-  "version": "0.8.0.test",
+  "version": "0.8.0",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
@@ -72,8 +72,9 @@
     "react-bootstrap": "^2.0.0-rc.0",
     "react-color": "^2.19.3",
     "react-dom": "^17.0.2",
+    "react-google-font-loader": "^1.1.0",
     "react-icons": "^4.3.1",
-    "react-multiselect-dropdown-bootstrap": "^1.1.0",
+    "react-multi-select-component": "^4.2.3",
     "react-scripts": "^5.0.0",
     "react-test-renderer": "^17.0.2",
     "shx": "^0.3.4",
@@ -84,6 +85,7 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.3",
+    "@types/react-dom": "^17.0.13",
     "eslint": "^8.6.0",
     "eslint-plugin-mocha": "^8.1.0",
     "eslint-plugin-react": "^7.23.2",

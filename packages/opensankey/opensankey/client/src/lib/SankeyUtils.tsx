@@ -32,7 +32,7 @@ export const getLinkValue = (
 ) => {
   const { links, dataTags } = data
   if (!(idLink in links)) {
-    console.log('idLink: ' + idLink + ' not in links')
+
     return {
       value: 0,
       display_value: 'default',
@@ -74,6 +74,9 @@ export const findMaxLinkValue = (
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
+  if ( value_dict === undefined || Object.values(value_dict).length == 0) {
+    return new_max_node_value
+  }
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
@@ -230,7 +233,7 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(nodes, links[the_id], selected_tags)
-      console.log(v)
+
       if (v === undefined) {
         return
       }
@@ -325,6 +328,9 @@ export const link_text = (
   if (str_display !== 'default') {
     return str_display
   }
+  if ( data.show_structure) {
+    return
+  }
   const the_link_value = toPrecision(link_value)
   return the_link_value
 }
@@ -338,7 +344,7 @@ export const default_sankey_data = (): SankeyData => {
     user_scale: 20,
     //height: 1500,
     width: window.innerWidth - 40,
-    height:500,
+    height: 500,
     node_width: 10,
     h_space: 200,
     v_space: 100,
@@ -362,7 +368,9 @@ export const default_sankey_data = (): SankeyData => {
       filter: 0,
       filter_label: 0,
       global_curvature: 0.5,
-      null_flux: false
+      null_flux: false,
+      font_family:['Arial','Roboto','Cormorant','Cantarell'],
+      font_family_selected:'Cormorant'
     },
 
     static_sankey: false,
@@ -373,6 +381,7 @@ export const default_sankey_data = (): SankeyData => {
 }
 
 export const default_node = (
+  data: SankeyData
 ): SankeyNode => {
   console.log('-> Affectation du default_node')
   const defaultNode = {
@@ -383,8 +392,9 @@ export const default_node = (
     node_visible: true,
     shape_visible: true,
     label_visible: true,
+    node_width: data.node_width,
     color: '#a9a9a9',
-    nodeParameter: 'general',
+    nodeParameter: 'local',
     position: 'absolute',
     x: 100,
     y: 100,
@@ -393,7 +403,22 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: { 'Primaire': { parent_name: undefined } }
+    dimensions: { 'Primaire': { parent_name: undefined } },
+
+    display_style: {
+      font_size: data.display_style.font_size,
+      uppercase: true,
+      bold: true,
+      italic: false,
+      unit: false,
+      filter: 0,
+      filter_label: 0,
+      global_curvature: 0.5,
+      null_flux: false,
+      label_vert:'bas',
+      label_horiz:'milieu',
+      label_box_width:110,
+    },
   }
   return defaultNode
 }
@@ -442,7 +467,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     idLink: 'link0',
     value: nObjet,
     color: '#a9a9a9',
-    gradient:false,
+    gradient: false,
     curved: false,
     arrow: true,
     text_color: 'black',
@@ -473,7 +498,6 @@ export const delete_link = (
   target_node.inputLinksId.splice(idx, 1)
 
   delete data.links[link.idLink]
-  console.log(link.idLink, data.links)
 }
 
 export const delete_node = (
@@ -489,14 +513,13 @@ export const delete_node = (
     Object.values(data.nodes).map((k) => {
       k.outputLinksId = k.outputLinksId.filter(function (value) {
         return value != idLink
-      })      
+      })
     })
     delete data.links[idLink]
   })
 
   //node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
   node.outputLinksId.forEach(idLink => {
-    console.log
     Object.values(data.nodes).map((k) => {
       k.inputLinksId = k.inputLinksId.filter(function (value) {
         return value != idLink
@@ -541,7 +564,7 @@ export const setSelectedTags = (
       node.node_visible = true
     }
   })
-  if ( !sankey_data.show_structure) {
+  if (!sankey_data.show_structure) {
     hideNullFluxNodes(sankey_data)
   }
 }
@@ -610,7 +633,7 @@ export const uploadExemple = (
       Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
       let max_vert_shift = 0
       Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-  
+
       data.height = Math.max(500, height + max_vert_shift + 200)
       set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)
@@ -654,30 +677,33 @@ export const hideNullFluxNodes = (
 ) => {
   const { nodes, links } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
+  if (display_nodes.length == 0) {
+    return
+  } 
   display_nodes.forEach(node => {
-    let total_input=0
-    if ( node.inputLinksId.length > 0 ) {
-      for (let i=0;i<node.inputLinksId.length;i++) {
+    let total_input = 0
+    if (node.inputLinksId.length > 0) {
+      for (let i = 0; i < node.inputLinksId.length; i++) {
         const link = links[node.inputLinksId[i]]
-        if ( link === undefined ) {
+        if (link === undefined) {
           //alert('Corruption du diagramme')
           return ''
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-          total_input += getLinkValue(sankey_data,link.idLink).value
+          total_input += getLinkValue(sankey_data, link.idLink).value
         }
       }
     }
-    let total_output=0
-    if ( node.outputLinksId.length > 0 ) {
-      for (let i=0;i<node.outputLinksId.length;i++) {
+    let total_output = 0
+    if (node.outputLinksId.length > 0) {
+      for (let i = 0; i < node.outputLinksId.length; i++) {
         const link = sankey_data.links[node.outputLinksId[i]]
-        if (link === undefined ) {
+        if (link === undefined) {
           //alert('Corruption du diagramme')
           return ''
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-          total_output += getLinkValue(sankey_data,link.idLink).value
+          total_output += getLinkValue(sankey_data, link.idLink).value
         }
       }
     }
