@@ -85,8 +85,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           app_name='version beta 0.8'
 
           example_menu={<>
-            <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
-            <ExempleItem 
+            <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+            <ExempleItem
               exemple_menu={exemple_menu}
               url_prefix=''
               data={data}
