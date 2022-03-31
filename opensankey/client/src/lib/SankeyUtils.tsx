@@ -344,16 +344,18 @@ export const default_sankey_data = (): SankeyData => {
     user_scale: 20,
     //height: 1500,
     width: window.innerWidth - 40,
+    width_min: window.innerWidth - 40,
+    height_min: 500,
     height: 500,
-    node_width: 10,
-    node_height: 10,
+    node_width: 25,
+    node_height: 25,
     h_space: 200,
     v_space: 100,
     legend_position: [0, 100],
 
     show_structure: false,
 
-    icon_catalog:{},
+    icon_catalog: {},
 
     left_shift: 0.4,
     right_shift: 0.5,
@@ -372,14 +374,17 @@ export const default_sankey_data = (): SankeyData => {
       filter_label: 0,
       global_curvature: 0.5,
       null_flux: false,
-      font_family:['Arial','Roboto','Cormorant','Cantarell'],
-      font_family_selected:'Cormorant'
+      font_family: ['Arial', 'Roboto', 'Cormorant', 'Cantarell'],
+      font_family_selected: 'Cormorant'
     },
+    grid_square_size: 50,
+    grid_visible: true,
 
     static_sankey: false,
 
     tags_catalog: {},
-    dataTags: {}
+    dataTags: {},
+    view: []
   }
 }
 
@@ -397,10 +402,10 @@ export const default_node = (
     label_visible: true,
     node_width: data.node_width,
     node_height: data.node_height,
-    iconName:'none',
-    iconColor:'#fff',
-    iconRatio:80,
-    iconVisible:true,
+    iconName: 'none',
+    iconColor: '#fff',
+    iconRatio: 80,
+    iconVisible: true,
 
     color: '#a9a9a9',
     nodeParameter: 'local',
@@ -424,9 +429,9 @@ export const default_node = (
       filter_label: 0,
       global_curvature: 0.5,
       null_flux: false,
-      label_vert:'bas',
-      label_horiz:'milieu',
-      label_box_width:110,
+      label_vert: 'bas',
+      label_horiz: 'milieu',
+      label_box_width: 110,
     },
   }
   return defaultNode
@@ -688,7 +693,7 @@ export const hideNullFluxNodes = (
   const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
   if (display_nodes.length == 0) {
     return
-  } 
+  }
   display_nodes.forEach(node => {
     let total_input = 0
     if (node.inputLinksId.length > 0) {
