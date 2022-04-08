@@ -2808,7 +2808,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const position = data.static_sankey ? 'relative' : 'absolute'
   const font = data.display_style.font_family_selected
   const test = document.getElementsByClassName('navbar') as any
-  const margin_top = test[0].getBoundingClientRect().height
+  let margin_top = 0
+  if (test && test.length>0) {
+    margin_top = test[0].getBoundingClientRect().height
+  }
 
   // const moveNode = (e: any) => {
   //   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
