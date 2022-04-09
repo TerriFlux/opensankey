@@ -1462,8 +1462,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select('#' + source_node.idNode).attr('width')
     const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y
-    const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select('#' + target_node.idNode).attr('width')
-    const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select('#' + target_node.idNode).attr('height')
+    const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select('#' + source_node.idNode).attr('width')
+    const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select('#' + source_node.idNode).attr('height')
 
     let xs = source_node_x
     let ys = source_node_y
