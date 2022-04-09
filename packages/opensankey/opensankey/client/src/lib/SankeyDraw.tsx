@@ -2267,7 +2267,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     //------------------LABEL------------------------
-
+    //   .attr('x', n => n.x_label ? n.x_label : 0)
+    //   .attr('y', n => {
+    //     if (n.y_label) {
+    //       return n.y_label
+    //     }
 
     const select = ggg_nodes
       .append('text')
@@ -2276,7 +2280,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', n => n.idNode + '_text')
       .attr('x', (n) => {
         const width = +d3.select('#' + n.idNode).attr('width')
-        if (n.display_style.label_horiz == 'milieu') {
+        if (n.x_label) {
+          return n.x_label
+        } else if (n.display_style.label_horiz == 'milieu') {
           return width / 2
         } else if (n.display_style.label_horiz == 'gauche') {
           return 0
@@ -2287,8 +2293,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('y', n => {
-        const height = +d3.select('#' + n.idNode).attr('height')
-        if (n.display_style.label_vert == 'milieu') {
+        const height = +d3.select('#' + n.idNode).attr('height')  
+        if (n.y_label) {
+          return n.y_label
+        } else if (n.display_style.label_vert == 'milieu') {
           return height / 2
         } else if (n.display_style.label_vert == 'haut') {
           return 0
