@@ -2773,7 +2773,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drawGrid = () => {
 
     d3.select('#svg #grid').selectAll('.line').remove()
-    if (data.grid_visible) {
+    if (data.grid_visible && !data.static_sankey) {
       const numberLineH = data.height / data.grid_square_size
       for (let row = 0; row < numberLineH; row++) {
         d3.select('#svg #grid').append('line')
