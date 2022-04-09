@@ -2804,8 +2804,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   }
 
-  const width = data.static_sankey ? '100%' : data.width
-  const position = data.static_sankey ? 'relative' : 'absolute'
   const font = data.display_style.font_family_selected
   const test = document.getElementsByClassName('navbar') as any
   let margin_top = 0
@@ -2968,9 +2966,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   useEffect(() => {
     removeAnimate()
     const svgSankey = (d3.select('#svg') as any)
-    if (data.static_sankey) {
-      svgSankey.attr('viewBox', [0, 0, data.width, data.height])
-    }
+    // if (data.static_sankey) {
+    //   svgSankey.attr('viewBox', [0, 0, data.width, data.height])
+    // }
     svgSankey
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -3084,30 +3082,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   return (
     <>
-      { !data.static_sankey ? (
-        <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-          <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-            <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': width, 'border': (current) ? '2px solid #78c2ad' : '2px solid red' }}>
-              <g className='grid' id='grid'></g>
-              <g className='g_legend' id='g_legend'></g>
-              <g className='g_links' id='g_links' ></g>
-              <g className='g_nodes' id='g_nodes'></g>
-            </svg>
-          </div>
+      <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
+        <div id="svg-container" style={{ 'marginTop': margin_top + 'px', 'fontFamily': font }}>
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.width, 'border': (current) ? '2px solid #78c2ad' : '2px solid red' }}>
+            <g className='grid' id='grid'></g>
+            <g className='g_legend' id='g_legend'></g>
+            <g className='g_links' id='g_links' ></g>
+            <g className='g_nodes' id='g_nodes'></g>
+          </svg>
         </div>
-      ) : (
-        <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-          <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-            <svg id='svg' style={{ 'margin': '20px', 'width': width, 'border': (current) ? '2px solid #78c2ad' : '2px solid red' }}>
-              <g className='grid' id='grid'></g>
-              <g className='g_legend' id='g_legend'></g>
-              <g className='g_links' id='g_links' ></g>
-              <g className='g_nodes' id='g_nodes'></g>
-            </svg>
-          </div>
-        </div>
-      )
-      }
+      </div>
 
       <AgregationModal
         show_agregation={show_agregation}
