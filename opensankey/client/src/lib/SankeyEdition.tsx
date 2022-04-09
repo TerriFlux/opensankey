@@ -162,7 +162,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
   }
 
   const addPalette = () => {
-    if (Object.entries(data.dataTags).filter(tags => tags[1].banner === 'display').length === 0 && Object.entries(data.tags_catalog).length == 0) {
+    if (Object.entries(data.dataTags).filter(tags => tags[1].banner === 'display' && tags[0] !== 'Exchanges').length === 0 && Object.entries(data.tags_catalog).filter(tags => tags[0] !== 'Exchanges').length == 0) {
       return (<></>)
     }
     return (
@@ -175,7 +175,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
             let the_colormap = colormap
             const apply_to_node = Object.keys(data.tags_catalog).includes(colormap)
             if (colormap === '' || colormap === undefined) {
-              the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] : ''
+              the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one' && tags_key !== 'Exchanges' )[0] : ''
               if (the_colormap === '' || colormap === undefined) {
                 the_colormap = tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : ''
               }
