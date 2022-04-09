@@ -165,6 +165,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_view={set_view}
         />
       ) : (<></>)}
+      {(window.SankeyToolsStatic) ? (
+        <SankeyEdition
+          data={data}
+          set_data={set_data} />
+      ) : (<></>)}
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
       {useEffect(() => {
