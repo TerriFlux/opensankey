@@ -429,7 +429,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           </Col>
         </Row>
       </div>
-      {window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
+      {window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
         <Modal 
           style={{
             display: 'flex',
