@@ -31,8 +31,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     tags_visible ?
       (Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one').length > 0 ?
         Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] :
-          (Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0 ?
-            Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
+        (Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0 ?
+          Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
       ) : '')
   //const [use_colormap, set_use_colormap] = useState(false)
   const [diagram, set_diagram] = useState('')
