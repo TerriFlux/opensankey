@@ -96,6 +96,9 @@ export const convert_data = (
   if (!data.display_style) {
     (data.display_style as Record<string,unknown> ) = {}
   }
+  if (!data.grid_visible) {
+    data.grid_visible = true
+  }
   if (data_to_convert.tags_catalog === undefined) {
     data_to_convert.tags_catalog = {}
   }
