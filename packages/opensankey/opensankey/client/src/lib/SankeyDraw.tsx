@@ -2307,7 +2307,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('text-anchor', n => {
-        if (n.display_style.label_horiz == 'milieu') {
+        if (n.x_label) {
+          return 'center'
+        } else if (n.display_style.label_horiz == 'milieu') {
           return 'middle'
         } else if (n.display_style.label_horiz == 'gauche') {
           return 'end'
