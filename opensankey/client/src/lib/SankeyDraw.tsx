@@ -1306,13 +1306,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
     let node_size_s_height = Math.max(
-      inv_scale(n.node_height), total_offset_height_left, total_offset_height_right
+      inv_scale(5), total_offset_height_left, total_offset_height_right
     )
     // let node_size_s_width = Math.max(
     //   inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     // )
     let node_size_s_width = Math.max(
-      inv_scale(n.node_width), total_offset_width_top, total_offset_width_bottom
+      inv_scale(5), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
@@ -1356,16 +1356,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_height = Math.max(
-      inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale(5), s_total_offset_height_left, s_total_offset_height_right
     )
     let node_size_t_height = Math.max(
-      inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale(5), t_total_offset_height_left, t_total_offset_height_right
     )
     let node_size_s_width = Math.max(
-      inv_scale(source_node.node_width), s_total_offset_width_top, s_total_offset_width_bottom
+      inv_scale(5), s_total_offset_width_top, s_total_offset_width_bottom
     )
     let node_size_t_width = Math.max(
-      inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
+      inv_scale(5), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
@@ -1428,20 +1428,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let node_size_t_width = inv_scale(target_node.node_width)
     if (!data.show_structure) {
       node_size_s_width = Math.max(
-        inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
+        inv_scale(5), s_total_offset_width_bottom, s_total_offset_width_top
       )
       node_size_t_width = Math.max(
-        inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
+        inv_scale(5), t_total_offset_width_bottom, t_total_offset_width_top
       )
     }
     let node_size_s_height = inv_scale(source_node.node_width)
     let node_size_t_height = inv_scale(target_node.node_width)
     if (!data.show_structure) {
       node_size_s_height = Math.max(
-        inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
+        inv_scale(5), s_total_offset_height_left, s_total_offset_height_right
       )
       node_size_t_height = Math.max(
-        inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
+        inv_scale(5), t_total_offset_height_left, t_total_offset_height_right
       )
     }
 
