@@ -904,6 +904,12 @@ export const convert_data = (
         v.extension.free_maxi = free_maxi 
         v.display_value = 'default'   
       }
+      if ( !v.color_tag) {
+        v.color_tag = {}
+      }
+      if ( !v.extension) {
+        v.extension = {}
+      }
       if (data_to_convert.dataTags['flux_types']) {
         if ( v.extension.data_value ) {
           v['color_tag']['flux_types'] = 'initial_data'
