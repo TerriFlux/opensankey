@@ -4,6 +4,8 @@ import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
+import { set_nodes_level } from './SankeyUtils'
+
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired
@@ -29,8 +31,24 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
           Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] : ''))
       : ''
   )
-  const [use_colormap, set_use_colormap] = useState(false)
+  //const [use_colormap, set_use_colormap] = useState(false)
   const [diagram, set_diagram] = useState('')
+  const [agregation_level,set_agregation_level] = useState(1)
+  const [use_colormap,set_use_colormap] = useState(Object.entries(data.tags_catalog).filter(tags_group=>tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' && tags_group[0] !== 'Echanges').length > 0)
+  const [use_level,set_use_level] = useState(false)
+
+  let nb_agregation_level = 0
+  Object.values(data.nodes).forEach(n => {
+    if (!n.dimensions) {
+      return
+    }
+    Object.entries(n.dimensions).forEach(dim => {
+      if (!dim[1].level) {
+        return
+      }
+      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
+    })
+  })
 
   const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
     const val = evt.target.value
@@ -148,113 +166,110 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
       return (<></>)
     }
     return (
-      <Row>
-        <Col>
-          <FormCheck
-            type='switch'
-            label='Palette'
-            checked={use_colormap === true}
-            onChange={evt => {
-              let the_colormap = colormap
-              const apply_to_node = Object.keys(data.tags_catalog).includes(colormap)
-              if (colormap === '' || colormap === undefined) {
-                the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] : ''
-                if (the_colormap === '' || colormap === undefined) {
-                  the_colormap = tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : ''
-                }
+      <Col>
+        <FormCheck
+          type='switch'
+          label='Palette de couleurs'
+          checked={use_colormap === true}
+          onChange={evt => {
+            let the_colormap = colormap
+            const apply_to_node = Object.keys(data.tags_catalog).includes(colormap)
+            if (colormap === '' || colormap === undefined) {
+              the_colormap = tags_visible ? Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] : ''
+              if (the_colormap === '' || colormap === undefined) {
+                the_colormap = tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : ''
               }
-              if (evt.target.checked) {
-                Object.values(data.links).forEach(link => link.colormap = the_colormap)
-                if (apply_to_node) {
-                  Object.values(data.nodes).forEach(node => {
-                    if (node.type === 'sector') {
-                      return
-                    }
-                    node.nodeParameter = 'groupTag'
-                    node.colorTag = the_colormap
-                  })
-                }
+            }
+            if (evt.target.checked) {
+              Object.values(data.links).forEach(link => link.colormap = the_colormap)
+              if (apply_to_node) {
+                Object.values(data.nodes).forEach(node => {
+                  if (node.type === 'sector') {
+                    return
+                  }
+                  node.nodeParameter = 'groupTag'
+                  node.colorTag = the_colormap
+                })
+              }
+            } else {
+              Object.values(data.links).forEach(link => link.colormap = '')
+              if (apply_to_node) {
+                Object.values(data.nodes).forEach(node => {
+                  node.nodeParameter = 'local'
+                  //node.colorTag = the_colormap
+                })
+              }
+            }
+            set_use_colormap(evt.target.checked)
+            Object.values(tags_catalog).forEach(tags_group => tags_group.show_legend = false)
+            Object.values(dataTags).forEach(tags_group => tags_group.show_legend = false)
+            if (the_colormap in tags_catalog) {
+              tags_catalog[the_colormap].show_legend = evt.target.checked
+            }
+            if (the_colormap in dataTags) {
+              dataTags[the_colormap].show_legend = evt.target.checked
+            }
+            set_colormap(the_colormap)
+            set_data({ ...data })
+          }}
+        />
+
+        <Form.Select
+          disabled={!use_colormap}
+          onChange={
+            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+              const apply_to_node = Object.keys(data.tags_catalog).includes(evt.target.value)
+              Object.values(data.links).forEach(link => link.colormap = evt.target.value)
+              if (apply_to_node) {
+                Object.values(data.nodes).forEach(node => {
+                  if (node.type === 'sector') {
+                    return
+                  }
+                  node.nodeParameter = 'groupTag'
+                  node.colorTag = evt.target.value
+                })
               } else {
-                Object.values(data.links).forEach(link => link.colormap = '')
-                if (apply_to_node) {
-                  Object.values(data.nodes).forEach(node => {
-                    node.nodeParameter = 'local'
-                    //node.colorTag = the_colormap
-                  })
-                }
+                Object.values(data.nodes).forEach(node => {
+                  if (node.type === 'sector') {
+                    return
+                  }
+                  node.nodeParameter = 'general'
+                })
               }
-              set_use_colormap(evt.target.checked)
+              //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
+              set_colormap(evt.target.value)
+              if (evt.target.value in tags_catalog) {
+                Object.values(tags_catalog).forEach(tags_group => tags_group.show_legend = false)
+                tags_catalog[evt.target.value].show_legend = true
+              }
               Object.values(tags_catalog).forEach(tags_group => tags_group.show_legend = false)
               Object.values(dataTags).forEach(tags_group => tags_group.show_legend = false)
-              if (the_colormap in tags_catalog) {
-                tags_catalog[the_colormap].show_legend = evt.target.checked
+              if (evt.target.value in tags_catalog) {
+                tags_catalog[evt.target.value].show_legend = true
               }
-              if (the_colormap in dataTags) {
-                dataTags[the_colormap].show_legend = evt.target.checked
+              if (evt.target.value in dataTags) {
+                dataTags[evt.target.value].show_legend = true
               }
-              set_colormap(the_colormap)
               set_data({ ...data })
-            }}
-          />
-        </Col>
-        <Col>
-          <Form.Select
-            disabled={!use_colormap}
-            onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                const apply_to_node = Object.keys(data.tags_catalog).includes(evt.target.value)
-                Object.values(data.links).forEach(link => link.colormap = evt.target.value)
-                if (apply_to_node) {
-                  Object.values(data.nodes).forEach(node => {
-                    if (node.type === 'sector') {
-                      return
-                    }
-                    node.nodeParameter = 'groupTag'
-                    node.colorTag = evt.target.value
-                  })
-                } else {
-                  Object.values(data.nodes).forEach(node => {
-                    if (node.type === 'sector') {
-                      return
-                    }
-                    node.nodeParameter = 'general'
-                  })
-                }
-                //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
-                set_colormap(evt.target.value)
-                if (evt.target.value in tags_catalog) {
-                  Object.values(tags_catalog).forEach(tags_group => tags_group.show_legend = false)
-                  tags_catalog[evt.target.value].show_legend = true
-                }
-                Object.values(tags_catalog).forEach(tags_group => tags_group.show_legend = false)
-                Object.values(dataTags).forEach(tags_group => tags_group.show_legend = false)
-                if (evt.target.value in tags_catalog) {
-                  tags_catalog[evt.target.value].show_legend = true
-                }
-                if (evt.target.value in dataTags) {
-                  dataTags[evt.target.value].show_legend = true
-                }
-                set_data({ ...data })
-              }}>
-            {Object.entries(data.dataTags).filter(tags_group => tags_group[1].banner === 'display').map(
-              (tags_group, i) =>
-                <option
-                  key={i}
-                  value={tags_group[0]}
-                  selected={colormap === tags_group[0]} >
-                  {tags_group[1].group_name}
-                </option>)}
-            {Object.entries(data.tags_catalog).filter(tags_group => tags_group[1].banner === 'multi').map(
-              (tags_group, i) =>
-                <option
-                  key={i}
-                  value={tags_group[0]}
-                  selected={colormap === tags_group[0]} >
-                  {tags_group[1].group_name}
-                </option>)}
-          </Form.Select>
-        </Col>
-      </Row>
+            }}>
+          {Object.entries(data.dataTags).filter(tags_group => tags_group[1].banner === 'display').map(
+            (tags_group, i) =>
+              <option
+                key={i}
+                value={tags_group[0]}
+                selected={colormap === tags_group[0]} >
+                {tags_group[1].group_name}
+              </option>)}
+          {Object.entries(data.tags_catalog).filter(tags_group => tags_group[1].banner === 'multi').map(
+            (tags_group, i) =>
+              <option
+                key={i}
+                value={tags_group[0]}
+                selected={colormap === tags_group[0]} >
+                {tags_group[1].group_name}
+              </option>)}
+        </Form.Select>
+      </Col>
     )
   }
 
@@ -276,7 +291,22 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
     Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
 
     new_data.height = Math.max(500, height + max_vert_shift + 200)
-    set_data({ ...new_data })
+    Object.values(data.nodes).forEach(n => {
+      if (!n.dimensions) {
+        return
+      }
+      Object.entries(n.dimensions).forEach(dim => {
+        if (!dim[1].level) {
+          return
+        }
+        nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
+      })
+    })
+    //for (let level = 1; level <= +evt.target.value + 1; level++) {
+    set_nodes_level(data.nodes,agregation_level)
+    //}
+    localStorage.setItem('initial_data',JSON.stringify(new_data))
+    set_data({...new_data})
   }
 
   let sous_filieres = undefined
@@ -322,6 +352,44 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
               {addAllDropDownLinks()}
             </Form>
           </Col>
+          { nb_agregation_level > 1 ? (<Col><Form.Group >
+            <FormCheck
+              type='switch'
+              label='Niveau de détail'
+              checked={use_level === true}
+              onChange={ evt => {
+                if (evt.target.checked) {
+                  set_nodes_level(data.nodes, agregation_level)
+                  set_data({...data})
+                } else {
+                  const json_data = localStorage.getItem('initial_data')
+                  const initial_data = JSON.parse(json_data as string)
+                  initial_data.static_sankey = true
+                  set_data({...data})
+                }
+                set_use_level(evt.target.checked)
+              }}
+            />
+            <Form.Select id="selectionNode"
+              disabled={!use_level}
+              onChange={
+                (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  if (evt.target.value ==='') {
+                    return
+                  }
+                  //set_level(+evt.target.value)
+                  for (let level = 1; level <= +evt.target.value + 1; level++) {
+                    set_nodes_level(data.nodes, level)
+                  }
+                  set_agregation_level(+evt.target.value)
+                  set_data({...data})
+                }
+              }
+            >
+              {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
+            </Form.Select>
+          </Form.Group>
+          </Col>) : (<></>)}
           <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
