@@ -393,6 +393,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
           <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
+              <Col>
+                <FormCheck
+                  type="checkbox"
+                  checked={data.show_structure}
+                  onChange={evt => {
+                    data.show_structure = evt.target.checked
+                    set_data({ ...data })
+                  }}
+                  label='Structure du diagramme'
+                />
+              </Col>   
             </Form>
           </Col>
         </Row>
