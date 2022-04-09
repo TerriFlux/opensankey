@@ -76,6 +76,7 @@ if (!window.SankeyToolsStatic) {
 
 } else {
   localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
+  localStorage.setItem('initial_data',JSON.stringify(window.sankey.filiere))
   const json_data = localStorage.getItem('data')
   if (json_data !== null && json_data !== 'undefined' ) {
     const new_data = JSON.parse(json_data)

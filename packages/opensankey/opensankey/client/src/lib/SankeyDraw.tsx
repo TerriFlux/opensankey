@@ -1312,7 +1312,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //   inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     // )
     let node_size_s_width = Math.max(
-      inv_scale(5), total_offset_width_top, total_offset_width_bottom
+      inv_scale(data.node_width), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
@@ -1362,10 +1362,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(5), t_total_offset_height_left, t_total_offset_height_right
     )
     let node_size_s_width = Math.max(
-      inv_scale(5), s_total_offset_width_top, s_total_offset_width_bottom
+      inv_scale(data.node_width), s_total_offset_width_top, s_total_offset_width_bottom
     )
     let node_size_t_width = Math.max(
-      inv_scale(5), t_total_offset_width_top, t_total_offset_width_bottom
+      inv_scale(data.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
@@ -1428,10 +1428,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let node_size_t_width = inv_scale(target_node.node_width)
     if (!data.show_structure) {
       node_size_s_width = Math.max(
-        inv_scale(5), s_total_offset_width_bottom, s_total_offset_width_top
+        inv_scale(data.node_width), s_total_offset_width_bottom, s_total_offset_width_top
       )
       node_size_t_width = Math.max(
-        inv_scale(5), t_total_offset_width_bottom, t_total_offset_width_top
+        inv_scale(data.node_width), t_total_offset_width_bottom, t_total_offset_width_top
       )
     }
     let node_size_s_height = inv_scale(source_node.node_width)
@@ -3090,11 +3090,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   })
 
+  let border = '0px'
+  if (!data.static_sankey) {
+    border = (current) ? '2px solid #78c2ad' : '2px solid red'
+  }
+
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.width, 'border': (current) ? '2px solid #78c2ad' : '2px solid red' }}>
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.width, 'border': border }}>
             <g className='grid' id='grid'></g>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>

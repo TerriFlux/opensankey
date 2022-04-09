@@ -1,41 +1,45 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck, FormLabel, FormControl } from 'react-bootstrap'
+import { Row, Col, Form, FormCheck, FormLabel, FormControl, Modal, Button, Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
+import parse from 'html-react-parser'
 import { convert_data } from './SankeyConvert'
 import { set_nodes_level } from './SankeyUtils'
 
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired
+  set_data: PropTypes.func.isRequired,
+  additional_selector: PropTypes.element,
 }
 
 declare const window: Window &
   typeof globalThis & {
     sankey: {
       sous_filieres: { [key: string]: string }
+      help: { [key: string]: string }
+      excel: string
     }
   }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,additional_selector }) => {
   const { tags_catalog, dataTags } = data
   const tags_visible = Object.keys(data.tags_catalog).length > 0 || Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0
   const [colormap, set_colormap] = useState(
     tags_visible ?
-      (Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0 ?
-        Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0]
-        : (Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one').length > 0 ?
-          Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] : ''))
-      : ''
-  )
+      (Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one').length > 0 ?
+        Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one')[0] :
+          (Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0 ?
+            Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
+      ) : '')
   //const [use_colormap, set_use_colormap] = useState(false)
   const [diagram, set_diagram] = useState('')
-  const [agregation_level,set_agregation_level] = useState(1)
+  const [agregation_level,set_agregation_level] = useState(0)
   const [use_colormap,set_use_colormap] = useState(Object.entries(data.tags_catalog).filter(tags_group=>tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' && tags_group[0] !== 'Echanges').length > 0)
   const [use_level,set_use_level] = useState(false)
+  const [show_readme,set_show_readme] = useState(false)
 
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
@@ -75,7 +79,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '100px' }}>
+            <Col style={{ width: '200px' }}>
               {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group) }}>{
                 Object.entries(tags_group.tags).map(([tag_key, tag]) => {
                   return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
@@ -89,7 +93,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '100px' }}>
+            <Col style={{ width: '200px' }}>
               {/* <DropdownMultiselect
                 key={tags_group.group_name}
                 selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)}
@@ -303,7 +307,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
       })
     })
     //for (let level = 1; level <= +evt.target.value + 1; level++) {
-    set_nodes_level(data.nodes,agregation_level)
+    set_nodes_level(data.nodes,agregation_level+1)
     //}
     localStorage.setItem('initial_data',JSON.stringify(new_data))
     set_data({...new_data})
@@ -352,6 +356,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
               {addAllDropDownLinks()}
             </Form>
           </Col>
+          {additional_selector}
           { nb_agregation_level > 1 ? (<Col><Form.Group >
             <FormCheck
               type='switch'
@@ -359,13 +364,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
               checked={use_level === true}
               onChange={ evt => {
                 if (evt.target.checked) {
-                  set_nodes_level(data.nodes, agregation_level)
+                  set_nodes_level(data.nodes, agregation_level+1)
                   set_data({...data})
                 } else {
                   const json_data = localStorage.getItem('initial_data')
                   const initial_data = JSON.parse(json_data as string)
                   initial_data.static_sankey = true
-                  set_data({...data})
+                  set_data({...initial_data})
                 }
                 set_use_level(evt.target.checked)
               }}
@@ -406,8 +411,66 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data }
               </Col>   
             </Form>
           </Col>
+          { window.sankey && window.sankey.excel ? (
+            <Form.Group as={Col} >
+              <FormLabel className="text-center" >Téléchargements</FormLabel>
+              <Button  href={window.sankey.excel}>
+                Résultats
+              </Button>
+            </Form.Group>
+          ) : (<></> )}
+          <Col > 
+            <br/>
+            <Button 
+              onClick={()=>set_show_readme(true)}
+            >
+                Aide
+            </Button>               
+          </Col>
         </Row>
       </div>
+      {window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
+        <Modal 
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            'color':'black'
+          }}
+          size="lg"
+          show={show_readme} 
+          onHide={()=>set_show_readme(false)}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Aide</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row>
+              <Col>
+                <Tabs defaultActiveKey={Object.keys(window.sankey.help)[0]} id="diagram">
+                  { Object.keys(window.sankey.help).map(
+                    (key,i)=>(<Tab title={key} eventKey={key} key={i}>{
+                      parse(window.sankey.help[key], {
+                        replace: (domNode : any) => {
+                          if (domNode.attribs && domNode.attribs.id === 'units') {
+                            return <div>
+                              {(data as any).units_names.slice(2).map(
+                                (units_desc : any,i:number) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>)}
+                              )}</div>
+                          } else if (domNode.attribs && domNode.attribs.id === 'selectors') {
+                            return <ul>
+                              {Object.entries(tags_catalog).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' &&  tags_group[0] !== 'flux_types' &&  tags_group[0] !== 'Uncert' ).map(tags_group => { return (<li key={i} >{tags_group[1].group_name}</li>)})}
+                            </ul>
+                          }
+                        }
+                      })
+                    }</Tab>))
+                  }
+                </Tabs>
+              </Col>
+            </Row>
+          </Modal.Body>
+        </Modal>) : (<></>)}
     </>
   )
 }
