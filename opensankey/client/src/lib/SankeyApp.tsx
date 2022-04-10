@@ -165,7 +165,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_view={set_view}
         />
       ) : (<></>)}
-      {(data.static_sankey) ? (
+      {(window.SankeyToolsStatic) ? (
         <SankeyEdition
           data={data}
           set_data={set_data} />
