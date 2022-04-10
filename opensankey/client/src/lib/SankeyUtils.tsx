@@ -354,6 +354,7 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [0, 100],
 
     show_structure: false,
+    fit_screen    : false,
 
     icon_catalog: {},
 

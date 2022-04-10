@@ -161,6 +161,7 @@ export const SankeyDataPropTypes = {
   icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
   show_structure: PropTypes.bool.isRequired,
+  fit_screen: PropTypes.bool.isRequired,
   //height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
   width_min:PropTypes.number.isRequired,

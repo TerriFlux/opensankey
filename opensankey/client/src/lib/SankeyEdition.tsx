@@ -426,7 +426,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   }}
                   label='Structure du diagramme'
                 />
-              </Col>   
+              </Col>
+              <Col>
+                <FormCheck
+                  type="checkbox"
+                  checked={data.fit_screen}
+                  onChange={evt => {
+                    data.fit_screen = evt.target.checked
+                    set_data({ ...data })
+                  }}
+                  label='Ajuster à l écran'
+                />
+              </Col>  
             </Form>
           </Col>
           { window.sankey && window.sankey.excel ? (
