@@ -99,7 +99,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const [agregation_dimension_names, set_agregation_dimension_names] = useState<string[]>([])
   const [is_agregation, set_is_agregation] = useState(true)
 
-  const default_node_size = data.node_width
+  // const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
   const min_thickness = 1
@@ -335,7 +335,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         const link_value = test_link_value(nodes, l, data.tags_catalog)
         //Zones limite à ne pas êtres
-        const limit_x = [pos_x_src - scale(link_value), pos_x_src + data.node_width + scale(link_value)]
+        const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
 
         let draw_warning = false
@@ -344,7 +344,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //si partie gauche du noeud ne se situe pas dans les coord du noeud source
         const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
         //si partie droite du noeud ne se situe pas dans le noeud source
-        const right_in_src = node.x + data.node_width > limit_x[0] && node.x + data.node_width < limit_x[1]
+        const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
         //si partie haute du noeud ne se situe pas dans le noeud source
         const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
         // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
@@ -653,7 +653,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const new_y = old_y + event.dy
 
 
-    if (new_x < 0 || new_x > (width - default_node_size) || new_y < 0 || new_y > (data.height - default_node_size)) {
+    if (new_x < 0 || new_x > (width - node.node_width) || new_y < 0 || new_y > (data.height - node.node_height)) {
       return
     }
 
@@ -718,7 +718,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       const link_value = test_link_value(nodes, l, tags_catalog)
       //Zones limite à ne pas êtres
-      const limit_x = [pos_x_src - scale(link_value), pos_x_src + data.node_width + scale(link_value)]
+      const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
       const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
 
       let draw_warning = false
@@ -727,7 +727,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //si partie gauche du noeud ne se situe pas dans les coord du noeud source
       const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
       //si partie droite du noeud ne se situe pas dans le noeud source
-      const right_in_src = node.x + data.node_width > limit_x[0] && node.x + data.node_width < limit_x[1]
+      const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
       //si partie haute du noeud ne se situe pas dans le noeud source
       const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
       const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
@@ -1116,7 +1116,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const target_x_max = target_x_min + parseInt(d3.select('#' + target_node.idNode).attr('width'))
     const target_y_min = target_node.y
     const target_y_max = target_y_min + parseInt(d3.select('#' + target_node.idNode).attr('height'))
-    const tolerance = 3 * default_node_size
+    const tolerance = 3 * source_node.node_width
 
     if ((link.orientation === 'hh' || link.orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
       return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }
@@ -1306,19 +1306,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
     let node_size_s_height = Math.max(
-      inv_scale(5), total_offset_height_left, total_offset_height_right
+      inv_scale(n.node_height), total_offset_height_left, total_offset_height_right
     )
     // let node_size_s_width = Math.max(
     //   inv_scale(default_node_size), total_offset_width_top, total_offset_width_bottom
     // )
     let node_size_s_width = Math.max(
-      inv_scale(data.node_width), total_offset_width_top, total_offset_width_bottom
+      inv_scale(n.node_width), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
       // Hauteur des noeuds
-      node_size_s_height = inv_scale(data.node_height) 
-      node_size_s_width  = inv_scale(data.node_width)
+      node_size_s_height = inv_scale(n.node_height) 
+      node_size_s_width  = inv_scale(n.node_width)
     }
 
     d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
@@ -1356,23 +1356,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_height = Math.max(
-      inv_scale(5), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
     )
     let node_size_t_height = Math.max(
-      inv_scale(5), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
     )
     let node_size_s_width = Math.max(
-      inv_scale(data.node_width), s_total_offset_width_top, s_total_offset_width_bottom
+      inv_scale(source_node.node_width), s_total_offset_width_top, s_total_offset_width_bottom
     )
     let node_size_t_width = Math.max(
-      inv_scale(data.node_width), t_total_offset_width_top, t_total_offset_width_bottom
+      inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
-      node_size_s_height = inv_scale(data.node_height) 
-      node_size_t_height = inv_scale(data.node_height)  
-      node_size_s_width = inv_scale(data.node_width)  
-      node_size_t_width = inv_scale(data.node_width) 
+      node_size_s_height = inv_scale(source_node.node_height) 
+      node_size_t_height = inv_scale(target_node.node_height)  
+      node_size_s_width = inv_scale(source_node.node_width)  
+      node_size_t_width = inv_scale(target_node.node_width) 
     }
     // const node_size_s_width = Math.max(
     //   inv_scale(default_node_size), s_total_offset_width_top, s_total_offset_width_bottom
@@ -1428,20 +1428,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let node_size_t_width = inv_scale(target_node.node_width)
     if (!data.show_structure) {
       node_size_s_width = Math.max(
-        inv_scale(data.node_width), s_total_offset_width_bottom, s_total_offset_width_top
+        inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
       )
       node_size_t_width = Math.max(
-        inv_scale(data.node_width), t_total_offset_width_bottom, t_total_offset_width_top
+        inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
       )
     }
     let node_size_s_height = inv_scale(source_node.node_width)
     let node_size_t_height = inv_scale(target_node.node_width)
     if (!data.show_structure) {
       node_size_s_height = Math.max(
-        inv_scale(5), s_total_offset_height_left, s_total_offset_height_right
+        inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
       )
       node_size_t_height = Math.max(
-        inv_scale(5), t_total_offset_height_left, t_total_offset_height_right
+        inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
       )
     }
 
@@ -1461,7 +1461,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
 
     const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select('#' + source_node.idNode).attr('width')
-    const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y
+    const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select('#' + source_node.idNode).attr('height')
     const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select('#' + source_node.idNode).attr('width')
     const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select('#' + source_node.idNode).attr('height')
 
@@ -1657,7 +1657,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (link.orientation === 'vh' && !link.recycling) {
       if (data.show_structure) {
-        [xs, yt] = [source_node.x+20,target_node.y+20]
+        [xs, yt] = [source_node.x+source_node.node_height/2,target_node.y+target_node.node_height/2]
         if (source_node.x > target_node.x) {
           xt = xt+30
         }
@@ -1687,9 +1687,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     if (link.orientation === 'hh' && !link.recycling) {
       if (data.show_structure) {
-        [ys, yt] = [source_node.y+20,target_node.y+20]
+        [ys, yt] = [source_node.y+source_node.node_height/2,target_node.y+target_node.node_height/2]
         if (source_node.x > target_node.x) {
-          xt = xt+30
+          xt = xt+target_node.node_width
         }
       }
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
@@ -1707,7 +1707,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     if (link.orientation === 'vv' && !link.recycling) {
       if (data.show_structure) {
-        [xs, xt] = [source_node.x+20,target_node.x+20]
+        [xs, xt] = [source_node.x+source_node.node_width/2,target_node.x+target_node.node_width/2]
         if (source_node.y > target_node.y) {
           yt = yt+30
         }
@@ -2056,12 +2056,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .classed('node', true)
       .classed('node_shape', true)
       // .attr('stroke-opacity', 0)
-      .attr('cx', default_node_size / 2)
-      .attr('cy', default_node_size / 2)
-      .attr('rx', default_node_size / 2)
-      .attr('ry', default_node_size / 2)
-      .attr('height', default_node_size)
-      .attr('width', default_node_size)
+      .attr('cx', d=>d.node_width / 2)
+      .attr('cy', d=>d.node_height / 2)
+      .attr('rx', d=>d.node_width / 2)
+      .attr('ry', d=>d.node_height / 2)
+      .attr('height', d=>d.node_height)
+      .attr('width', d=>d.node_width)
 
 
     d3.selectAll('.node')
@@ -2614,7 +2614,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 p5 = [xt, yt]
                 is_v = true
                 if (data.show_structure) {
-                  return SankeyShapes.draw_arrow(20, p5, 10, 15, true, false)
+                  return SankeyShapes.draw_arrow(n.node_height/2, p5, n.node_height/4, n.node_height*3/8, true, false)
                 }
                 return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
               } else {
