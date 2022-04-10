@@ -16,7 +16,10 @@ import SankeyDraw from './SankeyDraw'
 import * as d3 from 'd3'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 
-
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
 
 
 const MenuPropTypes = {
@@ -669,7 +672,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Nav>
         </Container>
 
-        {(view == 'none' && !data.static_sankey) ? <SankeyEdition
+        {(view == 'none' && !window.SankeyToolsStatic) ? <SankeyEdition
           data={data}
           set_data={set_data} /> : <></>}
 
