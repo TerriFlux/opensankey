@@ -256,17 +256,15 @@ export const explore_branch = (
 }
 
 export const arrangeNodes = (
-  data: SankeyData,
-  h_space: number,
-  v_space: number
+  data: SankeyData
 ) => {
   // const display_nodes : SankeyNode[] = Object.values(data.nodes).filter( n=> n.display )
   Object.values(data.nodes).forEach(node => {
     if ( !node.node_visible || node.position === 'relative' ) {
       return
     }
-    const x = Math.round(node.x / h_space) * h_space
-    const y = Math.round(node.y / v_space) * v_space
+    const x = Math.round(node.x / data.grid_square_size) * data.grid_square_size
+    const y = Math.round(node.y / data.grid_square_size) * data.grid_square_size
     node.x = x
     node.y = y
   })

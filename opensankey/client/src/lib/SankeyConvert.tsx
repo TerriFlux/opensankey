@@ -411,7 +411,7 @@ export const convert_data = (
         n.node_width = (data as any).node_width
       }
       if (n.node_height === undefined) {
-        n.node_height = (data as any).node_height
+        n.node_height = 10
       }
       if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')

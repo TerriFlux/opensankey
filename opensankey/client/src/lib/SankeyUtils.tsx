@@ -651,6 +651,7 @@ export const uploadExemple = (
 
       data.height = Math.max(500, height + max_vert_shift + 200)
       set_data({ ...data })
+      localStorage.setItem('initial_data',JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
       // } catch (err) {
       //   alert(err)
