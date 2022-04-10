@@ -2978,6 +2978,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const svgSankey = (d3.select('#svg') as any)
     if (data.fit_screen) {
       svgSankey.attr('viewBox', [0, 0, data.width, data.height])
+    } else {
+      svgSankey.attr('viewBox', null)
     }
     svgSankey
       .call(d3.zoom()
@@ -3094,16 +3096,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   if (!data.static_sankey) {
     border = (current) ? '2px solid #78c2ad' : '2px solid red'
   }
-  let width = String(data.width)
-  if (data.fit_screen) {
-    width = '100%'
-  }
 
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': width, 'border': border }}>
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '100%' :data.width , 'border': border }}>
             <g className='grid' id='grid'></g>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
