@@ -1317,8 +1317,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Hauteur des noeuds
     if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
       // Hauteur des noeuds
-      node_size_s_height = inv_scale(40) 
-      node_size_s_width  = inv_scale(40)
+      node_size_s_height = inv_scale(data.node_height) 
+      node_size_s_width  = inv_scale(data.node_width)
     }
 
     d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))
@@ -1369,10 +1369,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     )
     // Hauteur des noeuds
     if (res === [0, 0, 0, 0] || data.show_structure) {
-      node_size_s_height = inv_scale(40) 
-      node_size_t_height = inv_scale(40) 
-      node_size_s_width = inv_scale(40) 
-      node_size_t_width = inv_scale(40) 
+      node_size_s_height = inv_scale(data.node_height) 
+      node_size_t_height = inv_scale(data.node_height)  
+      node_size_s_width = inv_scale(data.node_width)  
+      node_size_t_width = inv_scale(data.node_width) 
     }
     // const node_size_s_width = Math.max(
     //   inv_scale(default_node_size), s_total_offset_width_top, s_total_offset_width_bottom
