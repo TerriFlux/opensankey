@@ -2976,9 +2976,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   useEffect(() => {
     removeAnimate()
     const svgSankey = (d3.select('#svg') as any)
-    // if (data.static_sankey) {
-    //   svgSankey.attr('viewBox', [0, 0, data.width, data.height])
-    // }
+    if (data.fit_screen) {
+      svgSankey.attr('viewBox', [0, 0, data.width, data.height])
+    }
     svgSankey
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -3094,12 +3094,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   if (!data.static_sankey) {
     border = (current) ? '2px solid #78c2ad' : '2px solid red'
   }
+  let width = String(data.width)
+  if (data.fit_screen) {
+    width = '100%'
+  }
 
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.width, 'border': border }}>
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': width, 'border': border }}>
             <g className='grid' id='grid'></g>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
