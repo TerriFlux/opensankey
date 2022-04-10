@@ -573,6 +573,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                         new_data.height = Math.max(500, height + max_vert_shift + 200)
                         set_data(new_data)
+                        localStorage.setItem('initial_data',JSON.stringify(new_data))
                       }
                     })()
                     reader.readAsText(files[0])
