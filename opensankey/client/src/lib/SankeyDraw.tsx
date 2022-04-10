@@ -2280,21 +2280,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', n => n.idNode + '_text')
       .attr('x', (n) => {
         const width = +d3.select('#' + n.idNode).attr('width')
-        if (n.x_label) {
+        if (n.x_label && !data.show_structure) {
           return n.x_label
         } else if (n.display_style.label_horiz == 'milieu') {
           return width / 2
         } else if (n.display_style.label_horiz == 'gauche') {
           return 0
         } else if (n.display_style.label_horiz == 'droite') {
-          return width
+          return 0//width
         } else {
           return 0
         }
       })
       .attr('y', n => {
         const height = +d3.select('#' + n.idNode).attr('height')  
-        if (n.y_label) {
+        if (n.y_label && !data.show_structure) {
           return n.y_label
         } else if (n.display_style.label_vert == 'milieu') {
           return height / 2
@@ -2307,7 +2307,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('text-anchor', n => {
-        if (n.x_label) {
+        if (n.x_label && !data.show_structure) {
           return 'center'
         } else if (n.display_style.label_horiz == 'milieu') {
           return 'middle'
@@ -2387,14 +2387,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
-        if ( !d.x_label) {
+        if ( !d.x_label || data.show_structure) {
           d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
             const width = +d3.select('#' + d.idNode).attr('width')
 
             if (d.display_style.label_horiz == 'milieu') {
               return width / 2
             } else if (d.display_style.label_horiz == 'droite') {
-              return width
+              return 0//width
             } else {
               return 0
             }
