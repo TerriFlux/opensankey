@@ -377,7 +377,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 <Button
                   size="sm"
                   onClick={() => {
-                    arrangeNodes(data, node_hspace, node_vspace)
+                    arrangeNodes(data)
                     set_data({ ...data })
                   }}
                 >Arranger noeuds</Button>
