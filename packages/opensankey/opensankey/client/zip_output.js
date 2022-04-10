@@ -1,9 +1,9 @@
 var shell = require('shelljs')
-const zl = require("zip-lib");
+const zl = require('zip-lib')
 
 shell.cd('build')
 var files = []
-const zip = new zl.Zip();
+const zip = new zl.Zip()
 shell.ls().forEach(function (file) {
   if (file.includes('reconciled.xlsx') || file.includes('pdf') ) {
     zip.addFile(file)
@@ -16,8 +16,8 @@ shell.ls().forEach(function (file) {
 // // Adds a folder from the file system, and naming it `new folder` within the archive
 // zip.addFolder("path/to/folder", "new folder");
 // Generate zip file.
-zip.archive(process.argv[2]+".zip").then(function () {
-    console.log("done");
+zip.archive(process.argv[2]+'.zip').then(function () {
+  console.log('done')
 }, function (err) {
-    console.log(err);
-});
+  console.log(err)
+})

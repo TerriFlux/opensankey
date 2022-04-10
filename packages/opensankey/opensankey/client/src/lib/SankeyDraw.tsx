@@ -2739,7 +2739,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return 'translate(' + dx + ', 0 )'
         })
         .attr('x', 0)
-        .attr('y', 0)
+        .attr('y', 20)
         .text(tag_group.group_name)
         .attr('style', 'font-weight:bold')
         .call(wrap)
@@ -2753,7 +2753,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // on filtre les tags avec selected à true (Visible)
         .filter(function (d) { return d[1].selected })
         .attr('transform', function (d, i) {
-          return 'translate(' + dx + ',' + i * 30 + ')'
+          return 'translate(' + dx + ',' + (i * 30 +30) + ')'
         })
 
       // Ajout du shape  
