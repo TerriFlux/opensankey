@@ -307,7 +307,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const { dataTags } = data
             if ( data.show_structure ) {
-              return inv_scale(data.node_height / 4)
+              return inv_scale(Object.values(nodes)[0].node_height / 4)
             }
             let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey: string[] = []

@@ -294,7 +294,7 @@ export const convert_data = (
   if (recompute_input_output_links) {
     compute_default_input_outputLinksId(data.nodes,data.links)
   }
-  const { display_style, nodes, links, node_width,node_height, units_names } = data
+  const { display_style, nodes, links, units_names } = data
 
 
   if (display_style.filter === undefined) {
@@ -314,23 +314,23 @@ export const convert_data = (
     display_style.sector_uppercase = true
     display_style.sector_bold = true
     display_style.trade_close = false
-    if (node_width === undefined) {
-      data.node_width = 40
-    }
-    if (node_height === undefined) {
-      data.node_height = 40
-    }
+    // if (node_width === undefined) {
+    //   data.node_width = 40
+    // }
+    // if (node_height === undefined) {
+    //   data.node_height = 40
+    // }
     data.show_uncert = false
   }
   if (data.version === '0.2') {
     display_style.sector_uppercase = true
     display_style.sector_bold = true
-    if (node_width === undefined) {
-      data.node_width = 40
-    }
-    if (node_height === undefined) {
-      data.node_height = 40
-    }
+    // if (node_width === undefined) {
+    //   data.node_width = 40
+    // }
+    // if (node_height === undefined) {
+    //   data.node_height = 40
+    // }
     data.show_uncert = false
   }
   if (data.version === '0.3') {
@@ -341,12 +341,12 @@ export const convert_data = (
     data.display_style.unit = true
   }
 
-  if (data.node_width === undefined) {
-    data.node_width = 10
-  }
-  if (node_height === undefined) {
-    data.node_height = 40
-  }
+  // if (data.node_width === undefined) {
+  //   data.node_width = 10
+  // }
+  // if (node_height === undefined) {
+  //   data.node_height = 40
+  // }
   if (data.display_style.null_flux === undefined) {
     data.display_style.null_flux = false
   }
@@ -408,10 +408,10 @@ export const convert_data = (
         }
       }
       if (n.node_width === undefined) {
-        n.node_width = data.node_width
+        n.node_width = (data as any).node_width
       }
       if (n.node_height === undefined) {
-        n.node_height = data.node_height
+        n.node_height = (data as any).node_height
       }
       if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')

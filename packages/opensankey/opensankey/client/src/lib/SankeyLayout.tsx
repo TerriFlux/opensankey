@@ -532,7 +532,7 @@ export const updateLayout = (
   Object.values(data.nodes).forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
-  data.node_width = new_layout.node_width
+  //data.node_width = new_layout.node_width
   // Apply nodes layout
   for (const node_layout_key in new_layout.nodes) {
     const node_layout = new_layout.nodes[node_layout_key]
@@ -560,6 +560,8 @@ export const updateLayout = (
     //   continue
     // }
     node.name = node_layout.name
+    node.node_width = node_layout.node_width
+    node.node_height = node_layout.node_height    
     node.x = node_layout.x
     node.y = node_layout.y
     if (node.y + 200 > max_vertical_offset) {

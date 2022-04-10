@@ -38,7 +38,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const tags_visible = Object.keys(data.dataTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
 
-  const { display_style, links, nodes, node_width, node_height } = data
+  const { display_style, links, nodes} = data
   const { filter } = display_style
 
   let max_link_value = 0
@@ -408,40 +408,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
         </Tab>
         <Tab eventKey="nodes" title="Noeuds">
           <Form >
-            <Form.Group as={Row} >
-              <Col>
-                <FormLabel >Taille minimum Largeur</FormLabel>
-              </Col>
-              <Col>
-                <Form.Range
-                  min="0" max="100"
-                  value={node_width}
-                  onChange={
-                    evt => {
-                      data.node_width = +evt.target.value
-                      set_data({ ...data })
-                    }
-                  } />
-              </Col>
-              <Col>{node_width}</Col>
-            </Form.Group>
-            <Form.Group as={Row} >
-              <Col>
-                <FormLabel >Taille minimum Hauteur</FormLabel>
-              </Col>
-              <Col>
-                <Form.Range
-                  min="0" max="100"
-                  value={node_height}
-                  onChange={
-                    evt => {
-                      data.node_height = +evt.target.value
-                      set_data({ ...data })
-                    }
-                  } />
-              </Col>
-              <Col>{node_height}</Col>
-            </Form.Group>
             <Form.Group as={Row} >
               <Col>
                 <FormLabel >Taille police</FormLabel>
