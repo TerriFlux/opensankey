@@ -2992,11 +2992,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .on('zoom', function (transform) {
           transform.transform.x = 0
           transform.transform.y = 0
-          d3.select('#g_links').attr('transform', transform.transform)
-          d3.select('#g_nodes').attr('transform', transform.transform)
-
-          d3.select('#svg').style('width', data.width*transform.transform.k)
-          d3.select('#svg').style('height', data.height*transform.transform.k)
+          d3.select('#svg').attr('transform', transform.transform)
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
@@ -3028,7 +3024,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     div.addEventListener('mousedown', function (event: any) {
-      if (event.altKey) {
+      if (event.ctrlKey) {
         isDown = true
         old_pos = div.getBoundingClientRect()
         // const rect = event.target.getBoundingClientRect()
@@ -3047,7 +3043,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       isDown = false
     }, true)
     document.addEventListener('mousemove', function (event: any) {
-      if (isDown && event.altKey) {
+      if (isDown && event.ctrlKey) {
 
         mousePosition = {
           x: event.clientX,
