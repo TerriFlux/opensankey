@@ -3069,9 +3069,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const shift_x = ((mousePosition.x - offset[0]) + old_pos.x / val_scale)
         const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
 
-
-        d3.select('#g_links').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
-        d3.select('#g_nodes').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+        d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+        // d3.select('#g_links').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+        // d3.select('#g_nodes').style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
       }
     }, true)
 
