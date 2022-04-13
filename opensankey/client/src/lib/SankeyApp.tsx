@@ -82,7 +82,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         <Menu
           data={data}
           set_data={set_data}
-          app_name='version beta 0.8'
+          app_name='version beta 0.9'
 
           example_menu={<>
             <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
