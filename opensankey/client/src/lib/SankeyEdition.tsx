@@ -356,7 +356,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               {addAllDropDownLinks()}
             </Form>
           </Col>
-          {additional_selector}
+          {additional_selector ? (additional_selector) : (<></>)}
           { nb_agregation_level > 1 ? (<Col><Form.Group >
             <FormCheck
               type='switch'
