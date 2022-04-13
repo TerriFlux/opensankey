@@ -3030,7 +3030,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // const rect = event.target.getBoundingClientRect()
         offset = [
           event.clientX,
-          event.clientY
+          event.clientY + margin_top
         ]
       }
 
@@ -3096,7 +3096,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-        <div id="svg-container" style={{ 'marginTop': margin_top + 'px', 'fontFamily': font }}>
+        <div id="svg-container" style={{ 'position': 'absolute', 'marginTop': margin_top + 'px', 'fontFamily': font }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98%' :data.width , 'border': border }}>
             <g className='grid' id='grid'></g>
             <g className='g_legend' id='g_legend'></g>
