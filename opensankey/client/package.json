@@ -7,7 +7,7 @@
     "url": "git@gitlab.com:greel/su-model.git"
   },
   "author": "Alapetite Julien",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
@@ -81,6 +81,7 @@
     "ts-jest": "^27.1.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.3.5",
+    "zip-lib": "^0.7.2",
     "yoga-layout-prebuilt": "^1.10.0"
   },
   "devDependencies": {

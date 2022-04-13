@@ -23,6 +23,12 @@ export const SankeyNodePropTypes = {
   label_visible: PropTypes.bool.isRequired,
 
   node_width: PropTypes.number.isRequired,
+  node_height: PropTypes.number.isRequired,
+
+  iconName: PropTypes.string.isRequired,
+  iconColor: PropTypes.string.isRequired,
+  iconRatio: PropTypes.number.isRequired,
+  iconVisible: PropTypes.bool.isRequired,
 
   color: PropTypes.string.isRequired,
 
@@ -58,9 +64,9 @@ export const SankeyNodePropTypes = {
     filter_label: PropTypes.number.isRequired,
     global_curvature: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired,
-    label_vert:PropTypes.string.isRequired,
-    label_horiz:PropTypes.string.isRequired,
-    label_box_width:PropTypes.number.isRequired
+    label_vert: PropTypes.string.isRequired,
+    label_horiz: PropTypes.string.isRequired,
+    label_box_width: PropTypes.number.isRequired
   }).isRequired,
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
@@ -145,13 +151,22 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
-  node_width: PropTypes.number.isRequired,
+  // node_width: PropTypes.number.isRequired,
+  // node_height: PropTypes.number.isRequired,
+
   user_scale: PropTypes.number.isRequired,
 
+  // icon_catalog: PropTypes.object.isRequired,
+  // icon_catalog: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)).isRequired,
+  icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
+
   show_structure: PropTypes.bool.isRequired,
+  fit_screen: PropTypes.bool.isRequired,
   //height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
+  width_min:PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  height_min:PropTypes.number.isRequired,
   h_space: PropTypes.number.isRequired,
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
@@ -174,15 +189,27 @@ export const SankeyDataPropTypes = {
     filter_label: PropTypes.number.isRequired,
     global_curvature: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired,
-    font_family:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    font_family_selected:PropTypes.string.isRequired
+    font_family: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    font_family_selected: PropTypes.string.isRequired
   }).isRequired,
+
+  grid_square_size: PropTypes.number.isRequired,
+  grid_visible: PropTypes.bool.isRequired,
 
   static_sankey: PropTypes.bool.isRequired,
 
   tags_catalog: TagsCatalogPropTypes,
 
-  dataTags: TagsCatalogPropTypes
+  dataTags: TagsCatalogPropTypes,
+
+  view: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      view_data: PropTypes.object.isRequired,
+      nom:PropTypes.string.isRequired
+
+    }).isRequired
+  ).isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
