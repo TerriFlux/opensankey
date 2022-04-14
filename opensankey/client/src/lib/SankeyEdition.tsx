@@ -356,13 +356,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form.Group>
             </Col>) : (<div />)}
           <Col>
-            <Form id='dropdown_banner_node' className='dropdown_banner_node'>
+            <Form id='dropdown_banner_node' className='dropdown_banner_node' style={{ 'color': 'black' }}>
               {addAllDropDownNode()}
             </Form>
           </Col>
           {banner_grouptag.length > 0 ?
             (<Col>
-              <Form id='dropdown_banner_node' className='dropdown_banner_node'>
+              <Form id='dropdown_banner_node' className='dropdown_banner_node' style={{ 'color': 'black' }}>
                 {addAllDropDownLinks()}
               </Form>
             </Col>) : (<></>)
