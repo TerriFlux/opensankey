@@ -19,6 +19,7 @@ declare const window: Window &
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
+      structure: boolean
     }
   }
 
@@ -431,17 +432,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
-              <Col>
-                <FormCheck
-                  type="checkbox"
-                  checked={data.show_structure}
-                  onChange={evt => {
-                    data.show_structure = evt.target.checked
-                    set_data({ ...data })
-                  }}
-                  label='Structure du diagramme'
-                />
-              </Col>
+              { !data.static_sankey || (window.sankey && window.sankey.structure) ?
+                (<Col>
+                  <FormCheck
+                    type="checkbox"
+                    checked={data.show_structure}
+                    onChange={evt => {
+                      data.show_structure = evt.target.checked
+                      set_data({ ...data })
+                    }}
+                    label='Structure du diagramme'
+                  />
+                </Col>) : (<></>)}
               <Col>
                 <FormCheck
                   type="checkbox"
