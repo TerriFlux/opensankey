@@ -319,7 +319,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   }
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
-  const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
+  //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
+  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   return (
     <>
       <div className='herowrap'
@@ -329,7 +330,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           paddingBottom: '3px',
           justifyContent: 'space-evenly',
           alignItems: '<baseline-position>',
-          display:(display_banner)?'none':'block'
+          display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, 'paddingBottom': '5px', 'paddingTop': '5px' }}>
           {(data.static_sankey && sous_filieres) ? (
@@ -351,11 +352,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               {addAllDropDownNode()}
             </Form>
           </Col>
-          <Col>
-            <Form id='dropdown_banner_node' className='dropdown_banner_node'>
-              {addAllDropDownLinks()}
-            </Form>
-          </Col>
+          {banner_grouptag.length > 0 ?
+            (<Col>
+              <Form id='dropdown_banner_node' className='dropdown_banner_node'>
+                {addAllDropDownLinks()}
+              </Form>
+            </Col>) : (<></>)
+          }
           {additional_selector ? (additional_selector) : (<></>)}
           { nb_agregation_level > 1 ? (<Col><Form.Group >
             <FormCheck
