@@ -378,8 +378,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   const json_data = localStorage.getItem('initial_data')
                   if (json_data) {
                     const initial_data = JSON.parse(json_data as string)
-                    initial_data.static_sankey = true
-                    set_data({...initial_data})
+                    Object.values(data.nodes).forEach(n=>n.display = initial_data.nodes[n.idNode].display )
+                    //initial_data.static_sankey = true
+                    set_data({...data})
                   }
                 }
                 set_use_level(evt.target.checked)
