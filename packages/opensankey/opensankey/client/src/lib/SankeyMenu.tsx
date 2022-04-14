@@ -1171,9 +1171,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Offcanvas>
         : <></>}
 
-      <Toast bg='success' className='toastView' show={show_toast} style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': '1' }}>
+      <Toast bg='success' className='toastView' show={show_toast} style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
         <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
-        <Toast.Body>Vue sauvgardé</Toast.Body>
+        <Toast.Body>Vue sauvegardée</Toast.Body>
       </Toast>
 
       {
