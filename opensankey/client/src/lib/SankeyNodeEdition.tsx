@@ -660,7 +660,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Col xs={5}>
                   <Form.Select
 
-                    onChange={evt => {
+                    onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                         d.iconName = evt.target.value
                       })
