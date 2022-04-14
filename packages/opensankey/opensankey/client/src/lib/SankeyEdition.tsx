@@ -73,7 +73,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     set_data({ ...data })
   }
   const addAllDropDownNode = () => {
-    const banner_grouptag = Object.entries(tags_catalog).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+    const banner_grouptag = Object.entries(tags_catalog).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi')  && key !== 'Exchanges' })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
         return (
@@ -321,11 +321,19 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
   const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  let color = 'black'
+  let backgroundColor = 'gainsboro'
+  if (data.static_sankey) {
+    color = 'white'
+    backgroundColor = '#3c3c3c'
+  }
+
   return (
     <>
       <div className='herowrap'
         style={{
-          backgroundColor: 'gainsboro',
+          color : color,
+          backgroundColor: backgroundColor,
           marginLeft: '0',
           paddingBottom: '3px',
           justifyContent: 'space-evenly',
