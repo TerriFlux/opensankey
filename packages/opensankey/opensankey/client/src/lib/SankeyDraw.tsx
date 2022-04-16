@@ -139,6 +139,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
       width  = (n.x && n.node_visible) ? Math.max(width, n.x) : width      
     })
+    height = height+200
+    width = width +200
     Object.values(data.links).forEach(l => {if (l.recycling) {
       height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y+l.vert_shift+100,data.nodes[l.idTarget].y+l.vert_shift+100,height) : height
     }})
