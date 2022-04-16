@@ -2238,7 +2238,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     ggg_nodes
       .filter(d => d.iconName != 'none' && d.iconVisible)
       .append('svg')
-      .attr('viewBox', '[0, 0, 1000, 1000]')
+      .attr('viewBox', '0, 0, 1000, 1000')
       // .attr('x', 0)
       // .attr('preserveAspectRatio', 'none')
       .attr('transform', n => {
