@@ -132,6 +132,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   setSelectedTags(data)
 
+  const min_width_and_height = () => {
+    let height = 0
+    let width = 0
+    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
+      width  = (n.x && n.node_visible) ? Math.max(width, n.x) : width      
+    })
+    Object.values(data.links).forEach(l => {if (l.recycling) {
+      height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y+l.vert_shift+100,data.nodes[l.idTarget].y+l.vert_shift+100,height) : height
+    }})
+    //let max_right_shift = 0
+    Object.values(data.links).forEach(l => { if (l.recycling) {
+      width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x+l.right_horiz_shift+default_horiz_shift+150) : width  
+    }})
+    return [width,height]
+  }
 
   const add_links = (
     static_sankey: boolean,
@@ -1029,7 +1045,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     handle_type: string,
     the_event: d3.D3DragEvent<Element, unknown, unknown>
   ) => {
-    const { width } = data
+    //const { width } = data
 
     const old_x = +d3.select(dragged).attr('transform').split(',')[0].substring(10)
     const old_y_str = d3.select(dragged).attr('transform').split(',')[1]
@@ -1068,10 +1084,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
     } else if (handle_type === 'vert') {
       const vert_shift = d.vert_shift ? d.vert_shift : 0
-      if (new_y < data.height - scale(getLinkValue(data, d.idLink).value) / 2) {
-        d.vert_shift = vert_shift + the_event.dy
-      } else {
-        return
+      //if (new_y < data.height - scale(getLinkValue(data, d.idLink).value) / 2) {
+      d.vert_shift = vert_shift + the_event.dy
+      if (data.height <  d.vert_shift + Math.max(data.nodes[d.idSource].y,data.nodes[d.idTarget].y) + 100) {
+        data.height = d.vert_shift + Math.max(data.nodes[d.idSource].y,data.nodes[d.idTarget].y) + 100
+        d3.select('#svg').style('height', data.height + 'px')
+        drawGrid()
+      }
+      const [min_width,min_height] = min_width_and_height()
+      if ( data.height > min_height ) {
+        data.height = min_height
+        d3.select('#svg').style('height', data.height + 'px')
+        drawGrid()
       }
     } else if (handle_type === 'left') {
       const left_horiz_shift = d.left_horiz_shift ? d.left_horiz_shift : 0
@@ -1082,8 +1106,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
     } else if (handle_type === 'right') {
       const right_horiz_shift = d.right_horiz_shift ? d.right_horiz_shift : 0
-      if (right_horiz_shift + the_event.dx > -default_horiz_shift && new_x < width - scale(getLinkValue(data, d.idLink).value) / 2) {
+      if (right_horiz_shift + the_event.dx > -default_horiz_shift ) {
         d.right_horiz_shift = right_horiz_shift + the_event.dx
+        if (data.width <  d.right_horiz_shift + data.nodes[d.idSource].x + 200) {
+          data.width = d.right_horiz_shift + data.nodes[d.idSource].x + 200
+          d3.select('#svg').style('width', data.width + 'px')
+          drawGrid()
+        }
+        const [min_width,min_height] = min_width_and_height()
+        if ( data.width > min_width ) {
+          data.width = min_width
+          d3.select('#svg').style('width', data.width + 'px')
+          drawGrid()
+        }
       } else {
         return
       }
@@ -3073,7 +3108,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }, true)
 
     update_scale(data.user_scale)
-    console.log(('Ajout liens noeud'))
+    console.log(('Ajout liens noeud'));
+
+    [data.width, data.height]  = min_width_and_height()
+
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
 
@@ -3094,11 +3132,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = (current) ? '2px solid #78c2ad' : '2px solid red'
   }
 
+
+
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': font }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98%' :data.width , 'border': border }}>
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '100%' :data.width , 'border': border }}>
             <g className='grid' id='grid'></g>
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
