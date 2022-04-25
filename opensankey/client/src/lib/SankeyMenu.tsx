@@ -13,7 +13,6 @@ import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import SankeyDraw from './SankeyDraw'
-import * as d3 from 'd3'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 
 declare const window: Window &
@@ -191,10 +190,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
     node.idNode = 'node' + idNode
     node.name = node.idNode
-    if (Object.keys(nodes).length < 5 ) {
+    if (Object.keys(nodes).length < 5) {
       node.x = Object.keys(nodes).length * 200 + 200
     } else {
-      node.x = 200      
+      node.x = 200
     }
     nodes[node.idNode] = node
     for (const tag_group_key in data.tags_catalog) {
@@ -298,6 +297,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const reinitialization = () => {
     const data = default_sankey_data()
+    set_multi_selected_node([])
+    set_multi_selected_links([])
     set_data({ ...data })
   }
 
@@ -305,7 +306,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_nav(t)
   }
 
-  const handleClose = () => setShow(false)
+  // const handleClose = () => setShow(false)
 
   const toggleShow = () => {
     setShow(!show_nav)
@@ -344,22 +345,16 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    // const link = selected_link
     const link = multi_selected_links[0]
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-    // const previous_node = nodes.filter(n => n.name === link.target_name)[0]
     const previous_node = data.nodes[link.idSource]
-    // previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(selected_link.idLink), 1)
     previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links[0].idLink), 1)
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
-    // source_node.outputLinksId.push(selected_link.idLink)
     source_node.outputLinksId.push(multi_selected_links[0].idLink)
 
-    // if (link.idTarget === link.idSource) {
-    //   link.recycling = true
-    // }
+
     set_data({ ...data })
   }
 
@@ -382,18 +377,13 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
-    // const link = selected_link
     const link = multi_selected_links[0]
     const previous_node = nodes[link.idTarget]
-    // previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(selected_link.idLink), 1)
     previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links[0].idLink), 1)
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
-    // if (link.idTarget === link.idSource) {
-    //   link.recycling = true
-    // }
-    // target_node.inputLinksId.push(selected_link.idLink)
+
     target_node.inputLinksId.push(multi_selected_links[0].idLink)
 
     set_data({ ...data })
@@ -487,41 +477,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     Object.assign(links, new_cat)
     set_data({ ...data })
   }
-  // const [modalshow, setModalShow] = useState(false)
 
-  // const handleModalClose = () => setModalShow(false)
-  // const handleModalShow = () => setModalShow(true)
   return (
     <>
-      {/* <Modal show={modalshow} onHide={handleModalClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Suppression noeud connecté</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Êtes-vous sûr de vouloir supprimer ce noeud ? Il est relié à différents flux:
-
-        Entrant:
-        {node.inputLinksId.map(k => { return <> <br /> -{data.nodes[data.links[k].idSource].name} </> })}<br />
-
-        Sortant:
-        {node.outputLinksId.map(k => { return <> <br /> -{data.nodes[data.links[k].idTarget].name} </> })}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleModalClose}>
-            Refuse
-          </Button>
-          <Button variant="primary" onClick={() => {
-            delete_node(data, selected_node)
-            set_selected_node(default_node(data))
-            set_data({ ...data })
-            handleModalClose()
-          }}>
-            Accept
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
-
-
-
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
 
@@ -573,7 +531,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                         new_data.height = Math.max(500, height + max_vert_shift + 200)
                         set_data(new_data)
-                        localStorage.setItem('initial_data',JSON.stringify(new_data))
+                        localStorage.setItem('initial_data', JSON.stringify(new_data))
                       }
                     })()
                     reader.readAsText(files[0])
@@ -701,7 +659,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               {
                 //MENU PARAMETRE GENERAUX
               }
-              <Accordion.Header>Paramêtres généraux</Accordion.Header>
+              <Accordion.Header>Paramètres généraux</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
               </Accordion.Body>
@@ -750,16 +708,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={multi_selected_node.length == 0}
                       onClick={
                         () => {
-                          // if (selected_node.inputLinksId.length > 0 || selected_node.outputLinksId.length > 0) {
-                          //   setModalShow(true)
-
-                          // } else {
+                          
                           //Boutton pour supprimer le noeud selectionné
                           multi_selected_node.map(d => delete_node(data, d))
                           set_selected_node(default_node(data))
                           set_multi_selected_node([])
                           set_data({ ...data })
-                          // }
+                          
 
 
 
@@ -783,7 +738,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       onChange={evt => {
                         const sel = (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
-                        // sel = evt.target.value
                         Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
                         set_data({ ...data })
                       }}
@@ -921,7 +875,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <tbody>
                     {Object.keys(data.links).reverse().map(d => {
                       return (
-                        <tr style={{ 'border': (multi_selected_links.map(d=>d.idLink).includes(d)) ? '2px solid '+data.links[d].color : 'none' }}>
+                        <tr style={{ 'border': (multi_selected_links.map(d => d.idLink).includes(d)) ? '2px solid ' + data.links[d].color : 'none' }}>
                           <td> <FormLabel>{d}</FormLabel></td>
                           <td>
                             <ButtonGroup className="button_position" size="sm">
@@ -1145,7 +1099,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <p><b>CTRL + Click (flux) :</b> Selectionne le flux click dans l'onglet Flux du menu</p><br />
                 <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p><br />
                 <p><b>CTRL + S :</b> Sauvegarde le data actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p><br />
-                <p><b>Flêche du clavier :</b> Permet de dépalcer les noeuds sélectionnés en fonction du grillage  </p><br />
+                <p><b>Flèche du clavier :</b> Permet de dépalcer les noeuds sélectionnés en fonction du grillage  </p><br />
                 <p><b>Echap :</b> Ferme le Menu si il est ouvert </p><br />
 
               </Accordion.Body>
