@@ -2069,7 +2069,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     ggg_nodes
       .filter(d => d.iconName != 'none' && d.iconVisible)
       .append('svg')
-      .attr('viewBox', '[0, 0, 1000, 1000]')
+      .attr('viewBox', '0, 0, 1000, 1000')
 
       .attr('transform', n => {
         const shiftV = (+d3.select('#' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
