@@ -260,7 +260,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const svg = window.d3.select('#svg-container svg')
     svg.selectAll('.tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
-    svg.attr('viewBox', [0, 0, data.width, data.height])
+    svg.attr('viewBox', [0, 0, data.width, data.height] as any)
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -1125,9 +1125,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Offcanvas>
         : <></>}
 
-      <Toast bg='success' className='toastView' show={show_toast} style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': '1' }}>
+      <Toast bg='success' className='toastView' show={show_toast} style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
         <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
-        <Toast.Body>Vue sauvgardé</Toast.Body>
+        <Toast.Body>Vue sauvegardée</Toast.Body>
       </Toast>
 
       {
