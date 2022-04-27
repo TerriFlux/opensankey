@@ -1334,7 +1334,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
-    const node_size_s_height = Math.max(
+    let node_size_s_height = Math.max(
       inv_scale(n.node_height), total_offset_height_left, total_offset_height_right
     )
 
@@ -1652,7 +1652,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return ''
     }
 
-    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
 
 
     // if (link.orientation === 'hh' || link.orientation === 'vv') {
@@ -2252,15 +2252,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return 0
             }
           })
-          //Nombre de tspan dans la balise text
-          const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
-          if (d.display_style.label_vert == 'milieu') {
-            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
-          } else if (d.display_style.label_vert == 'bas') {
-            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
-          } else if (d.display_style.label_vert == 'haut') {
-            d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
-
+        }
+        // //Nombre de tspan dans la balise text
+        // const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
+        // if (d.display_style.label_vert == 'milieu') {
+        //   d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
+        // } else if (d.display_style.label_vert == 'bas') {
+        //   d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
+        // } else if (d.display_style.label_vert == 'haut') {
+        //   d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
+        // }
 
         d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
           const width = +d3.select('#' + d.idNode).attr('width')
