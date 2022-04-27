@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck, FormLabel, FormControl, Modal, Button, Tabs, Tab } from 'react-bootstrap'
+import { Row, Col, Form, FormCheck, FormLabel, Modal, Button, Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'

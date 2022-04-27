@@ -52,23 +52,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [view, set_view] = useState('none')
 
   //Selectionne le premier flux par default si il y en a un 
-  /*  if(Object.keys(sankey_data.links).length!=0){
-     set_selected_link(sankey_data.links[Object.keys(sankey_data.links)[0]])
-   } */
+
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
 
   const display_links = data.links
-  // const draw = () => {
-  //   const d = ()
-  //   console.log(document.getElementsByClassName('navbar') as any)
-  //   return d
-  // }
-
-
-
-
 
   return (
 
@@ -195,7 +184,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           select_link={(l: SankeyLink) => {
             set_selected_link(l)
           }}
-          //node_color={n => n.color}
           node_color={(n: SankeyNode) => {
             let colorNode
             // Le couleur est définie dans l'onglet général
@@ -249,7 +237,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
 
             for (const i in listKey) {
-              //const val_dict = (val as unknown) as SankeyLinkValueDict
               val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
             }
             const v = (val as unknown) as SankeyLinkValue
@@ -331,9 +318,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               }
             }
             // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-            // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
-            //   listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
-            // })
 
             for (const i in listKey) {
               val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
