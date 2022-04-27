@@ -675,48 +675,24 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return
     }
 
-
-    //Aggrandie width svg 
-    if (new_x > old_x && new_x > data.width - 100) {
-      data.width += 100
-      d3.select('#svg').style('width', data.width + 'px')
-      drawGrid()
-
-      let y_max = 0
-      Object.values(data.nodes).map(d => {
-        y_max = (d.y > y_max) ? d.y : y_max
-      })
-
-    } else if (new_x < old_x) {
-      let x_max = 0
-      Object.values(data.nodes).map(d => {
-        x_max = (d.x > x_max) ? d.x : x_max
-      })
-      if (data.width - 100 > x_max && data.width - 100 >= data.width_min) {
-        data.width -= 50
-        d3.select('#svg').style('width', data.width + 'px')
-      }
-    }
-
-    //Aggrandie ou reduit height svg 
-    if (new_y > old_y && new_y > data.height - 100) {
-      data.height += 100
-      d3.select('#svg').style('height', data.height + 'px')
-      drawGrid()
-    } else if (new_y < old_y) {
-      let y_max = 0
-      Object.values(data.nodes).map(d => {
-        y_max = (d.y > y_max) ? d.y : y_max
-      })
-      if (data.height - 100 > y_max && data.height - 100 >= data.height_min) {
-        data.height -= 50
-        d3.select('#svg').style('height', data.height + 'px')
-      }
-    }
-
-
     node.x = new_x
-    node.y = new_y
+    node.y = new_y;
+
+    [data.width, data.height]  = min_width_and_height()
+    if (data.fit_screen) {
+      const svgSankey = (d3.select('#svg') as any)
+      svgSankey.attr('viewBox', [20, 0, data.width-40, data.height])
+    } else {
+      d3.select('#svg').style('width', data.width + 'px')
+    }
+
+    // let y_max = 0
+    // Object.values(data.nodes).map(d => {
+    //   y_max = (d.y > y_max) ? d.y : y_max
+    // })
+
+    d3.select('#svg').style('height', data.height + 'px')
+    drawGrid()
 
     const stream_io = node.inputLinksId.concat(node.outputLinksId)
     //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
@@ -2788,8 +2764,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     margin_top = test[0].getBoundingClientRect().height
   }
 
-  
-
   const keyHandler = (e: any) => {
 
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -2884,10 +2858,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   useEffect(() => {
+    [data.width, data.height]  = min_width_and_height()
     removeAnimate()
     const svgSankey = (d3.select('#svg') as any)
     if (data.fit_screen) {
-      svgSankey.attr('viewBox', [0, 0, data.width, data.height])
+      svgSankey.attr('viewBox', [20, 0, data.width-40, data.height])
     } else {
       svgSankey.attr('viewBox', null)
     }
