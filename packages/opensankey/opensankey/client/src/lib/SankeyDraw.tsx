@@ -1,11 +1,14 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, toPrecision } from './SankeyUtils'
+import { compute_total_offsets, default_sankey_data, getLinkValue, setSelectedTags, toPrecision } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
+import { FaSleigh, FaSave } from 'react-icons/fa'
+import { attributesToProps } from 'html-react-parser'
+
 
 window.d3 = d3
 
@@ -33,6 +36,9 @@ const SankeyDrawPropTypes = {
 
   set_multi_selected_links: PropTypes.func.isRequired,
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes)).isRequired,
+
+  multi_selected_label: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes)).isRequired,
+
 
   set_show_toast: PropTypes.func.isRequired,
   current: PropTypes.bool.isRequired
@@ -64,6 +70,7 @@ export const SankeyDrawDefaultProps = {
 
   set_multi_selected_links: () => SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links: [],
+  multi_selected_label: [],
 
   set_show_toast: () => null,
   current: true
@@ -90,6 +97,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   multi_selected_node = SankeyDrawDefaultProps.multi_selected_node,
   set_multi_selected_links = SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
+  multi_selected_label = SankeyDrawDefaultProps.multi_selected_label,
   set_show_toast,
   current
 
@@ -1298,7 +1306,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       !link.label_on_path || link.label_on_path === undefined) {
       (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
-        .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label : y_pos + default_handle_size)
+        .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
         .text(d => link_text(data, d, link_value, display_style))
         .attr('visibility', link.label_visible ? 'visible' : 'hidden')
     } else {
@@ -1326,7 +1334,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
-    let node_size_s_height = Math.max(
+    const node_size_s_height = Math.max(
       inv_scale(n.node_height), total_offset_height_left, total_offset_height_right
     )
 
@@ -1643,15 +1651,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (outputLinksId === undefined || inputLinksId === undefined) {
       return ''
     }
- 
-    let [xs,ys,xt,yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
 
-    if (link.orientation === 'hh' || link.orientation === 'vv') {
-      add_shift_handles(
-        link, nodes, links,
-        display_style, tags_catalog, xs, ys, xt, yt
-      )
-    }
+    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+
+
+    // if (link.orientation === 'hh' || link.orientation === 'vv') {
+    add_shift_handles(
+      link, nodes, links,
+      display_style, tags_catalog, xs, ys, xt, yt
+    )
+    // }
 
     if (link_value > display_style.filter_label) {
       drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt)
@@ -2051,7 +2060,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else {
           return 0
         }
-      })
+      }
+
+      )
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
@@ -2096,9 +2107,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
     Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.tags_catalog))
-
-
-
 
     //----------------ICON-----------------
 
@@ -2186,49 +2194,44 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
       .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
       .style('font-size', d => d.display_style.font_size + 'px')
+      .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => {
-        let total = 0
-        if (d.show_value) {
-          if (d.outputLinksId.length > 0) {
-            for (let i = 0; i < d.outputLinksId.length; i++) {
-              const link = display_links[d.outputLinksId[i]]
-              if (link === undefined) {
-                //alert('Corruption du diagramme')
-                return ''
-              }
-              if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
-                total += getLinkValue(data, link.idLink).value
-              }
-            }
-          }
-          if (total === 0) {
-            if (d.inputLinksId.length > 0) {
-              for (let i = 0; i < d.inputLinksId.length; i++) {
-                const link = display_links[d.inputLinksId[i]]
-                if (link === undefined) {
-                  //alert('Corruption du diagramme')
-                  return ''
-                }
-                if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
-                  total += getLinkValue(data, link.idLink).value
-                }
-              }
-            }
-          }
-        }
-        if (d.display_style.uppercase) {
-          if (d.show_value) {
-            return d.name.split(' - ')[0].replace('-', ' ').toUpperCase() + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
-          } else {
-            return d.name.split(' - ')[0].replace('-', ' ').toUpperCase()
-          }
-        } else {
-          if (d.show_value) {
-            return d.name.split(' - ')[0].replace('-', ' ') + ' : ' + toPrecision(total) + ((data as unknown) as { [key: string]: string[] }).units_names[0]
-          } else {
-            return d.name.split(' - ')[0].replace('-', ' ')
-          }
-        }
+        // let total = 0
+
+        // if (d.show_value) {
+        //   if (d.outputLinksId.length > 0) {
+        //     for (let i = 0; i < d.outputLinksId.length; i++) {
+        //       const link = display_links[d.outputLinksId[i]]
+        //       if (link === undefined) {
+        //         //alert('Corruption du diagramme')
+        //         return ''
+        //       }
+        //       if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+        //         total += getLinkValue(data, link.idLink).value
+        //       }
+        //     }
+        //   }
+        //   if (total === 0) {
+        //     if (d.inputLinksId.length > 0) {
+        //       for (let i = 0; i < d.inputLinksId.length; i++) {
+        //         const link = display_links[d.inputLinksId[i]]
+        //         if (link === undefined) {
+        //           //alert('Corruption du diagramme')
+        //           return ''
+        //         }
+        //         if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+        //           total += getLinkValue(data, link.idLink).value
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
+
+        // if (d.show_value) {
+        //   return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo') + ' : ' + toPrecision(total) //+ ((data as unknown) as { [key: string]: string[] }).units_names[0]
+        // } else {
+        return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo')
+        // }
       })
       .each(d => {
 
@@ -2258,8 +2261,34 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } else if (d.display_style.label_vert == 'haut') {
             d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
 
+
+        d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+          const width = +d3.select('#' + d.idNode).attr('width')
+
+          if (d.display_style.label_horiz == 'milieu') {
+            return width / 2
+          } else if (d.display_style.label_horiz == 'droite') {
+            return width
+          } else {
+            return 0
           }
+        })
+        //Nombre de tspan dans la balise text
+        const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
+        if (d.display_style.label_vert == 'milieu') {
+          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
+        } else if (d.display_style.label_vert == 'bas') {
+          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
+        } else if (d.display_style.label_vert == 'haut') {
+          d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
+
         }
+
+
+
+
+
+
       })
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
@@ -2281,6 +2310,90 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           sankeyTooltip.style('opacity', 0)
         }
       })
+
+    //Affiche valueur Noeud
+    ggg_nodes.append('text')
+      .classed('node', true)
+      .classed('node_text_value', true)
+      .attr('id', n => n.idNode + '_text_value')
+      .attr('x', (n) => {
+        const width = +d3.select('#' + n.idNode).attr('width')
+        const _text = document.getElementById(n.idNode + '_text')
+        const width_text = (_text) ? _text.getBoundingClientRect().width : 0
+        if (n.display_style.label_horiz == 'milieu') {
+          return width / 2
+        } else if (n.display_style.label_horiz == 'gauche') {
+          return -width / 2
+        } else if (n.display_style.label_horiz == 'droite') {
+          return width+width_text/2
+        } else {
+          return 0
+        }
+      })
+      .attr('y', n => {
+        const height = +d3.select('#' + n.idNode).attr('height')
+        const _text = document.getElementById(n.idNode + '_text')
+        const height_text = (_text) ? _text.getBoundingClientRect().height : 0
+        if (n.display_style.label_vert == 'milieu') {
+          return height / 2 + height_text / 2
+        } else if (n.display_style.label_vert == 'haut') {
+          return '-2em'
+        } else if (n.display_style.label_vert == 'bas') {
+          return height + height_text*0.8
+        } else {
+          return 0
+        }
+      })
+      .attr('text-anchor', n => {
+
+        return 'middle'
+
+      })
+      .attr('visibility', n => n.node_visible && n.label_visible ? 'visible' : 'hidden')
+      // .style('text-align', 'center')
+      // .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
+      // .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
+      .style('font-size', d => d.display_style.font_size + 'px')
+      // .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
+      .text(d => {
+        let total = 0
+
+        if (d.show_value) {
+          if (d.outputLinksId.length > 0) {
+            for (let i = 0; i < d.outputLinksId.length; i++) {
+              const link = display_links[d.outputLinksId[i]]
+              if (link === undefined) {
+                //alert('Corruption du diagramme')
+                return ''
+              }
+              if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+                total += getLinkValue(data, link.idLink).value
+              }
+            }
+          }
+          if (total === 0) {
+            if (d.inputLinksId.length > 0) {
+              for (let i = 0; i < d.inputLinksId.length; i++) {
+                const link = display_links[d.inputLinksId[i]]
+                if (link === undefined) {
+                  //alert('Corruption du diagramme')
+                  return ''
+                }
+                if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+                  total += getLinkValue(data, link.idLink).value
+                }
+              }
+            }
+          }
+          return total
+
+        } else {
+          return ''
+        }
+
+      })
+
+
 
     if (!static_sankey) {
       select.on('click', (event, n) => {
@@ -2603,6 +2716,34 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   }
 
+  const add_labels = () => {
+    d3.selectAll('#svg #g_label g').remove()
+    const g_label = d3.select('#svg #g_label')
+    data.labels.map(d => {
+      const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y).attr('id', d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')')
+      const rect = gg_label.append('rect').attr('width', d.label_width).attr('height', d.label_height).attr('fill', d.color).attr('stroke', d.color_border).attr('stroke-width', 2).attr('rx', 5)
+      gg_label.append('text').attr('x', d.label_width / 2)
+        .attr('dy', '0.25em')
+        .attr('y', d.label_height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('text-align', 'center')
+        .text(d.name)
+
+
+      gg_label.call(d3.drag<SVGGElement, unknown>()
+        .subject(Object).on('drag', function (event) {
+          const new_pos_x = d.x + event.dx
+          const new_pos_y = d.y + event.dy
+          d.x = new_pos_x
+          d.y = new_pos_y
+          d3.select('#' + d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')')
+
+        })
+      )
+
+    })
+  }
+
 
   const drawGrid = () => {
 
@@ -2659,11 +2800,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }).includes(f.name)).map(d => {
           const n_pos = Math.trunc(d.y / data.grid_square_size)
           d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-          
+
+
+          let y_max = 0
+          Object.values(data.nodes).map(d => {
+            y_max = (d.y > y_max) ? d.y : y_max
+          })
+
           //Diminue hauteur svg si le noeud est près du bord
-          if(d.y<data.height-100 && data.height-100>=data.height_min){
-            data.height-=50
+          if (y_max < data.height - 100 && data.height - 100 >= data.height_min) {
+            data.height -= 50
           }
+
+
         })
       } else if (e.key == 'ArrowDown') {
         Object.values(data.nodes).filter(f => multi_selected_node.map(d => {
@@ -2673,10 +2822,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }).includes(f.name)).map(d => {
           const n_pos = Math.trunc(d.y / data.grid_square_size)
           d.y = (n_pos + 1) * data.grid_square_size
-          
+
           //Augumente hauteur svg si le noeud est près du bord
-          if(d.y>data.height-100){
-            data.height+=100
+          if (d.y > data.height - 100) {
+            data.height += 100
           }
         })
       } else if (e.key == 'ArrowLeft') {
@@ -2687,10 +2836,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }).includes(f.name)).map(d => {
           const n_pos = Math.trunc(d.x / data.grid_square_size)
           d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-          
+
           //Diminue largeur svg si le noeud est près du bord
-          if(d.x<data.width-100 && data.width-100>=data.width_min){
-            data.width-=50
+          if (d.x < data.width - 100 && data.width - 100 >= data.width_min) {
+            data.width -= 50
           }
 
         })
@@ -2704,8 +2853,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d.x = (n_pos + 1) * data.grid_square_size
 
           //Augumente largeur svg si le noeud est près du bord
-          if(d.x>data.width-100){
-            data.width+=100
+          if (d.x > data.width - 100) {
+            data.width += 100
           }
         })
       }
@@ -2836,6 +2985,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
+    add_labels()
 
     drawLegend()
 
@@ -2862,6 +3012,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
+            <g className='g_label' id='g_label'></g>
           </svg>
         </div>
       </div>
