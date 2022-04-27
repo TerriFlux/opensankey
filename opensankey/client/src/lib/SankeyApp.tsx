@@ -9,7 +9,7 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Dropdown } from 'react-bootstrap'
+import { Row, Col, Dropdown, Container } from 'react-bootstrap'
 import * as d3 from 'd3'
 import { getLinkValue } from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
@@ -44,6 +44,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
   const [multi_selected_node, set_multi_selected_node] = useState([])
   const [multi_selected_links, set_multi_selected_links] = useState([])
+  const [multi_selected_label, set_multi_selected_label] = useState([])
 
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
@@ -67,7 +68,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           return { 'font': d }
         })}
       />
-      { !window.SankeyToolsStatic? (
+      { !window.SankeyToolsStatic ? (
         <Menu
           data={data}
           set_data={set_data}
@@ -101,6 +102,10 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
           set_selected_link={set_selected_link}
+          multi_selected_label={multi_selected_label}
+          set_multi_selected_label={set_multi_selected_label}
+
+
           selected_link={selected_link}
           agregation_level={agregation_level}
           set_agregation_level={set_agregation_level}
@@ -168,11 +173,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         return () => clearTimeout(timer)
       }, [])}
       {
-        (show_draw && view=='none') ? (<SankeyDraw
+        (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
           set_data={set_data}
           set_multi_selected_node={set_multi_selected_node}
           multi_selected_node={multi_selected_node}
+          multi_selected_label={multi_selected_label}
+
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
           select_node={(n: SankeyNode) => {
@@ -208,6 +215,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               // Le couleur est définie dans les parametres locaux du noeud
               colorNode = n.color
             }
+
             return colorNode
           }}
           link_text={SankeyUtils.link_text}

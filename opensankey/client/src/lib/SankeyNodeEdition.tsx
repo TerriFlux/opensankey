@@ -44,6 +44,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_node.map(d => visible = (d.shape_visible) ? true : visible)
     return visible
   }
+  const isAllNodeTotal = () => {
+    let show_value = false
+    multi_selected_node.map(d => show_value = (d.show_value) ? true : show_value)
+    return show_value
+  }
   const isAllNodeRect = () => {
     let rect = true
     if (multi_selected_node.length > 0) {
@@ -401,6 +406,24 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     }}
                   />
                 </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={4}>
+                  <FormLabel >Afficher la valeur du noeud</FormLabel>
+                </Col>
+                <Col xs={1}>
+                  <FormCheck inline
+                    type='switch'
+                    checked={isAllNodeTotal()}
+                    onChange={evt => {
+                      // node.shape_visible = evt.target.checked
+                      // node.node_visible = node.label_visible || node.shape_visible
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.show_value = evt.target.checked)
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+
               </Form.Group>
               <Form.Group as={Row} >
                 <Col xs={4}>
