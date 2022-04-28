@@ -31,13 +31,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     set_tags_group_key(Object.keys(tags_catalog)[0])
   }
 
-  let node = data.nodes[selected_node.idNode]
-  if (node === undefined) {
-    node = default_node(data)
-    for (const tag_group_key in tags_catalog) {
-      node.tags[tag_group_key] = []
-    }
-  }
+  // let node = data.nodes[multi_selected_node[0].idNode]
+  // if (node === undefined) {
+  //   node = default_node(data)
+  //   for (const tag_group_key in tags_catalog) {
+  //     node.tags[tag_group_key] = []
+  //   }
+  // }
   //Creation des fonctions qui check si les noeuds selectionnés ont tous la même valeurs de leurs attributs
   const isAllNodeVisible = () => {
     let visible = false
@@ -206,11 +206,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Col>
           <FormCheck inline
             type='switch'
-            disabled={node.nodeParameter !== 'groupTag'}
-            checked={node.colorTag == tags_group_key}
+            disabled={multi_selected_node.length === 0 || multi_selected_node[0].nodeParameter !== 'groupTag'}
+            checked={multi_selected_node.length > 0  && multi_selected_node[0].colorTag == tags_group_key}
             label='Palette'
             onChange={() => {
-              node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key
+              multi_selected_node.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key)
 
               set_data({ ...data })
             }}
@@ -721,10 +721,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Form.Control
                     as="textarea"
                     rows={10}
-                    value={node.tooltip_text ? node.tooltip_text : ''}
+                    value={multi_selected_node.length>0 && multi_selected_node[0].tooltip_text ? multi_selected_node[0].tooltip_text : ''}
                     onChange={
                       (evt) => {
-                        node.tooltip_text = evt.target.value.split('\n').join('\\n')
+                        multi_selected_node.map(node => node.tooltip_text = evt.target.value.split('\n').join('\\n'))
                         set_data({ ...data })
                       }
                     }
