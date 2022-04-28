@@ -2145,7 +2145,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else if (n.display_style.label_vert == 'milieu') {
           return height / 2
         } else if (n.display_style.label_vert == 'haut') {
-          return 0
+          return -4
         } else if (n.display_style.label_vert == 'bas') {
           return height
         } else {
