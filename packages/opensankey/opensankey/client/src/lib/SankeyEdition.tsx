@@ -38,7 +38,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   //const [use_colormap, set_use_colormap] = useState(false)
   const [diagram, set_diagram] = useState('')
   const [agregation_level,set_agregation_level] = useState(0)
-  const [use_colormap,set_use_colormap] = useState(Object.entries(data.tags_catalog).filter(tags_group=>tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' && tags_group[0] !== 'Echanges').length > 0)
+  const [use_colormap,set_use_colormap] = useState(
+    tags_visible &&
+      (Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one').length > 0 || 
+      Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0) 
+  )
   const [use_level,set_use_level] = useState(false)
   const [show_readme,set_show_readme] = useState(false)
 

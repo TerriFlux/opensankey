@@ -733,75 +733,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Row>
             </Form>
           </Tab>
-          <Tab eventKey="node_parameter" title="Déplacements">
-            <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                onClick={
-                  () => {
+          <Tab eventKey="link_parameter" title="Liens">
 
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-
-                      //Réalligne les noeuds sélectionnés avec le grillage de fond, si le noeud est à la même hauteur alors ils remonte d'un cran
-                      const n_pos=Math.trunc(d.y/data.grid_square_size)
-                      d.y=(n_pos*data.grid_square_size==d.y)?(n_pos-1)*data.grid_square_size:n_pos*data.grid_square_size
-
-                    })
-                    set_data({ ...data })
-                  }
-                }
-              >Monter</Button>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-       
-                      //Réalligne les noeuds sélectionnés avec le grillage de fond en descendant
-                      const n_pos=Math.trunc(d.y/data.grid_square_size)
-                      d.y=(n_pos+1)*data.grid_square_size
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Descendre</Button>
-            </ButtonGroup>
-            <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-     
-                      const n_pos=Math.trunc(d.x/data.grid_square_size)
-                      d.x=(n_pos*data.grid_square_size==d.x)?(n_pos-1)*data.grid_square_size:n_pos*data.grid_square_size
-                
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Décaler gauche</Button>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-
-                      const n_pos=Math.trunc(d.x/data.grid_square_size)
-                      d.x=(n_pos+1)*data.grid_square_size
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Décaler droite</Button>
-            </ButtonGroup>
             <ButtonGroup style={{ 'marginLeft': '10px' }}>
               <Button
                 size="sm"
