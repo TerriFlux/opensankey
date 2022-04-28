@@ -548,6 +548,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             onClick={(evt: any) => {
               data.static_sankey = evt.target.checked
               set_data({ ...data })
+              set_show_nav(false)
             }}
             label="Static"
           />
