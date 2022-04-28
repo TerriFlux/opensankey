@@ -364,7 +364,8 @@ export const default_sankey_data = (): SankeyData => {
     max_shift: 0.2,
 
     display_style: {
-      font_size: 11,
+      node_font_size: 14,
+      link_font_size: 14,
       sector_uppercase: true,
       sector_bold: true,
       sector_italic: false,
@@ -422,10 +423,10 @@ export const default_node = (
     dimensions: { 'Primaire': { parent_name: undefined } },
 
     display_style: {
-      font_size: data.display_style.font_size,
-      uppercase: true,
-      bold: true,
-      italic: false,
+      font_size: data.display_style.node_font_size,
+      uppercase: data.display_style.sector_uppercase,
+      bold: data.display_style.sector_bold,
+      italic: data.display_style.sector_italic,
       unit: false,
       filter: 0,
       filter_label: 0,

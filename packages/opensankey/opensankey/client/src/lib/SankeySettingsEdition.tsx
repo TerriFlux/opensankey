@@ -415,18 +415,18 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col>
                 <Form.Range
                   min="11" max="20"
-                  value={display_style.font_size}
+                  value={display_style.node_font_size}
                   onChange={evt => {
-                    display_style.font_size = +evt.target.value
+                    display_style.node_font_size = +evt.target.value
                     set_data({ ...data })
                   }}
                 />
               </Col>
-              <Col>{display_style.font_size}</Col>
+              <Col>{display_style.node_font_size}</Col>
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel >Secteurs</FormLabel>
+                <FormLabel >Labels</FormLabel>
               </Col>
               <Col>
                 <FormCheck
@@ -436,6 +436,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   onChange={
                     evt => {
                       display_style.sector_bold = evt.target.checked
+                      display_style.product_bold = evt.target.checked
                       set_data({ ...data })
                     }
                   }
@@ -449,6 +450,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   onChange={
                     evt => {
                       display_style.sector_uppercase = evt.target.checked
+                      display_style.product_uppercase = evt.target.checked
                       set_data({ ...data })
                     }
                   }
@@ -462,70 +464,11 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                   onChange={
                     evt => {
                       display_style.sector_italic = evt.target.checked
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-            </Form.Group>
-            <Form.Group as={Row} >
-              <Col>
-                <FormLabel >Produits</FormLabel>
-              </Col>
-              <Col>
-                <FormCheck
-                  type='checkbox'
-                  label='Gras'
-                  checked={display_style.product_bold}
-                  onChange={
-                    evt => {
-                      display_style.product_bold = evt.target.checked
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-              <Col>
-                <FormCheck
-                  type='checkbox'
-                  label='Majuscule'
-                  checked={display_style.product_uppercase}
-                  onChange={
-                    evt => {
-                      display_style.product_uppercase = evt.target.checked
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-              <Col>
-                <FormCheck
-                  type='checkbox'
-                  label='Italique'
-                  checked={display_style.product_italic}
-                  onChange={
-                    evt => {
                       display_style.product_italic = evt.target.checked
                       set_data({ ...data })
                     }
                   }
                 />
-              </Col>
-            </Form.Group>
-            <Form.Group as={Row} >
-              <Col>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px' }}
-                  onClick={
-                    () => {
-                      Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
-                        delete n.x_label
-                        delete n.y_label
-                      })
-                    }
-                  }
-                >Réinitialiser la position des labels</Button>
               </Col>
             </Form.Group>
           </Form>
@@ -795,14 +738,14 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               <Col >
                 <Form.Range
                   min="11" max="20"
-                  value={display_style.font_size}
+                  value={display_style.link_font_size}
                   onChange={evt => {
-                    display_style.font_size = +evt.target.value
+                    display_style.link_font_size = +evt.target.value
                     set_data({ ...data })
                   }}
                 />
               </Col>
-              <Col >{display_style.font_size}</Col>
+              <Col >{display_style.link_font_size}</Col>
             </Form.Group>
             <Form.Group as={Row} >
               <Col>

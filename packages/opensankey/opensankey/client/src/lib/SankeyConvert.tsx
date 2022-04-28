@@ -350,6 +350,12 @@ export const convert_data = (
   if (data.display_style.null_flux === undefined) {
     data.display_style.null_flux = false
   }
+  if (data.display_style.node_font_size === undefined) {
+    data.display_style.node_font_size = (data.display_style as any).font_size 
+  }
+  if (data.display_style.link_font_size === undefined) {
+    data.display_style.link_font_size = (data.display_style as any).font_size
+  }
 
   if (data.h_space === undefined) {
     data.h_space = 200
@@ -393,7 +399,7 @@ export const convert_data = (
       }
       if (n.display_style === undefined ) {
         n.display_style = {
-          font_size: data.display_style.font_size,
+          font_size: data.display_style.node_font_size,
           uppercase: n.type === 'product' ? false : true,
           bold: n.type === 'product' ? false : true,
           italic: n.type === 'product' ? true : false,

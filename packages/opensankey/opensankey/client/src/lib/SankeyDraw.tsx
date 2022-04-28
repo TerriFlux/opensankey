@@ -241,7 +241,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .append('text')
       .attr('pointer-events', 'none')
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('style', 'font-weight: bold; font-size:' + display_style.font_size + 'px;')
+      .attr('style', 'font-weight: bold; font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
         // if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
         //   return 'white'
@@ -290,7 +290,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('href', d => '#' + d.idLink)
       .attr('id', d => d.idLink + '_text')
       .attr('class', 'link_value')
-      .attr('style', 'font-weight: bold;font-size:' + display_style.font_size + 'px;')
+      .attr('style', 'font-weight: bold;font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
         if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
           return 'white'
@@ -655,7 +655,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drag_node = (
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
+    display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; node_font_size: number; link_font_size: number;sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
     tags_catalog: TagsCatalog,
     dragged: Element,
     event: { dx: number; dy: number }
@@ -934,7 +934,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drag_link = (
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter: number; filter_label: number },
+    display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number },
     tags_catalog: TagsCatalog,
     dragged: SVGPathElement | null,
     event: d3.D3DragEvent<Element, SankeyLink, unknown>
@@ -1010,7 +1010,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter: number; filter_label: number },
+    display_style: { node_font_size: number; link_font_size: number;filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     dragged: Element,
     handle_type: string,
@@ -1142,7 +1142,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter: number; filter_label: number },
+    display_style: { node_font_size: number; link_font_size : number; filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     shift_name: string,
     position: string
@@ -1180,7 +1180,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter: number; filter_label: number },
+    display_style: { node_font_size: number; link_font_size: number;filter: number; filter_label: number },
     selected_tags: { [tag_group: string]: string[] },
     xs: number,
     ys: number,
@@ -1226,7 +1226,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     link: SankeyLink,
     links: { [link_id: string]: SankeyLink },
     link_value: number,
-    display_style: { font_size: number; filter: number; filter_label: number },
+    display_style: { node_font_size: number; link_font_size : number; filter: number; filter_label: number },
     xs: number,
     ys: number,
     xt: number,
@@ -1609,7 +1609,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drawCurve = (
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter: number; filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
+    display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     tags_catalog: TagsCatalog,
     link: SankeyLink,
     error_msg: { text?: string } | undefined
@@ -2476,7 +2476,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     n: SankeyNode,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { font_size: number; filter?: number; filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
+    display_style: { node_font_size: number;link_font_size: number; filter?: number; filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
     tags_catalog: TagsCatalog,
     selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
   ) => {
