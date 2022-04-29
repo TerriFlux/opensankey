@@ -1,4 +1,4 @@
-﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table } from 'react-bootstrap'
@@ -666,7 +666,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
               {edition_menu}
             </NavDropdown >
-            <NavDropdown title="Exemples" id="exemples" >
+            <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
               {example_menu}
             </NavDropdown >
             <NavDropdown title="Portfolio" id="portfolio" >

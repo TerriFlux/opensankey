@@ -215,8 +215,8 @@ td {
      -moz-box-shadow: none;
           box-shadow: none;
 }
-.dropdown-menu {
-    max-height: 500px;
+.tutu > .dropdown-menu {
+    max-height: 600px;
     overflow-y: auto;
 }
 
