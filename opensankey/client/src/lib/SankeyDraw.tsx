@@ -2063,7 +2063,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('click', (event, d) => {
 
-        if (event.shiftKey) {
+        if (! data.static_sankey && event.shiftKey || data.static_sankey) {
           // Animation des flux du Sankey
           sankeyTooltip.style('opacity', 0)
           d3.selectAll('#svg .tmp').remove()
