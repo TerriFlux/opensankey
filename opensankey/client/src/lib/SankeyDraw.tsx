@@ -2883,8 +2883,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
           if ( evt.transform.k < 1 && !data.fit_screen) {
             d3.select('#svg')
-              .style('width' , data.width/evt.transform.k)
-              .style('height', data.height/evt.transform.k)
+              .style('width' , data.width/evt.transform.k+'px')
+              .style('height', data.height/evt.transform.k+'px')
           }
         })).on('dblclick.zoom', null)
 
