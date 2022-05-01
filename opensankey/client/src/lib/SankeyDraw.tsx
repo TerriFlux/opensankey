@@ -2870,15 +2870,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     svgSankey
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
-          return event.ctrlKey && event.buttons == 0
+          return event.ctrlKey && event.buttons == 0 
         })
         .wheelDelta(function wheelDelta(event) { // Permet de regler la vitesse du zoom
           return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002)
         })
         .on('zoom', function (evt) {
-          evt.transform.x = 0
+          data.fit_screen = false
+          evt.transform.x = 0 
           evt.transform.y = 0
-          d3.select('#svg').attr('transform', evt.transform).attr('transform-origin', '0 0')
+          d3.select('#svg')
+            .attr('transform', evt.transform).attr('transform-origin', '0 0')
+          if ( evt.transform.k < 1 && !data.fit_screen) {
+            d3.select('#svg')
+              .style('width' , data.width/evt.transform.k)
+              .style('height', data.height/evt.transform.k)
+          }
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
@@ -2891,13 +2898,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     drawGrid()
 
-    let mousePosition
-    let offset = [0, 0]
-    let isDown = false
+    // let mousePosition
+    // let offset = [0, 0]
+    // let isDown = false
     const div = document.getElementById('svg-container') as any
-    let old_pos = div.getBoundingClientRect()
+    //let old_pos = div.getBoundingClientRect()
     const div_banner = document.getElementById('react-container') as any
-    const height_banner = div_banner.getBoundingClientRect().height
+    //const height_banner = div_banner.getBoundingClientRect().height
 
 
     //Event listener sur les touche du clavier
@@ -2909,53 +2916,56 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
 
-    div.addEventListener('mousedown', function (event: any) {
-      if (event.ctrlKey) {
-        isDown = true
-        old_pos = div.getBoundingClientRect()
-        // const rect = event.target.getBoundingClientRect()
-        offset = [
-          event.clientX,
-          event.clientY + margin_top
-        ]
-      }
+    // div.addEventListener('mousedown', function (event: any) {
+    //   if (event.ctrlKey) {
+    //     isDown = true
+    //     old_pos = div.getBoundingClientRect()
+    //     // const rect = event.target.getBoundingClientRect()
+    //     offset = [
+    //       event.clientX,
+    //       event.clientY + margin_top
+    //     ]
+    //   }
 
 
 
-    }, true)
+    // }, true)
 
 
-    document.addEventListener('mouseup', function () {
-      isDown = false
-    }, true)
-    document.addEventListener('mousemove', function (event: any) {
-      if (isDown && event.ctrlKey) {
+    // document.addEventListener('mouseup', function () {
+    //   isDown = false
+    // }, true)
+    // document.addEventListener('mousemove', function (event: any) {
+    //   if (isDown && event.ctrlKey) {
 
-        mousePosition = {
-          x: event.clientX,
-          y: event.clientY
-        }
-        const tr = d3.select(div).style('transform')
-        const index = tr.indexOf('scale')
-        const tr_scale = (index != -1) ? tr.substring(index) : ''
-        let val_scale = parseFloat(tr_scale.substring(6, tr_scale.length - 1))
-        val_scale = (isNaN(val_scale)) ? 1 : val_scale
+    //     mousePosition = {
+    //       x: event.clientX,
+    //       y: event.clientY
+    //     }
+    //     const tr = d3.select(div).style('transform')
+    //     const index = tr.indexOf('scale')
+    //     const tr_scale = (index != -1) ? tr.substring(index) : ''
+    //     let val_scale = parseFloat(tr_scale.substring(6, tr_scale.length - 1))
+    //     val_scale = (isNaN(val_scale)) ? 1 : val_scale
 
 
-        //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
-        //la position de la souris au click avant drag, pos de la souris lors du drag 
-        //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
-        //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
+    //     //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
+    //     //la position de la souris au click avant drag, pos de la souris lors du drag 
+    //     //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
+    //     //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
 
-        //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
-        const shift_x = ((mousePosition.x - offset[0]) + old_pos.x / val_scale)
-        const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
+    //     //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
+    //     const shift_x = ((mousePosition.x - offset[0]) + old_pos.x / val_scale)
+    //     const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
 
-        d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
-      }
-    }, true)
+    //     d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
+    //   }
+    // }, true)
 
     update_scale(data.user_scale)
+    if (data.fit_screen) {
+      d3.select('#svg').attr('transform','scale(1)')
+    }
     console.log(('Ajout liens noeud'));
 
     [data.width, data.height]  = min_width_and_height()
