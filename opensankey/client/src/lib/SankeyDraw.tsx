@@ -2875,10 +2875,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .wheelDelta(function wheelDelta(event) { // Permet de regler la vitesse du zoom
           return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002)
         })
-        .on('zoom', function (transform) {
-          transform.transform.x = 0
-          transform.transform.y = 0
-          d3.select('#svg').attr('transform', transform.transform)
+        .on('zoom', function (evt) {
+          evt.transform.x = 0
+          evt.transform.y = 0
+          d3.select('#svg').attr('transform', evt.transform).attr('transform-origin', '0 0')
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
