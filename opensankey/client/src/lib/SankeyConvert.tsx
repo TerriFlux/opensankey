@@ -5,6 +5,7 @@ interface ConvertSankeyNode {
   id?: string
   orientation?: string,
   subchain?: string,
+  definition?: string,
   tooltips: string[],
   total_input_offset: number,
   input_offsets: number[],
@@ -426,6 +427,10 @@ export const convert_data = (
         } else {
           n.node_height = 10
         }
+      }
+      if (n_convert.definition) {
+        n.tooltip_text = n_convert.definition
+        delete n_convert.definition
       }
       if (n_convert.subchain && n_convert.subchain !== '') {
         n.tags['SubChain'] = n_convert.subchain.split(',')
