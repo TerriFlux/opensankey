@@ -539,7 +539,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         sankeyTooltip
-          .style('opacity', 1)
           .html(linkTooltipsContent(data, d))
         if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data, d.idLink).value >= display_style.filter) {
           return d3.select(this).attr('stroke-opacity', '0.5')
@@ -549,6 +548,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (!event.shiftKey && !static_sankey) {
           return
         }
+        sankeyTooltip
+          .style('opacity', 1)
         sankeyTooltip
           .style('top', (event.layerY - 10) + 'px')
           .style('left', (event.layerX + 10) + 'px')
