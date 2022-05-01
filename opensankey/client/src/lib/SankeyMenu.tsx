@@ -113,9 +113,9 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           if (item.includes('simple.xlsx')) {
             path = current_path + '/' + item
             callback = (server_data: SankeyData) => {
-              set_nodes_level(server_data.nodes, 2)
+              set_nodes_level(server_data,server_data.nodes, 2)
               compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-              set_nodes_level(server_data.nodes, 1)
+              set_nodes_level(server_data,server_data.nodes, 1)
               compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
               return 0
             }
@@ -1182,7 +1182,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                             return
                           }
                           for (let level = 1; level <= +evt.target.value + 1; level++) {
-                            set_nodes_level(display_nodes, level)
+                            set_nodes_level(data,display_nodes, level)
                           }
                           set_agregation_level(+evt.target.value)
                           set_data({ ...data })

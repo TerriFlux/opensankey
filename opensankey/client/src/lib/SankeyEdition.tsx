@@ -312,7 +312,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
       })
     })
     //for (let level = 1; level <= +evt.target.value + 1; level++) {
-    set_nodes_level(data.nodes,agregation_level+1)
+    set_nodes_level(data,data.nodes,agregation_level+1)
     //}
     localStorage.setItem('initial_data',JSON.stringify(new_data))
     set_data({...new_data})
@@ -380,15 +380,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               checked={use_level === true}
               onChange={ evt => {
                 if (evt.target.checked) {
-                  set_nodes_level(data.nodes, agregation_level+1)
-                  let height = 0
-                  Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                  let min_height = 2000
-                  Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                  let max_vert_shift = 0
-                  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                  set_nodes_level(data,data.nodes, agregation_level+1)
+                  // let height = 0
+                  // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                  // let min_height = 2000
+                  // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                  // let max_vert_shift = 0
+                  // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
                 
-                  data.height = Math.max(500, height + max_vert_shift + 200)
+                  // data.height = Math.max(500, height + max_vert_shift + 200)
                   set_data({...data})
                 } else {
                   const json_data = localStorage.getItem('initial_data')
@@ -414,17 +414,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   }
                   //set_level(+evt.target.value)
                   for (let level = 1; level <= +evt.target.value + 1; level++) {
-                    set_nodes_level(data.nodes, level)
+                    set_nodes_level(data,data.nodes, level)
                   }
                   set_agregation_level(+evt.target.value)
-                  let height = 0
-                  Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                  let min_height = 2000
-                  Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                  let max_vert_shift = 0
-                  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                  // let height = 0
+                  // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                  // let min_height = 2000
+                  // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                  // let max_vert_shift = 0
+                  // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
                 
-                  data.height = Math.max(500, height + max_vert_shift + 200)
+                  // data.height = Math.max(500, height + max_vert_shift + 200)
                   set_data({...data})
                 }
               }
