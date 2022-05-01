@@ -1,6 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
+import { agregation, desagregation } from './SankeyLayout'
 
 export const addDataTags = (
   dataTags: TagsGroup[],
@@ -657,6 +658,7 @@ export const uploadExemple = (
 }
 
 export const set_nodes_level = (
+  data : SankeyData,
   display_nodes: { [key: string]: SankeyNode },
   level: number
 ) => {
@@ -667,8 +669,10 @@ export const set_nodes_level = (
       return
     }
     if (node.dimensions['Primaire'].level === level) {
-      node.node_visible = true
-      node.display = true
+      desagregation(data,node.idNode,'Primaire')
+      agregation(data,node.idNode,'Primaire')
+      // node.node_visible = true
+      // node.display = true
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
         if (idParent !== null && idParent !== undefined) {
