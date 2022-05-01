@@ -156,7 +156,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     Object.values(data.links).forEach(l => { if (l.recycling) {
       width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x+l.right_horiz_shift+default_horiz_shift+150) : width  
     }})
-    return [width,height]
+    return [Math.max(width,data.width_min),Math.max(height,data.height_min)]
   }
 
   const add_links = (
@@ -2863,7 +2863,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     removeAnimate()
     const svgSankey = (d3.select('#svg') as any)
     if (data.fit_screen) {
-      svgSankey.attr('viewBox', [0, 0, data.width-40, data.height])
+      svgSankey.attr('viewBox', [20, 0, data.width-20, data.height])
     } else {
       svgSankey.attr('viewBox', null)
     }
