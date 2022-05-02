@@ -31,18 +31,23 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     set_tags_group_key(Object.keys(tags_catalog)[0])
   }
 
-  let node = data.nodes[selected_node.idNode]
-  if (node === undefined) {
-    node = default_node(data)
-    for (const tag_group_key in tags_catalog) {
-      node.tags[tag_group_key] = []
-    }
-  }
+  // let node = data.nodes[multi_selected_node[0].idNode]
+  // if (node === undefined) {
+  //   node = default_node(data)
+  //   for (const tag_group_key in tags_catalog) {
+  //     node.tags[tag_group_key] = []
+  //   }
+  // }
   //Creation des fonctions qui check si les noeuds selectionnés ont tous la même valeurs de leurs attributs
   const isAllNodeVisible = () => {
     let visible = false
     multi_selected_node.map(d => visible = (d.shape_visible) ? true : visible)
     return visible
+  }
+  const isAllNodeTotal = () => {
+    let show_value = false
+    multi_selected_node.map(d => show_value = (d.show_value) ? true : show_value)
+    return show_value
   }
   const isAllNodeRect = () => {
     let rect = true
@@ -201,11 +206,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Col>
           <FormCheck inline
             type='switch'
-            disabled={node.nodeParameter !== 'groupTag'}
-            checked={node.colorTag == tags_group_key}
+            disabled={multi_selected_node.length === 0 || multi_selected_node[0].nodeParameter !== 'groupTag'}
+            checked={multi_selected_node.length > 0  && multi_selected_node[0].colorTag == tags_group_key}
             label='Palette'
             onChange={() => {
-              node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key
+              multi_selected_node.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key)
 
               set_data({ ...data })
             }}
@@ -223,13 +228,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           <tbody>
             {tags_visible && tags_group_key != '' && Object.keys(tags_catalog).includes(tags_group_key) ? Object.entries(tags_catalog[tags_group_key].tags).map(
               tags => {
-                // const node_tags = node.tags[tags_group_key]
                 const verif = tags[0]
                 let allChecked = true
                 multi_selected_node.map((d) => {
                   allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
                 })
-                // const checked = node_tags ? node_tags.includes(tags[0]) : false
                 return (
                   <tr key={tags[0]}>
                     <td><FormLabel>{tags[1].name}</FormLabel></td>
@@ -245,14 +248,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                             const tag_key = new_nb_element.id
                             const visible = new_nb_element.checked
 
-                            // if (visible) {
-                            //   if (!node.tags[tags_group_key]) {
-                            //     node.tags[tags_group_key] = []
-                            //   }
-                            //   node.tags[tags_group_key].push(tag_key)
-                            // } else {
-                            //   node.tags[tags_group_key].splice(node.tags[tags_group_key].indexOf(tag_key))
-                            // }
+                 
 
                             Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                               if (visible) {
@@ -291,8 +287,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     type='switch'
                     checked={isAllNodeVisible()}
                     onChange={evt => {
-                      // node.shape_visible = evt.target.checked
-                      // node.node_visible = node.label_visible || node.shape_visible
+
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.shape_visible = evt.target.checked)
                       set_data({ ...data })
                     }}
@@ -325,10 +320,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <FormCheck
                     value="product"
                     type='radio'
-                    label='Circle'
+                    label='Cercle'
                     checked={isAllNodeCircle()}
                     onChange={evt => {
-                      // node.type = evt.target.value
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
                       set_data({ ...data })
                     }}
@@ -342,7 +336,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     label='Rectangle'
                     checked={isAllNodeRect()}
                     onChange={evt => {
-                      // node.type = evt.target.value
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
                       set_data({ ...data })
 
@@ -383,7 +376,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     value={displayedValueNodeHeight()}
                     onChange={
                       evt => {
-                        // multi_selected_node.map(d => d.node_width = +evt.target.value)
                         set_multi_selected_node(multi_selected_node)
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.node_height = +evt.target.value)
                         set_data({ ...data })
@@ -408,13 +400,30 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     type='switch'
                     checked={isAllLabelVisible()}
                     onChange={evt => {
-                      // node.label_visible = evt.target.checked
-                      // node.node_visible = node.label_visible || node.shape_visible
+
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.label_visible = evt.target.checked)
                       set_data({ ...data })
                     }}
                   />
                 </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col xs={4}>
+                  <FormLabel >Afficher la valeur du noeud</FormLabel>
+                </Col>
+                <Col xs={1}>
+                  <FormCheck inline
+                    type='switch'
+                    checked={isAllNodeTotal()}
+                    onChange={evt => {
+                      // node.shape_visible = evt.target.checked
+                      // node.node_visible = node.label_visible || node.shape_visible
+                      Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.show_value = evt.target.checked)
+                      set_data({ ...data })
+                    }}
+                  />
+                </Col>
+
               </Form.Group>
               <Form.Group as={Row} >
                 <Col xs={4}>
@@ -426,7 +435,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     type={'number'}
                     value={allNodeLabelFontSize()}
                     onChange={evt => {
-                      // data.display_style.font_size = +evt.target.value
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.font_size = +evt.target.value)
                       set_data({ ...data })
                     }}
@@ -445,7 +453,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeBold()}
                     onChange={
                       evt => {
-                        // data.display_style.sector_bold = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.bold = evt.target.checked)
                         set_data({ ...data })
                       }
@@ -459,7 +466,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeUpper()}
                     onChange={
                       evt => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.uppercase = evt.target.checked)
                         set_data({ ...data })
                       }
@@ -473,7 +479,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeItalic()}
                     onChange={
                       evt => {
-                        // data.display_style.sector_italic = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.italic = evt.target.checked)
                         set_data({ ...data })
                       }
@@ -500,10 +505,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.label_box_width = val)
                         set_data({ ...data })
                       }
-                      // else if(evt.target.value==''){
-                      //   Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.display_style.label_box_width = 110)
-                      //   set_data({ ...data })
-                      // }
+
                     }}
                   />
                 </Col>
@@ -522,7 +524,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('vert', 'haut')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_vert = 'haut'
                           delete d.x_label
@@ -540,7 +541,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('vert', 'milieu')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_vert = 'milieu'
                           delete d.x_label
@@ -559,7 +559,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('vert', 'bas')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_vert = 'bas'
                           delete d.x_label
@@ -582,7 +581,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('horiz', 'gauche')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_horiz = 'gauche'
                           delete d.x_label
@@ -600,7 +598,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('horiz', 'milieu')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_horiz = 'milieu'
                           delete d.x_label
@@ -618,7 +615,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     checked={isAllNodeLabelVert('horiz', 'droite')}
                     onChange={
                       () => {
-                        // data.display_style.sector_uppercase = evt.target.checked
                         Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
                           d.display_style.label_horiz = 'droite'
                           delete d.x_label
@@ -643,8 +639,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     type='switch'
                     checked={isAllIconVisible()}
                     onChange={evt => {
-                      // node.shape_visible = evt.target.checked
-                      // node.node_visible = node.label_visible || node.shape_visible
+
                       Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => d.iconVisible = evt.target.checked)
                       set_data({ ...data })
                     }}
@@ -718,18 +713,18 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           </Tab>
 
           {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
-          <Tab eventKey="node_tooltip" title="Tooltip">
+          <Tab eventKey="node_tooltip" title="Info-bulle">
             <Form >
               <Row>
-                <FormLabel column sm={1}>Tooltip:</FormLabel>
+                <FormLabel column sm={1}>Info-bulle:</FormLabel>
                 <Col sm={11}>
                   <Form.Control
                     as="textarea"
                     rows={10}
-                    value={node.tooltip_text ? node.tooltip_text : ''}
+                    value={multi_selected_node.length>0 && multi_selected_node[0].tooltip_text ? multi_selected_node[0].tooltip_text : ''}
                     onChange={
                       (evt) => {
-                        node.tooltip_text = evt.target.value.split('\n').join('\\n')
+                        multi_selected_node.map(node => node.tooltip_text = evt.target.value.split('\n').join('\\n'))
                         set_data({ ...data })
                       }
                     }
@@ -738,110 +733,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Row>
             </Form>
           </Tab>
-          <Tab eventKey="node_parameter" title="Déplacements">
-            <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                onClick={
-                  () => {
-                    // const current_x = selected_node.x
-                    // const current_prev_y = selected_node.y - data.v_space
-                    // const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y)[0]
-                    // if (node_to_replace !== undefined) {
-                    //   node_to_replace.y = selected_node.y
-                    // }
-                    // selected_node.y = selected_node.y - data.v_space
+          <Tab eventKey="link_parameter" title="Liens">
 
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-                      // const current_x = d.x
-                      // const current_prev_y = d.y - data.v_space
-                      // const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y)[0]
-                      // if (node_to_replace !== undefined) {
-                      //   node_to_replace.y = d.y
-                      // }
-                      // // d.y = d.y - data.v_space
-                      
-                      //Réalligne les noeuds sélectionnés avec le grillage de fond, si le noeud est à la même hauteur alors ils remonte d'un cran
-                      const n_pos=Math.trunc(d.y/data.grid_square_size)
-                      d.y=(n_pos*data.grid_square_size==d.y)?(n_pos-1)*data.grid_square_size:n_pos*data.grid_square_size
-
-                    })
-                    set_data({ ...data })
-                  }
-                }
-              >Monter</Button>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-                      // const current_x = d.x
-                      // const current_prev_y = d.y + data.v_space
-                      // const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_x && n.y === current_prev_y)[0]
-                      // if (node_to_replace !== undefined) {
-                      //   node_to_replace.y = d.y
-                      // }
-                      // d.y = d.y + data.v_space
-
-                      //Réalligne les noeuds sélectionnés avec le grillage de fond en descendant
-                      const n_pos=Math.trunc(d.y/data.grid_square_size)
-                      d.y=(n_pos+1)*data.grid_square_size
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Descendre</Button>
-            </ButtonGroup>
-            <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-                      // const current_prev_x = Math.round(d.x / data.h_space) * data.h_space - data.h_space
-                      // const current_y = d.y
-                      // const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y)[0]
-                      // if (node_to_replace !== undefined) {
-                      //   node_to_replace.x = Math.round(d.x / data.h_space) * data.h_space
-                      // }
-                      // d.x = current_prev_x
-
-                      const n_pos=Math.trunc(d.x/data.grid_square_size)
-                      d.x=(n_pos*data.grid_square_size==d.x)?(n_pos-1)*data.grid_square_size:n_pos*data.grid_square_size
-                
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Décaler gauche</Button>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(f => multi_selected_node.map(d => d.name).includes(f.name)).map(d => {
-                      // const current_prev_x = Math.round(d.x / data.h_space) * data.h_space + data.h_space
-                      // const current_y = d.y
-                      // const node_to_replace = Object.values(display_nodes).filter(n => n.node_visible && n.x === current_prev_x && n.y === current_y)[0]
-                      // if (node_to_replace !== undefined) {
-                      //   node_to_replace.x = Math.round(d.x / data.h_space) * data.h_space
-                      // }
-                      // d.x = current_prev_x
-
-                      const n_pos=Math.trunc(d.x/data.grid_square_size)
-                      d.x=(n_pos+1)*data.grid_square_size
-                    })
-
-                    set_data({ ...data })
-                  }
-                }
-              >Décaler droite</Button>
-            </ButtonGroup>
             <ButtonGroup style={{ 'marginLeft': '10px' }}>
               <Button
                 size="sm"
@@ -870,48 +763,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 }
               >Réorganiser liens sortants</Button>
             </ButtonGroup>
-            {/* <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    delete_node(data, selected_node)
-                    set_data({ ...data })
-                  }
-                }
-              >Supprimer noeud</Button>
-            </ButtonGroup>
-            <ButtonGroup style={{ 'marginLeft': '10px' }}>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                onClick={
-                  () => {
-                    while (selected_node.inputLinksId.length > 0) {
-                      const link = display_links[selected_node.inputLinksId[0]]
-                      delete_link(data, link)
-                    }
-                    set_data({ ...data })
-                  }
-                }
-              >Supprimer flux entrant</Button>
-              <Button
-                size="sm"
-                style={{ 'marginBottom': '3px' }}
-                onClick={
-                  () => {
-                    while (selected_node.outputLinksId.length > 0) {
-                      const link = display_links[selected_node.outputLinksId[0]]
-                      delete_link(data, link)
-                    }
-                    set_data({ ...data })
-                  }
-                }
-              >Supprimer flux sortant</Button>
-            </ButtonGroup> */}
-
-
+            
           </Tab>
           {children}
         </Tabs>

@@ -130,6 +130,23 @@ export const SankeyLinkPropTypes = {
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
 
+export const SankeyLabelPropTypes = {
+  // identification
+  idLabel: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  color:PropTypes.string.isRequired,
+  color_border:PropTypes.string.isRequired,
+
+  label_width: PropTypes.number.isRequired,
+  label_height: PropTypes.number.isRequired,
+
+  x: PropTypes.number.isRequired,
+  y: PropTypes.number.isRequired,
+
+}
+
+export type SankeyLabel = InferProps<typeof SankeyLabelPropTypes>
+
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
   show_legend: PropTypes.bool.isRequired,
@@ -176,8 +193,10 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
+  labels: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
-    font_size: PropTypes.number.isRequired,
+    node_font_size: PropTypes.number.isRequired,
+    link_font_size: PropTypes.number.isRequired,
     sector_uppercase: PropTypes.bool.isRequired,
     sector_bold: PropTypes.bool.isRequired,
     sector_italic: PropTypes.bool.isRequired,

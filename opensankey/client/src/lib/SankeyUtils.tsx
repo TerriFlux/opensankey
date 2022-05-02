@@ -1,6 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
+import { agregation, desagregation } from './SankeyLayout'
 
 export const addDataTags = (
   dataTags: TagsGroup[],
@@ -357,13 +358,15 @@ export const default_sankey_data = (): SankeyData => {
     fit_screen    : false,
 
     icon_catalog: {},
+    labels:[],
 
     left_shift: 0.4,
     right_shift: 0.5,
     max_shift: 0.2,
 
     display_style: {
-      font_size: 11,
+      node_font_size: 14,
+      link_font_size: 14,
       sector_uppercase: true,
       sector_bold: true,
       sector_italic: false,
@@ -421,10 +424,10 @@ export const default_node = (
     dimensions: { 'Primaire': { parent_name: undefined } },
 
     display_style: {
-      font_size: data.display_style.font_size,
-      uppercase: true,
-      bold: true,
-      italic: false,
+      font_size: data.display_style.node_font_size,
+      uppercase: data.display_style.sector_uppercase,
+      bold: data.display_style.sector_bold,
+      italic: data.display_style.sector_italic,
       unit: false,
       filter: 0,
       filter_label: 0,
@@ -642,14 +645,7 @@ export const uploadExemple = (
       // data.left_shift = 0.40
       // data.right_shift = 0.50
       example_callback(data)
-      let height = 0
-      Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-      let min_height = 2000
-      Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-      let max_vert_shift = 0
-      Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
 
-      data.height = Math.max(500, height + max_vert_shift + 200)
       set_data({ ...data })
       localStorage.setItem('initial_data',JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
@@ -662,6 +658,7 @@ export const uploadExemple = (
 }
 
 export const set_nodes_level = (
+  data : SankeyData,
   display_nodes: { [key: string]: SankeyNode },
   level: number
 ) => {
@@ -672,8 +669,10 @@ export const set_nodes_level = (
       return
     }
     if (node.dimensions['Primaire'].level === level) {
-      node.node_visible = true
-      node.display = true
+      desagregation(data,node.idNode,'Primaire')
+      agregation(data,node.idNode,'Primaire')
+      // node.node_visible = true
+      // node.display = true
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
         if (idParent !== null && idParent !== undefined) {

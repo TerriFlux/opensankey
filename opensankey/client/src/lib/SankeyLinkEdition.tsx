@@ -104,7 +104,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
         allChecked = (d.orientation == 'hh') ? allChecked : false
       })
       return allChecked
-
       break
     case 'vv':
       multi_selected_links.map(d => {
@@ -265,6 +264,24 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
+  // const allLinkValue = () => {
+  //   let display_courbe = true
+  //   const courbe = 1
+  //   if (multi_selected_links.length != 0) {
+  //     const first = multi_selected_links[0].value
+  //     Object.values(tags_selected).map(tag_selected => {
+  //       if (first[tag_selected] === undefined) {
+  //         first[tag_selected] = {}
+  //       }
+  //       first = first[tag_selected]
+  //     })
+  //     // courbe = multi_selected_links[0].value[tags_selected].value
+  //   }
+  //   multi_selected_links.map((d) => {
+  //     display_courbe = (d.value[tags_selected].value == courbe) ? display_courbe : false
+  //   })
+  //   return (display_courbe) ? courbe : 1
+  // }
 
 
   return (
@@ -323,18 +340,31 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col>
                   <Form.Control
-                    type='text'
+                    type='number'
+                    min={0}
+                    step={0.1}
                     value={value_selected_parameter().value}
                     onChange={
                       evt => {
                         let val = Object(selected_link.value)
-                        Object.values(tags_selected).forEach(tag => {
-                          if (val[tag] === undefined) {
-                            val[tag] = {}
-                          }
-                          val = val[tag]
+                        multi_selected_links.map(d => {
+                          val = d.value
+                          Object.values(tags_selected).forEach(tag => {
+                            if (val[tag] === undefined) {
+                              val[tag] = {}
+                            }
+                            val = val[tag]
+                          })
+                          val.value = +evt.target.value
+
                         })
-                        val.value = +evt.target.value
+                        // Object.values(tags_selected).forEach(tag => {
+                        //   if (val[tag] === undefined) {
+                        //     val[tag] = {}
+                        //   }
+                        //   val = val[tag]
+                        // })
+                        // val.value = +evt.target.value
                         set_data({ ...data })
                       }
                     }
@@ -533,7 +563,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <FormCheck
                     type='checkbox'
-                    label='Flêche'
+                    label='Flèche'
                     // checked={selected_link.arrow}
                     checked={linkType('arrow')}
                     onChange={
@@ -728,7 +758,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   // checked={selected_link.text_color === selected_link.color}
                   checked={linkLabelColor('color')}
                   onChange={
-                    (evt) => {
+                    () => {
                       // selected_link.text_color = selected_link.color
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = d.color
@@ -917,7 +947,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             <Tab eventKey="tags" title="Tags" >
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Tag Groupe:</FormLabel>
+                  <FormLabel >Groupe d'Étiquette:</FormLabel>
                 </Col>
                 <Col>
                   <FormCheck inline
@@ -947,10 +977,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
 
             </Tab>) : (<></>)}
-          <Tab eventKey="flux_tooltip" title="Tooltip">
+          <Tab eventKey="flux_tooltip" title="Info-bulle">
             <Form >
               <Row>
-                <FormLabel column sm={1}>Tooltip:</FormLabel>
+                <FormLabel column sm={1}>Info-bulle:</FormLabel>
                 <Col sm={11}>
                   <Form.Control
                     as="textarea"
