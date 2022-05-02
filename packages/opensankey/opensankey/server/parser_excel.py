@@ -28,7 +28,7 @@ def parse_sankey_energie_csv(
         },
 
     }
-    sankey_dict['tags_catalog'] = {
+    sankey_dict['nodeTags'] = {
         'Exchanges' : {
             'group_name'    : 'Echanges',
             'tags'          : {
@@ -369,7 +369,7 @@ def parse_simple_excel(
         'nodes'        : nodes,
         'links'        : links,
         'dataTags'     : dataTags,
-        'tags_catalog' : nodeTags
+        'nodeTags' : nodeTags
     }
 
 def save_simple_excel(
@@ -378,7 +378,7 @@ def save_simple_excel(
     nodes_cols =  ['Level', 'Element','Couleur', 'Forme']
     #nodes_cols = mfa_input['nodes'][0]
     # tag_names are disposed between the column Dimensions and the column Définition
-    tag_names = list(sankey_data['dataTags']) + list(sankey_data['tags_catalog'])
+    tag_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags'])
     nodes = {}
     tags =[]
     if len(tag_names) != 0:
@@ -387,13 +387,13 @@ def save_simple_excel(
        for i in range(len(tag_names)):
            if tag_names[i] in sankey_data['dataTags']:
                 tags[i+1]=[tag_names[i],'dataTags',(':').join([ tag['name'] for tag in sankey_data['dataTags'][tag_names[i]]['tags'].values()]),'','','']
-           elif tag_names[i] in sankey_data['tags_catalog']:
-                tags[i+1]=[tag_names[i],'nodeTags',(':').join([ tag['name'] for tag in sankey_data['tags_catalog'][tag_names[i]]['tags'].values()]),'','','']
+           elif tag_names[i] in sankey_data['nodeTags']:
+                tags[i+1]=[tag_names[i],'nodeTags',(':').join([ tag['name'] for tag in sankey_data['nodeTags'][tag_names[i]]['tags'].values()]),'','','']
 
-    nb_cols_nodes = 4 + len(sankey_data['tags_catalog'].keys()) + 1
+    nb_cols_nodes = 4 + len(sankey_data['nodeTags'].keys()) + 1
 
     nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
-    nodes[0] = ["Level","Element","Couleur","Forme"]+list(sankey_data['tags_catalog'])
+    nodes[0] = ["Level","Element","Couleur","Forme"]+list(sankey_data['nodeTags'])
 
     for i,node in enumerate(sankey_data['nodes'].values()):
         nodes[i+1][nodes_cols.index('Element')] = node['name']
@@ -405,7 +405,7 @@ def save_simple_excel(
         nodes[i+1][nodes_cols.index('Couleur')] = node['color']
         if 'definition' in node:
             nodes[i+1][nb_cols_nodes-1] = node['definition']             
-        for j,tag_name in enumerate(sankey_data['tags_catalog']):
+        for j,tag_name in enumerate(sankey_data['nodeTags']):
             nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
         nodes[i+1][nodes_cols.index('Level')] = 1
         if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:

@@ -216,14 +216,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       paths.call(d3.drag<SVGPathElement, SankeyLink>()
         .subject(Object)
         .on('drag', function (event) {
-          drag_link(display_nodes, display_links, display_style, data.tags_catalog, this, event)
+          drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event)
           Object.values(display_links).forEach(
             (link: SankeyLink) => {
               d3.select('#' + link.idLink).attr('d',
                 () => {
                   return drawCurve(
                     display_nodes, display_links, display_style,
-                    data.tags_catalog, link,
+                    data.nodeTags, link,
                     error_msg
                   )
                 }
@@ -327,7 +327,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } else {
             const text_id = d3.select(this).attr('id')
             const link_to_drag = text_id.substring(text_id.length - 5)
-            drag_link(display_nodes, display_links, display_style, data.tags_catalog, (d3.select(link_to_drag).node() as SVGPathElement), event)
+            drag_link(display_nodes, display_links, display_style, data.nodeTags, (d3.select(link_to_drag).node() as SVGPathElement), event)
           }
         })
       )
@@ -358,7 +358,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(nodes, l, data.tags_catalog)
+        const link_value = test_link_value(nodes, l, data.nodeTags)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -392,7 +392,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(display_nodes, l, data.tags_catalog)
+          const link_value = test_link_value(display_nodes, l, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -622,10 +622,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     paths.attr('d', d => {
-      setNodesHeight(display_nodes, display_links, d, data.tags_catalog)
+      setNodesHeight(display_nodes, display_links, d, data.nodeTags)
       return drawCurve(
         display_nodes, display_links, display_style,
-        data.tags_catalog, d, error_msg
+        data.nodeTags, d, error_msg
       )
     })
     if (error_msg && error_msg.text) {
@@ -637,7 +637,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(n => node_arrow_visible(n))
       .each(function (n) {
         const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.tags_catalog, selection)
+        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags, selection)
       })
   }
 
@@ -657,7 +657,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
     display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; node_font_size: number; link_font_size: number;sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
-    tags_catalog: TagsCatalog,
+    nodeTags: TagsCatalog,
     dragged: Element,
     event: { dx: number; dy: number }
   ) => {
@@ -711,7 +711,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
 
 
-      const link_value = test_link_value(nodes, l, tags_catalog)
+      const link_value = test_link_value(nodes, l, nodeTags)
       //Zones limite à ne pas êtres
       const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
       const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -745,7 +745,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         //retour à la normal
         d3.select('#' + l.idLink).attr('stroke-width', d => {
-          const link_value = test_link_value(display_nodes, d, data.tags_catalog)
+          const link_value = test_link_value(display_nodes, d, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
         })
       }
@@ -890,7 +890,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             .attr('d', () => {
               return drawCurve(
                 nodes, links, display_style,
-                data.tags_catalog,
+                data.nodeTags,
                 link,
                 error_msg
               )
@@ -898,14 +898,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const target_node = nodes[link.idTarget]
           if (link.arrow) {
             const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-            drawArrows(target_node, nodes, links, display_style, tags_catalog, node_select)
+            drawArrows(target_node, nodes, links, display_style, nodeTags, node_select)
           }
           for (let i = 0; i < target_node.inputLinksId.length; i++) {
             d3.select('#' + target_node.inputLinksId[i])
               .attr('d', (link => {
                 return drawCurve(
                   nodes, links, display_style,
-                  tags_catalog,
+                  nodeTags,
                   link as SankeyLink,
                   error_msg
                 )
@@ -916,7 +916,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               .attr('d', link => {
                 return drawCurve(
                   nodes, links, display_style,
-                  tags_catalog,
+                  nodeTags,
                   link as SankeyLink,
                   error_msg
                 )
@@ -936,7 +936,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
     display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number },
-    tags_catalog: TagsCatalog,
+    nodeTags: TagsCatalog,
     dragged: SVGPathElement | null,
     event: d3.D3DragEvent<Element, SankeyLink, unknown>
   ) => {
@@ -1003,7 +1003,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       }
       const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-      drawArrows(node, nodes, links, display_style, tags_catalog, node_select)
+      drawArrows(node, nodes, links, display_style, nodeTags, node_select)
     }
   }
 
@@ -1100,7 +1100,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       let error_msg
       return drawCurve(
         nodes, links, display_style,
-        data.tags_catalog, d, error_msg
+        data.nodeTags, d, error_msg
       )
     })
   }
@@ -1341,7 +1341,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
     d: SankeyLink,
-    tags_catalog: TagsCatalog
+    nodeTags: TagsCatalog
   ) => {
     let source_node = nodes[d.idSource]
     let target_node = nodes[d.idTarget]
@@ -1353,9 +1353,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       source_node = nodes[filter_idSource]
     }
 
-    let res = compute_total_offsets(source_node, nodes, links, tags_catalog, test_link_value)
+    let res = compute_total_offsets(source_node, nodes, links, nodeTags, test_link_value)
     const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-    res = compute_total_offsets(target_node, nodes, links, tags_catalog, test_link_value)
+    res = compute_total_offsets(target_node, nodes, links, nodeTags, test_link_value)
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_height = Math.max(
@@ -1611,14 +1611,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
     display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
-    tags_catalog: TagsCatalog,
+    nodeTags: TagsCatalog,
     link: SankeyLink,
     error_msg: { text?: string } | undefined
   ): string => {
     if (!link_visible(link)) {
       return ''
     }
-    const link_value = test_link_value(nodes, link, tags_catalog)
+    const link_value = test_link_value(nodes, link, nodeTags)
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -1629,13 +1629,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return ''
     }
 
-    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, tags_catalog)
+    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags)
 
 
     // if (link.orientation === 'hh' || link.orientation === 'vv') {
     add_shift_handles(
       link, nodes, links,
-      display_style, tags_catalog, xs, ys, xt, yt
+      display_style, nodeTags, xs, ys, xt, yt
     )
     // }
 
@@ -1895,7 +1895,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           drag_node(
             display_nodes, display_links,
             display_style,
-            data.tags_catalog,
+            data.nodeTags,
             this, event
           )
 
@@ -2083,7 +2083,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.tags_catalog))
+    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags))
 
     //----------------ICON-----------------
 
@@ -2392,7 +2392,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 drag_node(
                   display_nodes, display_links,
                   display_style,
-                  data.tags_catalog,
+                  data.nodeTags,
                   el,
                   event
                 )
@@ -2478,7 +2478,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
     display_style: { node_font_size: number;link_font_size: number; filter?: number; filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
-    tags_catalog: TagsCatalog,
+    nodeTags: TagsCatalog,
     selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
   ) => {
     let cum_v_left = 0
@@ -2490,7 +2490,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
  
 
-    const res = compute_total_offsets(n, nodes, links, tags_catalog, test_link_value)
+    const res = compute_total_offsets(n, nodes, links, nodeTags, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
     for (let i = 0; i < n.inputLinksId.length; i++) {
       const l = links[n.inputLinksId[i]]
@@ -2500,7 +2500,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
         continue
       }
-      const link_value = test_link_value(nodes, l, tags_catalog)
+      const link_value = test_link_value(nodes, l, nodeTags)
       if (link_value === undefined) {
         continue
       }
@@ -2517,7 +2517,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!display_style.filter || link_value >= display_style.filter) {
         //selection
         d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
-        setNodeHeight(n, nodes, links, tags_catalog)
+        setNodeHeight(n, nodes, links, nodeTags)
 
         d3.select('#gg_' + l.idLink)
           .append('path')
@@ -2645,7 +2645,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.values(data.tags_catalog).concat(Object.values(data.dataTags))
+    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.dataTags))
     all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
 
       // Ajout du tagGroup.name  

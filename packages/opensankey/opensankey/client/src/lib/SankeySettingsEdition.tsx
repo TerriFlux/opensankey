@@ -503,7 +503,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                         selected={tags_group_key === tags_group[0]} >
                         {tags_group[1].group_name}
                       </option>)}
-                  {Object.entries(data.tags_catalog).filter(tags_group => tags_group[1].banner === 'multi').map(
+                  {Object.entries(data.nodeTags).filter(tags_group => tags_group[1].banner === 'multi').map(
                     (tags_group, i) =>
                       <option
                         key={i}
@@ -589,11 +589,11 @@ const SankeySettingsEditionTagsPropTypes = {
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
 const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data }) => {
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.tags_catalog).length > 0 ? Object.keys(data.tags_catalog)[0] : '')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
   //const [tagColorMap, setTagColorMap] = useState('jet')
   //const [tag_key, set_tag_key] = useState('')
 
-  const { links, tags_catalog } = data
+  const { links, nodeTags } = data
 
   let max_link_value = 0
   Object.values(links).forEach(link => {
@@ -620,21 +620,21 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
-    tags_catalog[tags_group_key].banner = evt.target.value
+    nodeTags[tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
   // --------------------------------------------
   //ajoute un étiquette au groupe selectionné 
   const handleAddTagButton = () => {
-    const { tags_catalog } = data
+    const { nodeTags } = data
     // Méthode pour incrementer idElement
     const listId: number[] = []
-    Object.keys(tags_catalog[tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
+    Object.keys(nodeTags[tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
     const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    tags_catalog[tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
-    const nb_tags = Object.keys(tags_catalog[tags_group_key].tags).length
+    nodeTags[tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
+    const nb_tags = Object.keys(nodeTags[tags_group_key].tags).length
     const colors = colormap({
-      colormap: tags_catalog[tags_group_key].color_map,
+      colormap: nodeTags[tags_group_key].color_map,
       nshades: Math.max(11, nb_tags),
       format: 'hex',
       alpha: 1
@@ -643,19 +643,19 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
     if (nb_tags < 11) {
       step = Math.round(11 / nb_tags)
     }
-    Object.keys(tags_catalog[tags_group_key].tags).forEach(
-      (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i * step]
+    Object.keys(nodeTags[tags_group_key].tags).forEach(
+      (tag_key, i) => nodeTags[tags_group_key].tags[tag_key].color = colors[i * step]
     )
     set_data({ ...data })
   }
   //Ajoute un groupTag
   const handleAddTagGrpButton = () => {
-    const { tags_catalog } = data
+    const { nodeTags } = data
     // Méthode pour incrementer idGroup
     const listId: number[] = []
-    Object.keys(tags_catalog).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
+    Object.keys(nodeTags).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
     const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    tags_catalog['tag_group_' + idGroup] = {
+    nodeTags['tag_group_' + idGroup] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
@@ -663,12 +663,12 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
       banner: 'none'
     }
     Object.values(data.nodes).forEach(n => n.tags['tag_group_' + idGroup] = [])
-    if (Object.keys(tags_catalog).length === 1) {
-      Object.values(data.nodes).forEach(n => n.colorTag = Object.keys(tags_catalog)[0])
+    if (Object.keys(nodeTags).length === 1) {
+      Object.values(data.nodes).forEach(n => n.colorTag = Object.keys(nodeTags)[0])
     }
 
     //set_key_group_tag(tmp_key + 1)
-    // if (Object.keys(tags_catalog).length == 1) {
+    // if (Object.keys(nodeTags).length == 1) {
     //   set_tags_group_key(tmp_key)
     // }
     set_tags_group_key('tag_group_' + idGroup)
@@ -676,56 +676,56 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
   }
 
   const handleDelTag = (n: string) => {
-    const { tags_catalog } = data
-    delete tags_catalog[tags_group_key].tags[n]
+    const { nodeTags } = data
+    delete nodeTags[tags_group_key].tags[n]
 
     set_data({ ...data })
   }
 
   const handleDelGroupTag = (tags_group_key: string) => {
-    const { tags_catalog } = data
-    delete tags_catalog[tags_group_key]
+    const { nodeTags } = data
+    delete nodeTags[tags_group_key]
     Object.values(data.nodes).forEach(
       n => {
         if (n.colorTag === tags_group_key) {
           n.colorTag = ''
         }
       })
-    if (Object.keys(tags_catalog).length > 0) {
-      const lastElmt = Object.keys(tags_catalog)[Object.keys(tags_catalog).length - 1]
+    if (Object.keys(nodeTags).length > 0) {
+      const lastElmt = Object.keys(nodeTags)[Object.keys(nodeTags).length - 1]
       set_tags_group_key(lastElmt)
     }
     set_data({ ...data })
   }
 
   const handleUpGrpTag = (i: string) => {
-    const { tags_catalog } = data
-    const listElmt = Object.keys(tags_catalog)
+    const { nodeTags } = data
+    const listElmt = Object.keys(nodeTags)
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt - 1, 0, i)
     const new_cat: { [key: string]: TagsGroup } = {}
     listElmt.forEach(elt => {
-      new_cat[elt] = tags_catalog[elt]
+      new_cat[elt] = nodeTags[elt]
     })
-    for (const member in tags_catalog) delete tags_catalog[member]
-    Object.assign(tags_catalog, new_cat)
+    for (const member in nodeTags) delete nodeTags[member]
+    Object.assign(nodeTags, new_cat)
     set_data({ ...data })
   }
 
   const handleDownGrpTag = (i: string) => {
-    const { tags_catalog } = data
-    const listElmt = Object.keys(tags_catalog)
+    const { nodeTags } = data
+    const listElmt = Object.keys(nodeTags)
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt + 1, 0, i)
     const new_cat: { [key: string]: TagsGroup } = {}
     listElmt.forEach(elt => {
 
-      new_cat[elt] = tags_catalog[elt]
+      new_cat[elt] = nodeTags[elt]
     })
-    for (const member in tags_catalog) delete tags_catalog[member]
-    Object.assign(tags_catalog, new_cat)
+    for (const member in nodeTags) delete nodeTags[member]
+    Object.assign(nodeTags, new_cat)
     set_data({ ...data })
   }
 
@@ -741,13 +741,13 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
           }}>
-          {Object.keys(tags_catalog).map(
+          {Object.keys(nodeTags).map(
             (key, i) =>
               <option
                 key={i}
                 value={key}
                 selected={tags_group_key === key} >
-                {tags_catalog[key].group_name}
+                {nodeTags[key].group_name}
               </option>
           )}
         </Form.Select>
@@ -756,8 +756,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         <Form.Select onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             //setTagColorMap(evt.target.value)
-            tags_catalog[tags_group_key].color_map = evt.target.value
-            const nb_tags = Object.keys(tags_catalog[tags_group_key].tags).length
+            nodeTags[tags_group_key].color_map = evt.target.value
+            const nb_tags = Object.keys(nodeTags[tags_group_key].tags).length
             if (evt.target.value === 'custom') {
               return
             }
@@ -771,8 +771,8 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
             if (nb_tags < 11) {
               step = Math.round(11 / nb_tags)
             }
-            Object.keys(tags_catalog[tags_group_key].tags).forEach(
-              (tag_key, i) => tags_catalog[tags_group_key].tags[tag_key].color = colors[i * step]
+            Object.keys(nodeTags[tags_group_key].tags).forEach(
+              (tag_key, i) => nodeTags[tags_group_key].tags[tag_key].color = colors[i * step]
             )
             set_data({ ...data })
           }}>
@@ -781,7 +781,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
               <option
                 key={i}
                 value={cur_colormap}
-                selected={tags_catalog[tags_group_key] && tags_catalog[tags_group_key].color_map === cur_colormap} >
+                selected={nodeTags[tags_group_key] && nodeTags[tags_group_key].color_map === cur_colormap} >
                 {cur_colormap}
               </option>
           )}
@@ -801,7 +801,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         </tr>
       </thead>
       <tbody>
-        {Object.keys(tags_catalog).length > 0 && tags_group_key !== '' ? Object.keys(tags_catalog[tags_group_key].tags).map(
+        {Object.keys(nodeTags).length > 0 && tags_group_key !== '' ? Object.keys(nodeTags[tags_group_key].tags).map(
           (tag_key, i) => {
             return (
               <tr key={i.toString()}>
@@ -811,20 +811,20 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                   <FormControl /* size='sm' */
                     id={i.toString()}
                     type="text"
-                    value={tags_catalog[tags_group_key].tags[tag_key].name}
+                    value={nodeTags[tags_group_key].tags[tag_key].name}
                     onChange={
                       (evt: React.ChangeEvent) => {
-                        const { tags_catalog } = data
+                        const { nodeTags } = data
                         const new_nb_element = evt.target as HTMLInputElement
                         const name = new_nb_element.value
-                        tags_catalog[tags_group_key].tags[tag_key].name = name
+                        nodeTags[tags_group_key].tags[tag_key].name = name
                         set_data({ ...data })
                       }
                     } /></td>
                 <td style={{ 'width': '10%' }}>
                   <Form.Check inline={true}
                     name={'element_visible' + tag_key}
-                    checked={tags_catalog[tags_group_key].tags[tag_key].selected}
+                    checked={nodeTags[tags_group_key].tags[tag_key].selected}
                     id={tag_key}
                     type='switch'
                     onChange={
@@ -832,29 +832,29 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                         const new_nb_element = evt.target as HTMLInputElement
                         const tag_key = new_nb_element.id
                         const visible = new_nb_element.checked
-                        tags_catalog[tags_group_key].tags[tag_key].selected = visible
+                        nodeTags[tags_group_key].tags[tag_key].selected = visible
                         set_data({ ...data })
                       }
                     } />
                 </td>
                 <td><Form.Control
                   type="color"
-                  value={tags_catalog[tags_group_key].tags[tag_key].color as string}
+                  value={nodeTags[tags_group_key].tags[tag_key].color as string}
                   onChange={
                     evt => {
-                      tags_catalog[tags_group_key].tags[tag_key].color = evt.target.value
+                      nodeTags[tags_group_key].tags[tag_key].color = evt.target.value
                       set_data({ ...data })
                     }
                   }
                 /></td>
                 <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  tags_catalog[tags_group_key].tags[tag_key].shape = evt.target.value
+                  nodeTags[tags_group_key].tags[tag_key].shape = evt.target.value
                   set_data({ ...data })
                 }
 
                 }>
-                  <option key={'rect' + i} id='rect' selected={tags_catalog[tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
-                  <option key={'circle' + i} id='circle' selected={tags_catalog[tags_group_key].banner === 'multi'} value='circle'>Circle</option>
+                  <option key={'rect' + i} id='rect' selected={nodeTags[tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
+                  <option key={'circle' + i} id='circle' selected={nodeTags[tags_group_key].banner === 'multi'} value='circle'>Circle</option>
                 </Form.Select>
               </tr>
             )
@@ -882,7 +882,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
         <tbody>
           {
 
-            Object.keys(tags_catalog).map(
+            Object.keys(nodeTags).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -893,12 +893,12 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                       <FormControl
                         id={i.toString()}
                         type="text"
-                        value={tags_catalog[tags_group_key].group_name}
+                        value={nodeTags[tags_group_key].group_name}
                         onChange={
                           (evt: React.ChangeEvent) => {
-                            const { tags_catalog } = data
+                            const { nodeTags } = data
                             const new_name = (evt.target as HTMLInputElement).value
-                            tags_catalog[tags_group_key].group_name = new_name
+                            nodeTags[tags_group_key].group_name = new_name
                             set_data({ ...data })
                           }
                         } />
@@ -907,7 +907,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                       <Form.Check inline={true}
                         // Permet de selection le étiquette pour l'affichage dans la légende
                         name={'element_legend_' + tags_group_key}
-                        checked={tags_catalog[tags_group_key].show_legend}
+                        checked={nodeTags[tags_group_key].show_legend}
                         id={tags_group_key}
                         type='switch'
                         onChange={
@@ -915,16 +915,16 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
                             const new_nb_element = evt.target as HTMLInputElement
                             const tags_group_key = new_nb_element.id
                             const visible = new_nb_element.checked
-                            tags_catalog[tags_group_key].show_legend = visible
+                            nodeTags[tags_group_key].show_legend = visible
                             set_data({ ...data })
                           }
                         } />
                     </td>
-                    <td>{Object.keys(tags_catalog[tags_group_key].tags).length}</td>
+                    <td>{Object.keys(nodeTags[tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={tags_catalog[tags_group_key].banner === 'none' || !tags_catalog[tags_group_key].banner} value='none'>Aucun</option>
-                      <option key={'one' + i} id='OneBaner' selected={tags_catalog[tags_group_key].banner === 'one'} value='one'>One</option>
-                      <option key={'multi' + i} id='MultipleBaner' selected={tags_catalog[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
+                      <option key={'none' + i} id='NoneBaner' selected={nodeTags[tags_group_key].banner === 'none' || !nodeTags[tags_group_key].banner} value='none'>Aucun</option>
+                      <option key={'one' + i} id='OneBaner' selected={nodeTags[tags_group_key].banner === 'one'} value='one'>One</option>
+                      <option key={'multi' + i} id='MultipleBaner' selected={nodeTags[tags_group_key].banner === 'multi'} value='multi'>Multi</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
@@ -939,7 +939,7 @@ const SankeySettingsEditionTags: FunctionComponent<SankeySettingsEditionTagsType
           }
         </tbody>
       </Table>
-      {Object.keys(tags_catalog).length > 0 ? tagSetting : <></>}
+      {Object.keys(nodeTags).length > 0 ? tagSetting : <></>}
     </>
   )
 }
