@@ -21,20 +21,20 @@ type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,
   selected_node, radio_selected, set_multi_selected_node, multi_selected_node, children }) => {
-  const { tags_catalog } = data
-  const tags_visible = Object.keys(tags_catalog).length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(tags_catalog)[0] : '')
-  // let tags_group_key = tags_visible ? Object.keys(tags_catalog)[0] : ''
+  const { nodeTags } = data
+  const tags_visible = Object.keys(nodeTags).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
+  // let tags_group_key = tags_visible ? Object.keys(nodeTags)[0] : ''
   const display_nodes = data.nodes
   const display_links = data.links
-  if ((tags_group_key == '' && Object.keys(tags_catalog).length > 0) || (!Object.keys(tags_catalog).includes(tags_group_key) && Object.keys(tags_catalog).length > 0)) {
-    set_tags_group_key(Object.keys(tags_catalog)[0])
+  if ((tags_group_key == '' && Object.keys(nodeTags).length > 0) || (!Object.keys(nodeTags).includes(tags_group_key) && Object.keys(nodeTags).length > 0)) {
+    set_tags_group_key(Object.keys(nodeTags)[0])
   }
 
   // let node = data.nodes[multi_selected_node[0].idNode]
   // if (node === undefined) {
   //   node = default_node(data)
-  //   for (const tag_group_key in tags_catalog) {
+  //   for (const tag_group_key in nodeTags) {
   //     node.tags[tag_group_key] = []
   //   }
   // }
@@ -193,7 +193,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
             }
           >
-            {Object.entries(tags_catalog).map(
+            {Object.entries(nodeTags).map(
               (tags_group, i) =>
                 <option
                   key={i}
@@ -210,7 +210,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             checked={multi_selected_node.length > 0  && multi_selected_node[0].colorTag == tags_group_key}
             label='Palette'
             onChange={() => {
-              multi_selected_node.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(tags_catalog)[0] : tags_group_key)
+              multi_selected_node.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(nodeTags)[0] : tags_group_key)
 
               set_data({ ...data })
             }}
@@ -226,7 +226,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </tr>
           </thead>
           <tbody>
-            {tags_visible && tags_group_key != '' && Object.keys(tags_catalog).includes(tags_group_key) ? Object.entries(tags_catalog[tags_group_key].tags).map(
+            {tags_visible && tags_group_key != '' && Object.keys(nodeTags).includes(tags_group_key) ? Object.entries(nodeTags[tags_group_key].tags).map(
               tags => {
                 const verif = tags[0]
                 let allChecked = true
@@ -712,7 +712,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </Form>
           </Tab>
 
-          {Object.keys(tags_catalog).length > 0 ? node_tag : (<></>)}
+          {Object.keys(nodeTags).length > 0 ? node_tag : (<></>)}
           <Tab eventKey="node_tooltip" title="Info-bulle">
             <Form >
               <Row>

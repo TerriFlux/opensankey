@@ -217,9 +217,9 @@ export const SankeyDataPropTypes = {
 
   static_sankey: PropTypes.bool.isRequired,
 
-  tags_catalog: TagsCatalogPropTypes,
-
+  nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
+  fluxTags: TagsCatalogPropTypes,
 
   view: PropTypes.arrayOf(
     PropTypes.shape({

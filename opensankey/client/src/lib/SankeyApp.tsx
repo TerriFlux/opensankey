@@ -203,7 +203,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               if (n.colorTag !== undefined && n.colorTag !== '') {
                 const tagGroup = n.colorTag
                 if (n.tags[tagGroup].length > 0) {
-                  colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+                  colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
                 } else {
                   colorNode = n.color
                 }
@@ -282,19 +282,19 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               let selected_tag = ''
               if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
                 selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
+                return data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (target_node.type === 'sector' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
                 selected_tag = target_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
+                return data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
                 selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
+                return data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
                 selected_tag = target_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
+                return data.nodeTags[l.colormap].tags[selected_tag].color
               }
-              if (Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
-                return Object.values(data.tags_catalog[l.colormap].tags)[0].color
+              if (Object.values(data.nodeTags[l.colormap].tags).length > 0) {
+                return Object.values(data.nodeTags[l.colormap].tags)[0].color
               }
               return l.color
             }

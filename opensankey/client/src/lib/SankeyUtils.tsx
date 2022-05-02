@@ -386,8 +386,10 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-    tags_catalog: {},
+    nodeTags: {},
     dataTags: {},
+    fluxTags: {},
+    
     view: []
   }
 }
@@ -554,18 +556,18 @@ export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
 
-  const { tags_catalog } = sankey_data
+  const { nodeTags } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
 
   display_nodes.forEach(node => {
     node.node_visible = true
     let break_loop = false
     let no_tag = true
-    Object.keys(tags_catalog).forEach(tags_group_key => {
+    Object.keys(nodeTags).forEach(tags_group_key => {
       if (break_loop) {
         return
       }
-      const tags_group = tags_catalog[tags_group_key]
+      const tags_group = nodeTags[tags_group_key]
       if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
         // tags do not apply to node
         return

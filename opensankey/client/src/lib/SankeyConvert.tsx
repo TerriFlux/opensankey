@@ -79,7 +79,7 @@ interface ConvertSankeyData {
   trade_close_hspace?: number
   trade_close_vspace?: number
   periods?: boolean
-  tags_catalog: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
+  nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
 }
 
 const normalize_name = (name: string) => {
@@ -100,8 +100,8 @@ export const convert_data = (
   if (!data.grid_visible) {
     data.grid_visible = true
   }
-  if (data_to_convert.tags_catalog === undefined) {
-    data_to_convert.tags_catalog = {}
+  if (data_to_convert.nodeTags === undefined) {
+    data_to_convert.nodeTags = {}
   }
   if (data_to_convert.dataTags === undefined) {
     data_to_convert.dataTags = {}
@@ -113,8 +113,8 @@ export const convert_data = (
     data.height = 500
   }
 
-  if (Array.isArray(data.tags_catalog)) {
-    data_to_convert.tags_catalog = Object.assign({}, ...data.tags_catalog.map((tags_group) => (
+  if (Array.isArray(data.nodeTags)) {
+    data_to_convert.nodeTags = Object.assign({}, ...data.nodeTags.map((tags_group) => (
       {
         [tags_group.group_name]: {
           group_name: tags_group.group_name,
@@ -126,21 +126,21 @@ export const convert_data = (
     )))
   }
 
-  Object.values(data_to_convert.tags_catalog).forEach(
+  Object.values(data_to_convert.nodeTags).forEach(
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
     }
   )
-  if (data_to_convert.tags_catalog['Regions']) {
-    data_to_convert.dataTags['Regions'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Regions']))
-    delete data_to_convert.tags_catalog['Regions']
+  if (data_to_convert.nodeTags['Regions']) {
+    data_to_convert.dataTags['Regions'] = JSON.parse(JSON.stringify(data_to_convert.nodeTags['Regions']))
+    delete data_to_convert.nodeTags['Regions']
   }
-  if (data_to_convert.tags_catalog['Periods']) {
-    data_to_convert.dataTags['Periods'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Periods']))
-    delete data_to_convert.tags_catalog['Periods']
+  if (data_to_convert.nodeTags['Periods']) {
+    data_to_convert.dataTags['Periods'] = JSON.parse(JSON.stringify(data_to_convert.nodeTags['Periods']))
+    delete data_to_convert.nodeTags['Periods']
   }
-  if (data_to_convert.tags_catalog['flux_types']) {
+  if (data_to_convert.nodeTags['flux_types']) {
     data_to_convert.dataTags['flux_types'] = {
       group_name : 'Type de donnée',
       show_legend: false,
@@ -151,18 +151,18 @@ export const convert_data = (
       },
       banner : 'display'
     }
-    delete data_to_convert.tags_catalog['flux_types']
+    delete data_to_convert.nodeTags['flux_types']
   }
-  if (data_to_convert.tags_catalog['Uncert']) {
-    data_to_convert.dataTags['Uncert'] = JSON.parse(JSON.stringify(data_to_convert.tags_catalog['Uncert']))
+  if (data_to_convert.nodeTags['Uncert']) {
+    data_to_convert.dataTags['Uncert'] = JSON.parse(JSON.stringify(data_to_convert.nodeTags['Uncert']))
     data_to_convert.dataTags['Uncert'].banner = 'display'
-    delete data_to_convert.tags_catalog['Uncert']
+    delete data_to_convert.nodeTags['Uncert']
   }
-  if (data_to_convert.tags_catalog['SubChain']) {
-    data_to_convert.tags_catalog['SubChain'].group_name = 'Sous-Filières'
+  if (data_to_convert.nodeTags['SubChain']) {
+    data_to_convert.nodeTags['SubChain'].group_name = 'Sous-Filières'
   }
-  if (data_to_convert.tags_catalog['Exchanges']) {
-    data_to_convert.tags_catalog['Exchanges'].group_name = 'Echanges'
+  if (data_to_convert.nodeTags['Exchanges']) {
+    data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
   }
   if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6' && data.version !== '0.7') {
     const key_names = Object.keys(data.links)
@@ -261,8 +261,8 @@ export const convert_data = (
     }
   })
 
-  if (!data_to_convert.tags_catalog) {
-    data_to_convert.tags_catalog = {}
+  if (!data_to_convert.nodeTags) {
+    data_to_convert.nodeTags = {}
   }
 
   Object.values(data.nodes).forEach( n => {
@@ -508,19 +508,19 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
-      if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.tags_catalog['Exchanges']) {
+      if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
         import_export = true
         n.node_visible = true
-        const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('import'))
+        const exchange_tag = Object.keys(data.nodeTags['Exchanges'].tags).filter(tag=>tag.includes('import'))
         n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['import']
         
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
-      } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.tags_catalog['Exchanges']) {
+      } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
         import_export = true
         n.node_visible = true
-        const exchange_tag = Object.keys(data.tags_catalog['Exchanges'].tags).filter(tag=>tag.includes('export'))
+        const exchange_tag = Object.keys(data.nodeTags['Exchanges'].tags).filter(tag=>tag.includes('export'))
         n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['export']
        
         if (data.display_style.trade_close !== undefined) {
@@ -548,8 +548,8 @@ export const convert_data = (
   }
 
   if (import_export) {
-    if (Object.entries(data.tags_catalog).filter(tag => tag[0] === 'Exchanges').length === 0) {
-      data.tags_catalog['Exchanges'] = {
+    if (Object.entries(data.nodeTags).filter(tag => tag[0] === 'Exchanges').length === 0) {
+      data.nodeTags['Exchanges'] = {
         group_name: 'Echanges',
         show_legend: false,
         color_map: 'jet',
@@ -565,9 +565,9 @@ export const convert_data = (
 
   if (data.subchains && data.subchains[0] !== '') {
     const cpySbchaine = data.subchains
-    if (Object.entries(data.tags_catalog).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
+    if (Object.entries(data.nodeTags).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
       const tags_dict = Object.assign({}, ...cpySbchaine.map((subchain) => ({ [subchain]: { name: subchain, color: 'red', selected: true } })))
-      data.tags_catalog['SubChain'] = {
+      data.nodeTags['SubChain'] = {
         group_name: 'Sous-Filières',
         color_map: 'jet',
         show_legend: false,
@@ -578,8 +578,8 @@ export const convert_data = (
     }
   } else if (subchains.length > 0) {
     const tags_dict = Object.assign({}, ...subchains.map((subchain) => ({ [subchain]: { name: subchain, color: 'red', selected: true } })))
-    if (Object.entries(data.tags_catalog).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
-      data.tags_catalog['SubChain'] = {
+    if (Object.entries(data.nodeTags).filter(tags_group => tags_group[0] === 'SubChain').length === 0) {
+      data.nodeTags['SubChain'] = {
         group_name: 'Sous-Filières',
         show_legend: false,
         color_map: 'jet',

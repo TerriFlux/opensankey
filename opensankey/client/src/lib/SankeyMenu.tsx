@@ -202,7 +202,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       node.x = 200
     }
     nodes[node.idNode] = node
-    for (const tag_group_key in data.tags_catalog) {
+    for (const tag_group_key in data.nodeTags) {
       node.tags[tag_group_key] = []
     }
     set_selected_node(node)
@@ -1401,7 +1401,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               if (n.colorTag !== undefined && n.colorTag !== '') {
                 const tagGroup = n.colorTag
                 if (n.tags[tagGroup].length > 0) {
-                  colorNode = n_data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+                  colorNode = n_data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
                 } else {
                   colorNode = n.color
                 }
@@ -1479,19 +1479,19 @@ const Menu: FunctionComponent<MenuTypes> = (
               let selected_tag = ''
               if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
                 selected_tag = source_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
+                return n_data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (target_node.type === 'sector' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
                 selected_tag = target_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
+                return n_data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
                 selected_tag = source_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
+                return n_data.nodeTags[l.colormap].tags[selected_tag].color
               } else if (target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
                 selected_tag = target_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
+                return n_data.nodeTags[l.colormap].tags[selected_tag].color
               }
-              if (Object.values(n_data.tags_catalog[l.colormap].tags).length > 0) {
-                return Object.values(n_data.tags_catalog[l.colormap].tags)[0].color
+              if (Object.values(n_data.nodeTags[l.colormap].tags).length > 0) {
+                return Object.values(n_data.nodeTags[l.colormap].tags)[0].color
               }
               return l.color
             }
