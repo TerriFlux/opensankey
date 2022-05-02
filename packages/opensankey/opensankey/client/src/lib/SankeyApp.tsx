@@ -9,7 +9,7 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Dropdown } from 'react-bootstrap'
+import { Row, Col, Dropdown, Container } from 'react-bootstrap'
 import * as d3 from 'd3'
 import { getLinkValue } from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
@@ -44,6 +44,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
   const [multi_selected_node, set_multi_selected_node] = useState([])
   const [multi_selected_links, set_multi_selected_links] = useState([])
+  const [multi_selected_label, set_multi_selected_label] = useState([])
 
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
@@ -52,23 +53,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [view, set_view] = useState('none')
 
   //Selectionne le premier flux par default si il y en a un 
-  /*  if(Object.keys(sankey_data.links).length!=0){
-     set_selected_link(sankey_data.links[Object.keys(sankey_data.links)[0]])
-   } */
+
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
 
   const display_links = data.links
-  // const draw = () => {
-  //   const d = ()
-  //   console.log(document.getElementsByClassName('navbar') as any)
-  //   return d
-  // }
-
-
-
-
 
   return (
 
@@ -78,14 +68,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           return { 'font': d }
         })}
       />
-      { !window.SankeyToolsStatic? (
+      { !window.SankeyToolsStatic ? (
         <Menu
           data={data}
           set_data={set_data}
           app_name='version beta 0.9'
 
           example_menu={<>
-            <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+            <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
             <ExempleItem
               exemple_menu={exemple_menu}
               url_prefix=''
@@ -112,6 +102,10 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
           set_selected_link={set_selected_link}
+          multi_selected_label={multi_selected_label}
+          set_multi_selected_label={set_multi_selected_label}
+
+
           selected_link={selected_link}
           agregation_level={agregation_level}
           set_agregation_level={set_agregation_level}
@@ -179,11 +173,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         return () => clearTimeout(timer)
       }, [])}
       {
-        (show_draw && view=='none') ? (<SankeyDraw
+        (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
           set_data={set_data}
           set_multi_selected_node={set_multi_selected_node}
           multi_selected_node={multi_selected_node}
+          multi_selected_label={multi_selected_label}
+
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
           select_node={(n: SankeyNode) => {
@@ -195,7 +191,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           select_link={(l: SankeyLink) => {
             set_selected_link(l)
           }}
-          //node_color={n => n.color}
           node_color={(n: SankeyNode) => {
             let colorNode
             // Le couleur est définie dans l'onglet général
@@ -220,6 +215,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               // Le couleur est définie dans les parametres locaux du noeud
               colorNode = n.color
             }
+
             return colorNode
           }}
           link_text={SankeyUtils.link_text}
@@ -249,7 +245,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
 
             for (const i in listKey) {
-              //const val_dict = (val as unknown) as SankeyLinkValueDict
               val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
             }
             const v = (val as unknown) as SankeyLinkValue
@@ -331,9 +326,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               }
             }
             // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-            // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
-            //   listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
-            // })
 
             for (const i in listKey) {
               val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]

@@ -685,6 +685,10 @@ export const agregation = (
 ) =>  {
   const agregated_node = data.nodes[idParent]    
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
+
+  if (desagregate_nodes.length === 0) {
+    return
+  }
   // show agregated node
   agregated_node.display = true
   agregated_node.node_visible = true

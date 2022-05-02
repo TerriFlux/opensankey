@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck, FormLabel, FormControl, Modal, Button, Tabs, Tab } from 'react-bootstrap'
+import { Row, Col, Form, FormCheck, FormLabel, Modal, Button, Tabs, Tab } from 'react-bootstrap'
 import { SankeyDataPropTypes, TagsGroup, } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
@@ -19,6 +19,7 @@ declare const window: Window &
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
+      structure: boolean
     }
   }
 
@@ -37,7 +38,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   //const [use_colormap, set_use_colormap] = useState(false)
   const [diagram, set_diagram] = useState('')
   const [agregation_level,set_agregation_level] = useState(0)
-  const [use_colormap,set_use_colormap] = useState(Object.entries(data.tags_catalog).filter(tags_group=>tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' && tags_group[0] !== 'Echanges').length > 0)
+  const [use_colormap,set_use_colormap] = useState(
+    tags_visible &&
+      (Object.keys(data.tags_catalog).filter(tags_key => data.tags_catalog[tags_key].banner !== 'one').length > 0 || 
+      Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0) 
+  )
   const [use_level,set_use_level] = useState(false)
   const [show_readme,set_show_readme] = useState(false)
 
@@ -73,13 +78,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     set_data({ ...data })
   }
   const addAllDropDownNode = () => {
-    const banner_grouptag = Object.entries(tags_catalog).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+    const banner_grouptag = Object.entries(tags_catalog).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi')  && key !== 'Exchanges' })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '200px' }}>
+            <Col style={{ width: '200px', color:'black' }}>
               {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group) }}>{
                 Object.entries(tags_group.tags).map(([tag_key, tag]) => {
                   return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
@@ -93,7 +98,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '200px' }}>
+            <Col style={{ width: '200px', color:'black' }}>
               {/* <DropdownMultiselect
                 key={tags_group.group_name}
                 selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)}
@@ -277,7 +282,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     )
   }
 
-  const setDiagram = (evt: React.ChangeEvent) => {
+  const setDiagram = (evt:any) => {
 
     const the_diagram = (evt.target as HTMLInputElement).value as string
     const sous_filieres = window.sankey.sous_filieres
@@ -307,7 +312,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
       })
     })
     //for (let level = 1; level <= +evt.target.value + 1; level++) {
-    set_nodes_level(data.nodes,agregation_level+1)
+    set_nodes_level(data,data.nodes,agregation_level+1)
     //}
     localStorage.setItem('initial_data',JSON.stringify(new_data))
     set_data({...new_data})
@@ -319,17 +324,26 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   }
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
-  const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
+  //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.tags_catalog).filter(d=>d.banner!='none').length==0
+  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  let color = 'black'
+  let backgroundColor = 'gainsboro'
+  if (data.static_sankey) {
+    color = 'white'
+    backgroundColor = '#3c3c3c'
+  }
+
   return (
     <>
       <div className='herowrap'
         style={{
-          backgroundColor: 'gainsboro',
+          color : color,
+          backgroundColor: backgroundColor,
           marginLeft: '0',
           paddingBottom: '3px',
           justifyContent: 'space-evenly',
           alignItems: '<baseline-position>',
-          display:(display_banner)?'none':'block'
+          display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, 'paddingBottom': '5px', 'paddingTop': '5px' }}>
           {(data.static_sankey && sous_filieres) ? (
@@ -347,15 +361,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form.Group>
             </Col>) : (<div />)}
           <Col>
-            <Form id='dropdown_banner_node' className='dropdown_banner_node'>
+            <Form id='dropdown_banner_node' className='dropdown_banner_node' >
               {addAllDropDownNode()}
             </Form>
           </Col>
-          <Col>
-            <Form id='dropdown_banner_node' className='dropdown_banner_node'>
-              {addAllDropDownLinks()}
-            </Form>
-          </Col>
+          {banner_grouptag.length > 0 ?
+            (<Col>
+              <Form id='dropdown_banner_node' className='dropdown_banner_node' >
+                {addAllDropDownLinks()}
+              </Form>
+            </Col>) : (<></>)
+          }
           {additional_selector ? (additional_selector) : (<></>)}
           { nb_agregation_level > 1 ? (<Col><Form.Group >
             <FormCheck
@@ -364,22 +380,26 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               checked={use_level === true}
               onChange={ evt => {
                 if (evt.target.checked) {
-                  set_nodes_level(data.nodes, agregation_level+1)
-                  let height = 0
-                  Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                  let min_height = 2000
-                  Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                  let max_vert_shift = 0
-                  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                  set_nodes_level(data,data.nodes, agregation_level+1)
+                  // let height = 0
+                  // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                  // let min_height = 2000
+                  // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                  // let max_vert_shift = 0
+                  // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
                 
-                  data.height = Math.max(500, height + max_vert_shift + 200)
+                  // data.height = Math.max(500, height + max_vert_shift + 200)
                   set_data({...data})
                 } else {
                   const json_data = localStorage.getItem('initial_data')
                   if (json_data) {
                     const initial_data = JSON.parse(json_data as string)
-                    initial_data.static_sankey = true
-                    set_data({...initial_data})
+                    Object.values(data.nodes).forEach(n=> {
+                      n.display = initial_data.nodes[n.idNode].display
+                      n.node_visible = initial_data.nodes[n.idNode].node_visible
+                    })
+                    //initial_data.static_sankey = true
+                    set_data({...data})
                   }
                 }
                 set_use_level(evt.target.checked)
@@ -394,17 +414,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   }
                   //set_level(+evt.target.value)
                   for (let level = 1; level <= +evt.target.value + 1; level++) {
-                    set_nodes_level(data.nodes, level)
+                    set_nodes_level(data,data.nodes, level)
                   }
                   set_agregation_level(+evt.target.value)
-                  let height = 0
-                  Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                  let min_height = 2000
-                  Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                  let max_vert_shift = 0
-                  Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+                  // let height = 0
+                  // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+                  // let min_height = 2000
+                  // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+                  // let max_vert_shift = 0
+                  // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
                 
-                  data.height = Math.max(500, height + max_vert_shift + 200)
+                  // data.height = Math.max(500, height + max_vert_shift + 200)
                   set_data({...data})
                 }
               }
@@ -416,17 +436,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
               {addPalette()}
-              <Col>
-                <FormCheck
-                  type="checkbox"
-                  checked={data.show_structure}
-                  onChange={evt => {
-                    data.show_structure = evt.target.checked
-                    set_data({ ...data })
-                  }}
-                  label='Structure du diagramme'
-                />
-              </Col>
+              { !data.static_sankey || (window.sankey && window.sankey.structure) ?
+                (<Col>
+                  <FormCheck
+                    type="checkbox"
+                    checked={data.show_structure}
+                    onChange={evt => {
+                      data.show_structure = evt.target.checked
+                      set_data({ ...data })
+                    }}
+                    label='Structure du diagramme'
+                  />
+                </Col>) : (<></>)}
               <Col>
                 <FormCheck
                   type="checkbox"
