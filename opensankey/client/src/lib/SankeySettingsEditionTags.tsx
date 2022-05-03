@@ -203,7 +203,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           <th>Nom</th>
           <th>Visible</th>
           <th>Couleur</th>
-          <th>Forme</th>
+          { elementNameProp === 'nodes' ? (<th>Forme</th>) : (<></>)}
         </tr>
       </thead>
       <tbody>
@@ -252,15 +252,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     }
                   }
                 /></td>
-                <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
-                  set_data({ ...data })
-                }
+                { elementNameProp === 'nodes' ? (
+                  <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
+                    set_data({ ...data })
+                  }
 
-                }>
-                  <option key={'rect' + i} id='rect' selected={data[elementTagName][tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
-                  <option key={'circle' + i} id='circle' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='circle'>Circle</option>
-                </Form.Select>
+                  }>
+                    <option key={'rect' + i} id='rect' selected={data[elementTagName][tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
+                    <option key={'circle' + i} id='circle' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='circle'>Circle</option>
+                  </Form.Select>) : (<></>)
+                }
               </tr>
             )
           }) : (<></>)}

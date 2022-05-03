@@ -231,7 +231,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }}
           link_text={SankeyUtils.link_text}
           link_visible={(l: SankeyLink) => {
-            const { dataTags } = data
+            const { dataTags,fluxTags } = data
             if (data.show_structure) {
               if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
                 return false
@@ -260,9 +260,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
             const v = (val as unknown) as SankeyLinkValue
             let visible = true
-            Object.keys(v.tags).forEach(tag => {
-              const selected_tag = v.tags[tag]
-              if (selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
+            Object.keys(v.tags).forEach(tag_group => {
+              const selected_tag = v.tags[tag_group]
+              if (selected_tag && tag_group in fluxTags && !fluxTags[tag_group].tags[selected_tag].selected) {
                 visible = false
               }
             })
