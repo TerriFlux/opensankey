@@ -123,6 +123,45 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     })
     return allDD
   }
+  const addAllDropDownFlux = () => {
+    const banner_grouptag = Object.entries(fluxTags).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+    const allDD = banner_grouptag.map(([, tags_group]) => {
+      if (tags_group.banner == 'one') {
+        return (
+          <Row key={tags_group.group_name}>
+            <Col>{tags_group.group_name}</Col>
+            <Col style={{ width: '200px', color:'black' }}>
+              {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group) }}>{
+                Object.entries(tags_group.tags).map(([tag_key, tag]) => {
+                  return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+                })}
+              </Form.Select>}
+            </Col>
+          </Row>)
+      } else if (tags_group.banner == 'multi') {
+        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+        return (
+          <Row key={tags_group.group_name}>
+            <Col>{tags_group.group_name}</Col>
+            <Col style={{ width: '200px', color:'black' }}>
+              <MultiSelect
+                valueRenderer={(selected : any, _options :any) => {
+                  return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
+                }}
+                labelledBy={'hello'}
+                // hasSelectAll={false}
+                value={selected}
+                options={options}
+                onChange={(selected: [{ label: string, value: string }]) => {
+                  handleMultiDropdown(selected, tags_group)
+                }} />
+            </Col>
+          </Row>)
+      }
+    })
+    return allDD
+  }
   const addAllDropDownLinks = () => {
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -327,7 +366,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form.Group>
             </Col>) : (<div />)}
           <Col>
-            { Object.entries(nodeTags).length > 1 || nb_agregation_level > 1 ? (
+            { Object.entries(nodeTags).length > 0 || nb_agregation_level > 1 ? (
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>) : (<></>)
             }
             <Form id='dropdown_banner_node' className='dropdown_banner_node' >
@@ -381,6 +420,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   </Col>
                 </Form.Group>
               ) : (<></>)}
+            </Form>
+          </Col>
+          <Col>
+            { Object.entries(fluxTags).length > 0 ? (
+              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>) : (<></>)
+            }
+            <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
+              {addAllDropDownFlux()}
             </Form>
           </Col>
           {banner_grouptag.length > 0 ?
