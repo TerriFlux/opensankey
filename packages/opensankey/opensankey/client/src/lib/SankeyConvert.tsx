@@ -175,6 +175,7 @@ export const convert_data = (
     ([key,tags_group]) => {
       if (tags_group.banner === 'display' ) {
         data.fluxTags[key] = {...tags_group}
+        data.fluxTags[key].banner = 'multi'
       }
     }
   )
