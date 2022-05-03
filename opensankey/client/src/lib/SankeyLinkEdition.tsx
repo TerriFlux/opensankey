@@ -49,6 +49,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   //renvoie la valeur correspondant aux paramètre selectionné 
   const value_selected_parameter = (): SankeyLinkValue => {
+    if ( Object.keys(data.links).length === 0 ) {
+      return JSON.parse(JSON.stringify(Object(selected_link.value)))
+    }
     let val = JSON.parse(JSON.stringify(Object(data.links[selected_link.idLink].value)))
     Object.values(tags_selected).map(tag_selected => {
       if (val[tag_selected] === undefined) {
