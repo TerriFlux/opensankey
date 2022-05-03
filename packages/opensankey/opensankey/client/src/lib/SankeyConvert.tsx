@@ -947,6 +947,9 @@ export const convert_data = (
         }
         delete v.color_tag
       }
+      if (v.tags === undefined ) {
+        v.tags = {}
+      }
       if ( !v.extension) {
         v.extension = {}
       }
