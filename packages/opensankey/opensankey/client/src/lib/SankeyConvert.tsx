@@ -116,6 +116,9 @@ export const convert_data = (
   if (data.height === undefined) {
     data.height = 500
   }
+  if (data.labels === undefined) {
+    data.labels = []
+  }
 
   if (Array.isArray(data.nodeTags)) {
     data_to_convert.nodeTags = Object.assign({}, ...data.nodeTags.map((tags_group) => (
