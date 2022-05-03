@@ -211,7 +211,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               //on controle ici qu'il y a bien un favorite tag
               if (n.colorTag !== undefined && n.colorTag !== '') {
                 const tagGroup = n.colorTag
-                if (n.tags[tagGroup].length > 0) {
+                if (n.tags[tagGroup] === undefined ) {
+                  colorNode = n.color
+                } else if (n.tags[tagGroup].length > 0) {
                   colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
                 } else {
                   colorNode = n.color
@@ -296,16 +298,16 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
                   const source_node = data.nodes[l.idSource]
                   const target_node = data.nodes[l.idTarget]
                   let selected_tag = ''
-                  if (source_node.type === 'sector' && source_node.colorTag !== '' && source_node.tags[source_node.colorTag].length === 1) {
+                  if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
                     selected_tag = source_node.tags[source_node.colorTag][0]
                     return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (target_node.type === 'sector' && target_node.colorTag != '' && target_node.tags[target_node.colorTag].length === 1) {
+                  } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
                     selected_tag = target_node.tags[source_node.colorTag][0]
                     return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (source_node.type === 'product' && source_node.colorTag !== '' && source_node.tags[source_node.colorTag].length === 1) {
+                  } else if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
                     selected_tag = source_node.tags[source_node.colorTag][0]
                     return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (target_node.type === 'product' && target_node.colorTag !== '' && target_node.tags[target_node.colorTag].length === 1) {
+                  } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
                     selected_tag = target_node.tags[target_node.colorTag][0]
                     return data.nodeTags[target_node.colorTag].tags[selected_tag].color
                   } else if (source_node.type === 'product') {
