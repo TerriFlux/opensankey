@@ -110,12 +110,6 @@ export const convert_data = (
   if (data_to_convert.fluxTags === undefined) {
     data_to_convert.fluxTags = {}
   }
-  if (data.width === undefined) {
-    data.width = 1500
-  }
-  if (data.height === undefined) {
-    data.height = 500
-  }
   if (data.labels === undefined) {
     data.labels = []
   }

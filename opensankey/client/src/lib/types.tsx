@@ -177,11 +177,8 @@ export const SankeyDataPropTypes = {
 
   show_structure: PropTypes.bool.isRequired,
   fit_screen: PropTypes.bool.isRequired,
-  //height: PropTypes.number.isRequired,
-  width: PropTypes.number.isRequired,
-  width_min:PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
-  height_min:PropTypes.number.isRequired,
+  width: PropTypes.number.isRequired,
   h_space: PropTypes.number.isRequired,
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
