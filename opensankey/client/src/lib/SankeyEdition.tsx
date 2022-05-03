@@ -327,7 +327,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form.Group>
             </Col>) : (<div />)}
           <Col>
-            <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>
+            { Object.entries(nodeTags).length > 1 || nb_agregation_level > 1 ? (
+              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>) : (<></>)
+            }
             <Form id='dropdown_banner_node' className='dropdown_banner_node' >
               {addAllDropDownNode()}
               { nb_agregation_level > 1 ? (
