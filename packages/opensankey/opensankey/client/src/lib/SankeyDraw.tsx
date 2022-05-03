@@ -2639,7 +2639,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#g_legend').selectAll('*').remove()
 
-    const legend = d3.select('#g_legend').style('transform', 'translate(' + data.legend_position[0] + 'px,' + data.legend_position[1] + 'px)').append('g')
+    const legend = d3.select('#g_legend').style('transform', 'translate(' + data.legend_position[0]+25 + 'px,' + data.legend_position[1] + 'px)').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
