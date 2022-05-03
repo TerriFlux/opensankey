@@ -156,7 +156,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     Object.values(data.links).forEach(l => { if (l.recycling) {
       width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x+l.right_horiz_shift+default_horiz_shift+150) : width  
     }})
-    return [Math.max(width,data.width_min),Math.max(height,data.height_min)]
+    return [Math.max(width,window.innerWidth-40),Math.max(height,window.innerHeight-40)]
   }
 
   const add_links = (
@@ -2784,7 +2784,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           })
 
           //Diminue hauteur svg si le noeud est près du bord
-          if (y_max < data.height - 100 && data.height - 100 >= data.height_min) {
+          if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
             data.height -= 50
           }
 
@@ -2814,7 +2814,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
 
           //Diminue largeur svg si le noeud est près du bord
-          if (d.x < data.width - 100 && data.width - 100 >= data.width_min) {
+          if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth-40) {
             data.width -= 50
           }
 

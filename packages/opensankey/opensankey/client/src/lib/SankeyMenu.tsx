@@ -590,14 +590,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                           (new_data.version as any) = undefined
                         }
                         convert_data(new_data)
-                        let height = 0
-                        Object.values(new_data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                        let min_height = 2000
-                        Object.values(new_data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                        let max_vert_shift = 0
-                        Object.values(new_data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-                        new_data.height = Math.max(500, height + max_vert_shift + 200)
                         set_data(new_data)
                         localStorage.setItem('initial_data', JSON.stringify(new_data))
                       }
@@ -633,14 +625,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                       Object.assign(data, server_data)
                       convert_data(data)
                       compute_auto_sankey(data, 200)
-                      let height = 0
-                      Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-                      let min_height = 2000
-                      Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-                      let max_vert_shift = 0
-                      Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-                      data.height = Math.max(500, height + max_vert_shift + 200)
                       set_data({ ...data })
                     }
                     let root = window.location.href

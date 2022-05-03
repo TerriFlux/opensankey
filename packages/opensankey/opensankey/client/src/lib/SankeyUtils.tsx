@@ -343,13 +343,10 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
-    //height: 1500,
+
     width: window.innerWidth - 40,
-    width_min: window.innerWidth - 40,
-    height_min: 500,
-    height: 500,
-    // node_width: 25,
-    // node_height: 25,
+    height: window.innerHeight - 40,
+
     h_space: 200,
     v_space: 100,
     legend_position: [0, 100],
