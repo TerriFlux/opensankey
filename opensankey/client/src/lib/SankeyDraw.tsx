@@ -31,8 +31,8 @@ const SankeyDrawPropTypes = {
   nodeTooltipsContent: PropTypes.func.isRequired,
   linkTooltipsContent: PropTypes.func.isRequired,
 
-  set_multi_selected_node: PropTypes.func.isRequired,
-  multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes)).isRequired,
+  set_multi_selected_nodes: PropTypes.func.isRequired,
+  multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes)).isRequired,
 
   set_multi_selected_links: PropTypes.func.isRequired,
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes)).isRequired,
@@ -65,8 +65,8 @@ export const SankeyDrawDefaultProps = {
   nodeTooltipsContent: () => null,
   linkTooltipsContent: () => null,
 
-  set_multi_selected_node: () => SankeyDrawDefaultProps.set_multi_selected_node,
-  multi_selected_node: [],
+  set_multi_selected_nodes: () => SankeyDrawDefaultProps.set_multi_selected_nodes,
+  multi_selected_nodes: [],
 
   set_multi_selected_links: () => SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links: [],
@@ -93,8 +93,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_nav_item_active = SankeyDrawDefaultProps.set_nav_item_active,
   nodeTooltipsContent = SankeyDrawDefaultProps.nodeTooltipsContent,
   linkTooltipsContent = SankeyDrawDefaultProps.linkTooltipsContent,
-  set_multi_selected_node = SankeyDrawDefaultProps.set_multi_selected_node,
-  multi_selected_node = SankeyDrawDefaultProps.multi_selected_node,
+  set_multi_selected_nodes = SankeyDrawDefaultProps.set_multi_selected_nodes,
+  multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
   set_multi_selected_links = SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
   multi_selected_label = SankeyDrawDefaultProps.multi_selected_label,
@@ -1915,16 +1915,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!static_sankey && event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
 
-        multi_selected_node = multi_selected_node.filter(d => (d != null && d.name != ''))
+        multi_selected_nodes = multi_selected_nodes.filter(d => (d != null && d.name != ''))
 
-        if (multi_selected_node.includes(d)) {
-          multi_selected_node.splice(multi_selected_node.indexOf(d), 1)
+        if (multi_selected_nodes.includes(d)) {
+          multi_selected_nodes.splice(multi_selected_nodes.indexOf(d), 1)
         } else {
-          multi_selected_node.push(d)
+          multi_selected_nodes.push(d)
         }
 
 
-        set_multi_selected_node(multi_selected_node)
+        set_multi_selected_nodes(multi_selected_nodes)
 
         select_node(d)
         set_nav_item_active('2')
@@ -1934,9 +1934,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
 
     ggg_nodes.on('dblclick', (ev, n) => {
-      set_multi_selected_node([n])
+      set_multi_selected_nodes([n])
       if (!static_sankey && ev.ctrlKey) {
-        set_multi_selected_node([n])
+        set_multi_selected_nodes([n])
       }
       if (!n.dimensions) {
         return
@@ -2002,7 +2002,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .classed('node_shape', true)
       .attr('width', (d) => {
 
-        const n = multi_selected_node.filter(n => n?.name == d.name)[0]
+        const n = multi_selected_nodes.filter(n => n?.name == d.name)[0]
         const n_size = (n) ? n.node_width : 10
         // return default_node_size
         return n_size
@@ -2032,7 +2032,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
-        if (multi_selected_node.map(d => { if (d != undefined) { return d.name } else { return '' } }).includes((d as SankeyNode).name)) {
+        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.name } else { return '' } }).includes((d as SankeyNode).name)) {
           return 2
         } else {
           return 0
@@ -2769,7 +2769,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       if (e.key == 'ArrowUp') {
-        Object.values(data.nodes).filter(f => multi_selected_node.map(d => {
+        Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
           if (d != undefined) {
             return d.name
           }
@@ -2791,7 +2791,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         })
       } else if (e.key == 'ArrowDown') {
-        Object.values(data.nodes).filter(f => multi_selected_node.map(d => {
+        Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
           if (d != undefined) {
             return d.name
           }
@@ -2805,7 +2805,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         })
       } else if (e.key == 'ArrowLeft') {
-        Object.values(data.nodes).filter(f => multi_selected_node.map(d => {
+        Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
           if (d != undefined) {
             return d.name
           }
@@ -2820,7 +2820,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         })
       } else if (e.key == 'ArrowRight') {
-        Object.values(data.nodes).filter(f => multi_selected_node.map(d => {
+        Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
           if (d != undefined) {
             return d.name
           }
@@ -2890,7 +2890,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.on('click', function (ev: any) {
       if (!ev.ctrlKey) {
-        set_multi_selected_node([])
+        set_multi_selected_nodes([])
         set_multi_selected_links([])
       }
     })

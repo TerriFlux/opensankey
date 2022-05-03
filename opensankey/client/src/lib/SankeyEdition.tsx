@@ -26,22 +26,20 @@ declare const window: Window &
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,additional_selector }) => {
-  const { nodeTags, dataTags } = data
-  const tags_visible = Object.keys(data.nodeTags).length > 0 || Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0
-  const [colormap, set_colormap] = useState(
-    tags_visible ?
-      (Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one').length > 0 ?
-        Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one')[0] :
-        (Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0 ?
-          Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : '')
-      ) : '')
-  //const [use_colormap, set_use_colormap] = useState(false)
+  const { nodeTags,fluxTags, dataTags } = data
+  const node_tags_visible = Object.keys(data.nodeTags).length > 0 
+  const flux_tags_visible = Object.keys(data.fluxTags).length > 0
+  const [node_colormap, set_node_colormap] = useState(
+    node_tags_visible ? Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one').length > 0 ? Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one')[0] : '' : ''
+  )
+  const [flux_colormap, set_flux_colormap] = useState('node_colormap')
   const [diagram, set_diagram] = useState('')
   const [agregation_level,set_agregation_level] = useState(0)
-  const [use_colormap,set_use_colormap] = useState(
-    tags_visible &&
-      (Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one').length > 0 || 
-      Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display').length > 0) 
+  const [use_node_colormap,set_use_node_colormap] = useState(
+    node_tags_visible && Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one').length > 0
+  )
+  const [use_link_colormap,set_use_link_colormap] = useState(
+    flux_tags_visible && Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'one').length > 0
   )
   const [use_level,set_use_level] = useState(false)
   const [show_readme,set_show_readme] = useState(false)
@@ -170,53 +168,41 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     return allDD
   }
 
-  const addPalette = () => {
-    if (Object.entries(data.dataTags).filter(tags => tags[1].banner === 'display' && tags[0] !== 'Exchanges').length === 0 && Object.entries(data.nodeTags).filter(tags => tags[0] !== 'Exchanges').length == 0) {
+  const addPalette = (elementGroupNameParam:string,elementNameParam:string,set_use_colormap:(b:boolean)=>void,set_colormap:(s:string)=>void) => {
+    const elementGroupName = elementGroupNameParam === 'nodeTags' ? 'nodeTags' : 'fluxTags'
+    const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
+    const title = elementNameParam === 'nodes' ? 'Palette de couleurs des noeuds' : 'Palette de couleurs des flux'
+    const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
+    const colormap = elementNameParam === 'nodes' ? node_colormap : flux_colormap
+    const tags_visible = elementNameParam === 'nodes' ? node_tags_visible : flux_tags_visible
+    if (Object.entries(data[elementGroupName]).length === 0) {
       return (<></>)
     }
     return (
       <Col>
         <FormCheck
           type='switch'
-          label='Palette de couleurs'
+          label={title}
           checked={use_colormap === true}
           onChange={evt => {
             let the_colormap = colormap
-            const apply_to_node = Object.keys(data.nodeTags).includes(colormap)
             if (colormap === '' || colormap === undefined) {
-              the_colormap = tags_visible ? Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'one' && tags_key !== 'Exchanges' )[0] : ''
-              if (the_colormap === '' || colormap === undefined) {
-                the_colormap = tags_visible ? Object.keys(data.dataTags).filter(tags_key => data.dataTags[tags_key].banner === 'display')[0] : ''
-              }
+              the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'one')[0] : ''
             }
             if (evt.target.checked) {
-              Object.values(data.links).forEach(link => link.colormap = the_colormap)
-              if (apply_to_node) {
-                Object.values(data.nodes).forEach(node => {
-                  if (node.type === 'sector') {
-                    return
-                  }
-                  node.nodeParameter = 'groupTag'
-                  node.colorTag = the_colormap
-                })
-              }
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'groupTag'
+                el.colorTag = the_colormap
+              })
             } else {
-              Object.values(data.links).forEach(link => link.colormap = '')
-              if (apply_to_node) {
-                Object.values(data.nodes).forEach(node => {
-                  node.nodeParameter = 'local'
-                  //node.colorTag = the_colormap
-                })
-              }
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'local'
+              })
             }
             set_use_colormap(evt.target.checked)
-            Object.values(nodeTags).forEach(tags_group => tags_group.show_legend = false)
-            Object.values(dataTags).forEach(tags_group => tags_group.show_legend = false)
-            if (the_colormap in nodeTags) {
-              nodeTags[the_colormap].show_legend = evt.target.checked
-            }
-            if (the_colormap in dataTags) {
-              dataTags[the_colormap].show_legend = evt.target.checked
+            Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
+            if (the_colormap in data[elementGroupName]) {
+              data[elementGroupName][the_colormap].show_legend = evt.target.checked
             }
             set_colormap(the_colormap)
             set_data({ ...data })
@@ -227,49 +213,26 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           disabled={!use_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              const apply_to_node = Object.keys(data.nodeTags).includes(evt.target.value)
-              Object.values(data.links).forEach(link => link.colormap = evt.target.value)
-              if (apply_to_node) {
-                Object.values(data.nodes).forEach(node => {
-                  if (node.type === 'sector') {
-                    return
-                  }
-                  node.nodeParameter = 'groupTag'
-                  node.colorTag = evt.target.value
-                })
-              } else {
-                Object.values(data.nodes).forEach(node => {
-                  if (node.type === 'sector') {
-                    return
-                  }
-                  node.nodeParameter = 'general'
-                })
-              }
-              //set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'groupTag'
+                el.colorTag = evt.target.value
+              })
               set_colormap(evt.target.value)
-              if (evt.target.value in nodeTags) {
-                Object.values(nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                nodeTags[evt.target.value].show_legend = true
-              }
-              Object.values(nodeTags).forEach(tags_group => tags_group.show_legend = false)
-              Object.values(dataTags).forEach(tags_group => tags_group.show_legend = false)
-              if (evt.target.value in nodeTags) {
-                nodeTags[evt.target.value].show_legend = true
-              }
-              if (evt.target.value in dataTags) {
-                dataTags[evt.target.value].show_legend = true
+              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
+              if ( evt.target.value !== 'node_colormap' ) {
+                data[elementGroupName][evt.target.value].show_legend = true
               }
               set_data({ ...data })
             }}>
-          {Object.entries(data.dataTags).filter(tags_group => tags_group[1].banner === 'display').map(
-            (tags_group, i) =>
-              <option
-                key={i}
-                value={tags_group[0]}
-                selected={colormap === tags_group[0]} >
-                {tags_group[1].group_name}
-              </option>)}
-          {Object.entries(data.nodeTags).filter(tags_group => tags_group[1].banner === 'multi').map(
+          { elementNameParam === 'links' ? (
+            <option
+              key={node_colormap}
+              value={'node_colormap'}
+              selected={colormap === 'node_colormap'} >
+              Couleur des noeuds
+            </option>) : (<></>)
+          }
+          {Object.entries(data[elementGroupName]).map(
             (tags_group, i) =>
               <option
                 key={i}
@@ -292,14 +255,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     new_data.static_sankey = true
     //set_level(agregation_level)
     set_diagram(the_diagram)
-    let height = 0
-    Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-    let min_height = 2000
-    Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-    let max_vert_shift = 0
-    Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
+    // let height = 0
+    // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
+    // let min_height = 2000
+    // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
+    // let max_vert_shift = 0
+    // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
 
-    new_data.height = Math.max(500, height + max_vert_shift + 200)
+    // new_data.height = Math.max(500, height + max_vert_shift + 200)
     Object.values(data.nodes).forEach(n => {
       if (!n.dimensions) {
         return
@@ -435,8 +398,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           </Col>) : (<></>)}
           <Col>
             <Form id='dropdown_banner_node' className='dropdown_banner_node'>
-              {addPalette()}
-              { !data.static_sankey || (window.sankey && window.sankey.structure) ?
+              {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
+              {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}
+              {/* { !data.static_sankey || (window.sankey && window.sankey.structure) ?
                 (<Col>
                   <FormCheck
                     type="checkbox"
@@ -447,7 +411,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                     }}
                     label='Structure du diagramme'
                   />
-                </Col>) : (<></>)}
+                </Col>) : (<></>)} */}
               <Col>
                 <FormCheck
                   type="checkbox"

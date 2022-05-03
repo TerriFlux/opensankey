@@ -181,7 +181,7 @@ def set_value(
     if depth == len(tags):
         v['value'] = value
         v['display_value'] = display_value
-        v['color_tag'] = {}
+        v['tags'] = {}
         v['extension'] = {}        
     else:
         tag = tags[depth]
@@ -418,7 +418,7 @@ def save_simple_excel(
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys())
     nb_vals = 1
     for dataTag in sankey_data['dataTags']:
-        if len(sankey_data['dataTags'][dataTag]['tags']) != 0 and sankey_data['dataTags'][dataTag]['banner'] != 'display':
+        if len(sankey_data['dataTags'][dataTag]['tags']) != 0:
             nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
     links = [ [""] * nb_cols_nodes for i in range(len(sankey_data['links'].keys())*nb_vals+1) ]
     links[0] = flux_cols + list(sankey_data['dataTags'])

@@ -1,9 +1,9 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, FormControl } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, FormControl, Table } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
-
+import { getLinkValue } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -20,15 +20,20 @@ type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, multi_selected_links, set_multi_selected_links, children }
 ) => {
-  const { dataTags } = data
-  const tags_visible = Object.keys(dataTags).filter(key => dataTags[key].banner === 'display').length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(dataTags).filter(key => dataTags[key].banner === 'display')[0] : '')
+  const { fluxTags,dataTags } = data
+
+  const tags_visible = Object.keys(fluxTags).length > 0
+  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(fluxTags)[0] : '')
+  if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
+    set_tags_group_key(Object.keys(fluxTags)[0])
+  }
+
   let link = selected_link
   if (link === undefined) {
     link = default_link(data)
   }
 
-  const newEntries = new Map(Object.entries(dataTags).filter(([, dataTag]) => dataTag.banner !== 'display').map(([dataTagKey, dataTag]) => {
+  const newEntries = new Map(Object.entries(dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
@@ -44,7 +49,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   //renvoie la valeur correspondant aux paramètre selectionné 
   const value_selected_parameter = (): SankeyLinkValue => {
-    let val = JSON.parse(JSON.stringify(Object(selected_link.value)))
+    let val = JSON.parse(JSON.stringify(Object(data.links[selected_link.idLink].value)))
     Object.values(tags_selected).map(tag_selected => {
       if (val[tag_selected] === undefined) {
         val[tag_selected] = {}
@@ -282,20 +287,146 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   //   })
   //   return (display_courbe) ? courbe : 1
   // }
+  //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
+  const link_tag = (
+    <Tab eventKey="tags" title="Tags de Flux"
+      disabled={/*node.colorParameter !== 'groupTag'*/false} >
+      <Form.Group as={Row} >
+        <Col xs={2}>
+          <FormLabel >Groupe de tags:</FormLabel>
+        </Col>
+        <Col xs={6}>
+          <Form.Select
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
 
+            }
+          >
+            {Object.entries(fluxTags).map(
+              (tags_group, i) =>
+                <option
+                  key={i}
+                  value={tags_group[0]}
+                  selected={tags_group_key === tags_group[0]} >
+                  {tags_group[1].group_name}
+                </option>)}
+          </Form.Select>
+        </Col>
+        <Col>
+          <FormCheck inline
+            type='switch'
+            disabled={multi_selected_links.length === 0 || multi_selected_links[0].colorParameter !== 'groupTag'}
+            checked={multi_selected_links.length > 0  && multi_selected_links[0].colorTag == tags_group_key}
+            label='Palette'
+            onChange={() => {
+              multi_selected_links.forEach(link => link.colorTag = (link.colorTag === tags_group_key) ? Object.keys(fluxTags)[0] : tags_group_key)
+              set_data({ ...data })
+            }}
+          />
+        </Col>
+      </Form.Group>
+      {
+        //Définition des valeurs selon les paramètre dataTags
+        Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+          if (Object.keys(dataTag.tags).length != 0) {
 
+            return (
+              <Row key={dataTagKey}>
+                <Col >
+                  <FormLabel>
+                    {dataTag.group_name} :
+                  </FormLabel>
+                </Col>
+
+                <Col >
+
+                  <Form.Select
+                    name={dataTagKey}
+                    value={tags_selected[dataTagKey]}
+                    onChange={
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                        //Modifie les paramètres selectionnés 
+                        const { name, value } = evt.target
+                        set_tags_selected(prevState => ({
+                          ...prevState,
+                          [name]: value
+                        }))
+                      }
+                    }
+                  >
+                    {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+                      return (
+                        <option key={tag.name} value={tag_key}>{tag.name}</option>
+                      )
+                    })}
+                  </Form.Select>
+                </Col>
+              </Row>
+            )
+          }
+
+        })}
+      <Form.Group xs={12} as={Row} >
+        <Table striped bordered hover className='link_tags_affiliation'>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Appartenance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) ? Object.entries(fluxTags[tags_group_key].tags).map(
+              ([tag_key,tag]) => {
+                // const verif = tag_key
+                // let allChecked = true
+                // multi_selected_links.map((d) => {
+                //   const tmp = getLinkValue(data,d.idLink).tags[tags_group_key]
+                //   allChecked = (tmp === verif) ? allChecked : false
+                // })
+                return (
+                  <tr key={tag_key}>
+                    <td><FormLabel>{tag.name}</FormLabel></td>
+                    <td>
+                      <FormCheck
+                        name={'element_visible' + tag_key}
+                        checked={value_selected_parameter().tags[tags_group_key] === tag_key}
+                        id={tag_key}
+                        type='checkbox'
+                        onChange={
+                          (evt: React.ChangeEvent) => {
+                            const new_nb_element = evt.target as HTMLInputElement
+                            const new_tag_key = new_nb_element.id
+                            const visible = new_nb_element.checked
+                            Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                              let val = Object(d.value)
+                              Object.values(tags_selected).forEach(tag => {
+                                if (val[tag] === undefined) {
+                                  val[tag] = {}
+                                }
+                                val = val[tag]
+                              })
+                              val.tags[tags_group_key] = visible ? new_tag_key : ''
+                            })
+                            set_data({ ...data })
+                          }
+                        } />
+                    </td>
+                  </tr>
+                )
+              }) : (<></>)}
+          </tbody>
+        </Table>
+      </Form.Group>
+    </Tab >)
   return (
-
     <Row>
       <Col sm={12}>
         <Tabs defaultActiveKey="flux_data" id="settings-layout">
           <Tab eventKey="flux_data" title="Données">
             <Form >
-
-
               {
                 //Définition des valeurs selon les paramètre dataTags
-                Object.entries(data.dataTags).filter(([, dataTag]) => dataTag.banner !== 'display').map(([dataTagKey, dataTag]) => {
+                Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
                   if (Object.keys(dataTag.tags).length != 0) {
 
                     return (
@@ -943,40 +1074,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Col>
             </Form.Group>
           </Tab>
-          {Object.keys(dataTags).filter(key => dataTags[key].banner === 'display').length ? (
-            <Tab eventKey="tags" title="Tags" >
-              <Form.Group as={Row} >
-                <Col>
-                  <FormLabel >Groupe d'Étiquette:</FormLabel>
-                </Col>
-                <Col>
-                  <FormCheck inline
-                    type='switch'
-                    checked={link.colormap === tags_group_key}
-                    onChange={() => {
-                      link.colormap = (link.colormap === tags_group_key) ? '' : tags_group_key
-
-                      set_data({ ...data })
-                    }}
-                  />
-                </Col>
-                <Col>
-                  <Form.Select
-                    onChange={
-                      (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
-                    {Object.entries(dataTags).filter(d => d[1].banner === 'display').map(
-                      (tags_group, i) =>
-                        <option
-                          key={i}
-                          value={tags_group[0]}
-                          selected={tags_group_key === tags_group[0]} >
-                          {tags_group[1].group_name}
-                        </option>)}
-                  </Form.Select>
-                </Col>
-              </Form.Group>
-
-            </Tab>) : (<></>)}
+          {Object.keys(fluxTags).length > 0 ? link_tag : (<></>)}
           <Tab eventKey="flux_tooltip" title="Info-bulle">
             <Form >
               <Row>

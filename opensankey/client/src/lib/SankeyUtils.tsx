@@ -15,7 +15,7 @@ export const addDataTags = (
       v[listKey[i]] = {
         value: v.value,
         display_value: v.display_value,
-        color_tag: {},
+        tags: {},
         extension: {}
       }
     } else {
@@ -37,14 +37,14 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: 'default',
-      color_tag: {},
+      tags: {},
       extension: {}
     }
   }
   let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0)  ? true : false }).map(dataTag => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
@@ -56,7 +56,7 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: 'default',
-      color_tag: {},
+      tags: {},
       extension: {}
     }
   }
@@ -338,7 +338,7 @@ export const link_text = (
 
 export const default_sankey_data = (): SankeyData => {
   return {
-    version: '0.7',
+    version: '0.8',
 
     nodes: {},
     links: {},
@@ -414,7 +414,7 @@ export const default_node = (
     iconVisible: true,
 
     color: '#a9a9a9',
-    nodeParameter: 'local',
+    colorParameter: 'local',
     position: 'absolute',
     x: 100,
     y: 100,
@@ -448,7 +448,7 @@ const create_object = (data: SankeyData, l: string[]) => {
     const obj = Object.create({})
     obj['value'] = 10
     obj['display_value'] = 'default'
-    obj['color_tag'] = {}
+    obj['tags'] = {}
     obj['extension'] = {}
 
     return obj
@@ -501,7 +501,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     right_horiz_shift: 0,
     vert_shift: 0,
     shift_gap: 0.1,
-    colormap: ''
+    colorTag: '',
+    colorParameter: 'local'
   }
 }
 
@@ -620,7 +621,9 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void
+  example_callback: (data: SankeyData) => void,
+  set_multi_selected_nodes:(nodes:string[])=>void,
+  set_multi_selected_links:(links:string[])=>void
 ) => {
 
   let root = window.location.href
@@ -634,6 +637,8 @@ export const uploadExemple = (
   }
   let file_type = 'text/plain'
   set_data({ ...default_sankey_data() })
+  set_multi_selected_nodes([])
+  set_multi_selected_links([])
 
   file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
