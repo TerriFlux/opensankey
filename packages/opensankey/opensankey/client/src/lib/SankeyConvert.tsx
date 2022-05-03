@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyNode,TagsGroup } from './types'
+import { SankeyData, SankeyLink, SankeyNode,TagsCatalog,TagsGroup } from './types'
 import {compute_default_input_outputLinksId} from './SankeyLayout'
 
 interface ConvertSankeyNode {
@@ -33,9 +33,9 @@ interface ConvertSankeyLink {
   visible?: boolean
   label_visible?: boolean
   text_same_color?: boolean | string
-  frozen?: boolean,
-  link_reverse?: boolean,
-  display_unit?: string,
+  frozen?: boolean
+  link_reverse?: boolean
+  display_unit?: string
   type?: string
   tooltip_text?: string
   data_value?: number | number[]
@@ -47,34 +47,35 @@ interface ConvertSankeyLink {
   value: number | number[]
   display_value?: string | string[]
   data?: boolean
-  //unbounded?: boolean,
-  subchain?: string,
-  mini?: number | number[],
+  //unbounded?: boolean
+  subchain?: string
+  mini?: number | number[]
   maxi?: number | number[]
 }
 interface ConvertSankeyData {
   units_names: string[]
   display_style: {
-    trade_close?: boolean,
+    trade_close?: boolean
     unit?: boolean | number
   }
   show_uncert?: boolean
-  sankey_type?: string,
-  flux_types?: string[],
+  tags_catalog: TagsCatalog
+  sankey_type?: string
+  flux_types?: string[]
   use_flux_types?: boolean
   subchains?: string[]
   links?: { [region_name: string]: ConvertSankeyLink[] }
-  nodes2tooltips: unknown,
-  nodes2units_conv: unknown,
-  error: string,
-  max_vertical_offset: number,
-  region_names?: string[],
-  region_name?: string,
-  nodes_names: string[],
-  filtered_nodes: SankeyNode[],
-  filtered_nodes_names: string[],
-  filtered_links: SankeyLink[],
-  previous_filter: number,
+  nodes2tooltips: unknown
+  nodes2units_conv: unknown
+  error: string
+  max_vertical_offset: number
+  region_names?: string[]
+  region_name?: string
+  nodes_names: string[]
+  filtered_nodes: SankeyNode[]
+  filtered_nodes_names: string[]
+  filtered_links: SankeyLink[]
+  previous_filter: number
   trade_hspace?: number
   trade_close_hspace?: number
   trade_close_vspace?: number
@@ -100,8 +101,8 @@ export const convert_data = (
   if (!data.grid_visible) {
     data.grid_visible = true
   }
-  if (data_to_convert.nodeTags === undefined) {
-    data_to_convert.nodeTags = {}
+  if (data.tags_catalog) {
+    data_to_convert.nodeTags = Object.assign(data.tags_catalog)
   }
   if (data_to_convert.dataTags === undefined) {
     data_to_convert.dataTags = {}
