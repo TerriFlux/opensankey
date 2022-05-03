@@ -298,18 +298,18 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
                   const source_node = data.nodes[l.idSource]
                   const target_node = data.nodes[l.idTarget]
                   let selected_tag = ''
-                  if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
-                    selected_tag = source_node.tags[source_node.colorTag][0]
-                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
-                    selected_tag = target_node.tags[source_node.colorTag][0]
-                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+                  if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
                     selected_tag = source_node.tags[source_node.colorTag][0]
                     return data.nodeTags[source_node.colorTag].tags[selected_tag].color
                   } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
                     selected_tag = target_node.tags[target_node.colorTag][0]
                     return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+                  } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+                    selected_tag = source_node.tags[source_node.colorTag][0]
+                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+                  } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+                    selected_tag = target_node.tags[source_node.colorTag][0]
+                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
                   } else if (source_node.type === 'product') {
                     return source_node.color
                   } else if (target_node.type === 'product') {
