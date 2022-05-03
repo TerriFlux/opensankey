@@ -392,26 +392,27 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             </Col>) : (<></>)
           }
           {additional_selector ? (additional_selector) : (<></>)}
-
-          <Col>
-            <Form id='dropdown_banner_node' className='dropdown_banner_node'>
-              <Col><FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel></Col>
-              <Col>{addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}</Col>
-              <Col>{addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</Col>
-              {/* { !data.static_sankey || (window.sankey && window.sankey.structure) ?
-                (<Col>
-                  <FormCheck
-                    type="checkbox"
-                    checked={data.show_structure}
-                    onChange={evt => {
-                      data.show_structure = evt.target.checked
-                      set_data({ ...data })
-                    }}
-                    label='Structure du diagramme'
-                  />
-                </Col>) : (<></>)} */}
-            </Form>
-          </Col>
+          { Object.entries(nodeTags).length > 1 || Object.entries(fluxTags).length > 1 ? (
+            <Col>
+              <Form id='dropdown_banner_node' className='dropdown_banner_node'>
+                <Col><FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel></Col>
+                <Col>{addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}</Col>
+                <Col>{addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</Col>
+                {/* { !data.static_sankey || (window.sankey && window.sankey.structure) ?
+                  (<Col>
+                    <FormCheck
+                      type="checkbox"
+                      checked={data.show_structure}
+                      onChange={evt => {
+                        data.show_structure = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                      label='Structure du diagramme'
+                    />
+                  </Col>) : (<></>)} */}
+              </Form>
+            </Col>
+          ) : (<></>)}
           { window.sankey && window.sankey.excel ? (
             <Form.Group as={Col} >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
