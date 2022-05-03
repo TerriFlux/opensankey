@@ -1078,7 +1078,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Dimensions</Accordion.Header>
+              <Accordion.Header>Étiquettes Données de Flux</Accordion.Header>
               <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
