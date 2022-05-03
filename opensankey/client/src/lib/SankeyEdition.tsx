@@ -392,7 +392,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             </Col>) : (<></>)
           }
           {additional_selector ? (additional_selector) : (<></>)}
-          { Object.entries(nodeTags).length > 1 || Object.entries(fluxTags).length > 1 ? (
+          { Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0 ? (
             <Col>
               <Form id='dropdown_banner_node' className='dropdown_banner_node'>
                 <Col><FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel></Col>
