@@ -37,6 +37,12 @@ export const reorganize_node_inputLinksId = (
         }
         return -1       
       } 
+      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+        if (n1 && n2 && n1.x < n2.x) {
+          return -1
+        }
+        return 1
+      }
       if (n1 && n2 && n1.y < n2.y) {
         return -1
       }
@@ -93,8 +99,8 @@ export const reorganize_node_outputLinksId = (
         }
         return -1       
       }      
-      if (l1.orientation === 'hv' && l2.orientation === 'hv' ) {
-        if (n1 && n2 && n1.x > n2.x) {
+      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+        if (n1 && n2 && n1.x < n2.x) {
           return -1
         }
         return 1
