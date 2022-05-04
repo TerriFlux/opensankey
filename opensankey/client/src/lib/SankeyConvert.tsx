@@ -106,11 +106,8 @@ export const convert_data = (
   if (data_to_convert.dataTags === undefined) {
     data_to_convert.dataTags = {}
   }
-  if (data.width === undefined) {
-    data.width = 1500
-  }
-  if (data.height === undefined) {
-    data.height = 500
+  if (data.labels === undefined) {
+    data.labels = []
   }
 
   if (Array.isArray(data.tags_catalog)) {
