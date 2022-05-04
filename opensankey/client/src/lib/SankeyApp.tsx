@@ -10,9 +10,8 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Row, Col, Dropdown, Container } from 'react-bootstrap'
+import { Dropdown } from 'react-bootstrap'
 import * as d3 from 'd3'
-import { getLinkValue } from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
 
 let logo = ''
@@ -204,154 +203,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           select_link={(l: SankeyLink) => {
             set_selected_link(l)
           }}
-          node_color={(n: SankeyNode) => {
-            let colorNode
-            if (n.colorParameter === 'groupTag' || data.show_structure) {
-              //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-              //on controle ici qu'il y a bien un favorite tag
-              if (n.colorTag !== undefined && n.colorTag !== '') {
-                const tagGroup = n.colorTag
-                if (n.tags[tagGroup] === undefined ) {
-                  colorNode = n.color
-                } else if (n.tags[tagGroup].length > 0) {
-                  colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
-                } else {
-                  colorNode = n.color
-                }
-              } else {
-                colorNode = n.color
-              }
-            }
-            if (n.colorParameter === 'local') {
-              // Le couleur est définie dans les parametres locaux du noeud
-              colorNode = n.color
-            }
-
-            return colorNode
-          }}
           link_text={SankeyUtils.link_text}
-          link_visible={(l: SankeyLink) => {
-            const { dataTags,fluxTags } = data
-            if (data.show_structure) {
-              if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
-                return false
-              }
-            }
-            if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
-              return false
-            }
-            let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
-            const listKey = [] as string[]
-            let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-              const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-              if (selected_tags.length == 0 || missing_key) {
-                missing_key = true
-                return
-              }
-              listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
-            })
-            if (missing_key) {
-              return false
-            }
-
-            for (const i in listKey) {
-              val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
-            }
-            const v = (val as unknown) as SankeyLinkValue
-            let visible = true
-            Object.keys(v.tags).forEach(tag_group => {
-              const selected_tag = v.tags[tag_group]
-              if (selected_tag && tag_group in fluxTags && !fluxTags[tag_group].tags[selected_tag].selected) {
-                visible = false
-              }
-            })
-            if (!visible) {
-              return false
-            }
-            if (v.value === 0) {
-              if (data.display_style.null_flux) {
-                return true
-              }
-              return false
-            }
-            return true
-          }}
-          link_color={(l: SankeyLink) => {
-            let colorNode
-            if (l.colorParameter === 'groupTag' ) {
-              //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-              //on controle ici qu'il y a bien un favorite tag
-              if (l.colorTag !== undefined && l.colorTag !== '' ) {
-                if ( l.colorTag !== 'node_colormap' ) {
-                  const tagGroup = l.colorTag
-                  const v = getLinkValue(data,l.idLink)
-                  if (v === undefined) {
-                    return l.color
-                  }
-                  if (v.tags[tagGroup] in  data.fluxTags[tagGroup].tags) {
-                    colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
-                  } else {
-                    colorNode = l.color
-                  }
-                } else {
-                  const source_node = data.nodes[l.idSource]
-                  const target_node = data.nodes[l.idTarget]
-                  let selected_tag = ''
-                  if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
-                    selected_tag = source_node.tags[source_node.colorTag][0]
-                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
-                    selected_tag = target_node.tags[target_node.colorTag][0]
-                    return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-                  } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
-                    selected_tag = source_node.tags[source_node.colorTag][0]
-                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
-                    selected_tag = target_node.tags[source_node.colorTag][0]
-                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-                  } else if (source_node.type === 'product') {
-                    return source_node.color
-                  } else if (target_node.type === 'product') {
-                    return target_node.color
-                  }
-                }
-              } else {
-                colorNode = l.color
-              }
-            }
-            if (l.colorParameter === 'local') {
-              // Le couleur est définie dans les parametres locaux du noeud
-              colorNode = l.color
-            }
-
-            return colorNode
-
-            /*if (!l.colorTag || l.colorTag === '') {
-              return l.color
-            } else {
-              if (l.colorTag in data.fluxTags) {
-                const tagGroup = l.colorTag
-                if (l.tags[tagGroup].length > 0) {
-                  return data.fluxTags[tagGroup].tags[l.tags[tagGroup][0]].color
-                } else {
-                  return l.color
-                }
-              }
-              if (l.colorTag in data.dataTags) {
-                const selected_tag = getLinkValue(data, l.idLink).color_tag[l.colorTag]
-                if (selected_tag) {
-                  return data.dataTags[l.colorTag].tags[selected_tag].color
-                }
-                return l.color
-              }
-
-              if (Object.values(data.nodeTags[l.colorTag].tags).length > 0) {
-                return Object.values(data.nodeTags[l.colorTag].tags)[0].color
-              }
-              return l.color
-            }*/
-          }}
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const { dataTags } = data
             if ( data.show_structure ) {
