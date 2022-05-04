@@ -860,8 +860,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                       variant="danger"
                       onClick={
                         () => {
-                          delete_link(data, selected_link)
-                          set_selected_link(default_link(data))
+                          multi_selected_links.forEach( l=> delete_link(data, l))
+                          set_multi_selected_links([])
+                          //set_selected_link(default_link(data))
 
                           set_data({ ...data })
                         }
