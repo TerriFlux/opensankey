@@ -30,8 +30,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   const [shift_visible, set_shift_visible] = useState(true)
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [legend_position, set_legend_position] = useState(data.legend_position)
-  const [width, set_width] = useState(data.width_min)
-  const [height, set_height] = useState(data.height_min)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
   const [link_tag_favorite, set_link_tag_favorite] = useState('')
@@ -126,33 +124,30 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Form.Group>
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel >Hauteur Minimum</FormLabel>
+                <FormLabel >Taille Carré Grille</FormLabel>
               </Col>
-              <Col>
+              <Col xs={4}>
                 <FormControl
-                  type="text"
-                  value={height}
-                  onChange={evt => set_height(+evt.target.value)}
-                  onBlur={() => {
-                    data.height_min = height
-                    // data.height = height
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={data.grid_square_size}
+                  onChange={evt => {
+                    data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
                     set_data({ ...data })
                   }}
+
                 />
               </Col>
-            </Form.Group>
-            <Form.Group as={Row} >
-              <Col xs={3}>
-                <FormLabel>Largeur Minimum</FormLabel>
-              </Col>
-              <Col>
-                <FormControl
-                  type="text"
-                  value={width}
-                  onChange={evt => set_width(+evt.target.value)}
-                  onBlur={() => {
-                    data.width_min = width
-                    // data.width = width
+              <Col >
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.grid_visible}
+                  label='Grille visible'
+                  onChange={() => {
+                    data.grid_visible = !data.grid_visible
                     set_data({ ...data })
                   }}
                 />
@@ -173,42 +168,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 />
               </Col>
             </Form.Group>
-
-
-            <Form.Group as={Row} >
-              <Col xs={3}>
-                <FormLabel >Taille Carré Grille</FormLabel>
-              </Col>
-              <Col xs={4}>
-                <FormControl
-                  type="number"
-                  min={1}
-                  max={100}
-                  step={1}
-                  value={data.grid_square_size}
-                  onChange={evt => {
-                    data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
-                    set_data({ ...data })
-                  }}
-
-                />
-              </Col>
-
-              <Col >
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={data.grid_visible}
-                  label='Grille visible'
-                  onChange={() => {
-                    data.grid_visible = !data.grid_visible
-                    set_data({ ...data })
-                  }}
-                />
-              </Col>
-            </Form.Group>
-
-
             <Form.Group as={Row} >
               <Col xs={3}>
                 <FormLabel>Déplacement horizontal</FormLabel>
@@ -343,7 +302,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             </Form.Group>
             <Form.Group as={Row} >
               <Col xs={3}>
-                <FormLabel>Définition de la Grille</FormLabel>
+                <FormLabel>Ecart entre noeuds</FormLabel>
               </Col>
               <Col xs={2}>
                 <FormLabel>Horizontal</FormLabel>
