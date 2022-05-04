@@ -2866,6 +2866,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       svgSankey.attr('viewBox', [20, 0, data.width-20, data.height])
     } else {
       svgSankey.attr('viewBox', null)
+      svgSankey.style('width', data.width + 'px')
     }
     svgSankey
       .call(d3.zoom()
