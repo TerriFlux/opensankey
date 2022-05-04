@@ -2868,6 +2868,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       svgSankey.attr('viewBox', null)
       svgSankey.style('width', data.width + 'px')
     }
+    svgSankey.style('height', data.height + 'px')
     svgSankey
       .call(d3.zoom()
         .filter(function filter(event) { // Permet d'obliger Crtl pour activer le zoom
@@ -2967,9 +2968,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (data.fit_screen) {
       d3.select('#svg').attr('transform','scale(1)')
     }
-    console.log(('Ajout liens noeud'));
-
-    [data.width, data.height]  = min_width_and_height()
 
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
