@@ -423,7 +423,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             </Form>
           </Col>
           <Col>
-            { Object.entries(fluxTags).length > 0 ? (
+            { Object.entries(fluxTags).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi')}).length > 0 ? (
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>) : (<></>)
             }
             <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
