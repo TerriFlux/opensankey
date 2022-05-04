@@ -28,8 +28,9 @@ const MenuPropTypes = {
   edition_menu: PropTypes.element,
   right_menu: PropTypes.element,
   settings_edition: PropTypes.element,
-  settings_edition_tags: PropTypes.element,
-  settings_edition_tags_links: PropTypes.element,
+  settings_edition_node_tags: PropTypes.element,
+  settings_edition_link_tags: PropTypes.element,
+  settings_edition_data_tags: PropTypes.element,
   node_edition: PropTypes.element,
   link_edition: PropTypes.element,
   logo: PropTypes.string.isRequired,
@@ -43,8 +44,8 @@ const MenuPropTypes = {
   set_selected_node: PropTypes.func.isRequired,
   selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
 
-  set_multi_selected_node: PropTypes.func.isRequired,
-  multi_selected_node: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
+  set_multi_selected_nodes: PropTypes.func.isRequired,
+  multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
 
   set_multi_selected_links: PropTypes.func.isRequired,
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -103,7 +104,7 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path }: any) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path,set_multi_selected_nodes,set_multi_selected_links }: any) => {
   return (
     <>
       { Array.isArray(exemple_menu)
@@ -123,7 +124,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           return (
             <Dropdown.Item
               onClick={() => uploadExemple(
-                path, url_prefix, data, set_data, callback
+                path, url_prefix, data, set_data, callback,set_multi_selected_nodes,set_multi_selected_links
               )}
             >{item.split('.')[0].replace(/_/g, ' ').replace(' layout', '').replace('simple.xlsx', ' xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC')}</Dropdown.Item>
           )
@@ -139,6 +140,8 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     data={data}
                     set_data={set_data}
                     current_path={current_path !== '' ? current_path + '/' + key : key}
+                    set_multi_selected_links={set_multi_selected_links}
+                    set_multi_selected_nodes={set_multi_selected_nodes}
                   />
                 </NavDropdown>
               </>
@@ -153,11 +156,13 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     open_menu, save_menu, edition_menu, right_menu,
-    settings_edition, settings_edition_tags, settings_edition_tags_links, node_edition, link_edition,
+    settings_edition, 
+    settings_edition_node_tags, settings_edition_link_tags,settings_edition_data_tags, 
+    node_edition, link_edition,
     logo, app_name,
     set_show_nav, show_nav, set_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
-    set_multi_selected_node, multi_selected_node,
+    set_multi_selected_nodes, multi_selected_nodes,
     set_multi_selected_links, multi_selected_links,
     set_selected_link, selected_link,
     example_menu, portfolio_menu, url_prefix,
@@ -202,11 +207,11 @@ const Menu: FunctionComponent<MenuTypes> = (
       node.x = 200
     }
     nodes[node.idNode] = node
-    for (const tag_group_key in data.tags_catalog) {
+    for (const tag_group_key in data.nodeTags) {
       node.tags[tag_group_key] = []
     }
     set_selected_node(node)
-    set_multi_selected_node([node])
+    set_multi_selected_nodes([node])
     set_data({ ...data })
   }
 
@@ -303,7 +308,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const reinitialization = () => {
     const data = default_sankey_data()
-    set_multi_selected_node([])
+    set_multi_selected_nodes([])
     set_multi_selected_links([])
     set_data({ ...data })
   }
@@ -396,7 +401,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
   const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected = multi_selected_node.map((d) => { return { 'label': d.name, 'value': d.name } })
+  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.name } })
   const props = {
     scroll: true,
     backdrop: false,
@@ -415,7 +420,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
-            set_multi_selected_node(m_s)
+            set_multi_selected_nodes(m_s)
           }}
           labelledBy={'hello'}
         />
@@ -449,7 +454,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
   const INITIAL_OPTIONS_LINKS = Object.values(data.links).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
-  const selected_links = multi_selected_links.map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const selected_links = multi_selected_links.map((d) => { 
+    if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined ) {
+      return
+    }
+    return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } 
+  })
   const dropdownMultiLinks = () => {
     const DD = (
       <div id='DD_multi_links'>
@@ -747,14 +757,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button
                       size="sm"
                       variant='danger'
-                      disabled={multi_selected_node.length == 0}
+                      disabled={multi_selected_nodes.length == 0}
                       onClick={
                         () => {
                           
                           //Boutton pour supprimer le noeud selectionné
-                          multi_selected_node.map(d => delete_node(data, d))
+                          multi_selected_nodes.map(d => delete_node(data, d))
                           set_selected_node(default_node(data))
-                          set_multi_selected_node([])
+                          set_multi_selected_nodes([])
                           set_data({ ...data })
                           
 
@@ -775,22 +785,22 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                     <FormControl
                       value={
-                        (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
+                        (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
                       }
 
                       onChange={evt => {
-                        const sel = (multi_selected_node.length != 1) ? '' : multi_selected_node[0].name
+                        const sel = (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
                         Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
                         set_data({ ...data })
                       }}
-                      disabled={(multi_selected_node.length == 1) ? false : true} />
+                      disabled={(multi_selected_nodes.length == 1) ? false : true} />
                   </Col>
                   <Col xs={3}>
                   </Col>
                 </Form.Group>
                 {/* </Form> */}
 
-                <div style={{ 'display': (multi_selected_node.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
+                <div style={{ 'display': (multi_selected_nodes.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
@@ -806,9 +816,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 }
               }>
-              <Accordion.Header>Étiquette Noeuds</Accordion.Header>
+              <Accordion.Header>Étiquettes Noeuds</Accordion.Header>
               <Accordion.Body>
-                {settings_edition_tags}
+                {settings_edition_node_tags}
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
@@ -1031,15 +1041,29 @@ const Menu: FunctionComponent<MenuTypes> = (
               eventKey="8"
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               onClick={evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '8') {
                   set_nav_item_active('')
                 } else {
                   set_nav_item_active('8')
                 }
               }}
             >
-              <Accordion.Header>Étiquette Flux</Accordion.Header>
-              <Accordion.Body>{settings_edition_tags_links}</Accordion.Body>
+              <Accordion.Header>Étiquettes Flux</Accordion.Header>
+              <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item
+              eventKey="dimension"
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              onClick={evt => {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'dimension') {
+                  set_nav_item_active('')
+                } else {
+                  set_nav_item_active('dimension')
+                }
+              }}
+            >
+              <Accordion.Header>Étiquettes Données</Accordion.Header>
+              <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
               eventKey="7"
@@ -1204,7 +1228,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           if (evt.target.value === '') {
                             return
                           }
-                          set_multi_selected_node([])
+                          set_multi_selected_nodes([])
                           set_multi_selected_links([])
                           set_view(evt.target.value)
                         }
@@ -1361,8 +1385,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         (view != 'none') ? (<SankeyDraw
           data={data.view.filter(d => d.id == view)[0].view_data as SankeyData}
           set_data={() => null}
-          set_multi_selected_node={() => null}
-          multi_selected_node={multi_selected_node}
+          set_multi_selected_nodes={() => null}
+          multi_selected_nodes={multi_selected_nodes}
           set_multi_selected_links={() => null}
           multi_selected_links={multi_selected_links}
           multi_selected_label={multi_selected_label}
@@ -1374,18 +1398,13 @@ const Menu: FunctionComponent<MenuTypes> = (
           node_color={(n: SankeyNode) => {
             let colorNode
             const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
-
-            // Le couleur est définie dans l'onglet général
-            if (n.nodeParameter === 'general' && !n_data.show_structure) {
-              colorNode = '#808080'
-            }
-            if (n.nodeParameter === 'groupTag' || n_data.show_structure) {
+            if (n.colorParameter === 'groupTag' || n_data.show_structure) {
               //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
               //on controle ici qu'il y a bien un favorite tag
               if (n.colorTag !== undefined && n.colorTag !== '') {
                 const tagGroup = n.colorTag
                 if (n.tags[tagGroup].length > 0) {
-                  colorNode = n_data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+                  colorNode = n_data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
                 } else {
                   colorNode = n.color
                 }
@@ -1393,7 +1412,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 colorNode = n.color
               }
             }
-            if (n.nodeParameter === 'local') {
+            if (n.colorParameter === 'local') {
               // Le couleur est définie dans les parametres locaux du noeud
               colorNode = n.color
             }
@@ -1410,7 +1429,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey = [] as string[]
             let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
               if (selected_tags.length == 0 || missing_key) {
                 missing_key = true
@@ -1428,8 +1447,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             }
             const v = (val as unknown) as SankeyLinkValue
             let visible = true
-            Object.keys(v.color_tag).forEach(tag => {
-              const selected_tag = v.color_tag[tag]
+            Object.keys(v.tags).forEach(tag => {
+              const selected_tag = v.tags[tag]
               if (selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
                 visible = false
               }
@@ -1448,34 +1467,34 @@ const Menu: FunctionComponent<MenuTypes> = (
           link_color={(l: SankeyLink) => {
             const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
 
-            if (!l.colormap || l.colormap === '') {
+            if (!l.colorTag || l.colorTag === '') {
               return l.color
             } else {
-              if (l.colormap in n_data.dataTags) {
-                const selected_tag = getLinkValue(n_data, l.idLink).color_tag[l.colormap]
+              if (l.colorTag in n_data.fluxTags) {
+                const selected_tag = getLinkValue(n_data, l.idLink).tags[l.colorTag]
                 if (selected_tag) {
-                  return n_data.dataTags[l.colormap].tags[selected_tag].color
+                  return n_data.fluxTags[l.colorTag].tags[selected_tag].color
                 }
                 return l.color
               }
               const source_node = n_data.nodes[l.idSource]
               const target_node = n_data.nodes[l.idTarget]
               let selected_tag = ''
-              if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (target_node.type === 'sector' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]
-                return n_data.tags_catalog[l.colormap].tags[selected_tag].color
+              if (source_node.type === 'sector' && l.colorTag in source_node.tags && source_node.tags[l.colorTag].length === 1) {
+                selected_tag = source_node.tags[l.colorTag][0]
+                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
+              } else if (target_node.type === 'sector' && l.colorTag in target_node.tags && target_node.tags[l.colorTag].length === 1) {
+                selected_tag = target_node.tags[l.colorTag][0]
+                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
+              } else if (source_node.type === 'product' && l.colorTag in source_node.tags && source_node.tags[l.colorTag].length === 1) {
+                selected_tag = source_node.tags[l.colorTag][0]
+                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
+              } else if (target_node.type === 'product' && l.colorTag in target_node.tags && target_node.tags[l.colorTag].length === 1) {
+                selected_tag = target_node.tags[l.colorTag][0]
+                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
               }
-              if (Object.values(n_data.tags_catalog[l.colormap].tags).length > 0) {
-                return Object.values(n_data.tags_catalog[l.colormap].tags)[0].color
+              if (Object.values(n_data.nodeTags[l.colorTag].tags).length > 0) {
+                return Object.values(n_data.nodeTags[l.colorTag].tags)[0].color
               }
               return l.color
             }
@@ -1489,7 +1508,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             /* console.log(val)
             console.log(dataTags) */
             let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
               if (selected_tags.length == 0 || missing_key) {
                 missing_key = true
@@ -1501,12 +1520,12 @@ const Menu: FunctionComponent<MenuTypes> = (
               return {
                 value: 0,
                 display_value: 'default',
-                color_tag: {},
+                tags: {},
                 extension: {}
               }
             }
             // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-            // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0) && d.banner !== 'display' ? true : false }).map(d => {
+            // Object.values(dataTags).filter(d => { return (Object.keys(d.tags).length != 0)  ? true : false }).map(d => {
             //   listKey.push(Object.entries(d.tags).filter(([,tag]) => { return tag.selected })[0][0])
             // })
 

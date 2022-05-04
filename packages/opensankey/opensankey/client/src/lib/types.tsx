@@ -31,8 +31,7 @@ export const SankeyNodePropTypes = {
   iconVisible: PropTypes.bool.isRequired,
 
   color: PropTypes.string.isRequired,
-
-  nodeParameter: PropTypes.string.isRequired,
+  colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
 
   // geometry
@@ -75,9 +74,9 @@ export const SankeyLinkValueTypes =
 {
   value: PropTypes.number.isRequired,
   display_value: PropTypes.string.isRequired,
-  // corresponding to tag_favorite. to be used in conjunction with SankeyLink.tag_favorite
-  //  const selected_tag = getLinkValue(data,l.idLink).color_tag[l.colormap]
-  color_tag: PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
+  // corresponding to tag_favorite. to be used in conjunction with colorTag
+  //  const selected_tag = getLinkValue(data,l.idLink).tags[l.colorTag]
+  tags: PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
   // for previous_value, data_value, data_source, data_period, mini, maxi ...
   extension: PropTypes.objectOf(PropTypes.string.isRequired)
 }
@@ -104,6 +103,8 @@ export const SankeyLinkPropTypes = {
   label_visible: PropTypes.bool.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
+  colorParameter: PropTypes.string.isRequired,
+  colorTag: PropTypes.string.isRequired,
   // Ajout
   gradient: PropTypes.bool.isRequired,
 
@@ -114,9 +115,6 @@ export const SankeyLinkPropTypes = {
   // geometry
   x_label: PropTypes.number,
   y_label: PropTypes.number,
-
-  //NEW : Choix du group tag pour changement couleur palette 
-  colormap: PropTypes.string.isRequired,
 
   left_horiz_shift: PropTypes.number,
   right_horiz_shift: PropTypes.number,
@@ -214,9 +212,9 @@ export const SankeyDataPropTypes = {
 
   static_sankey: PropTypes.bool.isRequired,
 
-  tags_catalog: TagsCatalogPropTypes,
-
+  nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
+  fluxTags: TagsCatalogPropTypes,
 
   view: PropTypes.arrayOf(
     PropTypes.shape({

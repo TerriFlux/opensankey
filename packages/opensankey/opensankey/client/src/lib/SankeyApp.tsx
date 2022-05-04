@@ -3,7 +3,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
 import SankeyEdition from './SankeyEdition'
-import { SankeySettingsEdition, SankeySettingsEditionTags, SankeySettingsEditionTagsLinks } from './SankeySettingsEdition'
+import { SankeySettingsEdition} from './SankeySettingsEdition'
+import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
@@ -42,7 +43,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [selected_link, set_selected_link] = useState(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
-  const [multi_selected_node, set_multi_selected_node] = useState([])
+  const [multi_selected_nodes, set_multi_selected_nodes] = useState([])
   const [multi_selected_links, set_multi_selected_links] = useState([])
   const [multi_selected_label, set_multi_selected_label] = useState([])
 
@@ -82,6 +83,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               data={data}
               set_data={set_data}
               current_path={''}
+              set_multi_selected_nodes={set_multi_selected_nodes}
+              set_multi_selected_links={set_multi_selected_links}
             /></>}
           portfolio_menu={<>
             <ArtefactsItem
@@ -97,8 +100,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           nav_item_active={nav_item_active}
           set_selected_node={set_selected_node}
           selected_node={selected_node}
-          set_multi_selected_node={set_multi_selected_node}
-          multi_selected_node={multi_selected_node}
+          set_multi_selected_nodes={set_multi_selected_nodes}
+          multi_selected_nodes={multi_selected_nodes}
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
           set_selected_link={set_selected_link}
@@ -129,8 +132,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               set_data={set_data}
               selected_node={selected_node}
               radio_selected={radio_selected}
-              set_multi_selected_node={set_multi_selected_node}
-              multi_selected_node={multi_selected_node}
+              set_multi_selected_nodes={set_multi_selected_nodes}
+              multi_selected_nodes={multi_selected_nodes}
             />
           }
           link_edition={
@@ -143,14 +146,24 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               multi_selected_links={multi_selected_links}
             />
           }
-          settings_edition_tags={
-            <SankeySettingsEditionTags
+          settings_edition_node_tags={
+            <SankeySettingsEditionElementTags
               data={data}
               set_data={set_data}
+              elementTagNameProp='nodeTags'
+              elementNameProp='nodes'
             />
           }
-          settings_edition_tags_links={
-            <SankeySettingsEditionTagsLinks
+          settings_edition_link_tags={
+            <SankeySettingsEditionElementTags
+              data={data}
+              set_data={set_data}
+              elementTagNameProp='fluxTags'
+              elementNameProp='links'
+            />
+          }
+          settings_edition_data_tags={
+            <SankeySettingsEditionDataTags
               data={data}
               set_data={set_data}
             />
@@ -176,8 +189,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
           set_data={set_data}
-          set_multi_selected_node={set_multi_selected_node}
-          multi_selected_node={multi_selected_node}
+          set_multi_selected_nodes={set_multi_selected_nodes}
+          multi_selected_nodes={multi_selected_nodes}
           multi_selected_label={multi_selected_label}
 
           set_multi_selected_links={set_multi_selected_links}
@@ -193,17 +206,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }}
           node_color={(n: SankeyNode) => {
             let colorNode
-            // Le couleur est définie dans l'onglet général
-            if (n.nodeParameter === 'general' && !data.show_structure) {
-              colorNode = '#808080'
-            }
-            if (n.nodeParameter === 'groupTag' || data.show_structure) {
+            if (n.colorParameter === 'groupTag' || data.show_structure) {
               //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
               //on controle ici qu'il y a bien un favorite tag
               if (n.colorTag !== undefined && n.colorTag !== '') {
                 const tagGroup = n.colorTag
-                if (n.tags[tagGroup].length > 0) {
-                  colorNode = data.tags_catalog[tagGroup].tags[n.tags[tagGroup][0]].color
+                if (n.tags[tagGroup] === undefined ) {
+                  colorNode = n.color
+                } else if (n.tags[tagGroup].length > 0) {
+                  colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
                 } else {
                   colorNode = n.color
                 }
@@ -211,7 +222,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
                 colorNode = n.color
               }
             }
-            if (n.nodeParameter === 'local') {
+            if (n.colorParameter === 'local') {
               // Le couleur est définie dans les parametres locaux du noeud
               colorNode = n.color
             }
@@ -220,7 +231,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }}
           link_text={SankeyUtils.link_text}
           link_visible={(l: SankeyLink) => {
-            const { dataTags } = data
+            const { dataTags,fluxTags } = data
             if (data.show_structure) {
               if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
                 return false
@@ -232,7 +243,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey = [] as string[]
             let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
               if (selected_tags.length == 0 || missing_key) {
                 missing_key = true
@@ -249,9 +260,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
             const v = (val as unknown) as SankeyLinkValue
             let visible = true
-            Object.keys(v.color_tag).forEach(tag => {
-              const selected_tag = v.color_tag[tag]
-              if (selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
+            Object.keys(v.tags).forEach(tag_group => {
+              const selected_tag = v.tags[tag_group]
+              if (selected_tag && tag_group in fluxTags && !fluxTags[tag_group].tags[selected_tag].selected) {
                 visible = false
               }
             })
@@ -267,37 +278,79 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             return true
           }}
           link_color={(l: SankeyLink) => {
-            if (!l.colormap || l.colormap === '') {
+            let colorNode
+            if (l.colorParameter === 'groupTag' ) {
+              //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+              //on controle ici qu'il y a bien un favorite tag
+              if (l.colorTag !== undefined && l.colorTag !== '' ) {
+                if ( l.colorTag !== 'node_colormap' ) {
+                  const tagGroup = l.colorTag
+                  const v = getLinkValue(data,l.idLink)
+                  if (v === undefined) {
+                    return l.color
+                  }
+                  if (v.tags[tagGroup] in  data.fluxTags[tagGroup].tags) {
+                    colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
+                  } else {
+                    colorNode = l.color
+                  }
+                } else {
+                  const source_node = data.nodes[l.idSource]
+                  const target_node = data.nodes[l.idTarget]
+                  let selected_tag = ''
+                  if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+                    selected_tag = source_node.tags[source_node.colorTag][0]
+                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+                  } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+                    selected_tag = target_node.tags[target_node.colorTag][0]
+                    return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+                  } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+                    selected_tag = source_node.tags[source_node.colorTag][0]
+                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+                  } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+                    selected_tag = target_node.tags[source_node.colorTag][0]
+                    return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+                  } else if (source_node.type === 'product') {
+                    return source_node.color
+                  } else if (target_node.type === 'product') {
+                    return target_node.color
+                  }
+                }
+              } else {
+                colorNode = l.color
+              }
+            }
+            if (l.colorParameter === 'local') {
+              // Le couleur est définie dans les parametres locaux du noeud
+              colorNode = l.color
+            }
+
+            return colorNode
+
+            /*if (!l.colorTag || l.colorTag === '') {
               return l.color
             } else {
-              if (l.colormap in data.dataTags) {
-                const selected_tag = getLinkValue(data, l.idLink).color_tag[l.colormap]
+              if (l.colorTag in data.fluxTags) {
+                const tagGroup = l.colorTag
+                if (l.tags[tagGroup].length > 0) {
+                  return data.fluxTags[tagGroup].tags[l.tags[tagGroup][0]].color
+                } else {
+                  return l.color
+                }
+              }
+              if (l.colorTag in data.dataTags) {
+                const selected_tag = getLinkValue(data, l.idLink).color_tag[l.colorTag]
                 if (selected_tag) {
-                  return data.dataTags[l.colormap].tags[selected_tag].color
+                  return data.dataTags[l.colorTag].tags[selected_tag].color
                 }
                 return l.color
               }
-              const source_node = data.nodes[l.idSource]
-              const target_node = data.nodes[l.idTarget]
-              let selected_tag = ''
-              if (source_node.type === 'sector' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (target_node.type === 'sector' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (source_node.type === 'product' && l.colormap in source_node.tags && source_node.tags[l.colormap].length === 1) {
-                selected_tag = source_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              } else if (target_node.type === 'product' && l.colormap in target_node.tags && target_node.tags[l.colormap].length === 1) {
-                selected_tag = target_node.tags[l.colormap][0]
-                return data.tags_catalog[l.colormap].tags[selected_tag].color
-              }
-              if (Object.values(data.tags_catalog[l.colormap].tags).length > 0) {
-                return Object.values(data.tags_catalog[l.colormap].tags)[0].color
+
+              if (Object.values(data.nodeTags[l.colorTag].tags).length > 0) {
+                return Object.values(data.nodeTags[l.colorTag].tags)[0].color
               }
               return l.color
-            }
+            }*/
           }}
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const { dataTags } = data
@@ -309,7 +362,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             /* console.log(val)
             console.log(dataTags) */
             let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
+            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
               if (selected_tags.length == 0 || missing_key) {
                 missing_key = true
@@ -321,7 +374,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
               return {
                 value: 0,
                 display_value: 'default',
-                color_tag: {},
+                tags: {},
                 extension: {}
               }
             }
