@@ -2270,11 +2270,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-
-
-
-
-
       })
       .on('mouseover', function (event, d) {
         d3.select(this).attr('cursor', 'grab')
@@ -2703,18 +2698,46 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const add_labels = () => {
+
+
+
     d3.selectAll('#svg #g_label g').remove()
     const g_label = d3.select('#svg #g_label')
-    data.labels.map(d => {
+    Object.values(data.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y).attr('id', d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')')
-      const rect = gg_label.append('rect').attr('width', d.label_width).attr('height', d.label_height).attr('fill', d.color).attr('stroke', d.color_border).attr('stroke-width', 2).attr('rx', 5)
-      gg_label.append('text').attr('x', d.label_width / 2)
-        .attr('dy', '0.25em')
-        .attr('y', d.label_height / 2)
-        .attr('text-anchor', 'middle')
-        .attr('text-align', 'center')
+      const rect = gg_label.append('rect')
+        .attr('width', d.label_width).attr('height', d.label_height)
+        .attr('fill', d.color)
+        .style('fill-opacity', d.transparent ? 0 : 1)
+        .attr('stroke', d.color_border)
+        .attr('stroke-width', 2).attr('rx', 5)
+
+      gg_label.append('text')
+        .attr('x', d.label_width / 2)
+        // .attr('dy', '0.25em')
+        .attr('y', () => {
+          if (d.position_vert == 'haut') {
+            const tailleText = +d3.select('#' + d.idLabel + ' text').style('font-size').replace('px', '')
+            return tailleText+3
+          } else if (d.position_vert == 'milieu') {
+            return d.label_height / 2
+          } else {
+            return d.label_height - 3
+          }
+        }
+
+        )
+
+        .style('text-anchor', 'middle')
+        .style('text-align', 'center')
         .text(d.name)
 
+      const wrap = textwrap()
+        .bounds({ height: 100, width: d.label_width })
+        .method('tspans')
+
+      d3.select('#' + d.idLabel + ' text')
+        .call(wrap)
 
       gg_label.call(d3.drag<SVGGElement, unknown>()
         .subject(Object).on('drag', function (event) {
@@ -2896,6 +2919,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               .style('width', data.width / evt.transform.k + 'px')
               .style('height', data.height / evt.transform.k + 'px')
           }
+          // data.width=data.width / evt.transform.k
+          // data.height=data.height/ evt.transform.k
+          // drawGrid()
         })).on('dblclick.zoom', null)
 
     // svgSankey.on('click', function (ev: any) {
@@ -3006,10 +3032,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': font }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '100%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
             <g className='grid' id='grid'></g>
+            <g className='g_label' id='g_label'></g>
+
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' ></g>
             <g className='g_nodes' id='g_nodes'></g>
-            <g className='g_label' id='g_label'></g>
+
           </svg>
         </div>
       </div>

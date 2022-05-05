@@ -111,7 +111,7 @@ export const convert_data = (
     data_to_convert.fluxTags = {}
   }
   if (data.labels === undefined) {
-    data.labels = []
+    data.labels = {}
   }
 
   if (Array.isArray(data.nodeTags)) {
