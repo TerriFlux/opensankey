@@ -67,6 +67,7 @@ const MenuPropTypes = {
   view: PropTypes.string.isRequired,
   set_view: PropTypes.func.isRequired,
 
+  additional_selector: PropTypes.element,
 }
 
 
@@ -171,7 +172,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_toast,
     set_show_toast,
     view, set_view,
-    multi_selected_label, set_multi_selected_label
+    multi_selected_label, set_multi_selected_label,
+    additional_selector
 
   }
 ) => {
@@ -685,8 +687,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         {(view == 'none' && !window.SankeyToolsStatic) ? <SankeyEdition
           data={data}
-          set_data={set_data} /> : <></>}
-
+          set_data={set_data}
+          additional_selector={additional_selector} /> : <></>}
       </Navbar>
 
 
