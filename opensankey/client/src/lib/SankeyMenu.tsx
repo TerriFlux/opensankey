@@ -1,12 +1,12 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { compute_auto_sankey, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -71,6 +71,7 @@ const MenuPropTypes = {
   set_view: PropTypes.func.isRequired,
 
   additional_selector: PropTypes.element,
+  set_current_filter: PropTypes.func.isRequired
 }
 
 
@@ -176,11 +177,25 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_toast,
     view, set_view,
     multi_selected_label, set_multi_selected_label,
+    set_current_filter,
     additional_selector
 
   }
 ) => {
   const set_show_link = useState(true)[1]
+  const [legend_position, set_legend_position] = useState(data.legend_position)
+  const [show_apply_layout, set_show_apply_layout] = useState(false)
+  const { filter } = data.display_style
+
+  let max_link_value = 0
+  Object.values(data.links).forEach(link => {
+    const new_max_link_value = findMaxLinkValue(
+      max_link_value,
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
+  })
+  max_link_value += 1
 
   const display_nodes = data.nodes
   let nb_agregation_level = 0
@@ -662,6 +677,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown>
               <NavDropdown id='edition' title="Edition" >
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
+                <Dropdown.Item onClick={ ()=>set_show_apply_layout(true) }>Appliquer mise en page</Dropdown.Item>
                 {edition_menu}
               </NavDropdown >
               <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
@@ -717,9 +733,60 @@ const Menu: FunctionComponent<MenuTypes> = (
               {
                 //MENU PARAMETRE GENERAUX
               }
-              <Accordion.Header>Paramètres généraux</Accordion.Header>
+              <Accordion.Header>Mise en page</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              eventKey="legend"
+              onClick={
+                evt => {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('legend')
+                  }
+                }
+              }>
+              {
+                //MENU PARAMETRE GENERAUX
+              }
+              <Accordion.Header>Légendes</Accordion.Header>
+              <Accordion.Body>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel >Légende X</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[0]}
+                      onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Légende Y</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[1]}
+                      onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
@@ -806,7 +873,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 {/* </Form> */}
 
-                <div style={{ 'display': (multi_selected_nodes.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
+                <div style={{ 'display':'block' }}>{node_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
@@ -1083,7 +1150,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Label Libre</Accordion.Header>
+              <Accordion.Header>Labels Libres</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row}>
                   <Col xs={1}>
@@ -1169,164 +1236,186 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               </Accordion.Body>
             </Accordion.Item>
-
-
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
-              eventKey="5"
+              eventKey="Visualisation"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('5')
+                    set_nav_item_active('Visualisation')
                   }
                 }
               }>
-              <Accordion.Header>Niveaux agrégation</Accordion.Header>
+              <Accordion.Header>Visualisation</Accordion.Header>
               <Accordion.Body>
-                <Row>
-                  <Col>
-                    <FormLabel>Niveau agrégation</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Select id="selectionNode"
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value === '') {
-                            return
+                <Tabs defaultActiveKey="vue" id="visualisation">
+                  <Tab eventKey="vue" title="Vue">
+                    <Row>
+                      <Col xs={3}>
+                        <FormLabel>Sélection Vue</FormLabel>
+                      </Col>
+                      <Col xs={9}>
+                        <Form.Select id="selectionNode"
+                          onChange={
+                            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                              if (evt.target.value === '') {
+                                return
+                              }
+                              set_multi_selected_nodes([])
+                              set_multi_selected_links([])
+                              set_view(evt.target.value)
+                            }
                           }
-                          for (let level = 1; level <= +evt.target.value + 1; level++) {
-                            set_nodes_level(data,display_nodes, level)
-                          }
-                          set_agregation_level(+evt.target.value)
-                          set_data({ ...data })
-                        }
-                      }
-                    >
-                      {[...Array(nb_agregation_level).keys()].map(level => <option key={level} value={(level as unknown) as string} selected={level === agregation_level} >{'Niveau ' + (level + 1)}</option>)}
-                    </Form.Select>
-                  </Col>
-                </Row>
-              </Accordion.Body>
-            </Accordion.Item>
+                        >
+                          <option selected={view == 'none'} value={'none'}>Données actuelles</option>
+                          {data.view.map(d => {
+                            return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+                          })}
+                        </Form.Select>
+                      </Col>
+                    </Row>
 
-            <Accordion.Item
-              eventKey="Vue"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Vue') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('Vue')
-                  }
-                }
-              }>
-              <Accordion.Header>Vue</Accordion.Header>
-              <Accordion.Body>
-                <Row>
-                  <Col xs={3}>
-                    <FormLabel>Sélection Vue</FormLabel>
-                  </Col>
-                  <Col xs={9}>
-                    <Form.Select id="selectionNode"
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value === '') {
-                            return
-                          }
-                          set_multi_selected_nodes([])
-                          set_multi_selected_links([])
-                          set_view(evt.target.value)
-                        }
-                      }
-                    >
-                      <option selected={view == 'none'} value={'none'}>Données actuelles</option>
-                      {data.view.map(d => {
-                        return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                      })}
-                    </Form.Select>
-                  </Col>
-                </Row>
+                    <Table bordered size='sm'>
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Position</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.values(data.view).map(d => {
+                          return (
+                            <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
+                              <td><FormControl size='sm'
+                                value={d.nom}
+                                onChange={evt => {
+                                  data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                                  set_data({ ...data })
+                                }}
+                              /></td>
+                              <td>
+                                <ButtonGroup className="button_position" size="sm">
+                                  <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={
+                                      () => {
+                                        let ind = -1
+                                        data.view.map((v, i) => {
+                                          ind = (v.id == d.id) ? i : ind
+                                        })
+                                        const toShift = data.view[ind]
+                                        data.view.splice(ind, 1)
+                                        data.view.splice(ind - 1, 0, toShift)
+                                        set_data({ ...data })
 
-                <Table bordered size='sm'>
-                  <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Position</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.values(data.view).map(d => {
-                      return (
-                        <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
-                          <td><FormControl size='sm'
-                            value={d.nom}
+                                      }
+                                    }
+                                  ><FaArrowUp /></Button><Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={
+                                      () => {
+                                        let ind = -1
+                                        data.view.map((v, i) => {
+                                          ind = (v.id == d.id) ? i : ind
+                                        })
+                                        const toShift = data.view[ind]
+                                        data.view.splice(ind, 1)
+                                        data.view.splice(ind + 1, 0, toShift)
+                                        set_data({ ...data })
+                                      }
+                                    }
+                                  ><FaArrowDown /></Button>
+                                </ButtonGroup>
+
+                              </td>
+                              <td><Button
+                                size="sm"
+                                variant='danger'
+                                onClick={
+                                  () => {
+                                    let ind = -1
+                                    data.view.map((v, i) => {
+                                      ind = (v.id == d.id) ? i : ind
+                                    })
+                                    data.view.splice(ind, 1)
+                                    set_view('none')
+                                    set_data({ ...data })
+                                  }
+                                }
+                              ><FaMinus /></Button></td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </Table>
+                  </Tab>
+                  <Tab eventKey="flux" title="Filtres Flux">
+                    <Form >
+                      <Form.Group as={Row} >
+                        <Col >
+                          <FormCheck
+                            type='checkbox'
+                            label='Mode structure'
+                            checked={data.show_structure}
                             onChange={evt => {
-                              data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                              data.show_structure = evt.target.checked
                               set_data({ ...data })
                             }}
-                          /></td>
-                          <td>
-                            <ButtonGroup className="button_position" size="sm">
-                              <Button
-                                size="sm"
-                                variant="success"
-                                onClick={
-                                  () => {
-                                    let ind = -1
-                                    data.view.map((v, i) => {
-                                      ind = (v.id == d.id) ? i : ind
-                                    })
-                                    const toShift = data.view[ind]
-                                    data.view.splice(ind, 1)
-                                    data.view.splice(ind - 1, 0, toShift)
-                                    set_data({ ...data })
-
-                                  }
-                                }
-                              ><FaArrowUp /></Button><Button
-                                size="sm"
-                                variant="success"
-                                onClick={
-                                  () => {
-                                    let ind = -1
-                                    data.view.map((v, i) => {
-                                      ind = (v.id == d.id) ? i : ind
-                                    })
-                                    const toShift = data.view[ind]
-                                    data.view.splice(ind, 1)
-                                    data.view.splice(ind + 1, 0, toShift)
-                                    set_data({ ...data })
-                                  }
-                                }
-                              ><FaArrowDown /></Button>
-                            </ButtonGroup>
-
-                          </td>
-                          <td><Button
-                            size="sm"
-                            variant='danger'
-                            onClick={
-                              () => {
-                                let ind = -1
-                                data.view.map((v, i) => {
-                                  ind = (v.id == d.id) ? i : ind
-                                })
-                                data.view.splice(ind, 1)
-                                set_view('none')
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaMinus /></Button></td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-
-                </Table>
-
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel >Filtre</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Range
+                            min="0"
+                            max={max_link_value}
+                            value={filter}
+                            onChange={evt => set_current_filter(Number(evt.target.value))} />
+                        </Col>
+                        <Col>{filter}</Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel>Filtre label</FormLabel>
+                        </Col>
+                        <Col >
+                          <Form.Range
+                            min="0"
+                            max={max_link_value}
+                            value={data.display_style.filter_label}
+                            onChange={evt => {
+                              data.display_style.filter_label = +evt.target.value
+                              set_data({ ...data })
+                            }}
+                          />
+                        </Col>
+                        <Col>{data.display_style.filter_label}</Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel >Flux Nuls:</FormLabel>
+                        </Col>
+                        <Col >
+                          <FormCheck
+                            type='checkbox'
+                            label='Visible'
+                            onChange={evt => {
+                              data.display_style.null_flux = evt.target.checked
+                              set_data({ ...data })
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+                    </Form>
+                  </Tab>
+                </Tabs>
               </Accordion.Body>
             </Accordion.Item>
 
@@ -1449,14 +1538,78 @@ const Menu: FunctionComponent<MenuTypes> = (
           current={false}
         />) : (<></>)
       }
-
+      <ApplyLayoutDialog
+        show_apply_layout={show_apply_layout}
+        set_show_apply_layout={set_show_apply_layout}
+        sankey_data={data}
+        set_sankey_data={set_data}
+      /> 
     </>
   )
 }
 
+const ApplyLayoutDialog = ({show_apply_layout,set_show_apply_layout,sankey_data,set_sankey_data} : any) => {
+  let file_layout: Blob[] | undefined
+  return (
+    <Modal 
+      bsSize="large" 
+      show={show_apply_layout} 
+      onHide={ () => set_show_apply_layout(false) }
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <Modal.Header closeButton>
+        <Modal.Title>Appliquer mise en page</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form >
+          <Form.Group as={Row} >
+            <Col xs={3}>
+              <FormLabel>Fichier de mise en page</FormLabel>
+            </Col>
+            <Col xs={5}>
+              <Form.Control
+                type="file"
+                onChange={(evt: React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
+              />
+            </Col>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                onClick={
+                  () => {
+                    if (file_layout === undefined) {
+                      return
+                    }
+                    const reader = new FileReader()
+                    reader.onload = (() => {
+                      return (
+                        (e: ProgressEvent<FileReader>) => {
+                          let result = (e.target as FileReader).result
+                          if (result) {
+                            result = String(result).split('<br>').join('\\\\n')
+                            const new_layout = JSON.parse(result)
+                            updateLayout(sankey_data, new_layout)
+                            set_sankey_data({ ...sankey_data })
+                          }
+                        }
+                      )
+                    })()
+                    reader.readAsText(file_layout[0])
+                  }
+                }>Appliquer Disposition
+              </Button>
+            </Col>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+    </Modal>
+  )
+}
 
 Menu.propTypes = MenuPropTypes
-
 
 export default Menu
 
