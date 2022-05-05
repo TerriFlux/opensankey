@@ -2883,8 +2883,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.y / data.grid_square_size)
-          d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          if (e.shiftKey) {
+            d.y = d.y - data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.y / data.grid_square_size)
+            d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          }
 
 
           let y_max = 0
@@ -2905,8 +2909,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.y / data.grid_square_size)
-          d.y = (n_pos + 1) * data.grid_square_size
+          if (e.shiftKey) {
+            d.y = d.y + data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.y / data.grid_square_size)
+            d.y = (n_pos + 1) * data.grid_square_size
+          }
 
           //Augumente hauteur svg si le noeud est près du bord
           if (d.y > data.height - 100) {
@@ -2919,9 +2927,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-
+          if (e.shiftKey) {
+            d.x = d.x - data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.x / data.grid_square_size)
+            d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          }
           //Diminue largeur svg si le noeud est près du bord
           if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth-40) {
             data.width -= 50
@@ -2934,8 +2945,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos + 1) * data.grid_square_size
+          if (e.shiftKey) {
+            d.x = d.x + data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.x / data.grid_square_size)
+            d.x = (n_pos + 1) * data.grid_square_size
+          }
 
           //Augumente largeur svg si le noeud est près du bord
           if (d.x > data.width - 100) {

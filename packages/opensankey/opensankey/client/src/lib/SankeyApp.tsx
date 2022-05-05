@@ -75,6 +75,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         data={data}
         set_data={set_data}
         app_name={!window.SankeyToolsStatic ? 'version beta 0.9' : ''}
+        set_current_filter={(
+          new_current_filter: number
+        ) => {
+          const { display_style } = data
+          display_style.filter = +new_current_filter
+          set_data({ ...data })
+        }}
         example_menu={<>
           <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
@@ -117,13 +124,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           <SankeySettingsEdition
             data={data}
             set_data={set_data}
-            set_current_filter={(
-              new_current_filter: number
-            ) => {
-              const { display_style } = data
-              display_style.filter = +new_current_filter
-              set_data({ ...data })
-            }}
           />
         }
         node_edition={
