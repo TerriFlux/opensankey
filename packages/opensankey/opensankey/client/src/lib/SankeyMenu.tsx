@@ -554,8 +554,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
+          <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
           { !window.SankeyToolsStatic ? (<>
-            <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
             <Form.Check
               type="switch"
               checked={data.static_sankey}
