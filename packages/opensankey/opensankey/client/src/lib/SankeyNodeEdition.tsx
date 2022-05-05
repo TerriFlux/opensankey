@@ -2,8 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
-import { default_node } from './SankeyUtils'
-import { reorganize_inputLinksId } from './SankeyLayout'
+import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 
 
 
@@ -178,7 +177,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
-    <Tab eventKey="tags" title="Tags"
+    <Tab eventKey="tags" title="Tags de noeuds"
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
       <Form.Group as={Row} >
         <Col xs={2}>
@@ -269,76 +268,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   return (
     <Row>
       <Col sm={12}>
-        <Tabs defaultActiveKey="general_parameters" id="node_attributes">
-          <Tab eventKey="general_parameters" title="Création">
-            <Form >
-              <Form.Group as={Row} >
-                <Col>
-                  <FormLabel >Taille police</FormLabel>
-                </Col>
-                <Col>
-                  <Form.Range
-                    min="11" max="20"
-                    value={data.display_style.node_font_size}
-                    onChange={evt => {
-                      data.display_style.node_font_size = +evt.target.value
-                      set_data({ ...data })
-                    }}
-                  />
-                </Col>
-                <Col>{data.display_style.node_font_size}</Col>
-              </Form.Group>
-              <Form.Group as={Row} >
-                <Col>
-                  <FormLabel >Labels</FormLabel>
-                </Col>
-                <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Gras'
-                    checked={data.display_style.sector_bold}
-                    onChange={
-                      evt => {
-                        data.display_style.sector_bold = evt.target.checked
-                        data.display_style.product_bold = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-                <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Majuscule'
-                    checked={data.display_style.sector_uppercase}
-                    onChange={
-                      evt => {
-                        data.display_style.sector_uppercase = evt.target.checked
-                        data.display_style.product_uppercase = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-                <Col>
-                  <FormCheck
-                    type='checkbox'
-                    label='Italique'
-                    checked={data.display_style.sector_italic}
-                    onChange={
-                      evt => {
-                        data.display_style.sector_italic = evt.target.checked
-                        data.display_style.product_italic = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-              </Form.Group>
-            </Form>
-          </Tab>
+        <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
+
           {(multi_selected_nodes.length !== 0) ? (
-            <Tab eventKey="nodes_desc" title="Desc"
+            <Tab eventKey="nodes_desc" title="Apparence"
               disabled={/*!(node.colorParameter == 'local')*/false}>
               <Form >
                 <Form.Group as={Row} >
@@ -778,7 +711,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </Tab>) : (<></>)}
           {Object.keys(nodeTags).length > 0 && multi_selected_nodes.length !== 0 ? node_tag : (<></>)}
           {(multi_selected_nodes.length !== 0) ? (
-            <Tab eventKey="node_tooltip" title="Info">
+            <Tab eventKey="node_tooltip" title="Info-bulle">
               <Form >
                 <Row>
                   <FormLabel column sm={1}>Info-bulle:</FormLabel>
@@ -798,42 +731,28 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Row>
               </Form>
             </Tab>): (<></>)}
-          {(multi_selected_nodes.length !== 0) ? (
-            <Tab eventKey="link_parameter" title="Flux">
-
-              <ButtonGroup style={{ 'marginLeft': '10px' }}>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
-                  onClick={
-                    () => {
-                    // reorganize_inputLinksId(selected_node, true, false, display_nodes, display_links)
-                      Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
-                        reorganize_inputLinksId(d, true, false, display_nodes, display_links)
-                      })
-                      set_data({ ...data })
-                    }
-                  }
-                >Réorganiser liens entrants</Button>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px' }}
-                  onClick={
-                    () => {
-                    // reorganize_inputLinksId(selected_node, false, true, display_nodes, display_links)
-                      Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
-                        reorganize_inputLinksId(d, false, true, display_nodes, display_links)
-                      })
-                      set_data({ ...data })
-                    }
-                  }
-                >Réorganiser liens sortants</Button>
-              </ButtonGroup>
-            
-            </Tab>) : (<></>)}
           {children} 
         </Tabs>
+        {(multi_selected_nodes.length !== 0) ? (
+          <ButtonGroup as={Row}>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    // reorganize_inputLinksId(selected_node, true, false, display_nodes, display_links)
+                    Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
+                      reorganize_node_inputLinksId(d, display_nodes, display_links)
+                      reorganize_node_outputLinksId(d, display_nodes, display_links)
+                    })
+                    set_data({ ...data })
+                  }
+                }
+              >Réorganiser flux entrants/sortants</Button>
+            </Col>
 
+          </ButtonGroup>) : (<></>)}
       </Col>
     </Row >
   )

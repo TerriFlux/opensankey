@@ -571,7 +571,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Container>
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
           { !window.SankeyToolsStatic ? (<>
-            <Form.Check
+            {/* <Form.Check
               type="switch"
               checked={data.static_sankey}
               onClick={(evt: any) => {
@@ -580,7 +580,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 set_show_nav(false)
               }}
               label="Static"
-            />
+            /> */}
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
                 <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -755,6 +755,95 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
+                <Form >
+                  <Form.Group>
+                    <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres généraux</b></FormLabel>
+                    <Row>
+                      <Col xs={6}>Police des labels</Col>
+                      <Col xs={6}><Form.Select
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            data.display_style.font_family_selected = evt.target.value
+                            set_data({ ...data })
+                          }
+                        }
+                      >
+                        {data.display_style.font_family.map((d) => {
+                          return <option
+                            key={'ff-' + d}
+                            value={d}
+                            selected={d == data.display_style.font_family_selected}
+                          >{d}</option>
+
+                        })}
+                      </Form.Select></Col>
+                    </Row>
+                  </Form.Group>
+                  <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres par défaut</b></FormLabel>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Taille police</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Range
+                        min="11" max="20"
+                        value={data.display_style.node_font_size}
+                        onChange={evt => {
+                          data.display_style.node_font_size = +evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col>{data.display_style.node_font_size}</Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Labels</FormLabel>
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Gras'
+                        checked={data.display_style.sector_bold}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_bold = evt.target.checked
+                            data.display_style.product_bold = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Majuscule'
+                        checked={data.display_style.sector_uppercase}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_uppercase = evt.target.checked
+                            data.display_style.product_uppercase = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Italique'
+                        checked={data.display_style.sector_italic}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_italic = evt.target.checked
+                            data.display_style.product_italic = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+                </Form>
                 <Row >
                   <Col xs={1}>
                     <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
