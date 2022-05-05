@@ -740,57 +740,6 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
-              eventKey="legend"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('legend')
-                  }
-                }
-              }>
-              {
-                //MENU PARAMETRE GENERAUX
-              }
-              <Accordion.Header>Légendes</Accordion.Header>
-              <Accordion.Body>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel >Légende X</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      type="text"
-                      value={legend_position[0]}
-                      onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
-                      onBlur={() => {
-                        data.legend_position = legend_position
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel>Légende Y</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      type="text"
-                      value={legend_position[1]}
-                      onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
-                      onBlur={() => {
-                        data.legend_position = legend_position
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="2"
               onClick={
                 evt => {
@@ -1418,7 +1367,54 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Tabs>
               </Accordion.Body>
             </Accordion.Item>
-
+            <Accordion.Item
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              eventKey="legend"
+              onClick={
+                evt => {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('legend')
+                  }
+                }
+              }>
+              <Accordion.Header>Légendes</Accordion.Header>
+              <Accordion.Body>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel >Légende X</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[0]}
+                      onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Légende Y</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[1]}
+                      onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+              </Accordion.Body>
+            </Accordion.Item>
             <Accordion.Item
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="0"
