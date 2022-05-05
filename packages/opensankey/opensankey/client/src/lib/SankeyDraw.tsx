@@ -3014,12 +3014,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         })).on('dblclick.zoom', null)
 
-    // svgSankey.on('click', function (ev: any) {
-    //   if (!ev.ctrlKey) {
-    //     set_multi_selected_nodes([])
-    //     set_multi_selected_links([])
-    //   }
-    // })
+    svgSankey.on('click', function (ev: any) {
+      if (!ev.ctrlKey) {
+        set_multi_selected_nodes([])
+        set_multi_selected_links([])
+      }
+    })
 
 
     drawGrid()
