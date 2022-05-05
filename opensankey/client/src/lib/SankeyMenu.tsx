@@ -6,7 +6,7 @@ import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodeProp
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, getLinkValue } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -17,6 +17,9 @@ import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
+    sankey: {
+      header? : string,
+    }
   }
 
 
@@ -551,146 +554,147 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
-
-
-          <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
-          <Form.Check
-            type="switch"
-            checked={data.static_sankey}
-            onClick={(evt: any) => {
-              data.static_sankey = evt.target.checked
-              set_data({ ...data })
-              set_show_nav(false)
-            }}
-            label="Static"
-          />
-          <Nav>
-            <NavDropdown title="Fichiers" id="files" >
-              <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item
-                  onClick={() => {
-                    if (_load_json.current) {
-                      _load_json.current.name = ''
-                      _load_json.current.click()
-                    }
-                  }} >JSON</Dropdown.Item>
-                <Form.Control
-                  type="file"
-                  ref={_load_json}
-                  style={{ display: 'none' }}
-                  onChange={(evt: ChangeEvent) => {
-                    const files = (evt.target as HTMLFormElement).files
-                    const reader = new FileReader()
-                    reader.onload = (() => {
-                      return (e: ProgressEvent<FileReader>) => {
-                        let result = String((e.target as FileReader).result)
-                        const new_data = default_sankey_data()
-                        result = result.split('<br>').join('\\\\n')
-                        const result_data = JSON.parse(result)
-                        Object.assign(new_data, result_data)
-                        if (result_data.version === undefined) {
-                          (new_data.version as any) = undefined
+          { !window.SankeyToolsStatic ? (<>
+            <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+            <Form.Check
+              type="switch"
+              checked={data.static_sankey}
+              onClick={(evt: any) => {
+                data.static_sankey = evt.target.checked
+                set_data({ ...data })
+                set_show_nav(false)
+              }}
+              label="Static"
+            />
+            <Nav>
+              <NavDropdown title="Fichiers" id="files" >
+                <NavDropdown id='ouvrir' title="Ouvrir" >
+                  <Dropdown.Item
+                    onClick={() => {
+                      if (_load_json.current) {
+                        _load_json.current.name = ''
+                        _load_json.current.click()
+                      }
+                    }} >JSON</Dropdown.Item>
+                  <Form.Control
+                    type="file"
+                    ref={_load_json}
+                    style={{ display: 'none' }}
+                    onChange={(evt: ChangeEvent) => {
+                      const files = (evt.target as HTMLFormElement).files
+                      const reader = new FileReader()
+                      reader.onload = (() => {
+                        return (e: ProgressEvent<FileReader>) => {
+                          let result = String((e.target as FileReader).result)
+                          const new_data = default_sankey_data()
+                          result = result.split('<br>').join('\\\\n')
+                          const result_data = JSON.parse(result)
+                          Object.assign(new_data, result_data)
+                          if (result_data.version === undefined) {
+                            (new_data.version as any) = undefined
+                          }
+                          convert_data(new_data)
+                          set_data(new_data)
+                          localStorage.setItem('initial_data', JSON.stringify(new_data))
                         }
-                        convert_data(new_data)
-                        set_data(new_data)
-                        localStorage.setItem('initial_data', JSON.stringify(new_data))
+                      })()
+                      reader.readAsText(files[0])
+                    }}
+                  />
+                  <Dropdown.Item
+                    onClick={() => {
+                      if (_load_simple_excel && _load_simple_excel.current) {
+                        _load_simple_excel.current.name = ''
+                        _load_simple_excel.current.click()
                       }
-                    })()
-                    reader.readAsText(files[0])
-                  }}
-                />
-                <Dropdown.Item
-                  onClick={() => {
-                    if (_load_simple_excel && _load_simple_excel.current) {
-                      _load_simple_excel.current.name = ''
-                      _load_simple_excel.current.click()
-                    }
-                  }}>Excel simple</Dropdown.Item>
-                <Form.Control
-                  type="file"
-                  ref={_load_simple_excel}
-                  style={{ display: 'none' }}
-                  onChange={(evt: ChangeEvent) => {
-                    const files = (evt.target as HTMLFormElement).files
-                    const form_data = new FormData()
-                    form_data.append('file', files ? files[0] : '')
-                    const fetchData = {
-                      method: 'POST',
-                      body: form_data
-                    }
-                    const callback = (server_data: SankeyData & { error: string }) => {
-                      const error = server_data['error']
-                      if (error && error.length != 0) {
-                        alert(error)
-                        return
+                    }}>Excel simple</Dropdown.Item>
+                  <Form.Control
+                    type="file"
+                    ref={_load_simple_excel}
+                    style={{ display: 'none' }}
+                    onChange={(evt: ChangeEvent) => {
+                      const files = (evt.target as HTMLFormElement).files
+                      const form_data = new FormData()
+                      form_data.append('file', files ? files[0] : '')
+                      const fetchData = {
+                        method: 'POST',
+                        body: form_data
                       }
-                      Object.assign(data, server_data)
-                      convert_data(data)
-                      compute_auto_sankey(data, 200)
-                      set_data({ ...data })
-                    }
-                    let root = window.location.href
-                    if (root.includes('sankey-diagrams')) {
-                      root = root.replace('sankey-diagrams/', '')
-                    }
-                    const url = root + url_prefix + '/sankey/upload_simple_excel'
-                    fetch(url, fetchData).then(response => {
-                      response.text().then(text => {
-                        // try {
-                        const json_data = JSON.parse(text)
-                        callback(json_data)
-                        // } catch(err) {
-                        //   alert(err)
-                        // }
+                      const callback = (server_data: SankeyData & { error: string }) => {
+                        const error = server_data['error']
+                        if (error && error.length != 0) {
+                          alert(error)
+                          return
+                        }
+                        Object.assign(data, server_data)
+                        convert_data(data)
+                        compute_auto_sankey(data, 200)
+                        set_data({ ...data })
+                      }
+                      let root = window.location.href
+                      if (root.includes('sankey-diagrams')) {
+                        root = root.replace('sankey-diagrams/', '')
+                      }
+                      const url = root + url_prefix + '/sankey/upload_simple_excel'
+                      fetch(url, fetchData).then(response => {
+                        response.text().then(text => {
+                          // try {
+                          const json_data = JSON.parse(text)
+                          callback(json_data)
+                          // } catch(err) {
+                          //   alert(err)
+                          // }
+                        })
                       })
-                    })
-                  }}
-                />
-                {open_menu}
+                    }}
+                  />
+                  {open_menu}
+                </NavDropdown>
+                <NavDropdown id='enregistrer' title="Enregistrer" >
+                  <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
+                  {save_menu}
+                </NavDropdown>
+                <NavDropdown id='exporter' title="Exporter" >
+                  <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
+                </NavDropdown>
               </NavDropdown>
-              <NavDropdown id='enregistrer' title="Enregistrer" >
-                <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
-                <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
-                {save_menu}
-              </NavDropdown>
-              <NavDropdown id='exporter' title="Exporter" >
-                <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
-                <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
-              </NavDropdown>
-            </NavDropdown>
-            <NavDropdown id='edition' title="Edition" >
-              <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
-              {edition_menu}
-            </NavDropdown >
-            <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
-              {example_menu}
-            </NavDropdown >
-            <NavDropdown title="Portfolio" id="portfolio" >
-              {portfolio_menu}
-            </NavDropdown >
-            {!data.static_sankey ? (
-              <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
-                <ToggleButton
-                  id="toggle-check"
-                  type="checkbox"
-                  variant="outline-primary"
-                  checked={show_nav}
-                  onChange={(e) => { setChecked(e.currentTarget.checked) }}
-                  onClick={toggleShow}
-                  value="1">{menuButton()}
-                </ToggleButton>
-              </ButtonGroup>) : (<></>)
-            }
-            {right_menu}
-          </Nav>
+              <NavDropdown id='edition' title="Edition" >
+                <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
+                {edition_menu}
+              </NavDropdown >
+              <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
+                {example_menu}
+              </NavDropdown >
+              <NavDropdown title="Portfolio" id="portfolio" >
+                {portfolio_menu}
+              </NavDropdown >
+              {!data.static_sankey ? (
+                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
+                  <ToggleButton
+                    id="toggle-check"
+                    type="checkbox"
+                    variant="outline-primary"
+                    checked={show_nav}
+                    onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                    onClick={toggleShow}
+                    value="1">{menuButton()}
+                  </ToggleButton>
+                </ButtonGroup>) : (<></>)
+              }
+              {right_menu}
+            </Nav></>
+          ) :(<><br/>
+            <h2>{window.sankey.header}</h2>
+            <br/></>)}
         </Container>
 
-        {(view == 'none' && !window.SankeyToolsStatic) ? <SankeyEdition
+        {(view == 'none') ? <SankeyEdition
           data={data}
           set_data={set_data}
           additional_selector={additional_selector} /> : <></>}
       </Navbar>
-
 
       {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
