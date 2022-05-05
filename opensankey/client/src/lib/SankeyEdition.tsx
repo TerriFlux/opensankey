@@ -358,78 +358,79 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   <FormLabel className="text-center" >{diagram_label}</FormLabel>
                 </Row>
                 <Row>
-                  <Form.Select
+                  <Form.Select style={{ width: '200px', color:'black' }}
                     onChange={setDiagram}>
                     {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
                   </Form.Select>
                 </Row>
               </Form.Group>
             </Col>) : (<div />)}
-          <Col>
-            { Object.entries(nodeTags).length > 0 || nb_agregation_level > 1 ? (
-              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>) : (<></>)
-            }
-            <Form id='dropdown_banner_node' className='dropdown_banner_node' >
-              {addAllDropDownNode()}
-              { nb_agregation_level > 1 ? (
-                <Form.Group as={Row}>
-                  <Col>
-                    <FormCheck
-                      type='switch'
-                      label='Niveau de détail'
-                      checked={use_level === true}
-                      onChange={ evt => {
-                        if (evt.target.checked) {
-                          set_nodes_level(data,data.nodes, agregation_level+1)
+          { Object.entries(nodeTags).length > 0 || nb_agregation_level > 1 ? (
+            <Col>
+              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>
+              <Form id='dropdown_banner_node' className='dropdown_banner_node' >
+                {addAllDropDownNode()}
+                { nb_agregation_level > 1 ? (
+                  <Form.Group as={Row}>
+                    <Col>
+                      <FormCheck
+                        type='switch'
+                        label='Niveau de détail'
+                        checked={use_level === true}
+                        onChange={ evt => {
+                          if (evt.target.checked) {
+                            set_nodes_level(data,data.nodes, agregation_level+1)
 
-                          set_data({...data})
-                        } else {
-                          const json_data = localStorage.getItem('initial_data')
-                          if (json_data) {
-                            const initial_data = JSON.parse(json_data as string)
-                            Object.values(data.nodes).forEach(n=> {
-                              n.display = initial_data.nodes[n.idNode].display
-                              n.node_visible = initial_data.nodes[n.idNode].node_visible
-                            })
-                            //initial_data.static_sankey = true
+                            set_data({...data})
+                          } else {
+                            const json_data = localStorage.getItem('initial_data')
+                            if (json_data) {
+                              const initial_data = JSON.parse(json_data as string)
+                              Object.values(data.nodes).forEach(n=> {
+                                n.display = initial_data.nodes[n.idNode].display
+                                n.node_visible = initial_data.nodes[n.idNode].node_visible
+                              })
+                              //initial_data.static_sankey = true
+                              set_data({...data})
+                            }
+                          }
+                          set_use_level(evt.target.checked)
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Select id="selectionNode"
+                        disabled={!use_level}
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            if (evt.target.value ==='') {
+                              return
+                            }
+                            for (let level = 1; level <= +evt.target.value + 1; level++) {
+                              set_nodes_level(data,data.nodes, level)
+                            }
+                            set_agregation_level(+evt.target.value)
                             set_data({...data})
                           }
                         }
-                        set_use_level(evt.target.checked)
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Select id="selectionNode"
-                      disabled={!use_level}
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value ==='') {
-                            return
-                          }
-                          for (let level = 1; level <= +evt.target.value + 1; level++) {
-                            set_nodes_level(data,data.nodes, level)
-                          }
-                          set_agregation_level(+evt.target.value)
-                          set_data({...data})
-                        }
-                      }
-                    >
-                      {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
-                    </Form.Select>
-                  </Col>
-                </Form.Group>
-              ) : (<></>)}
-            </Form>
-          </Col>
-          <Col>
-            { Object.entries(fluxTags).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi')}).length > 0 ? (
-              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>) : (<></>)
-            }
-            <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
-              {addAllDropDownFlux()}
-            </Form>
-          </Col>
+                      >
+                        {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
+                      </Form.Select>
+                    </Col>
+                  </Form.Group>
+                ) : (<></>)}
+              </Form>
+            </Col>
+          ): (<></>)}
+          { Object.entries(fluxTags).filter(([key, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi')}).length > 0 ? (
+            <Col>
+              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
+              <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
+                {addAllDropDownFlux()}
+              </Form>
+            </Col>
+            ) : (<></>)
+          }
           {banner_grouptag.length > 0 ?
             (<Col>
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des données</b></FormLabel>
