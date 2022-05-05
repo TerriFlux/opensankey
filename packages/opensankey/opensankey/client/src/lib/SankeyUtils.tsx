@@ -362,7 +362,7 @@ export const default_sankey_data = (): SankeyData => {
     fit_screen    : false,
 
     icon_catalog: {},
-    labels:[],
+    labels:{},
 
     left_shift: 0.4,
     right_shift: 0.5,
