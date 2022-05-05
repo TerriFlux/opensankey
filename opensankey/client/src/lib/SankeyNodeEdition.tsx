@@ -776,7 +776,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
               </Form>
             </Tab>) : (<></>)}
-          {Object.keys(nodeTags).length > 0 ? node_tag : (<></>)}
+          {Object.keys(nodeTags).length > 0 && multi_selected_nodes.length !== 0 ? node_tag : (<></>)}
           {(multi_selected_nodes.length !== 0) ? (
             <Tab eventKey="node_tooltip" title="Info">
               <Form >
