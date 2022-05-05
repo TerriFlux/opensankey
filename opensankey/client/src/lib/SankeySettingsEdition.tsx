@@ -23,28 +23,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   return (
     <>
       <Form>
-        <Form.Group>
-          <Row>
-            <Col xs={6}>Font Family pour le Sankey</Col>
-            <Col xs={6}><Form.Select
-              onChange={
-                (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  data.display_style.font_family_selected = evt.target.value
-                  set_data({ ...data })
-                }
-              }
-            >
-              {data.display_style.font_family.map((d) => {
-                return <option
-                  key={'ff-' + d}
-                  value={d}
-                  selected={d == data.display_style.font_family_selected}
-                >{d}</option>
-
-              })}
-            </Form.Select></Col>
-          </Row>
-        </Form.Group>
         <Form.Group as={Row}>
           <Col xs={6}>Font Charger des icones</Col>
           <Col xs={6}><FormControl
@@ -170,18 +148,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 set_data({ ...data })
               }}
             > Positionnement automatique</Button>
-          </Col>
-          <Col xs={5}>
-            <Button
-              size="sm"
-              onClick={() => {
-                Object.values(data.nodes).forEach(n => {
-                  reorganize_node_inputLinksId(n, data.nodes, data.links)
-                  reorganize_node_outputLinksId(n, data.nodes, data.links)
-                })
-                set_data({ ...data })
-              }}
-            >Reorganiser liens entrants et sortant</Button>
           </Col>
         </Form.Group>
       </Form>
