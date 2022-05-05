@@ -127,7 +127,10 @@ export const compute_total_offsets = (
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
-
+      if (link === undefined) {
+        console.log(node.name)
+        return
+      }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let target_node
         try {
@@ -172,6 +175,10 @@ export const compute_total_offsets = (
   node.inputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
+      if (link === undefined) {
+        console.log(node.name)
+        return
+      }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let source_node
         try {

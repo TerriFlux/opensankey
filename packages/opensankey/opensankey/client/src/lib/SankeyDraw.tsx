@@ -1,13 +1,11 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValueDict, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, default_sankey_data, getLinkValue, setSelectedTags, toPrecision } from './SankeyUtils'
+import { compute_total_offsets,  getLinkValue, setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
-import { FaSleigh, FaSave } from 'react-icons/fa'
-import { attributesToProps } from 'html-react-parser'
 
 
 window.d3 = d3
@@ -16,13 +14,10 @@ const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   select_node: PropTypes.func.isRequired,
-  node_color: PropTypes.func.isRequired,
   node_arrow_visible: PropTypes.func.isRequired,
 
   select_link: PropTypes.func.isRequired,
-  link_color: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
-  link_visible: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
   set_show_nav: PropTypes.func.isRequired,
@@ -50,14 +45,9 @@ export const SankeyDrawDefaultProps = {
   //data: default_sankey_data(),
   set_data: () => null,
   select_node: () => null,
-  node_color: (n: SankeyNode) => n.color,
   node_arrow_visible: (n: SankeyNode) => true,
 
   select_link: () => null,
-  link_color: (l: SankeyLink) => l.color,
-  //link_text: (l:SankeyLink) => getLinkValue(data,l).value,
-  link_visible: (l: SankeyLink) => true,
-  //test_link_value: (nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => getLinkValue(data,l).value,
 
   set_show_nav: () => null,
   set_nav_item_active: () => null,
@@ -84,11 +74,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   test_link_value,
   set_data = SankeyDrawDefaultProps.set_data,
   select_node = SankeyDrawDefaultProps.select_node,
-  node_color = SankeyDrawDefaultProps.node_color,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
   select_link = SankeyDrawDefaultProps.select_link,
-  link_color = SankeyDrawDefaultProps.link_color,
-  link_visible = SankeyDrawDefaultProps.link_visible,
   set_show_nav = SankeyDrawDefaultProps.set_show_nav,
   set_nav_item_active = SankeyDrawDefaultProps.set_nav_item_active,
   nodeTooltipsContent = SankeyDrawDefaultProps.nodeTooltipsContent,
@@ -157,6 +144,128 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x+l.right_horiz_shift+default_horiz_shift+150) : width  
     }})
     return [Math.max(width,window.innerWidth-40),Math.max(height,window.innerHeight-40)]
+  }
+  const node_color=(n: SankeyNode) => {
+    let colorNode
+    if (n.colorParameter === 'groupTag' || data.show_structure) {
+      //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+      //on controle ici qu'il y a bien un favorite tag
+      if (n.colorTag !== undefined && n.colorTag !== '') {
+        const tagGroup = n.colorTag
+        if (n.tags[tagGroup] === undefined ) {
+          colorNode = n.color
+        } else if (n.tags[tagGroup].length > 0) {
+          colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
+        } else {
+          colorNode = n.color
+        }
+      } else {
+        colorNode = n.color
+      }
+    }
+    if (n.colorParameter === 'local') {
+      // Le couleur est définie dans les parametres locaux du noeud
+      colorNode = n.color
+    }
+
+    return colorNode
+  }
+  const link_visible=(l: SankeyLink) => {
+    const { dataTags,fluxTags } = data
+    if (data.show_structure) {
+      if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
+        return false
+      }
+    }
+    if (!data.nodes[l.idSource].node_visible || !data.nodes[l.idTarget].node_visible) {
+      return false
+    }
+    let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
+    const listKey = [] as string[]
+    let missing_key = false
+    Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+      const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
+      if (selected_tags.length == 0 || missing_key) {
+        missing_key = true
+        return
+      }
+      listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+    })
+    if (missing_key) {
+      return false
+    }
+
+    for (const i in listKey) {
+      val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+    }
+    const v = (val as unknown) as SankeyLinkValue
+    let visible = true
+    Object.keys(v.tags).forEach(tag_group => {
+      const selected_tag = v.tags[tag_group]
+      if (selected_tag && tag_group in fluxTags && !fluxTags[tag_group].tags[selected_tag].selected) {
+        visible = false
+      }
+    })
+    if (!visible) {
+      return false
+    }
+    if (v.value === 0) {
+      if (data.display_style.null_flux) {
+        return true
+      }
+      return false
+    }
+    return true
+  }
+  const link_color=(l: SankeyLink) => {
+    let colorNode
+    if (l.colorParameter === 'groupTag' ) {
+      //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+      //on controle ici qu'il y a bien un favorite tag
+      if (l.colorTag !== undefined && l.colorTag !== '' ) {
+        if ( l.colorTag !== 'node_colormap' ) {
+          const tagGroup = l.colorTag
+          const v = getLinkValue(data,l.idLink)
+          if (v === undefined) {
+            return l.color
+          }
+          if (v.tags[tagGroup] in  data.fluxTags[tagGroup].tags) {
+            colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
+          } else {
+            colorNode = l.color
+          }
+        } else {
+          const source_node = data.nodes[l.idSource]
+          const target_node = data.nodes[l.idTarget]
+          let selected_tag = ''
+          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+            selected_tag = source_node.tags[source_node.colorTag][0]
+            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+            selected_tag = target_node.tags[target_node.colorTag][0]
+            return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+            selected_tag = source_node.tags[source_node.colorTag][0]
+            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+            selected_tag = target_node.tags[source_node.colorTag][0]
+            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+          } else if (source_node.type === 'product') {
+            return source_node.color
+          } else if (target_node.type === 'product') {
+            return target_node.color
+          }
+        }
+      } else {
+        colorNode = l.color
+      }
+    }
+    if (l.colorParameter === 'local') {
+      // Le couleur est définie dans les parametres locaux du noeud
+      colorNode = l.color
+    }
+
+    return colorNode
   }
 
   const add_links = (
@@ -531,7 +640,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l)
+        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
       .on('mouseover', function (event, d) {
@@ -2028,7 +2137,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
       .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
-      .attr('fill', d => node_color(d))
+      .attr('fill', d => node_color(d as SankeyNode) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
@@ -2583,7 +2692,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           .attr('fill', () => {
 
-            return (l.gradient) ? data.nodes[l.idTarget].color : link_color(l)
+            return (l.gradient) ? data.nodes[l.idTarget].color : link_color(l) as string
           })
           .attr('fill-opacity', () => {
             const opacity = String(!((data as unknown) as { show_uncert: boolean }).show_uncert && getLinkValue(data, l.idLink).display_value).includes('[') ? 0.85 : 0.85
