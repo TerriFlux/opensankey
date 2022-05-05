@@ -135,6 +135,7 @@ export const SankeyLabelPropTypes = {
   transparent:PropTypes.bool.isRequired,
   color:PropTypes.string.isRequired,
   color_border:PropTypes.string.isRequired,
+  transparent_border:PropTypes.bool.isRequired,
   position_vert:PropTypes.string.isRequired,
   position_horiz:PropTypes.string.isRequired,
 

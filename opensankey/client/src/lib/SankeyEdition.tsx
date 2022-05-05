@@ -63,13 +63,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     set_data({ ...data })
   }
 
-  // const handleMultiDropdown = (selected: string[], tags_group: TagsGroup) => {
-  //   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = selected.includes(tag[1].name))
-  //   set_data({ ...data })
-  // }
   const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup) => {
     const tab_sel = selected.map((d) => {
-      console.log(d)
       return d.value
     })
     Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
@@ -97,19 +92,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
             <Col style={{ width: '200px', color:'black' }}>
-              {/* <DropdownMultiselect
-                key={tags_group.group_name}
-                selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)}
-                name={tags_group.group_name}
-                options={Object.entries(tags_group.tags).map(tag => tag[1].name)}
-                handleOnChange={(selected: string[]) => { handleMultiDropdown(selected, tags_group) }} />
-                 */}
+           
               <MultiSelect
                 valueRenderer={(selected : any, _options :any) => {
                   return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
                 }}
                 labelledBy={'hello'}
-                // hasSelectAll={false}
                 value={selected}
                 options={options}
                 onChange={(selected: [{ label: string, value: string }]) => {
@@ -150,7 +138,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
                 }}
                 labelledBy={'hello'}
-                // hasSelectAll={false}
                 value={selected}
                 options={options}
                 onChange={(selected: [{ label: string, value: string }]) => {
@@ -169,7 +156,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col /* style={{ width: '100px' }} */>
+            <Col>
               {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group) }}>{
                 Object.entries(tags_group.tags).map(([tag_key, tag]) => {
                   return (<option key={tag_key} value={tag.name} selected={tag.selected}>{tag.name}</option>)
@@ -183,14 +170,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col /* style={{ width: '100px' }} */>
-              {/* <DropdownMultiselect
-                key={tags_group.group_name}
-                selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)}
-                name={tags_group.group_name}
-                options={Object.entries(tags_group.tags).map(tag => tag[1].name)}
-              handleOnChange={(selected: string[]) => { handleMultiDropdown(selected, tags_group) }}
-              /> */}
+            <Col >
+              
               <MultiSelect
                 labelledBy={'hello'}
                 value={selected}
@@ -295,16 +276,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    //set_level(agregation_level)
     set_diagram(the_diagram)
-    // let height = 0
-    // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-    // let min_height = 2000
-    // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-    // let max_vert_shift = 0
-    // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-    // new_data.height = Math.max(500, height + max_vert_shift + 200)
+    
     Object.values(data.nodes).forEach(n => {
       if (!n.dimensions) {
         return

@@ -327,30 +327,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
             return colorNode
 
-            /*if (!l.colorTag || l.colorTag === '') {
-              return l.color
-            } else {
-              if (l.colorTag in data.fluxTags) {
-                const tagGroup = l.colorTag
-                if (l.tags[tagGroup].length > 0) {
-                  return data.fluxTags[tagGroup].tags[l.tags[tagGroup][0]].color
-                } else {
-                  return l.color
-                }
-              }
-              if (l.colorTag in data.dataTags) {
-                const selected_tag = getLinkValue(data, l.idLink).color_tag[l.colorTag]
-                if (selected_tag) {
-                  return data.dataTags[l.colorTag].tags[selected_tag].color
-                }
-                return l.color
-              }
 
-              if (Object.values(data.nodeTags[l.colorTag].tags).length > 0) {
-                return Object.values(data.nodeTags[l.colorTag].tags)[0].color
-              }
-              return l.color
-            }*/
           }}
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const { dataTags } = data
@@ -359,8 +336,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
             let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey: string[] = []
-            /* console.log(val)
-            console.log(dataTags) */
+
             let missing_key = false
             Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })

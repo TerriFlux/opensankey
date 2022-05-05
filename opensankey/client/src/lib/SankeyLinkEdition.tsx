@@ -47,7 +47,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     set_tags_selected(dataTagsSelected)
   }
 
-  //renvoie la valeur correspondant aux paramètre selectionné 
+  //renvoie la valeur correspondant aux paramètre selectionné
   const value_selected_parameter = (): SankeyLinkValue => {
     if ( Object.keys(data.links).length === 0 || !(selected_link.idLink in data.links) ) {
       let val = JSON.parse(JSON.stringify(Object(selected_link.value)))
@@ -279,24 +279,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-  // const allLinkValue = () => {
-  //   let display_courbe = true
-  //   const courbe = 1
-  //   if (multi_selected_links.length != 0) {
-  //     const first = multi_selected_links[0].value
-  //     Object.values(tags_selected).map(tag_selected => {
-  //       if (first[tag_selected] === undefined) {
-  //         first[tag_selected] = {}
-  //       }
-  //       first = first[tag_selected]
-  //     })
-  //     // courbe = multi_selected_links[0].value[tags_selected].value
-  //   }
-  //   multi_selected_links.map((d) => {
-  //     display_courbe = (d.value[tags_selected].value == courbe) ? display_courbe : false
-  //   })
-  //   return (display_courbe) ? courbe : 1
-  // }
+
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const link_tag = (
     <Tab eventKey="tags" title="Tags de Flux"
@@ -387,12 +370,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
           <tbody>
             {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) ? Object.entries(fluxTags[tags_group_key].tags).map(
               ([tag_key,tag]) => {
-                // const verif = tag_key
-                // let allChecked = true
-                // multi_selected_links.map((d) => {
-                //   const tmp = getLinkValue(data,d.idLink).tags[tags_group_key]
-                //   allChecked = (tmp === verif) ? allChecked : false
-                // })
+               
                 return (
                   <tr key={tag_key}>
                     <td><FormLabel>{tag.name}</FormLabel></td>
@@ -499,13 +477,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val.value = +evt.target.value
 
                         })
-                        // Object.values(tags_selected).forEach(tag => {
-                        //   if (val[tag] === undefined) {
-                        //     val[tag] = {}
-                        //   }
-                        //   val = val[tag]
-                        // })
-                        // val.value = +evt.target.value
+      
                         set_data({ ...data })
                       }
                     }
@@ -593,23 +565,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormLabel >Position du centre</FormLabel>
                 </Col>
                 <Col>
-                  {/* <Form.Range
-                    min="0" max="1" step="0.01"
-                    value={center}
-                    onChange={
-                      evt => {
-                        if (+evt.target.value - selected_link.shift_gap < 0) {
-                          return
-                        }
-                        if (+evt.target.value + selected_link.shift_gap > 1) {
-                          return
-                        }
-                        selected_link.left_horiz_shift = +evt.target.value - selected_link.shift_gap
-                        selected_link.right_horiz_shift = +evt.target.value + selected_link.shift_gap
-                        set_data({ ...data })
-                      }
-                    }
-                  /> */}
+                 
                   <FormControl
                     min={0} max={1} step={0.01}
                     type={'number'}
@@ -638,24 +594,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormLabel >Ecart entre Poignées</FormLabel>
                 </Col>
                 <Col>
-                  {/* <Form.Range
-                    min="0" max="0.5" step="0.01"
-                    value={selected_link.shift_gap}
-                    onChange={
-                      evt => {
-                        if (center - +evt.target.value < 0) {
-                          return
-                        }
-                        if (center + +evt.target.value > 1) {
-                          return
-                        }
-                        selected_link.shift_gap = +evt.target.value
-                        selected_link.left_horiz_shift = center - selected_link.shift_gap
-                        selected_link.right_horiz_shift = center + selected_link.shift_gap
-                        set_data({ ...data })
-                      }
-                    }
-                  /> */}
+                  
 
                   <FormControl
                     min={0} max={0.5} step={0.01}
@@ -689,11 +628,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormCheck
                     type='checkbox'
                     label='Courbe'
-                    // checked={selected_link.curved}
                     checked={linkType('courbe')}
                     onChange={
                       evt => {
-                        // selected_link.curved = evt.target.checked
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
 
                         set_data({ ...data })
@@ -705,11 +642,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormCheck
                     type='checkbox'
                     label='Flèche'
-                    // checked={selected_link.arrow}
                     checked={linkType('arrow')}
                     onChange={
                       evt => {
-                        // selected_link.arrow = evt.target.checked
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
                         set_data({ ...data })
                       }
@@ -720,13 +655,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <FormCheck
                     type='checkbox'
                     label='Recyclage'
-                    // checked={selected_link.recycling ? selected_link.recycling : undefined}
                     checked={linkType('recycle')}
                     onChange={
                       evt => {
-                        // selected_link.recycling = evt.target.checked
-                        // delete selected_link.left_horiz_shift
-                        // delete selected_link.right_horiz_shift
+         
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.recycling = evt.target.checked
                           delete d.left_horiz_shift
@@ -744,19 +676,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <FormLabel >Courbure</FormLabel>
                 </Col>
-                {/* <Col>
-                  <Form.Range
-                    min="0" max="1" step="0.1"
-                    value={selected_link.curvature}
-                    disabled={!selected_link.curved}
-                    onChange={
-                      evt => {
-                        selected_link.curvature = +evt.target.value
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col> */}
+                
                 <Col>
                   <FormControl
 
@@ -783,11 +703,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='radio'
                     label='Horiz-Horiz'
                     value='hh'
-                    // checked={selected_link.orientation === 'hh'}
                     checked={linkOrientation('hh')}
                     onChange={
                       evt => {
-                        // selected_link.orientation = evt.target.value
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
@@ -801,11 +719,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='radio'
                     label='Vert-Vert'
                     value='vv'
-                    // checked={selected_link.orientation === 'vv'}
                     checked={linkOrientation('vv')}
                     onChange={
                       evt => {
-                        // selected_link.orientation = evt.target.value
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
@@ -819,11 +735,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='radio'
                     label='Vert-Horiz'
                     value='vh'
-                    // checked={selected_link.orientation === 'vh'}
                     checked={linkOrientation('vh')}
                     onChange={
                       evt => {
-                        // selected_link.orientation = evt.target.value
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
@@ -837,11 +751,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     type='radio'
                     label='Horiz-Vert'
                     value='hv'
-                    // checked={selected_link.orientation === 'hv'}
                     checked={linkOrientation('hv')}
                     onChange={
                       evt => {
-                        // selected_link.orientation = evt.target.value
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
@@ -860,11 +772,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='black'
                   type='radio'
                   label='Label en noir'
-                  // checked={selected_link.text_color === 'black'}
                   checked={linkLabelColor('black')}
                   onChange={
                     (evt) => {
-                      // selected_link.text_color = 'black'
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = evt.target.value
                       })
@@ -878,11 +788,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='white'
                   type='radio'
                   label='Label blanc'
-                  // checked={selected_link.text_color === 'white'}
                   checked={linkLabelColor('white')}
                   onChange={
                     (evt) => {
-                      // selected_link.text_color = 'white'
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = evt.target.value
                       })
@@ -896,11 +804,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='same_color'
                   type='radio'
                   label='Label en couleur'
-                  // checked={selected_link.text_color === selected_link.color}
                   checked={linkLabelColor('color')}
                   onChange={
                     () => {
-                      // selected_link.text_color = selected_link.color
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = d.color
                       })
@@ -914,11 +820,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <FormCheck
                 type='checkbox'
                 label='Label visible'
-                // checked={selected_link.label_visible}
                 checked={labelVisibleChecked()}
                 onChange={
                   evt => {
-                    // selected_link.label_visible = evt.target.checked
                     Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                       d.label_visible = evt.target.checked
                     })
@@ -937,10 +841,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   type='radio'
                   label='Début'
                   checked={labelPositionVert('beginning')}
-                  // checked={selected_link.label_position === 'beginning'}
                   onChange={
                     evt => {
-                      // selected_link.label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
@@ -954,11 +856,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='middle'
                   type='radio'
                   label='Milieu'
-                  // checked={selected_link.label_position === 'middle'}
                   checked={labelPositionVert('middle')}
                   onChange={
                     evt => {
-                      // selected_link.label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
@@ -972,11 +872,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='end'
                   type='radio'
                   label='Fin'
-                  // checked={selected_link.label_position === 'end'}
                   checked={labelPositionVert('end')}
                   onChange={
                     evt => {
-                      // selected_link.label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
@@ -990,11 +888,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='frozen'
                   type='radio'
                   label='Figé'
-                  // checked={selected_link.label_position === 'frozen'}
                   checked={labelPositionVert('frozen')}
                   onChange={
                     evt => {
-                      // selected_link.label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
@@ -1009,11 +905,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 type='checkbox'
                 label='Attaché au flux'
                 disabled={selected_link.label_position === 'frozen'}
-                // checked={selected_link.label_on_path && selected_link.label_position !== 'frozen'}
                 checked={labelSticktoLinkDisabled()}
                 onChange={
                   evt => {
-                    // selected_link.label_on_path = evt.target.checked
                     Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                       d.label_on_path = evt.target.checked
                     })
@@ -1031,12 +925,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='below'
                   type='radio'
                   label='Dessous'
-                  // checked={selected_link.orthogonal_label_position === 'below'}
                   checked={labelPositionOrtho('below')}
 
                   onChange={
                     evt => {
-                      // selected_link.orthogonal_label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })
@@ -1050,11 +942,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='middle'
                   type='radio'
                   label='Milieu'
-                  // checked={selected_link.orthogonal_label_position === 'middle'}
                   checked={labelPositionOrtho('middle')}
                   onChange={
                     evt => {
-                      // selected_link.orthogonal_label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })
@@ -1068,12 +958,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='above'
                   type='radio'
                   label='Dessus'
-                  // checked={selected_link.orthogonal_label_position === 'above'}
                   checked={labelPositionOrtho('above')}
 
                   onChange={
                     evt => {
-                      // selected_link.orthogonal_label_position = evt.target.value
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })

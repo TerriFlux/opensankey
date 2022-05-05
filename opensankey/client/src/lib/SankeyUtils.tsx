@@ -123,12 +123,11 @@ export const compute_total_offsets = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
-  //const link_id = link ? links.indexOf(link) : -1
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
-        console.log(node.name)
+
         return
       }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
@@ -176,7 +175,7 @@ export const compute_total_offsets = (
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
-        console.log(node.name)
+
         return
       }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
@@ -533,7 +532,6 @@ export const delete_node = (
   //Ne fait plus appel à delete_link car la fonction modifie le tableau des output/input du node 
   //et ne supprime pas des flux qui devrait l'être 
 
-  //node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
   node.inputLinksId.forEach(idLink => {
     Object.values(data.nodes).map((k) => {
       k.outputLinksId = k.outputLinksId.filter(function (value) {
@@ -543,7 +541,6 @@ export const delete_node = (
     delete data.links[idLink]
   })
 
-  //node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
   node.outputLinksId.forEach(idLink => {
     Object.values(data.nodes).map((k) => {
       k.inputLinksId = k.inputLinksId.filter(function (value) {
@@ -648,22 +645,17 @@ export const uploadExemple = (
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      // try {
+
       const server_data = JSON.parse(text)
       data = default_sankey_data()
       Object.assign(data, server_data)
       convert_data(data)
-      // data.left_shift = 0.40
-      // data.right_shift = 0.50
+
       example_callback(data)
 
       set_data({ ...data })
       localStorage.setItem('initial_data',JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
-      // } catch (err) {
-      //   alert(err)
-      // }
-      //
     })
   })
 }
@@ -682,8 +674,6 @@ export const set_nodes_level = (
     if (node.dimensions['Primaire'].level === level) {
       desagregation(data,node.idNode,'Primaire')
       agregation(data,node.idNode,'Primaire')
-      // node.node_visible = true
-      // node.display = true
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
         if (idParent !== null && idParent !== undefined) {
