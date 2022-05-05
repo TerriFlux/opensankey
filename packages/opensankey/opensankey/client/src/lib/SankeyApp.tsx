@@ -24,6 +24,9 @@ try {
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
+    sankey: {
+      logo? : string,
+    }
   }
 
 const SankeyAppPropTypes = {
@@ -68,114 +71,106 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           return { 'font': d }
         })}
       />
-      { !window.SankeyToolsStatic ? (
-        <Menu
-          data={data}
-          set_data={set_data}
-          app_name='version beta 0.9'
-
-          example_menu={<>
-            <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
-            <ExempleItem
-              exemple_menu={exemple_menu}
-              url_prefix=''
-              data={data}
-              set_data={set_data}
-              current_path={''}
-              set_multi_selected_nodes={set_multi_selected_nodes}
-              set_multi_selected_links={set_multi_selected_links}
-            /></>}
-          portfolio_menu={<>
-            <ArtefactsItem
-              artefacts_menu={artefacts_menu}
-              current_path={''}
-            /></>}
-          logo={logo.replace('static/', 'static/opensankey/')}
-          set_show_nav={set_show_nav}
-          show_nav={show_nav}
-          set_show_toast={set_show_toast}
-          show_toast={show_toast}
-          set_nav_item_active={set_nav_item_active}
-          nav_item_active={nav_item_active}
-          set_selected_node={set_selected_node}
-          selected_node={selected_node}
-          set_multi_selected_nodes={set_multi_selected_nodes}
-          multi_selected_nodes={multi_selected_nodes}
-          set_multi_selected_links={set_multi_selected_links}
-          multi_selected_links={multi_selected_links}
-          set_selected_link={set_selected_link}
-          multi_selected_label={multi_selected_label}
-          set_multi_selected_label={set_multi_selected_label}
+      <Menu
+        data={data}
+        set_data={set_data}
+        app_name={!window.SankeyToolsStatic ? 'version beta 0.9' : ''}
+        example_menu={<>
+          <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+          <ExempleItem
+            exemple_menu={exemple_menu}
+            url_prefix=''
+            data={data}
+            set_data={set_data}
+            current_path={''}
+            set_multi_selected_nodes={set_multi_selected_nodes}
+            set_multi_selected_links={set_multi_selected_links}
+          /></>}
+        portfolio_menu={<>
+          <ArtefactsItem
+            artefacts_menu={artefacts_menu}
+            current_path={''}
+          /></>}
+        logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
+        set_show_nav={set_show_nav}
+        show_nav={show_nav}
+        set_show_toast={set_show_toast}
+        show_toast={show_toast}
+        set_nav_item_active={set_nav_item_active}
+        nav_item_active={nav_item_active}
+        set_selected_node={set_selected_node}
+        selected_node={selected_node}
+        set_multi_selected_nodes={set_multi_selected_nodes}
+        multi_selected_nodes={multi_selected_nodes}
+        set_multi_selected_links={set_multi_selected_links}
+        multi_selected_links={multi_selected_links}
+        set_selected_link={set_selected_link}
+        multi_selected_label={multi_selected_label}
+        set_multi_selected_label={set_multi_selected_label}
 
 
-          selected_link={selected_link}
-          agregation_level={agregation_level}
-          set_agregation_level={set_agregation_level}
-          url_prefix=''
-          settings_edition={
-            <SankeySettingsEdition
-              data={data}
-              set_data={set_data}
-              set_current_filter={(
-                new_current_filter: number
-              ) => {
-                const { display_style } = data
-                display_style.filter = +new_current_filter
-                set_data({ ...data })
-              }}
-            />
-          }
-          node_edition={
-            <SankeyNodeEdition
-              data={data}
-              set_data={set_data}
-              selected_node={selected_node}
-              radio_selected={radio_selected}
-              set_multi_selected_nodes={set_multi_selected_nodes}
-              multi_selected_nodes={multi_selected_nodes}
-            />
-          }
-          link_edition={
-            <SankeyLinkEdition
-              show={true}
-              data={data}
-              set_data={set_data}
-              selected_link={selected_link}
-              set_multi_selected_links={set_multi_selected_links}
-              multi_selected_links={multi_selected_links}
-            />
-          }
-          settings_edition_node_tags={
-            <SankeySettingsEditionElementTags
-              data={data}
-              set_data={set_data}
-              elementTagNameProp='nodeTags'
-              elementNameProp='nodes'
-            />
-          }
-          settings_edition_link_tags={
-            <SankeySettingsEditionElementTags
-              data={data}
-              set_data={set_data}
-              elementTagNameProp='fluxTags'
-              elementNameProp='links'
-            />
-          }
-          settings_edition_data_tags={
-            <SankeySettingsEditionDataTags
-              data={data}
-              set_data={set_data}
-            />
-          }
-          view={view}
-          set_view={set_view}
-        />
-      ) : (<></>)}
-      {(window.SankeyToolsStatic) ? (
-        <SankeyEdition
-          data={data}
-          set_data={set_data} />
-      ) : (<></>)}
+        selected_link={selected_link}
+        agregation_level={agregation_level}
+        set_agregation_level={set_agregation_level}
+        url_prefix=''
+        settings_edition={
+          <SankeySettingsEdition
+            data={data}
+            set_data={set_data}
+            set_current_filter={(
+              new_current_filter: number
+            ) => {
+              const { display_style } = data
+              display_style.filter = +new_current_filter
+              set_data({ ...data })
+            }}
+          />
+        }
+        node_edition={
+          <SankeyNodeEdition
+            data={data}
+            set_data={set_data}
+            selected_node={selected_node}
+            radio_selected={radio_selected}
+            set_multi_selected_nodes={set_multi_selected_nodes}
+            multi_selected_nodes={multi_selected_nodes}
+          />
+        }
+        link_edition={
+          <SankeyLinkEdition
+            show={true}
+            data={data}
+            set_data={set_data}
+            selected_link={selected_link}
+            set_multi_selected_links={set_multi_selected_links}
+            multi_selected_links={multi_selected_links}
+          />
+        }
+        settings_edition_node_tags={
+          <SankeySettingsEditionElementTags
+            data={data}
+            set_data={set_data}
+            elementTagNameProp='nodeTags'
+            elementNameProp='nodes'
+          />
+        }
+        settings_edition_link_tags={
+          <SankeySettingsEditionElementTags
+            data={data}
+            set_data={set_data}
+            elementTagNameProp='fluxTags'
+            elementNameProp='links'
+          />
+        }
+        settings_edition_data_tags={
+          <SankeySettingsEditionDataTags
+            data={data}
+            set_data={set_data}
+          />
+        }
+        view={view}
+        set_view={set_view}
+      />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
       {useEffect(() => {
