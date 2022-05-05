@@ -860,8 +860,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                       variant="danger"
                       onClick={
                         () => {
-                          delete_link(data, selected_link)
-                          set_selected_link(default_link(data))
+                          multi_selected_links.forEach( l=> delete_link(data, l))
+                          set_multi_selected_links([])
+                          //set_selected_link(default_link(data))
 
                           set_data({ ...data })
                         }
@@ -1394,111 +1395,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           select_node={() => null}
           node_arrow_visible={() => null}
           select_link={() => null}
-          //node_color={n => n.color}
-          node_color={(n: SankeyNode) => {
-            let colorNode
-            const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
-            if (n.colorParameter === 'groupTag' || n_data.show_structure) {
-              //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-              //on controle ici qu'il y a bien un favorite tag
-              if (n.colorTag !== undefined && n.colorTag !== '') {
-                const tagGroup = n.colorTag
-                if (n.tags[tagGroup].length > 0) {
-                  colorNode = n_data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
-                } else {
-                  colorNode = n.color
-                }
-              } else {
-                colorNode = n.color
-              }
-            }
-            if (n.colorParameter === 'local') {
-              // Le couleur est définie dans les parametres locaux du noeud
-              colorNode = n.color
-            }
 
-            return colorNode
-          }}
           link_text={link_text}
-          link_visible={(l: SankeyLink) => {
-            const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
-            const { dataTags } = n_data
-            if (!n_data.nodes[l.idSource].node_visible || !n_data.nodes[l.idTarget].node_visible) {
-              return false
-            }
-            let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
-            const listKey = [] as string[]
-            let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-              const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-              if (selected_tags.length == 0 || missing_key) {
-                missing_key = true
-                return
-              }
-              listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
-            })
-            if (missing_key) {
-              return false
-            }
-
-            for (const i in listKey) {
-              //const val_dict = (val as unknown) as SankeyLinkValueDict
-              val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
-            }
-            const v = (val as unknown) as SankeyLinkValue
-            let visible = true
-            Object.keys(v.tags).forEach(tag => {
-              const selected_tag = v.tags[tag]
-              if (selected_tag && tag in dataTags && !dataTags[tag].tags[selected_tag].selected) {
-                visible = false
-              }
-            })
-            if (!visible) {
-              return false
-            }
-            if (v.value === 0) {
-              if (n_data.display_style.null_flux) {
-                return true
-              }
-              return false
-            }
-            return true
-          }}
-          link_color={(l: SankeyLink) => {
-            const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
-
-            if (!l.colorTag || l.colorTag === '') {
-              return l.color
-            } else {
-              if (l.colorTag in n_data.fluxTags) {
-                const selected_tag = getLinkValue(n_data, l.idLink).tags[l.colorTag]
-                if (selected_tag) {
-                  return n_data.fluxTags[l.colorTag].tags[selected_tag].color
-                }
-                return l.color
-              }
-              const source_node = n_data.nodes[l.idSource]
-              const target_node = n_data.nodes[l.idTarget]
-              let selected_tag = ''
-              if (source_node.type === 'sector' && l.colorTag in source_node.tags && source_node.tags[l.colorTag].length === 1) {
-                selected_tag = source_node.tags[l.colorTag][0]
-                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
-              } else if (target_node.type === 'sector' && l.colorTag in target_node.tags && target_node.tags[l.colorTag].length === 1) {
-                selected_tag = target_node.tags[l.colorTag][0]
-                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
-              } else if (source_node.type === 'product' && l.colorTag in source_node.tags && source_node.tags[l.colorTag].length === 1) {
-                selected_tag = source_node.tags[l.colorTag][0]
-                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
-              } else if (target_node.type === 'product' && l.colorTag in target_node.tags && target_node.tags[l.colorTag].length === 1) {
-                selected_tag = target_node.tags[l.colorTag][0]
-                return n_data.nodeTags[l.colorTag].tags[selected_tag].color
-              }
-              if (Object.values(n_data.nodeTags[l.colorTag].tags).length > 0) {
-                return Object.values(n_data.nodeTags[l.colorTag].tags)[0].color
-              }
-              return l.color
-            }
-          }}
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
 

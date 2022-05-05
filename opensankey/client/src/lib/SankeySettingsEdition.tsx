@@ -430,45 +430,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
         <Tab eventKey="flux" title="Flux">
           <Form >
             <Form.Group as={Row} >
-              <Col>
-                <FormLabel >Palette:</FormLabel>
-              </Col>
-              <Col>
-                <FormCheck inline
-                  type='switch'
-                  checked={link_tag_favorite === tags_group_key}
-                  onChange={() => {
-                    Object.values(data.links).forEach(link => link.colorTag = (link.colorTag === tags_group_key) ? '' : tags_group_key)
-                    set_link_tag_favorite((link_tag_favorite === tags_group_key) ? '' : tags_group_key)
-                    set_data({ ...data })
-                  }}
-                />
-              </Col>
-              <Col>
-                <Form.Select
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}>
-
-                  {Object.entries(data.fluxTags).map(
-                    (tags_group, i) =>
-                      <option
-                        key={i}
-                        value={tags_group[0]}
-                        selected={tags_group_key === tags_group[0]} >
-                        {tags_group[1].group_name}
-                      </option>)}
-                  {Object.entries(data.nodeTags).filter(tags_group => tags_group[1].banner === 'multi').map(
-                    (tags_group, i) =>
-                      <option
-                        key={i}
-                        value={tags_group[0]}
-                        selected={tags_group_key === tags_group[0]} >
-                        {tags_group[1].group_name}
-                      </option>)}
-                </Form.Select>
-              </Col>
-            </Form.Group>
-            <Form.Group as={Row} >
               <Col >
                 <FormCheck
                   type='checkbox'
