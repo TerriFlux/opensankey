@@ -429,8 +429,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 {addAllDropDownFlux()}
               </Form>
             </Col>
-            ) : (<></>)
-          }
+          ) : (<></>)}
           {banner_grouptag.length > 0 ?
             (<Col>
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des données</b></FormLabel>
