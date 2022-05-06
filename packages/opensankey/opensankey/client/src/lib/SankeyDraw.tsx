@@ -2754,7 +2754,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.dataTags))
+    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.fluxTags))
     all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
 
       // Ajout du tagGroup.name  
