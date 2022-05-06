@@ -601,7 +601,7 @@ export const convert_data = (
     }
   }
 
-  if (data.flux_types || data.use_flux_types) {
+  if ((data.flux_types || data.use_flux_types) && data.version !== '0.7' && data.version !== '0.8') {
     if (!data.fluxTags['flux_types']) {
       data.fluxTags['flux_types'] = {
         group_name: 'Type de donnée',
