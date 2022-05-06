@@ -4339,6 +4339,10 @@ fieldset:disabled .btn {
   list-style: none;
 }
 
+.modal-body .navbar-nav {
+  flex-direction: row;  
+}
+
 .navbar-nav .nav-link {
   padding-right: 0;
   padding-left: 0;
