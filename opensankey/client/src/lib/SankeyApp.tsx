@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState, useEffect } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
-import SankeyEdition from './SankeyEdition'
+import { addAllDropDownFlux } from './SankeyEdition'
 import { SankeySettingsEdition} from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
@@ -10,7 +10,7 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Dropdown } from 'react-bootstrap'
+import { Col, Dropdown, Form, FormLabel } from 'react-bootstrap'
 import * as d3 from 'd3'
 import GoogleFontLoader from 'react-google-font-loader'
 
@@ -25,6 +25,7 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
+      advanced? : boolean
       logo? : string,
     }
   }
@@ -170,6 +171,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         }
         view={view}
         set_view={set_view}
+        flux_selector={window.sankey.advanced === true ? (
+          <Col lg="auto">
+            <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
+            <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
+              {addAllDropDownFlux(data.fluxTags,data,set_data)}
+            </Form>
+          </Col>) :(<></>)
+        }
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
