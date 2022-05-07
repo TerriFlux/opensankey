@@ -3,6 +3,11 @@ import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { agregation, desagregation } from './SankeyLayout'
 
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
+
 export const addDataTags = (
   dataTags: TagsGroup[],
   v: any,
@@ -359,7 +364,7 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [0, 100],
 
     show_structure: false,
-    fit_screen    : false,
+    fit_screen    : window.SankeyToolsStatic,
 
     icon_catalog: {},
     labels:[],

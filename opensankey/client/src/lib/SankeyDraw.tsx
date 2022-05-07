@@ -2883,6 +2883,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
+          if (d.position === 'relative') {
+            return
+          }
           if (e.shiftKey) {
             d.y = d.y - data.grid_square_size
           } else {
@@ -2909,6 +2912,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
+          if (d.position === 'relative') {
+            return
+          }
           if (e.shiftKey) {
             d.y = d.y + data.grid_square_size
           } else {
@@ -2927,6 +2933,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
+          if (d.position === 'relative') {
+            return
+          }
           if (e.shiftKey) {
             d.x = d.x - data.grid_square_size
           } else {
@@ -2945,6 +2954,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
+          if (d.position === 'relative') {
+            return
+          }
           if (e.shiftKey) {
             d.x = d.x + data.grid_square_size
           } else {
