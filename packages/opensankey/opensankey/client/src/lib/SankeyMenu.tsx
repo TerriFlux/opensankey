@@ -19,6 +19,7 @@ declare const window: Window &
     SankeyToolsStatic: boolean
     sankey: {
       header? : string,
+      advanced? : boolean
     }
   }
 
@@ -71,6 +72,7 @@ const MenuPropTypes = {
   set_view: PropTypes.func.isRequired,
 
   additional_selector: PropTypes.element,
+  flux_selector: PropTypes.element,
   set_current_filter: PropTypes.func.isRequired
 }
 
@@ -178,7 +180,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     view, set_view,
     multi_selected_label, set_multi_selected_label,
     set_current_filter,
-    additional_selector
+    additional_selector,
+    flux_selector
 
   }
 ) => {
@@ -570,17 +573,16 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+          <Form.Check
+            type="switch"
+            checked={window.sankey.advanced}
+            onClick={(evt: any) => {
+              window.sankey.advanced = evt.target.checked
+              set_data({...data})
+            }}
+            label="Advanced"
+          />
           { !window.SankeyToolsStatic ? (<>
-            {/* <Form.Check
-              type="switch"
-              checked={data.static_sankey}
-              onClick={(evt: any) => {
-                data.static_sankey = evt.target.checked
-                set_data({ ...data })
-                set_show_nav(false)
-              }}
-              label="Static"
-            /> */}
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
                 <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -709,7 +711,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         {(view == 'none') ? <SankeyEdition
           data={data}
           set_data={set_data}
-          additional_selector={additional_selector} /> : <></>}
+          additional_selector={additional_selector}
+          flux_selector={flux_selector} /> : <></>}
       </Navbar>
 
       {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
