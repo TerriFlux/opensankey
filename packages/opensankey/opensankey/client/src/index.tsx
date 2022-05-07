@@ -30,6 +30,9 @@ window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : wind
 const data  = default_sankey_data()
 
 if (!window.SankeyToolsStatic) {
+  if (!window.sankey) {
+    window.sankey = {}
+  }
   const json_data = localStorage.getItem('data')
   if (json_data !== null) {
     const new_data = JSON.parse(json_data)

@@ -214,7 +214,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
     const colormap = elementNameParam === 'nodes' ? node_colormap : flux_colormap
     const tags_visible = elementNameParam === 'nodes' ? node_tags_visible : flux_tags_visible
-    if (Object.entries(data[elementGroupName]).length === 0) {
+    if (Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none').length === 0) {
       return (<></>)
     }
     return (
@@ -227,7 +227,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             onChange={evt => {
               let the_colormap = colormap
               if (colormap === '' || colormap === undefined) {
-                the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'one')[0] : ''
+                the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none')[0] : ''
               }
               if (evt.target.checked) {
                 Object.values(data[elementName]).forEach(el => {
@@ -273,7 +273,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 Couleur des noeuds
               </option>) : (<></>)
             }
-            {Object.entries(data[elementGroupName]).map(
+            {Object.entries(data[elementGroupName]).filter(([,tag_group]) => tag_group.banner !== 'none').map(
               (tags_group, i) =>
                 <option
                   key={i}
@@ -350,7 +350,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           alignItems: '<baseline-position>',
           display: 'block'
         }}>
-        <Row style={{ marginTop: marginTop, 'paddingBottom': '5px', 'paddingTop': '5px' }}>
+        <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px',alignItems: 'baseline' }}>
           {(data.static_sankey && sous_filieres) ? (
             <Col>
               <Form.Group as={Col} style={{ marginLeft: '30px' }}>
