@@ -1,12 +1,12 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { compute_auto_sankey, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, getLinkValue } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -17,6 +17,10 @@ import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
+    sankey: {
+      header? : string,
+      advanced? : boolean
+    }
   }
 
 
@@ -67,6 +71,9 @@ const MenuPropTypes = {
   view: PropTypes.string.isRequired,
   set_view: PropTypes.func.isRequired,
 
+  additional_selector: PropTypes.element,
+  flux_selector: PropTypes.element,
+  set_current_filter: PropTypes.func.isRequired
 }
 
 
@@ -171,11 +178,27 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_toast,
     set_show_toast,
     view, set_view,
-    multi_selected_label, set_multi_selected_label
+    multi_selected_label, set_multi_selected_label,
+    set_current_filter,
+    additional_selector,
+    flux_selector
 
   }
 ) => {
   const set_show_link = useState(true)[1]
+  const [legend_position, set_legend_position] = useState(data.legend_position)
+  const [show_apply_layout, set_show_apply_layout] = useState(false)
+  const { filter } = data.display_style
+
+  let max_link_value = 0
+  Object.values(data.links).forEach(link => {
+    const new_max_link_value = findMaxLinkValue(
+      max_link_value,
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
+  })
+  max_link_value += 1
 
   const display_nodes = data.nodes
   let nb_agregation_level = 0
@@ -417,6 +440,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS}
           value={selected}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
@@ -441,6 +467,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_label}
           value={selected_label}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = data.labels.filter(d => (new_sel.includes(d.name)))
@@ -469,6 +498,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
@@ -549,146 +581,148 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
-
-
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+          { !window.SankeyToolsStatic ? (<>
+            <Nav>
+              <NavDropdown title="Fichiers" id="files" >
+                <NavDropdown id='ouvrir' title="Ouvrir" >
+                  <Dropdown.Item
+                    onClick={() => {
+                      if (_load_json.current) {
+                        _load_json.current.name = ''
+                        _load_json.current.click()
+                      }
+                    }} >JSON</Dropdown.Item>
+                  <Form.Control
+                    type="file"
+                    ref={_load_json}
+                    style={{ display: 'none' }}
+                    onChange={(evt: ChangeEvent) => {
+                      const files = (evt.target as HTMLFormElement).files
+                      const reader = new FileReader()
+                      reader.onload = (() => {
+                        return (e: ProgressEvent<FileReader>) => {
+                          let result = String((e.target as FileReader).result)
+                          const new_data = default_sankey_data()
+                          result = result.split('<br>').join('\\\\n')
+                          const result_data = JSON.parse(result)
+                          Object.assign(new_data, result_data)
+                          if (result_data.version === undefined) {
+                            (new_data.version as any) = undefined
+                          }
+                          convert_data(new_data)
+                          set_data(new_data)
+                          localStorage.setItem('initial_data', JSON.stringify(new_data))
+                        }
+                      })()
+                      reader.readAsText(files[0])
+                    }}
+                  />
+                  <Dropdown.Item
+                    onClick={() => {
+                      if (_load_simple_excel && _load_simple_excel.current) {
+                        _load_simple_excel.current.name = ''
+                        _load_simple_excel.current.click()
+                      }
+                    }}>Excel simple</Dropdown.Item>
+                  <Form.Control
+                    type="file"
+                    ref={_load_simple_excel}
+                    style={{ display: 'none' }}
+                    onChange={(evt: ChangeEvent) => {
+                      const files = (evt.target as HTMLFormElement).files
+                      const form_data = new FormData()
+                      form_data.append('file', files ? files[0] : '')
+                      const fetchData = {
+                        method: 'POST',
+                        body: form_data
+                      }
+                      const callback = (server_data: SankeyData & { error: string }) => {
+                        const error = server_data['error']
+                        if (error && error.length != 0) {
+                          alert(error)
+                          return
+                        }
+                        Object.assign(data, server_data)
+                        convert_data(data)
+                        compute_auto_sankey(data, 200)
+                        set_data({ ...data })
+                      }
+                      let root = window.location.href
+                      if (root.includes('sankey-diagrams')) {
+                        root = root.replace('sankey-diagrams/', '')
+                      }
+                      const url = root + url_prefix + '/sankey/upload_simple_excel'
+                      fetch(url, fetchData).then(response => {
+                        response.text().then(text => {
+                          // try {
+                          const json_data = JSON.parse(text)
+                          callback(json_data)
+                          // } catch(err) {
+                          //   alert(err)
+                          // }
+                        })
+                      })
+                    }}
+                  />
+                  {open_menu}
+                </NavDropdown>
+                <NavDropdown id='enregistrer' title="Enregistrer" >
+                  <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
+                  {save_menu}
+                </NavDropdown>
+                <NavDropdown id='exporter' title="Exporter" >
+                  <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
+                </NavDropdown>
+              </NavDropdown>
+              <NavDropdown id='edition' title="Edition" >
+                <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
+                <Dropdown.Item onClick={ ()=>set_show_apply_layout(true) }>Appliquer mise en page</Dropdown.Item>
+                {edition_menu}
+              </NavDropdown >
+              <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
+                {example_menu}
+              </NavDropdown >
+              <NavDropdown title="Portfolio" id="portfolio" >
+                {portfolio_menu}
+              </NavDropdown >
+              {!data.static_sankey ? (
+                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
+                  <ToggleButton
+                    id="toggle-check"
+                    type="checkbox"
+                    variant="outline-primary"
+                    checked={show_nav}
+                    onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                    onClick={toggleShow}
+                    value="1">{menuButton()}
+                  </ToggleButton>
+                </ButtonGroup>) : (<></>)
+              }
+              {right_menu}
+            </Nav></>
+          ) :(<><br/>
+            <h2>{window.sankey.header}</h2>
+            <br/></>)}
           <Form.Check
             type="switch"
-            checked={data.static_sankey}
+            checked={window.sankey.advanced}
             onClick={(evt: any) => {
-              data.static_sankey = evt.target.checked
-              set_data({ ...data })
-              set_show_nav(false)
+              window.sankey.advanced = evt.target.checked
+              set_data({...data})
             }}
-            label="Static"
+            label="Options de filtrage"
           />
-          <Nav>
-            <NavDropdown title="Fichiers" id="files" >
-              <NavDropdown id='ouvrir' title="Ouvrir" >
-                <Dropdown.Item
-                  onClick={() => {
-                    if (_load_json.current) {
-                      _load_json.current.name = ''
-                      _load_json.current.click()
-                    }
-                  }} >JSON</Dropdown.Item>
-                <Form.Control
-                  type="file"
-                  ref={_load_json}
-                  style={{ display: 'none' }}
-                  onChange={(evt: ChangeEvent) => {
-                    const files = (evt.target as HTMLFormElement).files
-                    const reader = new FileReader()
-                    reader.onload = (() => {
-                      return (e: ProgressEvent<FileReader>) => {
-                        let result = String((e.target as FileReader).result)
-                        const new_data = default_sankey_data()
-                        result = result.split('<br>').join('\\\\n')
-                        const result_data = JSON.parse(result)
-                        Object.assign(new_data, result_data)
-                        if (result_data.version === undefined) {
-                          (new_data.version as any) = undefined
-                        }
-                        convert_data(new_data)
-                        set_data(new_data)
-                        localStorage.setItem('initial_data', JSON.stringify(new_data))
-                      }
-                    })()
-                    reader.readAsText(files[0])
-                  }}
-                />
-                <Dropdown.Item
-                  onClick={() => {
-                    if (_load_simple_excel && _load_simple_excel.current) {
-                      _load_simple_excel.current.name = ''
-                      _load_simple_excel.current.click()
-                    }
-                  }}>Excel simple</Dropdown.Item>
-                <Form.Control
-                  type="file"
-                  ref={_load_simple_excel}
-                  style={{ display: 'none' }}
-                  onChange={(evt: ChangeEvent) => {
-                    const files = (evt.target as HTMLFormElement).files
-                    const form_data = new FormData()
-                    form_data.append('file', files ? files[0] : '')
-                    const fetchData = {
-                      method: 'POST',
-                      body: form_data
-                    }
-                    const callback = (server_data: SankeyData & { error: string }) => {
-                      const error = server_data['error']
-                      if (error && error.length != 0) {
-                        alert(error)
-                        return
-                      }
-                      Object.assign(data, server_data)
-                      convert_data(data)
-                      compute_auto_sankey(data, 200)
-                      set_data({ ...data })
-                    }
-                    let root = window.location.href
-                    if (root.includes('sankey-diagrams')) {
-                      root = root.replace('sankey-diagrams/', '')
-                    }
-                    const url = root + url_prefix + '/sankey/upload_simple_excel'
-                    fetch(url, fetchData).then(response => {
-                      response.text().then(text => {
-                        // try {
-                        const json_data = JSON.parse(text)
-                        callback(json_data)
-                        // } catch(err) {
-                        //   alert(err)
-                        // }
-                      })
-                    })
-                  }}
-                />
-                {open_menu}
-              </NavDropdown>
-              <NavDropdown id='enregistrer' title="Enregistrer" >
-                <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
-                <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
-                {save_menu}
-              </NavDropdown>
-              <NavDropdown id='exporter' title="Exporter" >
-                <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
-                <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
-              </NavDropdown>
-            </NavDropdown>
-            <NavDropdown id='edition' title="Edition" >
-              <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
-              {edition_menu}
-            </NavDropdown >
-            <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
-              {example_menu}
-            </NavDropdown >
-            <NavDropdown title="Portfolio" id="portfolio" >
-              {portfolio_menu}
-            </NavDropdown >
-            {!data.static_sankey ? (
-              <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
-                <ToggleButton
-                  id="toggle-check"
-                  type="checkbox"
-                  variant="outline-primary"
-                  checked={show_nav}
-                  onChange={(e) => { setChecked(e.currentTarget.checked) }}
-                  onClick={toggleShow}
-                  value="1">{menuButton()}
-                </ToggleButton>
-              </ButtonGroup>) : (<></>)
-            }
-            {right_menu}
-          </Nav>
         </Container>
 
-        {(view == 'none' && !window.SankeyToolsStatic) ? <SankeyEdition
+        {(view == 'none') ? <SankeyEdition
           data={data}
-          set_data={set_data} /> : <></>}
-
+          set_data={set_data}
+          additional_selector={additional_selector}
+          flux_selector={flux_selector} /> : <></>}
       </Navbar>
-
 
       {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
         <Offcanvas.Body style={{ 'padding': '0px' }}>
@@ -711,7 +745,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               {
                 //MENU PARAMETRE GENERAUX
               }
-              <Accordion.Header>Paramètres généraux</Accordion.Header>
+              <Accordion.Header>Mise en page</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
               </Accordion.Body>
@@ -733,6 +767,95 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
+                <Form >
+                  <Form.Group>
+                    <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres généraux</b></FormLabel>
+                    <Row>
+                      <Col xs={6}>Police des labels</Col>
+                      <Col xs={6}><Form.Select
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            data.display_style.font_family_selected = evt.target.value
+                            set_data({ ...data })
+                          }
+                        }
+                      >
+                        {data.display_style.font_family.map((d) => {
+                          return <option
+                            key={'ff-' + d}
+                            value={d}
+                            selected={d == data.display_style.font_family_selected}
+                          >{d}</option>
+
+                        })}
+                      </Form.Select></Col>
+                    </Row>
+                  </Form.Group>
+                  <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres par défaut</b></FormLabel>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Taille police</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Range
+                        min="11" max="20"
+                        value={data.display_style.node_font_size}
+                        onChange={evt => {
+                          data.display_style.node_font_size = +evt.target.value
+                          set_data({ ...data })
+                        }}
+                      />
+                    </Col>
+                    <Col>{data.display_style.node_font_size}</Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Labels</FormLabel>
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Gras'
+                        checked={data.display_style.sector_bold}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_bold = evt.target.checked
+                            data.display_style.product_bold = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Majuscule'
+                        checked={data.display_style.sector_uppercase}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_uppercase = evt.target.checked
+                            data.display_style.product_uppercase = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Italique'
+                        checked={data.display_style.sector_italic}
+                        onChange={
+                          evt => {
+                            data.display_style.sector_italic = evt.target.checked
+                            data.display_style.product_italic = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+                </Form>
                 <Row >
                   <Col xs={1}>
                     <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
@@ -800,7 +923,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 {/* </Form> */}
 
-                <div style={{ 'display': (multi_selected_nodes.length == 0) ? 'none' : 'block' }}>{node_edition}</div>
+                <div style={{ 'display':'block' }}>{node_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
@@ -1077,7 +1200,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Label Libre</Accordion.Header>
+              <Accordion.Header>Labels Libres</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row}>
                   <Col xs={1}>
@@ -1163,167 +1286,236 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               </Accordion.Body>
             </Accordion.Item>
-
-
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
-              eventKey="5"
+              eventKey="Visualisation"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '5') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
                     set_nav_item_active('')
                   } else {
-                    set_nav_item_active('5')
+                    set_nav_item_active('Visualisation')
                   }
                 }
               }>
-              <Accordion.Header>Niveaux agrégation</Accordion.Header>
+              <Accordion.Header>Visualisation</Accordion.Header>
               <Accordion.Body>
-                <Row>
-                  <Col>
-                    <FormLabel>Niveau agrégation</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Select id="selectionNode"
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value === '') {
-                            return
+                <Tabs defaultActiveKey="vue" id="visualisation">
+                  <Tab eventKey="vue" title="Vue">
+                    <Row>
+                      <Col xs={3}>
+                        <FormLabel>Sélection Vue</FormLabel>
+                      </Col>
+                      <Col xs={9}>
+                        <Form.Select id="selectionNode"
+                          onChange={
+                            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                              if (evt.target.value === '') {
+                                return
+                              }
+                              set_multi_selected_nodes([])
+                              set_multi_selected_links([])
+                              set_view(evt.target.value)
+                            }
                           }
-                          for (let level = 1; level <= +evt.target.value + 1; level++) {
-                            set_nodes_level(data,display_nodes, level)
-                          }
-                          set_agregation_level(+evt.target.value)
-                          set_data({ ...data })
-                        }
-                      }
-                    >
-                      {[...Array(nb_agregation_level).keys()].map(level => <option key={level} value={(level as unknown) as string} selected={level === agregation_level} >{'Niveau ' + (level + 1)}</option>)}
-                    </Form.Select>
-                  </Col>
-                </Row>
-              </Accordion.Body>
-            </Accordion.Item>
+                        >
+                          <option selected={view == 'none'} value={'none'}>Données actuelles</option>
+                          {data.view.map(d => {
+                            return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+                          })}
+                        </Form.Select>
+                      </Col>
+                    </Row>
 
-            <Accordion.Item
-              eventKey="Vue"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Vue') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('Vue')
-                  }
-                }
-              }>
-              <Accordion.Header>Vue</Accordion.Header>
-              <Accordion.Body>
-                <Row>
-                  <Col xs={3}>
-                    <FormLabel>Sélection Vue</FormLabel>
-                  </Col>
-                  <Col xs={9}>
-                    <Form.Select id="selectionNode"
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value === '') {
-                            return
-                          }
-                          set_multi_selected_nodes([])
-                          set_multi_selected_links([])
-                          set_view(evt.target.value)
-                        }
-                      }
-                    >
-                      <option selected={view == 'none'} value={'none'}>Données actuelles</option>
-                      {data.view.map(d => {
-                        return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                      })}
-                    </Form.Select>
-                  </Col>
-                </Row>
+                    <Table bordered size='sm'>
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Position</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.values(data.view).map(d => {
+                          return (
+                            <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
+                              <td><FormControl size='sm'
+                                value={d.nom}
+                                onChange={evt => {
+                                  data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                                  set_data({ ...data })
+                                }}
+                              /></td>
+                              <td>
+                                <ButtonGroup className="button_position" size="sm">
+                                  <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={
+                                      () => {
+                                        let ind = -1
+                                        data.view.map((v, i) => {
+                                          ind = (v.id == d.id) ? i : ind
+                                        })
+                                        const toShift = data.view[ind]
+                                        data.view.splice(ind, 1)
+                                        data.view.splice(ind - 1, 0, toShift)
+                                        set_data({ ...data })
 
-                <Table bordered size='sm'>
-                  <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Position</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.values(data.view).map(d => {
-                      return (
-                        <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
-                          <td><FormControl size='sm'
-                            value={d.nom}
+                                      }
+                                    }
+                                  ><FaArrowUp /></Button><Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={
+                                      () => {
+                                        let ind = -1
+                                        data.view.map((v, i) => {
+                                          ind = (v.id == d.id) ? i : ind
+                                        })
+                                        const toShift = data.view[ind]
+                                        data.view.splice(ind, 1)
+                                        data.view.splice(ind + 1, 0, toShift)
+                                        set_data({ ...data })
+                                      }
+                                    }
+                                  ><FaArrowDown /></Button>
+                                </ButtonGroup>
+
+                              </td>
+                              <td><Button
+                                size="sm"
+                                variant='danger'
+                                onClick={
+                                  () => {
+                                    let ind = -1
+                                    data.view.map((v, i) => {
+                                      ind = (v.id == d.id) ? i : ind
+                                    })
+                                    data.view.splice(ind, 1)
+                                    set_view('none')
+                                    set_data({ ...data })
+                                  }
+                                }
+                              ><FaMinus /></Button></td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </Table>
+                  </Tab>
+                  <Tab eventKey="flux" title="Filtres Flux">
+                    <Form >
+                      <Form.Group as={Row} >
+                        <Col >
+                          <FormCheck
+                            type='checkbox'
+                            label='Mode structure'
+                            checked={data.show_structure}
                             onChange={evt => {
-                              data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                              data.show_structure = evt.target.checked
                               set_data({ ...data })
                             }}
-                          /></td>
-                          <td>
-                            <ButtonGroup className="button_position" size="sm">
-                              <Button
-                                size="sm"
-                                variant="success"
-                                onClick={
-                                  () => {
-                                    let ind = -1
-                                    data.view.map((v, i) => {
-                                      ind = (v.id == d.id) ? i : ind
-                                    })
-                                    const toShift = data.view[ind]
-                                    data.view.splice(ind, 1)
-                                    data.view.splice(ind - 1, 0, toShift)
-                                    set_data({ ...data })
-
-                                  }
-                                }
-                              ><FaArrowUp /></Button><Button
-                                size="sm"
-                                variant="success"
-                                onClick={
-                                  () => {
-                                    let ind = -1
-                                    data.view.map((v, i) => {
-                                      ind = (v.id == d.id) ? i : ind
-                                    })
-                                    const toShift = data.view[ind]
-                                    data.view.splice(ind, 1)
-                                    data.view.splice(ind + 1, 0, toShift)
-                                    set_data({ ...data })
-                                  }
-                                }
-                              ><FaArrowDown /></Button>
-                            </ButtonGroup>
-
-                          </td>
-                          <td><Button
-                            size="sm"
-                            variant='danger'
-                            onClick={
-                              () => {
-                                let ind = -1
-                                data.view.map((v, i) => {
-                                  ind = (v.id == d.id) ? i : ind
-                                })
-                                data.view.splice(ind, 1)
-                                set_view('none')
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaMinus /></Button></td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-
-                </Table>
-
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel >Filtre</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Range
+                            min="0"
+                            max={max_link_value}
+                            value={filter}
+                            onChange={evt => set_current_filter(Number(evt.target.value))} />
+                        </Col>
+                        <Col>{filter}</Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel>Filtre label</FormLabel>
+                        </Col>
+                        <Col >
+                          <Form.Range
+                            min="0"
+                            max={max_link_value}
+                            value={data.display_style.filter_label}
+                            onChange={evt => {
+                              data.display_style.filter_label = +evt.target.value
+                              set_data({ ...data })
+                            }}
+                          />
+                        </Col>
+                        <Col>{data.display_style.filter_label}</Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col>
+                          <FormLabel >Flux Nuls:</FormLabel>
+                        </Col>
+                        <Col >
+                          <FormCheck
+                            type='checkbox'
+                            label='Visible'
+                            onChange={evt => {
+                              data.display_style.null_flux = evt.target.checked
+                              set_data({ ...data })
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+                    </Form>
+                  </Tab>
+                </Tabs>
               </Accordion.Body>
             </Accordion.Item>
-
+            <Accordion.Item
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              eventKey="legend"
+              onClick={
+                evt => {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
+                    set_nav_item_active('')
+                  } else {
+                    set_nav_item_active('legend')
+                  }
+                }
+              }>
+              <Accordion.Header>Légendes</Accordion.Header>
+              <Accordion.Body>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel >Légende X</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[0]}
+                      onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Légende Y</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="text"
+                      value={legend_position[1]}
+                      onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
+                      onBlur={() => {
+                        data.legend_position = legend_position
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+              </Accordion.Body>
+            </Accordion.Item>
             <Accordion.Item
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="0"
@@ -1443,14 +1635,78 @@ const Menu: FunctionComponent<MenuTypes> = (
           current={false}
         />) : (<></>)
       }
-
+      <ApplyLayoutDialog
+        show_apply_layout={show_apply_layout}
+        set_show_apply_layout={set_show_apply_layout}
+        sankey_data={data}
+        set_sankey_data={set_data}
+      /> 
     </>
   )
 }
 
+const ApplyLayoutDialog = ({show_apply_layout,set_show_apply_layout,sankey_data,set_sankey_data} : any) => {
+  let file_layout: Blob[] | undefined
+  return (
+    <Modal 
+      bsSize="large" 
+      show={show_apply_layout} 
+      onHide={ () => set_show_apply_layout(false) }
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <Modal.Header closeButton>
+        <Modal.Title>Appliquer mise en page</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form >
+          <Form.Group as={Row} >
+            <Col xs={3}>
+              <FormLabel>Fichier de mise en page</FormLabel>
+            </Col>
+            <Col xs={5}>
+              <Form.Control
+                type="file"
+                onChange={(evt: React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
+              />
+            </Col>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                onClick={
+                  () => {
+                    if (file_layout === undefined) {
+                      return
+                    }
+                    const reader = new FileReader()
+                    reader.onload = (() => {
+                      return (
+                        (e: ProgressEvent<FileReader>) => {
+                          let result = (e.target as FileReader).result
+                          if (result) {
+                            result = String(result).split('<br>').join('\\\\n')
+                            const new_layout = JSON.parse(result)
+                            updateLayout(sankey_data, new_layout)
+                            set_sankey_data({ ...sankey_data })
+                          }
+                        }
+                      )
+                    })()
+                    reader.readAsText(file_layout[0])
+                  }
+                }>Appliquer Disposition
+              </Button>
+            </Col>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+    </Modal>
+  )
+}
 
 Menu.propTypes = MenuPropTypes
-
 
 export default Menu
 
