@@ -454,7 +454,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           ) : (<></>)}
           {window.sankey.advanced === true && additional_selector ? (additional_selector) : (<></>)}
           { window.sankey && window.sankey.excel ? (
-            <Form.Group as={Col} lg="auto" xs={{ offset: 10 }} >
+            <Form.Group as={Col} lg="auto" xs={{ offset: window.sankey.advanced === true ? 0 : (sous_filieres ? 8 : 10) }} >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
               <Button  href={window.sankey.excel}>
                 Résultats
