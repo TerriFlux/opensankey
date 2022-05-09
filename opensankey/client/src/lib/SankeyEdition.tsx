@@ -122,7 +122,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     })
   })
 
-  const offset = window.sankey.advanced === true ? ( window.sankey.excel ? 10 : 11) : 0
+  const offset = window.sankey.advanced === true ? ( window.sankey.excel ? 0 : 11) : 0
 
   const addAllDropDownNode = () => {
     const banner_grouptag = Object.entries(nodeTags).filter(([key, tags_group]) => tags_group.banner !== 'none' )
@@ -454,7 +454,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           ) : (<></>)}
           {window.sankey.advanced === true && additional_selector ? (additional_selector) : (<></>)}
           { window.sankey && window.sankey.excel ? (
-            <Form.Group as={Col} xs={{ offset: 10 }} >
+            <Form.Group as={Col} lg="auto" xs={{ offset: 10 }} >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
               <Button  href={window.sankey.excel}>
                 Résultats
