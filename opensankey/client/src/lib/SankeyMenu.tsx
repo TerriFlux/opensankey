@@ -440,6 +440,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS}
           value={selected}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
@@ -464,6 +467,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_label}
           value={selected_label}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = data.labels.filter(d => (new_sel.includes(d.name)))
@@ -492,6 +498,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
+          overrideStrings = {{
+            'selectAll': 'Tout sélectionner',
+          }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
@@ -704,7 +713,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               window.sankey.advanced = evt.target.checked
               set_data({...data})
             }}
-            label="Advanced"
+            label="Options de filtrage"
           />
         </Container>
 

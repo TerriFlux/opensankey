@@ -74,6 +74,9 @@ export const addAllDropDownFlux = (fluxTags : TagsCatalog,data:SankeyData,set_da
                 return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
               }}
               labelledBy={'hello'}
+              overrideStrings = {{
+                'selectAll': 'Tout sélectionner',
+              }}
               // hasSelectAll={false}
               value={selected}
               options={options}
@@ -146,6 +149,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
                 }}
                 labelledBy={'hello'}
+                overrideStrings = {{
+                  'selectAll': 'Tout sélectionner',
+                }}
                 // hasSelectAll={false}
                 value={selected}
                 options={options}
@@ -192,6 +198,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               /> */}
               <MultiSelect
                 labelledBy={'hello'}
+                overrideStrings = {{
+                  'selectAll': 'Tout sélectionner',
+                }}
                 value={selected}
                 options={options}
                 onChange={(selected: [{ label: string, value: string }]) => {
@@ -364,12 +373,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 </Row>
               </Form.Group>
             </Col>) : (<div />)}
-          { Object.entries(nodeTags).length > 0 || nb_agregation_level > 1 ? (
+          { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 || nb_agregation_level > 1) ? (
             <Col lg="auto">
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>
               <Form id='dropdown_banner_node' className='dropdown_banner_node' >
                 {addAllDropDownNode()}
-                { window.sankey.advanced === true && nb_agregation_level > 1 ? (
+                { nb_agregation_level > 1 ? (
                   <Form.Group as={Row}>
                     <Col>
                       <FormCheck
@@ -432,7 +441,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form>
             </Col>) : (<></>)
           }
-          { Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0 ? (
+          { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0) ? (
             <Col lg="auto">
               <Form id='dropdown_banner_node' className='dropdown_banner_node'>
                 <Col><FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel></Col>
@@ -450,7 +459,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Button>
             </Form.Group>
           ) : (<></> )}
-          <Col lg="auto"> 
+          <Col lg="auto" xs={{ offset: window.sankey.advanced === true ? 0 : 11 }}> 
             <br/>
             <Button 
               onClick={()=>set_show_readme(true)}
@@ -465,7 +474,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 data.fit_screen = evt.target.checked
                 set_data({ ...data })
               }}
-              label='Ajuster à l écran'
+              label='Taille initiale'
             />
           </Col>  
         </Row>
