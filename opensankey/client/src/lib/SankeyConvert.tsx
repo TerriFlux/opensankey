@@ -111,7 +111,7 @@ export const convert_data = (
     data_to_convert.fluxTags = {}
   }
   if (data.labels === undefined) {
-    data.labels = []
+    data.labels = {}
   }
 
   if (Array.isArray(data.nodeTags)) {
@@ -327,23 +327,13 @@ export const convert_data = (
     display_style.sector_uppercase = true
     display_style.sector_bold = true
     display_style.trade_close = false
-    // if (node_width === undefined) {
-    //   data.node_width = 40
-    // }
-    // if (node_height === undefined) {
-    //   data.node_height = 40
-    // }
+
     data.show_uncert = false
   }
   if (data.version === '0.2') {
     display_style.sector_uppercase = true
     display_style.sector_bold = true
-    // if (node_width === undefined) {
-    //   data.node_width = 40
-    // }
-    // if (node_height === undefined) {
-    //   data.node_height = 40
-    // }
+    
     data.show_uncert = false
   }
   if (data.version === '0.3') {
@@ -354,12 +344,7 @@ export const convert_data = (
     data.display_style.unit = true
   }
 
-  // if (data.node_width === undefined) {
-  //   data.node_width = 10
-  // }
-  // if (node_height === undefined) {
-  //   data.node_height = 40
-  // }
+  
   if (data.display_style.null_flux === undefined) {
     data.display_style.null_flux = false
   }
@@ -538,9 +523,7 @@ export const convert_data = (
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
-      } //else if (!n.tags['Exchanges']) {
-      //   n.tags['Exchanges'] = ['interior']
-      // }
+      }
       if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
         n.position = 'relative'
         n.x = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_hspace as number) : data.trade_close_hspace as number

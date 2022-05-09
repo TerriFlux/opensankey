@@ -132,8 +132,12 @@ export const SankeyLabelPropTypes = {
   // identification
   idLabel: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
+  transparent:PropTypes.bool.isRequired,
   color:PropTypes.string.isRequired,
   color_border:PropTypes.string.isRequired,
+  transparent_border:PropTypes.bool.isRequired,
+  position_vert:PropTypes.string.isRequired,
+  position_horiz:PropTypes.string.isRequired,
 
   label_width: PropTypes.number.isRequired,
   label_height: PropTypes.number.isRequired,
@@ -188,7 +192,7 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  labels: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
+  labels: PropTypes.objectOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
     node_font_size: PropTypes.number.isRequired,
     link_font_size: PropTypes.number.isRequired,

@@ -154,7 +154,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 overrideStrings = {{
                   'selectAll': 'Tout sélectionner',
                 }}
-                // hasSelectAll={false}
                 value={selected}
                 options={options}
                 onChange={(selected: [{ label: string, value: string }]) => {
@@ -168,7 +167,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     })
     return allDD
   }
-
   const addAllDropDownLinks = () => {
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -190,14 +188,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         return (
           <Row key={tags_group.group_name}>
             <Col>{tags_group.group_name}</Col>
-            <Col /* style={{ width: '100px' }} */>
-              {/* <DropdownMultiselect
-                key={tags_group.group_name}
-                selected={Object.entries(tags_group.tags).map(tag => tag[1].selected ? tag[1].name : null).filter(tag_name => tag_name !== null)}
-                name={tags_group.group_name}
-                options={Object.entries(tags_group.tags).map(tag => tag[1].name)}
-              handleOnChange={(selected: string[]) => { handleMultiDropdown(selected, tags_group) }}
-              /> */}
+            <Col >
+              
               <MultiSelect
                 labelledBy={'hello'}
                 overrideStrings = {{
@@ -305,16 +297,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    //set_level(agregation_level)
     set_diagram(the_diagram)
-    // let height = 0
-    // Object.values(data.nodes).forEach(n => height = (n.y && n.node_visible) ? Math.max(height, n.y) : height)
-    // let min_height = 2000
-    // Object.values(data.nodes).forEach(n => min_height = (n.y && n.node_visible) ? Math.min(min_height, n.y) : min_height)
-    // let max_vert_shift = 0
-    // Object.values(data.links).forEach(l => max_vert_shift = l.vert_shift ? Math.max(max_vert_shift, l.vert_shift) : max_vert_shift)
-
-    // new_data.height = Math.max(500, height + max_vert_shift + 200)
+    
     Object.values(data.nodes).forEach(n => {
       if (!n.dimensions) {
         return
