@@ -122,7 +122,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     })
   })
 
-  const offset = window.sankey.advanced === true ? ( window.sankey.excel ? 0 : 11) : 0
+  const offset = window.sankey.advanced === true ? 0 : ( window.sankey.excel ? 0 : 11)
 
   const addAllDropDownNode = () => {
     const banner_grouptag = Object.entries(nodeTags).filter(([key, tags_group]) => tags_group.banner !== 'none' )
