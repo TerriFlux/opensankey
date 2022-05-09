@@ -450,7 +450,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               </Form>
             </Col>
           ) : (<></>)}
-          {additional_selector ? (additional_selector) : (<></>)}
+          {window.sankey.advanced === true && additional_selector ? (additional_selector) : (<></>)}
           { window.sankey && window.sankey.excel ? (
             <Form.Group as={Col} >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
