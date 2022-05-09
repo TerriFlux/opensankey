@@ -2316,7 +2316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // if (d.show_value) {
         //   return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo') + ' : ' + toPrecision(total) //+ ((data as unknown) as { [key: string]: string[] }).units_names[0]
         // } else {
-        return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo')
+        return d.name.split(' - ')[0].replace('-', ' ')
         // }
       })
       .each(d => {
