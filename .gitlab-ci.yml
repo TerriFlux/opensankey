@@ -47,6 +47,7 @@ deploy_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
+    - git config --global --add safe.directory /home/ubuntu/test_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"

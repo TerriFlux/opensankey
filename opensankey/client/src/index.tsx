@@ -30,6 +30,9 @@ window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : wind
 const data  = default_sankey_data()
 
 if (!window.SankeyToolsStatic) {
+  if (!window.sankey) {
+    window.sankey = {}
+  }
   const json_data = localStorage.getItem('data')
   if (json_data !== null) {
     const new_data = JSON.parse(json_data)
@@ -87,23 +90,6 @@ if (!window.SankeyToolsStatic) {
   }
   render(
     <>
-      {window.sankey.has_header ? (
-        <div className="container">
-          <div className="row">
-            <div className="col-sm-4">
-              <br/>
-              <img src={window.sankey.logo} width={window.sankey.logo_width}/>
-              <br/>
-            </div>
-            <div className="col-sm-8">
-              <br/>
-              <h2>{window.sankey.header}</h2>
-              <br/>
-            </div>
-          </div>
-        </div>
-      ) : (<></>)
-      }
       <SankeyApp 
         sankey_data={data}
         exemple_menu={{}}
@@ -115,7 +101,7 @@ if (!window.SankeyToolsStatic) {
             <div className="row" style={{ 'marginTop' : '0px' }} >
               <div className="col-sm-11">
                 <br/>
-                <p>Réalisé par TerriFlux - <a href="https://terriflux.fr">www.terriflux.fr</a></p>
+                <p>Réalisé par TerriFlux - <a href="https://terriflux.com">www.terriflux.fr</a></p>
               </div>
               <div className="col-sm-1">
                 <img src="logo_terriflux.png" width="100"/>

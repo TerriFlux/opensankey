@@ -660,8 +660,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         sankeyTooltip
           .style('opacity', 1)
         sankeyTooltip
-          .style('top', (event.layerY - 10) + 'px')
-          .style('left', (event.layerX + 10) + 'px')
+          .style('top', (margin_top+50) + 'px')
+          .style('left', 30 + 'px')
       })
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
@@ -2162,8 +2162,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
 
-            .style('top', (event.layerY - 10) + 'px')
-            .style('left', (event.layerX + 10) + 'px')
+            .style('top', (margin_top+50) + 'px')
+            .style('left', 30 + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2316,7 +2316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // if (d.show_value) {
         //   return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo') + ' : ' + toPrecision(total) //+ ((data as unknown) as { [key: string]: string[] }).units_names[0]
         // } else {
-        return d.name.split(' - ')[0].replace('-', ' ').replace('Transformation', 'Transfo')
+        return d.name.split(' - ')[0].replace('-', ' ')
         // }
       })
       .each(d => {
@@ -2388,8 +2388,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if (d.label_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
-            .style('top', (event.layerY - 10) + 'px')
-            .style('left', (event.layerX + 10) + 'px')
+            .style('top', (margin_top+50) + 'px')
+            .style('left', 30 + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2748,13 +2748,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#g_legend').selectAll('*').remove()
 
-    const legend = d3.select('#g_legend').style('transform', 'translate(' + data.legend_position[0]+25 + 'px,' + data.legend_position[1] + 'px)').append('g')
+    const legend = d3.select('#g_legend').style('transform', 'translate(' + (data.legend_position[0]+25) + 'px,' + data.legend_position[1] + 'px)').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.dataTags))
+    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.fluxTags))
     all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
 
       // Ajout du tagGroup.name  
@@ -2883,8 +2883,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.y / data.grid_square_size)
-          d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          if (d.position === 'relative') {
+            return
+          }
+          if (e.shiftKey) {
+            d.y = d.y - data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.y / data.grid_square_size)
+            d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          }
 
 
           let y_max = 0
@@ -2905,8 +2912,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.y / data.grid_square_size)
-          d.y = (n_pos + 1) * data.grid_square_size
+          if (d.position === 'relative') {
+            return
+          }
+          if (e.shiftKey) {
+            d.y = d.y + data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.y / data.grid_square_size)
+            d.y = (n_pos + 1) * data.grid_square_size
+          }
 
           //Augumente hauteur svg si le noeud est près du bord
           if (d.y > data.height - 100) {
@@ -2919,9 +2933,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-
+          if (d.position === 'relative') {
+            return
+          }
+          if (e.shiftKey) {
+            d.x = d.x - data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.x / data.grid_square_size)
+            d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+          }
           //Diminue largeur svg si le noeud est près du bord
           if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth-40) {
             data.width -= 50
@@ -2934,8 +2954,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return d.name
           }
         }).includes(f.name)).map(d => {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos + 1) * data.grid_square_size
+          if (d.position === 'relative') {
+            return
+          }
+          if (e.shiftKey) {
+            d.x = d.x + data.grid_square_size
+          } else {
+            const n_pos = Math.trunc(d.x / data.grid_square_size)
+            d.x = (n_pos + 1) * data.grid_square_size
+          }
 
           //Augumente largeur svg si le noeud est près du bord
           if (d.x > data.width - 100) {
@@ -2999,12 +3026,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         })).on('dblclick.zoom', null)
 
-    // svgSankey.on('click', function (ev: any) {
-    //   if (!ev.ctrlKey) {
-    //     set_multi_selected_nodes([])
-    //     set_multi_selected_links([])
-    //   }
-    // })
+    svgSankey.on('click', function (ev: any) {
+      if (!ev.ctrlKey) {
+        set_multi_selected_nodes([])
+        set_multi_selected_links([])
+      }
+    })
 
 
     drawGrid()
