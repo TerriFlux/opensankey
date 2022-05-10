@@ -25,10 +25,12 @@ declare const window: Window &
     }
    }
 
-window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : window.SankeyToolsStatic
+window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? true : window.SankeyToolsStatic
+if (!window.sankey) {
+  window.sankey = {}
+}
 
 const data  = default_sankey_data()
-
 if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
     window.sankey = {}
@@ -40,6 +42,8 @@ if (!window.SankeyToolsStatic) {
     data.nodeTags = {}
     Object.assign(data, new_data)
   }
+  data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
+
   const fetchData = {
     method: 'POST'
   }
@@ -78,8 +82,10 @@ if (!window.SankeyToolsStatic) {
   })
 
 } else {
-  localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
-  localStorage.setItem('initial_data',JSON.stringify(window.sankey.filiere))
+  if (window.sankey.filiere ) {
+    localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
+    localStorage.setItem('initial_data',JSON.stringify(window.sankey.filiere))
+  }
   const json_data = localStorage.getItem('data')
   if (json_data !== null && json_data !== 'undefined' ) {
     const new_data = JSON.parse(json_data)
