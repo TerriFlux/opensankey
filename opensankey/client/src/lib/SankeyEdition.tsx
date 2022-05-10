@@ -6,12 +6,12 @@ import { MultiSelect } from 'react-multi-select-component'
 import parse from 'html-react-parser'
 import { convert_data } from './SankeyConvert'
 import { set_nodes_level } from './SankeyUtils'
+import * as d3 from 'd3'
 
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  additional_selector: PropTypes.element,
-  flux_selector: PropTypes.element,
+  additional_selector: PropTypes.element
 }
 
 declare const window: Window &
@@ -52,45 +52,42 @@ export const addAllDropDownFlux = (fluxTags : TagsCatalog,data:SankeyData,set_da
     const the_tags_group = tags_group as TagsGroup
     if (the_tags_group.banner == 'one') {
       return (
-        <Row key={the_tags_group.group_name}>
-          <Col>{the_tags_group.group_name}</Col>
-          <Col style={{ width: '200px', color:'black' }}>
-            {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group,data,set_data) }}>{
-              Object.entries(the_tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
-              })}
-            </Form.Select>}
-          </Col>
-        </Row>)
+        <>
+          <FormLabel>{the_tags_group.group_name}</FormLabel>
+          {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group,data,set_data) }}>{
+            Object.entries(the_tags_group.tags).map(([tag_key, tag]) => {
+              return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+            })}
+          </Form.Select>}
+        </>)
     } else if (the_tags_group.banner == 'multi') {
       const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       return (
-        <Row key={the_tags_group.group_name}>
-          <Col>{the_tags_group.group_name}</Col>
-          <Col style={{ width: '200px', color:'black' }}>
-            <MultiSelect
-              valueRenderer={(selected : any, _options :any) => {
-                return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
-              }}
-              labelledBy={'hello'}
-              overrideStrings = {{
-                'selectAll': 'Tout sélectionner',
-              }}
-              // hasSelectAll={false}
-              value={selected}
-              options={options}
-              onChange={(selected: [{ label: string, value: string }]) => {
-                handleMultiDropdown(selected, the_tags_group,data,set_data)
-              }} />
-          </Col>
-        </Row>)
+        <>
+          <FormLabel>{the_tags_group.group_name}</FormLabel>
+          <MultiSelect
+            style={{ color:'black' }}
+            valueRenderer={(selected : any, _options :any) => {
+              return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
+            }}
+            labelledBy={'hello'}
+            overrideStrings = {{
+              'selectAll': 'Tout sélectionner',
+            }}
+            // hasSelectAll={false}
+            value={selected}
+            options={options}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              handleMultiDropdown(selected, the_tags_group,data,set_data)
+            }} />
+        </>)
     }
   })
   return allDD
 }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,additional_selector,flux_selector }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,additional_selector }) => {
   const { nodeTags,fluxTags, dataTags } = data
   const node_tags_visible = Object.keys(data.nodeTags).length > 0 
   const flux_tags_visible = Object.keys(data.fluxTags).length > 0
@@ -122,45 +119,41 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     })
   })
 
-  const offset = window.sankey.advanced === true ? ( window.sankey.excel ? 10 : 11) : 0
-
   const addAllDropDownNode = () => {
     const banner_grouptag = Object.entries(nodeTags).filter(([key, tags_group]) => tags_group.banner !== 'none' )
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
         return (
-          <Row key={tags_group.group_name}>
-            <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '200px', color:'black' }}>
-              {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-                Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                  return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
-                })}
-              </Form.Select>}
-            </Col>
-          </Row>)
+          <>
+            <FormLabel style={{ color:color }}>{tags_group.group_name}</FormLabel>
+            {<Form.Select  style={{ width: '200px', color:'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
+                return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+              })}
+            </Form.Select>}
+          </>)
       } else if (tags_group.banner == 'multi') {
         const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
         const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
         return (
-          <Row key={tags_group.group_name}>
-            <Col>{tags_group.group_name}</Col>
-            <Col style={{ width: '200px', color:'black' }}>
-              <MultiSelect
-                valueRenderer={(selected : any, _options :any) => {
-                  return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
-                }}
-                labelledBy={'hello'}
-                overrideStrings = {{
-                  'selectAll': 'Tout sélectionner',
-                }}
-                value={selected}
-                options={options}
-                onChange={(selected: [{ label: string, value: string }]) => {
-                  handleMultiDropdown(selected, tags_group,data,set_data)
-                }} />
-            </Col>
-          </Row>)
+          <>
+            <FormLabel style={{ color:color }}>{tags_group.group_name}</FormLabel>
+            <MultiSelect
+              style={{ color:'black' }}
+              valueRenderer={(selected : any, _options :any) => {
+                return selected.length? selected.map(({ label } : any) => label+', '): 'Aucun tag sélectionné'
+              }}
+              labelledBy={'hello'}
+              overrideStrings = {{
+                'selectAll': 'Tout sélectionner',
+              }}
+              // hasSelectAll={false}
+              value={selected}
+              options={options}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                handleMultiDropdown(selected, tags_group,data,set_data)
+              }} />
+          </>)
       }
 
 
@@ -172,36 +165,32 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
         return (
-          <Row key={tags_group.group_name}>
-            <Col>{tags_group.group_name}</Col>
-            <Col /* style={{ width: '100px' }} */>
-              {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-                Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                  return (<option key={tag_key} value={tag.name} selected={tag.selected}>{tag.name}</option>)
-                })}
-              </Form.Select>}
-            </Col>
-          </Row>)
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
+                return (<option key={tag_key} value={tag.name} selected={tag.selected}>{tag.name}</option>)
+              })}
+            </Form.Select>}
+          </>)
       } else if (tags_group.banner == 'multi') {
         const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
         const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
         return (
-          <Row key={tags_group.group_name}>
-            <Col>{tags_group.group_name}</Col>
-            <Col >
-              
-              <MultiSelect
-                labelledBy={'hello'}
-                overrideStrings = {{
-                  'selectAll': 'Tout sélectionner',
-                }}
-                value={selected}
-                options={options}
-                onChange={(selected: [{ label: string, value: string }]) => {
-                  handleMultiDropdown(selected, tags_group,data,set_data)
-                }} />
-            </Col>
-          </Row>)
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            <MultiSelect
+              style={{ color:'black' }}
+              labelledBy={'hello'}
+              overrideStrings = {{
+                'selectAll': 'Tout sélectionner',
+              }}
+              value={selected}
+              options={options}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                handleMultiDropdown(selected, tags_group,data,set_data)
+              }} />
+          </>)
       }
 
 
@@ -220,72 +209,68 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
       return (<></>)
     }
     return (
-      <Row>
-        <Col>
-          <FormCheck
-            type='switch'
-            label={title}
-            checked={use_colormap === true}
-            onChange={evt => {
-              let the_colormap = colormap
-              if (colormap === '' || colormap === undefined) {
-                the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none')[0] : ''
-              }
-              if (evt.target.checked) {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = the_colormap
-                })
-              } else {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'local'
-                })
-              }
-              set_use_colormap(evt.target.checked)
-              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
-              if (the_colormap in data[elementGroupName]) {
-                data[elementGroupName][the_colormap].show_legend = evt.target.checked
-              }
-              set_colormap(the_colormap)
-              set_data({ ...data })
-            }}
-          />
-        </Col>
-        <Col>
-          <Form.Select
-            disabled={!use_colormap}
-            onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = evt.target.value
-                })
-                set_colormap(evt.target.value)
-                Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
-                if ( evt.target.value !== 'node_colormap' ) {
-                  data[elementGroupName][evt.target.value].show_legend = true
-                }
-                set_data({ ...data })
-              }}>
-            { elementNameParam === 'links' ? (
-              <option
-                key={node_colormap}
-                value={'node_colormap'}
-                selected={colormap === 'node_colormap'} >
-                Couleur des noeuds
-              </option>) : (<></>)
+      <>
+        <FormCheck
+          type='switch'
+          label={title}
+          checked={use_colormap === true}
+          onChange={evt => {
+            let the_colormap = colormap
+            if (colormap === '' || colormap === undefined) {
+              the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none')[0] : ''
             }
-            {Object.entries(data[elementGroupName]).filter(([,tag_group]) => tag_group.banner !== 'none').map(
-              (tags_group, i) =>
-                <option
-                  key={i}
-                  value={tags_group[0]}
-                  selected={colormap === tags_group[0]} >
-                  {tags_group[1].group_name}
-                </option>)}
-          </Form.Select>
-        </Col>
-      </Row>
+            if (evt.target.checked) {
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'groupTag'
+                el.colorTag = the_colormap
+              })
+            } else {
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'local'
+              })
+            }
+            set_use_colormap(evt.target.checked)
+            Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
+            if (the_colormap in data[elementGroupName]) {
+              data[elementGroupName][the_colormap].show_legend = evt.target.checked
+            }
+            set_colormap(the_colormap)
+            set_data({ ...data })
+          }}
+        />
+        <Form.Select
+          disabled={!use_colormap}
+          onChange={
+            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'groupTag'
+                el.colorTag = evt.target.value
+              })
+              set_colormap(evt.target.value)
+              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
+              if ( evt.target.value !== 'node_colormap' ) {
+                data[elementGroupName][evt.target.value].show_legend = true
+              }
+              set_data({ ...data })
+            }}>
+          { elementNameParam === 'links' ? (
+            <option
+              key={node_colormap}
+              value={'node_colormap'}
+              selected={colormap === 'node_colormap'} >
+                Couleur des noeuds
+            </option>) : (<></>)
+          }
+          {Object.entries(data[elementGroupName]).filter(([,tag_group]) => tag_group.banner !== 'none').map(
+            (tags_group, i) =>
+              <option
+                key={i}
+                value={tags_group[0]}
+                selected={colormap === tags_group[0]} >
+                {tags_group[1].group_name}
+              </option>)}
+        </Form.Select>
+      </>
     )
   }
 
@@ -310,9 +295,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
       })
     })
-    //for (let level = 1; level <= +evt.target.value + 1; level++) {
     set_nodes_level(data,data.nodes,agregation_level+1)
-    //}
     localStorage.setItem('initial_data',JSON.stringify(new_data))
     set_data({...new_data})
   }
@@ -325,13 +308,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
   const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
-  let color = 'black'
-  let backgroundColor = 'gainsboro'
-  if (data.static_sankey) {
-    color = 'white'
-    backgroundColor = '#3c3c3c'
-  }
+  const color = 'black'
+  const backgroundColor = 'gainsboro'
+  // if (data.static_sankey) {
+  //   color = 'white'
+  //   backgroundColor = '#3c3c3c'
+  // }
 
+  const borderLeft = window.sankey.advanced === true ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
+  const opacity = window.sankey.advanced === true ? '0.3' : '0'
   return (
     <>
       <div className='herowrap'
@@ -340,129 +325,137 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           backgroundColor: backgroundColor,
           marginLeft: '0',
           paddingBottom: '3px',
-          justifyContent: 'space-evenly',
           alignItems: '<baseline-position>',
           display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px',alignItems: 'baseline' }}>
-          {(data.static_sankey && sous_filieres) ? (
-            <Col lg="auto">
-              <Form.Group as={Col} style={{ marginLeft: '30px' }}>
-                <Row>
-                  <FormLabel className="text-center" >{diagram_label}</FormLabel>
-                </Row>
-                <Row>
-                  <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={setDiagram}>
-                    {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
-                  </Form.Select>
-                </Row>
-              </Form.Group>
-            </Col>) : (<div />)}
-          { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 || nb_agregation_level > 1) ? (
-            <Col lg="auto">
-              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des noeuds</b></FormLabel>
-              <Form id='dropdown_banner_node' className='dropdown_banner_node' >
-                {addAllDropDownNode()}
-                { nb_agregation_level > 1 ? (
-                  <Form.Group as={Row}>
-                    <Col>
-                      <FormCheck
-                        type='switch'
-                        label='Niveau de détail'
-                        checked={use_level === true}
-                        onChange={ evt => {
-                          if (evt.target.checked) {
-                            set_nodes_level(data,data.nodes, agregation_level+1)
+          {(data.static_sankey && sous_filieres) ? (<>
+          <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+            <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+            <Form.Select style={{ width: '200px', color:'black' }}
+              onChange={setDiagram}>
+              {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
+            </Form.Select>
+          </Form.Group></>) : (<></>)}
+          <Form.Group as={Col} lg="auto" style={{width: '200px', borderLeft:'1px solid #F5F5F5',borderRight:'1px solid #F5F5F5', marginLeft: '10px'}}>
+            { (Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0) ? (<>
+              <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
+              {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
+              {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</>
+            ) : (<>
+              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
+              <Form.Control placeholder="Pas de palette" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
+            }
+          </Form.Group>
+          {additional_selector ? (
+            additional_selector
+          ) : (<></>)}
+          <Form.Group as={Col} 
+            style={{ color:'black', marginLeft: '0px',width: '250px', borderLeft:borderLeft}} 
+            lg="auto"
+          >
+            { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 ) ? (<>
+              <FormLabel className="text-center" style={{justifyContent: 'center',color : color}}><b>Filtrage des noeuds</b></FormLabel>
+              {addAllDropDownNode()}</>
+            ) : (<>
+              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des noeuds</FormLabel>
+              <Form.Control placeholder="Pas de filtrage" style={{ width: '200px',opacity:opacity,color:'#6c757d' }} disabled /></>)
+            }      
+            <FormCheck
+              type='switch'
+              label='Niveau de détail'
+              style={{ opacity: window.sankey.advanced === true ? '1' : '0' }}
+              checked={use_level === true}
+              onChange={ evt => {
+                if (evt.target.checked) {
+                  set_nodes_level(data,data.nodes, agregation_level+1)
 
-                            set_data({...data})
-                          } else {
-                            const json_data = localStorage.getItem('initial_data')
-                            if (json_data) {
-                              const initial_data = JSON.parse(json_data as string)
-                              Object.values(data.nodes).forEach(n=> {
-                                n.display = initial_data.nodes[n.idNode].display
-                                n.node_visible = initial_data.nodes[n.idNode].node_visible
-                              })
-                              //initial_data.static_sankey = true
-                              set_data({...data})
-                            }
-                          }
-                          set_use_level(evt.target.checked)
-                        }}
-                      />
-                    </Col>
-                    <Col>
-                      <Form.Select id="selectionNode"
-                        disabled={!use_level}
-                        onChange={
-                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            if (evt.target.value ==='') {
-                              return
-                            }
-                            for (let level = 1; level <= +evt.target.value + 1; level++) {
-                              set_nodes_level(data,data.nodes, level)
-                            }
-                            set_agregation_level(+evt.target.value)
-                            set_data({...data})
-                          }
-                        }
-                      >
-                        {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
-                      </Form.Select>
-                    </Col>
-                  </Form.Group>
-                ) : (<></>)}
-              </Form>
-            </Col>
-          ): (<></>)}
-          { Object.values(fluxTags).filter(tags_group => tags_group.banner !== 'none' ).length > 0 ? (
-            (flux_selector)
-          ) : (<></>)}
-          {banner_grouptag.length > 0 ?
-            (<Col>
+                  set_data({...data})
+                } else {
+                  const json_data = localStorage.getItem('initial_data')
+                  if (json_data) {
+                    const initial_data = JSON.parse(json_data as string)
+                    Object.values(data.nodes).forEach(n=> {
+                      n.display = initial_data.nodes[n.idNode].display
+                      n.node_visible = initial_data.nodes[n.idNode].node_visible
+                    })
+                    //initial_data.static_sankey = true
+                    set_data({...data})
+                  }
+                }
+                set_use_level(evt.target.checked)
+              }}
+            />
+            <Form.Select id="selectionNode"
+              style={{ color:'black', opacity: use_level ? '1' : '0' }}
+              disabled={!use_level}
+              onChange={
+                (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  if (evt.target.value ==='') {
+                    return
+                  }
+                  for (let level = 1; level <= +evt.target.value + 1; level++) {
+                    set_nodes_level(data,data.nodes, level)
+                  }
+                  set_agregation_level(+evt.target.value)
+                  set_data({...data})
+                }
+              }
+            >
+              {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
+            { window.sankey.advanced === true && Object.values(fluxTags).filter(tags_group => tags_group.banner !== 'none' ).length > 0 ? (
+              <>
+                <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
+                {addAllDropDownFlux(data.fluxTags,data,set_data)}          
+              </>)
+              : (<>
+                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des flux</FormLabel>
+                <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
+            }  
+          </Form.Group>    
+
+          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
+            {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des données</b></FormLabel>
-              <Form id='dropdown_banner_node' className='dropdown_banner_node' >
-                {addAllDropDownLinks()}
-              </Form>
-            </Col>) : (<></>)
-          }
-          { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0) ? (
-            <Col lg="auto">
-              <Form id='dropdown_banner_node' className='dropdown_banner_node'>
-                <Col><FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel></Col>
-                <Col>{addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}</Col>
-                <Col>{addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</Col>
-              </Form>
-            </Col>
-          ) : (<></>)}
-          {window.sankey.advanced === true && additional_selector ? (additional_selector) : (<></>)}
+              {addAllDropDownLinks()}
+            </>)
+              : (<>
+                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des données</FormLabel>
+                <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
+            } 
+          </Form.Group> 
+          <Col></Col>
           { window.sankey && window.sankey.excel ? (
-            <Form.Group as={Col} xs={{ offset: 10 }} >
+            <Form.Group as={Col} lg="auto" style={{borderLeft:'1px solid #F5F5F5'}}>
               <FormLabel className="text-center" >Téléchargements</FormLabel>
-              <Button  href={window.sankey.excel}>
-                Résultats
-              </Button>
+              <Button  href={window.sankey.excel}>Résultats</Button>
             </Form.Group>
-          ) : (<></> )}
-          <Col lg="auto" xs={{ offset: offset }}> 
+          ) : (<></>) }
+          <Form.Group as={Col} lg="auto" style={{ marginRight: '10px', borderLeft:'1px solid #F5F5F5'}}>
             <br/>
             <Button 
+              size="sm"
               onClick={()=>set_show_readme(true)}
             >
                 Aide
             </Button>
-            <br/><br/><br/>      
-            <FormCheck
-              type="checkbox"
-              checked={data.fit_screen}
-              onChange={evt => {
-                data.fit_screen = evt.target.checked
+            <br/>  
+            <br/> 
+            <br/> 
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => {
+                data.fit_screen = true
+                d3.select('#svg').on('.zoom', null)
                 set_data({ ...data })
               }}
-              label='Taille initiale'
-            />
-          </Col>  
+            >100%</Button>
+            <Row></Row>
+          </Form.Group> 
         </Row>
 
       </div>

@@ -271,6 +271,7 @@ PublishFiliereBoisSavoie2:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
     - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run zip_output --datapath="/home/ubuntu/dev_opensankey/MFAData/Savoie/v2"          --publish_name="FiliereBoisSavoie2"
     - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
     - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
   when: manual
