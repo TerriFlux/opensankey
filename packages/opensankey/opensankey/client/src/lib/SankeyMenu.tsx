@@ -72,7 +72,6 @@ const MenuPropTypes = {
   set_view: PropTypes.func.isRequired,
 
   additional_selector: PropTypes.element,
-  flux_selector: PropTypes.element,
   set_current_filter: PropTypes.func.isRequired
 }
 
@@ -180,8 +179,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     view, set_view,
     multi_selected_label, set_multi_selected_label,
     set_current_filter,
-    additional_selector,
-    flux_selector
+    additional_selector
 
   }
 ) => {
@@ -721,7 +719,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           data={data}
           set_data={set_data}
           additional_selector={additional_selector}
-          flux_selector={flux_selector} /> : <></>}
+        /> : <></>}
       </Navbar>
 
       {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>

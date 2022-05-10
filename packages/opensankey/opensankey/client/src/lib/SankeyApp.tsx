@@ -171,14 +171,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         }
         view={view}
         set_view={set_view}
-        flux_selector={window.sankey.advanced === true ? (
-          <Col lg="auto">
-            <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
-            <Form id='dropdown_banner_flux' className='dropdown_banner_flux' >
-              {addAllDropDownFlux(data.fluxTags,data,set_data)}
-            </Form>
-          </Col>) :(<></>)
-        }
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }

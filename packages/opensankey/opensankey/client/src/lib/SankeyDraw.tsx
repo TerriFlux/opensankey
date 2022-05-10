@@ -3000,6 +3000,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const svgSankey = (d3.select('#svg') as any)
     if (data.fit_screen) {
       svgSankey.attr('viewBox', [20, 0, data.width-20, data.height])
+      svgSankey.style('width', '100%')
     } else {
       svgSankey.attr('viewBox', null)
       svgSankey.style('width', data.width + 'px')
