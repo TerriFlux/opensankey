@@ -59,7 +59,7 @@ interface ConvertSankeyData {
     unit?: boolean | number
   }
   show_uncert?: boolean
-  tags_catalog: TagsCatalog
+  tags_catalog?: TagsCatalog
   sankey_type?: string
   flux_types?: string[]
   use_flux_types?: boolean
@@ -113,6 +113,7 @@ export const convert_data = (
   if (data.labels === undefined) {
     data.labels = {}
   }
+  delete data.tags_catalog
 
   if (Array.isArray(data.nodeTags)) {
     data_to_convert.nodeTags = Object.assign({}, ...data.nodeTags.map((tags_group) => (
@@ -167,13 +168,13 @@ export const convert_data = (
   }
   Object.entries(data_to_convert.dataTags).forEach(
     ([key,tags_group]) => {
-      if (tags_group.banner === 'display' ) {
+      if (tags_group.banner === 'display'|| key === 'flux_types' || key ==='Uncert' ) {
         data.fluxTags[key] = {...tags_group}
-        data.fluxTags[key].banner = 'multi'
+        data.fluxTags[key].banner = 'none'
       }
     }
   )
-  const new_dataTags = Object.entries(data_to_convert.dataTags).filter(([,tag_group])=>tag_group.banner !== 'display')
+  const new_dataTags = Object.entries(data_to_convert.dataTags).filter(([key,tag_group])=>tag_group.banner !== 'display' && key !== 'flux_types' && key !=='Uncert')
   data.dataTags = Object.assign({}, ...new_dataTags.map(([key,v]) => ({ [key]: { ...v } })))
 
   if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {

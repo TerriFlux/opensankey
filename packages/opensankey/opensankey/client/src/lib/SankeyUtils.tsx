@@ -711,7 +711,12 @@ export const hideNullFluxNodes = (
           return ''
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-          total_input += getLinkValue(sankey_data, link.idLink).value
+          const val = getLinkValue(sankey_data, link.idLink)
+          if (val) {
+            total_input += getLinkValue(sankey_data, link.idLink).value
+          } else {
+            console.log('val is undefined')
+          }
         }
       }
     }
