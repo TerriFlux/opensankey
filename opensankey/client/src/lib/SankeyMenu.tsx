@@ -774,7 +774,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               window.sankey.advanced = evt.target.checked
               set_data({...data})
             }}
-            label="Options de filtrage"
+            label="Options avancées"
           />
         </Container>
 
