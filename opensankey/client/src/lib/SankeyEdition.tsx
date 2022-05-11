@@ -318,6 +318,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const borderLeft = window.sankey.advanced === true ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
   const opacity = window.sankey.advanced === true ? '0.3' : '0'
   const palette = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
+  const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
+  const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
   return (
     <>
       <div className='herowrap'
@@ -362,11 +364,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             style={{ color:'black', marginLeft: '0px',width: '250px', borderLeft:borderLeft}} 
             lg="auto"
           >
-            { window.sankey.advanced === true && (Object.entries(nodeTags).length > 0 ) ? (<>
-              <FormLabel className="text-center" style={{justifyContent: 'center',color : color}}><b>Filtrage des noeuds</b></FormLabel>
+            { (window.sankey.advanced === true && node_filter ) ? (
+              <FormLabel className="text-center" style={{justifyContent: 'center', color : color}}><b>Filtrage des noeuds</b></FormLabel>
+            ) : (
+              <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity, color : color}}>Filtrage des noeuds</FormLabel>
+            )}                          
+            { window.sankey.advanced === true && (Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 ) ? (<>
               {addAllDropDownNode()}</>
             ) : (<>
-              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des noeuds</FormLabel>
               <Form.Control placeholder="Pas de filtrage" style={{ width: '200px',opacity:opacity,color:'#6c757d' }} disabled /></>)
             }      
             <FormCheck
@@ -415,13 +420,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             </Form.Select>
           </Form.Group>
           <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
-            { window.sankey.advanced === true && Object.values(fluxTags).filter(tags_group => tags_group.banner !== 'none' ).length > 0 ? (
+            { window.sankey.advanced === true && flux_filter ? (
               <>
                 <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
                 {addAllDropDownFlux(data.fluxTags,data,set_data)}          
               </>)
               : (<>
-                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des flux</FormLabel>
+                <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity, color:'#6c757d'}}>Filtrage des flux</FormLabel>
                 <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
             }  
           </Form.Group>    
