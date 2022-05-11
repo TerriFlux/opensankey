@@ -330,13 +330,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px',alignItems: 'baseline' }}>
           {(data.static_sankey && sous_filieres) ? (<>
-          <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
-            <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-            <Form.Select style={{ width: '200px', color:'black' }}
-              onChange={setDiagram}>
-              {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
-            </Form.Select>
-          </Form.Group></>) : (<></>)}
+            <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+              <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+              <Form.Select style={{ width: '200px', color:'black' }}
+                onChange={setDiagram}>
+                {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
+              </Form.Select>
+            </Form.Group></>) : (<></>)}
           <Form.Group as={Col} lg="auto" style={{width: '200px', borderLeft:'1px solid #F5F5F5',borderRight:'1px solid #F5F5F5', marginLeft: '10px'}}>
             { (Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0) ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
