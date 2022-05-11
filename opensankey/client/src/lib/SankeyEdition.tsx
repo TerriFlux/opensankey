@@ -320,7 +320,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const palette = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
   const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
-  const dataSelectionBorderRight = (window.sankey.advanced === false || (!additional_selector && !node_filter) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
+  const dataSelectionBorderRight = ( window.sankey.advanced === false ||  window.sankey.advanced === undefined || (!additional_selector && !node_filter) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
   return (
     <>
       <div className='herowrap'
