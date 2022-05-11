@@ -317,6 +317,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
 
   const borderLeft = window.sankey.advanced === true ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
   const opacity = window.sankey.advanced === true ? '0.3' : '0'
+  const palette = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
   return (
     <>
       <div className='herowrap'
@@ -337,8 +338,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
               </Form.Select>
             </Form.Group></>) : (<></>)}
-          <Form.Group as={Col} lg="auto" style={{width: '200px', borderLeft:'1px solid #F5F5F5',borderRight:'1px solid #F5F5F5', marginLeft: '10px'}}>
-            { (Object.entries(nodeTags).length > 0 || Object.entries(fluxTags).length > 0) ? (<>
+          <Form.Group as={Col} 
+            lg="auto" 
+            style={{
+              width: '200px', 
+              borderLeft: palette ? '1px solid #F5F5F5' : '0px', 
+              borderRight:palette ? '1px solid #F5F5F5' : '0px', 
+              marginLeft: '10px'
+            }}>
+            { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
               {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
               {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</>
@@ -364,6 +372,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             <FormCheck
               type='switch'
               label='Niveau de détail'
+              disabled={nb_agregation_level < 2}
               style={{ opacity: window.sankey.advanced === true ? '1' : '0' }}
               checked={use_level === true}
               onChange={ evt => {
