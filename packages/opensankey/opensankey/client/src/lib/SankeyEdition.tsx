@@ -351,8 +351,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
               {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</>
             ) : (<>
-              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
-              <Form.Control placeholder="Pas de palette" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
+              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:'0.3',color:'#6c757d'}}>Palettes de couleurs</FormLabel>
+              <Form.Control placeholder="Pas de palette" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
             }
           </Form.Group>
           {additional_selector ? (
