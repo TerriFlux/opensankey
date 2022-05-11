@@ -357,6 +357,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               <Form.Control placeholder="Pas de palette" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
             }
           </Form.Group>
+          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
+            {banner_grouptag.length > 0 ? (<>
+              <FormLabel style={{justifyContent: 'center'}}><b>Sélection des données</b></FormLabel>
+              {addAllDropDownLinks()}
+            </>)
+              : (<>
+                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:'0.3',color:'#6c757d'}}>Sélection des données</FormLabel>
+                <Form.Control placeholder="Pas de sélection" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
+            } 
+          </Form.Group> 
           {additional_selector ? (
             additional_selector
           ) : (<></>)}
@@ -430,17 +440,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
             }  
           </Form.Group>    
-
-          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
-            {banner_grouptag.length > 0 ? (<>
-              <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des données</b></FormLabel>
-              {addAllDropDownLinks()}
-            </>)
-              : (<>
-                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity,color:'#6c757d'}}>Filtrage des données</FormLabel>
-                <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
-            } 
-          </Form.Group> 
           <Col></Col>
           { window.sankey && window.sankey.excel ? (
             <Form.Group as={Col} lg="auto" style={{borderLeft:'1px solid #F5F5F5'}}>
