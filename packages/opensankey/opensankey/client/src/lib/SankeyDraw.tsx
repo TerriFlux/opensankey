@@ -211,7 +211,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!visible) {
       return false
     }
-    if (v.value === 0) {
+    if (test_link_value(data.nodes, l, data.nodeTags) === 0) {
       if (data.display_style.null_flux) {
         return true
       }
