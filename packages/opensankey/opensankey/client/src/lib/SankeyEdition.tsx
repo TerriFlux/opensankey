@@ -320,6 +320,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const palette = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
   const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
+  const dataSelectionBorderRight = (window.sankey.advanced === false || (!additional_selector && !node_filter) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
   return (
     <>
       <div className='herowrap'
@@ -344,8 +345,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             lg="auto" 
             style={{
               width: '200px', 
-              borderLeft: palette ? '1px solid #F5F5F5' : '0px', 
-              borderRight:palette ? '1px solid #F5F5F5' : '0px', 
+              borderLeft: '1px solid #F5F5F5', 
               marginLeft: '10px'
             }}>
             { palette ? (<>
@@ -357,7 +357,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               <Form.Control placeholder="Pas de palette" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
             }
           </Form.Group>
-          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
+          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:'1px solid #F5F5F5',borderRight:dataSelectionBorderRight }} lg="auto">
             {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Sélection des données</b></FormLabel>
               {addAllDropDownLinks()}
@@ -371,7 +371,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             additional_selector
           ) : (<></>)}
           <Form.Group as={Col} 
-            style={{ color:'black', marginLeft: '0px',width: '250px', borderLeft:borderLeft}} 
+            style={{ color:'black', marginLeft: '0px',width: '250px', borderLeft: additional_selector ? '0px' : borderLeft}} 
             lg="auto"
           >
             { (window.sankey.advanced === true && node_filter ) ? (
