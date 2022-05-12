@@ -436,7 +436,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               }}
             />
             <Form.Select id="selectionNode"
-              style={{ color:'black', opacity: use_level ? '1' : '0' }}
+              style={{ color:'black', opacity: window.sankey.advanced === true && use_level && nb_agregation_level > 1? '1' : '0' }}
               disabled={!use_level}
               onChange={
                 (evt: React.ChangeEvent<HTMLSelectElement>) => {

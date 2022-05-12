@@ -132,6 +132,21 @@ export const convert_data = (
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+    }
+  )
+  Object.values(data_to_convert.fluxTags).forEach(
+    tags_group => {
+      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+    }
+  )
+  Object.values(data_to_convert.dataTags).forEach(
+    tags_group => {
+      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
     }
   )
   if (data_to_convert.nodeTags['Regions']) {
