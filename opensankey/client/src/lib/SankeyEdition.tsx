@@ -390,9 +390,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 <Form.Control placeholder="Pas de sélection" style={{ opacity:opacity_basic,color:'#6c757d' }} disabled /></>)
             } 
           </Form.Group> 
-          {additional_selector ? (
-            additional_selector
-          ) : (<></>)}
+          <Col lg="auto">
+            {additional_selector ? (
+              additional_selector
+            ) : (<></>)}
+          </Col>
           <Form.Group as={Col} 
             style={{ color:'black', marginLeft: '5px',width: '250px'}} 
             lg="auto"
@@ -463,7 +465,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity_advanced,color:'#6c757d' }} disabled /></>)
             }  
           </Form.Group>    
-          <Col></Col>
+          {(data.static_sankey && sous_filieres) ? (<></>) :(<Col></Col>)}
           { window.sankey && window.sankey.excel ? (
             <Form.Group as={Col} lg="auto" >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
