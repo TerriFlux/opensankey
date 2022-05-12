@@ -397,6 +397,8 @@ export const default_sankey_data = (): SankeyData => {
     nodeTags: {},
     dataTags: {},
     fluxTags: {},
+    fluxColorMap: 'node_colormap',
+    nodeColorMap: 'node_colormap', 
     
     view: []
   }

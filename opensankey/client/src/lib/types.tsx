@@ -170,9 +170,6 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
-  // node_width: PropTypes.number.isRequired,
-  // node_height: PropTypes.number.isRequired,
-
   user_scale: PropTypes.number.isRequired,
 
   // icon_catalog: PropTypes.object.isRequired,
@@ -219,7 +216,9 @@ export const SankeyDataPropTypes = {
   nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
   fluxTags: TagsCatalogPropTypes,
-
+  fluxColorMap: PropTypes.string.isRequired,
+  nodeColorMap: PropTypes.string.isRequired,
+  
   view: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
