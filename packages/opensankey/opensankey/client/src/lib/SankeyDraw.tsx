@@ -729,6 +729,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
     })
 
+    //Creation des Arrows associés au link
+    d3.selectAll('.ggg_nodes')
+      .filter(n => node_arrow_visible(n))
+      .each(function (n) {
+        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags, selection)
+      })
 
     paths.attr('d', d => {
       setNodesHeight(display_nodes, display_links, d, data.nodeTags)
@@ -740,14 +747,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (error_msg && error_msg.text) {
       alert(error_msg.text)
     }
-
-    //Creation des Arrows associés au link
-    d3.selectAll('.ggg_nodes')
-      .filter(n => node_arrow_visible(n))
-      .each(function (n) {
-        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags, selection)
-      })
   }
 
 
