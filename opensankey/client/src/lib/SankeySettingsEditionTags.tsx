@@ -334,8 +334,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     <td>{Object.keys(data[elementTagName][tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
                       <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>Aucun</option>
-                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>One</option>
-                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>Multi</option>
+                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>Unique</option>
+                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>Multiple</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
