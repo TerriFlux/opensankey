@@ -16,6 +16,7 @@ const SankeyEditionPropTypes = {
 
 declare const window: Window &
   typeof globalThis & {
+    SankeyToolsStatic: boolean
     sankey: {
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
@@ -210,7 +211,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     }
     return (
       <>
-        <FormCheck
+        {/* <FormCheck
           type='switch'
           label={title}
           checked={use_colormap === true}
@@ -237,28 +238,43 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             set_colormap(the_colormap)
             set_data({ ...data })
           }}
-        />
+        /> */}
         <Form.Select
           disabled={!use_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(data[elementName]).forEach(el => {
-                el.colorParameter = 'groupTag'
-                el.colorTag = evt.target.value
-              })
-              set_colormap(evt.target.value)
+              if ( elementNameParam !== 'nodes' || evt.target.value !== 'node_colormap' ) {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = evt.target.value
+                })
+              } else {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'local'
+                  el.colorTag = evt.target.value
+                })
+              }
               Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
               if ( evt.target.value !== 'node_colormap' ) {
+                set_colormap(evt.target.value)
                 data[elementGroupName][evt.target.value].show_legend = true
               }
               set_data({ ...data })
             }}>
           { elementNameParam === 'links' ? (
             <option
-              key={node_colormap}
+              key='node_colormap'
               value={'node_colormap'}
               selected={colormap === 'node_colormap'} >
                 Couleur des noeuds
+            </option>) : (<></>)
+          }
+          { elementNameParam === 'nodes' ? (
+            <option
+              key='node_colormap'
+              value={'node_colormap'}
+              selected={colormap === 'node_colormap'} >
+                Pas de palette
             </option>) : (<></>)
           }
           {Object.entries(data[elementGroupName]).filter(([,tag_group]) => tag_group.banner !== 'none').map(
@@ -315,12 +331,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   //   backgroundColor = '#3c3c3c'
   // }
 
-  const borderLeft = window.sankey.advanced === true ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
-  const opacity = window.sankey.advanced === true ? '0.3' : '0'
-  const palette = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
+  const opacity_advanced = window.sankey.advanced === true  && !window.SankeyToolsStatic ? '0.3' : '0'
+  const opacity_basic = !window.SankeyToolsStatic ? '0.3' : '0'
   const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
-  const dataSelectionBorderRight = ( window.sankey.advanced === false ||  window.sankey.advanced === undefined || (!additional_selector && !node_filter) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
+  const palette = window.SankeyToolsStatic ?
+     Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
+     node_filter || flux_filter
+  const borderLeft = (window.sankey.advanced === true && !window.SankeyToolsStatic) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
+  const dataSelectionBorderRight = ( !window.SankeyToolsStatic && (window.sankey.advanced === false ||  window.sankey.advanced === undefined || (!additional_selector && !node_filter && nb_agregation_level <= 1 )) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
+   
   return (
     <>
       <div className='herowrap'
@@ -329,7 +349,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           backgroundColor: backgroundColor,
           marginLeft: '0',
           paddingBottom: '3px',
-          alignItems: '<baseline-position>',
+          alignItems: 'baseline',
           display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px',alignItems: 'baseline' }}>
@@ -344,45 +364,53 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Form.Group as={Col} 
             lg="auto" 
             style={{
-              width: '200px', 
-              borderLeft: '1px solid #F5F5F5', 
-              marginLeft: '10px'
+              width: '250px', 
+              borderLeft: !window.SankeyToolsStatic ? '1px solid #F5F5F5' : '0px', 
+              marginLeft: '5px'
             }}>
             { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
+              { (node_filter && flux_filter) ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
               {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
+              { (node_filter && flux_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
               {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</>
             ) : (<>
-              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:'0.3',color:'#6c757d'}}>Palettes de couleurs</FormLabel>
-              <Form.Control placeholder="Pas de palette" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
+              <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
+              <Form.Control placeholder="Pas de palette" style={{ opacity:opacity_basic,color:'#6c757d' }} disabled /></>)
             }
           </Form.Group>
-          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:'1px solid #F5F5F5',borderRight:dataSelectionBorderRight }} lg="auto">
+          <Form.Group as={Col} 
+            style={{ 
+              width:'250px', 
+              marginLeft: '0px',
+              borderLeft: !window.SankeyToolsStatic ? '1px solid #F5F5F5' : '0px', 
+              borderRight: dataSelectionBorderRight 
+            }} lg="auto">
             {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Sélection des données</b></FormLabel>
               {addAllDropDownLinks()}
             </>)
               : (<>
-                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:'0.3',color:'#6c757d'}}>Sélection des données</FormLabel>
-                <Form.Control placeholder="Pas de sélection" style={{ opacity:'0.3',color:'#6c757d' }} disabled /></>)
+                <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Sélection des données</FormLabel>
+                <Form.Control placeholder="Pas de sélection" style={{ opacity:opacity_basic,color:'#6c757d' }} disabled /></>)
             } 
           </Form.Group> 
           {additional_selector ? (
             additional_selector
           ) : (<></>)}
           <Form.Group as={Col} 
-            style={{ color:'black', marginLeft: '0px',width: '250px', borderLeft: additional_selector ? '0px' : borderLeft}} 
+            style={{ color:'black', marginLeft: '5px',width: '250px', borderLeft: additional_selector ? '0px' : borderLeft}} 
             lg="auto"
           >
-            { (window.sankey.advanced === true && node_filter ) ? (
+            { (window.sankey.advanced === true && (node_filter || nb_agregation_level > 1) ) ? (
               <FormLabel className="text-center" style={{justifyContent: 'center', color : color}}><b>Filtrage des noeuds</b></FormLabel>
             ) : (
-              <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity, color : color}}>Filtrage des noeuds</FormLabel>
+              <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity_advanced, color : color}}>Filtrage des noeuds</FormLabel>
             )}                          
             { window.sankey.advanced === true && (Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 ) ? (<>
               {addAllDropDownNode()}</>
             ) : (<>
-              <Form.Control placeholder="Pas de filtrage" style={{ width: '200px',opacity:opacity,color:'#6c757d' }} disabled /></>)
+              <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity_advanced,color:'#6c757d' }} disabled /></>)
             }      
             <FormCheck
               type='switch'
@@ -436,8 +464,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 {addAllDropDownFlux(data.fluxTags,data,set_data)}          
               </>)
               : (<>
-                <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity, color:'#6c757d'}}>Filtrage des flux</FormLabel>
-                <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity,color:'#6c757d' }} disabled /></>)
+                <FormLabel className="text-center" style={{justifyContent: 'center', opacity:opacity_advanced, color:'#6c757d'}}>Filtrage des flux</FormLabel>
+                <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity_advanced,color:'#6c757d' }} disabled /></>)
             }  
           </Form.Group>    
           <Col></Col>
@@ -447,7 +475,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               <Button  href={window.sankey.excel}>Résultats</Button>
             </Form.Group>
           ) : (<></>) }
-          <Form.Group as={Col} lg="auto" style={{ marginRight: '10px', borderLeft:'1px solid #F5F5F5'}}>
+          <Form.Group as={Col} lg="auto" style={{ marginRight: '5px', borderLeft:'1px solid #F5F5F5'}}>
             <br/>
             <Button 
               size="sm"
