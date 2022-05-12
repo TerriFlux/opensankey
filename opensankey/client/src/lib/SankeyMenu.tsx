@@ -1696,13 +1696,16 @@ const Menu: FunctionComponent<MenuTypes> = (
               }>
               <Accordion.Header>Raccourci Clavier</Accordion.Header>
               <Accordion.Body>
-                <p>Fonctionnement des clics :</p><br />
-                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds click dans l'onglet Noeuds du menu</p><br />
-                <p><b>CTRL + Click (flux) :</b> Selectionne le flux click dans l'onglet Flux du menu</p><br />
-                <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p><br />
-                <p><b>CTRL + S :</b> Sauvegarde le data actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p><br />
-                <p><b>Flèche du clavier :</b> Permet de dépalcer les noeuds sélectionnés en fonction du grillage  </p><br />
-                <p><b>Echap :</b> Ferme le Menu si il est ouvert </p><br />
+                <p>Fonctionnement des clics :</p>
+                <p><b>CTRL + Click (noeuds) :</b> Selectionne le noeuds click dans l'onglet Noeuds du menu</p>
+                <p><b>CTRL + Click (flux) :</b> Selectionne le flux click dans l'onglet Flux du menu</p>
+                <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
+                <p><b>Right Click (noeuds) :</b>  Agrége le noeud</p>
+                <p><b>Alt Right Click (noeuds) :</b>  Désagrége le noeud</p>
+                <p><b>Alt Click (label noeuds) :</b>  Déplace le label</p>
+                <p><b>CTRL + S :</b> Sauvegarde le data actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p>
+                <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
+                <p><b>Echap :</b> Ferme le Menu si il est ouvert </p>
 
               </Accordion.Body>
             </Accordion.Item>
