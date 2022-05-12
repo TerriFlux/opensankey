@@ -30,13 +30,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     set_tags_group_key(Object.keys(nodeTags)[0])
   }
 
-  // let node = data.nodes[multi_selected_nodes[0].idNode]
-  // if (node === undefined) {
-  //   node = default_node(data)
-  //   for (const tag_group_key in nodeTags) {
-  //     node.tags[tag_group_key] = []
-  //   }
-  // }
+
   //Creation des fonctions qui check si les noeuds selectionnés ont tous la même valeurs de leurs attributs
   const isAllNodeVisible = () => {
     let visible = false
@@ -741,7 +735,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
                 onClick={
                   () => {
-                    // reorganize_inputLinksId(selected_node, true, false, display_nodes, display_links)
                     Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
                       reorganize_node_inputLinksId(d, display_nodes, display_links)
                       reorganize_node_outputLinksId(d, display_nodes, display_links)
