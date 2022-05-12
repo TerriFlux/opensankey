@@ -32,6 +32,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     data[elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'][tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
+
+  let element_tags : string [] = []
+  if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
+    if (tags_group_key in data[elementTagName]) {
+      element_tags = Object.keys(data[elementTagName][tags_group_key].tags)
+    } else {
+      console.log('tutu')
+    }
+  }
   // --------------------------------------------
   //ajoute un étiquette au groupe selectionné 
   const handleAddTagButton = () => {
@@ -206,7 +215,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         </tr>
       </thead>
       <tbody>
-        {Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '' ? Object.keys(data[elementTagName][tags_group_key].tags).map(
+        {element_tags.length > 0 ? element_tags.map(
           (tag_key, i) => {
             return (
               <tr key={i.toString()}>
