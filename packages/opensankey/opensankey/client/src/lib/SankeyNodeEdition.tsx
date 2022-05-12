@@ -171,11 +171,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
-    <Tab eventKey="tags" title="Tags de noeuds"
+    <Tab eventKey="tags" title="Étiquettes de noeuds"
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
       <Form.Group as={Row} >
         <Col xs={2}>
-          <FormLabel >TagGroupe:</FormLabel>
+          <FormLabel >Groupe d'étiquettes:</FormLabel>
         </Col>
         <Col xs={6}>
           <Form.Select
