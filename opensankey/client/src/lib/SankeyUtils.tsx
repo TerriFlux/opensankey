@@ -360,7 +360,7 @@ export const default_sankey_data = (): SankeyData => {
 
     h_space: 200,
     v_space: 100,
-    legend_position: [0, 100],
+    legend_position: [0, 10],
 
     show_structure: false,
     fit_screen    : window.SankeyToolsStatic,
@@ -397,6 +397,8 @@ export const default_sankey_data = (): SankeyData => {
     nodeTags: {},
     dataTags: {},
     fluxTags: {},
+    fluxColorMap: 'node_colormap',
+    nodeColorMap: 'node_colormap', 
     
     view: []
   }

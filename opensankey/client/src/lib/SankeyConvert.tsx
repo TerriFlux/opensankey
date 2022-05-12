@@ -132,6 +132,21 @@ export const convert_data = (
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+    }
+  )
+  Object.values(data_to_convert.fluxTags).forEach(
+    tags_group => {
+      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+    }
+  )
+  Object.values(data_to_convert.dataTags).forEach(
+    tags_group => {
+      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
+      if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
     }
   )
   if (data_to_convert.nodeTags['Regions']) {
@@ -378,7 +393,7 @@ export const convert_data = (
     data.trade_close_vspace = 20
   }
   if (data.legend_position === undefined) {
-    data.legend_position = [0,100]
+    data.legend_position = [0,10]
   }
 
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']

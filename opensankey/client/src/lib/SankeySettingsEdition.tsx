@@ -24,7 +24,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
     <>
       <Form>
         <Form.Group as={Row}>
-          <Col xs={6}>Font Charger des icones</Col>
+          <Col xs={6}>Police Charger des icones</Col>
           <Col xs={6}><FormControl
             //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
             type='file'

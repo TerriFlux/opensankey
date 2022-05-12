@@ -90,20 +90,10 @@ export const addAllDropDownFlux = (fluxTags : TagsCatalog,data:SankeyData,set_da
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,additional_selector }) => {
   const { nodeTags,fluxTags, dataTags } = data
-  const node_tags_visible = Object.keys(data.nodeTags).length > 0 
-  const flux_tags_visible = Object.keys(data.fluxTags).length > 0
-  const [node_colormap, set_node_colormap] = useState(
-    node_tags_visible ? Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 ? Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none')[0] : '' : ''
-  )
-  const [flux_colormap, set_flux_colormap] = useState('node_colormap')
   const [diagram, set_diagram] = useState('')
   const [agregation_level,set_agregation_level] = useState(0)
-  const [use_node_colormap,set_use_node_colormap] = useState(
-    node_tags_visible && Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0
-  )
-  const [use_link_colormap,set_use_link_colormap] = useState(
-    flux_tags_visible && Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
-  )
+  const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0
+  const use_link_colormap = Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [use_level,set_use_level] = useState(false)
   const [show_readme,set_show_readme] = useState(false)
 
@@ -199,46 +189,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     return allDD
   }
 
-  const addPalette = (elementGroupNameParam:string,elementNameParam:string,set_use_colormap:(b:boolean)=>void,set_colormap:(s:string)=>void) => {
+  const addPalette = (elementGroupNameParam:string,elementNameParam:string) => {
     const elementGroupName = elementGroupNameParam === 'nodeTags' ? 'nodeTags' : 'fluxTags'
     const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
-    const title = elementNameParam === 'nodes' ? 'Noeuds' : 'Flux'
     const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
-    const colormap = elementNameParam === 'nodes' ? node_colormap : flux_colormap
-    const tags_visible = elementNameParam === 'nodes' ? node_tags_visible : flux_tags_visible
+    let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
     if (Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none').length === 0) {
       return (<></>)
     }
     return (
       <>
-        {/* <FormCheck
-          type='switch'
-          label={title}
-          checked={use_colormap === true}
-          onChange={evt => {
-            let the_colormap = colormap
-            if (colormap === '' || colormap === undefined) {
-              the_colormap = tags_visible ? Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none')[0] : ''
-            }
-            if (evt.target.checked) {
-              Object.values(data[elementName]).forEach(el => {
-                el.colorParameter = 'groupTag'
-                el.colorTag = the_colormap
-              })
-            } else {
-              Object.values(data[elementName]).forEach(el => {
-                el.colorParameter = 'local'
-              })
-            }
-            set_use_colormap(evt.target.checked)
-            Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
-            if (the_colormap in data[elementGroupName]) {
-              data[elementGroupName][the_colormap].show_legend = evt.target.checked
-            }
-            set_colormap(the_colormap)
-            set_data({ ...data })
-          }}
-        /> */}
         <Form.Select
           disabled={!use_colormap}
           onChange={
@@ -256,7 +216,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               }
               Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
               if ( evt.target.value !== 'node_colormap' ) {
-                set_colormap(evt.target.value)
+                colormap = evt.target.value
                 data[elementGroupName][evt.target.value].show_legend = true
               }
               set_data({ ...data })
@@ -368,9 +328,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
               { (node_filter && flux_filter) ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
-              {addPalette('nodeTags','nodes',set_use_node_colormap,set_node_colormap)}
+              {addPalette('nodeTags','nodes')}
               { (node_filter && flux_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
-              {addPalette('fluxTags','links',set_use_link_colormap,set_flux_colormap)}</>
+              {addPalette('fluxTags','links')}</>
             ) : (<>
               <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
               <Form.Control placeholder="Pas de palette" style={{ opacity:opacity_basic,color:'#6c757d' }} disabled /></>)
@@ -436,7 +396,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               }}
             />
             <Form.Select id="selectionNode"
-              style={{ color:'black', opacity: use_level ? '1' : '0' }}
+              style={{ color:'black', opacity: window.sankey.advanced === true && use_level && nb_agregation_level > 1? '1' : '0' }}
               disabled={!use_level}
               onChange={
                 (evt: React.ChangeEvent<HTMLSelectElement>) => {
