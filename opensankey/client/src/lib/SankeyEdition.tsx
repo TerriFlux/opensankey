@@ -336,8 +336,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
   const palette = window.SankeyToolsStatic ?
-     Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
-     node_filter || flux_filter
+    Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
+    node_filter || flux_filter
   const borderLeft = (window.sankey.advanced === true && !window.SankeyToolsStatic) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
   const dataSelectionBorderRight = ( !window.SankeyToolsStatic && (window.sankey.advanced === false ||  window.sankey.advanced === undefined || (!additional_selector && !node_filter && nb_agregation_level <= 1 )) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
    
