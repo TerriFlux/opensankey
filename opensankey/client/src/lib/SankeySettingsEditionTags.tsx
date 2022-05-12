@@ -161,7 +161,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       <Col>
         <Form.Select onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
-            //setTagColorMap(evt.target.value)
             data[elementTagName][tags_group_key].color_map = evt.target.value
             const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
             if (evt.target.value === 'custom') {
@@ -355,7 +354,6 @@ type SankeySettingsEditionDataTagsTypes = InferProps<typeof SankeySettingsDataTa
 
 const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionDataTagsTypes> = ({ data, set_data }) => {
   const [data_tags_group_key, set_data_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
-  //const [tag_key, set_tag_key] = useState('')
 
   const { links, dataTags } = data
 

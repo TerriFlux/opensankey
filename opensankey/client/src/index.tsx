@@ -25,7 +25,7 @@ declare const window: Window &
     }
    }
 
-window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? true : window.SankeyToolsStatic
+window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : window.SankeyToolsStatic
 if (!window.sankey) {
   window.sankey = {}
 }

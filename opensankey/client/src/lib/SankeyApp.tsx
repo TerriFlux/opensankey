@@ -207,8 +207,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             }
             let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey: string[] = []
-            /* console.log(val)
-            console.log(dataTags) */
+
             let missing_key = false
             Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
