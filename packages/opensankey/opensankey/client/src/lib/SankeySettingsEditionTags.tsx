@@ -35,7 +35,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   let element_tags : string [] = []
   if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
-    if (tags_group_key in Object.keys(data[elementTagName])) {
+    if (tags_group_key in data[elementTagName]) {
       element_tags = Object.keys(data[elementTagName][tags_group_key].tags)
     } else {
       console.log('tutu')
