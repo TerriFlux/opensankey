@@ -338,8 +338,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const palette = window.SankeyToolsStatic ?
     Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
     node_filter || flux_filter
-  const borderLeft = (window.sankey.advanced === true && !window.SankeyToolsStatic) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
-  const dataSelectionBorderRight = ( !window.SankeyToolsStatic && (window.sankey.advanced === false ||  window.sankey.advanced === undefined || (!additional_selector && !node_filter && nb_agregation_level <= 1 )) ) ? '1px solid #F5F5F5' : '0px solid #F5F5F5'
    
   return (
     <>
@@ -365,7 +363,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             lg="auto" 
             style={{
               width: '250px', 
-              borderLeft: !window.SankeyToolsStatic ? '1px solid #F5F5F5' : '0px', 
               marginLeft: '5px'
             }}>
             { palette ? (<>
@@ -382,9 +379,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Form.Group as={Col} 
             style={{ 
               width:'250px', 
-              marginLeft: '0px',
-              borderLeft: !window.SankeyToolsStatic ? '1px solid #F5F5F5' : '0px', 
-              borderRight: dataSelectionBorderRight 
+              marginLeft: '0px'
             }} lg="auto">
             {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Sélection des données</b></FormLabel>
@@ -399,7 +394,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             additional_selector
           ) : (<></>)}
           <Form.Group as={Col} 
-            style={{ color:'black', marginLeft: '5px',width: '250px', borderLeft: additional_selector ? '0px' : borderLeft}} 
+            style={{ color:'black', marginLeft: '5px',width: '250px'}} 
             lg="auto"
           >
             { (window.sankey.advanced === true && (node_filter || nb_agregation_level > 1) ) ? (
@@ -457,7 +452,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
             </Form.Select>
           </Form.Group>
-          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px',borderLeft:borderLeft }} lg="auto">
+          <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px' }} lg="auto">
             { window.sankey.advanced === true && flux_filter ? (
               <>
                 <FormLabel style={{justifyContent: 'center'}}><b>Filtrage des flux</b></FormLabel>
@@ -470,12 +465,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           </Form.Group>    
           <Col></Col>
           { window.sankey && window.sankey.excel ? (
-            <Form.Group as={Col} lg="auto" style={{borderLeft:'1px solid #F5F5F5'}}>
+            <Form.Group as={Col} lg="auto" >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
               <Button  href={window.sankey.excel}>Résultats</Button>
             </Form.Group>
           ) : (<></>) }
-          <Form.Group as={Col} lg="auto" style={{ marginRight: '5px', borderLeft:'1px solid #F5F5F5'}}>
+          <Form.Group as={Col} lg="auto" style={{ marginRight: '5px'}}>
             <br/>
             <Button 
               size="sm"
