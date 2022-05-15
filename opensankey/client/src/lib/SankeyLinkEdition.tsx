@@ -282,7 +282,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const link_tag = (
-    <Tab eventKey="tags" title="Tags de Flux"
+    <Tab eventKey="tags" title="Étiquettes de Flux"
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
       <Form.Group as={Row} >
         <Col xs={2}>

@@ -671,33 +671,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
 
-    let firing = false
-    const singleClick = (link: SankeyLink) => {
-      select_link(link)
-    }
-    const doubleClick = (link: SankeyLink) => {
-      const id = Object.values(display_links).indexOf(link)
-      handles_visible[id] = !handles_visible[id]
-      let shift_handles
-      if (Object.values(display_links)[id].recycling) {
-        shift_handles = ['#vert_shift', '#left_horiz_shift', '#right_horiz_shift']
-      } else {
-        shift_handles = ['#left_horiz_shift', '#right_horiz_shift']
-      }
-      for (let i = 0; i < shift_handles.length; i++) {
-        const str = shift_handles[i] + link.idLink
-        const sel = d3.select(str)
-        if (handles_visible[id]) {
-          sel.attr('fill-opacity', '0.7')
-        } else {
-          sel.attr('fill-opacity', '0')
-        }
-      }
-    }
-    let firingFunc = singleClick
-    paths.on('dblclick', () => {
-      firingFunc = doubleClick
-    })
     paths.on('click', function (event, d) {
       if (event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
@@ -715,20 +688,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         select_link(d)
         set_nav_item_active('3')
         set_show_nav(true)
-      } else {
-        sankeyTooltip.style('opacity', 0)
-        if (firing) {
-          return
-        }
-        firing = true
-        setTimeout(() => {
-          firingFunc(d)
-          firingFunc = singleClick
-          firing = false
-        }, 300)
       }
+
     })
 
+    //Creation des Arrows associés au link
+    d3.selectAll('.ggg_nodes')
+      .filter(n => node_arrow_visible(n))
+      .each(function (n) {
+        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags, selection)
+      })
 
     paths.attr('d', d => {
       setNodesHeight(display_nodes, display_links, d, data.nodeTags)
@@ -740,14 +710,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (error_msg && error_msg.text) {
       alert(error_msg.text)
     }
-
-    //Creation des Arrows associés au link
-    d3.selectAll('.ggg_nodes')
-      .filter(n => node_arrow_visible(n))
-      .each(function (n) {
-        const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-        drawArrows(n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags, selection)
-      })
   }
 
 
@@ -2015,7 +1977,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     // Gestion du click  
     ggg_nodes.on('click', (event, d) => {
-
       if (!static_sankey && event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
 
@@ -2037,11 +1998,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     })
 
-    ggg_nodes.on('dblclick', (ev, n) => {
-      set_multi_selected_nodes([n])
-      if (!static_sankey && ev.ctrlKey) {
-        set_multi_selected_nodes([n])
-      }
+    ggg_nodes.on('contextmenu', (ev, n) => {
+      ev.preventDefault()
       if (!n.dimensions) {
         return
       }
@@ -2430,12 +2388,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     if (!static_sankey) {
-      select.on('click', (event, n) => {
-        select_node(n)
-        deselect_nodes_and_links()
-        d3.select('#ggg_' + n.idNode + ' rect').attr('class', 'selected_node')
-        return
-      })
+      select
         .call(d3.drag<SVGTextElement, SankeyNode>()
           .subject(Object).on('drag', function (event, node) {
             if (alt_key_pressed === true) {
