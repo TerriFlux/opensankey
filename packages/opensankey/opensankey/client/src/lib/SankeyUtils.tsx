@@ -715,7 +715,7 @@ export const hideNullFluxNodes = (
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val) {
-            total_input += getLinkValue(sankey_data, link.idLink).value
+            total_input += val.value
           } else {
             console.log('val is undefined')
           }
@@ -731,7 +731,12 @@ export const hideNullFluxNodes = (
           return ''
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-          total_output += getLinkValue(sankey_data, link.idLink).value
+          const val = getLinkValue(sankey_data, link.idLink)
+          if (val) {
+            total_output += val.value
+          } else {
+            console.log('val is undefined')
+          }
         }
       }
     }
