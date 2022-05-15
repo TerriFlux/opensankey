@@ -99,10 +99,11 @@ def clean_excel():
     )
     return response
 
-@opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
-def upload_data():
+@opensankey.route('/sankey/upload_excel', methods=['POST'])
+def upload_excel():
     excel_input_file = request.files['file']
-    sankey_data = parser_excel.parse_simple_excel(excel_input_file)
+    mfa_input = io_excel.load_mfa_excel(excel_input_file)
+    sankey_data = parser_excel.parse_excel(mfa_input)
     # context = {
     #     'nodes': nodes,
     #     'links': links

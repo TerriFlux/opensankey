@@ -23,6 +23,52 @@ declare const window: Window &
     }
   }
 
+export const uploadExcelImpl = (
+  data : SankeyData,
+  set_data : (data:SankeyData)=>void,
+  set_show_excel_dialog: (b:boolean)=>void,
+  input_file : Blob,
+  sheet: string,
+  post_callback: any
+) => {
+  const form_data = new FormData()
+  form_data.append(
+    'file', input_file
+  )
+  // form_data.append(
+  //   'sheet', sheet
+  // )
+  const path = window.location.href
+
+  const url = path + 'sankey/upload_excel'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+  const callback = (server_data: SankeyData & { error: string }) => {
+    const error = server_data['error']
+    if (error && error.length != 0) {
+      alert(error)
+      return
+    }
+    Object.assign(data, server_data)
+    convert_data(data)
+    compute_auto_sankey(data, 200)
+    post_callback(data)
+    set_data({ ...data })
+  }
+  fetch(url, fetchData).then(response => {
+    response.text().then(text => {
+      // try {
+      const json_data = JSON.parse(text)
+      callback(json_data)
+      // } catch(err) {
+      //   alert(err)
+      // }
+    })
+  })
+  set_show_excel_dialog(false)
+}
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -184,6 +230,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 ) => {
   const set_show_link = useState(true)[1]
+  const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
   const { filter } = data.display_style
@@ -635,9 +682,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
 
-
-
-
   return (
     <>
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
@@ -679,53 +723,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                       reader.readAsText(files[0])
                     }}
                   />
-                  <Dropdown.Item
-                    onClick={() => {
-                      if (_load_simple_excel && _load_simple_excel.current) {
-                        _load_simple_excel.current.name = ''
-                        _load_simple_excel.current.click()
-                      }
-                    }}>Excel simple</Dropdown.Item>
-                  <Form.Control
-                    type="file"
-                    ref={_load_simple_excel}
-                    style={{ display: 'none' }}
-                    onChange={(evt: ChangeEvent) => {
-                      const files = (evt.target as HTMLFormElement).files
-                      const form_data = new FormData()
-                      form_data.append('file', files ? files[0] : '')
-                      const fetchData = {
-                        method: 'POST',
-                        body: form_data
-                      }
-                      const callback = (server_data: SankeyData & { error: string }) => {
-                        const error = server_data['error']
-                        if (error && error.length != 0) {
-                          alert(error)
-                          return
-                        }
-                        Object.assign(data, server_data)
-                        convert_data(data)
-                        compute_auto_sankey(data, 200)
-                        set_data({ ...data })
-                      }
-                      let root = window.location.href
-                      if (root.includes('sankey-diagrams')) {
-                        root = root.replace('sankey-diagrams/', '')
-                      }
-                      const url = root + url_prefix + '/sankey/upload_simple_excel'
-                      fetch(url, fetchData).then(response => {
-                        response.text().then(text => {
-                          // try {
-                          const json_data = JSON.parse(text)
-                          callback(json_data)
-                          // } catch(err) {
-                          //   alert(err)
-                          // }
-                        })
-                      })
-                    }}
-                  />
+                  <Dropdown.Item 
+                    onClick={ () => set_show_excel_dialog(true) }
+                  >Excel</Dropdown.Item>
                   {open_menu}
                 </NavDropdown>
                 <NavDropdown id='enregistrer' title="Enregistrer" >
@@ -1804,7 +1804,17 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_show_apply_layout={set_show_apply_layout}
         sankey_data={data}
         set_sankey_data={set_data}
-      /> 
+      />
+      {show_excel_dialog ? (
+        <ExcelModal
+          handleCloseDialog={()=>set_show_excel_dialog(false)}
+          uploadExcelImpl={uploadExcelImpl}
+          set_data={set_data}
+          data={data}
+          set_show_excel_dialog={set_show_excel_dialog} />
+      ) :
+        (<div />)
+      } 
     </>
   )
 }
@@ -1869,6 +1879,116 @@ const ApplyLayoutDialog = ({show_apply_layout,set_show_apply_layout,sankey_data,
     </Modal>
   )
 }
+
+const ExcelModalPropTypes = {
+  uploadExcelImpl: PropTypes.func.isRequired,
+  handleCloseDialog: PropTypes.func.isRequired,
+  set_data: PropTypes.func.isRequired,
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_show_excel_dialog: PropTypes.func.isRequired
+}
+type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
+
+const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog,set_data,data,set_show_excel_dialog }) => {
+  let input_file_name: Blob[] | undefined
+  const [layout_file,set_layout_file] = useState<Blob|undefined>(undefined)
+  const [sheet, set_sheet] = useState('results')
+
+  return (
+    <Modal
+      show={true}
+      onHide={handleCloseDialog}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Ouvrir Fichier Excel</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group as={Row}>
+            <Form.Label>Fichier d&apos;entrée excel</Form.Label>
+            <Form.Control
+              type="file"
+              onChange={(evt: ChangeEvent) => {
+                input_file_name = (evt.target as HTMLFormElement).files[0]
+              }}
+            />
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label>Onglet</Form.Label>
+            <Form.Control as="select"
+              onChange={
+                evt => set_sheet((evt.target as HTMLInputElement).value)
+              }
+            >
+              <option
+                key={0}
+                value='data'
+                selected={sheet === 'data'}
+              >Données</option>
+              <option
+                key={1}
+                value='results'
+                selected={sheet === 'results'}
+              >Résultats</option>
+            </Form.Control>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.Label>Layout</Form.Label>
+            <Form.Control
+              type="file"
+              //ref={layout_file_}
+              name=""
+              onChange={(evt:any) =>{
+                set_layout_file(evt.target.files[0])
+              }}
+            />
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button
+          variant="secondary"
+          onClick={
+            () => uploadExcelImpl(
+              data,
+              set_data,
+              set_show_excel_dialog,
+              input_file_name,
+              sheet,
+              (sankey_data:SankeyData)=>{ 
+                if (layout_file === undefined) {
+                  return
+                }
+                const reader = new FileReader()
+                reader.onload = (() => {
+                  return (
+                    (e: ProgressEvent<FileReader>) => {
+                      let result = (e.target as FileReader).result
+                      if (result) {
+                        result = String(result).split('<br>').join('\\\\n')
+                        const data : SankeyData = JSON.parse(result)
+                        updateLayout(sankey_data, data)
+                        set_data({...sankey_data})
+                        localStorage.setItem('initial_data',JSON.stringify(sankey_data))
+                      }
+                    }
+                  )
+                }
+                )()
+                reader.readAsText(layout_file)
+              }
+            )
+          }
+        >Ouvrir</Button>
+        <Button
+          variant="secondary"
+          onClick={handleCloseDialog}
+        >Annuler</Button>
+      </Modal.Footer>
+    </Modal>)
+}
+
+ExcelModal.propTypes = ExcelModalPropTypes
 
 Menu.propTypes = MenuPropTypes
 
