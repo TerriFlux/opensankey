@@ -643,12 +643,10 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  let file_type = 'text/plain'
+  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :'text/plain'
   set_data({ ...default_sankey_data() })
   set_multi_selected_nodes([])
   set_multi_selected_links([])
-
-  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
