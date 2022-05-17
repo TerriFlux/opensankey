@@ -1908,7 +1908,7 @@ const ExcelModalPropTypes = {
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
 const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog,set_data,data,set_show_excel_dialog }) => {
-  let input_file_name: Blob[] | undefined
+  const [input_file_name,set_input_file_name]= useState<Blob|undefined>(undefined)
   const [layout_file,set_layout_file] = useState<Blob|undefined>(undefined)
   const [sheet, set_sheet] = useState('results')
 
@@ -1927,28 +1927,9 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
             <Form.Control
               type="file"
               onChange={(evt: ChangeEvent) => {
-                input_file_name = (evt.target as HTMLFormElement).files[0]
+                set_input_file_name((evt.target as HTMLFormElement).files[0])
               }}
             />
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label>Onglet</Form.Label>
-            <Form.Control as="select"
-              onChange={
-                evt => set_sheet((evt.target as HTMLInputElement).value)
-              }
-            >
-              <option
-                key={0}
-                value='data'
-                selected={sheet === 'data'}
-              >Données</option>
-              <option
-                key={1}
-                value='results'
-                selected={sheet === 'results'}
-              >Résultats</option>
-            </Form.Control>
           </Form.Group>
           <Form.Group as={Row}>
             <Form.Label>Layout</Form.Label>
@@ -1956,8 +1937,8 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
               type="file"
               //ref={layout_file_}
               name=""
-              onChange={(evt:any) =>{
-                set_layout_file(evt.target.files[0])
+              onChange={(evt:ChangeEvent) =>{
+                set_layout_file((evt.target as HTMLFormElement).files[0])
               }}
             />
           </Form.Group>
