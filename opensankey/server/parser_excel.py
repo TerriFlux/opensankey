@@ -237,8 +237,17 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('destination')]
         source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
         target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-        if len(source_nodes) == 0 or len(target_nodes) == 0:
-            continue
+        if len(source_nodes) == 0:
+            source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
+            target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
+            if len(source_nodes) == 0 or len(target_nodes) == 0:            
+                continue
+        if len(target_nodes) == 0:
+            source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
+            target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
+            if len(source_nodes) == 0 or len(target_nodes) == 0:            
+                continue
+            
         source_node = source_nodes[0]
         target_node = target_nodes[0]
         if source_node['type'] == 'product':
