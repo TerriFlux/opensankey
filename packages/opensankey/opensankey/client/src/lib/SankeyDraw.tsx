@@ -2189,7 +2189,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', n => n.idNode + '_text')
       .attr('x', (n) => {
         const width = +d3.select('#' + n.idNode).attr('width')
-        if (n.x_label && !data.show_structure) {
+        if (n.x_label) {
           return n.x_label
         } else if (n.display_style.label_horiz == 'milieu') {
           return width / 2
@@ -2261,8 +2261,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         
         d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
           const width = +d3.select('#' + d.idNode).attr('width')
-
-          if (d.display_style.label_horiz == 'milieu') {
+          if (d.x_label) {
+            return d.x_label
+          } else if (d.display_style.label_horiz == 'milieu') {
             return width / 2
           } else if (d.display_style.label_horiz == 'droite') {
             return width
