@@ -203,31 +203,44 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           disabled={!use_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              if ( elementNameParam !== 'nodes' || evt.target.value !== 'node_colormap' ) {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = evt.target.value
-                })
-              } else {
+              if ( elementNameParam === 'links' && evt.target.value === 'link_colormap' ) {
                 Object.values(data[elementName]).forEach(el => {
                   el.colorParameter = 'local'
                   el.colorTag = evt.target.value
                 })
-              }
-              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
-              if ( evt.target.value !== 'node_colormap' ) {
-                colormap = evt.target.value
-                data[elementGroupName][evt.target.value].show_legend = true
+              } else if ( elementNameParam === 'links' && evt.target.value === 'node_colormap' ) {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'node_colormap'
+                })
+              } else if ( elementNameParam === 'nodes' && evt.target.value === 'node_colormap' ) {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'local'
+                  el.colorTag = evt.target.value
+                })
+              } else {          
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = evt.target.value
+                  colormap = evt.target.value
+                  data[elementGroupName][evt.target.value].show_legend = true
+                })
               }
               set_data({ ...data })
             }}>
-          { elementNameParam === 'links' ? (
+          { elementNameParam === 'links' ? (<>
+            <option
+              key='link_colormap'
+              value={'link_colormap'}
+              selected={colormap === 'link_colormap'} >
+                Pas de palette
+            </option>
             <option
               key='node_colormap'
               value={'node_colormap'}
               selected={colormap === 'node_colormap'} >
                 Couleur des noeuds
-            </option>) : (<></>)
+            </option></>) : (<></>)
           }
           { elementNameParam === 'nodes' ? (
             <option
