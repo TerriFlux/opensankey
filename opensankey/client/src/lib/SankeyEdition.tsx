@@ -343,7 +343,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
               { (node_filter && flux_filter) ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
               {addPalette('nodeTags','nodes')}
-              { (node_filter && flux_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
+              { (node_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
               {addPalette('fluxTags','links')}</>
             ) : (<>
               <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
