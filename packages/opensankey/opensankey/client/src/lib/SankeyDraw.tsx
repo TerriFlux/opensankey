@@ -2167,7 +2167,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .style('fill', (n : any) => {
         if (n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
-          return data.nodeTags[n.colorTag].tags[selected_tag].color
+          const tag = data.nodeTags[n.colorTag].tags[selected_tag]
+          if (tag) {
+            return tag.color
+          } else {
+            console.log('tutu')
+          }
         }
         return n.iconColor
       })
