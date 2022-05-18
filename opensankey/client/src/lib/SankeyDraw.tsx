@@ -2164,7 +2164,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', n => n.iconColor)
+      .style('fill', (n : any) => {
+        if (n.colorParameter === 'groupTag') {
+          const selected_tag = n.tags[n.colorTag][0]
+          return data.nodeTags[n.colorTag].tags[selected_tag].color
+        }
+        return n.iconColor
+      })
       .attr('d', n => {
         const icon = data.icon_catalog[n.iconName]
         if (icon != undefined) {
