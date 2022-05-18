@@ -716,7 +716,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       value={multi_selected_nodes.length>0 && multi_selected_nodes[0].tooltip_text ? multi_selected_nodes[0].tooltip_text : ''}
                       onChange={
                         (evt) => {
-                          multi_selected_nodes.map(node => node.tooltip_text = evt.target.value.split('\n').join('\\n'))
+                          multi_selected_nodes.map(node => node.tooltip_text = evt.target.value)
                           set_data({ ...data })
                         }
                       }

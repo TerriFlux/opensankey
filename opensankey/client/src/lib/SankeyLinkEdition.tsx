@@ -983,7 +983,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     rows={10}
                     value={selected_link.tooltip_text ? selected_link.tooltip_text : ''}
                     onChange={evt => {
-                      selected_link.tooltip_text = evt.target.value.split('\n').join('\\n')
+                      selected_link.tooltip_text = evt.target.value
                       set_data({ ...data })
                     }}
                   />
