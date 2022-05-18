@@ -218,7 +218,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   el.colorParameter = 'local'
                   el.colorTag = evt.target.value
                 })
-              } else {          
+              } else {   
+                Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)       
                 Object.values(data[elementName]).forEach(el => {
                   el.colorParameter = 'groupTag'
                   el.colorTag = evt.target.value
