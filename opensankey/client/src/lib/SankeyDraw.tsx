@@ -256,6 +256,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return source_node.color
           } else if (target_node.type === 'product') {
             return target_node.color
+          } else {
+            return l.color
           }
         }
       } else {
@@ -2168,7 +2170,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-          if (tag) {
+          if (tag && !n.shape_visible) {
             return tag.color
           } else {
             console.log('tutu')
