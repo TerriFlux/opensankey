@@ -56,7 +56,7 @@ export const  linkTooltipsContent = (
   
   if (l.tooltip_text) {
     //t += '<p><b>Définition'+ '</b></p>' 
-    t += '<p>'+l.tooltip_text+ '</p>' 
+    t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>' 
   }
 
   //- Données
@@ -137,7 +137,7 @@ export const nodeTooltipsContent = (
 
   if (n.tooltip_text) {
     //t += '<p><b>Définition'+ '</b></p>' 
-    t += '<p>'+n.tooltip_text+ '</p>' 
+    t += '<p>'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
   }
 
   let total=0
