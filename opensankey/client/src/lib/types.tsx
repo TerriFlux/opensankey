@@ -205,7 +205,8 @@ export const SankeyDataPropTypes = {
     global_curvature: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired,
     font_family: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    font_family_selected: PropTypes.string.isRequired
+    node_font_family_selected: PropTypes.string.isRequired,
+    link_font_family_selected: PropTypes.string.isRequired
   }).isRequired,
 
   grid_square_size: PropTypes.number.isRequired,
