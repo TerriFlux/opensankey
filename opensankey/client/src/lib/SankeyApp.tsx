@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState, useEffect } from 'react'
+import React, { FunctionComponent, useState, useEffect, useRef } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
@@ -52,8 +52,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
-  const [show_draw, set_show_draw] = useState(false)
-
+  const show_draw = useRef(false)
   const [view, set_view] = useState('none')
 
   //Selectionne le premier flux par default si il y en a un 
@@ -63,6 +62,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
     .range([0, data.user_scale])
 
   const display_links = data.links
+  
+
+  useEffect(() => {
+    setTimeout(() => {
+      show_draw.current = true
+      set_data({...data})
+    }, 100)
+    show_draw.current = false
+  })
 
   return (
 
@@ -174,12 +182,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
-      {useEffect(() => {
-        const timer = setTimeout(() => {
-          set_show_draw(true)
-        }, 100)
-        return () => clearTimeout(timer)
-      }, [])}
       {
         (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
