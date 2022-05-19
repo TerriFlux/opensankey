@@ -93,7 +93,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const [diagram, set_diagram] = useState('')
   const [agregation_level,set_agregation_level] = useState(0)
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0
-  const use_link_colormap = Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
+  //const use_link_colormap = Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [use_level,set_use_level] = useState(false)
   const [show_readme,set_show_readme] = useState(false)
 
@@ -192,12 +192,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
   const addPalette = (elementGroupNameParam:string,elementNameParam:string) => {
     const elementGroupName = elementGroupNameParam === 'nodeTags' ? 'nodeTags' : 'fluxTags'
     const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
-    const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
+    //const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
     let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
     return (
       <>
         <Form.Select
-          disabled={!use_colormap}
+          disabled={!use_node_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)     
