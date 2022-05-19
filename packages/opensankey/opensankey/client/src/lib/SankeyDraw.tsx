@@ -3113,7 +3113,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const position = data.static_sankey ? 'relative' : 'absolute'
-  const font = data.display_style.font_family_selected
+  const node_font = data.display_style.node_font_family_selected
+  const link_font = data.display_style.link_font_family_selected
   const test = document.getElementsByClassName('navbar') as any
   let margin_top = 0
   if (test && test.length > 0) {
@@ -3381,14 +3382,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-        <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': font }}>
+        <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '100%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
             <g className='grid' id='grid'></g>
             <g className='g_label' id='g_label'></g>
 
             <g className='g_legend' id='g_legend'></g>
-            <g className='g_links' id='g_links' ></g>
-            <g className='g_nodes' id='g_nodes'></g>
+            <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': node_font }} ></g>
 
           </svg>
         </div>
