@@ -387,7 +387,8 @@ export const default_sankey_data = (): SankeyData => {
       global_curvature: 0.5,
       null_flux: false,
       font_family: ['Arial', 'Roboto', 'Cormorant', 'Cantarell'],
-      font_family_selected: 'Cormorant'
+      node_font_family_selected: 'Cormorant',
+      link_font_family_selected: 'Cormorant'
     },
     grid_square_size: 50,
     grid_visible: true,
