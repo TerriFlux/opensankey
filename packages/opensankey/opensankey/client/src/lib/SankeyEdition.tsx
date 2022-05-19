@@ -194,9 +194,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
     const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
     let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
-    if (Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none').length === 0) {
-      return (<></>)
-    }
     return (
       <>
         <Form.Select
@@ -307,11 +304,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
 
   const opacity_advanced = window.sankey.advanced === true  && !window.SankeyToolsStatic ? '0.3' : '0'
   const opacity_basic = !window.SankeyToolsStatic ? '0.3' : '0'
-  const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
+  const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
-  const palette = window.SankeyToolsStatic ?
-    Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
-    node_filter || flux_filter
+  const palette = node_filter || flux_filter
    
   return (
     <>
@@ -342,8 +337,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
               { (node_filter && flux_filter) ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
-              {addPalette('nodeTags','nodes')}
-              { (node_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
+              { node_filter ? (addPalette('nodeTags','nodes')) : (<></>)}
+              { (node_filter && flux_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
               {addPalette('fluxTags','links')}</>
             ) : (<>
               <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
