@@ -836,7 +836,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <Col xs={6}><Form.Select
                         onChange={
                           (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            data.display_style.font_family_selected = evt.target.value
+                            data.display_style.node_font_family_selected = evt.target.value
                             set_data({ ...data })
                           }
                         }
@@ -845,7 +845,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           return <option
                             key={'ff-' + d}
                             value={d}
-                            selected={d == data.display_style.font_family_selected}
+                            selected={d == data.display_style.node_font_family_selected}
                           >{d}</option>
 
                         })}
@@ -1008,6 +1008,29 @@ const Menu: FunctionComponent<MenuTypes> = (
             >
               <Accordion.Header>Flux</Accordion.Header>
               <Accordion.Body>
+                <Form.Group>
+                  <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres généraux</b></FormLabel>
+                  <Row>
+                    <Col xs={6}>Police des labels</Col>
+                    <Col xs={6}><Form.Select
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          data.display_style.link_font_family_selected = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    >
+                      {data.display_style.font_family.map((d) => {
+                        return <option
+                          key={'ff-' + d}
+                          value={d}
+                          selected={d == data.display_style.link_font_family_selected}
+                        >{d}</option>
+
+                      })}
+                    </Form.Select></Col>
+                  </Row>
+                </Form.Group>
                 <Row>
                   <Col xs={1}>
 

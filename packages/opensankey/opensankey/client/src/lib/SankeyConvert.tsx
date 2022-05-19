@@ -57,6 +57,7 @@ interface ConvertSankeyData {
   display_style: {
     trade_close?: boolean
     unit?: boolean | number
+    font_family_selected?: string
   }
   show_uncert?: boolean
   tags_catalog?: TagsCatalog
@@ -331,7 +332,13 @@ export const convert_data = (
   }
   if (display_style.font_family === undefined) {
     display_style.font_family = ['Arial','Roboto','Cormorant','Cantarell']
-    display_style.font_family_selected = 'Arial'
+    if (display_style.font_family_selected) {
+      display_style.node_font_family_selected = display_style.font_family_selected
+      display_style.link_font_family_selected = display_style.font_family_selected
+    } else {
+      display_style.node_font_family_selected = 'Arial'
+      display_style.link_font_family_selected = 'Arial'      
+    }
   }
   if (display_style.global_curvature === undefined) {
     display_style.global_curvature = 0.99
