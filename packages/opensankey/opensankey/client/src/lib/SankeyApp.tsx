@@ -73,7 +73,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
     }, 100)
     setTimeout(() => {
       show_draw.current = false
-    }, 200)
+    }, 5000)
   })
 
   return (
