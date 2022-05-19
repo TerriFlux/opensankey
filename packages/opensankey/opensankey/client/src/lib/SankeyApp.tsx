@@ -66,10 +66,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
   useEffect(() => {
     setTimeout(() => {
-      show_draw.current = true
-      set_data({...data})
+      if (!show_draw.current) {
+        show_draw.current = true
+        set_data({...data})
+      }
     }, 100)
-    show_draw.current = false
+    setTimeout(() => {
+      show_draw.current = false
+    }, 200)
   })
 
   return (
