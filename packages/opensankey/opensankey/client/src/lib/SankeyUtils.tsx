@@ -643,12 +643,10 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  let file_type = 'text/plain'
+  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :'text/plain'
   set_data({ ...default_sankey_data() })
   set_multi_selected_nodes([])
   set_multi_selected_links([])
-
-  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
@@ -715,7 +713,7 @@ export const hideNullFluxNodes = (
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val) {
-            total_input += getLinkValue(sankey_data, link.idLink).value
+            total_input += val.value
           } else {
             console.log('val is undefined')
           }
@@ -731,7 +729,12 @@ export const hideNullFluxNodes = (
           return ''
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-          total_output += getLinkValue(sankey_data, link.idLink).value
+          const val = getLinkValue(sankey_data, link.idLink)
+          if (val) {
+            total_output += val.value
+          } else {
+            console.log('val is undefined')
+          }
         }
       }
     }

@@ -194,40 +194,51 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
     const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
     let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
-    if (Object.keys(data[elementGroupName]).filter(tags_key => data[elementGroupName][tags_key].banner !== 'none').length === 0) {
-      return (<></>)
-    }
     return (
       <>
         <Form.Select
           disabled={!use_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              if ( elementNameParam !== 'nodes' || evt.target.value !== 'node_colormap' ) {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = evt.target.value
-                })
-              } else {
+              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)     
+              if ( elementNameParam === 'links' && evt.target.value === 'link_colormap' ) {
                 Object.values(data[elementName]).forEach(el => {
                   el.colorParameter = 'local'
                   el.colorTag = evt.target.value
                 })
-              }
-              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)
-              if ( evt.target.value !== 'node_colormap' ) {
-                colormap = evt.target.value
-                data[elementGroupName][evt.target.value].show_legend = true
+              } else if ( elementNameParam === 'links' && evt.target.value === 'node_colormap' ) {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'node_colormap'
+                })
+              } else if ( elementNameParam === 'nodes' && evt.target.value === 'node_colormap' ) {
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'local'
+                  el.colorTag = evt.target.value
+                })
+              } else {     
+                Object.values(data[elementName]).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = evt.target.value
+                  colormap = evt.target.value
+                  data[elementGroupName][evt.target.value].show_legend = true
+                })
               }
               set_data({ ...data })
             }}>
-          { elementNameParam === 'links' ? (
+          { elementNameParam === 'links' ? (<>
+            <option
+              key='link_colormap'
+              value={'link_colormap'}
+              selected={colormap === 'link_colormap'} >
+                Pas de palette
+            </option>
             <option
               key='node_colormap'
               value={'node_colormap'}
               selected={colormap === 'node_colormap'} >
                 Couleur des noeuds
-            </option>) : (<></>)
+            </option></>) : (<></>)
           }
           { elementNameParam === 'nodes' ? (
             <option
@@ -293,11 +304,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
 
   const opacity_advanced = window.sankey.advanced === true  && !window.SankeyToolsStatic ? '0.3' : '0'
   const opacity_basic = !window.SankeyToolsStatic ? '0.3' : '0'
-  const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0 || nb_agregation_level > 1
+  const node_filter = Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 0
   const flux_filter = Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 0
-  const palette = window.SankeyToolsStatic ?
-    Object.entries(nodeTags).filter(([,v])=>v.banner !== 'none').length > 1 || Object.entries(fluxTags).filter(([,v])=>v.banner !== 'none').length > 1 :
-    node_filter || flux_filter
+  const palette = node_filter || flux_filter
    
   return (
     <>
@@ -328,7 +337,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
               { (node_filter && flux_filter) ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
-              {addPalette('nodeTags','nodes')}
+              { node_filter ? (addPalette('nodeTags','nodes')) : (<></>)}
               { (node_filter && flux_filter) ?(<FormLabel >Flux</FormLabel>) : (<></>)}
               {addPalette('fluxTags','links')}</>
             ) : (<>
