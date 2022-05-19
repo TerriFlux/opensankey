@@ -430,7 +430,7 @@ def save_simple_excel(
                 tags_colors = (':').join([ tag['color'] for tag in sankey_data['fluxTags'][tag_key_names[i]]['tags'].values()])
                 tags[i+1]=[tag_key_names[i],'fluxTags',(':').join([ tag['name'] for tag in sankey_data['fluxTags'][tag_key_names[i]]['tags'].values()]),'',sankey_data['fluxTags'][tag_key_names[i]]['color_map'],tags_colors]
 
-    nb_cols_nodes = 4 + len(sankey_data['nodeTags'].keys()) + 1
+    nb_cols_nodes = 4 + len(sankey_data['nodeTags'].keys())
 
     nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodes[0] = ["Level","Element","Couleur","Forme"]+list(sankey_data['nodeTags'])
@@ -448,11 +448,11 @@ def save_simple_excel(
         for j,tag_name in enumerate(sankey_data['nodeTags']):
             nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
         nodes[i+1][nodes_cols.index('Level')] = 1
-        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
-            nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
+        # if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
+        #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
     flux_cols = [
-        'Origin', 'Destination', 'Value'
+        'origin', 'destination', 'value'
     ]
 
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys()) + len(sankey_data['fluxTags'].keys())
@@ -467,41 +467,38 @@ def save_simple_excel(
         val = link['value']
         row = add_links(sankey_data, flux_cols, links, row, link, val,0)
 
-    products = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'product']
-    sectors  = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'sector']
-    nb_products = len(products)
-    nb_sectors  = len(sectors)
+    # products = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'product']
+    # sectors  = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'sector']
+    # nb_products = len(products)
+    # nb_sectors  = len(sectors)
 
-    if nb_products == 0 or nb_sectors == 0:
-        mfa_output = {
-            'nodes' : nodes,
-            'tags'  : tags,
-            'data'  : links,
-        }
-        return mfa_output,products,sectors
+    # if nb_products == 0 or nb_sectors == 0:
+    #     mfa_output = {
+    #         'nodes' : nodes,
+    #         'tags'  : tags,
+    #         'data'  : links,
+    #     }
+    #     return mfa_output,products,sectors
 
-    ter = {
-        'use': [[None for x in range(nb_sectors + 1)] for y in range(nb_products + 1)],
-        'supply': [[None for x in range(nb_sectors + 1)] for y in range(nb_products + 1)]
-    }
+    nodes_names = [node[1] for node in nodes[1:]]
+    ter = [[None for x in range(len(nodes) + 1)] for y in range(len(nodes) + 1)]
 
-    for i in range(0, nb_products):
-        ter['supply'][i+1][0] = products[i]
-        ter['use'][i+1][0] = products[i]
-    for j in range(0, nb_sectors):
-        ter['supply'][0][j+1] = sectors[j]
-        ter['use'][0][j+1] = sectors[j]
+    for i in range(len(nodes_names)):
+        ter[i+1][0] =nodes_names[i]
+        #ter['use'][i+1][0] = nodes[i]
+    for j in range(len(nodes_names)):
+        ter[0][j+1] = nodes_names[j]
+    #     ter['use'][0][j+1] = sectors[j]
     for row in range(1,len(links)):
-        origin      = links[row][flux_cols.index('Origin')]
-        destination = links[row][flux_cols.index('Destination')]
-        if origin in products:
-            product_idx = products.index(origin)
-            sector_idx = sectors.index(destination)
-            ter['use'][product_idx+1][sector_idx+1] = 1
-        else:
-            product_idx = products.index(destination)
-            sector_idx = sectors.index(origin)
-            ter['supply'][product_idx+1][sector_idx+1] = 1           
+        origin      = links[row][flux_cols.index('origin')]
+        destination = links[row][flux_cols.index('destination')]
+        try:
+            origin_idx = nodes_names.index(origin)
+            destination_idx = nodes_names.index(destination)
+            ter[origin_idx+1][destination_idx+1] = 1
+        except Exception as excpt:
+            print(excpt)
+
     mfa_output = {
         'nodes' : nodes,
         'tags'  : tags,
@@ -509,20 +506,22 @@ def save_simple_excel(
         'ter_base'   : ter
     }
 
-    return mfa_output,products,sectors
+    return mfa_output,nodes_names
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
-    if ( 'value' in val):
-        links[row][flux_cols.index('Origin')] = sankey_data['nodes'][link['idSource']]['name']
-        links[row][flux_cols.index('Destination')] = sankey_data['nodes'][link['idTarget']]['name']
-        links[row][flux_cols.index('Value')] = val['value']
+    if len(sankey_data['dataTags'].keys()) == depth:
+        links[row][flux_cols.index('origin')] = sankey_data['nodes'][link['idSource']]['name']
+        links[row][flux_cols.index('destination')] = sankey_data['nodes'][link['idTarget']]['name']
+        links[row][flux_cols.index('value')] = val['value']
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
                 links[row][3+depth+i] = val['tags'][flux_tag_key]
             else:
                 links[row][3+depth+i] = ''
         return row+1
-    for i,data_tag_name in enumerate(val.keys()):
+    dataTagGroup = list(sankey_data['dataTags'].keys())[depth]
+    data_tags = list(sankey_data['dataTags'][dataTagGroup]['tags'].keys())
+    for i,data_tag_name in enumerate(data_tags):
         links[row][3+depth] = data_tag_name
         new_row = add_links(sankey_data, flux_cols, links, row, link, val[data_tag_name],depth+1)
         for i in range(row,new_row):
