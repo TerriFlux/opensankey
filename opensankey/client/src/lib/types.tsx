@@ -139,11 +139,21 @@ export const SankeyLabelPropTypes = {
   position_vert:PropTypes.string.isRequired,
   position_horiz:PropTypes.string.isRequired,
 
+  font_size:PropTypes.number.isRequired,
+  font_weight:PropTypes.bool.isRequired,
+  font_style:PropTypes.bool.isRequired,
+  font_uppercase:PropTypes.bool.isRequired,
+
   label_width: PropTypes.number.isRequired,
   label_height: PropTypes.number.isRequired,
+ 
+
 
   x: PropTypes.number.isRequired,
   y: PropTypes.number.isRequired,
+  x_label: PropTypes.number.isRequired,
+  y_label: PropTypes.number.isRequired,
+  
 
 }
 
