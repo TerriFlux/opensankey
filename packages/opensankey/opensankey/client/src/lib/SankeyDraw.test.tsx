@@ -1,26 +1,26 @@
 import React from 'react'
-import { render } from "@testing-library/react";
+import { render } from '@testing-library/react'
 //import renderer from 'react-test-renderer';
 //import {default_sankey_data, getLinkValue} from './SankeyUtils'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
-import { SankeyData, SankeyLink, SankeyNode } from './types';
-import { convert_data } from './SankeyConvert';
-import { compute_auto_sankey } from './SankeyLayout';
+import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { convert_data } from './SankeyConvert'
+import { compute_auto_sankey } from './SankeyLayout'
 
 beforeEach(() => {
-  (window.SVGElement.prototype as any).getComputedTextLength = () => 200;
-});
+  (window.SVGElement.prototype as any).getComputedTextLength = () => 200
+})
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs')
+const path = require('path')
 const the_tests : string[] = []
 const mfadata = process.env.MFAData as string
 const parse_folder = (current_dir : string) => {
   const folder_content = fs.readdirSync(current_dir)
-  for (let idx in folder_content) {
+  for (const idx in folder_content) {
     const file_or_folder = folder_content[idx]
     if ( file_or_folder.includes('.vscode') || file_or_folder.includes('.git') || file_or_folder.includes('.md') || file_or_folder.includes('Archive') || file_or_folder.includes('not_tested') || file_or_folder.includes('artefacts')) {
-       continue
+      continue
     }
     const new_path = path.join(current_dir,file_or_folder)
     const stats = fs.statSync(new_path)
@@ -36,7 +36,7 @@ const parse_folder = (current_dir : string) => {
       const file_names = fs.readdirSync(new_path)
       for (const file_idx in file_names) {
         if (file_names[file_idx].includes('layout')) {
-            continue
+          continue
         }
         const full_path = path.join(new_path,file_names[file_idx])
         the_tests.push(full_path)
@@ -47,7 +47,7 @@ const parse_folder = (current_dir : string) => {
 parse_folder(mfadata)
 
 test.each(the_tests)( 'tyty',(full_path) => {
-  let x = jest.spyOn(window, 'focus') 
+  const x = jest.spyOn(window, 'focus') 
   x.mockImplementation(() => {})
 
   const new_data = require(full_path)
@@ -59,8 +59,8 @@ test.each(the_tests)( 'tyty',(full_path) => {
     sankey_file_name,
     JSON.stringify(new_data, null, 3),
     function (err:any) {
-      if (err) throw err;
-      console.log('File is created successfully.');
+      if (err) throw err
+      console.log('File is created successfully.')
     }
   )
 
@@ -72,8 +72,8 @@ test.each(the_tests)( 'tyty',(full_path) => {
       {...SankeyDrawDefaultProps}
     />
   )
-  let tree = component.container
+  const tree = component.container
   expect(tree).toMatchSnapshot()
-});
+})
 
 

@@ -53,6 +53,12 @@ export const  linkTooltipsContent = (
   const l = d as SankeyLink
   let t = '<p style=\'text-align: center;margin-bottom:0px\'><b>'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' -> ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</b></p>'
 
+  
+  if (l.tooltip_text) {
+    //t += '<p><b>Définition'+ '</b></p>' 
+    t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>' 
+  }
+
   //- Données
   let children = false
   let desagregate_source_nodes : SankeyNode[] = []
@@ -128,6 +134,12 @@ export const nodeTooltipsContent = (
   const display_links = data.links
 
   let t =  '<p style=\'text-align: center;margin-bottom:0px\' ><b>'  + n.name.split('\\n').join(' ') + '</b></p>'
+
+  if (n.tooltip_text) {
+    //t += '<p><b>Définition'+ '</b></p>' 
+    t += '<p>'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
+  }
+
   let total=0
   if ( n.inputLinksId.length > 0 ) {
     for (let i=0;i<n.inputLinksId.length;i++) {

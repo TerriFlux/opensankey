@@ -1,25 +1,30 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import * as d3 from 'd3'
+import { agregation, desagregation } from './SankeyLayout'
 
-export const addDataTags =(
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
+
+export const addDataTags = (
   dataTags: TagsGroup[],
-  v:any,
-  depth:number  
+  v: any,
+  depth: number
 ) => {
   const dataTag = Object.values(dataTags)[depth]
   const listKey = Object.keys(dataTag.tags)
   for (const i in listKey) {
-    if (depth === dataTags.length-1) {
+    if (depth === dataTags.length - 1) {
       v[listKey[i]] = {
-        value         : v.value,
-        display_value : v.display_value,
-        color_tag     : {},
-        extension     : {}        
+        value: v.value,
+        display_value: v.display_value,
+        tags: {},
+        extension: {}
       }
     } else {
-      addDataTags(dataTags,v[listKey[i]],depth+1)  
+      addDataTags(dataTags, v[listKey[i]], depth + 1)
     }
   }
 }
@@ -31,57 +36,57 @@ export const getLinkValue = (
   idLink: string,
   up = false
 ) => {
-  const { links,dataTags } = data
+  const { links, dataTags } = data
   if (!(idLink in links)) {
-    console.log('idLink: ' + idLink + ' not in links')
+
     return {
-      value        : 0,
+      value: 0,
       display_value: 'default',
-      color_tag    : {},
-      extension    : {}          
+      tags: {},
+      extension: {}
     }
   }
-  let val = ((links[idLink].value as unknown) as {[key:string]:SankeyLinkValueDict})
+  let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) && dataTag.banner !== 'display' ? true : false }).map(dataTag => {
-    const selected_tags = Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0)  ? true : false }).map(dataTag => {
+    const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
-      return 
+      return
     }
-    listKey.push(Object.entries(dataTag.tags).filter(([,tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
   })
   if (missing_key) {
     return {
-      value        : 0,
+      value: 0,
       display_value: 'default',
-      color_tag    : {},
-      extension    : {}          
-    }    
+      tags: {},
+      extension: {}
+    }
   }
 
   for (const i in listKey) {
-    if ( up && +i === (listKey.length - 1) ) {
+    if (up && +i === (listKey.length - 1)) {
       break
     }
     val = val[listKey[i]]
   }
-  return (val as unknown ) as SankeyLinkValue
+  return (val as unknown) as SankeyLinkValue
 }
 
-export const findMaxLinkValue = ( 
-  max_node_value:number, 
+export const findMaxLinkValue = (
+  max_node_value: number,
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
-  if ( !value_dict || Object.values(value_dict).length ===0) {
-    return max_node_value
+  if ( value_dict === undefined || Object.values(value_dict).length == 0) {
+    return new_max_node_value
   }
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
     Object.values(value_dict).forEach(v => {
-      const cur_max_value = findMaxLinkValue(new_max_node_value,(v as unknown) as SankeyLinkValueDict)
+      const cur_max_value = findMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
       new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
     })
   } else {
@@ -98,7 +103,7 @@ export const getTotalLinks = (
   Links.forEach(element => {
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
     if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
-      const tmp = getLinkValue(data,element).value
+      const tmp = getLinkValue(data, element).value
       total += tmp
     }
   })
@@ -123,11 +128,13 @@ export const compute_total_offsets = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
-  //const link_id = link ? links.indexOf(link) : -1
-
   node.outputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
+      if (link === undefined) {
+
+        return
+      }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let target_node
         try {
@@ -135,11 +142,11 @@ export const compute_total_offsets = (
         } catch {
           return
         }
-        
-        const node_x = node.position === 'absolute'               ? +node.x        : +target_node.x + +node.x
-        const node_y = node.position === 'absolute'               ? +node.y        : +target_node.y + +node.y 
-        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x        + +target_node.x 
-        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y        + +target_node.y
+
+        const node_x = node.position === 'absolute' ? +node.x : +target_node.x + +node.x
+        const node_y = node.position === 'absolute' ? +node.y : +target_node.y + +node.y
+        const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x + +target_node.x
+        const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y + +target_node.y
         if (link.orientation === 'hh') {
           if (target_node_x > node_x && !link.recycling || target_node_x <= node_x && link.recycling) {
             right_flux.push(idLink)
@@ -172,6 +179,10 @@ export const compute_total_offsets = (
   node.inputLinksId.forEach(
     (idLink) => {
       const link = links[idLink]
+      if (link === undefined) {
+
+        return
+      }
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         let source_node
         try {
@@ -179,10 +190,10 @@ export const compute_total_offsets = (
         } catch {
           return
         }
-        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x        + +source_node.x 
-        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y        + +source_node.y 
-        const node_x = node.position === 'absolute'               ? +node.x        : +source_node.x + +node.x 
-        const node_y = node.position === 'absolute'               ? +node.y        : +source_node.y + +node.y
+        const source_node_x = source_node.position === 'absolute' ? +source_node.x : +node.x + +source_node.x
+        const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
+        const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
+        const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
         if (link.orientation === 'vv') {
           if (source_node_y < node_y) {
             // flux goes down
@@ -234,7 +245,7 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(nodes, links[the_id], selected_tags)
-      console.log(v)
+
       if (v === undefined) {
         return
       }
@@ -325,9 +336,12 @@ export const link_text = (
   d: SankeyLink,
   link_value: number
 ) => {
-  const str_display = String(getLinkValue(data,d.idLink).display_value)
+  const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== 'default') {
     return str_display
+  }
+  if ( data.show_structure) {
+    return
   }
   const the_link_value = toPrecision(link_value)
   return the_link_value
@@ -335,24 +349,32 @@ export const link_text = (
 
 export const default_sankey_data = (): SankeyData => {
   return {
-    version: '0.6',
+    version: '0.8',
 
     nodes: {},
     links: {},
     user_scale: 20,
-    //height: 1500,
-    width: 2150,
-    node_width: 10,
+
+    width: window.innerWidth - 40,
+    height: window.innerHeight - 40,
+
     h_space: 200,
     v_space: 100,
-    legend_position: [0, 100],
+    legend_position: [0, 10],
+
+    show_structure: false,
+    fit_screen    : window.SankeyToolsStatic,
+
+    icon_catalog: {},
+    labels:{},
 
     left_shift: 0.4,
     right_shift: 0.5,
     max_shift: 0.2,
 
     display_style: {
-      font_size: 11,
+      node_font_size: 14,
+      link_font_size: 14,
       sector_uppercase: true,
       sector_bold: true,
       sector_italic: false,
@@ -363,19 +385,29 @@ export const default_sankey_data = (): SankeyData => {
       filter: 0,
       filter_label: 0,
       global_curvature: 0.5,
-      null_flux: false
+      null_flux: false,
+      font_family: ['Arial', 'Roboto', 'Cormorant', 'Cantarell'],
+      font_family_selected: 'Cormorant'
     },
+    grid_square_size: 50,
+    grid_visible: true,
 
     static_sankey: false,
 
-    tags_catalog: {},
-    dataTags: {}
+    nodeTags: {},
+    dataTags: {},
+    fluxTags: {},
+    fluxColorMap: 'node_colormap',
+    nodeColorMap: 'node_colormap', 
+    
+    view: []
   }
 }
 
 export const default_node = (
+  data: SankeyData
 ): SankeyNode => {
-  console.log('-> Affectation du default_node')
+  // console.log('-> Affectation du default_node')
   const defaultNode = {
     name: '',
     idNode: 'default',
@@ -384,8 +416,15 @@ export const default_node = (
     node_visible: true,
     shape_visible: true,
     label_visible: true,
+    node_width: 40,
+    node_height: 40,
+    iconName: 'none',
+    iconColor: '#fff',
+    iconRatio: 80,
+    iconVisible: true,
+
     color: '#a9a9a9',
-    nodeParameter: 'general',
+    colorParameter: 'local',
     position: 'absolute',
     x: 100,
     y: 100,
@@ -394,7 +433,22 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: { 'Primaire': { parent_name: undefined } }
+    dimensions: { 'Primaire': { parent_name: undefined } },
+
+    display_style: {
+      font_size: data.display_style.node_font_size,
+      uppercase: data.display_style.sector_uppercase,
+      bold: data.display_style.sector_bold,
+      italic: data.display_style.sector_italic,
+      unit: false,
+      filter: 0,
+      filter_label: 0,
+      global_curvature: 0.5,
+      null_flux: false,
+      label_vert: 'bas',
+      label_horiz: 'milieu',
+      label_box_width: 110,
+    },
   }
   return defaultNode
 }
@@ -404,19 +458,19 @@ const create_object = (data: SankeyData, l: string[]) => {
     const obj = Object.create({})
     obj['value'] = 10
     obj['display_value'] = 'default'
-    obj['color_tag'] = {}
+    obj['tags'] = {}
     obj['extension'] = {}
 
     return obj
   } else {
     const i = l[0]
     if (i !== undefined) {
-      const o=Object.create({})
+      const o = Object.create({})
       Object.keys(dataTags[i].tags).forEach(tag_key => {
         const obj = Object.create({})
         const ob = create_object(data, l.slice(1))
         obj[tag_key] = ob
-        Object.assign(o,obj)
+        Object.assign(o, obj)
       })
       return o
     }
@@ -425,24 +479,25 @@ const create_object = (data: SankeyData, l: string[]) => {
 export const default_link = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
-  const listK = Object.keys(dataTags).filter(d=>{
+  const listK = Object.keys(dataTags).filter(d => {
 
-    if(Object.keys(dataTags[d].tags).length!=0){
+    if (Object.keys(dataTags[d].tags).length != 0) {
       return true
-    }else{
+    } else {
       return false
     }
   })
-  
+
 
   nObjet = create_object(data, listK)
-  
+
   return {
     idSource: 'node0',
     idTarget: 'node1',
     idLink: 'link0',
     value: nObjet,
     color: '#a9a9a9',
+    gradient: false,
     curved: false,
     arrow: true,
     text_color: 'black',
@@ -456,7 +511,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     right_horiz_shift: 0,
     vert_shift: 0,
     shift_gap: 0.1,
-    colormap: ''
+    colorTag: '',
+    colorParameter: 'local'
   }
 }
 
@@ -479,8 +535,29 @@ export const delete_node = (
   data: SankeyData,
   node: SankeyNode
 ) => {
-  node.inputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
-  node.outputLinksId.forEach(idLink => delete_link(data, data.links[idLink]))
+
+  //Ne fait plus appel à delete_link car la fonction modifie le tableau des output/input du node 
+  //et ne supprime pas des flux qui devrait l'être 
+
+  node.inputLinksId.forEach(idLink => {
+    Object.values(data.nodes).map((k) => {
+      k.outputLinksId = k.outputLinksId.filter(function (value) {
+        return value != idLink
+      })
+    })
+    delete data.links[idLink]
+  })
+
+  node.outputLinksId.forEach(idLink => {
+    Object.values(data.nodes).map((k) => {
+      k.inputLinksId = k.inputLinksId.filter(function (value) {
+        return value != idLink
+      })
+    })
+    delete data.links[idLink]
+  })
+
+
   delete data.nodes[node.idNode]
 }
 
@@ -488,18 +565,18 @@ export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
 
-  const { tags_catalog } = sankey_data
+  const { nodeTags } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
 
   display_nodes.forEach(node => {
     node.node_visible = true
     let break_loop = false
     let no_tag = true
-    Object.keys(tags_catalog).forEach(tags_group_key => {
+    Object.keys(nodeTags).forEach(tags_group_key => {
       if (break_loop) {
         return
       }
-      const tags_group = tags_catalog[tags_group_key]
+      const tags_group = nodeTags[tags_group_key]
       if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
         // tags do not apply to node
         return
@@ -516,7 +593,9 @@ export const setSelectedTags = (
       node.node_visible = true
     }
   })
-
+  if (!sankey_data.show_structure) {
+    hideNullFluxNodes(sankey_data)
+  }
 }
 
 const downloadExamples = (
@@ -550,9 +629,11 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void
+  example_callback: (data: SankeyData) => void,
+  set_multi_selected_nodes:(nodes:string[])=>void,
+  set_multi_selected_links:(links:string[])=>void
 ) => {
-  
+
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
@@ -562,31 +643,30 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  let file_type = 'text/plain'
+  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :'text/plain'
   set_data({ ...default_sankey_data() })
-
-  file_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  set_multi_selected_nodes([])
+  set_multi_selected_links([])
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      // try {
+
       const server_data = JSON.parse(text)
       data = default_sankey_data()
       Object.assign(data, server_data)
       convert_data(data)
-      // data.left_shift = 0.40
-      // data.right_shift = 0.50
+
       example_callback(data)
+
       set_data({ ...data })
+      localStorage.setItem('initial_data',JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
-      // } catch (err) {
-      //   alert(err)
-      // }
     })
   })
 }
 
 export const set_nodes_level = (
+  data : SankeyData,
   display_nodes: { [key: string]: SankeyNode },
   level: number
 ) => {
@@ -597,8 +677,8 @@ export const set_nodes_level = (
       return
     }
     if (node.dimensions['Primaire'].level === level) {
-      node.node_visible = true
-      node.display = true
+      desagregation(data,node.idNode,'Primaire')
+      agregation(data,node.idNode,'Primaire')
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
         if (idParent !== null && idParent !== undefined) {
@@ -609,6 +689,57 @@ export const set_nodes_level = (
     } else if (node.dimensions['Primaire'].level > level) {
       node.node_visible = false
       node.display = false
+    }
+  })
+}
+
+export const hideNullFluxNodes = (
+  sankey_data: SankeyData
+) => {
+  const { nodes, links } = sankey_data
+  const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
+  if (display_nodes.length == 0) {
+    return
+  }
+  display_nodes.forEach(node => {
+    let total_input = 0
+    if (node.inputLinksId.length > 0) {
+      for (let i = 0; i < node.inputLinksId.length; i++) {
+        const link = links[node.inputLinksId[i]]
+        if (link === undefined) {
+          //alert('Corruption du diagramme')
+          return ''
+        }
+        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+          const val = getLinkValue(sankey_data, link.idLink)
+          if (val) {
+            total_input += val.value
+          } else {
+            console.log('val is undefined')
+          }
+        }
+      }
+    }
+    let total_output = 0
+    if (node.outputLinksId.length > 0) {
+      for (let i = 0; i < node.outputLinksId.length; i++) {
+        const link = sankey_data.links[node.outputLinksId[i]]
+        if (link === undefined) {
+          //alert('Corruption du diagramme')
+          return ''
+        }
+        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+          const val = getLinkValue(sankey_data, link.idLink)
+          if (val) {
+            total_output += val.value
+          } else {
+            console.log('val is undefined')
+          }
+        }
+      }
+    }
+    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+      nodes[node.idNode].node_visible = false
     }
   })
 }
