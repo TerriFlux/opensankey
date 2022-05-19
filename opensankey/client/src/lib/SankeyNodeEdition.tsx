@@ -208,56 +208,54 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           />
         </Col>
       </Form.Group>
-      <Form.Group xs={12} as={Row} >
-        <Table striped bordered hover className='node_tags_affiliation'>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Appartenance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tags_visible && tags_group_key != '' && Object.keys(nodeTags).includes(tags_group_key) ? Object.entries(nodeTags[tags_group_key].tags).map(
-              tags => {
-                const verif = tags[0]
-                let allChecked = true
-                multi_selected_nodes.map((d) => {
-                  allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
-                })
-                return (
-                  <tr key={tags[0]}>
-                    <td><FormLabel>{tags[1].name}</FormLabel></td>
-                    <td>
-                      <FormCheck
-                        name={'element_visible' + tags[0]}
-                        checked={allChecked}
-                        id={tags[0]}
-                        type='checkbox'
-                        onChange={
-                          (evt: React.ChangeEvent) => {
-                            const new_nb_element = evt.target as HTMLInputElement
-                            const tag_key = new_nb_element.id
-                            const visible = new_nb_element.checked
-                            Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
-                              if (visible) {
-                                if (!d.tags[tags_group_key]) {
-                                  d.tags[tags_group_key] = []
-                                }
-                                d.tags[tags_group_key].push(tag_key)
-                              } else {
-                                d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tag_key))
+      <Table striped bordered hover className='node_tags_affiliation' >
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Appartenance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tags_visible && tags_group_key != '' && Object.keys(nodeTags).includes(tags_group_key) ? Object.entries(nodeTags[tags_group_key].tags).map(
+            tags => {
+              const verif = tags[0]
+              let allChecked = true
+              multi_selected_nodes.map((d) => {
+                allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
+              })
+              return (
+                <tr key={tags[0]}>
+                  <td><FormLabel>{tags[1].name}</FormLabel></td>
+                  <td>
+                    <FormCheck
+                      name={'element_visible' + tags[0]}
+                      checked={allChecked}
+                      id={tags[0]}
+                      type='checkbox'
+                      onChange={
+                        (evt: React.ChangeEvent) => {
+                          const new_nb_element = evt.target as HTMLInputElement
+                          const tag_key = new_nb_element.id
+                          const visible = new_nb_element.checked
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
+                            if (visible) {
+                              if (!d.tags[tags_group_key]) {
+                                d.tags[tags_group_key] = []
                               }
-                            })
-                            set_data({ ...data })
-                          }
-                        } />
-                    </td>
-                  </tr>
-                )
-              }) : (<></>)}
-          </tbody>
-        </Table>
-      </Form.Group>
+                              d.tags[tags_group_key].push(tag_key)
+                            } else {
+                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tag_key))
+                            }
+                          })
+                          set_data({ ...data })
+                        }
+                      } />
+                  </td>
+                </tr>
+              )
+            }) : (<></>)}
+        </tbody>
+      </Table>
     </Tab >)
   return (
     <Row>
