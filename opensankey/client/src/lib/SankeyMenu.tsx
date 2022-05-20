@@ -419,8 +419,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     set_data({ ...data })
   }
-  const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.name } })
+  const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
+  console.log(tmpNodes)
+  const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
+  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   const props = {
     scroll: true,
     backdrop: false,
@@ -441,7 +444,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
+            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             set_multi_selected_nodes(m_s)
           }}
           labelledBy={'hello'}
@@ -450,8 +453,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     return DD
   }
 
-  const INITIAL_OPTIONS_label = Object.values(data.labels).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected_label = multi_selected_label.map((d) => { return { 'label': d.name, 'value': d.name } })
+  const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
+  const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
+  const selected_label = multi_selected_label.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   const dropdownMultiLabel = () => {
     const DD = (
       <div id='DD_multi_label'>
@@ -468,7 +472,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.name)))
+            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
             set_multi_selected_label(m_s)
           }}
           labelledBy={'hello'}
@@ -1295,8 +1299,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         font_uppercase: false,
                         x: 50,
                         y: 50,
-                        x_label:25,
-                        y_label:12,
+                        x_label: 25,
+                        y_label: 12,
                       }
                       data.labels[new_label.idLabel] = new_label
                       set_multi_selected_label([new_label])
@@ -1488,10 +1492,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.map(d => {
                             d.position_vert = 'haut'
-                            d.x_label=d.label_width/2
-                            d.y_label=d.font_size+3
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.font_size + 3
                           })
-                      
+
                           set_data({ ...data })
                         }
                       }
@@ -1506,8 +1510,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.map(d => {
                             d.position_vert = 'milieu'
-                            d.x_label=d.label_width/2
-                            d.y_label=d.label_height/2
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.label_height / 2
                           })
                           set_data({ ...data })
                         }
@@ -1524,8 +1528,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.map(d => {
                             d.position_vert = 'bas'
-                            d.x_label=d.label_width/2
-                            d.y_label=d.label_height-3
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.label_height - 3
                           })
                           set_data({ ...data })
                         }
@@ -1547,8 +1551,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type={'number'}
                       value={allLabelFontSize()}
                       onChange={evt => {
-                        let val= +evt.target.value
-                        val=(val<=0)?1:val
+                        let val = +evt.target.value
+                        val = (val <= 0) ? 1 : val
                         multi_selected_label.map(d => d.font_size = val)
                         set_data({ ...data })
                       }}
