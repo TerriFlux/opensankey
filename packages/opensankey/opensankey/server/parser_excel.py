@@ -411,29 +411,27 @@ def save_simple_excel(
     #nodes_cols = mfa_input['nodes'][0]
     # tag_names are disposed between the column Dimensions and the column Définition
     tag_key_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags']) + list(sankey_data['fluxTags'])
-    tag_group_names = [ tags_group['group_name'] for tags_group in sankey_data['dataTags'].values()] +\
-                      [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()] +\
-                      [ tags_group['group_name'] for tags_group in sankey_data['fluxTags'].values()]
+
     nodes = {}
-    tags =[]
-    if len(tag_group_names) != 0:
-        tags = [[""] * 6] * (len(tag_group_names)+1)
-        tags[0] = ["Name","Type","Tags","isPalette","Colormap","Color"]
+    tags_sheet =[]
+    if len(tag_key_names) != 0:
+        tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
+        tags_sheet[0] = ["Name","Type","Tags","isPalette","Colormap","Color"]
+    
+    row = 1
+    for tag_group_type in ['dataTags','nodeTags','fluxTags']:
+        tag_key_names = list(sankey_data[tag_group_type])
+        tag_group_names = [ tags_group['group_name'] for tags_group in sankey_data[tag_group_type].values()]
         for i in range(len(tag_key_names)):
-            if tag_key_names[i] in sankey_data['dataTags']:
-                tags_colors = (':').join([ tag['color'] for tag in sankey_data['dataTags'][tag_key_names[i]]['tags'].values()])
-                tags[i+1]=[tag_key_names[i],'dataTags',(':').join([ tag['name'] for tag in sankey_data['dataTags'][tag_key_names[i]]['tags'].values()]),'',sankey_data['dataTags'][tag_key_names[i]]['color_map'],tags_colors]
-            elif tag_key_names[i] in sankey_data['nodeTags']:
-                tags_colors = (':').join([ tag['color'] for tag in sankey_data['nodeTags'][tag_key_names[i]]['tags'].values()])
-                tags[i+1]=[tag_key_names[i],'nodeTags',(':').join([ tag['name'] for tag in sankey_data['nodeTags'][tag_key_names[i]]['tags'].values()]),'',sankey_data['nodeTags'][tag_key_names[i]]['color_map'],tags_colors]
-            elif tag_key_names[i] in sankey_data['fluxTags']:
-                tags_colors = (':').join([ tag['color'] for tag in sankey_data['fluxTags'][tag_key_names[i]]['tags'].values()])
-                tags[i+1]=[tag_key_names[i],'fluxTags',(':').join([ tag['name'] for tag in sankey_data['fluxTags'][tag_key_names[i]]['tags'].values()]),'',sankey_data['fluxTags'][tag_key_names[i]]['color_map'],tags_colors]
+            tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()])
+            tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
+            row = row+1
 
     nb_cols_nodes = 4 + len(sankey_data['nodeTags'].keys())
 
     nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
-    nodes[0] = ["Level","Element","Couleur","Forme"]+list(sankey_data['nodeTags'])
+    nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
+    nodes[0] = ["Level","Element","Couleur","Forme"]+nodeTags_group_names
 
     for i,node in enumerate(sankey_data['nodes'].values()):
         nodes[i+1][nodes_cols.index('Element')] = node['name']
@@ -446,7 +444,9 @@ def save_simple_excel(
         if 'definition' in node:
             nodes[i+1][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
-            nodes[i+1][4+j] = (':').join(node['tags'][tag_name])
+            tags = sankey_data['nodeTags'][tag_name]['tags'] 
+            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+            nodes[i+1][4+j] = (':').join(tags_names)
         nodes[i+1][nodes_cols.index('Level')] = 1
         # if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
         #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
@@ -461,7 +461,9 @@ def save_simple_excel(
         if len(sankey_data['dataTags'][dataTag]['tags']) != 0:
             nb_vals = nb_vals * len(sankey_data['dataTags'][dataTag]['tags'])
     links = [ [""] * nb_cols_nodes for i in range(len(sankey_data['links'].keys())*nb_vals+1) ]
-    links[0] = flux_cols + list(sankey_data['dataTags']) + list(sankey_data['fluxTags'])
+    dataTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['dataTags'].values()]
+    fluxTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['fluxTags'].values()]
+    links[0] = flux_cols + dataTags_group_names + fluxTags_group_names
     row=1
     for _,link in enumerate(sankey_data['links'].values()):
         val = link['value']
@@ -515,7 +517,8 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
         links[row][flux_cols.index('value')] = val['value']
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
-                links[row][3+depth+i] = val['tags'][flux_tag_key]
+                
+                links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
             else:
                 links[row][3+depth+i] = ''
         return row+1
