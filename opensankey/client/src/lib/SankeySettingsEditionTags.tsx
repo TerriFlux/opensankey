@@ -79,7 +79,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       show_legend: false,
       color_map: 'jet',
       tags: {},
-      banner: 'none'
+      banner: 'multi'
     }
     if (elementName === 'nodes' ) {
       Object.values(data[elementName]).forEach(n => n.tags['tag_group_' + idGroup] = [])
@@ -411,7 +411,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       show_legend: false,
       color_map: 'jet',
       tags: {},
-      banner: 'none'
+      banner: 'multi'
     }
 
     set_data_tags_group_key('tag_group_' + idGroup)

@@ -3318,7 +3318,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const svgSankey = (d3.select('#svg') as any)
     if (data.fit_screen) {
       svgSankey.attr('viewBox', [20, 0, data.width - 20, data.height])
-      svgSankey.style('width', '100%')
+      svgSankey.style('width', '98.5%')
     } else {
       svgSankey.attr('viewBox', null)
       svgSankey.style('width', data.width + 'px')
@@ -3455,7 +3455,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '100%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
             <g className='grid' id='grid'></g>
             <g className='g_label' id='g_label'></g>
 
