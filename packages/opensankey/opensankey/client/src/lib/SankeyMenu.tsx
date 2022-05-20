@@ -705,6 +705,16 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+          { !window.SankeyToolsStatic ? (
+            <Form.Check
+              type="switch"
+              checked={window.sankey.advanced}
+              onClick={(evt: any) => {
+                window.sankey.advanced = evt.target.checked
+                set_data({...data})
+              }}
+              label="Options avancées"
+            />) : (<></>)}
           { !window.SankeyToolsStatic ? (<>
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
@@ -785,15 +795,16 @@ const Menu: FunctionComponent<MenuTypes> = (
           ) :(<><br/>
             <h2>{window.sankey.header}</h2>
             <br/></>)}
-          <Form.Check
-            type="switch"
-            checked={window.sankey.advanced}
-            onClick={(evt: any) => {
-              window.sankey.advanced = evt.target.checked
-              set_data({...data})
-            }}
-            label="Options avancées"
-          />
+          { window.SankeyToolsStatic ? (
+            <Form.Check
+              type="switch"
+              checked={window.sankey.advanced}
+              onClick={(evt: any) => {
+                window.sankey.advanced = evt.target.checked
+                set_data({...data})
+              }}
+              label="Options avancées"
+            />) : (<></>)}
         </Container>
 
         {(view == 'none') ? <SankeyEdition
