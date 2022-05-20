@@ -4,7 +4,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValueDict, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets,  getLinkValue, setSelectedTags } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 
 
@@ -32,6 +32,7 @@ const SankeyDrawPropTypes = {
   set_multi_selected_links: PropTypes.func.isRequired,
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes)).isRequired,
 
+  set_multi_selected_label: PropTypes.func.isRequired,
   multi_selected_label: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes)).isRequired,
 
 
@@ -59,6 +60,8 @@ export const SankeyDrawDefaultProps = {
 
   set_multi_selected_links: () => SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links: [],
+
+  set_multi_selected_label: () => SankeyDrawDefaultProps.set_multi_selected_label,
   multi_selected_label: [],
 
   set_show_toast: () => null,
@@ -83,6 +86,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
   set_multi_selected_links = SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
+  set_multi_selected_label = SankeyDrawDefaultProps.set_multi_selected_label,
   multi_selected_label = SankeyDrawDefaultProps.multi_selected_label,
   set_show_toast,
   current
@@ -147,14 +151,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
     return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
   }
-  const node_color=(n: SankeyNode) => {
+  const node_color = (n: SankeyNode) => {
     let colorNode
     if (n.colorParameter === 'groupTag' || data.show_structure) {
       //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
       //on controle ici qu'il y a bien un favorite tag
       if (n.colorTag !== undefined && n.colorTag !== '') {
         const tagGroup = n.colorTag
-        if (n.tags[tagGroup] === undefined ) {
+        if (n.tags[tagGroup] === undefined) {
           colorNode = n.color
         } else if (n.tags[tagGroup].length > 0) {
           colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
@@ -172,10 +176,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     return colorNode
   }
-  const link_visible=(l: SankeyLink) => {
-    const { dataTags,fluxTags } = data
+  const link_visible = (l: SankeyLink) => {
+    const { dataTags, fluxTags } = data
     if (data.show_structure) {
-      if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative' ) {
+      if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative') {
         return false
       }
     }
@@ -219,19 +223,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     return true
   }
-  const link_color=(l: SankeyLink) => {
+  const link_color = (l: SankeyLink) => {
     let colorNode
-    if (l.colorParameter === 'groupTag' ) {
+    if (l.colorParameter === 'groupTag') {
       //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
       //on controle ici qu'il y a bien un favorite tag
-      if (l.colorTag !== undefined && l.colorTag !== '' ) {
-        if ( l.colorTag !== 'node_colormap' ) {
+      if (l.colorTag !== undefined && l.colorTag !== '') {
+        if (l.colorTag !== 'node_colormap') {
           const tagGroup = l.colorTag
-          const v = getLinkValue(data,l.idLink)
+          const v = getLinkValue(data, l.idLink)
           if (v === undefined) {
             return l.color
           }
-          if (v.tags[tagGroup] in  data.fluxTags[tagGroup].tags) {
+          if (v.tags[tagGroup] in data.fluxTags[tagGroup].tags) {
             colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
           } else {
             colorNode = l.color
@@ -535,9 +539,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -547,11 +551,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -571,9 +575,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -585,9 +589,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -613,9 +617,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -632,9 +636,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -649,11 +653,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -663,11 +667,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -689,11 +693,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -709,11 +713,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -728,11 +732,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -742,11 +746,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -769,9 +773,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -786,11 +790,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -805,11 +809,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
                 }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color as string
               } else {
                 return n.iconColor as string
@@ -821,9 +825,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color as string
               } else {
                 return n.iconColor as string
@@ -831,7 +835,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           }
           )
-  
+
         }
 
         return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
@@ -853,7 +857,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .style('opacity', 1)
-          .style('top', Math.max(margin_top+50,event.layerY - 10) + 'px')
+          .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
           .style('left', (event.layerX + 30) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -1041,11 +1045,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1062,9 +1066,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1079,11 +1083,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1093,11 +1097,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1149,11 +1153,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1168,11 +1172,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1187,11 +1191,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -1201,11 +1205,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 if (n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag ) {
+                  if (tag) {
                     return tag.color as string
-                  } 
+                  }
                 }
-                if (n.shape_visible || n.iconName === 'none' ) {
+                if (n.shape_visible || n.iconName === 'none') {
                   return n.color
                 } else {
                   return n.iconColor
@@ -2378,12 +2382,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
-      .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
+      // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
+      .attr('opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
-        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.name } else { return '' } }).includes((d as SankeyNode).name)) {
+        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
           return 2
         } else {
           return 0
@@ -2404,7 +2409,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
 
-            .style('top', Math.max(margin_top+50,event.layerY - 10) + 'px')
+            .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
             .style('left', (event.layerX + 30) + 'px')
         }
       })
@@ -2416,11 +2421,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('click', (event, d) => {
 
         if (!data.static_sankey && event.shiftKey || data.static_sankey) {
+          event.preventDefault()
           // Animation des flux du Sankey
           sankeyTooltip.style('opacity', 0)
-          d3.selectAll('#svg .tmp').remove()
+          //d3.selectAll('#svg .tmp').remove()
           // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
+          
+
           d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
+          d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.node').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link_value').style('display', 'none')
@@ -2453,7 +2462,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', (n : any) => {
+      .style('fill', (n: any) => {
         if (n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -2535,7 +2544,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .style('font-size', d => d.display_style.font_size + 'px')
       .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => {
-       
+
         return d.name.split(' - ')[0].replace('-', ' ')
       })
       .each(d => {
@@ -2558,7 +2567,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           })
         }
-        
+
         d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
           const width = +d3.select('#' + d.idNode).attr('width')
           if (d.x_label) {
@@ -2594,7 +2603,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if (d.label_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
-            .style('top', Math.max(margin_top+50,event.layerY - 10) + 'px')
+            .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
             .style('left', (event.layerX + 30) + 'px')
         }
       })
@@ -2723,8 +2732,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodeData: SankeyNode,
     nodeDisplay: string[]
   ) => {
+
+    console.log('branchAnimate')
+
+
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
+
+    console.log(nodeStart)
+
     // on pourrait aussi evnetuellement faire un clone des noeuds
     d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
     d3.select('#' + nodeData.idNode + '_text').style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
@@ -2733,11 +2749,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(function (d) {
         return d.idSource == nodeStart
       })
+    console.log('gLink',glinks)
+
     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+    console.log('tmpLinks',tmpLinks)    
     tmpLinks.selectAll('.link')
       .each(function (this) {
         const totalLength = (this as SVGGeometryElement).getTotalLength()
+        console.log(totalLength)
         d3.select(this)
           .attr('stroke-dasharray', totalLength + ' ' + totalLength)
           .attr('stroke-dashoffset', totalLength)
@@ -2897,11 +2917,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               if (n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag ) {
+                if (tag) {
                   return tag.color as string
-                } 
+                }
               }
-              if (n.shape_visible || n.iconName === 'none' ) {
+              if (n.shape_visible || n.iconName === 'none') {
                 return n.color
               } else {
                 return n.iconColor
@@ -2963,7 +2983,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#g_legend').selectAll('*').remove()
 
-    const legend = d3.select('#g_legend').style('transform', 'translate(' + (data.legend_position[0]+25) + 'px,' + data.legend_position[1] + 'px)').append('g')
+    const legend = d3.select('#g_legend').style('transform', 'translate(' + (data.legend_position[0] + 25) + 'px,' + data.legend_position[1] + 'px)').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -3026,35 +3046,84 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const g_label = d3.select('#svg #g_label')
     Object.values(data.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
-        .attr('id', d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')')
+        .attr('id', d.idLabel)
+        .attr('class', 'gg_label')
+        .attr('transform', 'translate(' + d.x + ',' + d.y + ')')
 
       const rect = gg_label.append('rect')
         .attr('width', d.label_width).attr('height', d.label_height)
         .attr('fill', d.color)
         .style('fill-opacity', d.transparent ? 0 : 1)
         .attr('stroke', d.color_border)
-        .attr('stroke-opacity',d.transparent_border?0:1)
+        .attr('stroke-opacity', d.transparent_border ? 0 : 1)
         .attr('stroke-width', 2)
         .attr('rx', 5)
 
-      gg_label.append('text')
-        .attr('x', d.label_width / 2)
-        .attr('y', () => {
-          if (d.position_vert == 'haut') {
-            const tailleText = +d3.select('#' + d.idLabel + ' text').style('font-size').replace('px', '')
-            return tailleText + 3
-          } else if (d.position_vert == 'milieu') {
-            return d.label_height / 2
+
+
+      gg_label.on('click', (event) => {
+        if (event.ctrlKey) {
+          sankeyTooltip.style('opacity', 0)
+
+          if (multi_selected_label.includes(d)) {
+            multi_selected_label.splice(multi_selected_label.indexOf(d), 1)
           } else {
-            return d.label_height - 3
+            multi_selected_label.push(d)
           }
+
+          set_multi_selected_label(multi_selected_label)
+
+          set_data({ ...data })
+          set_nav_item_active('7')
+          set_show_nav(true)
         }
+      })
 
-        )
 
+
+
+      const label_text = gg_label.append('text')
+        .attr('id', d.idLabel + '_text')
+        .attr('x', d.x_label)
+        .attr('y', d.y_label)
         .style('text-anchor', 'middle')
+        .style('font-weight', () => (d.font_weight) ? 'bold' : 'normal')
+        .style('font-style', () => (d.font_style) ? 'italic' : 'normal')
+        .style('font-size', () => d.font_size + 'px')
+        .style('text-transform', () => (d.font_uppercase) ? 'uppercase' : 'none')
         .style('text-align', 'center')
         .text(d.name)
+
+
+      label_text.call(d3.drag<SVGTextElement, unknown>()
+        .subject(Object).on('drag', function (event) {
+          if (alt_key_pressed) {
+            d.position_vert=''
+            const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
+              old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
+              new_x = old_x + event.dx,
+              new_y = old_y + event.dy
+            d3.select('#' + d.idLabel + '_text').attr('x', new_x)
+            d3.select('#' + d.idLabel + '_text').attr('y', new_y)
+
+            d.x_label=new_x
+            d.y_label=new_y
+
+            d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
+
+          }
+
+        })
+      )
+
+
+
+
+
+
+
+
+
 
       const wrap = textwrap()
         .bounds({ height: 100, width: d.label_width })
@@ -3075,6 +3144,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
 
     })
+
+
   }
 
 
@@ -3278,9 +3349,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
-      if (!ev.ctrlKey) {
+      if (!ev.ctrlKey && !ev.shiftKey) {
         set_multi_selected_nodes([])
         set_multi_selected_links([])
+        set_multi_selected_label([])
       }
     })
 
