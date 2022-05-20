@@ -2388,7 +2388,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
-        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.name } else { return '' } }).includes((d as SankeyNode).name)) {
+        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
           return 2
         } else {
           return 0
@@ -2421,11 +2421,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('click', (event, d) => {
 
         if (!data.static_sankey && event.shiftKey || data.static_sankey) {
+          event.preventDefault()
           // Animation des flux du Sankey
           sankeyTooltip.style('opacity', 0)
-          d3.selectAll('#svg .tmp').remove()
+          //d3.selectAll('#svg .tmp').remove()
           // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
+          
+
           d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
+          d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.node').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link_value').style('display', 'none')
@@ -2728,8 +2732,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodeData: SankeyNode,
     nodeDisplay: string[]
   ) => {
+
+    console.log('branchAnimate')
+
+
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
+
+    console.log(nodeStart)
+
     // on pourrait aussi evnetuellement faire un clone des noeuds
     d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
     d3.select('#' + nodeData.idNode + '_text').style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
@@ -2738,11 +2749,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(function (d) {
         return d.idSource == nodeStart
       })
+    console.log('gLink',glinks)
+
     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+    console.log('tmpLinks',tmpLinks)    
     tmpLinks.selectAll('.link')
       .each(function (this) {
         const totalLength = (this as SVGGeometryElement).getTotalLength()
+        console.log(totalLength)
         d3.select(this)
           .attr('stroke-dasharray', totalLength + ' ' + totalLength)
           .attr('stroke-dashoffset', totalLength)
@@ -3334,7 +3349,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })).on('dblclick.zoom', null)
 
     svgSankey.on('click', function (ev: any) {
-      if (!ev.ctrlKey) {
+      if (!ev.ctrlKey && !ev.shiftKey) {
         set_multi_selected_nodes([])
         set_multi_selected_links([])
         set_multi_selected_label([])
