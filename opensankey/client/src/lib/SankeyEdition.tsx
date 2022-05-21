@@ -444,23 +444,23 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
           <Form.Group as={Col} lg="auto" style={{ marginRight: '5px'}}>
             <br/>
             <Button 
+              style = {{width:'75px'}}
               size="sm"
               onClick={()=>set_show_readme(true)}
             >
                 Aide
             </Button>
-            <br/>  
-            <br/> 
+            <br/>   
             <br/> 
             <Button
-              variant="light"
+              style = {{width:'75px'}}
               size="sm"
               onClick={() => {
                 data.fit_screen = true
                 d3.select('#svg').on('.zoom', null)
                 set_data({ ...data })
               }}
-            >100%</Button>
+            >Réajuster cadre</Button>
             <Row></Row>
           </Form.Group> 
         </Row>
