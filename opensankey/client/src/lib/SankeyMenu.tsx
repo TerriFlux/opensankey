@@ -2003,6 +2003,16 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
       />
+      {show_excel_dialog ? (
+        <ExcelModal
+          handleCloseDialog={()=>set_show_excel_dialog(false)}
+          uploadExcelImpl={uploadExcelImpl}
+          set_data={set_data}
+          data={data}
+          set_show_excel_dialog={set_show_excel_dialog} />
+      ) :
+        (<div />)
+      } 
     </>
   )
 }
