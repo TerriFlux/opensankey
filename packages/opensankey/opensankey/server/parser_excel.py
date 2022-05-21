@@ -228,7 +228,7 @@ def parse_excel(mfa_input):
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     nb_data_tags = len(dataTags.keys())
-    nb_flux_tags = len(dataTags.keys())
+    nb_flux_tags = len(fluxTags.keys())
     sheet_name = 'data'
     if 'results' in mfa_input and len(mfa_input['results']) > 1:
         sheet_name = 'results'        
@@ -503,7 +503,7 @@ def save_simple_excel(
 
     mfa_output = {
         'nodes' : nodes,
-        'tags'  : tags,
+        'tags'  : tags_sheet,
         'data'  : links,
         'ter_base'   : ter
     }
