@@ -161,7 +161,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (n.tags[tagGroup] === undefined) {
           colorNode = n.color
         } else if (n.tags[tagGroup].length > 0) {
-          colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
+          if  (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
+            colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
+          } else {
+            colorNode = n.color
+          }
         } else {
           colorNode = n.color
         }
