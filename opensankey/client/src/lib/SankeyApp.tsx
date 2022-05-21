@@ -192,6 +192,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data={set_data}
           set_multi_selected_nodes={set_multi_selected_nodes}
           multi_selected_nodes={multi_selected_nodes}
+
+          set_multi_selected_label={set_multi_selected_label}
           multi_selected_label={multi_selected_label}
 
           set_multi_selected_links={set_multi_selected_links}
