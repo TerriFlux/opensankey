@@ -460,8 +460,15 @@ export const updateLayout = (
     }
     node.x_label = node_layout.x_label
     node.y_label = node_layout.y_label
-    node.label_visible = node_layout.label_visible
+
     node.display_style = {...node_layout.display_style}
+    node.iconName = node_layout.iconName
+    node.iconColor = node_layout.iconColor
+    node.iconRatio = node_layout.iconRatio
+    node.iconVisible= node_layout.iconVisible
+    node.shape_visible = node_layout.shape_visible
+    node.node_visible = node_layout.node_visible
+    node.label_visible = node_layout.label_visible
   }
   apply_input_outputLinksId(
     new_layout.nodes,
@@ -485,7 +492,7 @@ export const updateLayout = (
     }
     const link = links[0]
 
-    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position } = link_layout
+    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,gradient } = link_layout
     link.curvature = curvature
     link.curved = curved
     link.arrow = arrow
@@ -499,7 +506,7 @@ export const updateLayout = (
     link.orientation = link_layout.orientation
     link.recycling = recycling
     link.orthogonal_label_position = orthogonal_label_position
-
+    link.gradient = gradient
 
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift
@@ -508,6 +515,8 @@ export const updateLayout = (
     }
   }
 
+  data.icon_catalog = new_layout.icon_catalog
+  Object.assign(data.labels,new_layout.labels)
   data.user_scale = new_layout.user_scale
   data.legend_position = new_layout.legend_position;
   ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
