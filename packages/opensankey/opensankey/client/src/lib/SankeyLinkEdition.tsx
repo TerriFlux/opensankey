@@ -227,11 +227,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
           allChecked = (d.label_position == 'end') ? allChecked : false
         })
         break
-      case 'frozen':
-        multi_selected_links.map(d => {
-          allChecked = (d.label_position == 'frozen') ? allChecked : false
-        })
-        break
       }
       return allChecked
     } else {
@@ -242,14 +237,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const labelSticktoLink = () => {
     let labelSticktoLink = true
     multi_selected_links.map(d => {
-      labelSticktoLink = (d.label_on_path && d.label_position != 'frozen') ? labelSticktoLink : false
+      labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
     })
     return labelSticktoLink
   }
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
     multi_selected_links.map(d => {
-      labelSticktoLink = (d.label_position == 'frozen') ? labelSticktoLink : true
+      labelSticktoLink = (d.label_position === 'frozen') ? labelSticktoLink : true
     })
     return labelSticktoLink
   }
@@ -873,22 +868,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   type='radio'
                   label='Fin'
                   checked={labelPositionVert('end')}
-                  onChange={
-                    evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        d.label_position = evt.target.value
-                      })
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-              <Col>
-                <FormCheck
-                  value='frozen'
-                  type='radio'
-                  label='Figé'
-                  checked={labelPositionVert('frozen')}
                   onChange={
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
