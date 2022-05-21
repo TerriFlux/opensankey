@@ -18,8 +18,8 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      header? : string,
-      advanced? : boolean
+      header?: string,
+      advanced?: boolean
     }
   }
 
@@ -396,6 +396,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const data = default_sankey_data()
     set_multi_selected_nodes([])
     set_multi_selected_links([])
+    set_multi_selected_label([])
     set_data({ ...data })
   }
 
@@ -483,8 +484,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     set_data({ ...data })
   }
-  const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.name } })
+  const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
+  console.log(tmpNodes)
+  const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
+  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   const props = {
     scroll: true,
     backdrop: false,
@@ -500,12 +504,12 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS}
           value={selected}
-          overrideStrings = {{
+          overrideStrings={{
             'selectAll': 'Tout sélectionner',
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.name)))
+            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             set_multi_selected_nodes(m_s)
           }}
           labelledBy={'hello'}
@@ -514,8 +518,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     return DD
   }
 
-  const INITIAL_OPTIONS_label = Object.values(data.labels).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected_label = multi_selected_label.map((d) => { return { 'label': d.name, 'value': d.name } })
+  const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
+  const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
+  const selected_label = multi_selected_label.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   const dropdownMultiLabel = () => {
     const DD = (
       <div id='DD_multi_label'>
@@ -527,12 +532,12 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_label}
           value={selected_label}
-          overrideStrings = {{
+          overrideStrings={{
             'selectAll': 'Tout sélectionner',
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.name)))
+            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
             set_multi_selected_label(m_s)
           }}
           labelledBy={'hello'}
@@ -558,7 +563,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
-          overrideStrings = {{
+          overrideStrings={{
             'selectAll': 'Tout sélectionner',
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
@@ -612,6 +617,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
 
+
+  //=================FONCTION POUR TEST VALEUR MULTI SELECT LABEL===========================
   const allLabelHeight = () => {
     let display_size = true
     let size = 25
@@ -668,6 +675,46 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
+  const allLabelFontSize = () => {
+    let display_size = true
+    let size = 1
+    if (multi_selected_label.length != 0) {
+      size = multi_selected_label[0].font_size
+    }
+    multi_selected_label.map((d) => {
+      display_size = (d.font_size == size) ? display_size : false
+    })
+    return (display_size) ? size : -1
+  }
+
+  const allLabelTextBold = () => {
+    let bold = false
+
+    multi_selected_label.map((d) => {
+      bold = (d.font_weight) ? true : bold
+    })
+    return bold
+  }
+
+  const allLabelTextItalic = () => {
+    let italic = false
+
+    multi_selected_label.map((d) => {
+      italic = (d.font_style) ? true : italic
+    })
+    return italic
+  }
+
+  const allLabelTextUpper = () => {
+    let up = false
+
+    multi_selected_label.map((d) => {
+      up = (d.font_uppercase) ? true : up
+    })
+    return up
+  }
+
+
 
   const handleUplabel = (i: string) => {
     const { labels } = data
@@ -699,6 +746,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     Object.assign(labels, new_cat)
     set_data({ ...data })
   }
+
+
+
 
   return (
     <>
@@ -768,7 +818,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown>
               <NavDropdown id='edition' title="Edition" >
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
-                <Dropdown.Item onClick={ ()=>set_show_apply_layout(true) }>Appliquer mise en page</Dropdown.Item>
+                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
                 {edition_menu}
               </NavDropdown >
               <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
@@ -792,7 +842,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
               {right_menu}
             </Nav></>
-          ) :(<><br/>
+          ) : (<><br />
             <h2>{window.sankey.header}</h2>
             <br/></>)}
           { window.SankeyToolsStatic ? (
@@ -859,7 +909,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Body>
                 <Form >
                   <Form.Group>
-                    <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres généraux</b></FormLabel>
+                    <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
                     <Row>
                       <Col xs={6}>Police des labels</Col>
                       <Col xs={6}><Form.Select
@@ -881,7 +931,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Form.Select></Col>
                     </Row>
                   </Form.Group>
-                  <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres par défaut</b></FormLabel>
+                  <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres par défaut</b></FormLabel>
                   <Form.Group as={Row} >
                     <Col>
                       <FormLabel >Taille police</FormLabel>
@@ -950,7 +1000,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={1}>
                     <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
                   </Col>
-                  
+
                   <Col xs={10}>
                     {dropdownMultiNode()}
                   </Col>
@@ -1000,9 +1050,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={3}>
                   </Col>
                 </Form.Group>
-              
 
-                <div style={{ 'display':'block' }}>{node_edition}</div>
+
+                <div style={{ 'display': 'block' }}>{node_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
@@ -1038,7 +1088,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Header>Flux</Accordion.Header>
               <Accordion.Body>
                 <Form.Group>
-                  <FormLabel style={{justifyContent: 'center'}} ><b>Paramétres généraux</b></FormLabel>
+                  <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
                   <Row>
                     <Col xs={6}>Police des labels</Col>
                     <Col xs={6}><Form.Select
@@ -1275,8 +1325,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                         transparent_border: false,
                         position_vert: 'milieu',
                         position_horiz: 'milieu',
+                        font_size: 12,
+                        font_weight: false,
+                        font_style: false,
+                        font_uppercase: false,
                         x: 50,
                         y: 50,
+                        x_label: 25,
+                        y_label: 12,
                       }
                       data.labels[new_label.idLabel] = new_label
                       set_multi_selected_label([new_label])
@@ -1457,7 +1513,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical</FormLabel>
+                    <FormLabel >Position texte</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
@@ -1466,7 +1522,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                       checked={allNodeLabelVert('vert', 'haut')}
                       onChange={
                         () => {
-                          multi_selected_label.map(d => d.position_vert = 'haut')
+                          multi_selected_label.map(d => {
+                            d.position_vert = 'haut'
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.font_size + 3
+                          })
+
                           set_data({ ...data })
                         }
                       }
@@ -1479,7 +1540,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       checked={allNodeLabelVert('vert', 'milieu')}
                       onChange={
                         () => {
-                          multi_selected_label.map(d => d.position_vert = 'milieu')
+                          multi_selected_label.map(d => {
+                            d.position_vert = 'milieu'
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.label_height / 2
+                          })
                           set_data({ ...data })
                         }
                       }
@@ -1493,13 +1558,91 @@ const Menu: FunctionComponent<MenuTypes> = (
                       checked={allNodeLabelVert('vert', 'bas')}
                       onChange={
                         () => {
-                          multi_selected_label.map(d => d.position_vert = 'bas')
+                          multi_selected_label.map(d => {
+                            d.position_vert = 'bas'
+                            d.x_label = d.label_width / 2
+                            d.y_label = d.label_height - 3
+                          })
                           set_data({ ...data })
                         }
                       }
                     />
                   </Col>
                 </Form.Group>
+
+
+
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Taille Police</FormLabel>
+                  </Col>
+                  <Col xs={8}>
+                    <FormControl size='sm'
+                      min={0}
+                      max={100}
+                      type={'number'}
+                      value={allLabelFontSize()}
+                      onChange={evt => {
+                        let val = +evt.target.value
+                        val = (val <= 0) ? 1 : val
+                        multi_selected_label.map(d => d.font_size = val)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormLabel >Labels</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Gras'
+                      checked={allLabelTextBold()}
+                      onChange={
+                        evt => {
+                          multi_selected_label.map(d => d.font_weight = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Majuscule'
+                      checked={allLabelTextUpper()}
+                      onChange={
+                        evt => {
+                          multi_selected_label.map(d => d.font_uppercase = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Italique'
+                      checked={allLabelTextItalic()}
+                      onChange={
+                        evt => {
+                          multi_selected_label.map(d => d.font_style = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+
+
+
+
+
+
+
 
 
               </Accordion.Body>
@@ -1532,6 +1675,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                               }
                               set_multi_selected_nodes([])
                               set_multi_selected_links([])
+                              set_multi_selected_label([])
                               set_view(evt.target.value)
                             }
                           }
@@ -1803,6 +1947,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           multi_selected_nodes={multi_selected_nodes}
           set_multi_selected_links={() => null}
           multi_selected_links={multi_selected_links}
+
+          set_multi_selected_label={set_multi_selected_label}
           multi_selected_label={multi_selected_label}
 
           select_node={() => null}
@@ -1816,7 +1962,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             const { dataTags } = n_data
             let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
             const listKey: string[] = []
-          
+
             let missing_key = false
             Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
               const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
@@ -1857,27 +2003,17 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
       />
-      {show_excel_dialog ? (
-        <ExcelModal
-          handleCloseDialog={()=>set_show_excel_dialog(false)}
-          uploadExcelImpl={uploadExcelImpl}
-          set_data={set_data}
-          data={data}
-          set_show_excel_dialog={set_show_excel_dialog} />
-      ) :
-        (<div />)
-      } 
     </>
   )
 }
 
-const ApplyLayoutDialog = ({show_apply_layout,set_show_apply_layout,sankey_data,set_sankey_data} : any) => {
+const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: any) => {
   let file_layout: Blob[] | undefined
   return (
-    <Modal 
-      bsSize="large" 
-      show={show_apply_layout} 
-      onHide={ () => set_show_apply_layout(false) }
+    <Modal
+      bsSize="large"
+      show={show_apply_layout}
+      onHide={() => set_show_apply_layout(false)}
       style={{
         display: 'flex',
         justifyContent: 'center',
