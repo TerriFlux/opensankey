@@ -378,6 +378,7 @@ def parse_simple_excel(
         'version'      : '0.8',
         'nodes'        : nodes,
         'links'        : links,
+        'labels'       : {},
         'dataTags'     : dataTags,
         'nodeTags'     : nodeTags,
         'fluxTags'     : fluxTags
