@@ -2821,9 +2821,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let cum_h_bottom = 0
     let is_v = true
 
-
-
-
     const res = compute_total_offsets(n, nodes, links, nodeTags, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
     for (let i = 0; i < n.inputLinksId.length; i++) {
@@ -3343,6 +3340,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           evt.transform.y = 0
           d3.select('#svg')
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
+          svgSankey.attr('viewBox', null)
           if (evt.transform.k < 1 && !data.fit_screen) {
             d3.select('#svg')
               .style('width', data.width / evt.transform.k + 'px')
