@@ -156,7 +156,7 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_labels }: any) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label}: any) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
@@ -193,7 +193,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             <Dropdown.Item
               key={index}
               onClick={() => uploadExemple(
-                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data,callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_labels
+                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data,callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_label
               )} 
             >{item.includes('xlsx') ? 
                 item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
@@ -213,7 +213,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     current_path={current_path !== '' ? current_path+'/'+key.replace('JSON','').replace('Excel','') : key.replace('JSON','').replace('Excel','')}
                     set_multi_selected_links={set_multi_selected_links}
                     set_multi_selected_nodes={set_multi_selected_nodes}
-                    set_multi_selected_labels={set_multi_selected_labels}
+                    set_multi_selected_label={set_multi_selected_label}
                   />
                 </NavDropdown>
               </>
