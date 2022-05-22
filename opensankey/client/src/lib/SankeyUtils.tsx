@@ -632,7 +632,8 @@ export const uploadExemple = (
   set_data: (data: SankeyData) => void,
   example_callback: (data: SankeyData) => void,
   set_multi_selected_nodes:(nodes:string[])=>void,
-  set_multi_selected_links:(links:string[])=>void
+  set_multi_selected_links:(links:string[])=>void,
+  set_multi_selected_label:(labels:string[])=>void
 ) => {
 
   let root = window.location.href
@@ -648,6 +649,7 @@ export const uploadExemple = (
   set_data({ ...default_sankey_data() })
   set_multi_selected_nodes([])
   set_multi_selected_links([])
+  set_multi_selected_label([])
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
