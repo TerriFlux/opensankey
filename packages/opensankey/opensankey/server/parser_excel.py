@@ -223,7 +223,8 @@ def parse_excel(mfa_input):
         'nodeTags'     : nodeTags,
         'fluxTags'     : fluxTags,
         'nodes'        : nodes,
-        'links'        : links
+        'links'        : links,
+        'labels'       : {}
     }
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
