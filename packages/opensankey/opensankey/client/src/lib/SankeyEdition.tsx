@@ -434,7 +434,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                 <Form.Control placeholder="Pas de filtrage" style={{ opacity:opacity_advanced,color:'#6c757d' }} disabled /></>)
             }  
           </Form.Group>    
-          {additional_selector ? (<></>) : (<Col></Col>)}
+          {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
           { window.sankey && window.sankey.excel ? (
             <Form.Group as={Col} lg="auto" >
               <FormLabel className="text-center" >Téléchargements</FormLabel>
