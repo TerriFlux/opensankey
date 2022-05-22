@@ -4,7 +4,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, updateLayout } from './SankeyLayout'
+import { compute_auto_sankey, reorganize_all_input_outputLinksId, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
@@ -109,7 +109,7 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links }: any) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label}: any) => {
   return (
     <>
       { Array.isArray(exemple_menu)
@@ -129,7 +129,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           return (
             <Dropdown.Item
               onClick={() => uploadExemple(
-                path, url_prefix, data, set_data, callback, set_multi_selected_nodes, set_multi_selected_links
+                path, url_prefix, data, set_data, callback, set_multi_selected_nodes, set_multi_selected_links, set_multi_selected_label
               )}
             >{item.split('.')[0].replace(/_/g, ' ').replace(' layout', '').replace('simple.xlsx', ' xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC')}</Dropdown.Item>
           )
@@ -147,6 +147,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     current_path={current_path !== '' ? current_path + '/' + key : key}
                     set_multi_selected_links={set_multi_selected_links}
                     set_multi_selected_nodes={set_multi_selected_nodes}
+                    set_multi_selected_label={set_multi_selected_label}
                   />
                 </NavDropdown>
               </>
@@ -1149,7 +1150,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col >
                     <Button variant='info'
                       onClick={() => {
-                        multi_selected_links.map(l => {
+                        const nodes_to_reorganize : SankeyNode[] = []
+                        multi_selected_links.forEach(l => {
                           const tmp = l.idSource
 
                           const previous_node_s = data.nodes[l.idSource]
@@ -1157,12 +1159,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                           const source_node = data.nodes[l.idTarget]
                           l.idSource = source_node.idNode
                           source_node.outputLinksId.push(l.idLink)
+                          nodes_to_reorganize.push(source_node)
 
                           const previous_node_t = data.nodes[l.idTarget]
                           previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
                           const target_node = data.nodes[tmp]
                           l.idTarget = target_node.idNode
                           target_node.inputLinksId.push(l.idLink)
+                          nodes_to_reorganize.push(target_node)
+                        })
+                        nodes_to_reorganize.forEach( n => {
+                          reorganize_inputLinksId(n,true,true,data.nodes,data.links)
                         })
                         set_data({ ...data })
                       }}><FaArrowsAltH /></Button>

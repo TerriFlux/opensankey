@@ -84,7 +84,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data({ ...data })
         }}
         example_menu={<>
-          <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+          <Dropdown.Item eventKey="data_repo" href="http://open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
             exemple_menu={exemple_menu}
             url_prefix=''
@@ -93,6 +93,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             current_path={''}
             set_multi_selected_nodes={set_multi_selected_nodes}
             set_multi_selected_links={set_multi_selected_links}
+            set_multi_selected_label={set_multi_selected_label}
           /></>}
         portfolio_menu={<>
           <ArtefactsItem
