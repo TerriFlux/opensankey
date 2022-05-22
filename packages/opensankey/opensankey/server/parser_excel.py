@@ -251,6 +251,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             
         source_node = source_nodes[0]
         target_node = target_nodes[0]
+        color = source_node['color']
         if source_node['type'] == 'product':
             color = source_node['color']
         elif target_node['type'] == 'product':
@@ -525,10 +526,10 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
         return row+1
     dataTagGroup = list(sankey_data['dataTags'].keys())[depth]
     data_tags = list(sankey_data['dataTags'][dataTagGroup]['tags'].keys())
-    for i,data_tag_name in enumerate(data_tags):
-        links[row][3+depth] = data_tag_name
-        new_row = add_links(sankey_data, flux_cols, links, row, link, val[data_tag_name],depth+1)
+    for i,data_tag_key in enumerate(data_tags):
+        links[row][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']
+        new_row = add_links(sankey_data, flux_cols, links, row, link, val[data_tag_key],depth+1)
         for i in range(row,new_row):
-            links[i][3+depth] = data_tag_name
+            links[i][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']
         row = new_row
     return row
