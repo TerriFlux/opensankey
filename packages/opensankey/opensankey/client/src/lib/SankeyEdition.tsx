@@ -30,7 +30,7 @@ type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup,data:SankeyData,set_data:(data:SankeyData)=>void) => {
   const val = evt.target.value
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
+  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[1].name)
   set_data({ ...data })
 }
 
