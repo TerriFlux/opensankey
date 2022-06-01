@@ -3,7 +3,7 @@ import numpy as np
 import re
 import webcolors
 import math
-import mfa_problem.io_excel as io_excel
+from mfa_problem.io_excel import *
 
 def is_hex(s):
     return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
@@ -197,24 +197,12 @@ def set_value(
 
 
 def parse_excel(mfa_input):
-    nodes_cols = mfa_input['nodes'][0]
-
-    previous_level = 1
-    nb_cols = len(nodes_cols)
-    has_definition_col = False
-    # if nb_cols > len(base_cols):
-    #     for i in range(len(base_cols),len(nodes_cols)):
-    #         if nodes_cols[i] == 'Définition':
-    #             has_definition_col = True
-    #             break
-    #         node_tag_names.append(nodes_cols[i])
-
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
     parse_tags(mfa_input, dataTags, nodeTags, fluxTags)
     nodes = {}
-    parse_nodes(mfa_input, nodes_cols, nodes, previous_level, nb_cols, has_definition_col, nodeTags)
+    parse_nodes(mfa_input, nodes, nodeTags)
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
     return {
@@ -230,12 +218,12 @@ def parse_excel(mfa_input):
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     nb_data_tags = len(dataTags.keys())
     nb_flux_tags = len(fluxTags.keys())
-    sheet_name = 'data'
-    if 'results' in mfa_input and len(mfa_input['results']) > 1:
-        sheet_name = 'results'        
+    sheet_name = DATA_SHEET
+    if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
+        sheet_name = RESULTS_SHEET        
     for row in range(1,len(mfa_input[sheet_name])):
-        source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('origin')]
-        target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('destination')]
+        source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]
+        target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_DESTINATION)]
         source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
         target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
         if len(source_nodes) == 0:
@@ -283,31 +271,33 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             }
             links[new_link['idLink']] = new_link
 
-def parse_nodes(mfa_input, nodes_cols, nodes, previous_level, nb_cols, has_definition_col, nodeTags):
+def parse_nodes(mfa_input, nodes, nodeTags):
     current_parent_level = 1
-    for i in range(1,len(mfa_input['nodes'])):
-        name  = mfa_input['nodes'][i][nodes_cols.index('Element')]
-        shape = mfa_input['nodes'][i][nodes_cols.index('Forme')]
-        if shape == 'rectangle' :
-            shape = 'sector' 
-        else:
-            shape = 'product'
-        color =mfa_input['nodes'][i][nodes_cols.index('Couleur')]
+    previous_level = 1
+    nodes_cols = mfa_input[NODES_SHEET][0]
+    #has_shape = 'Forme' in nodes_cols
+    for i in range(1,len(mfa_input[NODES_SHEET])):
+        name  = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_NODE)]
+        if mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
+            node_type = 'sector' 
+        else: 
+            node_type = 'product'
+        color =mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
         if type(color) != str and math.isnan(color) or color == '':
             color = 'grey'
         if not is_hex(color):
             color = webcolors.name_to_hex(color)
         node_definition = None
-        if has_definition_col and type(mfa_input['nodes'][i][nb_cols-1]) == str:
-            node_definition = mfa_input['nodes'][i][nb_cols-1]
+        if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
+            node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
         node_tags = {}
         for _,node_tag_name in enumerate(nodeTags.keys()):
-            tag_value = mfa_input['nodes'][i][mfa_input['nodes'][0].index(node_tag_name)]
+            tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
             node_tags[node_tag_name] = tag_value.split(':')
 
-        level = mfa_input['nodes'][i][nodes_cols.index('Level')]
+        level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
         #new_node['dimensions']['Primaire']['level'] = int(level)
         parent_name = None
         if level > previous_level:
@@ -325,7 +315,7 @@ def parse_nodes(mfa_input, nodes_cols, nodes, previous_level, nb_cols, has_defin
             'idNode'        : 'node'+str(i-1),
             'name'          : name,
             'definition'    : node_definition,
-            'type'          : shape,
+            'type'          : node_type,
             'tags'          : node_tags,
             'dimensions'    : {
                 'Primaire':{
@@ -342,13 +332,13 @@ def parse_nodes(mfa_input, nodes_cols, nodes, previous_level, nb_cols, has_defin
         nodes[new_node['idNode']] = new_node
 
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
-    if 'tags' in mfa_input and len(mfa_input['tags']) != 0:
-       for i in range(len(mfa_input['tags'])):
-           if mfa_input['tags'][i][1] == 'dataTags':
-                tmp = mfa_input['tags'][i][2].split(':')
+    if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
+       for i in range(len(mfa_input[TAG_SHEET])):
+           if mfa_input[TAG_SHEET][i][1] == 'dataTags':
+                tmp = mfa_input[TAG_SHEET][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
                 try:
-                    color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
+                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET][i][5].split(':')]
                 except Exception as excpt:
                     color_tmp = ['']
                 tags = { s : {'name':s,'selected': 0, 'color' : ''} for i,s in enumerate(tmp)}
@@ -359,17 +349,17 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         if not is_hex(color):
                             color = webcolors.name_to_hex(color)
                         tags[tag_key]['color'] = color
-                dataTags[mfa_input['tags'][i][0]] = {
-                    'group_name'  : mfa_input['tags'][i][0],
+                dataTags[mfa_input[TAG_SHEET][i][0]] = {
+                    'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
                     'tags'        : tags,
                     'banner'      : 'one'                   
                 }
-           elif mfa_input['tags'][i][1] == 'nodeTags':
-                tmp = mfa_input['tags'][i][2].split(':')
+           elif mfa_input[TAG_SHEET][i][1] == 'nodeTags':
+                tmp = mfa_input[TAG_SHEET][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
                 try:
-                    color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
+                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET][i][5].split(':')]
                 except Exception as excpt:
                     color_tmp = ['']
                 tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
@@ -379,17 +369,17 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         if not is_hex(color):
                             color = webcolors.name_to_hex(color)
                         tags[tag_key]['color'] = color
-                nodeTags[mfa_input['tags'][i][0]] = {
-                    'group_name'  : mfa_input['tags'][i][0],
+                nodeTags[mfa_input[TAG_SHEET][i][0]] = {
+                    'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
                     'tags'        : tags,
                     'banner'      : 'multi'                   
                 }              
-           elif mfa_input['tags'][i][1] == 'fluxTags':
-                tmp = mfa_input['tags'][i][2].split(':')
+           elif mfa_input[TAG_SHEET][i][1] == 'fluxTags':
+                tmp = mfa_input[TAG_SHEET][i][2].split(':')
                 tmp = [s.strip() for s in tmp]
                 try:
-                    color_tmp = [s.strip() for s in mfa_input['tags'][i][5].split(':')]
+                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET][i][5].split(':')]
                 except Exception as excpt:
                     color_tmp = ['']
                 tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
@@ -399,8 +389,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         if not is_hex(color):
                             color = webcolors.name_to_hex(color)
                         tags[tag_key]['color'] = color
-                fluxTags[mfa_input['tags'][i][0]] = {
-                    'group_name'  : mfa_input['tags'][i][0],
+                fluxTags[mfa_input[TAG_SHEET][i][0]] = {
+                    'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
                     'tags'        : tags,
                     'banner'      : 'multi'                   
@@ -409,8 +399,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
 def save_simple_excel(
     sankey_data : dict
 ):
-    nodes_cols =  ['Level', 'Element','Couleur', 'Forme']
-    #nodes_cols = mfa_input['nodes'][0]
+    nodes_cols =  [NODES_LEVEL, NODES_NODE,NODES_COLOR]
+    #nodes_cols = mfa_input[NODES_SHEET][0]
     # tag_names are disposed between the column Dimensions and the column Définition
     tag_key_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags']) + list(sankey_data['fluxTags'])
 
@@ -418,7 +408,7 @@ def save_simple_excel(
     tags_sheet =[]
     if len(tag_key_names) != 0:
         tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
-        tags_sheet[0] = ["Name","Type","Tags","isPalette","Colormap","Color"]
+        tags_sheet[0] = [TAG_NAME,TAG_TYPE,TAG_TAGS,TAG_IS_PALETTE,TAG_COLORMAP,TAG_COLOR]
     
     row = 1
     for tag_group_type in ['dataTags','nodeTags','fluxTags']:
@@ -433,28 +423,28 @@ def save_simple_excel(
 
     nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
-    nodes[0] = ["Level","Element","Couleur","Forme"]+nodeTags_group_names
+    nodes[0] = [NODES_LEVEL, NODES_NODE,NODES_COLOR]+nodeTags_group_names
 
     for i,node in enumerate(sankey_data['nodes'].values()):
-        nodes[i+1][nodes_cols.index('Element')] = node['name']
+        nodes[i+1][nodes_cols.index(NODES_NODE)] = node['name']
         shape   = node['type']
-        if shape == 'sector' :
-            nodes[i+1][nodes_cols.index('Forme')] = 'rectangle' 
-        else:
-            nodes[i+1][nodes_cols.index('Forme')] = 'circle'
-        nodes[i+1][nodes_cols.index('Couleur')] = node['color']
+        # if shape == 'sector' :
+        #     nodes[i+1][nodes_cols.index('Forme')] = 'rectangle' 
+        # else:
+        #     nodes[i+1][nodes_cols.index('Forme')] = 'circle'
+        nodes[i+1][nodes_cols.index(NODES_COLOR)] = node['color']
         if 'definition' in node:
             nodes[i+1][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
             tags = sankey_data['nodeTags'][tag_name]['tags'] 
             tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
             nodes[i+1][4+j] = (':').join(tags_names)
-        nodes[i+1][nodes_cols.index('Level')] = 1
+        nodes[i+1][nodes_cols.index(NODES_LEVEL)] = 1
         # if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
         #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
     flux_cols = [
-        'origin', 'destination', 'value'
+        DATA_ORIGIN, DATA_DESTINATION, DATA_DESTINATION
     ]
 
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys()) + len(sankey_data['fluxTags'].keys())
@@ -494,8 +484,8 @@ def save_simple_excel(
         ter[0][j+1] = nodes_names[j]
     #     ter['use'][0][j+1] = sectors[j]
     for row in range(1,len(links)):
-        origin      = links[row][flux_cols.index('origin')]
-        destination = links[row][flux_cols.index('destination')]
+        origin      = links[row][flux_cols.index(DATA_ORIGIN)]
+        destination = links[row][flux_cols.index(DATA_DESTINATION)]
         try:
             origin_idx = nodes_names.index(origin)
             destination_idx = nodes_names.index(destination)
@@ -504,8 +494,8 @@ def save_simple_excel(
             print(excpt)
 
     mfa_output = {
-        'nodes' : nodes,
         'tags'  : tags_sheet,
+        'nodes' : nodes,
         'data'  : links,
         'ter_base'   : ter
     }
@@ -514,9 +504,9 @@ def save_simple_excel(
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     if len(sankey_data['dataTags'].keys()) == depth:
-        links[row][flux_cols.index('origin')] = sankey_data['nodes'][link['idSource']]['name']
-        links[row][flux_cols.index('destination')] = sankey_data['nodes'][link['idTarget']]['name']
-        links[row][flux_cols.index('value')] = val['value']
+        links[row][flux_cols.index(DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
+        links[row][flux_cols.index(DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
+        links[row][flux_cols.index(DATA_DESTINATION)] = val['value']
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
                 

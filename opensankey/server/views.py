@@ -85,8 +85,8 @@ def save_excel():
     cwd = os.getcwd()
     excel_file = os.path.join(cwd, "tutu.xlsx")
     sankey_data =  request.get_data().decode("utf-8")
-    mfa_output,nodes_names = parser_excel.save_simple_excel(json.loads(sankey_data))
-    io_excel.write_mfa_problem_output_to_excel(excel_file,mfa_output,nodes_names,nodes_names,'w')
+    mfa_output = parser_excel.save_simple_excel(json.loads(sankey_data))
+    io_excel.write_mfa_problem_output_to_excel(excel_file,mfa_output,'w')
     return send_file(excel_file, as_attachment=True)
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
@@ -132,11 +132,19 @@ def upload_exemple():
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
     exemple_folder = os.path.dirname(exemple_file_path)
+    base_file_name = os.path.basename(exemple_file_path)
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        mfa_input = io_excel.load_mfa_excel(exemple_file_path)
+        mfa_input,_,_ = io_excel.load_mfa_excel(exemple_file_path)
         sankey_data = parser_excel.parse_excel(mfa_input)
+        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+        sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
+        layout_file_name = os.path.join(sankey_folder,layout_file_name)
+        if os.path.exists(layout_file_name):
+            layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
+            layout_data = json.load(layout_file) 
+            sankey_data['layout'] = layout_data
         # context = {
         #     'version': '0.6',
         #     'error'  : error,
@@ -196,8 +204,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                 artefacts[key].append(file_name)
                 artefact_found = True
             continue
-        #if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
-        if 'simple.xlsx' in file_or_folder:
+        if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if 'Excel' not in menus[key]:
