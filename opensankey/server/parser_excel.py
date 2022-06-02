@@ -369,11 +369,14 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         if not is_hex(color):
                             color = webcolors.name_to_hex(color)
                         tags[tag_key]['color'] = color
+                banner = 'multi'
+                if mfa_input[TAG_SHEET][i][0] == NODE_TYPE:
+                    banner = 'node'                    
                 nodeTags[mfa_input[TAG_SHEET][i][0]] = {
                     'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : 'multi'                   
+                    'banner'      : banner                   
                 }              
            elif mfa_input[TAG_SHEET][i][1] == 'fluxTags':
                 tmp = mfa_input[TAG_SHEET][i][2].split(':')

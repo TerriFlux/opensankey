@@ -102,7 +102,7 @@ def clean_excel():
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
     excel_input_file = request.files['file']
-    mfa_input = io_excel.load_mfa_excel(excel_input_file)
+    mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
     sankey_data = parser_excel.parse_excel(mfa_input)
     # context = {
     #     'nodes': nodes,
@@ -136,7 +136,7 @@ def upload_exemple():
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        mfa_input,_,_ = io_excel.load_mfa_excel(exemple_file_path)
+        mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
         sankey_data = parser_excel.parse_excel(mfa_input)
         layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
         sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
