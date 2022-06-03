@@ -371,7 +371,7 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         tags[tag_key]['color'] = color
                 banner = 'multi'
                 if mfa_input[TAG_SHEET][i][0] == NODE_TYPE:
-                    banner = 'node'                    
+                    banner = 'none'                    
                 nodeTags[mfa_input[TAG_SHEET][i][0]] = {
                     'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
