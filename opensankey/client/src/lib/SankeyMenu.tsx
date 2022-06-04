@@ -171,19 +171,25 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
               //   delete server_data.links['link325']
               // }
               if ((server_data as any).layout !== undefined) {
-                updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                localStorage.setItem('initial_data',JSON.stringify(server_data))
                 let nb_agregation_level = 0
                 Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
                 for (let i=1 ; i<=nb_agregation_level ; i++) {
-                  set_nodes_level(server_data,server_data.nodes,i)
-                  updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                  set_nodes_level((server_data as any).layout,(server_data as any).layout.nodes,i,false)
                 }
-                delete (server_data as SankeyData & { layout?: SankeyData }).layout
-                Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))
-           
+                updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                localStorage.setItem('initial_data',JSON.stringify(server_data))
+                // for (let i=1 ; i<=nb_agregation_level ; i++) {
+                //   set_nodes_level(server_data,server_data.nodes,i)
+                //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                // }
+                // delete (server_data as SankeyData & { layout?: SankeyData }).layout
+                // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
               } else {
+                set_nodes_level(server_data,server_data.nodes,2)
                 compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                set_nodes_level(server_data,server_data.nodes,1)
+                compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+                return 0             
               }
               return 0
             }

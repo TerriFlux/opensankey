@@ -518,6 +518,18 @@ export const convert_data = (
         n.colorTag = ''
       }
 
+      if (n.iconName === undefined) {
+        n.iconName = 'none'
+      }
+      if (n.iconColor === undefined) {
+        n.iconColor = '#fff'
+      }
+      if (n.iconRatio === undefined) {
+        n.iconRatio = 80
+      }
+      if (n.iconVisible === undefined) {
+        n.iconVisible = true
+      }
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
