@@ -156,50 +156,50 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label}: any) => {
+export const processExample = (server_data: SankeyData) => {
+  // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
+  //   server_data.links['link324'].idSource = 'node63'
+  //   delete server_data.links['link325']
+  // }
+  if ((server_data as any).layout !== undefined) {
+    let nb_agregation_level = 0
+    Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+    for (let i=1 ; i<=nb_agregation_level ; i++) {
+      set_nodes_level((server_data as any).layout,(server_data as any).layout.nodes,i,false)
+    }
+    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+    localStorage.setItem('initial_data',JSON.stringify(server_data))
+    // for (let i=1 ; i<=nb_agregation_level ; i++) {
+    //   set_nodes_level(server_data,server_data.nodes,i)
+    //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+    // }
+    // delete (server_data as SankeyData & { layout?: SankeyData }).layout
+    // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
+  } else {
+    set_nodes_level(server_data,server_data.nodes,2)
+    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+    set_nodes_level(server_data,server_data.nodes,1)
+    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+    return 0             
+  }
+  return 0
+}
+
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label,callback}: any) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
         ? exemple_menu.map( (item,index)=> {
-          let callback = (server_data : SankeyData)=> 0
+          //let callback = (server_data : SankeyData)=> 0
           let path = current_path+'/sankey/'+item
-          if (item.includes('simple.xlsx') || item.includes('reconciled.xlsx')) {
+          if (item.includes('.xlsx')) {
             path = current_path+'/'+item
-            callback = (server_data: SankeyData) => {
-              // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
-              //   server_data.links['link324'].idSource = 'node63'
-              //   delete server_data.links['link325']
-              // }
-              if ((server_data as any).layout !== undefined) {
-                let nb_agregation_level = 0
-                Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-                for (let i=1 ; i<=nb_agregation_level ; i++) {
-                  set_nodes_level((server_data as any).layout,(server_data as any).layout.nodes,i,false)
-                }
-                updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                localStorage.setItem('initial_data',JSON.stringify(server_data))
-                // for (let i=1 ; i<=nb_agregation_level ; i++) {
-                //   set_nodes_level(server_data,server_data.nodes,i)
-                //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                // }
-                // delete (server_data as SankeyData & { layout?: SankeyData }).layout
-                // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
-              } else {
-                set_nodes_level(server_data,server_data.nodes,2)
-                compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                set_nodes_level(server_data,server_data.nodes,1)
-                compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-                return 0             
-              }
-              return 0
-            }
-
           }
           return (
             <Dropdown.Item
               key={index}
               onClick={() => uploadExemple(
-                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data,callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_label
+                path, url_prefix, data, set_data,callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_label
               )} 
             >{item.includes('xlsx') ? 
                 item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
@@ -220,6 +220,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     set_multi_selected_links={set_multi_selected_links}
                     set_multi_selected_nodes={set_multi_selected_nodes}
                     set_multi_selected_label={set_multi_selected_label}
+                    callback={callback}
                   />
                 </NavDropdown>
               </>
