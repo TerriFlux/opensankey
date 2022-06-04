@@ -671,25 +671,26 @@ export const uploadExemple = (
 export const set_nodes_level = (
   data : SankeyData,
   display_nodes: { [key: string]: SankeyNode },
-  level: number
+  level: number,
+  control_display = true
 ) => {
   Object.values(display_nodes).forEach(node => {
-    if (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level) {
+    if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
       node.display = false
       node.node_visible = false
       return
     }
     if (node.dimensions['Primaire'].level === level) {
-      desagregation(data,node.idNode,'Primaire')
-      agregation(data,node.idNode,'Primaire')
+      desagregation(data,node.idNode,'Primaire',control_display)
+      agregation(data,node.idNode,'Primaire',control_display)
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
-        if (idParent !== null && idParent !== undefined) {
+        if (control_display && idParent !== null && idParent !== undefined) {
           display_nodes[idParent].node_visible = false
           display_nodes[idParent].display = false
         }
       })
-    } else if (node.dimensions['Primaire'].level > level) {
+    } else if (control_display && node.dimensions['Primaire'].level  && node.dimensions['Primaire'].level > level) {
       node.node_visible = false
       node.display = false
     }

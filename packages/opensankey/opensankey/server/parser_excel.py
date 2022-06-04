@@ -203,6 +203,7 @@ def parse_excel(mfa_input):
     parse_tags(mfa_input, dataTags, nodeTags, fluxTags)
     nodes = {}
     parse_nodes(mfa_input, nodes, nodeTags)
+    nodes = {node['idNode']:node for node in nodes.values()}
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
     return {
@@ -245,7 +246,10 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         elif target_node['type'] == 'product':
             color = target_node['color']
         if not is_hex(color):
-          color = webcolors.name_to_hex(color)
+            try:
+               color = webcolors.name_to_hex(color)
+            except Exception:
+                pass 
         link_data_tags= []
         for i in range(nb_data_tags):
             if len(mfa_input[sheet_name][row]) > 3+i:
@@ -261,7 +265,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
         else:
             value = {}
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
+            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
             new_link = {
                 'idLink'   : 'link'+str(row-1),  
                 'idSource' : source_node['idNode'],
@@ -272,64 +276,94 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             links[new_link['idLink']] = new_link
 
 def parse_nodes(mfa_input, nodes, nodeTags):
-    current_parent_level = 1
-    previous_level = 1
+    # current_parent_level = 1
+    # previous_level = 1
     nodes_cols = mfa_input[NODES_SHEET][0]
-    #has_shape = 'Forme' in nodes_cols
-    for i in range(1,len(mfa_input[NODES_SHEET])):
-        name  = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_NODE)]
-        if mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
-            node_type = 'sector' 
-        else: 
-            node_type = 'product'
-        color =mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
-        if type(color) != str and math.isnan(color) or color == '':
-            color = 'grey'
-        if not is_hex(color):
-            color = webcolors.name_to_hex(color)
-        node_definition = None
-        if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
-            node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
-        node_tags = {}
-        for _,node_tag_name in enumerate(nodeTags.keys()):
-            tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
-            if type(tag_value) != str and math.isnan(tag_value):
-                continue
-            node_tags[node_tag_name] = tag_value.split(':')
+    nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
+    has_sankey_col = nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
 
+    node_index = 0
+    for i in range(1,len(mfa_input[NODES_SHEET])):
+        sankey_visible = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_SANKEY)]
+        if sankey_visible == 0:
+            continue
+             
+        name  = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_NODE)]
+        if not name in nodes:
+            if not has_sankey_col or mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_SANKEY)] == 1:
+                # if sankey column is present and value is 1 node is displayed
+                node_visible = 1
+            else:
+                node_visible = 0                
+            if mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
+                node_type = 'sector' 
+            else: 
+                node_type = 'product'
+            color =mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
+            if type(color) != str and math.isnan(color) or color == '':
+                color = 'grey'
+            if not is_hex(color):
+                try:
+                    color = webcolors.name_to_hex(color)
+                except Exception:
+                    pass
+            node_definition = None
+            if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
+                node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
+            node_tags = {}
+            for _,node_tag_name in enumerate(nodeTags.keys()):
+                tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
+                if type(tag_value) != str and math.isnan(tag_value):
+                    continue
+                if tag_value == '':
+                    continue
+                node_tags[node_tag_name] = tag_value.split(':')
+            new_node = {
+                'idNode'        : 'node'+str(node_index),
+                'name'          : name,
+                'definition'    : node_definition,
+                'type'          : node_type,
+                'tags'          : node_tags,
+                'display'       : node_visible,
+                'node_visible'  : node_visible,
+                'label_visible' : 1,
+                'shape_visible' : 1,
+                'color'         : color
+            }
+            node_index = node_index+1
+            nodes[name] = new_node
+        else:
+            new_node = nodes[name]
+            
         level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
-        #new_node['dimensions']['Primaire']['level'] = int(level)
-        parent_name = None
-        if level > previous_level:
-            current_node_parent = nodes['node'+str(i-2)]
-            current_parent_level = previous_level
-        if level > current_parent_level:
-            parent_name = current_node_parent['idNode']
-        previous_level = level
-        display = 1
-        node_visible = 1
-        if level != 1:
-          display = 0
-          node_visible = 0
-        new_node = {
-            'idNode'        : 'node'+str(i-1),
-            'name'          : name,
-            'definition'    : node_definition,
-            'type'          : node_type,
-            'tags'          : node_tags,
-            'dimensions'    : {
-                'Primaire':{
-                    'parent_name': parent_name,
-                    'level'      : int(level)
-                }
-            },
-            'label_visible' : 1,
-            'shape_visible' : 1,
-            'display'       : display,
-            'node_visible'  : node_visible,
-            'color'         : color
-        }
-        nodes[new_node['idNode']] = new_node
+        dimension =  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_DIMENSIONS)]
+        if not 'dimensions'  in new_node:
+            new_node['dimensions'] = {}
+        if not dimension  in new_node['dimensions']:
+            new_node['dimensions'][dimension] = {}
+            
+        if level == 1:
+            new_node['dimensions'][dimension]['level'] = 1
+            if not has_sankey_col:
+                new_node['display'] = 1  
+                new_node['node_visible'] = 1     
+        else:
+            if not has_sankey_col:
+                new_node['display'] = 0 
+                new_node['node_visible'] = 0   
+            new_node['dimensions'][dimension]['level'] = int(level)
+            other_display_node_found = False
+            j = i
+            while not other_display_node_found:
+                j = j-1
+                if  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] <  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] :
+                    parent_name =  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_NODE)].strip()
+                    if parent_name in nodes:
+                        new_node['dimensions'][dimension]['parent_name'] = nodes[parent_name]['idNode']
+                    break
+                if  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] == 1:
+                    break
+
 
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
     if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
