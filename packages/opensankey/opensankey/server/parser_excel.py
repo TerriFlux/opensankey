@@ -217,26 +217,27 @@ def parse_excel(mfa_input):
     }
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
-    nb_data_tags = len(dataTags.keys())
-    nb_flux_tags = len(fluxTags.keys())
+    # nb_data_tags = len(dataTags.keys())
+    # nb_flux_tags = len(fluxTags.keys())
     sheet_name = DATA_SHEET
     if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
-        sheet_name = RESULTS_SHEET        
+        sheet_name = RESULTS_SHEET
+    columns =  mfa_input[sheet_name][0]    
     for row in range(1,len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]
         target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_DESTINATION)]
-        source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-        target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-        if len(source_nodes) == 0:
-            source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
-            target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-            if len(source_nodes) == 0 or len(target_nodes) == 0:            
-                continue
-        if len(target_nodes) == 0:
-            source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-            target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
-            if len(source_nodes) == 0 or len(target_nodes) == 0:            
-                continue
+        source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+        target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+        # if len(source_nodes) == 0:
+        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
+        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
+        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+        #         continue
+        # if len(target_nodes) == 0:
+        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
+        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
+        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+        #         continue
             
         source_node = source_nodes[0]
         target_node = target_nodes[0]
@@ -251,29 +252,27 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             except Exception:
                 pass 
         link_data_tags= []
-        for i in range(nb_data_tags):
-            if len(mfa_input[sheet_name][row]) > 3+i:
-                link_data_tags.append(mfa_input[sheet_name][row][3+i])
+        for dataTag in dataTags:
+            link_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
         link_flux_tags= []
-        for i in range(nb_flux_tags):
-            if len(mfa_input[sheet_name][row]) > 3+i+nb_data_tags:
-                link_flux_tags.append(mfa_input[sheet_name][row][3+i+nb_data_tags])
+        for fluxTag in fluxTags:
+            link_flux_tags.append(mfa_input[sheet_name][row][columns.index(fluxTag)])
 
-        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        if len(existing_links) > 0:
-            new_link = existing_links[0]
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
-        else:
-            value = {}
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
-            new_link = {
-                'idLink'   : 'link'+str(row-1),  
-                'idSource' : source_node['idNode'],
-                'idTarget' : target_node['idNode'],
-                'value'    : value,
-                'color'    : color
-            }
-            links[new_link['idLink']] = new_link
+        # existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
+        # if len(existing_links) > 0:
+        #     new_link = existing_links[0]
+        #     set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
+        # else:
+        value = {}
+        set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
+        new_link = {
+            'idLink'   : 'link'+str(row-1),  
+            'idSource' : source_node['idNode'],
+            'idTarget' : target_node['idNode'],
+            'value'    : value,
+            'color'    : color
+        }
+        links[new_link['idLink']] = new_link
 
 def parse_nodes(mfa_input, nodes, nodeTags):
     # current_parent_level = 1
