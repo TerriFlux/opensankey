@@ -640,7 +640,7 @@ export const uploadExemple = (
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
   }
-  const url = root + the_url_prefix + 'sankey/upload_examples'
+  const url = root + 'sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
