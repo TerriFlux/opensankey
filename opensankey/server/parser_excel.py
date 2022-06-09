@@ -258,21 +258,21 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         for fluxTag in fluxTags:
             link_flux_tags.append(mfa_input[sheet_name][row][columns.index(fluxTag)])
 
-        # existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        # if len(existing_links) > 0:
-        #     new_link = existing_links[0]
-        #     set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
-        # else:
-        value = {}
-        set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
-        new_link = {
-            'idLink'   : 'link'+str(row-1),  
-            'idSource' : source_node['idNode'],
-            'idTarget' : target_node['idNode'],
-            'value'    : value,
-            'color'    : color
-        }
-        links[new_link['idLink']] = new_link
+        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
+        if len(existing_links) > 0:
+            new_link = existing_links[0]
+            set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
+        else:
+            value = {}
+            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
+            new_link = {
+                'idLink'   : 'link'+str(row-1),  
+                'idSource' : source_node['idNode'],
+                'idTarget' : target_node['idNode'],
+                'value'    : value,
+                'color'    : color
+            }
+            links[new_link['idLink']] = new_link
 
 def parse_nodes(mfa_input, nodes, nodeTags):
     # current_parent_level = 1
