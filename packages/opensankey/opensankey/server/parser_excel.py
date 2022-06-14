@@ -228,6 +228,10 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_DESTINATION)]
         source_nodes = [node for node in nodes.values() if node['name'] == source_name]
         target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+        if len(source_nodes) == 0:
+            continue
+        if len(target_nodes) == 0:
+            continue
         # if len(source_nodes) == 0:
         #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
         #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
@@ -455,7 +459,7 @@ def save_simple_excel(
             tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
 
-    nb_cols_nodes = 4 + len(sankey_data['nodeTags'].keys())
+    nb_cols_nodes = len(nodes_cols) + len(sankey_data['nodeTags'].keys())
 
     nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
@@ -480,7 +484,7 @@ def save_simple_excel(
         #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
 
     flux_cols = [
-        DATA_ORIGIN, DATA_DESTINATION, DATA_DESTINATION
+        DATA_ORIGIN, DATA_DESTINATION, DATA_VALUE
     ]
 
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys()) + len(sankey_data['fluxTags'].keys())
@@ -533,7 +537,7 @@ def save_simple_excel(
         'tags'  : tags_sheet,
         'nodes' : nodes,
         'data'  : links,
-        'ter_base'   : ter
+        'flux'   : ter
     }
 
     return mfa_output,nodes_names
@@ -542,7 +546,7 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     if len(sankey_data['dataTags'].keys()) == depth:
         links[row][flux_cols.index(DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
         links[row][flux_cols.index(DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
-        links[row][flux_cols.index(DATA_DESTINATION)] = val['value']
+        links[row][flux_cols.index(DATA_VALUE)] = val['value']
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
                 
