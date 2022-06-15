@@ -4,6 +4,7 @@ import re
 import webcolors
 import math
 from mfa_problem.io_excel import *
+from mfa_problem import mfa_problem_format_io
 
 def is_hex(s):
     return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
@@ -478,7 +479,7 @@ def save_simple_excel(
         for j,tag_name in enumerate(sankey_data['nodeTags']):
             tags = sankey_data['nodeTags'][tag_name]['tags'] 
             tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-            nodes[i+1][4+j] = (':').join(tags_names)
+            nodes[i+1][len(nodes_cols)+j] = (':').join(tags_names)
         nodes[i+1][nodes_cols.index(NODES_LEVEL)] = 1
         # if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
         #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
@@ -513,25 +514,50 @@ def save_simple_excel(
     #         'data'  : links,
     #     }
     #     return mfa_output,products,sectors
-
     nodes_names = [node[1] for node in nodes[1:]]
-    ter = [[None for x in range(len(nodes) + 1)] for y in range(len(nodes) + 1)]
+    node_tag_keys = list(sankey_data['nodeTags'])
+    if NODE_TYPE in node_tag_keys:
+        mfa_output = {
+            'nodes' : nodes,
+        }
+        ter,sectors_names,products_names = mfa_problem_format_io.create_empty_ter(mfa_output)
+        s_names2s_idx = {e: i for i, e in enumerate(sectors_names)}
+        p_names2p_idx = {e: i for i, e in enumerate(products_names)}
+        for row in range(1,len(links)):
+            origin      = links[row][flux_cols.index(DATA_ORIGIN)]
+            destination = links[row][flux_cols.index(DATA_DESTINATION)]
+            if origin in sectors_names:
+                sector_name = origin
+                product_name = destination
+                table_name = 'supply'
+            else:
+                sector_name = destination
+                product_name = origin
+                table_name = 'use'
+            try:          
+                col = s_names2s_idx[sector_name]+1
+                row = p_names2p_idx[product_name]+1
+                ter[table_name][row][col] = 1
+            except Exception as excpt:
+                print(excpt)      
+    else:
+        ter = [[None for x in range(len(nodes) + 1)] for y in range(len(nodes) + 1)]
 
-    for i in range(len(nodes_names)):
-        ter[i+1][0] =nodes_names[i]
-        #ter['use'][i+1][0] = nodes[i]
-    for j in range(len(nodes_names)):
-        ter[0][j+1] = nodes_names[j]
-    #     ter['use'][0][j+1] = sectors[j]
-    for row in range(1,len(links)):
-        origin      = links[row][flux_cols.index(DATA_ORIGIN)]
-        destination = links[row][flux_cols.index(DATA_DESTINATION)]
-        try:
-            origin_idx = nodes_names.index(origin)
-            destination_idx = nodes_names.index(destination)
-            ter[origin_idx+1][destination_idx+1] = 1
-        except Exception as excpt:
-            print(excpt)
+        for i in range(len(nodes_names)):
+            ter[i+1][0] =nodes_names[i]
+            #ter['use'][i+1][0] = nodes[i]
+        for j in range(len(nodes_names)):
+            ter[0][j+1] = nodes_names[j]
+        #     ter['use'][0][j+1] = sectors[j]
+        for row in range(1,len(links)):
+            origin      = links[row][flux_cols.index(DATA_ORIGIN)]
+            destination = links[row][flux_cols.index(DATA_DESTINATION)]
+            try:
+                origin_idx = nodes_names.index(origin)
+                destination_idx = nodes_names.index(destination)
+                ter[origin_idx+1][destination_idx+1] = 1
+            except Exception as excpt:
+                print(excpt)
 
     mfa_output = {
         'tags'  : tags_sheet,
