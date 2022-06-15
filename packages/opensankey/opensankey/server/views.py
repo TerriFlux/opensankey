@@ -86,7 +86,11 @@ def save_excel():
     excel_file = os.path.join(cwd, "tutu.xlsx")
     sankey_data =  request.get_data().decode("utf-8")
     mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
-    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=1)
+    if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
+        verbosity=2
+    else:
+        verbosity=1        
+    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
     return send_file(excel_file, as_attachment=True)
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
