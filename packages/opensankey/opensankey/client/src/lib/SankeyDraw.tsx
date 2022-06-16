@@ -2238,6 +2238,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (d.node_visible) { display = 'inline' } else { display = 'none' }
         return display
       })
+      .style('font-family',d=>d.display_style.font_family)
 
     const ggg_nodes = gg_nodes.append('g')
       .attr('id', d => 'ggg_' + d.idNode)
@@ -3464,7 +3465,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': node_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */}} ></g>
 
           </svg>
         </div>

@@ -8,7 +8,7 @@ import { compute_auto_sankey, reorganize_all_input_outputLinksId, reorganize_inp
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaProductHunt } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
@@ -24,10 +24,10 @@ declare const window: Window &
   }
 
 export const uploadExcelImpl = (
-  data : SankeyData,
-  set_data : (data:SankeyData)=>void,
-  set_show_excel_dialog: (b:boolean)=>void,
-  input_file : Blob,
+  data: SankeyData,
+  set_data: (data: SankeyData) => void,
+  set_show_excel_dialog: (b: boolean) => void,
+  input_file: Blob,
   sheet: string,
   post_callback: any
 ) => {
@@ -156,15 +156,15 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label}: any) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links, set_multi_selected_label }: any) => {
   return (
     <>
-      { Array.isArray(exemple_menu) 
-        ? exemple_menu.map( (item,index)=> {
-          let callback = (server_data : SankeyData)=> 0
-          let path = current_path+'/sankey/'+item
+      { Array.isArray(exemple_menu)
+        ? exemple_menu.map((item, index) => {
+          let callback = (server_data: SankeyData) => 0
+          let path = current_path + '/sankey/' + item
           if (item.includes('simple.xlsx') || item.includes('reconciled.xlsx')) {
-            path = current_path+'/'+item
+            path = current_path + '/' + item
             callback = (server_data: SankeyData) => {
               // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
               //   server_data.links['link324'].idSource = 'node63'
@@ -172,16 +172,16 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
               // }
               if ((server_data as any).layout !== undefined) {
                 updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-                localStorage.setItem('initial_data',JSON.stringify(server_data))
+                localStorage.setItem('initial_data', JSON.stringify(server_data))
                 let nb_agregation_level = 0
-                Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-                for (let i=1 ; i<=nb_agregation_level ; i++) {
-                  set_nodes_level(server_data,server_data.nodes,i)
+                Object.values(server_data.nodes).forEach(n => Object.entries(n.dimensions).forEach(dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+                for (let i = 1; i <= nb_agregation_level; i++) {
+                  set_nodes_level(server_data, server_data.nodes, i)
                   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
                 }
                 delete (server_data as SankeyData & { layout?: SankeyData }).layout
-                Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))
-           
+                Object.assign(server_data, JSON.parse(localStorage.getItem('initial_data') as string))
+
               } else {
                 compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
               }
@@ -193,34 +193,34 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             <Dropdown.Item
               key={index}
               onClick={() => uploadExemple(
-                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data,callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_label
-              )} 
-            >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
-                : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data, callback, set_multi_selected_nodes, set_multi_selected_links, set_multi_selected_label
+              )}
+            >{item.includes('xlsx') ? item.split('.x')[0].replace(/_/g, ' ').replace(' layout', '').replace('simple', ' xl').replace('reconciled', ' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC').replace('C G A P A T', 'CGAPAT').replace('M P', 'MP') : item.split('.j')[0].replace(/_/g, ' ').replace(' layout', '').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC').replace('C G A P A T', 'CGAPAT').replace('M P', 'MP')
               }</Dropdown.Item>
-          )}
+          )
+        }
         ) : Object.keys(exemple_menu).map(
-          (key,index)=> {
+          (key, index) => {
             return (
               <>
                 <NavDropdown title={key} id={key} >
-                  <ExempleItem 
+                  <ExempleItem
                     exemple_menu={exemple_menu[key]}
                     url_prefix={url_prefix}
                     data={data}
                     set_data={set_data}
-                    current_path={current_path !== '' ? current_path+'/'+key.replace('JSON','').replace('Excel','') : key.replace('JSON','').replace('Excel','')}
+                    current_path={current_path !== '' ? current_path + '/' + key.replace('JSON', '').replace('Excel', '') : key.replace('JSON', '').replace('Excel', '')}
                     set_multi_selected_links={set_multi_selected_links}
                     set_multi_selected_nodes={set_multi_selected_nodes}
                     set_multi_selected_label={set_multi_selected_label}
                   />
                 </NavDropdown>
               </>
-            )}          
+            )
+          }
         )
       }
-    </>      
+    </>
   )
 }
 
@@ -486,7 +486,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  console.log(tmpNodes)
   const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
   const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
@@ -748,25 +747,1177 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
 
+  const [showPreference, setShowPreference] = useState(false)
+  const preferenceCheck = (str: string) => {
+    if (!data.accordeonToShow.includes(str)) {
+      data.accordeonToShow.push(str)
+    } else {
+      const posElemt = data.accordeonToShow.indexOf(str)
+      data.accordeonToShow.splice(posElemt, 1)
+    }
 
+  }
+  const modalPreference = (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
+    <Modal.Header closeButton>
+      <Modal.Title>Édition Préference</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <ButtonGroup>
+        <Button variant='info'
+          onClick={() => {
+            data.accordeonToShow = ['MEP', 'RC', 'Aide']
+            set_data({ ...data })
+
+          }}
+        >Simple</Button>
+        <Button variant='dark'
+          onClick={() => {
+            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg', 'RC', 'Aide']
+            set_data({ ...data })
+          }}
+        >Expert</Button>
+      </ButtonGroup>
+      <Form>
+        <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={evt => {
+          preferenceCheck('MEP')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked disabled type="checkbox" label="Noeuds" />
+        <Form.Check checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={evt => {
+          preferenceCheck('EN')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked disabled type="checkbox" label="Flux" />
+        <Form.Check checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={evt => {
+          preferenceCheck('EF')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={evt => {
+          preferenceCheck('ED')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={evt => {
+          preferenceCheck('LL')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Visualisation" onChange={evt => {
+          preferenceCheck('Vis')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={evt => {
+          preferenceCheck('Leg')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('RC')} type="checkbox" label="Raccourci Clavier" onChange={evt => {
+          preferenceCheck('RC')
+          set_data({ ...data })
+        }} />
+        <Form.Check checked={data.accordeonToShow.includes('Aide')} type="checkbox" label="Aide" onChange={evt => {
+          preferenceCheck('Aide')
+          set_data({ ...data })
+        }} />
+      </Form>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
+        Close
+      </Button>
+    </Modal.Footer>
+  </Modal>)
+
+
+  //Modal et fonctions pour l'édition et affectation des styles de noeud
+  const [showStyle, setShowStyle] = useState(false)
+  const showStyleEdition = () => {
+    setShowStyle(true)
+  }
+  const closeStyleEdition = () => {
+    setShowStyle(false)
+  }
+  const applyStyleToNodes = () => {
+    const style = data.style_node[selected_style_node]
+    Object.values(data.nodes).filter(d => d.style != '' && d.style == selected_style_node).map(d => {
+      //Style Noeud
+      d.shape_visible = style.shape_visible
+      d.color = style.color
+      d.type = style.type
+      d.node_width = style.node_width
+      d.node_height = style.node_height
+
+      //Syle label
+      d.label_visible = style.label_visible
+      d.show_value = style.show_value
+      d.display_style.font_size = style.display_style.font_size
+      d.display_style.bold = style.display_style.bold
+      d.display_style.uppercase = style.display_style.uppercase
+      d.display_style.italic = style.display_style.italic
+      d.display_style.label_box_width = style.display_style.label_box_width
+      d.display_style.label_vert = style.display_style.label_vert
+      d.display_style.label_horiz = style.display_style.label_horiz
+      d.display_style.font_family = style.display_style.font_family
+
+    })
+
+    set_data({ ...data })
+
+  }
+  const cut_name = (t: string, n: number) => {
+    return (t.length > n) ? t.slice(0, n) + '...' : t
+  }
+  const [selected_style_node, set_selected_style_node] = useState('default')
+  const [style_to_apply, set_style_to_apply] = useState('default')
+  const modalStyleNode = (
+    <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
+      <Modal.Header closeButton>
+        <Modal.Title>Édition Style</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+
+        <Row >
+          <Col xs={1}>
+            <Button size="sm" onClick={(evt) => {
+              const new_style = default_node(data)
+              new_style.name = 'New Style'
+              const new_id = 'style_node_' + String(new Date().getTime())
+              data.style_node[new_id] = new_style
+              set_data({ ...data })
+
+            }}><FaPlus /></Button>
+          </Col>
+
+          <Col xs={5}>
+            <Dropdown>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+
+              <Dropdown.Menu>
+                {Object.keys(data.style_node).map(d => {
+                  console.log(data.style_node[d])
+                  return (<Dropdown.Item onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+
+                })}
+
+
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+
+          <Col xs={1}>
+            <Button
+              size="sm"
+              variant='danger'
+              disabled={selected_style_node == 'default'}
+              onClick={
+                () => {
+                  delete data.style_node[selected_style_node]
+                  set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
+                }
+              }
+            ><FaMinus /></Button>
+
+          </Col>
+
+          <Col xs={5}>
+            <Button variant="warning" onClick={applyStyleToNodes}>Appliquer le style aux noeuds</Button>
+          </Col>
+        </Row>
+
+        <Form.Group as={Row} >
+          <Col xs={2} >
+            <FormLabel >Nom Style</FormLabel>
+          </Col>
+          <Col xs={10} >
+
+            <FormControl
+              value={
+                (selected_style_node != '') ? data.style_node[selected_style_node].name : ''
+              }
+
+              onChange={evt => {
+                data.style_node[selected_style_node].name = evt.target.value
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+
+        </Form.Group>
+
+        {console.log(data)}
+        {console.log(selected_style_node)}
+
+        <Col md={12}>
+          <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
+            <Tab eventKey="nodes_desc" title="Apparence">
+              <Form >
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Visibilité</FormLabel>
+                  </Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].shape_visible : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].shape_visible = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Couleur</FormLabel>
+                  </Col>
+                  <Col xs={3}>
+                    <Form.Control
+                      type='color'
+                      value={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].color : '#ffffff'
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].color = evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel>Forme</FormLabel>
+                  </Col>
+                  <Col xs={2}>
+                    <FormCheck
+                      value="product"
+                      type='radio'
+                      label='Cercle'
+
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'product' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].type = evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+
+                  <Col xs={2}>
+                    <FormCheck
+                      value="sector"
+                      type='radio'
+                      label='Rectangle'
+
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'sector' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].type = evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+              </Form>
+              <Form >
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Taille minimum Largeur</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      min={0} max={100}
+                      type={'number'}
+                      value={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].node_width : 0
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].node_width = +evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Taille minimum Hauteur</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      min={0} max={100}
+                      type={'number'}
+
+                      value={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].node_height : 0
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].node_height = +evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+
+
+              </Form>
+            </Tab>
+
+            <Tab eventKey="label_desc" title="Labels">
+              <Form>
+
+                <Row>
+                  <Col xs={6}>Police des labels</Col>
+                  <Col xs={6}><Form.Select
+                    onChange={
+                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                        data.style_node[selected_style_node].display_style.font_family = evt.target.value
+                        set_data({ ...data })
+                      }
+                    }
+                  >
+                    {data.display_style.font_family.map((d) => {
+                      return <option
+                        key={'ff-' + d}
+                        value={d}
+                        selected={d == data.style_node[selected_style_node].display_style.font_family}
+                      >{d}</option>
+
+                    })}
+                  </Form.Select></Col>
+                </Row>
+
+                <Form.Group as={Row} >
+                  <Col xs={4}>Visibilité</Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].label_visible : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].label_visible = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Afficher la valeur du noeud</FormLabel>
+                  </Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].show_value : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].show_value = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Taille police</FormLabel>
+                  </Col>
+                  <Col xs={5}>
+                    <FormControl
+                      min={11} max={20}
+                      type={'number'}
+                      value={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.font_size : 0
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.font_size = +evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel >Police</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Gras'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.bold : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.bold = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Majuscule'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.uppercase : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.uppercase = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Italique'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.italic : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.italic = evt.target.checked
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel>Coupure des labels</FormLabel>
+                  </Col>
+                  <Col xs={5}>
+                    <FormControl
+                      type={'number'}
+                      placeholder={'110'}
+                      min={0}
+                      max={500}
+                      value={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_box_width : 0
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_box_width = +evt.target.value
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+
+
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Position vertical</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Haut'
+
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_vert = 'haut'
+                        set_data({ ...data })
+                      }}
+
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Milieu'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_vert = 'milieu'
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Bas'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_vert = 'bas'
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Position horizontal</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Gauche'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_horiz = 'gauche'
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Milieu'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_horiz = 'milieu'
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Droite'
+                      checked={
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
+                      }
+
+                      onChange={evt => {
+                        data.style_node[selected_style_node].display_style.label_horiz = 'droite'
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+              </Form>
+            </Tab>
+          </Tabs>
+        </Col>
+        <Row>Noeuds affecter au style :{Object.values(data.nodes).filter(d => d.style == selected_style_node).map(d => d.name).join('/')}</Row>
+
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={closeStyleEdition}>Close</Button>
+      </Modal.Footer>
+    </Modal>)
+
+  const apply_style_to_nodes = () => {
+    console.log('here')
+    const style = data.style_node[style_to_apply]
+
+    multi_selected_nodes.map(d => {
+      //Style Noeud
+      d.shape_visible = style.shape_visible
+      d.color = style.color
+      d.type = style.type
+      d.node_width = style.node_width
+      d.node_height = style.node_height
+
+      //Syle label
+      d.label_visible = style.label_visible
+      d.show_value = style.show_value
+      d.display_style.font_size = style.display_style.font_size
+      d.display_style.bold = style.display_style.bold
+      d.display_style.uppercase = style.display_style.uppercase
+      d.display_style.italic = style.display_style.italic
+      d.display_style.label_box_width = style.display_style.label_box_width
+      d.display_style.label_vert = style.display_style.label_vert
+      d.display_style.label_horiz = style.display_style.label_horiz
+      d.display_style.font_family = style.display_style.font_family
+
+
+    })
+    set_data({ ...data })
+
+
+  }
+
+  const style_of_selected_nodes = () => {
+    let style_to_display = 'Aucun'
+    if (multi_selected_nodes.length != 0) {
+      style_to_display = multi_selected_nodes[0].style
+      let inchangee = true
+      multi_selected_nodes.map(d => {
+        inchangee = (d.style == style_to_display) ? inchangee : false
+      })
+      if (style_to_display != '') {
+        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 25) : 'Multiple style parmi les noeuds sélectionnés'
+
+      } else {
+        return 'Aucun'
+      }
+    } else {
+      return style_to_display
+    }
+  }
+
+
+
+  //Modal et fonctions pour l'edition et affectation des style de flux
+  const [showStyleLink, setShowStyleLink] = useState(false)
+  const showStyleEditionLink = () => {
+    setShowStyleLink(true)
+  }
+  const closeStyleEditionLink = () => {
+    setShowStyleLink(false)
+  }
+  const applyStyleToLinks = () => {
+    const style = data.style_link[selected_style_link]
+    Object.values(data.links).filter(d => d.style != '' && d.style == selected_style_link).map(d => {
+      d.recycling = style.recycling
+      d.orientation = style.orientation
+      d.arrow = style.arrow
+
+      // display_attribute
+      d.label_position = style.label_position
+      d.orthogonal_label_position = style.orthogonal_label_position
+      d.label_on_path = style.label_on_path
+      d.label_visible = style.label_visible
+      d.text_color = style.text_color
+      d.color = style.color
+
+      d.gradient = style.gradient
+
+      d.curvature = style.curvature
+      d.curved = style.curved
+    })
+
+    set_data({ ...data })
+
+  }
+  const apply_style_to_selected_links = () => {
+    console.log('here')
+    const style = data.style_link[style_to_apply_to_link]
+
+    multi_selected_links.map(d => {
+
+      // type of link
+      d.recycling = style.recycling
+      d.orientation = style.orientation
+      d.arrow = style.arrow
+
+      // display_attribute
+      d.label_position = style.label_position
+      d.orthogonal_label_position = style.orthogonal_label_position
+      d.label_on_path = style.label_on_path
+      d.label_visible = style.label_visible
+      d.text_color = style.text_color
+      d.color = style.color
+
+      d.gradient = style.gradient
+
+      d.curvature = style.curvature
+      d.curved = style.curved
+    })
+
+
+  }
+  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+  const modalStyleLink = (
+    <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
+      <Modal.Header closeButton>
+        <Modal.Title>Édition Style</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+
+        <Row >
+          <Col xs={1}>
+            <Button size="sm" onClick={(evt) => {
+              const new_style = default_link(data)
+              new_style.idLink = 'New Style'
+              const new_id = 'style_link_' + String(new Date().getTime())
+              data.style_link[new_id] = new_style
+              set_data({ ...data })
+
+            }}><FaPlus /></Button>
+          </Col>
+
+          <Col xs={5}>
+            <Dropdown>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
+
+              <Dropdown.Menu>
+                {Object.keys(data.style_link).map(d => {
+                  console.log(data.style_link[d])
+                  return (<Dropdown.Item onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
+
+                })}
+
+
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+
+          <Col xs={1}>
+            <Button
+              size="sm"
+              variant='danger'
+              disabled={selected_style_link == 'default'}
+              onClick={
+                () => {
+                  delete data.style_link[selected_style_link]
+                  set_selected_style_link((Object.keys(data.style_link).length > 0) ? Object.keys(data.style_link)[0] : '')
+                }
+              }
+            ><FaMinus /></Button>
+
+          </Col>
+
+          <Col xs={5}>
+            <Button variant="warning" onClick={applyStyleToLinks}>Appliquer le style aux flux</Button>
+          </Col>
+        </Row>
+
+        <Form.Group as={Row} >
+          <Col xs={2} >
+            <FormLabel >Nom Style</FormLabel>
+          </Col>
+          <Col xs={10} >
+
+            <FormControl
+              value={
+                (selected_style_link != '') ? data.style_link[selected_style_link].idLink : ''
+              }
+
+              onChange={evt => {
+                data.style_link[selected_style_link].idLink = evt.target.value
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+
+        </Form.Group>
+
+
+        <Row>
+          <Col md={12}>
+            <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
+              <Tab eventKey="flux_attributes" title="Apparence">
+                <Form >
+
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Couleur:</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Control
+                        type="color"
+                        value={data.style_link[selected_style_link].color}
+                        onChange={
+                          evt => {
+                            // selected_link.color = evt.target.value
+                            const color = evt.target.value
+                            data.style_link[selected_style_link].color = color
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+
+
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Gradient:</FormLabel>
+                    </Col>
+                    <Col>
+                      <Form.Check
+                        inline
+                        type="checkbox"
+                        checked={data.style_link[selected_style_link].gradient}
+                        onChange={
+                          evt => {
+                            // selected_link.color = evt.target.value
+                            data.style_link[selected_style_link].gradient = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+
+
+
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel>Type:</FormLabel>
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Courbe'
+                        checked={data.style_link[selected_style_link].curved}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].curved = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Flèche'
+                        checked={data.style_link[selected_style_link].arrow}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].arrow = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <FormCheck
+                        type='checkbox'
+                        label='Recyclage'
+                        checked={(data.style_link[selected_style_link].recycling) ? true : false}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].recycling = evt.target.checked
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col>
+                      <FormLabel >Courbure</FormLabel>
+                    </Col>
+
+                    <Col>
+                      <FormControl
+
+                        min={0} max={1} step={0.01}
+                        type={'number'}
+                        value={data.style_link[selected_style_link].curvature}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].curvature = +evt.target.value
+
+                            set_data({ ...data })
+                          }
+                        } />
+                    </Col>
+                    <Col sm={2}>{selected_link.curvature}</Col>
+                  </Form.Group>
+                  <Form.Group as={Row} >
+                    <Col sm={12}>
+                      <FormCheck
+                        inline
+                        name='orientation'
+                        type='radio'
+                        label='Horiz-Horiz'
+                        value='hh'
+                        checked={data.style_link[selected_style_link].orientation == 'hh'}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].orientation = 'hh'
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                      <FormCheck
+                        inline
+                        name='orientation'
+                        type='radio'
+                        label='Vert-Vert'
+                        value='vv'
+                        checked={data.style_link[selected_style_link].orientation == 'vv'}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].orientation == 'vv'
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                      <FormCheck
+                        inline
+                        name='orientation'
+                        type='radio'
+                        label='Vert-Horiz'
+                        value='vh'
+                        checked={data.style_link[selected_style_link].orientation == 'vh'}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].orientation = 'vh'
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                      <FormCheck
+                        inline
+                        name='orientation'
+                        type='radio'
+                        label='Horiz-Vert'
+                        value='hv'
+                        checked={data.style_link[selected_style_link].orientation == 'hv'}
+                        onChange={
+                          evt => {
+                            data.style_link[selected_style_link].orientation = 'hv'
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+                    </Col>
+                  </Form.Group>
+                </Form>
+              </Tab>
+              <Tab eventKey="label" title="Label">
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormCheck
+                      value='black'
+                      type='radio'
+                      label='Label en noir'
+                      checked={data.style_link[selected_style_link].text_color == 'black'}
+                      onChange={
+                        (evt) => {
+                          data.style_link[selected_style_link].text_color = 'black'
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      value='white'
+                      type='radio'
+                      label='Label blanc'
+                      checked={data.style_link[selected_style_link].text_color == 'white'}
+                      onChange={
+                        (evt) => {
+                          data.style_link[selected_style_link].text_color = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      value='same_color'
+                      type='radio'
+                      label='Label en couleur'
+                      checked={data.style_link[selected_style_link].text_color == 'color'}
+                      onChange={
+                        (evt) => {
+                          data.style_link[selected_style_link].text_color = data.style_link[selected_style_link].color
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group >
+                  <FormCheck
+                    type='checkbox'
+                    label='Label visible'
+                    checked={data.style_link[selected_style_link].label_visible}
+                    onChange={
+                      evt => {
+                        data.style_link[selected_style_link].label_visible = evt.target.checked
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormLabel>Position laterale:</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='beginning'
+                      type='radio'
+                      label='Début'
+                      checked={data.style_link[selected_style_link].label_position == 'beginning'}
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='middle'
+                      type='radio'
+                      label='Milieu'
+                      checked={data.style_link[selected_style_link].label_position == 'middle'}
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='end'
+                      type='radio'
+                      label='Fin'
+                      checked={data.style_link[selected_style_link].label_position == 'end'}
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group>
+                  <FormCheck
+                    type='checkbox'
+                    label='Attaché au flux'
+                    disabled={selected_link.label_position === 'frozen'}
+                    checked={data.style_link[selected_style_link].label_on_path}
+                    onChange={
+                      evt => {
+                        data.style_link[selected_style_link].label_on_path = evt.target.checked
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col>
+                    <FormLabel>Position orthogonale:</FormLabel>
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='below'
+                      type='radio'
+                      label='Dessous'
+                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'below'}
+
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='middle'
+                      type='radio'
+                      label='Milieu'
+                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'middle'}
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Check
+                      value='above'
+                      type='radio'
+                      label='Dessus'
+                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'above'}
+
+                      onChange={
+                        evt => {
+                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+              </Tab>
+            </Tabs>
+          </Col>
+        </Row>
+        <Row>Noeuds affecter au style :{Object.values(data.links).filter(d => d.style == selected_style_link).map(d => d.idSource + '-->' + d.idTarget).join('/')}</Row>
+
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={closeStyleEditionLink}>Close</Button>
+      </Modal.Footer>
+    </Modal>)
+
+
+
+  const style_of_selected_links = () => {
+    let style_to_display = 'Aucun'
+    if (multi_selected_links.length != 0) {
+      style_to_display = multi_selected_links[0].style
+      let inchangee = true
+      multi_selected_links.map(d => {
+        inchangee = (d.style == style_to_display) ? inchangee : false
+      })
+      if (style_to_display != '') {
+        return (inchangee) ? cut_name(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
+
+      } else {
+        return 'Aucun'
+      }
+    } else {
+      return style_to_display
+    }
+  }
 
 
   return (
     <>
+
+      {modalStyleNode}
+      {modalPreference}
+      {modalStyleLink}
+
+
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
-          { !window.SankeyToolsStatic ? (
+          {!window.SankeyToolsStatic ? (
             <Form.Check
               type="switch"
               checked={window.sankey.advanced}
               onClick={(evt: any) => {
                 window.sankey.advanced = evt.target.checked
-                set_data({...data})
+                set_data({ ...data })
               }}
               label="Options avancées"
             />) : (<></>)}
-          { !window.SankeyToolsStatic ? (<>
+          {!window.SankeyToolsStatic ? (<>
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
                 <NavDropdown id='ouvrir' title="Ouvrir" >
@@ -802,8 +1953,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       reader.readAsText(files[0])
                     }}
                   />
-                  <Dropdown.Item 
-                    onClick={ () => set_show_excel_dialog(true) }
+                  <Dropdown.Item
+                    onClick={() => set_show_excel_dialog(true)}
                   >Excel</Dropdown.Item>
                   {open_menu}
                 </NavDropdown>
@@ -816,11 +1967,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
                   <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
                 </NavDropdown>
+                <Dropdown.Item onClick={() => { setShowPreference(true) }}>Préférences</Dropdown.Item>
               </NavDropdown>
               <NavDropdown id='edition' title="Edition" >
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
                 <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
                 {edition_menu}
+                <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
+                <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
               </NavDropdown >
               <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
                 {example_menu}
@@ -845,14 +1999,14 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Nav></>
           ) : (<><br />
             <h2>{window.sankey.header}</h2>
-            <br/></>)}
-          { window.SankeyToolsStatic ? (
+            <br /></>)}
+          {window.SankeyToolsStatic ? (
             <Form.Check
               type="switch"
               checked={window.sankey.advanced}
               onClick={(evt: any) => {
                 window.sankey.advanced = evt.target.checked
-                set_data({...data})
+                set_data({ ...data })
               }}
               label="Options avancées"
             />) : (<></>)}
@@ -872,7 +2026,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             }
 
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
               eventKey="1"
               onClick={
                 evt => {
@@ -894,186 +2048,174 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="2"
+
               onClick={
                 evt => {
+                  console.log(evt)
                   if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
                   }
                 }
-              }>
+              }
+            >
               {
                 //PARAMETRE NOEUD
               }
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
-                <Form >
-                  <Form.Group>
-                    <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
-                    <Row>
-                      <Col xs={6}>Police des labels</Col>
-                      <Col xs={6}><Form.Select
-                        onChange={
-                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                            data.display_style.node_font_family_selected = evt.target.value
-                            set_data({ ...data })
-                          }
-                        }
-                      >
-                        {data.display_style.font_family.map((d) => {
-                          return <option
-                            key={'ff-' + d}
-                            value={d}
-                            selected={d == data.display_style.node_font_family_selected}
-                          >{d}</option>
 
-                        })}
-                      </Form.Select></Col>
-                    </Row>
-                  </Form.Group>
-                  <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres par défaut</b></FormLabel>
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >Taille police</FormLabel>
-                    </Col>
-                    <Col>
-                      <Form.Range
-                        min="11" max="20"
-                        value={data.display_style.node_font_size}
-                        onChange={evt => {
-                          data.display_style.node_font_size = +evt.target.value
-                          set_data({ ...data })
-                        }}
-                      />
-                    </Col>
-                    <Col>{data.display_style.node_font_size}</Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >Labels</FormLabel>
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label='Gras'
-                        checked={data.display_style.sector_bold}
-                        onChange={
-                          evt => {
-                            data.display_style.sector_bold = evt.target.checked
-                            data.display_style.product_bold = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label='Majuscule'
-                        checked={data.display_style.sector_uppercase}
-                        onChange={
-                          evt => {
-                            data.display_style.sector_uppercase = evt.target.checked
-                            data.display_style.product_uppercase = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label='Italique'
-                        checked={data.display_style.sector_italic}
-                        onChange={
-                          evt => {
-                            data.display_style.sector_italic = evt.target.checked
-                            data.display_style.product_italic = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-                </Form>
-                <Row >
-                  <Col xs={1}>
-                    <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
-                  </Col>
-
-                  <Col xs={10}>
-                    {dropdownMultiNode()}
-                  </Col>
-
-                  <Col xs={1}>
-                    <Button
-                      size="sm"
-                      variant='danger'
-                      disabled={multi_selected_nodes.length == 0}
-                      onClick={
-                        () => {
-
-                          //Boutton pour supprimer le noeud selectionné
-                          multi_selected_nodes.map(d => delete_node(data, d))
-                          set_selected_node(default_node(data))
-                          set_multi_selected_nodes([])
-                          set_data({ ...data })
-
-
-
+                <Accordion >
+                  <Accordion.Item
+                    style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
+                    eventKey="EtiquetteNoeud"
+                    onClick={
+                      evt => {
+                        console.log(evt.target)
+                        if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
+                          set_nav_item_active('2')
+                          set_show_nav(true)
+                        } else {
+                          set_nav_item_active('2')
+                          set_show_nav(true)
 
                         }
                       }
-                    ><FaMinus /></Button>
+                    }
+                  >
+                    <Accordion.Header>Étiquettes Noeuds</Accordion.Header>
+                    <Accordion.Body>
+                      {settings_edition_node_tags}
+                    </Accordion.Body>
+                  </Accordion.Item>
 
-                  </Col>
-                </Row>
-
-                <Form.Group as={Row} >
-                  <Col xs={1} >
-                    <FormLabel >Nom</FormLabel>
-                  </Col>
-                  <Col xs={10} >
-
-                    <FormControl
-                      value={
-                        (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
-                      }
-
-                      onChange={evt => {
-                        const sel = (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
-                        Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
-                        set_data({ ...data })
-                      }}
-                      disabled={(multi_selected_nodes.length == 1) ? false : true} />
-                  </Col>
-                  <Col xs={3}>
-                  </Col>
-                </Form.Group>
+                  <Accordion.Item eventKey='editionNoeud'>
+                    <Accordion.Header>Edition Noeuds</Accordion.Header>
+                    <Accordion.Body>
 
 
-                <div style={{ 'display': 'block' }}>{node_edition}</div>
+
+                      <Row >
+                        <Col xs={1}>
+                          <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
+                        </Col>
+
+                        <Col xs={10}>
+                          {dropdownMultiNode()}
+                        </Col>
+
+                        <Col xs={1}>
+                          <Button
+                            size="sm"
+                            variant='danger'
+                            disabled={multi_selected_nodes.length == 0}
+                            onClick={
+                              () => {
+
+                                //Boutton pour supprimer le noeud selectionné
+                                multi_selected_nodes.map(d => delete_node(data, d))
+                                set_selected_node(default_node(data))
+                                set_multi_selected_nodes([])
+                                set_data({ ...data })
+
+
+
+
+                              }
+                            }
+                          ><FaMinus /></Button>
+
+                        </Col>
+                      </Row>
+
+                      <Row >
+                        <Col xs={3}>
+                          <FormLabel>Choix de Style</FormLabel>
+                        </Col>
+
+                        <Col xs={6}>
+                          <Dropdown>
+                            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
+
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => {
+                                set_style_to_apply('')
+                                multi_selected_nodes.map(n => {
+                                  n.style = ''
+                                })
+                                set_data({ ...data })
+                              }}>{'Aucun'}</Dropdown.Item>
+                              {Object.keys(data.style_node).map(d => {
+                                return (<Dropdown.Item onClick={() => {
+                                  set_style_to_apply(d)
+                                  multi_selected_nodes.map(n => {
+                                    n.style = d
+                                  })
+                                  set_data({ ...data })
+                                }}>{data.style_node[d].name}</Dropdown.Item>)
+
+                              })}
+
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </Col>
+
+                        <Col xs={3}>
+                          <Button
+                            size="sm"
+                            variant='info'
+
+                            onClick={
+                              () => {
+                                apply_style_to_nodes()
+                                set_data({ ...data })
+                              }
+                            }
+                          >Appliquer Style</Button>
+
+                        </Col>
+                      </Row>
+
+
+                      <Form.Group as={Row} >
+                        <Col xs={1} >
+                          <FormLabel >Nom</FormLabel>
+                        </Col>
+                        <Col xs={10} >
+
+                          <FormControl
+                            value={
+                              (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
+                            }
+
+                            onChange={evt => {
+                              const sel = (multi_selected_nodes.length != 1) ? '' : multi_selected_nodes[0].name
+                              Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
+                              set_data({ ...data })
+                            }}
+                            disabled={(multi_selected_nodes.length == 1) ? false : true} />
+                        </Col>
+                        <Col xs={3}>
+                        </Col>
+                      </Form.Group>
+
+
+                      <div style={{ 'display': 'block' }}>{node_edition}</div>
+
+
+
+
+
+
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
+
 
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
-              eventKey="4"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '4') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('4')
-                  }
-                }
-              }>
-              <Accordion.Header>Étiquettes Noeuds</Accordion.Header>
-              <Accordion.Body>
-                {settings_edition_node_tags}
-              </Accordion.Body>
-            </Accordion.Item>
+
             <Accordion.Item
               style={{ 'display': (view == 'none') ? 'block' : 'none' }}
 
@@ -1172,7 +2314,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col >
                     <Button variant='info'
                       onClick={() => {
-                        const nodes_to_reorganize : SankeyNode[] = []
+                        const nodes_to_reorganize: SankeyNode[] = []
                         multi_selected_links.forEach(l => {
                           const tmp = l.idSource
 
@@ -1190,8 +2332,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                           target_node.inputLinksId.push(l.idLink)
                           nodes_to_reorganize.push(target_node)
                         })
-                        nodes_to_reorganize.forEach( n => {
-                          reorganize_inputLinksId(n,true,true,data.nodes,data.links)
+                        nodes_to_reorganize.forEach(n => {
+                          reorganize_inputLinksId(n, true, true, data.nodes, data.links)
                         })
                         set_data({ ...data })
                       }}><FaArrowsAltH /></Button>
@@ -1273,13 +2415,61 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Row>
 
+                <Row >
+                  <Col xs={3}>
+                    <FormLabel>Choix de Style</FormLabel>
+                  </Col>
+
+                  <Col xs={6}>
+                    <Dropdown>
+                      <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
+
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => {
+                          set_style_to_apply_to_link('')
+                          multi_selected_links.map(n => {
+                            n.style = ''
+                          })
+                          set_data({ ...data })
+                        }}>{'Aucun'}</Dropdown.Item>
+                        {Object.keys(data.style_link).map(d => {
+                          return (<Dropdown.Item onClick={() => {
+                            set_style_to_apply_to_link(d)
+                            multi_selected_links.map(n => {
+                              n.style = d
+                            })
+                            set_data({ ...data })
+                          }}>{data.style_link[d].idLink}</Dropdown.Item>)
+
+                        })}
+
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
+                  <Col xs={3}>
+                    <Button
+                      size="sm"
+                      variant='info'
+
+                      onClick={
+                        () => {
+                          apply_style_to_selected_links()
+                          set_data({ ...data })
+                        }
+                      }
+                    >Appliquer Style</Button>
+
+                  </Col>
+                </Row>
+
                 <div style={{ 'display': (multi_selected_links.length == 0) ? 'none' : 'block' }}>{link_edition}</div>
 
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
               eventKey="8"
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '8') {
                   set_nav_item_active('')
@@ -1293,7 +2483,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               eventKey="dimension"
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'dimension') {
                   set_nav_item_active('')
@@ -1307,7 +2497,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               eventKey="7"
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
                   set_nav_item_active('')
@@ -1656,6 +2846,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               eventKey="Visualisation"
+              style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
               onClick={
                 evt => {
                   if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
@@ -1668,6 +2859,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Header>Visualisation</Accordion.Header>
               <Accordion.Body>
                 <Tabs defaultActiveKey="vue" id="visualisation">
+
                   <Tab eventKey="vue" title="Vue">
                     <Row>
                       <Col xs={3}>
@@ -1838,7 +3030,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
               eventKey="legend"
               onClick={
                 evt => {
@@ -1886,7 +3078,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('RC')) ? 'block' : 'none' }}
               eventKey="0"
               onClick={
                 evt => {
@@ -1913,7 +3105,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('Aide')) ? 'block' : 'none' }}
               eventKey="6"
               onClick={
                 evt => {
@@ -2012,14 +3204,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
       {show_excel_dialog ? (
         <ExcelModal
-          handleCloseDialog={()=>set_show_excel_dialog(false)}
+          handleCloseDialog={() => set_show_excel_dialog(false)}
           uploadExcelImpl={uploadExcelImpl}
           set_data={set_data}
           data={data}
           set_show_excel_dialog={set_show_excel_dialog} />
       ) :
         (<div />)
-      } 
+      }
     </>
   )
 }
@@ -2094,9 +3286,9 @@ const ExcelModalPropTypes = {
 }
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog,set_data,data,set_show_excel_dialog }) => {
-  const [input_file_name,set_input_file_name]= useState<Blob|undefined>(undefined)
-  const [layout_file,set_layout_file] = useState<Blob|undefined>(undefined)
+const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog }) => {
+  const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
+  const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
   const [sheet, set_sheet] = useState('results')
 
   return (
@@ -2124,7 +3316,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
               type="file"
               //ref={layout_file_}
               name=""
-              onChange={(evt:ChangeEvent) =>{
+              onChange={(evt: ChangeEvent) => {
                 set_layout_file((evt.target as HTMLFormElement).files[0])
               }}
             />
@@ -2141,7 +3333,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
               set_show_excel_dialog,
               input_file_name,
               sheet,
-              (sankey_data:SankeyData)=>{ 
+              (sankey_data: SankeyData) => {
                 if (layout_file === undefined) {
                   return
                 }
@@ -2152,10 +3344,10 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                       let result = (e.target as FileReader).result
                       if (result) {
                         result = String(result).split('<br>').join('\\\\n')
-                        const data : SankeyData = JSON.parse(result)
+                        const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
-                        set_data({...sankey_data})
-                        localStorage.setItem('initial_data',JSON.stringify(sankey_data))
+                        set_data({ ...sankey_data })
+                        localStorage.setItem('initial_data', JSON.stringify(sankey_data))
                       }
                     }
                   )
