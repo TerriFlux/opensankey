@@ -875,8 +875,10 @@ export const convert_data = (
               tmp = the_display_value.split(',')                
             } else if (the_display_value.includes('...')) {
               tmp = the_display_value.split('...')           
+            } else if (the_display_value.includes('  ')) {
+              tmp = the_display_value.split('  ')    
             } else {
-              tmp = the_display_value.split('  ')          
+              tmp = the_display_value.split(' ')          
             }
             const free_mini = Number(tmp[0].substring(1))
             const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
@@ -947,8 +949,10 @@ export const convert_data = (
           tmp = v.display_value.split(',')                
         } else if (v.display_value.includes('...')) {
           tmp = v.display_value.split('...')           
-        } else {
+        } else if (v.display_value.includes('  ')) {
           tmp = v.display_value.split('  ')          
+        } else {
+          tmp = v.display_value.split(' ')          
         }
         const free_mini = Number(tmp[0].substring(1))
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))

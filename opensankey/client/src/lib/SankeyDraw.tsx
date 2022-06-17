@@ -483,8 +483,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         const link_value = test_link_value(nodes, l, data.nodeTags)
         //Zones limite à ne pas êtres
-        const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
-        const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
+        const limit_x = [pos_x_src - scale(link_value/2), pos_x_src + node.node_width + scale(link_value/2)]
+        const limit_y = [pos_y_src - scale(link_value/2), pos_y_src + scale(link_value/2)]
 
         let draw_warning = false
 

@@ -462,27 +462,57 @@ def save_simple_excel(
 
     nb_cols_nodes = len(nodes_cols) + len(sankey_data['nodeTags'].keys())
 
-    nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
+    #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
     nodes[0] = [NODES_LEVEL, NODES_NODE,NODES_COLOR]+nodeTags_group_names
 
+    row = 1
     for i,node in enumerate(sankey_data['nodes'].values()):
-        nodes[i+1][nodes_cols.index(NODES_NODE)] = node['name']
+        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
+            level = node['dimensions']['Primaire']['level']
+            if level > 1:
+                continue
+        nodes.concat([""] * nb_cols_nodes)
+        nodes[row][nodes_cols.index(NODES_LEVEL)] = node['dimensions']['Primaire']['level']
+        nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
         shape   = node['type']
         # if shape == 'sector' :
         #     nodes[i+1][nodes_cols.index('Forme')] = 'rectangle' 
         # else:
         #     nodes[i+1][nodes_cols.index('Forme')] = 'circle'
-        nodes[i+1][nodes_cols.index(NODES_COLOR)] = node['color']
+        nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
         if 'definition' in node:
-            nodes[i+1][nb_cols_nodes-1] = node['definition']             
+            nodes[row][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
             tags = sankey_data['nodeTags'][tag_name]['tags'] 
             tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-            nodes[i+1][len(nodes_cols)+j] = (':').join(tags_names)
-        nodes[i+1][nodes_cols.index(NODES_LEVEL)] = 1
-        # if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
-        #     nodes[i+1][nodes_cols.index('Level')] = node['dimensions']['Primaire']['level']
+            nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+        nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+        row = row+1
+        
+    for i,node in enumerate(sankey_data['nodes'].values()):
+        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
+            level = node['dimensions']['Primaire']['level']
+            if level < 2:
+                continue
+            parent_id = node['dimensions']['Primaire']['parent_name']
+            parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+        parent_row = [i for i in range(1,len(nodes)) if nodes[i][nodes_cols.index(NODES_NODE)] == parent_name][0]
+        nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+        row = parent_row
+        nodes[row][nodes_cols.index(NODES_LEVEL)] = node['dimensions']['Primaire']['level']
+        nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+        nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
+        if 'definition' in node:
+            nodes[row][nb_cols_nodes-1] = node['definition']             
+        for j,tag_name in enumerate(sankey_data['nodeTags']):
+            tags = sankey_data['nodeTags'][tag_name]['tags'] 
+            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+            nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+        nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+        #row = row+1    
+
+
 
     flux_cols = [
         DATA_ORIGIN, DATA_DESTINATION, DATA_VALUE

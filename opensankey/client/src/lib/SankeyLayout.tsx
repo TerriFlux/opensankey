@@ -517,6 +517,15 @@ export const updateLayout = (
     }
   }
 
+  for (const tag_group_key in data.nodeTags) {
+    if (tag_group_key in new_layout.nodeTags) {
+      data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
+      for ( const tag_key in data.nodeTags[tag_group_key].tags) {
+        data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
+      }
+    }
+  }
+
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
   data.user_scale = new_layout.user_scale

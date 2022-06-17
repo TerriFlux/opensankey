@@ -260,6 +260,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
+  const [parent_visible,set_parent_visible] = useState(false)
   const { filter } = data.display_style
 
   let max_link_value = 0
@@ -1059,8 +1060,37 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={3}>
                   </Col>
                 </Form.Group>
-
-
+                <Form.Group as={Row} >
+                  <Col xs={2} >
+                    <FormCheck
+                      disabled={multi_selected_nodes.length == 0}
+                      type='checkbox'
+                      label='Parent'
+                      checked={multi_selected_nodes.length != 0 && parent_visible}
+                      onChange={
+                        evt => set_parent_visible(evt.target.checked)
+                      }
+                    />
+                  </Col>
+                  { parent_visible ? (
+                    <Col xs={10}>
+                      <Form.Select 
+                        onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
+                          if ( changeEvent.target.value == 'none' ) {
+                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
+                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 1)
+                          } else {
+                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
+                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 2)
+                          }
+                        }}>
+                        <option key={0} value='none' selected={multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
+                        {
+                          Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
+                        }
+                      </Form.Select>
+                    </Col>) : (<></>) }
+                </Form.Group>
                 <div style={{ 'display': 'block' }}>{node_edition}</div>
 
               </Accordion.Body>
