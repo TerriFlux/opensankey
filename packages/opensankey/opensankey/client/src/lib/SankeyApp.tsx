@@ -3,7 +3,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
 import { addAllDropDownFlux } from './SankeyEdition'
-import { SankeySettingsEdition} from './SankeySettingsEdition'
+import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
@@ -25,8 +25,8 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      advanced? : boolean
-      logo? : string,
+      advanced?: boolean
+      logo?: string,
     }
   }
 
@@ -39,13 +39,14 @@ const SankeyAppPropTypes = {
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
+  const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   const [show_nav, set_show_nav] = useState(false)
   const [show_toast, set_show_toast] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [selected_link, set_selected_link] = useState(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
-  const [selected_node, set_selected_node] = useState(SankeyUtils.default_node(sankey_data))
+  const [selected_node, set_selected_node] = useState(default_node)
   const [multi_selected_nodes, set_multi_selected_nodes] = useState([])
   const [multi_selected_links, set_multi_selected_links] = useState([])
   const [multi_selected_label, set_multi_selected_label] = useState([])
@@ -63,6 +64,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
     .range([0, data.user_scale])
 
   const display_links = data.links
+
 
   return (
 
@@ -176,6 +178,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
       {useEffect(() => {
+
         const timer = setTimeout(() => {
           set_show_draw(true)
         }, 100)
@@ -184,6 +187,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       {
         (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
+
           set_data={set_data}
           set_multi_selected_nodes={set_multi_selected_nodes}
           multi_selected_nodes={multi_selected_nodes}
@@ -205,7 +209,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           link_text={SankeyUtils.link_text}
           test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
             const { dataTags } = data
-            if ( data.show_structure ) {
+            if (data.show_structure) {
               return inv_scale(Object.values(nodes)[0].node_height / 4)
             }
             let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
