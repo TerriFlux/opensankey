@@ -382,7 +382,7 @@ export const default_sankey_data = (): SankeyData => {
         show_value: false,
         tags: {},
         colorTag: '',
-        dimensions: { 'Primaire': { parent_name: undefined } },
+        dimensions: {},
         style: '',
         display_style: {
           font_family: 'Cormorant',
@@ -499,6 +499,7 @@ export const default_node = (
   data: SankeyData
 ): SankeyNode => {
   // console.log('-> Affectation du default_node')
+
   const defaultNode = {
     name: '',
     idNode: 'default',
@@ -525,6 +526,7 @@ export const default_node = (
     tags: {},
     colorTag: '',
     dimensions: { 'Primaire': { parent_name: undefined } },
+    // dimensions: { },
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
@@ -549,8 +551,8 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 10
-    obj['display_value'] = 'default'
+    obj['value'] = 5
+    obj['display_value'] = '*'
     obj['tags'] = {}
     obj['extension'] = {}
 

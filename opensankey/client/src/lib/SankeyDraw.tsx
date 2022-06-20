@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
@@ -6,6 +7,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets, getLinkValue, setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
+import { IndexedAccessType } from 'typescript'
+import { path } from 'd3'
 
 
 window.d3 = d3
@@ -106,6 +109,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const display_links = data.links
   const handles_visible = [...(new Array(Object.keys(display_links).length).fill(false))]
 
+  // const diff=require('deep-diff')
 
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.tooltip').remove()
@@ -161,7 +165,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (n.tags[tagGroup] === undefined) {
           colorNode = n.color
         } else if (n.tags[tagGroup].length > 0) {
-          if  (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
+          if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
             colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
           } else {
             colorNode = n.color
@@ -2238,7 +2242,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (d.node_visible) { display = 'inline' } else { display = 'none' }
         return display
       })
-      .style('font-family',d=>d.display_style.font_family)
+      .style('font-family', d => d.display_style.font_family)
 
     const ggg_nodes = gg_nodes.append('g')
       .attr('id', d => 'ggg_' + d.idNode)
@@ -2259,15 +2263,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             this, event
           )
 
-          try {
-            localStorage.setItem('data', JSON.stringify(data))
-            if (current) {
-              localStorage.setItem('data', JSON.stringify(data))
+          // try {
 
-            }
-          } catch (e) {
-            localStorage.clear()
-          }
+          //   // localStorage.setItem('data', JSON.stringify(data))
+          //   if (current) {
+          //     localStorage.setItem('data', JSON.stringify(data))
+          //   }
+
+          // } catch (e) {
+          //   localStorage.clear()
+          // }
         }
       })
     )
@@ -2431,7 +2436,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           sankeyTooltip.style('opacity', 0)
           //d3.selectAll('#svg .tmp').remove()
           // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
-          
+
 
           d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
@@ -2744,7 +2749,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
 
-    console.log(nodeStart)
+
 
     // on pourrait aussi evnetuellement faire un clone des noeuds
     d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
@@ -2754,15 +2759,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(function (d) {
         return d.idSource == nodeStart
       })
-    console.log('gLink',glinks)
+    console.log('gLink', glinks)
 
     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-    console.log('tmpLinks',tmpLinks)    
+    console.log('tmpLinks', tmpLinks)
     tmpLinks.selectAll('.link')
       .each(function (this) {
         const totalLength = (this as SVGGeometryElement).getTotalLength()
-        console.log(totalLength)
+
         d3.select(this)
           .attr('stroke-dasharray', totalLength + ' ' + totalLength)
           .attr('stroke-dashoffset', totalLength)
@@ -3101,7 +3106,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       label_text.call(d3.drag<SVGTextElement, unknown>()
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
-            d.position_vert=''
+            d.position_vert = ''
             const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
               old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
               new_x = old_x + event.dx,
@@ -3109,8 +3114,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#' + d.idLabel + '_text').attr('x', new_x)
             d3.select('#' + d.idLabel + '_text').attr('y', new_y)
 
-            d.x_label=new_x
-            d.y_label=new_y
+            d.x_label = new_x
+            d.y_label = new_y
 
             d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
 
@@ -3311,9 +3316,77 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }, 3000)
       }
 
+    } else if (e.key == 'z' && e.ctrlKey) {
+      e.preventDefault()
+      const diffrence = JSON.parse(localStorage.getItem('diff') as string)
+      // console.log(diffrence)
+      if (diffrence !== undefined) {
+        const dt = JSON.parse(JSON.stringify(data))
+
+        diffrence.map((d: any) => {
+          let element_to_delete = dt
+          if (d['kind'] == 'D') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                delete element_to_delete[dd]
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+
+              // element_to_delete=element_to_delete[dd]
+            })
+
+          } else if (d['kind'] == 'N') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                element_to_delete[dd] = d['rhs']
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+          } else if (d['kind'] == 'A') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                if (d['item']['kind'] == 'N') {
+                  element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
+                } else if (d['item']['kind'] == 'D') {
+                  element_to_delete[dd].splice(d['index'], 1)
+                }
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+          } else if (d['kind'] == 'E') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              
+              if (cpt == d['path'].length) {
+                element_to_delete[dd] = d['rhs']
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+          }
+        })
+        data = dt
+        set_data({ ...data })
+      }
+
     }
   }
-
+  const get_diff = () => {
+    const diff = require('deep-diff')
+    const old_data = JSON.parse(localStorage.getItem('data') as string)
+    const difference = diff(data, old_data)
+    const z = (difference !== undefined) ? localStorage.setItem('diff', JSON.stringify(difference)) : ''
+  }
 
   useEffect(() => {
     [data.width, data.height] = min_width_and_height()
@@ -3441,6 +3514,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     try {
       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
       if (current) {
+        get_diff()
         localStorage.setItem('data', JSON.stringify(data))
       }
     } catch (e) {
@@ -3465,7 +3539,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */}} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */ }} ></g>
 
           </svg>
         </div>

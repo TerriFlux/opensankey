@@ -765,14 +765,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       <ButtonGroup>
         <Button variant='info'
           onClick={() => {
-            data.accordeonToShow = ['MEP', 'RC', 'Aide']
+            data.accordeonToShow = ['MEP']
             set_data({ ...data })
 
           }}
         >Simple</Button>
         <Button variant='dark'
           onClick={() => {
-            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg', 'RC', 'Aide']
+            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
             set_data({ ...data })
           }}
         >Expert</Button>
@@ -808,14 +808,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           preferenceCheck('Leg')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('RC')} type="checkbox" label="Raccourci Clavier" onChange={evt => {
-          preferenceCheck('RC')
-          set_data({ ...data })
-        }} />
-        <Form.Check checked={data.accordeonToShow.includes('Aide')} type="checkbox" label="Aide" onChange={evt => {
-          preferenceCheck('Aide')
-          set_data({ ...data })
-        }} />
+
       </Form>
     </Modal.Body>
     <Modal.Footer>
@@ -891,7 +884,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               <Dropdown.Menu>
                 {Object.keys(data.style_node).map(d => {
-                  console.log(data.style_node[d])
                   return (<Dropdown.Item onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
                 })}
@@ -941,8 +933,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         </Form.Group>
 
-        {console.log(data)}
-        {console.log(selected_style_node)}
 
         <Col md={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
@@ -1330,7 +1320,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal>)
 
   const apply_style_to_nodes = () => {
-    console.log('here')
     const style = data.style_node[style_to_apply]
 
     multi_selected_nodes.map(d => {
@@ -1368,7 +1357,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       multi_selected_nodes.map(d => {
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
-      if (style_to_display != '') {
+      if (style_to_display != '' && style_to_display !== undefined) {
         return (inchangee) ? cut_name(data.style_node[style_to_display].name, 25) : 'Multiple style parmi les noeuds sélectionnés'
 
       } else {
@@ -1414,7 +1403,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
   const apply_style_to_selected_links = () => {
-    console.log('here')
     const style = data.style_link[style_to_apply_to_link]
 
     multi_selected_links.map(d => {
@@ -1437,8 +1425,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       d.curvature = style.curvature
       d.curved = style.curved
     })
-
-
   }
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
@@ -1467,7 +1453,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map(d => {
-                  console.log(data.style_link[d])
+
                   return (<Dropdown.Item onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
 
                 })}
@@ -1884,7 +1870,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       multi_selected_links.map(d => {
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
-      if (style_to_display != '') {
+      if (style_to_display != '' && style_to_display !== undefined) {
         return (inchangee) ? cut_name(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
 
       } else {
@@ -1895,14 +1881,96 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
+  //Modal pour les raccourcis clavier
+  const [showShortcut, setshowShortcut] = useState(false)
+  const modalShortcut = (
+    <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
+      <Modal.Header closeButton>
+        <Modal.Title>Raccourci Clavier</Modal.Title>
+      </Modal.Header>
+      <Modal.Body >
+        <p>Fonctionnement des clics :</p>
+        <p><b>CTRL + Clic (noeuds) :</b> Sélectionne le noeuds click dans l'onglet "<b>Noeuds</b>" du menu</p>
+        <p><b>CTRL + Clic (flux) :</b> Sélectionne le flux click dans l'onglet "<b>Flux</b>" du menu</p>
+        <p><b>Clic (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
+        <p><b>Clic droit (noeuds) :</b>  Agrége le noeud</p>
+        <p><b>Alt Clic droit (noeuds) :</b>  Désagrége le noeud</p>
+        <p><b>Alt Clic (label noeuds) :</b>  Déplace le label</p>
+        <p><b>CTRL + S :</b> Sauvegarde la configuration actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p>
+        <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
+        <p><b>Echap :</b> Ferme le Menu si il est ouvert </p>
 
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setshowShortcut(false)}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+
+  )
+
+
+
+  const [showHelp, setshowHelp] = useState(false)
+  const modalHelp = (
+    <Modal size={'lg'} show={showHelp} onHide={() => setshowHelp(false)}>
+      <Modal.Header closeButton>
+        <Modal.Title>Aide</Modal.Title>
+      </Modal.Header>
+      <Modal.Body >
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setshowHelp(false)}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+
+  )
+
+  // const diff = (obj1:any, obj2:any) => {
+  //   const result = {} as any
+  //   if (Object.is(obj1, obj2)) {
+  //     return undefined
+  //   }
+  //   if (!obj2 || typeof obj2 !== 'object') {
+  //     return obj2
+  //   }
+  //   Object.keys(obj1 || {}).concat(Object.keys(obj2 || {})).forEach(key => {
+  //     if (obj2[key] !== obj1[key] && !Object.is(obj1[key], obj2[key])) {
+  //       result[key] = obj2[key]
+  //     }
+  //     if (typeof obj2[key] === 'object' && typeof obj1[key] === 'object') {
+  //       const value = diff(obj1[key], obj2[key])
+  //       if (value !== undefined) {
+  //         result[key] = value
+  //       }
+  //     }
+  //   })
+  //   return result
+  // }
+
+  const tmp = () => {
+    // const diff=require('deep-diff')
+    // console.log('JSON.stringify(localStorage)')
+    // const t = JSON.parse(localStorage.getItem('data') as string)
+    // const size = new TextEncoder().encode(JSON.stringify(t)).length
+    // console.log(Object.keys(t.links).length)
+    // console.log(size)
+    // const cpy = JSON.parse(JSON.stringify(t))
+    // cpy.links = {}
+    // console.log(diff(t,cpy))
+
+  }
   return (
     <>
-
+      {tmp()}
       {modalStyleNode}
       {modalPreference}
       {modalStyleLink}
-
+      {modalShortcut}
+      {modalHelp}
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container>
@@ -1915,7 +1983,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 window.sankey.advanced = evt.target.checked
                 set_data({ ...data })
               }}
-              label="Options avancées"
+              label="Options de visualisation"
             />) : (<></>)}
           {!window.SankeyToolsStatic ? (<>
             <Nav>
@@ -1982,6 +2050,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown title="Portfolio" id="portfolio" >
                 {portfolio_menu}
               </NavDropdown >
+
+              <NavDropdown id='Aide' title="Aide" >
+                <Dropdown.Item onClick={() => setshowShortcut(true)} >Raccourci Clavier</Dropdown.Item>
+                <Dropdown.Item onClick={() => setshowHelp(true)}>Aide Supplémentaire</Dropdown.Item>
+              </NavDropdown >
+
+
               {!data.static_sankey ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
                   <ToggleButton
@@ -2051,7 +2126,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               onClick={
                 evt => {
-                  console.log(evt)
+
                   if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
@@ -2060,9 +2135,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }
             >
-              {
-                //PARAMETRE NOEUD
-              }
+
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body>
 
@@ -2072,7 +2145,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                     eventKey="EtiquetteNoeud"
                     onClick={
                       evt => {
-                        console.log(evt.target)
                         if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                           set_nav_item_active('2')
                           set_show_nav(true)
@@ -2204,7 +2276,31 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <div style={{ 'display': 'block' }}>{node_edition}</div>
 
 
-
+                      <Form.Group as={Row}>
+                        <Col xs={6}>Charger une police d'icones</Col>
+                        <Col xs={6}><FormControl
+                          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
+                          type='file'
+                          onChange={(evt: ChangeEvent) => {
+                            const files = (evt.target as HTMLFormElement).files
+                            const reader = new FileReader()
+                            reader.onload = (() => {
+                              return (e: ProgressEvent<FileReader>) => {
+                                const result = String((e.target as FileReader).result)
+                                const js = JSON.parse(result)
+                                js.icons.map((d: any) => {
+                                  const name = d.properties.name as string
+                                  data.icon_catalog[name] = d.icon.paths[0]
+                                })
+                              }
+                            })()
+                            reader.readAsText(files[0])
+                            set_data(data)
+                          }}
+                        >
+                        </FormControl>
+                        </Col>
+                      </Form.Group>
 
 
 
@@ -2856,7 +2952,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 }
               }>
-              <Accordion.Header>Visualisation</Accordion.Header>
+              <Accordion.Header>Storytelling</Accordion.Header>
               <Accordion.Body>
                 <Tabs defaultActiveKey="vue" id="visualisation">
 
@@ -3077,49 +3173,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('RC')) ? 'block' : 'none' }}
-              eventKey="0"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '0') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('0')
-                  }
-                }
-              }>
-              <Accordion.Header>Raccourci Clavier</Accordion.Header>
-              <Accordion.Body>
-                <p>Fonctionnement des clics :</p>
-                <p><b>CTRL + Clic (noeuds) :</b> Sélectionne le noeuds click dans l'onglet "<b>Noeuds</b>" du menu</p>
-                <p><b>CTRL + Clic (flux) :</b> Sélectionne le flux click dans l'onglet "<b>Flux</b>" du menu</p>
-                <p><b>Clic (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
-                <p><b>Clic droit (noeuds) :</b>  Agrége le noeud</p>
-                <p><b>Alt Clic droit (noeuds) :</b>  Désagrége le noeud</p>
-                <p><b>Alt Clic (label noeuds) :</b>  Déplace le label</p>
-                <p><b>CTRL + S :</b> Sauvegarde la configuration actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p>
-                <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
-                <p><b>Echap :</b> Ferme le Menu si il est ouvert </p>
 
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('Aide')) ? 'block' : 'none' }}
-              eventKey="6"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '6') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('6')
-                  }
-                }
-              }>
-              <Accordion.Header>Aide</Accordion.Header>
-              <Accordion.Body>
-              </Accordion.Body>
-            </Accordion.Item>
           </Accordion>
         </Offcanvas.Body>
       </Offcanvas>

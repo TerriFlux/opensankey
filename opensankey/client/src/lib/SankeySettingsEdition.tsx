@@ -23,7 +23,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   return (
     <>
       <Form>
-        <Form.Group as={Row}>
+        {/* <Form.Group as={Row}>
           <Col xs={6}>Police Charger des icones</Col>
           <Col xs={6}><FormControl
             //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
@@ -47,7 +47,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           >
           </FormControl>
           </Col>
-        </Form.Group>
+        </Form.Group> */}
         <Form.Group as={Row} >
           <Col xs={3}>
             <FormLabel >Echelle</FormLabel>
