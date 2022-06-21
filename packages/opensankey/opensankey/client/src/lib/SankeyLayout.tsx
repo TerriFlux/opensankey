@@ -467,6 +467,10 @@ export const updateLayout = (
     node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
     node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
     node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
+
+    for (const node_tag_key in node_layout.tags) {
+      node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+    }
     
     node.shape_visible = node_layout.shape_visible
     node.node_visible = node_layout.node_visible
@@ -517,13 +521,14 @@ export const updateLayout = (
     }
   }
 
-  for (const tag_group_key in data.nodeTags) {
-    if (tag_group_key in new_layout.nodeTags) {
-      data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
-      for ( const tag_key in data.nodeTags[tag_group_key].tags) {
-        data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
-      }
-    }
+  for (const tag_group_key in new_layout.nodeTags) {
+    data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+    // if (tag_group_key in new_layout.nodeTags) {
+    //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
+    //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
+    //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
+    //   }
+    // }
   }
 
   data.icon_catalog = new_layout.icon_catalog

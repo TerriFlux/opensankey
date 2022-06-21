@@ -227,8 +227,7 @@ export const SankeyDataPropTypes = {
   nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
   fluxTags: TagsCatalogPropTypes,
-  fluxColorMap: PropTypes.string.isRequired,
-  nodeColorMap: PropTypes.string.isRequired,
+  colorMap: PropTypes.string.isRequired,
   
   view: PropTypes.arrayOf(
     PropTypes.shape({
