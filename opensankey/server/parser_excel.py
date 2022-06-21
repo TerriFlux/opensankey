@@ -457,12 +457,12 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
 def save_simple_excel(
     sankey_data : dict
 ):
-    nodes_cols =  [NODES_LEVEL, NODES_NODE,NODES_COLOR]
+    nodes_cols =  [NODES_LEVEL, NODES_NODE]
     #nodes_cols = mfa_input[NODES_SHEET][0]
     # tag_names are disposed between the column Dimensions and the column Définition
     tag_key_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags']) + list(sankey_data['fluxTags'])
 
-    nodes = {}
+    nodes = []
     tags_sheet =[]
     if len(tag_key_names) != 0:
         tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
@@ -481,23 +481,24 @@ def save_simple_excel(
 
     #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
-    nodes[0] = [NODES_LEVEL, NODES_NODE,NODES_COLOR]+nodeTags_group_names
+    nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
 
     row = 1
     for i,node in enumerate(sankey_data['nodes'].values()):
+        level = 1
         if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
             level = node['dimensions']['Primaire']['level']
             if level > 1:
                 continue
-        nodes.concat([""] * nb_cols_nodes)
-        nodes[row][nodes_cols.index(NODES_LEVEL)] = node['dimensions']['Primaire']['level']
+        nodes.append([""] * nb_cols_nodes)
+        nodes[row][nodes_cols.index(NODES_LEVEL)] = level
         nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
         shape   = node['type']
         # if shape == 'sector' :
         #     nodes[i+1][nodes_cols.index('Forme')] = 'rectangle' 
         # else:
         #     nodes[i+1][nodes_cols.index('Forme')] = 'circle'
-        nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
+        #nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
         if 'definition' in node:
             nodes[row][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
@@ -514,12 +515,14 @@ def save_simple_excel(
                 continue
             parent_id = node['dimensions']['Primaire']['parent_name']
             parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+        else:
+            continue
         parent_row = [i for i in range(1,len(nodes)) if nodes[i][nodes_cols.index(NODES_NODE)] == parent_name][0]
         nodes.insert(parent_row+1,[""] * nb_cols_nodes)
         row = parent_row
         nodes[row][nodes_cols.index(NODES_LEVEL)] = node['dimensions']['Primaire']['level']
         nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-        nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
+        #nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
         if 'definition' in node:
             nodes[row][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
@@ -605,12 +608,15 @@ def save_simple_excel(
                 ter[origin_idx+1][destination_idx+1] = 1
             except Exception as excpt:
                 print(excpt)
-
+                
+    param_sheet = pd.DataFrame([[VERSION_LABEL,0.8,VERSION_DOC]],columns=[PARAM_NAME,PARAM_VALUE,PARAM_DESC])
+        
     mfa_output = {
-        'tags'  : tags_sheet,
-        'nodes' : nodes,
-        'data'  : links,
-        'flux'   : ter
+        PARAM_SHEET : [param_sheet.columns.values.tolist()]+param_sheet.values.tolist(),
+        TAG_SHEET  : tags_sheet,
+        NODES_SHEET : nodes,
+        DATA_SHEET  : links,
+        FLUX_SHEET   : ter
     }
 
     return mfa_output,nodes_names
