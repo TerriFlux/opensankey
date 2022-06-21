@@ -248,6 +248,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const source_node = data.nodes[l.idSource]
           const target_node = data.nodes[l.idTarget]
           let selected_tag = ''
+          if ( source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local') {
+            const common_tags  = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
+            if (common_tags.length > 0 ) {
+              return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
+            }
+          }
           if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             return data.nodeTags[source_node.colorTag].tags[selected_tag].color
@@ -368,7 +374,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style', 'font-weight: bold; font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
-
+        if ( l.text_color == l.color ) {
+          return link_color(l) as string
+        }
         return l.text_color
       })
       .attr('dy', l => {

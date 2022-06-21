@@ -189,71 +189,67 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     return allDD
   }
 
-  const addPalette = (elementGroupNameParam:string,elementNameParam:string) => {
-    const elementGroupName = elementGroupNameParam === 'nodeTags' ? 'nodeTags' : 'fluxTags'
-    const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
-    //const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
-    let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
+  const addPalette = () => {
+    // const elementGroupName = elementGroupNameParam === 'nodeTags' ? 'nodeTags' : 'fluxTags'
+    // const elementName = elementNameParam === 'nodes' ? 'nodes' : 'links'
+    // //const use_colormap = elementNameParam === 'nodes' ? use_node_colormap : use_link_colormap
+    // let colormap = elementNameParam === 'nodes' ? data.nodeColorMap :  data.fluxColorMap
     return (
       <>
         <Form.Select
           disabled={!use_node_colormap}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(data[elementGroupName]).forEach(tags_group => tags_group.show_legend = false)     
-              if ( elementNameParam === 'links' && evt.target.value === 'link_colormap' ) {
-                Object.values(data[elementName]).forEach(el => {
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+              if (evt.target.value === 'no_colormap') {
+                Object.values(data.links).forEach(el => {
                   el.colorParameter = 'local'
                   el.colorTag = evt.target.value
                 })
-              } else if ( elementNameParam === 'links' && evt.target.value === 'node_colormap' ) {
-                Object.values(data[elementName]).forEach(el => {
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'local'
+                  el.colorTag = evt.target.value
+                })
+                set_data({ ...data })
+                return          
+              }
+              const elementGroupName = evt.target.value in data.nodeTags ? 'nodeTags' : 'fluxTags'
+              const elementName = evt.target.value in data.nodeTags ? 'nodes' : 'links'   
+              if ( evt.target.value in data.nodeTags) {
+                Object.values(data.links).forEach(el => {
                   el.colorParameter = 'groupTag'
                   el.colorTag = 'node_colormap'
                 })
-              } else if ( elementNameParam === 'nodes' && evt.target.value === 'node_colormap' ) {
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'local'
-                  el.colorTag = evt.target.value
-                })
-              } else {     
-                Object.values(data[elementName]).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = evt.target.value
-                  colormap = evt.target.value
-                  data[elementGroupName][evt.target.value].show_legend = true
-                })
-              }
+              }     
+              Object.values(data[elementName]).forEach(el => {
+                el.colorParameter = 'groupTag'
+                el.colorTag = evt.target.value
+                data.colorMap = evt.target.value
+                data[elementGroupName][evt.target.value].show_legend = true
+              })
               set_data({ ...data })
             }}>
-          { elementNameParam === 'links' ? (<>
             <option
-              key='link_colormap'
-              value={'link_colormap'}
-              selected={colormap === 'link_colormap'} >
+              key='no_colormap'
+              value={'no_colormap'}
+              selected={data.colorMap === 'no_colormap'} >
                 Pas de palette
             </option>
-            <option
-              key='node_colormap'
-              value={'node_colormap'}
-              selected={colormap === 'node_colormap'} >
-                Couleur des noeuds
-            </option></>) : (<></>)
-          }
-          { elementNameParam === 'nodes' ? (
-            <option
-              key='node_colormap'
-              value={'node_colormap'}
-              selected={colormap === 'node_colormap'} >
-                Pas de palette
-            </option>) : (<></>)
-          }
-          {Object.entries(data[elementGroupName]).filter(([,tag_group]) => tag_group.banner !== 'none').map(
+          {Object.entries(data.nodeTags).filter(([,tag_group]) => tag_group.banner !== 'none').map(
             (tags_group, i) =>
               <option
                 key={i}
                 value={tags_group[0]}
-                selected={colormap === tags_group[0]} >
+                selected={data.colorMap === tags_group[0]} >
+                {tags_group[1].group_name}
+              </option>)}
+          {Object.entries(data.fluxTags).filter(([key,tag_group]) => tag_group.banner !== 'none' ).map(
+            (tags_group, i) =>
+              <option
+                key={i}
+                value={tags_group[0]}
+                selected={data.colorMap === tags_group[0]} >
                 {tags_group[1].group_name}
               </option>)}
         </Form.Select>
@@ -336,10 +332,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             }}>
             { palette ? (<>
               <FormLabel style={{justifyContent: 'center'}}><b>Palettes de couleurs</b></FormLabel>
-              { node_filter ?(<FormLabel >Noeuds</FormLabel>) : (<></>)}
-              { node_filter ? (addPalette('nodeTags','nodes')) : (<></>)}
-              <FormLabel >Flux</FormLabel>
-              {addPalette('fluxTags','links')}</>
+              {addPalette()}</>
             ) : (<>
               <FormLabel className="text-center" style={{justifyContent: 'center',opacity:opacity_basic,color:'#6c757d'}}>Palettes de couleurs</FormLabel>
               <Form.Control placeholder="Pas de palette" style={{ opacity:opacity_basic,color:'#6c757d' }} disabled /></>)

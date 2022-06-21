@@ -183,7 +183,15 @@ def set_value(
 ):
     v_tags = {}
     for i,key in enumerate(fluxTags.keys()):
-        v_tags[key]=link_flux_tags[i]
+        tag_value = link_flux_tags[i]
+        if key == 'Type de donnée':
+            key = 'flux_types'
+        if key == 'flux_types':
+            if link_flux_tags[i] == 'Donnée calculée':
+                tag_value = 'computed_data'
+            else:
+                tag_value = 'initial_data'
+        v_tags[key]=tag_value
     if depth == len(link_data_tags):
         v['value'] = value
         v['display_value'] = display_value
@@ -261,6 +269,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             link_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
         link_flux_tags= []
         for fluxTag in fluxTags:
+            if fluxTag == 'flux_types':
+                fluxTag = DATA_TYPE_LABEL
             link_flux_tags.append(mfa_input[sheet_name][row][columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
@@ -430,11 +440,18 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         if not is_hex(color):
                             color = webcolors.name_to_hex(color)
                         tags[tag_key]['color'] = color
-                fluxTags[mfa_input[TAG_SHEET][i][0]] = {
+                key = mfa_input[TAG_SHEET][i][0]
+                banner = 'multi'
+                if key == 'Type de donnée':
+                    key = 'flux_types'
+                    tags['initial_data'] = tags.pop('Donnée collectée')
+                    tags['computed_data'] = tags.pop('Donnée calculée')
+                    banner = 'none'
+                fluxTags[key] = {
                     'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : 'multi'                   
+                    'banner'      : banner                   
                 }
 
 def save_simple_excel(
