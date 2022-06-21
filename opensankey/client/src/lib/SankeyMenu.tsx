@@ -773,7 +773,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 window.sankey.advanced = evt.target.checked
                 set_data({...data})
               }}
-              label="Options avancées"
+              label="Options de visualisation"
             />) : (<></>)}
           { !window.SankeyToolsStatic ? (<>
             <Nav>
@@ -863,7 +863,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 window.sankey.advanced = evt.target.checked
                 set_data({...data})
               }}
-              label="Options avancées"
+              label="Options de visualisation"
             />) : (<></>)}
         </Container>
 
