@@ -5,7 +5,7 @@ shell.cd('build')
 var files = []
 const zip = new zl.Zip()
 shell.ls().forEach(function (file) {
-  if (file.includes('reconciled.xlsx') || file.includes('pdf') ) {
+  if (file.includes('reconciled.xlsx') || file.includes('pdf') || file.includes('pptx') ) {
     zip.addFile(file)
   }
 })
