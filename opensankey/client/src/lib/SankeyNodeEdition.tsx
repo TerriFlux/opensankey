@@ -222,7 +222,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               const verif = tags[0]
               let allChecked = true
               multi_selected_nodes.map((d) => {
-                allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
+                allChecked = (tags_group_key in d.tags && d.tags[tags_group_key].includes(verif)) ? allChecked : false
               })
               return (
                 <tr key={tags[0]}>
