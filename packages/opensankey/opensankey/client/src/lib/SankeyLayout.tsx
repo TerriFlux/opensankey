@@ -470,6 +470,7 @@ export const updateLayout = (
 
     node.colorTag = node_layout.colorTag
     node.colorParameter = node_layout.colorParameter
+    node.color = node_layout.color
 
     for (const node_tag_key in node_layout.tags) {
       node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
