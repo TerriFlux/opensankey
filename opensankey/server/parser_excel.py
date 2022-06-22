@@ -294,13 +294,14 @@ def parse_nodes(mfa_input, nodes, nodeTags):
     # previous_level = 1
     nodes_cols = mfa_input[NODES_SHEET][0]
     nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
-    has_sankey_col = nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
+    has_sankey_col = NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
 
     node_index = 0
     for i in range(1,len(mfa_input[NODES_SHEET])):
-        sankey_visible = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_SANKEY)]
-        if sankey_visible == 0:
-            continue
+        if NODES_SANKEY in nodes_cols:
+            sankey_visible = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_SANKEY)]
+            if sankey_visible == 0:
+                continue
              
         name  = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_NODE)]
         if not name in nodes:
@@ -313,14 +314,16 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 node_type = 'sector' 
             else: 
                 node_type = 'product'
-            color =mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
-            if type(color) != str and math.isnan(color) or color == '':
-                color = 'grey'
-            if not is_hex(color):
-                try:
-                    color = webcolors.name_to_hex(color)
-                except Exception:
-                    pass
+            color = 'grey'
+            if NODES_SANKEY in nodes_cols:
+                mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
+                if type(color) != str and math.isnan(color) or color == '':
+                    color = 'grey'
+                if not is_hex(color):
+                    try:
+                        color = webcolors.name_to_hex(color)
+                    except Exception:
+                        pass
             node_definition = None
             if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
                 node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
