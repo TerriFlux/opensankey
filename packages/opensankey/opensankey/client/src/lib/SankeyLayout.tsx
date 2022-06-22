@@ -517,6 +517,9 @@ export const updateLayout = (
     link.orthogonal_label_position = orthogonal_label_position
     link.gradient = gradient
 
+    link.colorTag = link_layout.colorTag
+    link.colorParameter = link_layout.colorParameter
+
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift
       link.right_horiz_shift = link_layout.right_horiz_shift
