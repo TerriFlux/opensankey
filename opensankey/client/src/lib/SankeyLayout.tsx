@@ -533,6 +533,7 @@ export const updateLayout = (
 
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
+  data.colorMap = new_layout.colorMap
   data.user_scale = new_layout.user_scale
   data.legend_position = new_layout.legend_position;
   ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
