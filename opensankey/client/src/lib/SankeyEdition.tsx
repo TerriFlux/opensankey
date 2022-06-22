@@ -230,12 +230,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               })
               set_data({ ...data })
             }}>
-            <option
-              key='no_colormap'
-              value={'no_colormap'}
-              selected={data.colorMap === 'no_colormap'} >
+          <option
+            key='no_colormap'
+            value={'no_colormap'}
+            selected={data.colorMap === 'no_colormap'} >
                 Pas de palette
-            </option>
+          </option>
           {Object.entries(data.nodeTags).filter(([,tag_group]) => tag_group.banner !== 'none').map(
             (tags_group, i) =>
               <option
