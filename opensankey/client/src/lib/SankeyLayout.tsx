@@ -537,6 +537,9 @@ export const updateLayout = (
     //   }
     // }
   }
+  for (const tag_group_key in new_layout.fluxTags) {
+    data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
+  }
 
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
