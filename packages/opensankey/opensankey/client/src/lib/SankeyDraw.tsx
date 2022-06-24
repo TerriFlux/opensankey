@@ -328,7 +328,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return ''
         }
         const display_value = getLinkValue(data, d.idLink).display_value
-        if (display_value.includes('*') && !data.show_structure) {
+        // if (display_value.includes('*') && !data.show_structure) {
+        //   return '40, 5'
+        // } else {
+        //   return ''
+        // }
+        if (d.dashed) {
           return '40, 5'
         } else {
           return ''
@@ -2267,7 +2272,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           //   // localStorage.setItem('data', JSON.stringify(data))
           //   if (current) {
+          //     get_diff()
           //     localStorage.setItem('data', JSON.stringify(data))
+
           //   }
 
           // } catch (e) {
@@ -3124,15 +3131,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
       )
 
-
-
-
-
-
-
-
-
-
       const wrap = textwrap()
         .bounds({ height: 100, width: d.label_width })
         .method('tspans')
@@ -3318,12 +3316,35 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     } else if (e.key == 'z' && e.ctrlKey) {
       e.preventDefault()
-      const diffrence = JSON.parse(localStorage.getItem('diff') as string)
-      // console.log(diffrence)
-      if (diffrence !== undefined) {
-        const dt = JSON.parse(JSON.stringify(data))
+      //va chercher les différences sauvegardées dans le localStorage
+      // const differences = JSON.parse(localStorage.getItem('diff') as string)
+      const LZString = require('lz-string')
 
-        diffrence.map((d: any) => {
+      const differences_str = LZString.decompress(localStorage.getItem('diff')) as string
+      const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
+
+      //Si il y a des différences, prend la dernière effectuée
+      if (differences !== undefined && differences.length != 0) {
+
+        const difference = differences.pop()
+
+
+        //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
+        //La copie nous permet de reffecter une variable avec d'autre type d'objet
+        //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
+        //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
+        let dt = JSON.parse(JSON.stringify(data))
+
+        //Parcours les dernières modifications à effectuer
+        //D : Supprime un objet qui a été ajouté
+        //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
+        //A : Annule des moddification faites à des array
+        //E : Annule des modifications faites à des propriétées de l'objet
+
+        //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
+        // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
+
+        difference.map((d: any) => {
           let element_to_delete = dt
           if (d['kind'] == 'D') {
             let cpt = 0
@@ -3334,8 +3355,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               } else {
                 element_to_delete = element_to_delete[dd]
               }
-
-              // element_to_delete=element_to_delete[dd]
             })
 
           } else if (d['kind'] == 'N') {
@@ -3364,29 +3383,75 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             })
           } else if (d['kind'] == 'E') {
             let cpt = 0
-            d.path.map((dd: any) => {
-              cpt++
-              
-              if (cpt == d['path'].length) {
-                element_to_delete[dd] = d['rhs']
-              } else {
-                element_to_delete = element_to_delete[dd]
-              }
-            })
+            if (d.path !== null && d.path !== undefined) {
+              d.path.map((dd: any) => {
+                cpt++
+
+                if (cpt == d['path'].length) {
+                  element_to_delete[dd] = d['rhs']
+                } else {
+                  element_to_delete = element_to_delete[dd]
+                }
+              })
+            } else {
+              dt = d['rhs']
+            }
+
           }
         })
+
+
         data = dt
+        localStorage.setItem('diff', LZString.compress(JSON.stringify(differences)))
+        try {
+          //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+          if (current) {
+            localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+          }
+        } catch (e) {
+          localStorage.clear()
+        }
         set_data({ ...data })
+
+
+
+      } else {
+        console.log('Aucune action en mémoire pour un retour en arrière')
       }
 
     }
   }
   const get_diff = () => {
     const diff = require('deep-diff')
-    const old_data = JSON.parse(localStorage.getItem('data') as string)
-    const difference = diff(data, old_data)
-    const z = (difference !== undefined) ? localStorage.setItem('diff', JSON.stringify(difference)) : ''
+    const LZString = require('lz-string')
+    const old_data_str = LZString.decompress(localStorage.getItem('data')) as string
+    //Si data existe dans le localStorage 
+    if (old_data_str != '') {
+      //On le parse en JSON
+      const old_data = JSON.parse(old_data_str)
+      //on va chercher les anciennes différences
+      // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
+      const old_diff_str = LZString.decompress(localStorage.getItem('diff')) as string
+      let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
+      const difference = diff(data, old_data)
+
+      //Si il y des différences et que le tableau des anciennes différences existes alors on push dedans la nouvelles différence
+      //sinon on créer un tableau ne contenant que la nouvelle différence
+      if (difference !== undefined) {
+        if (old_diff !== undefined && old_diff !== null) {
+          old_diff.push(difference)
+        } else {
+          old_diff = [difference]
+        }
+      }
+
+      const cmp = LZString.compress(JSON.stringify(old_diff))
+      const z = (old_diff !== undefined) ? localStorage.setItem('diff', cmp) : ''
+    }
+
   }
+
+
 
   useEffect(() => {
     [data.width, data.height] = min_width_and_height()
@@ -3425,13 +3490,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // drawGrid()
         })).on('dblclick.zoom', null)
 
-    svgSankey.on('click', function (ev: any) {
-      if (!ev.ctrlKey && !ev.shiftKey) {
-        set_multi_selected_nodes([])
-        set_multi_selected_links([])
-        set_multi_selected_label([])
-      }
-    })
+    // svgSankey.on('click', function (ev: any) {
+    //   if (!ev.ctrlKey && !ev.shiftKey) {
+    //     set_multi_selected_nodes([])
+    //     set_multi_selected_links([])
+    //     set_multi_selected_label([])
+    //   }
+    // })
 
 
     drawGrid()
@@ -3454,52 +3519,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
 
-    // div.addEventListener('mousedown', function (event: any) {
-    //   if (event.ctrlKey) {
-    //     isDown = true
-    //     old_pos = div.getBoundingClientRect()
-    //     // const rect = event.target.getBoundingClientRect()
-    //     offset = [
-    //       event.clientX,
-    //       event.clientY + margin_top
-    //     ]
-    //   }
-
-
-
-    // }, true)
-
-
-    // document.addEventListener('mouseup', function () {
-    //   isDown = false
-    // }, true)
-    // document.addEventListener('mousemove', function (event: any) {
-    //   if (isDown && event.ctrlKey) {
-
-    //     mousePosition = {
-    //       x: event.clientX,
-    //       y: event.clientY
-    //     }
-    //     const tr = d3.select(div).style('transform')
-    //     const index = tr.indexOf('scale')
-    //     const tr_scale = (index != -1) ? tr.substring(index) : ''
-    //     let val_scale = parseFloat(tr_scale.substring(6, tr_scale.length - 1))
-    //     val_scale = (isNaN(val_scale)) ? 1 : val_scale
-
-
-    //     //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
-    //     //la position de la souris au click avant drag, pos de la souris lors du drag 
-    //     //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
-    //     //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
-
-    //     //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
-    //     const shift_x = ((mousePosition.x - offset[0]) + old_pos.x / val_scale)
-    //     const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
-
-    //     d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
-    //   }
-    // }, true)
-
     update_scale(data.user_scale)
     if (data.fit_screen) {
       d3.select('#svg').attr('transform', 'scale(1)')
@@ -3515,9 +3534,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
       if (current) {
         get_diff()
-        localStorage.setItem('data', JSON.stringify(data))
+        const LZString = require('lz-string')
+        const cmp = LZString.compress(JSON.stringify(data))
+        localStorage.setItem('data', cmp)
       }
     } catch (e) {
+      console.log(e)
       localStorage.clear()
     }
   })
@@ -3533,7 +3555,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+            if (!ev.ctrlKey && !ev.shiftKey) {
+              set_multi_selected_nodes([])
+              set_multi_selected_links([])
+              set_multi_selected_label([])
+            }
+          }}>
             <g className='grid' id='grid'></g>
             <g className='g_label' id='g_label'></g>
 
