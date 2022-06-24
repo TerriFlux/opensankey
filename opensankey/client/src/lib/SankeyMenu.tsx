@@ -297,8 +297,11 @@ const Menu: FunctionComponent<MenuTypes> = (
     for (const tag_group_key in data.nodeTags) {
       node.tags[tag_group_key] = []
     }
-    set_selected_node(node)
+    // set_selected_node(node)
+    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
     set_multi_selected_nodes([node])
+    multi_selected_nodes = [node]
+    apply_style_to_nodes()
     set_data({ ...data })
   }
 
@@ -398,6 +401,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_multi_selected_nodes([])
     set_multi_selected_links([])
     set_multi_selected_label([])
+    localStorage.removeItem('diff')
+    localStorage.removeItem('data')
     set_data({ ...data })
   }
 
@@ -759,9 +764,37 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const modalPreference = (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
     <Modal.Header closeButton>
-      <Modal.Title>Édition Préference</Modal.Title>
+      <Modal.Title>Édition Préferences</Modal.Title>
     </Modal.Header>
     <Modal.Body>
+      <Form.Group as={Row}>
+        <Col xs={6}>Charger une police d'icones</Col>
+        <Col xs={6}><FormControl
+          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
+          type='file'
+          onChange={(evt: ChangeEvent) => {
+            const files = (evt.target as HTMLFormElement).files
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (e: ProgressEvent<FileReader>) => {
+                const result = String((e.target as FileReader).result)
+                const js = JSON.parse(result)
+                js.icons.map((d: any) => {
+                  const name = d.properties.name as string
+                  data.icon_catalog[name] = d.icon.paths[0]
+                })
+              }
+            })()
+            reader.readAsText(files[0])
+            set_data(data)
+          }}
+        >
+        </FormControl>
+        </Col>
+      </Form.Group>
+
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+
       <ButtonGroup>
         <Button variant='info'
           onClick={() => {
@@ -800,7 +833,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Visualisation" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={evt => {
           preferenceCheck('Vis')
           set_data({ ...data })
         }} />
@@ -1321,7 +1354,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const apply_style_to_nodes = () => {
     const style = data.style_node[style_to_apply]
-
     multi_selected_nodes.map(d => {
       //Style Noeud
       d.shape_visible = style.shape_visible
@@ -1358,7 +1390,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 25) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 20) : 'Multiple style parmi les noeuds sélectionnés'
 
       } else {
         return 'Aucun'
@@ -1951,21 +1983,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   //   return result
   // }
 
-  const tmp = () => {
-    // const diff=require('deep-diff')
-    // console.log('JSON.stringify(localStorage)')
-    // const t = JSON.parse(localStorage.getItem('data') as string)
-    // const size = new TextEncoder().encode(JSON.stringify(t)).length
-    // console.log(Object.keys(t.links).length)
-    // console.log(size)
-    // const cpy = JSON.parse(JSON.stringify(t))
-    // cpy.links = {}
-    // console.log(diff(t,cpy))
 
-  }
   return (
     <>
-      {tmp()}
+      
       {modalStyleNode}
       {modalPreference}
       {modalStyleLink}
@@ -2137,7 +2158,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             >
 
               <Accordion.Header>Noeuds</Accordion.Header>
-              <Accordion.Body>
+              <Accordion.Body style={{ padding: '0px' }}>
 
                 <Accordion >
                   <Accordion.Item
@@ -2156,21 +2177,23 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }
                   >
-                    <Accordion.Header>Étiquettes Noeuds</Accordion.Header>
+                    <Accordion.Header style={{ marginLeft: '25px'/*,padding:'10px' */ }} >
+                      Étiquettes Noeuds
+                    </Accordion.Header>
                     <Accordion.Body>
                       {settings_edition_node_tags}
                     </Accordion.Body>
                   </Accordion.Item>
 
                   <Accordion.Item eventKey='editionNoeud'>
-                    <Accordion.Header>Edition Noeuds</Accordion.Header>
+                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Noeuds</Accordion.Header>
                     <Accordion.Body>
-
-
-
                       <Row >
                         <Col xs={1}>
-                          <Button size="sm" onClick={add_new_node}><FaPlus /></Button>
+                          <Button size="sm" onClick={() => {
+                            add_new_node()
+
+                          }}><FaPlus /></Button>
                         </Col>
 
                         <Col xs={10}>
@@ -2202,8 +2225,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
 
                       <Row >
-                        <Col xs={3}>
-                          <FormLabel>Choix de Style</FormLabel>
+                        <Col xs={1}>
+                          <FormLabel>Style:</FormLabel>
                         </Col>
 
                         <Col xs={6}>
@@ -2233,7 +2256,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           </Dropdown>
                         </Col>
 
-                        <Col xs={3}>
+                        <Col xs={5}>
                           <Button
                             size="sm"
                             variant='info'
@@ -2276,7 +2299,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <div style={{ 'display': 'block' }}>{node_edition}</div>
 
 
-                      <Form.Group as={Row}>
+                      {/* <Form.Group as={Row}>
                         <Col xs={6}>Charger une police d'icones</Col>
                         <Col xs={6}><FormControl
                           //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
@@ -2300,7 +2323,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         >
                         </FormControl>
                         </Col>
-                      </Form.Group>
+                      </Form.Group> */}
 
 
 
@@ -2325,258 +2348,274 @@ const Menu: FunctionComponent<MenuTypes> = (
               }}
             >
               <Accordion.Header>Flux</Accordion.Header>
-              <Accordion.Body>
-                <Form.Group>
-                  <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
-                  <Row>
-                    <Col xs={6}>Police des labels</Col>
-                    <Col xs={6}><Form.Select
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          data.display_style.link_font_family_selected = evt.target.value
-                          set_data({ ...data })
-                        }
+              <Accordion.Body style={{ padding: '0px' }}>
+
+                <Accordion>
+                  <Accordion.Item
+                    eventKey="8"
+                    style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
+                    onClick={evt => {
+                      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '8') {
+                        set_nav_item_active('')
+                      } else {
+                        set_nav_item_active('8')
                       }
-                    >
-                      {data.display_style.font_family.map((d) => {
-                        return <option
-                          key={'ff-' + d}
-                          value={d}
-                          selected={d == data.display_style.link_font_family_selected}
-                        >{d}</option>
-
-                      })}
-                    </Form.Select></Col>
-                  </Row>
-                </Form.Group>
-                <Row>
-                  <Col xs={1}>
-
-                    <Button
-                      size="sm"
-                      variant="success"
-                      onClick={
-                        () => {
-                          add_new_link()
-                          set_data({ ...data })
-                        }
-                      }
-                    ><FaPlus /></Button>
-
-                  </Col>
-                  <Col xs={10}>
-                    {dropdownMultiLinks()}
-                  </Col>
-
-                  <Col xs={1}>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={
-                        () => {
-                          multi_selected_links.forEach(l => delete_link(data, l))
-                          set_multi_selected_links([])
-
-                          set_data({ ...data })
-                        }
-                      }
-                    ><FaMinus /></Button>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <FormLabel>Source</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Select disabled={multi_selected_links.length != 1} onChange={source_change}>
-                      {addDropSource()}
-                    </Form.Select>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <FormLabel>Cible</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Select disabled={multi_selected_links.length != 1} onChange={target_change}>
-                      {addDropCible()}
-                    </Form.Select>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <FormLabel>Inverser Flux</FormLabel>
-                  </Col>
-                  <Col >
-                    <Button variant='info'
-                      onClick={() => {
-                        const nodes_to_reorganize: SankeyNode[] = []
-                        multi_selected_links.forEach(l => {
-                          const tmp = l.idSource
-
-                          const previous_node_s = data.nodes[l.idSource]
-                          previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                          const source_node = data.nodes[l.idTarget]
-                          l.idSource = source_node.idNode
-                          source_node.outputLinksId.push(l.idLink)
-                          nodes_to_reorganize.push(source_node)
-
-                          const previous_node_t = data.nodes[l.idTarget]
-                          previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                          const target_node = data.nodes[tmp]
-                          l.idTarget = target_node.idNode
-                          target_node.inputLinksId.push(l.idLink)
-                          nodes_to_reorganize.push(target_node)
-                        })
-                        nodes_to_reorganize.forEach(n => {
-                          reorganize_inputLinksId(n, true, true, data.nodes, data.links)
-                        })
-                        set_data({ ...data })
-                      }}><FaArrowsAltH /></Button>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col>
-                    <FormLabel>Déplacement z-index flux</FormLabel>
-                  </Col>
-                  <Col >
-                    {//Boutton pour monter le lien sélctionné
-                    }
-                    <ButtonGroup>
-                      <Button variant='info' disabled={multi_selected_links.length != 1}
-                        onClick={() => {
-                          multi_selected_links.map(l => {
-                            handleDownLink(l.idLink)
-                          })
+                    }}
+                  >
+                    <Accordion.Header style={{ marginLeft: '25px' }}>Étiquettes Flux</Accordion.Header>
+                    <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
+                  </Accordion.Item>
 
 
-                        }}><FaAngleUp /></Button>
+                  <Accordion.Item eventKey='edition Flux'>
+                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Flux</Accordion.Header>
+                    <Accordion.Body>
+                      <Form.Group>
+                        <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
+                        <Row>
+                          <Col xs={6}>Police des labels</Col>
+                          <Col xs={6}><Form.Select
+                            onChange={
+                              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                                data.display_style.link_font_family_selected = evt.target.value
+                                set_data({ ...data })
+                              }
+                            }
+                          >
+                            {data.display_style.font_family.map((d) => {
+                              return <option
+                                key={'ff-' + d}
+                                value={d}
+                                selected={d == data.display_style.link_font_family_selected}
+                              >{d}</option>
 
-                      <Button variant='info' disabled={multi_selected_links.length != 1}
-                        onClick={() => {
-                          multi_selected_links.map(l => {
-                            const i = l.idLink
-                            const { links } = data
-                            const listElmt = Object.keys(links)
-                            const posElemt = listElmt.indexOf(i)
-                            listElmt.splice(posElemt, 1)
-                            listElmt.splice(listElmt.length, 0, i)
-                            const new_cat: { [key: string]: SankeyLink } = {}
-                            listElmt.forEach(elt => {
-                              new_cat[elt] = links[elt]
-                            })
-                            for (const member in links) delete links[member]
-                            Object.assign(links, new_cat)
+                            })}
+                          </Form.Select></Col>
+                        </Row>
+                      </Form.Group>
+                      <Row>
+                        <Col xs={1}>
 
-                          })
-                          set_data({ ...data })
+                          <Button
+                            size="sm"
+                            variant="success"
+                            onClick={
+                              () => {
+                                add_new_link()
+                                set_data({ ...data })
+                              }
+                            }
+                          ><FaPlus /></Button>
+
+                        </Col>
+                        <Col xs={10}>
+                          {dropdownMultiLinks()}
+                        </Col>
+
+                        <Col xs={1}>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={
+                              () => {
+                                multi_selected_links.forEach(l => delete_link(data, l))
+                                set_multi_selected_links([])
+
+                                set_data({ ...data })
+                              }
+                            }
+                          ><FaMinus /></Button>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col>
+                          <FormLabel>Source</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Select disabled={multi_selected_links.length != 1} onChange={source_change}>
+                            {addDropSource()}
+                          </Form.Select>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col>
+                          <FormLabel>Cible</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Select disabled={multi_selected_links.length != 1} onChange={target_change}>
+                            {addDropCible()}
+                          </Form.Select>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col>
+                          <FormLabel>Inverser Flux</FormLabel>
+                        </Col>
+                        <Col >
+                          <Button variant='info'
+                            onClick={() => {
+                              const nodes_to_reorganize: SankeyNode[] = []
+                              multi_selected_links.forEach(l => {
+                                const tmp = l.idSource
+
+                                const previous_node_s = data.nodes[l.idSource]
+                                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+                                const source_node = data.nodes[l.idTarget]
+                                l.idSource = source_node.idNode
+                                source_node.outputLinksId.push(l.idLink)
+                                nodes_to_reorganize.push(source_node)
+
+                                const previous_node_t = data.nodes[l.idTarget]
+                                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+                                const target_node = data.nodes[tmp]
+                                l.idTarget = target_node.idNode
+                                target_node.inputLinksId.push(l.idLink)
+                                nodes_to_reorganize.push(target_node)
+                              })
+                              nodes_to_reorganize.forEach(n => {
+                                reorganize_inputLinksId(n, true, true, data.nodes, data.links)
+                              })
+                              set_data({ ...data })
+                            }}><FaArrowsAltH /></Button>
+                        </Col>
+                      </Row>
+
+                      <Row>
+                        <Col>
+                          <FormLabel>Déplacement z-index flux</FormLabel>
+                        </Col>
+                        <Col >
+                          {//Boutton pour monter le lien sélctionné
+                          }
+                          <ButtonGroup>
+                            <Button variant='info' disabled={multi_selected_links.length != 1}
+                              onClick={() => {
+                                multi_selected_links.map(l => {
+                                  handleDownLink(l.idLink)
+                                })
 
 
-                        }}><FaAngleDoubleUp /></Button>
+                              }}><FaAngleUp /></Button>
+
+                            <Button variant='info' disabled={multi_selected_links.length != 1}
+                              onClick={() => {
+                                multi_selected_links.map(l => {
+                                  const i = l.idLink
+                                  const { links } = data
+                                  const listElmt = Object.keys(links)
+                                  const posElemt = listElmt.indexOf(i)
+                                  listElmt.splice(posElemt, 1)
+                                  listElmt.splice(listElmt.length, 0, i)
+                                  const new_cat: { [key: string]: SankeyLink } = {}
+                                  listElmt.forEach(elt => {
+                                    new_cat[elt] = links[elt]
+                                  })
+                                  for (const member in links) delete links[member]
+                                  Object.assign(links, new_cat)
+
+                                })
+                                set_data({ ...data })
 
 
-                      <Button variant='warning' disabled={multi_selected_links.length != 1}
-                        onClick={() => {
-                          multi_selected_links.map(l => {
-                            handleUpLink(l.idLink)
-                          })
+                              }}><FaAngleDoubleUp /></Button>
 
 
-                        }}><FaAngleDown /></Button>
-                      {//Boutton pour baisser le lien sélctionné
-                      }
-                      <Button variant='warning' disabled={multi_selected_links.length != 1}
-                        onClick={() => {
-                          multi_selected_links.map(l => {
-                            const i = l.idLink
-                            const { links } = data
-                            const listElmt = Object.keys(links)
-                            const posElemt = listElmt.indexOf(i)
-                            listElmt.splice(posElemt, 1)
-                            listElmt.splice(0, 0, i)
-                            const new_cat: { [key: string]: SankeyLink } = {}
-                            listElmt.forEach(elt => {
-                              new_cat[elt] = links[elt]
-                            })
-                            for (const member in links) delete links[member]
-                            Object.assign(links, new_cat)
-
-                          })
-                          set_data({ ...data })
+                            <Button variant='warning' disabled={multi_selected_links.length != 1}
+                              onClick={() => {
+                                multi_selected_links.map(l => {
+                                  handleUpLink(l.idLink)
+                                })
 
 
-                        }}><FaAngleDoubleDown /></Button>
-                    </ButtonGroup>
-                  </Col>
-                </Row>
+                              }}><FaAngleDown /></Button>
+                            {//Boutton pour baisser le lien sélctionné
+                            }
+                            <Button variant='warning' disabled={multi_selected_links.length != 1}
+                              onClick={() => {
+                                multi_selected_links.map(l => {
+                                  const i = l.idLink
+                                  const { links } = data
+                                  const listElmt = Object.keys(links)
+                                  const posElemt = listElmt.indexOf(i)
+                                  listElmt.splice(posElemt, 1)
+                                  listElmt.splice(0, 0, i)
+                                  const new_cat: { [key: string]: SankeyLink } = {}
+                                  listElmt.forEach(elt => {
+                                    new_cat[elt] = links[elt]
+                                  })
+                                  for (const member in links) delete links[member]
+                                  Object.assign(links, new_cat)
 
-                <Row >
-                  <Col xs={3}>
-                    <FormLabel>Choix de Style</FormLabel>
-                  </Col>
+                                })
+                                set_data({ ...data })
 
-                  <Col xs={6}>
-                    <Dropdown>
-                      <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
 
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => {
-                          set_style_to_apply_to_link('')
-                          multi_selected_links.map(n => {
-                            n.style = ''
-                          })
-                          set_data({ ...data })
-                        }}>{'Aucun'}</Dropdown.Item>
-                        {Object.keys(data.style_link).map(d => {
-                          return (<Dropdown.Item onClick={() => {
-                            set_style_to_apply_to_link(d)
-                            multi_selected_links.map(n => {
-                              n.style = d
-                            })
-                            set_data({ ...data })
-                          }}>{data.style_link[d].idLink}</Dropdown.Item>)
+                              }}><FaAngleDoubleDown /></Button>
+                          </ButtonGroup>
+                        </Col>
+                      </Row>
 
-                        })}
+                      <Row >
+                        <Col xs={1}>
+                          <FormLabel>Style:</FormLabel>
+                        </Col>
 
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </Col>
+                        <Col xs={6}>
+                          <Dropdown>
+                            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
 
-                  <Col xs={3}>
-                    <Button
-                      size="sm"
-                      variant='info'
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => {
+                                set_style_to_apply_to_link('')
+                                multi_selected_links.map(n => {
+                                  n.style = ''
+                                })
+                                set_data({ ...data })
+                              }}>{'Aucun'}</Dropdown.Item>
+                              {Object.keys(data.style_link).map(d => {
+                                return (<Dropdown.Item onClick={() => {
+                                  set_style_to_apply_to_link(d)
+                                  multi_selected_links.map(n => {
+                                    n.style = d
+                                  })
+                                  set_data({ ...data })
+                                }}>{data.style_link[d].idLink}</Dropdown.Item>)
 
-                      onClick={
-                        () => {
-                          apply_style_to_selected_links()
-                          set_data({ ...data })
-                        }
-                      }
-                    >Appliquer Style</Button>
+                              })}
 
-                  </Col>
-                </Row>
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </Col>
 
-                <div style={{ 'display': (multi_selected_links.length == 0) ? 'none' : 'block' }}>{link_edition}</div>
+                        <Col xs={5}>
+                          <Button
+                            size="sm"
+                            variant='info'
+
+                            onClick={
+                              () => {
+                                apply_style_to_selected_links()
+                                set_data({ ...data })
+                              }
+                            }
+                          >Appliquer Style</Button>
+
+                        </Col>
+                      </Row>
+
+                      <div style={{ 'display': (multi_selected_links.length == 0) ? 'none' : 'block' }}>{link_edition}</div>
+
+
+                    </Accordion.Body>
+
+                  </Accordion.Item>
+
+                </Accordion>
+
 
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item
-              eventKey="8"
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
-              onClick={evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '8') {
-                  set_nav_item_active('')
-                } else {
-                  set_nav_item_active('8')
-                }
-              }}
-            >
-              <Accordion.Header>Étiquettes Flux</Accordion.Header>
-              <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
-            </Accordion.Item>
+
             <Accordion.Item
               eventKey="dimension"
               style={{ 'display': (view == 'none' && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}

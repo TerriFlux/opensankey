@@ -11,32 +11,36 @@ import { default_sankey_data } from './lib/SankeyUtils'
 window.React = React
 
 declare const window: Window &
-   typeof globalThis & {
+  typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      filiere?:     string
-      header? : string,
-      has_header? : boolean,
-      footer? : boolean,
-      logo_width? : number,
-      excel? : string,
+      filiere?: string
+      header?: string,
+      has_header?: boolean,
+      footer?: boolean,
+      logo_width?: number,
+      excel?: string,
       publish?: boolean
-      logo? : string
+      logo?: string
     }
-   }
+  }
 
 window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : window.SankeyToolsStatic
 if (!window.sankey) {
   window.sankey = {}
 }
 
-const data  = default_sankey_data()
+const data = default_sankey_data()
 if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
     window.sankey = {}
   }
-  const json_data = localStorage.getItem('data')
-  if (json_data !== null) {
+  const LZString = require('lz-string')
+  const json_data = LZString.decompress(localStorage.getItem('data')) as string
+  // const json_data = localStorage.getItem('data')
+
+  if (json_data !== null && json_data != '' && json_data!='null') {
+
     const new_data = JSON.parse(json_data)
     convert_data(new_data)
     data.nodeTags = {}
@@ -59,7 +63,7 @@ if (!window.SankeyToolsStatic) {
       artefacts_menu = json_data.artefacts_menu
       render(
         <>
-          <SankeyApp 
+          <SankeyApp
             sankey_data={data}
             exemple_menu={exemple_menu}
             artefacts_menu={artefacts_menu}
@@ -67,27 +71,32 @@ if (!window.SankeyToolsStatic) {
         </>,
         document.getElementById('react-container')
       )
-    }).catch( ()=> 
+    }).catch(() =>
       render(
         <>
-          <SankeyApp 
+          <SankeyApp
             sankey_data={data}
             exemple_menu={{}}
             artefacts_menu={{}}
           />
         </>,
         document.getElementById('react-container')
-      )    
+      )
     )
   })
 
 } else {
-  if (window.sankey.filiere ) {
-    localStorage.setItem('data',JSON.stringify(window.sankey.filiere))
-    localStorage.setItem('initial_data',JSON.stringify(window.sankey.filiere))
+  if (window.sankey.filiere) {
+    localStorage.setItem('data', JSON.stringify(window.sankey.filiere))
+    localStorage.setItem('initial_data', JSON.stringify(window.sankey.filiere))
   }
-  const json_data = localStorage.getItem('data')
-  if (json_data !== null && json_data !== 'undefined' ) {
+
+  const LZString = require('lz-string')
+  const json_data = LZString.decompress(localStorage.getItem('data')) as string
+  console.log(json_data)
+  // const json_data = localStorage.getItem('data')
+  console.log(json_data)
+  if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
@@ -96,7 +105,7 @@ if (!window.SankeyToolsStatic) {
   }
   render(
     <>
-      <SankeyApp 
+      <SankeyApp
         sankey_data={data}
         exemple_menu={{}}
         artefacts_menu={{}}
@@ -104,19 +113,19 @@ if (!window.SankeyToolsStatic) {
       {window.sankey.footer ? (
         <div id="copyright">
           <div className="container">
-            <div className="row" style={{ 'marginTop' : '0px' }} >
+            <div className="row" style={{ 'marginTop': '0px' }} >
               <div className="col-sm-11">
-                <br/>
+                <br />
                 <p>Réalisé par TerriFlux - <a href="https://terriflux.com">www.terriflux.fr</a></p>
               </div>
               <div className="col-sm-1">
-                <img src="logo_terriflux.png" width="100"/>
+                <img src="logo_terriflux.png" width="100" />
               </div>
             </div>
           </div>
         </div>
       ) : (<></>)
-      } 
+      }
     </>,
     document.getElementById('react-container')
   )

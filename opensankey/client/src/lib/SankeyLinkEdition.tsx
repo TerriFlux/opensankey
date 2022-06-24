@@ -79,6 +79,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     return gradChecked
   }
 
+  const dashChecked = () => {
+    let dashChecked = true
+    multi_selected_links.map(d => {
+      dashChecked = (d.dashed) ? dashChecked : false
+    })
+    return dashChecked
+  }
+
   const labelVisibleChecked = () => {
     let labelVisibleChecked = true
     multi_selected_links.map(d => {
@@ -497,8 +505,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val = val[tag]
                         })
                         val.display_value = evt.target.value
-
-
                         set_data({ ...data })
                       }
                     }
@@ -548,6 +554,27 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       evt => {
                         // selected_link.gradient = evt.target.checked
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Hachuré:</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Check
+                    inline
+                    type="checkbox"
+                    checked={
+                      dashChecked()
+                    }
+                    onChange={
+                      evt => {
+                        // selected_link.gradient = evt.target.checked
+                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                         set_data({ ...data })
                       }
                     }

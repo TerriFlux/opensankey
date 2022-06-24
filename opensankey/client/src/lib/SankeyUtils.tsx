@@ -337,7 +337,7 @@ export const link_text = (
   link_value: number
 ) => {
   const str_display = String(getLinkValue(data, d.idLink).display_value)
-  if (str_display !== 'default') {
+  if (str_display !== '' && str_display!=='*') {
     return str_display
   }
   if (data.show_structure) {
@@ -355,7 +355,7 @@ export const default_sankey_data = (): SankeyData => {
     links: {},
     user_scale: 20,
 
-    accordeonToShow: [],
+    accordeonToShow: ['MEP'],
     style_node: {
       'default': {
         name: 'par défaut',
@@ -420,11 +420,12 @@ export const default_sankey_data = (): SankeyData => {
         label_on_path: true,
         label_visible: true,
         text_color: 'black',
-        color: '#ffffff',
+        color: '#a9a9a9',
         colorParameter: '',
         colorTag: '',
         // Ajout
         gradient: false,
+        dashed:false,
 
         value: {},
 
@@ -525,8 +526,8 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: { 'Primaire': { parent_name: undefined } },
-    // dimensions: { },
+    // dimensions: { 'Primaire': { parent_name: undefined } },
+    dimensions: {'Primaire':{} },
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
@@ -552,7 +553,7 @@ const create_object = (data: SankeyData, l: string[]) => {
   if (l.length == 0) {
     const obj = Object.create({})
     obj['value'] = 5
-    obj['display_value'] = '*'
+    obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
 
@@ -608,7 +609,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     shift_gap: 0.1,
     colorTag: '',
     colorParameter: 'local',
-    style:'default'
+    style:'default',
+    dashed:true
   }
 }
 
@@ -836,8 +838,11 @@ export const hideNullFluxNodes = (
         }
       }
     }
-    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
-      nodes[node.idNode].node_visible = false
-    }
+
+    //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
+    //Voir avec julien 
+    // if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+    //   nodes[node.idNode].node_visible = false
+    // }
   })
 }
