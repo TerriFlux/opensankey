@@ -812,14 +812,14 @@ const Menu: FunctionComponent<MenuTypes> = (
             data.accordeonToShow = ['MEP']
             set_data({ ...data })
           }}
-          >Simple</Button>
-          <Button variant='dark'
-            onClick={() => {
-              data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
-              set_data({ ...data })
-            }}
-          >Expert</Button>
-        </ButtonGroup>
+        >Simple</Button>
+        <Button variant='dark'
+          onClick={() => {
+            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
+            set_data({ ...data })
+          }}
+        >Expert</Button>
+      </ButtonGroup>
       <Form>
         <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={evt => {
           preferenceCheck('MEP')
@@ -2305,36 +2305,36 @@ const Menu: FunctionComponent<MenuTypes> = (
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row} >
-                  <Col xs={2} >
-                    <FormCheck
-                      disabled={multi_selected_nodes.length == 0}
-                      type='checkbox'
-                      label='Parent'
-                      checked={multi_selected_nodes.length != 0 && parent_visible}
-                      onChange={
-                        evt => set_parent_visible(evt.target.checked)
-                      }
-                    />
-                  </Col>
-                  { parent_visible ? (
-                    <Col xs={10}>
-                      <Form.Select 
-                        onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
-                          if ( changeEvent.target.value == 'none' ) {
-                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
-                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 1)
-                          } else {
-                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
-                            multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 2)
-                          }
-                        }}>
-                        <option key={0} value='none' selected={multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
-                        {
-                          Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
-                        }
-                      </Form.Select>
-                    </Col>) : (<></>) }
-                </Form.Group>
+                        <Col xs={2} >
+                          <FormCheck
+                            disabled={multi_selected_nodes.length == 0}
+                            type='checkbox'
+                            label='Parent'
+                            checked={multi_selected_nodes.length != 0 && parent_visible}
+                            onChange={
+                              evt => set_parent_visible(evt.target.checked)
+                            }
+                          />
+                        </Col>
+                        { parent_visible ? (
+                          <Col xs={10}>
+                            <Form.Select 
+                              onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
+                                if ( changeEvent.target.value == 'none' ) {
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 1)
+                                } else {
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 2)
+                                }
+                              }}>
+                              <option key={0} value='none' selected={multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
+                              {
+                                Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
+                              }
+                            </Form.Select>
+                          </Col>) : (<></>) }
+                      </Form.Group>
 
                       <div style={{ 'display': 'block' }}>{node_edition}</div>
 
