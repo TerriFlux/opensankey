@@ -568,6 +568,8 @@ export const desagregation = (
   cur_dimension: string,
   control_display = true
 ) => {
+  console.log('--')
+
   const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
   if (!idParent) {
     return

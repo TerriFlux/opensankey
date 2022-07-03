@@ -49,7 +49,7 @@ export const getLinkValue = (
   let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0)  ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
@@ -80,7 +80,7 @@ export const findMaxLinkValue = (
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
-  if ( value_dict === undefined || Object.values(value_dict).length == 0) {
+  if (value_dict === undefined || Object.values(value_dict).length == 0) {
     return new_max_node_value
   }
   const child = Object.values(value_dict)[0]
@@ -337,10 +337,10 @@ export const link_text = (
   link_value: number
 ) => {
   const str_display = String(getLinkValue(data, d.idLink).display_value)
-  if (str_display !== 'default') {
+  if (str_display !== '' && str_display!=='*') {
     return str_display
   }
-  if ( data.show_structure) {
+  if (data.show_structure) {
     return
   }
   const the_link_value = toPrecision(link_value)
@@ -355,6 +355,97 @@ export const default_sankey_data = (): SankeyData => {
     links: {},
     user_scale: 20,
 
+    accordeonToShow: ['MEP'],
+    style_node: {
+      'default': {
+        name: 'par défaut',
+        idNode: 'default',
+        type: 'sector',
+        display: true,
+        node_visible: true,
+        shape_visible: true,
+        label_visible: true,
+        node_width: 40,
+        node_height: 40,
+        iconName: 'none',
+        iconColor: '#fff',
+        iconRatio: 80,
+        iconVisible: true,
+
+        color: '#a9a9a9',
+        colorParameter: 'local',
+        position: 'absolute',
+        x: 100,
+        y: 100,
+        inputLinksId: [],
+        outputLinksId: [],
+        show_value: false,
+        tags: {},
+        colorTag: '',
+        dimensions: {},
+        style: '',
+        display_style: {
+          font_family: 'Cormorant',
+          font_size: 14,
+          uppercase: false,
+          bold: false,
+          italic: false,
+          unit: false,
+          filter: 0,
+          filter_label: 0,
+          global_curvature: 0.5,
+          null_flux: false,
+          label_vert: 'bas',
+          label_horiz: 'milieu',
+          label_box_width: 110,
+        }
+      }
+
+    },
+
+    style_link: {
+      'default': {
+        idLink: 'par défaut',
+        idSource: 'None',
+        idTarget: 'None',
+
+        // type of link
+        recycling: false,
+        orientation: 'hh',
+        arrow: true,
+
+        // display_attribute
+        label_position: 'middle',
+        orthogonal_label_position: 'middle',
+        label_on_path: true,
+        label_visible: true,
+        text_color: 'black',
+        color: '#a9a9a9',
+        colorParameter: '',
+        colorTag: '',
+        // Ajout
+        gradient: false,
+        dashed:false,
+
+        value: {},
+
+        tooltip_text: '',
+
+        // geometry
+        x_label: 0,
+        y_label: 0,
+
+        left_horiz_shift: 0,
+        right_horiz_shift: 0,
+        vert_shift: 0,
+        shift_gap: 0,
+
+        curvature: 0.5,
+        curved: false,
+        style:''
+      }
+    },
+
     width: window.innerWidth - 40,
     height: window.innerHeight - 40,
 
@@ -363,10 +454,10 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [0, 10],
 
     show_structure: false,
-    fit_screen    : window.SankeyToolsStatic,
+    fit_screen: window.SankeyToolsStatic,
 
     icon_catalog: {},
-    labels:{},
+    labels: {},
 
     left_shift: 0.4,
     right_shift: 0.5,
@@ -409,6 +500,7 @@ export const default_node = (
   data: SankeyData
 ): SankeyNode => {
   // console.log('-> Affectation du default_node')
+
   const defaultNode = {
     name: '',
     idNode: 'default',
@@ -434,9 +526,12 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: { 'Primaire': { parent_name: undefined } },
-
+    // dimensions: { 'Primaire': { parent_name: undefined } },
+    dimensions: {'Primaire':{} },
+    style: 'default',
     display_style: {
+      font_family: 'Cormorant',
+
       font_size: data.display_style.node_font_size,
       uppercase: data.display_style.sector_uppercase,
       bold: data.display_style.sector_bold,
@@ -457,8 +552,8 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 10
-    obj['display_value'] = 'default'
+    obj['value'] = 5
+    obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
 
@@ -513,7 +608,9 @@ export const default_link = (data: SankeyData): SankeyLink => {
     vert_shift: 0,
     shift_gap: 0.1,
     colorTag: '',
-    colorParameter: 'local'
+    colorParameter: 'local',
+    style:'default',
+    dashed:true
   }
 }
 
@@ -631,9 +728,9 @@ export const uploadExemple = (
   data: SankeyData,
   set_data: (data: SankeyData) => void,
   example_callback: (data: SankeyData) => void,
-  set_multi_selected_nodes:(nodes:string[])=>void,
-  set_multi_selected_links:(links:string[])=>void,
-  set_multi_selected_label:(labels:string[])=>void
+  set_multi_selected_nodes: (nodes: string[]) => void,
+  set_multi_selected_links: (links: string[]) => void,
+  set_multi_selected_label: (labels: string[]) => void
 ) => {
 
   let root = window.location.href
@@ -645,7 +742,7 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :'text/plain'
+  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain'
   set_data({ ...default_sankey_data() })
   set_multi_selected_nodes([])
   set_multi_selected_links([])
@@ -662,14 +759,14 @@ export const uploadExemple = (
       example_callback(data)
 
       set_data({ ...data })
-      localStorage.setItem('initial_data',JSON.stringify(data))
+      localStorage.setItem('initial_data', JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
     })
   })
 }
 
 export const set_nodes_level = (
-  data : SankeyData,
+  data: SankeyData,
   display_nodes: { [key: string]: SankeyNode },
   level: number,
   control_display = true
@@ -742,8 +839,11 @@ export const hideNullFluxNodes = (
         }
       }
     }
-    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
-      nodes[node.idNode].node_visible = false
-    }
+
+    //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
+    //Voir avec julien 
+    // if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+    //   nodes[node.idNode].node_visible = false
+    // }
   })
 }

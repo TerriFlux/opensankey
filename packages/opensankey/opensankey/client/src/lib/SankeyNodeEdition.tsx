@@ -728,7 +728,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         </Tabs>
         {(multi_selected_nodes.length !== 0) ? (
           <ButtonGroup as={Row}>
-            <Col xs={4}>
+            <Col>
               <Button
                 size="sm"
                 style={{ 'marginBottom': '3px', 'marginRight': '3px' }}

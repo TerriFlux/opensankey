@@ -420,6 +420,7 @@ export const convert_data = (
       }
       if (n.display_style === undefined ) {
         n.display_style = {
+          font_family:'Cormorant',
           font_size: data.display_style.node_font_size,
           uppercase: n.type === 'product' ? false : true,
           bold: n.type === 'product' ? false : true,

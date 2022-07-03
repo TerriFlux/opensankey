@@ -40,7 +40,6 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
 // }
 const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup,data:SankeyData,set_data:(data:SankeyData)=>void) => {
   const tab_sel = selected.map((d) => {
-    console.log(d)
     return d.value
   })
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
