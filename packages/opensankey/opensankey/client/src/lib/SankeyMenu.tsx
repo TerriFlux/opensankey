@@ -212,7 +212,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           (key, index) => {
             return (
               <>
-                <NavDropdown title={key} id={key} >
+                <NavDropdown key={index} title={key} id={key} >
                   <ExempleItem
                     exemple_menu={exemple_menu[key]}
                     url_prefix={url_prefix}
@@ -926,8 +926,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_node).map(d => {
-                  return (<Dropdown.Item onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+                {Object.keys(data.style_node).map((d,index) => {
+                  return (<Dropdown.Item key={index} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
                 })}
 
@@ -1494,9 +1494,9 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_link).map(d => {
+                {Object.keys(data.style_link).map((d,index) => {
 
-                  return (<Dropdown.Item onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
+                  return (<Dropdown.Item key={index} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
 
                 })}
 

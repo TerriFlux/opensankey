@@ -157,9 +157,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
         return (
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
-            {<Form.Select key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+            {<Form.Select key={tags_group.group_name} placeholder='all' value={Object.entries(tags_group.tags).filter(([k,v])=>v.selected)[0][0]} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
               Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag.name} selected={tag.selected}>{tag.name}</option>)
+                return (<option key={tag_key} value={tag.name} >{tag.name}</option>)
               })}
             </Form.Select>}
           </>)
@@ -210,6 +210,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   el.colorParameter = 'local'
                   el.colorTag = evt.target.value
                 })
+                data.colorMap = evt.target.value
                 set_data({ ...data })
                 return          
               }
@@ -218,37 +219,41 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
               if ( evt.target.value in data.nodeTags) {
                 Object.values(data.links).forEach(el => {
                   el.colorParameter = 'groupTag'
-                  el.colorTag = 'node_colormap'
+                  el.colorTag = 'no_colormap'
                 })
-              }     
+              }
+              if ( evt.target.value in data.fluxTags) {
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = evt.target.value
+                })
+              }
               Object.values(data[elementName]).forEach(el => {
                 el.colorParameter = 'groupTag'
                 el.colorTag = evt.target.value
-                data.colorMap = evt.target.value
-                data[elementGroupName][evt.target.value].show_legend = true
               })
+              data.colorMap = evt.target.value
+              data[elementGroupName][evt.target.value].show_legend = true
               set_data({ ...data })
-            }}>
+            }}
+          value={data.colorMap}>
           <option
             key='no_colormap'
-            value={'no_colormap'}
-            selected={data.colorMap === 'no_colormap'} >
+            value={'no_colormap'} >
                 Pas de palette
           </option>
           {Object.entries(data.nodeTags).filter(([,tag_group]) => tag_group.banner !== 'none').map(
             (tags_group, i) =>
               <option
                 key={i}
-                value={tags_group[0]}
-                selected={data.colorMap === tags_group[0]} >
+                value={tags_group[0]} >
                 {tags_group[1].group_name}
               </option>)}
           {Object.entries(data.fluxTags).filter(([key,tag_group]) => tag_group.banner !== 'none' ).map(
             (tags_group, i) =>
               <option
                 key={i}
-                value={tags_group[0]}
-                selected={data.colorMap === tags_group[0]} >
+                value={tags_group[0]} >
                 {tags_group[1].group_name}
               </option>)}
         </Form.Select>
@@ -319,8 +324,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
             <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
               <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
               <Form.Select style={{ width: '200px', color:'black' }}
-                onChange={setDiagram}>
-                {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} selected={diagram === name} >{name}</option>)}
+                onChange={setDiagram}
+                value={diagram}>
+                {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
               </Form.Select>
             </Form.Group></>) : (<></>)}
           <Form.Group as={Col} 
@@ -411,8 +417,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
                   set_data({...data})
                 }
               }
+              value={agregation_level}
             >
-              {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level} selected={level === agregation_level} >{'Niveau '+(level+1)}</option>)}
+              {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
             </Form.Select>
           </Form.Group>
           <Form.Group as={Col} style={{ width:'250px', marginLeft: '0px' }} lg="auto">

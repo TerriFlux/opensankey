@@ -111,7 +111,7 @@ export const SankeyLinkPropTypes = {
   dashed:PropTypes.bool.isRequired,
 
 
-  value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
+  value:  PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
   tooltip_text: PropTypes.string,
 
