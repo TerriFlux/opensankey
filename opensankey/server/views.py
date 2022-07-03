@@ -85,8 +85,12 @@ def save_excel():
     cwd = os.getcwd()
     excel_file = os.path.join(cwd, "tutu.xlsx")
     sankey_data =  request.get_data().decode("utf-8")
-    mfa_output,nodes_names = parser_excel.save_simple_excel(json.loads(sankey_data))
-    io_excel.write_mfa_problem_output_to_excel(excel_file,mfa_output,nodes_names,nodes_names,'w')
+    mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
+    if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
+        verbosity=2
+    else:
+        verbosity=1        
+    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
     return send_file(excel_file, as_attachment=True)
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
@@ -102,7 +106,7 @@ def clean_excel():
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
     excel_input_file = request.files['file']
-    mfa_input = io_excel.load_mfa_excel(excel_input_file)
+    mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
     sankey_data = parser_excel.parse_excel(mfa_input)
     # context = {
     #     'nodes': nodes,
@@ -132,19 +136,19 @@ def upload_exemple():
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
     exemple_folder = os.path.dirname(exemple_file_path)
+    base_file_name = os.path.basename(exemple_file_path)
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        mfa_input = io_excel.load_mfa_excel(exemple_file_path)
+        mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
         sankey_data = parser_excel.parse_excel(mfa_input)
-        # context = {
-        #     'version': '0.6',
-        #     'error'  : error,
-        #     'nodes'  : nodes,
-        #     'links'  : links,
-        #     'h_space': 500,
-        #     'v_space': 250
-        # }
+        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+        sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
+        layout_file_name = os.path.join(sankey_folder,layout_file_name)
+        if os.path.exists(layout_file_name):
+            layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
+            layout_data = json.load(layout_file) 
+            sankey_data['layout'] = layout_data
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -196,8 +200,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                 artefacts[key].append(file_name)
                 artefact_found = True
             continue
-        #if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
-        if 'simple.xlsx' in file_or_folder:
+        if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if 'Excel' not in menus[key]:

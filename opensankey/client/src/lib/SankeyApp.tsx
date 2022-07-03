@@ -7,7 +7,7 @@ import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu, { ExempleItem, ArtefactsItem } from './SankeyMenu'
+import Menu, { ExempleItem, ArtefactsItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Col, Dropdown, Form, FormLabel } from 'react-bootstrap'
@@ -86,7 +86,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data({ ...data })
         }}
         example_menu={<>
-          <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+          <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
             exemple_menu={exemple_menu}
             url_prefix=''
@@ -96,6 +96,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             set_multi_selected_nodes={set_multi_selected_nodes}
             set_multi_selected_links={set_multi_selected_links}
             set_multi_selected_label={set_multi_selected_label}
+            callback={processExample}
           /></>}
         portfolio_menu={<>
           <ArtefactsItem

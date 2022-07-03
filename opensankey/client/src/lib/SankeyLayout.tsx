@@ -462,10 +462,20 @@ export const updateLayout = (
     node.y_label = node_layout.y_label
 
     node.display_style = {...node_layout.display_style}
-    node.iconName = node_layout.iconName
-    node.iconColor = node_layout.iconColor
-    node.iconRatio = node_layout.iconRatio
-    node.iconVisible= node_layout.iconVisible
+
+    node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
+    node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
+    node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
+    node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
+
+    node.colorTag = node_layout.colorTag
+    node.colorParameter = node_layout.colorParameter
+    node.color = node_layout.color
+
+    for (const node_tag_key in node_layout.tags) {
+      node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+    }
+    
     node.shape_visible = node_layout.shape_visible
     node.node_visible = node_layout.node_visible
     node.label_visible = node_layout.label_visible
@@ -508,6 +518,9 @@ export const updateLayout = (
     link.orthogonal_label_position = orthogonal_label_position
     link.gradient = gradient
 
+    link.colorTag = link_layout.colorTag
+    link.colorParameter = link_layout.colorParameter
+
     if (link_layout.vert_shift) {
       link.left_horiz_shift = link_layout.left_horiz_shift
       link.right_horiz_shift = link_layout.right_horiz_shift
@@ -515,8 +528,22 @@ export const updateLayout = (
     }
   }
 
+  for (const tag_group_key in new_layout.nodeTags) {
+    data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+    // if (tag_group_key in new_layout.nodeTags) {
+    //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
+    //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
+    //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
+    //   }
+    // }
+  }
+  for (const tag_group_key in new_layout.fluxTags) {
+    data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
+  }
+
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
+  data.colorMap = new_layout.colorMap
   data.user_scale = new_layout.user_scale
   data.legend_position = new_layout.legend_position;
   ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
@@ -538,7 +565,8 @@ export const updateLayout = (
 export const desagregation = (
   data: SankeyData,   
   idChildNode: string, 
-  cur_dimension: string
+  cur_dimension: string,
+  control_display = true
 ) => {
   console.log('--')
 
@@ -547,10 +575,12 @@ export const desagregation = (
     return
   }
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
-  desagregate_nodes.forEach( n => {
-    n.display = true
-    n.node_visible = true
-  })
+  if (control_display) {
+    desagregate_nodes.forEach( n => {
+      n.display = true
+      n.node_visible = true
+    })
+  }
   const nb_desagregated = desagregate_nodes.length
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
@@ -561,15 +591,18 @@ export const desagregation = (
     }
     current_y = current_y - delta_y
   })
-  // Hides agregated nodes
-  data.nodes[idParent].display = false
-  data.nodes[idParent].node_visible = false
+  if (control_display) {
+    // Hides agregated nodes
+    data.nodes[idParent].display = false
+    data.nodes[idParent].node_visible = false
+  }
 }
 
 export const agregation = (
   data : SankeyData, 
   idParent: string,
-  cur_dimension: string
+  cur_dimension: string,
+  control_display = true
 ) =>  {
   const agregated_node = data.nodes[idParent]    
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
@@ -577,15 +610,19 @@ export const agregation = (
   if (desagregate_nodes.length === 0) {
     return
   }
-  // show agregated node
-  agregated_node.display = true
-  agregated_node.node_visible = true
+  if (control_display) {
+    // show agregated node
+    agregated_node.display = true
+    agregated_node.node_visible = true
+  }
 
   let mean_x = 0
   let mean_y = 0
   desagregate_nodes.forEach(n => {
-    data.nodes[n.idNode].display = false
-    data.nodes[n.idNode].node_visible = false
+    if (control_display) {
+      data.nodes[n.idNode].display = false
+      data.nodes[n.idNode].node_visible = false
+    }
     if (n.x) {
       mean_x += n.x  
       mean_y += n.y

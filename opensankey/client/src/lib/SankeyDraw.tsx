@@ -252,18 +252,28 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const source_node = data.nodes[l.idSource]
           const target_node = data.nodes[l.idTarget]
           let selected_tag = ''
-          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+          if ( source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
+            const common_tags  = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
+            if (common_tags.length > 0 ) {
+              return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
+            }
+          }
+          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1 ) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1 ) {
             selected_tag = target_node.tags[target_node.colorTag][0]
             return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.tags[source_node.colorTag].length === 1) {
+          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1 ) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.tags[target_node.colorTag].length === 1) {
+          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1 ) {
             selected_tag = target_node.tags[source_node.colorTag][0]
-            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
+              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
           } else if (source_node.type === 'product') {
             return source_node.color
           } else if (target_node.type === 'product') {
@@ -373,7 +383,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style', 'font-weight: bold; font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
-
+        if ( l.text_color == l.color ) {
+          return link_color(l) as string
+        }
         return l.text_color
       })
       .attr('dy', l => {
@@ -488,8 +500,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         const link_value = test_link_value(nodes, l, data.nodeTags)
         //Zones limite à ne pas êtres
-        const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
-        const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
+        const limit_x = [pos_x_src - scale(link_value/2), pos_x_src + node.node_width + scale(link_value/2)]
+        const limit_y = [pos_y_src - scale(link_value/2), pos_y_src + scale(link_value/2)]
 
         let draw_warning = false
 
@@ -547,7 +559,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
             if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
               const n = data.nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -561,7 +573,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             } else {
               const n = data.nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -583,7 +595,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .attr('stop-color', () => {
             if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
               const n = data.nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -597,7 +609,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             } else {
               const n = data.nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -625,7 +637,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('x2', nodes[l.idTarget].x)
                 .attr('y2', 0)
               const n = data.nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -644,7 +656,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('x2', nodes[l.idSource].x)
                 .attr('y2', 0)
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -663,7 +675,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
             if (nodes[l.idSource].x > nodes[l.idTarget].x) {
               const n = nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -677,7 +689,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             } else {
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -703,7 +715,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('y2', data.nodes[l.idTarget].y)
 
               const n = nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -723,7 +735,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('y2', data.nodes[l.idSource].y)
 
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -742,7 +754,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
             if (nodes[l.idSource].y > nodes[l.idTarget].y) {
               const n = nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -756,7 +768,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             } else {
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -781,7 +793,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('x2', nodes[l.idTarget].x)
                 .attr('y2', 0)
               const n = nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -800,7 +812,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 .attr('x2', nodes[l.idSource].x)
                 .attr('y2', 0)
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -819,7 +831,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
             if (nodes[l.idSource].x > nodes[l.idTarget].x) {
               const n = nodes[l.idSource]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -833,7 +845,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             } else {
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
@@ -1055,7 +1067,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   .attr('x2', nodes[link.idTarget].x)
                   .attr('y2', 0)
                 const n = nodes[link.idSource]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1074,7 +1086,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   .attr('x2', nodes[link.idSource].x)
                   .attr('y2', 0)
                 const n = nodes[link.idTarget]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1093,7 +1105,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
               if (nodes[link.idSource].x > nodes[link.idTarget].x) {
                 const n = nodes[link.idSource]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1107,7 +1119,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 }
               } else {
                 const n = nodes[link.idTarget]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1163,7 +1175,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   .attr('x2', nodes[link.idTarget].x)
                   .attr('y2', 0)
                 const n = nodes[link.idSource]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1182,7 +1194,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   .attr('x2', nodes[link.idSource].x)
                   .attr('y2', 0)
                 const n = nodes[link.idTarget]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1201,7 +1213,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
               if (nodes[link.idSource].x > nodes[link.idTarget].x) {
                 const n = nodes[link.idSource]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -1215,7 +1227,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 }
               } else {
                 const n = nodes[link.idTarget]
-                if (n.colorParameter === 'groupTag') {
+                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                   const selected_tag = n.tags[n.colorTag][0]
                   const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                   if (tag) {
@@ -2480,7 +2492,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .append('g')
       .append('path')
       .style('fill', (n: any) => {
-        if (n.colorParameter === 'groupTag') {
+        if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
           if (tag && !n.shape_visible) {
@@ -2928,7 +2940,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .attr('fill', () => {
             if (l.gradient) {
               const n = nodes[l.idTarget]
-              if (n.colorParameter === 'groupTag') {
+              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
                 const selected_tag = n.tags[n.colorTag][0]
                 const tag = data.nodeTags[n.colorTag].tags[selected_tag]
                 if (tag) {
