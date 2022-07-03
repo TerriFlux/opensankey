@@ -20,8 +20,8 @@ deploy_opensankey:
   stage: deploy
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -47,7 +47,7 @@ deploy_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/test_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -55,15 +55,15 @@ deploy_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source test_opensankey/bin/activate
+    - source dev_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 PublishExercicesAFM:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -84,18 +84,18 @@ PublishExercicesAFM:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AFM" --publish_name="ExercicesAFM"
   when: manual
 
 PublishExercicesReconciliation:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -116,18 +116,18 @@ PublishExercicesReconciliation:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/Reconciliation" --publish_name="ExercicesReconciliation"
   when: manual
 
 PublishExercicesAgePoidsTaille:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -148,18 +148,18 @@ PublishExercicesAgePoidsTaille:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/AgePoidsTaille" --publish_name="ExercicesAgePoidsTaille"
   when: manual
 
 PublishExercicesFormesCouleurs:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -180,18 +180,18 @@ PublishExercicesFormesCouleurs:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Exercices/FormesCouleurs" --publish_name="ExercicesFormesCouleurs"
   when: manual
 
 PublishFiliereVegetal:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -212,18 +212,18 @@ PublishFiliereVegetal:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Végétal" --publish_name="FiliereVegetal"
   when: manual
 
 PublishFiliereBoisSavoie1:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -244,18 +244,18 @@ PublishFiliereBoisSavoie1:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v1" --publish_name="FiliereBoisSavoie1"
   when: manual
 
 PublishFiliereBoisSavoie2:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -276,18 +276,18 @@ PublishFiliereBoisSavoie2:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
-    - CI= npm run zip_output --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v2"          --publish_name="FiliereBoisSavoie2"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run zip_output --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2"          --publish_name="FiliereBoisSavoie2"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/Savoie/v2" --publish_name="FiliereBoisSavoie2"
   when: manual
 
 PublishFiliereBoisGrandEst:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -308,18 +308,18 @@ PublishFiliereBoisGrandEst:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/GrandEst" --publish_name="FiliereBoisGrandEst"
   when: manual
 
 PublishFiliereBoisRegions:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -340,18 +340,18 @@ PublishFiliereBoisRegions:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/ForetBois/FranceRegions" --publish_name="FiliereBoisRegions"
   when: manual
 
 PublishFiliereLait:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -372,18 +372,18 @@ PublishFiliereLait:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Lait" --publish_name="FiliereLait"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Lait" --publish_name="FiliereLait"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Lait" --publish_name="FiliereLait"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Lait" --publish_name="FiliereLait"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Lait" --publish_name="FiliereLait"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Lait" --publish_name="FiliereLait"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Lait" --publish_name="FiliereLait"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Lait" --publish_name="FiliereLait"
   when: manual
 
 PublishFiliereViande:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -404,18 +404,18 @@ PublishFiliereViande:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Viande" --publish_name="FiliereViande"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Viande" --publish_name="FiliereViande"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Viande" --publish_name="FiliereViande"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Viande" --publish_name="FiliereViande"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Viande" --publish_name="FiliereViande"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Viande" --publish_name="FiliereViande"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Viande" --publish_name="FiliereViande"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Viande" --publish_name="FiliereViande"
   when: manual
 
 PublishFilierePaille:
   stage: publish
   variables:
     NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    APP_NAME : test_opensankey
+    FOLDER: /home/ubuntu/dev_opensankey
+    APP_NAME : dev_opensankey
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
@@ -436,8 +436,8 @@ PublishFilierePaille:
   script:
     - cd $FOLDER/opensankey/opensankey/client
     - npm install
-    - CI= npm run publish   --datapath="/home/ubuntu/test_opensankey/MFAData/Paille" --publish_name="FilierePaille"
-    - CI= npm run zip_output   --datapath="/home/ubuntu/test_opensankey/MFAData/Paille" --publish_name="FilierePaille"
-    - CI= npm run build_zip --datapath="/home/ubuntu/test_opensankey/MFAData/Paille" --publish_name="FilierePaille"
-    - CI= npm run unzip     --datapath="/home/ubuntu/test_opensankey/MFAData/Paille" --publish_name="FilierePaille"
+    - CI= npm run publish   --datapath="/home/ubuntu/dev_opensankey/MFAData/Paille" --publish_name="FilierePaille"
+    - CI= npm run zip_output   --datapath="/home/ubuntu/dev_opensankey/MFAData/Paille" --publish_name="FilierePaille"
+    - CI= npm run build_zip --datapath="/home/ubuntu/dev_opensankey/MFAData/Paille" --publish_name="FilierePaille"
+    - CI= npm run unzip     --datapath="/home/ubuntu/dev_opensankey/MFAData/Paille" --publish_name="FilierePaille"
   when: manual
