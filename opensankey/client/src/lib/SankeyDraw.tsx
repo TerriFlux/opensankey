@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
@@ -6,6 +7,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets, getLinkValue, setSelectedTags } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
+import { IndexedAccessType } from 'typescript'
+import { path } from 'd3'
 
 
 window.d3 = d3
@@ -106,6 +109,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const display_links = data.links
   const handles_visible = [...(new Array(Object.keys(display_links).length).fill(false))]
 
+  // const diff=require('deep-diff')
 
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.tooltip').remove()
@@ -161,7 +165,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (n.tags[tagGroup] === undefined) {
           colorNode = n.color
         } else if (n.tags[tagGroup].length > 0) {
-          if  (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
+          if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
             colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
           } else {
             colorNode = n.color
@@ -334,7 +338,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return ''
         }
         const display_value = getLinkValue(data, d.idLink).display_value
-        if (display_value.includes('*') && !data.show_structure) {
+        // if (display_value.includes('*') && !data.show_structure) {
+        //   return '40, 5'
+        // } else {
+        //   return ''
+        // }
+        if (d.dashed) {
           return '40, 5'
         } else {
           return ''
@@ -2250,6 +2259,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (d.node_visible) { display = 'inline' } else { display = 'none' }
         return display
       })
+      .style('font-family', d => d.display_style.font_family)
 
     const ggg_nodes = gg_nodes.append('g')
       .attr('id', d => 'ggg_' + d.idNode)
@@ -2270,15 +2280,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             this, event
           )
 
-          try {
-            localStorage.setItem('data', JSON.stringify(data))
-            if (current) {
-              localStorage.setItem('data', JSON.stringify(data))
+          // try {
 
-            }
-          } catch (e) {
-            localStorage.clear()
-          }
+          //   // localStorage.setItem('data', JSON.stringify(data))
+          //   if (current) {
+          //     get_diff()
+          //     localStorage.setItem('data', JSON.stringify(data))
+
+          //   }
+
+          // } catch (e) {
+          //   localStorage.clear()
+          // }
         }
       })
     )
@@ -2442,7 +2455,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           sankeyTooltip.style('opacity', 0)
           //d3.selectAll('#svg .tmp').remove()
           // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
-          
+
 
           d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
@@ -2755,7 +2768,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
 
-    console.log(nodeStart)
+
 
     // on pourrait aussi evnetuellement faire un clone des noeuds
     d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
@@ -2765,15 +2778,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(function (d) {
         return d.idSource == nodeStart
       })
-    console.log('gLink',glinks)
+    console.log('gLink', glinks)
 
     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-    console.log('tmpLinks',tmpLinks)    
+    console.log('tmpLinks', tmpLinks)
     tmpLinks.selectAll('.link')
       .each(function (this) {
         const totalLength = (this as SVGGeometryElement).getTotalLength()
-        console.log(totalLength)
+
         d3.select(this)
           .attr('stroke-dasharray', totalLength + ' ' + totalLength)
           .attr('stroke-dashoffset', totalLength)
@@ -3112,7 +3125,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       label_text.call(d3.drag<SVGTextElement, unknown>()
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
-            d.position_vert=''
+            d.position_vert = ''
             const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
               old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
               new_x = old_x + event.dx,
@@ -3120,8 +3133,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#' + d.idLabel + '_text').attr('x', new_x)
             d3.select('#' + d.idLabel + '_text').attr('y', new_y)
 
-            d.x_label=new_x
-            d.y_label=new_y
+            d.x_label = new_x
+            d.y_label = new_y
 
             d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
 
@@ -3129,15 +3142,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         })
       )
-
-
-
-
-
-
-
-
-
 
       const wrap = textwrap()
         .bounds({ height: 100, width: d.label_width })
@@ -3322,8 +3326,143 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }, 3000)
       }
 
+    } else if (e.key == 'z' && e.ctrlKey) {
+      e.preventDefault()
+      //va chercher les différences sauvegardées dans le localStorage
+      // const differences = JSON.parse(localStorage.getItem('diff') as string)
+      const LZString = require('lz-string')
+
+      const differences_str = LZString.decompress(localStorage.getItem('diff')) as string
+      const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
+
+      //Si il y a des différences, prend la dernière effectuée
+      if (differences !== undefined && differences.length != 0) {
+
+        const difference = differences.pop()
+
+
+        //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
+        //La copie nous permet de reffecter une variable avec d'autre type d'objet
+        //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
+        //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
+        let dt = JSON.parse(JSON.stringify(data))
+
+        //Parcours les dernières modifications à effectuer
+        //D : Supprime un objet qui a été ajouté
+        //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
+        //A : Annule des moddification faites à des array
+        //E : Annule des modifications faites à des propriétées de l'objet
+
+        //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
+        // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
+
+        difference.map((d: any) => {
+          let element_to_delete = dt
+          if (d['kind'] == 'D') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                delete element_to_delete[dd]
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+
+          } else if (d['kind'] == 'N') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                element_to_delete[dd] = d['rhs']
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+          } else if (d['kind'] == 'A') {
+            let cpt = 0
+            d.path.map((dd: any) => {
+              cpt++
+              if (cpt == d['path'].length) {
+                if (d['item']['kind'] == 'N') {
+                  element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
+                } else if (d['item']['kind'] == 'D') {
+                  element_to_delete[dd].splice(d['index'], 1)
+                }
+              } else {
+                element_to_delete = element_to_delete[dd]
+              }
+            })
+          } else if (d['kind'] == 'E') {
+            let cpt = 0
+            if (d.path !== null && d.path !== undefined) {
+              d.path.map((dd: any) => {
+                cpt++
+
+                if (cpt == d['path'].length) {
+                  element_to_delete[dd] = d['rhs']
+                } else {
+                  element_to_delete = element_to_delete[dd]
+                }
+              })
+            } else {
+              dt = d['rhs']
+            }
+
+          }
+        })
+
+
+        data = dt
+        localStorage.setItem('diff', LZString.compress(JSON.stringify(differences)))
+        try {
+          //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+          if (current) {
+            localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+          }
+        } catch (e) {
+          localStorage.clear()
+        }
+        set_data({ ...data })
+
+
+
+      } else {
+        console.log('Aucune action en mémoire pour un retour en arrière')
+      }
+
     }
   }
+  const get_diff = () => {
+    const diff = require('deep-diff')
+    const LZString = require('lz-string')
+    const old_data_str = LZString.decompress(localStorage.getItem('data')) as string
+    //Si data existe dans le localStorage 
+    if (old_data_str != '') {
+      //On le parse en JSON
+      const old_data = JSON.parse(old_data_str)
+      //on va chercher les anciennes différences
+      // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
+      const old_diff_str = LZString.decompress(localStorage.getItem('diff')) as string
+      let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
+      const difference = diff(data, old_data)
+
+      //Si il y des différences et que le tableau des anciennes différences existes alors on push dedans la nouvelles différence
+      //sinon on créer un tableau ne contenant que la nouvelle différence
+      if (difference !== undefined) {
+        if (old_diff !== undefined && old_diff !== null) {
+          old_diff.push(difference)
+        } else {
+          old_diff = [difference]
+        }
+      }
+
+      const cmp = LZString.compress(JSON.stringify(old_diff))
+      const z = (old_diff !== undefined) ? localStorage.setItem('diff', cmp) : ''
+    }
+
+  }
+
 
 
   useEffect(() => {
@@ -3363,13 +3502,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // drawGrid()
         })).on('dblclick.zoom', null)
 
-    svgSankey.on('click', function (ev: any) {
-      if (!ev.ctrlKey && !ev.shiftKey) {
-        set_multi_selected_nodes([])
-        set_multi_selected_links([])
-        set_multi_selected_label([])
-      }
-    })
+    // svgSankey.on('click', function (ev: any) {
+    //   if (!ev.ctrlKey && !ev.shiftKey) {
+    //     set_multi_selected_nodes([])
+    //     set_multi_selected_links([])
+    //     set_multi_selected_label([])
+    //   }
+    // })
 
 
     drawGrid()
@@ -3392,52 +3531,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
 
-    // div.addEventListener('mousedown', function (event: any) {
-    //   if (event.ctrlKey) {
-    //     isDown = true
-    //     old_pos = div.getBoundingClientRect()
-    //     // const rect = event.target.getBoundingClientRect()
-    //     offset = [
-    //       event.clientX,
-    //       event.clientY + margin_top
-    //     ]
-    //   }
-
-
-
-    // }, true)
-
-
-    // document.addEventListener('mouseup', function () {
-    //   isDown = false
-    // }, true)
-    // document.addEventListener('mousemove', function (event: any) {
-    //   if (isDown && event.ctrlKey) {
-
-    //     mousePosition = {
-    //       x: event.clientX,
-    //       y: event.clientY
-    //     }
-    //     const tr = d3.select(div).style('transform')
-    //     const index = tr.indexOf('scale')
-    //     const tr_scale = (index != -1) ? tr.substring(index) : ''
-    //     let val_scale = parseFloat(tr_scale.substring(6, tr_scale.length - 1))
-    //     val_scale = (isNaN(val_scale)) ? 1 : val_scale
-
-
-    //     //Déplacement à effectuer, on prend en compte : la pos du svg avant déplacement, 
-    //     //la position de la souris au click avant drag, pos de la souris lors du drag 
-    //     //on calcul la difference entre les deux pos de la souris puis on l'additionne à l'ancienne pos du svg 
-    //     //(ancienne pos qui n'est mis à jour que lors du click et non lors du drag )
-
-    //     //Problème: lors du zoom cela semble entrainer des problème de bon positionnement soit de old_pos soit de la souris
-    //     const shift_x = ((mousePosition.x - offset[0]) + old_pos.x / val_scale)
-    //     const shift_y = ((mousePosition.y - offset[1]) + old_pos.y - height_banner)
-
-    //     d3.select(div).style('transform', 'translate(' + shift_x + 'px,' + shift_y + 'px)' + ' ' + tr_scale)
-    //   }
-    // }, true)
-
     update_scale(data.user_scale)
     if (data.fit_screen) {
       d3.select('#svg').attr('transform', 'scale(1)')
@@ -3452,9 +3545,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     try {
       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
       if (current) {
-        localStorage.setItem('data', JSON.stringify(data))
+        get_diff()
+        const LZString = require('lz-string')
+        const cmp = LZString.compress(JSON.stringify(data))
+        localStorage.setItem('data', cmp)
       }
     } catch (e) {
+      console.log(e)
       localStorage.clear()
     }
   })
@@ -3470,13 +3567,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
-          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet">
+          <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+            if (!ev.ctrlKey && !ev.shiftKey) {
+              set_multi_selected_nodes([])
+              set_multi_selected_links([])
+              set_multi_selected_label([])
+            }
+          }}>
             <g className='grid' id='grid'></g>
             <g className='g_label' id='g_label'></g>
 
             <g className='g_legend' id='g_legend'></g>
             <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': node_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */ }} ></g>
 
           </svg>
         </div>

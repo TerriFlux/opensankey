@@ -51,9 +51,10 @@ export const SankeyNodePropTypes = {
   // semantic
   type: PropTypes.oneOf(['product', 'sector']),
   tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
-
+  style:PropTypes.string.isRequired,
   //display
   display_style: PropTypes.shape({
+    font_family:PropTypes.string.isRequired,
     font_size: PropTypes.number.isRequired,
     uppercase: PropTypes.bool.isRequired,
     bold: PropTypes.bool.isRequired,
@@ -107,6 +108,8 @@ export const SankeyLinkPropTypes = {
   colorTag: PropTypes.string.isRequired,
   // Ajout
   gradient: PropTypes.bool.isRequired,
+  dashed:PropTypes.bool.isRequired,
+
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
@@ -122,7 +125,10 @@ export const SankeyLinkPropTypes = {
   shift_gap: PropTypes.number.isRequired,
 
   curvature: PropTypes.number.isRequired,
-  curved: PropTypes.bool.isRequired
+  curved: PropTypes.bool.isRequired,
+
+  //style
+  style:PropTypes.string.isRequired
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
@@ -181,7 +187,9 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   user_scale: PropTypes.number.isRequired,
-
+  accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
+  style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
   // icon_catalog: PropTypes.object.isRequired,
   // icon_catalog: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)).isRequired,
   icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
