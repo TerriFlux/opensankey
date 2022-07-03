@@ -163,18 +163,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (n.colorTag !== undefined && n.colorTag !== '') {
         const tagGroup = n.colorTag
         if (n.tags[tagGroup] === undefined) {
-          colorNode = n.color
+          colorNode = 'grey'
         } else if (n.tags[tagGroup].length > 0) {
           if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
             colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
           } else {
-            colorNode = n.color
+            colorNode = 'grey'
           }
         } else {
-          colorNode = n.color
+          colorNode = 'grey'
         }
       } else {
-        colorNode = n.color
+        colorNode = 'grey'
       }
     }
     if (n.colorParameter === 'local') {
@@ -237,7 +237,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
       //on controle ici qu'il y a bien un favorite tag
       if (l.colorTag !== undefined && l.colorTag !== '') {
-        if (l.colorTag !== 'node_colormap') {
+        if (l.colorTag !== 'no_colormap') {
           const tagGroup = l.colorTag
           const v = getLinkValue(data, l.idLink)
           if (v === undefined) {

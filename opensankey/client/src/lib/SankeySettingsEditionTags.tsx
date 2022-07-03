@@ -567,7 +567,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
 }
 
 SankeySettingsEditionElementTags.propTypes = SankeySettingsEditionTagsPropTypes
-SankeySettingsEditionDataTags.propTypes = SankeySettingsEditionTagsPropTypes
+SankeySettingsEditionDataTags.propTypes = SankeySettingsDataTagsPropTypes
 
 export default null
 
