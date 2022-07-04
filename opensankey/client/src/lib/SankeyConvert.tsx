@@ -435,6 +435,9 @@ export const convert_data = (
           label_box_width:110,
         }
       }
+      if (n.display_style.font_family === undefined) {
+        n.display_style.font_family = 'Cormorant'
+      }
       if (n.node_width === undefined) {
         if ( (data as any).node_width) {
           n.node_width = (data as any).node_width
@@ -570,7 +573,10 @@ export const convert_data = (
       }
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
-      }      
+      }
+      if (n.style === undefined) {
+        n.style = 'default'
+      }  
     }
   )
 
@@ -669,7 +675,23 @@ export const convert_data = (
       if (l.label_visible === undefined) {
         l.label_visible = true
       }
-
+      
+      if (l.orthogonal_label_position === undefined) {
+        l.orthogonal_label_position = 'default'
+      }
+      if (l.dashed === undefined) {
+        l.dashed = false
+      }
+      if (l.label_position === undefined) {
+        l.label_position = 'middle'
+      }
+      if (l.gradient === undefined) {
+        l.gradient = false
+      }
+      l.label_visible = Boolean(l.label_visible)
+      if (l.style === undefined) {
+        l.style = 'default'
+      }
       if (l.color === undefined) {
         l.color = source_node.color
       }
@@ -974,7 +996,7 @@ export const convert_data = (
       if ( !v.extension) {
         v.extension = {}
       }
-      if (data_to_convert.fluxTags['flux_types']) {
+      if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
         if ( v.extension.data_value ) {
           v['tags']['flux_types'] = 'initial_data'
         } else {
