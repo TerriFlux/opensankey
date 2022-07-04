@@ -72,9 +72,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
     // Méthode pour incrementer idGroup
     const listId: number[] = []
-    Object.keys(data[elementTagName]).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
+    Object.keys(data[elementTagName]).forEach(elt => listId.push(Number(elt.replace(elementName+'_tag_group_', ''))))
     const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    data[elementTagName]['tag_group_' + idGroup] = {
+    data[elementTagName][elementName+'_tag_group_' + idGroup] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
@@ -82,12 +82,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       banner: 'multi'
     }
     if (elementName === 'nodes' ) {
-      Object.values(data[elementName]).forEach(n => n.tags['tag_group_' + idGroup] = [])
+      Object.values(data[elementName]).forEach(n => n.tags[elementName+'_tag_group_' + idGroup] = [])
     }
     if (Object.keys(data[elementTagName]).length === 1) {
       Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
     }
-    set_tags_group_key('tag_group_' + idGroup)
+    set_tags_group_key(elementName+'_tag_group_' + idGroup)
     set_data({ ...data })
   }
 
@@ -404,9 +404,9 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
 
     // Méthode pour incrementer idGroup
     const listId: number[] = []
-    Object.keys(dataTags).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
+    Object.keys(dataTags).forEach(elt => listId.push(Number(elt.replace('data_tag_group_', ''))))
     const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    dataTags['tag_group_' + idGroup] = {
+    dataTags['data_tag_group_' + idGroup] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
@@ -414,7 +414,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       banner: 'multi'
     }
 
-    set_data_tags_group_key('tag_group_' + idGroup)
+    set_data_tags_group_key('data_tag_group_' + idGroup)
     set_data({ ...data })
   }
   //supprime étiquette
@@ -567,7 +567,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
 }
 
 SankeySettingsEditionElementTags.propTypes = SankeySettingsEditionTagsPropTypes
-SankeySettingsEditionDataTags.propTypes = SankeySettingsEditionTagsPropTypes
+SankeySettingsEditionDataTags.propTypes = SankeySettingsDataTagsPropTypes
 
 export default null
 

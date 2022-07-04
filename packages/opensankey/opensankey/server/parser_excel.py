@@ -449,7 +449,7 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     key = 'flux_types'
                     tags['initial_data'] = tags.pop('Donnée collectée')
                     tags['computed_data'] = tags.pop('Donnée calculée')
-                    banner = 'none'
+                    banner = 'multi'
                 fluxTags[key] = {
                     'group_name'  : mfa_input[TAG_SHEET][i][0],
                     'show_legend' : 0,
@@ -505,9 +505,12 @@ def save_simple_excel(
         if 'definition' in node:
             nodes[row][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
-            tags = sankey_data['nodeTags'][tag_name]['tags'] 
-            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-            nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+            tags = sankey_data['nodeTags'][tag_name]['tags']
+            try:
+                tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+            except Exception as expt:
+                pass
         nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
         row = row+1
         
