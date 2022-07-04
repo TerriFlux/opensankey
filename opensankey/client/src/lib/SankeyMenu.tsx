@@ -1354,7 +1354,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Tab>
           </Tabs>
         </Col>
-        <Row>Noeuds affecter au style :{Object.values(data.nodes).filter(d => d.style == selected_style_node).map(d => d.name).join('/')}</Row>
+        <Row>Noeuds affectés au style :{Object.values(data.nodes).filter(d => d.style == selected_style_node).map(d => d.name).join('/')}</Row>
 
       </Modal.Body>
       <Modal.Footer>
@@ -1894,7 +1894,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Tabs>
           </Col>
         </Row>
-        <Row>Noeuds affecter au style :{Object.values(data.links).filter(d => d.style == selected_style_link).map(d => d.idSource + '-->' + d.idTarget).join('/')}</Row>
+        <Row>Noeuds affectés au style :{Object.values(data.links).filter(d => d.style == selected_style_link).map(d => d.idSource + '-->' + d.idTarget).join('/')}</Row>
 
       </Modal.Body>
       <Modal.Footer>
