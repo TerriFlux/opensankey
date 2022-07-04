@@ -30,7 +30,7 @@ type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup,data:SankeyData,set_data:(data:SankeyData)=>void) => {
   const val = evt.target.value
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[1].name)
+  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
   set_data({ ...data })
 }
 
@@ -154,12 +154,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,a
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
+        const selected = Object.entries(tags_group.tags).filter(([k,v])=>v.selected)[0][0]
         return (
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
-            {<Form.Select key={tags_group.group_name} placeholder='all' value={Object.entries(tags_group.tags).filter(([k,v])=>v.selected)[0][0]} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+            {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
               Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag.name} >{tag.name}</option>)
+                return (<option key={tag_key} value={tag_key} >{tag.name}</option>)
               })}
             </Form.Select>}
           </>)
