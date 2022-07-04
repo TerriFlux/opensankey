@@ -907,7 +907,7 @@ export const convert_data = (
             const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
             editable_link.value2.extension.free_mini = free_mini
             editable_link.value2.extension.free_maxi = free_maxi 
-            editable_link.value2.display_value = 'default'           
+            editable_link.value2.display_value = ''           
           }
           if (editable_link.mini !== undefined && editable_link.mini !== null) {
             let the_mini = editable_link.mini
@@ -962,7 +962,9 @@ export const convert_data = (
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length ) {
       if (v.display_value === undefined) {
-        v.display_value = 'default'
+        v.display_value = ''
+      } else if (v.display_value === 'default') {
+        v.display_value = ''
       } else if (v.display_value.includes('[')) {
         // Variables libres
         let tmp 
@@ -981,7 +983,7 @@ export const convert_data = (
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
         v.extension.free_mini = free_mini
         v.extension.free_maxi = free_maxi 
-        v.display_value = 'default'   
+        v.display_value = ''   
       }
       if ( v.color_tag) {
         v.tags = {...v.color_tag}
