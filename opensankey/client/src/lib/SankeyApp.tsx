@@ -228,7 +228,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             if (missing_key) {
               return {
                 value: 0,
-                display_value: 'default',
+                display_value: '',
                 tags: {},
                 extension: {}
               }

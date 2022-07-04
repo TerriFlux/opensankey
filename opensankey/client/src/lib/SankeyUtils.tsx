@@ -41,7 +41,7 @@ export const getLinkValue = (
 
     return {
       value: 0,
-      display_value: 'default',
+      display_value: '',
       tags: {},
       extension: {}
     }
@@ -60,7 +60,7 @@ export const getLinkValue = (
   if (missing_key) {
     return {
       value: 0,
-      display_value: 'default',
+      display_value: '',
       tags: {},
       extension: {}
     }
