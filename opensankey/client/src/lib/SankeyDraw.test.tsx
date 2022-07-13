@@ -70,6 +70,8 @@ test.each(the_tests)( 'tyty',(full_path) => {
       link_text={(l:SankeyLink) => 'tutu'}
       test_link_value= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => 10}
       {...SankeyDrawDefaultProps}
+      view={''}
+      set_view={()=>{}}
     />
   )
   const tree = component.container

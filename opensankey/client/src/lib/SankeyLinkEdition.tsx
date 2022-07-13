@@ -78,7 +78,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return gradChecked
   }
-
   const dashChecked = () => {
     let dashChecked = true
     multi_selected_links.map(d => {
@@ -86,7 +85,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return dashChecked
   }
-
   const labelVisibleChecked = () => {
     let labelVisibleChecked = true
     multi_selected_links.map(d => {
@@ -94,7 +92,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return labelVisibleChecked
   }
-
   const shiftCenter = () => {
     let display_shift = true
     let center = 0.5
@@ -118,7 +115,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_shift) ? shift : 0
   }
-
   const linkOrientation = (param: string) => {
     let allChecked = true
     switch (param) {
@@ -151,7 +147,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     }
 
   }
-
   const courbure = () => {
     let display_courbe = true
     let courbe = 0.5
@@ -163,7 +158,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_courbe) ? courbe : 0
   }
-
   const linkType = (param: string) => {
     let allChecked = true
     if (multi_selected_links.length != 0) {
@@ -241,7 +235,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-
   const labelSticktoLink = () => {
     let labelSticktoLink = true
     multi_selected_links.map(d => {
@@ -256,7 +249,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return labelSticktoLink
   }
-
   const labelPositionOrtho = (param: string) => {
     let allChecked = true
     if (multi_selected_links.length != 0) {
@@ -504,6 +496,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           }
                           val = val[tag]
                         })
+                        if(val.display_value==' '){
+                          selected_link.dashed=false
+                        }
                         val.display_value = evt.target.value
                         set_data({ ...data })
                       }

@@ -23,31 +23,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   return (
     <>
       <Form>
-        {/* <Form.Group as={Row}>
-          <Col xs={6}>Police Charger des icones</Col>
-          <Col xs={6}><FormControl
-            //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
-            type='file'
-            onChange={(evt: ChangeEvent) => {
-              const files = (evt.target as HTMLFormElement).files
-              const reader = new FileReader()
-              reader.onload = (() => {
-                return (e: ProgressEvent<FileReader>) => {
-                  const result = String((e.target as FileReader).result)
-                  const js = JSON.parse(result)
-                  js.icons.map((d: any) => {
-                    const name = d.properties.name as string
-                    data.icon_catalog[name] = d.icon.paths[0]
-                  })
-                }
-              })()
-              reader.readAsText(files[0])
-              set_data(data)
-            }}
-          >
-          </FormControl>
-          </Col>
-        </Form.Group> */}
         <Form.Group as={Row} >
           <Col xs={3}>
             <FormLabel >Echelle</FormLabel>

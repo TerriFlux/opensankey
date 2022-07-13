@@ -447,7 +447,8 @@ export const default_sankey_data = (): SankeyData => {
     },
 
     width: window.innerWidth - 40,
-    height: window.innerHeight - 40,
+    // height: window.innerHeight-40,
+    height: window.innerHeight/2,
 
     h_space: 200,
     v_space: 100,
@@ -489,9 +490,9 @@ export const default_sankey_data = (): SankeyData => {
     nodeTags: {},
     dataTags: {},
     fluxTags: {},
+    fluxColorMap: 'node_colormap',
+    nodeColorMap: 'node_colormap',
 
-    colorMap: 'no_colormap', 
-    
     view: []
   }
 }
@@ -553,7 +554,7 @@ const create_object = (data: SankeyData, l: string[]) => {
   if (l.length == 0) {
     const obj = Object.create({})
     obj['value'] = 5
-    obj['display_value'] = ''
+    obj['display_value'] = ' '
     obj['tags'] = {}
     obj['extension'] = {}
 
@@ -737,7 +738,7 @@ export const uploadExemple = (
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
   }
-  const url = root + 'sankey/upload_examples'
+  const url = root + the_url_prefix + 'sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -768,26 +769,25 @@ export const uploadExemple = (
 export const set_nodes_level = (
   data: SankeyData,
   display_nodes: { [key: string]: SankeyNode },
-  level: number,
-  control_display = true
+  level: number
 ) => {
   Object.values(display_nodes).forEach(node => {
-    if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
+    if (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level) {
       node.display = false
       node.node_visible = false
       return
     }
     if (node.dimensions['Primaire'].level === level) {
-      desagregation(data,node.idNode,'Primaire',control_display)
-      agregation(data,node.idNode,'Primaire',control_display)
+      desagregation(data, node.idNode, 'Primaire')
+      agregation(data, node.idNode, 'Primaire')
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
-        if (control_display && idParent !== null && idParent !== undefined) {
+        if (idParent !== null && idParent !== undefined) {
           display_nodes[idParent].node_visible = false
           display_nodes[idParent].display = false
         }
       })
-    } else if (control_display && node.dimensions['Primaire'].level  && node.dimensions['Primaire'].level > level) {
+    } else if (node.dimensions['Primaire'].level > level) {
       node.node_visible = false
       node.display = false
     }

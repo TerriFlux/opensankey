@@ -111,7 +111,7 @@ export const SankeyLinkPropTypes = {
   dashed:PropTypes.bool.isRequired,
 
 
-  value:  PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
+  value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
   tooltip_text: PropTypes.string,
 
@@ -235,14 +235,16 @@ export const SankeyDataPropTypes = {
   nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
   fluxTags: TagsCatalogPropTypes,
-  colorMap: PropTypes.string.isRequired,
+  fluxColorMap: PropTypes.string.isRequired,
+  nodeColorMap: PropTypes.string.isRequired,
   
   view: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       view_data: PropTypes.object.isRequired,
-      nom:PropTypes.string.isRequired
-
+      nom:PropTypes.string.isRequired,
+      details:PropTypes.string.isRequired
+      
     }).isRequired
   ).isRequired
 }
