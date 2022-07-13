@@ -121,7 +121,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .style('padding', '5px')
     .style('max-width', '50%')
     .style('font-size', '12px')
-    .style('z-index', 100)
+    .style('z-index', 1800)
     .style('position', 'absolute')
     .style('pointer-events', 'none')
 
