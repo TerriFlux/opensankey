@@ -1,4 +1,4 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
+﻿/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
@@ -8,7 +8,7 @@ import { compute_auto_sankey, reorganize_all_input_outputLinksId, reorganize_inp
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaProductHunt } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaProductHunt, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
@@ -91,6 +91,8 @@ const MenuPropTypes = {
   show_toast: PropTypes.bool.isRequired,
   set_nav_item_active: PropTypes.func.isRequired,
   nav_item_active: PropTypes.string.isRequired,
+  set_sub_nav_item_active: PropTypes.func.isRequired,
+  sub_nav_item_active: PropTypes.string.isRequired,
   set_selected_node: PropTypes.func.isRequired,
   selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
 
@@ -118,7 +120,14 @@ const MenuPropTypes = {
   set_view: PropTypes.func.isRequired,
 
   additional_selector: PropTypes.element,
-  set_current_filter: PropTypes.func.isRequired
+  set_current_filter: PropTypes.func.isRequired,
+
+  mode_selection: PropTypes.string.isRequired,
+  set_mode_selection: PropTypes.func.isRequired,
+
+
+  style_to_apply: PropTypes.string.isRequired,
+  set_style_to_apply: PropTypes.func.isRequired
 }
 
 
@@ -156,55 +165,46 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const processExample = (server_data: SankeyData) => {
-  // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
-  //   server_data.links['link324'].idSource = 'node63'
-  //   delete server_data.links['link325']
-  // }
-  if ((server_data as any).layout !== undefined) {
-    let nb_agregation_level = 0
-    Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-    for (let i=1 ; i<=nb_agregation_level ; i++) {
-      set_nodes_level((server_data as any).layout,(server_data as any).layout.nodes,i,false)
-    }
-    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-    localStorage.setItem('initial_data',JSON.stringify(server_data))
-    // for (let i=1 ; i<=nb_agregation_level ; i++) {
-    //   set_nodes_level(server_data,server_data.nodes,i)
-    //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-    // }
-    // delete (server_data as SankeyData & { layout?: SankeyData }).layout
-    // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
-  } else {
-    set_nodes_level(server_data,server_data.nodes,2)
-    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-    set_nodes_level(server_data,server_data.nodes,1)
-    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-    return 0             
-  }
-  return 0
-}
-
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label,callback}: any) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links, set_multi_selected_label }: any) => {
   return (
     <>
-      { Array.isArray(exemple_menu) 
-        ? exemple_menu.map( (item,index)=> {
-          let the_callback = (server_data : SankeyData)=> 0
-          let path = current_path+'/sankey/'+item
-          if (item.includes('.xlsx')) {
-            the_callback = callback
-            path = current_path+'/'+item
+      { Array.isArray(exemple_menu)
+        ? exemple_menu.map((item, index) => {
+          let callback = (server_data: SankeyData) => 0
+          let path = current_path + '/sankey/' + item
+          if (item.includes('simple.xlsx') || item.includes('reconciled.xlsx')) {
+            path = current_path + '/' + item
+            callback = (server_data: SankeyData) => {
+              // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
+              //   server_data.links['link324'].idSource = 'node63'
+              //   delete server_data.links['link325']
+              // }
+              if ((server_data as any).layout !== undefined) {
+                updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                localStorage.setItem('initial_data', JSON.stringify(server_data))
+                let nb_agregation_level = 0
+                Object.values(server_data.nodes).forEach(n => Object.entries(n.dimensions).forEach(dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+                for (let i = 1; i <= nb_agregation_level; i++) {
+                  set_nodes_level(server_data, server_data.nodes, i)
+                  updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+                }
+                delete (server_data as SankeyData & { layout?: SankeyData }).layout
+                Object.assign(server_data, JSON.parse(localStorage.getItem('initial_data') as string))
+
+              } else {
+                compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+              }
+              return 0
+            }
+
           }
           return (
             <Dropdown.Item
               key={index}
               onClick={() => uploadExemple(
-                path, url_prefix, data, set_data,the_callback,set_multi_selected_nodes,set_multi_selected_links,set_multi_selected_label
-              )} 
-            >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
-                : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+                path, item.includes('reconciled.xlsx') || item.includes('simple.xlsx') ? '' : url_prefix, data, set_data, callback, set_multi_selected_nodes, set_multi_selected_links, set_multi_selected_label
+              )}
+            >{item.includes('xlsx') ? item.split('.x')[0].replace(/_/g, ' ').replace(' layout', '').replace('simple', ' xl').replace('reconciled', ' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC').replace('C G A P A T', 'CGAPAT').replace('M P', 'MP') : item.split('.j')[0].replace(/_/g, ' ').replace(' layout', '').split(/(?=[A-Z0-9])/).join(' ').replace('A F M', 'AFM').replace('T E C', 'TEC').replace('C G A P A T', 'CGAPAT').replace('M P', 'MP')
               }</Dropdown.Item>
           )
         }
@@ -212,7 +212,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           (key, index) => {
             return (
               <>
-                <NavDropdown key={index} title={key} id={key} >
+                <NavDropdown title={key} id={key} >
                   <ExempleItem
                     exemple_menu={exemple_menu[key]}
                     url_prefix={url_prefix}
@@ -222,7 +222,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     set_multi_selected_links={set_multi_selected_links}
                     set_multi_selected_nodes={set_multi_selected_nodes}
                     set_multi_selected_label={set_multi_selected_label}
-                    callback={callback}
                   />
                 </NavDropdown>
               </>
@@ -241,7 +240,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
     node_edition, link_edition,
     logo, app_name,
-    set_show_nav, show_nav, set_nav_item_active, nav_item_active,
+    set_show_nav, show_nav, set_nav_item_active, set_sub_nav_item_active, sub_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_multi_selected_nodes, multi_selected_nodes,
     set_multi_selected_links, multi_selected_links,
@@ -254,15 +253,17 @@ const Menu: FunctionComponent<MenuTypes> = (
     view, set_view,
     multi_selected_label, set_multi_selected_label,
     set_current_filter,
-    additional_selector
-
+    additional_selector,
+    mode_selection,
+    set_mode_selection
+    , style_to_apply,
+    set_style_to_apply
   }
 ) => {
   const set_show_link = useState(true)[1]
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
-  const [parent_visible,set_parent_visible] = useState(false)
   const { filter } = data.display_style
 
   let max_link_value = 0
@@ -288,7 +289,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
     })
   })
-
+  //Ajoute un nouveau noeud puis le selectionne
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node(data)
@@ -308,12 +309,12 @@ const Menu: FunctionComponent<MenuTypes> = (
     for (const tag_group_key in data.nodeTags) {
       node.tags[tag_group_key] = []
     }
-    // set_selected_node(node)
     //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
     set_multi_selected_nodes([node])
     multi_selected_nodes = [node]
+    style_to_apply = 'default'
     apply_style_to_nodes()
-    set_data({ ...data })
+
   }
 
   const _load_json = useRef<HTMLInputElement>(null)
@@ -358,7 +359,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const clickSaveSVG = () => {
     const svg = window.d3.select('#svg-container svg')
-    svg.selectAll('.tooltip').remove()
+    svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
@@ -370,7 +371,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const clickSavePDF = () => {
     const svg = window.d3.select('#svg-container svg')
-    svg.selectAll('.tooltip').remove()
+    svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     svg.attr('viewBox', [0, 0, data.width, data.height] as any)
     const html = ((svg.attr('title', 'test2')
@@ -407,6 +408,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       .then(showFile).then(cleanFile)
   }
 
+  //Réinitialise data et vide les noeud/liens sélectionnés 
   const reinitialization = () => {
     const data = default_sankey_data()
     set_multi_selected_nodes([])
@@ -414,19 +416,19 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_multi_selected_label([])
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
+    set_selected_style_node('default')
+    set_selected_style_link('default')
+    set_view('none')
     set_data({ ...data })
   }
-
-  const setShow = (t: boolean) => {
-    set_show_nav(t)
-  }
-
-
+  //Modifie la variable qui permet d'afficher le menu accordéon
   const toggleShow = () => {
-    setShow(!show_nav)
+    set_show_nav(!show_nav)
   }
   const [checked, setChecked] = useState(false)
 
+
+  //Ajoute un nouveau flux et le sélectionne
   const add_new_link = () => {
     const { nodes, links } = data
 
@@ -457,7 +459,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   if (node === undefined) {
     node = default_node(data)
   }
-
+  //Change la source du flux sélectionné
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = multi_selected_links[0]
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
@@ -487,7 +489,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-
+  //Change la cible du flux sélectionné
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
     const link = multi_selected_links[0]
@@ -509,6 +511,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     scroll: true,
     backdrop: false,
   }
+
+  //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
     const DD = (
       <div id='DD_multi_node'>
@@ -533,10 +537,10 @@ const Menu: FunctionComponent<MenuTypes> = (
       </div>)
     return DD
   }
-
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   const selected_label = multi_selected_label.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
+  //Renvoie le menue déroulant pour la sélection des labels libres
   const dropdownMultiLabel = () => {
     const DD = (
       <div id='DD_multi_label'>
@@ -570,6 +574,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
     return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink }
   })
+  //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
       <div id='DD_multi_links'>
@@ -602,6 +607,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
+  //Dépalce la place des liens sélectionnés vers le début dans le tableau de liens de data
+  //Permet donc de les déssiner avant 
   const handleUpLink = (i: string) => {
     const { links } = data
     const listElmt = Object.keys(links)
@@ -617,7 +624,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
 
-
+  //Dépalce la place des liens sélectionnés vers la fin dans le tableau de liens de data
+  //Permet donc de les déssiner après 
   const handleDownLink = (i: string) => {
     const { links } = data
     const listElmt = Object.keys(links)
@@ -732,6 +740,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
 
+  //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
+  //Permet donc de les déssiner après 
   const handleUplabel = (i: string) => {
     const { labels } = data
     const listElmt = Object.keys(labels)
@@ -748,6 +758,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
+  //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de liens de data
+  //Permet donc de les déssiner après 
   const handleDownlabel = (i: string) => {
     const { labels } = data
     const listElmt = Object.keys(labels)
@@ -811,6 +823,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           onClick={() => {
             data.accordeonToShow = ['MEP']
             set_data({ ...data })
+
           }}
         >Simple</Button>
         <Button variant='dark'
@@ -900,8 +913,19 @@ const Menu: FunctionComponent<MenuTypes> = (
   const cut_name = (t: string, n: number) => {
     return (t.length > n) ? t.slice(0, n) + '...' : t
   }
+
+  const viewOfData = () => {
+
+    const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id == view)[0].view_data)) as SankeyData
+    d.view = JSON.parse(JSON.stringify(data.view))
+    return d as SankeyData
+
+  }
+
+
   const [selected_style_node, set_selected_style_node] = useState('default')
-  const [style_to_apply, set_style_to_apply] = useState('default')
+  // const [style_to_apply, set_style_to_apply] = useState('default')
+
   const modalStyleNode = (
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
       <Modal.Header closeButton>
@@ -926,8 +950,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_node).map((d,index) => {
-                  return (<Dropdown.Item key={index} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+                {Object.keys(data.style_node).map(d => {
+                  return (<Dropdown.Item onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
                 })}
 
@@ -1494,9 +1518,9 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_link).map((d,index) => {
+                {Object.keys(data.style_link).map(d => {
 
-                  return (<Dropdown.Item key={index} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
+                  return (<Dropdown.Item onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
 
                 })}
 
@@ -1903,7 +1927,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal>)
 
 
-
+  //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
     let style_to_display = 'Aucun'
     if (multi_selected_links.length != 0) {
@@ -1971,32 +1995,13 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   )
 
-  // const diff = (obj1:any, obj2:any) => {
-  //   const result = {} as any
-  //   if (Object.is(obj1, obj2)) {
-  //     return undefined
-  //   }
-  //   if (!obj2 || typeof obj2 !== 'object') {
-  //     return obj2
-  //   }
-  //   Object.keys(obj1 || {}).concat(Object.keys(obj2 || {})).forEach(key => {
-  //     if (obj2[key] !== obj1[key] && !Object.is(obj1[key], obj2[key])) {
-  //       result[key] = obj2[key]
-  //     }
-  //     if (typeof obj2[key] === 'object' && typeof obj1[key] === 'object') {
-  //       const value = diff(obj1[key], obj2[key])
-  //       if (value !== undefined) {
-  //         result[key] = value
-  //       }
-  //     }
-  //   })
-  //   return result
-  // }
 
 
   return (
     <>
+      {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
       
+      } 
       {modalStyleNode}
       {modalPreference}
       {modalStyleLink}
@@ -2004,7 +2009,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       {modalHelp}
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
-        <Container>
+        <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (
             <Form.Check
@@ -2118,11 +2123,50 @@ const Menu: FunctionComponent<MenuTypes> = (
             />) : (<></>)}
         </Container>
 
+        {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
+          //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
+        }
         {(view == 'none') ? <SankeyEdition
           data={data}
           set_data={set_data}
           additional_selector={additional_selector}
-        /> : <></>}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+        /> : <><Row>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
+              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+                const ev = document as any
+                const tmp = { key: 'p' }
+                ev.onkeydown(tmp)
+              }}>
+                <FaPlay />
+              </Button>
+              <Button variant={'outline-success'} onClick={() => {
+                const ev = document as any
+                const tmp = { key: 'ArrowUp' }
+                ev.onkeydown(tmp)
+              }}>
+                <FaBackward />
+              </Button>
+              <Button variant={'outline-warning'} onClick={() => {
+                const ev = document as any
+                const tmp = { key: 'ArrowDown' }
+                ev.onkeydown(tmp)
+              }}>
+                <FaForward />
+              </Button>
+            </ButtonGroup>
+          </FormGroup>
+        </Row>{/* {set_data({ ...data })} */}</>}
+
+        {/* <SankeyEdition
+          data={data}
+          set_data={set_data}
+          additional_selector={additional_selector}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+        /> */}
       </Navbar>
 
       {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
@@ -2157,8 +2201,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               onClick={
                 evt => {
-
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === 'Noeuds' && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -2170,16 +2213,18 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Accordion.Header>Noeuds</Accordion.Header>
               <Accordion.Body style={{ padding: '0px' }}>
 
-                <Accordion >
+                <Accordion activeKey={sub_nav_item_active as string} >
                   <Accordion.Item
                     style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
                     eventKey="EtiquetteNoeud"
                     onClick={
                       evt => {
                         if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
+                          set_sub_nav_item_active('')
                           set_nav_item_active('2')
                           set_show_nav(true)
                         } else {
+                          set_sub_nav_item_active('EtiquetteNoeud')
                           set_nav_item_active('2')
                           set_show_nav(true)
 
@@ -2195,12 +2240,29 @@ const Menu: FunctionComponent<MenuTypes> = (
                     </Accordion.Body>
                   </Accordion.Item>
 
-                  <Accordion.Item eventKey='editionNoeud'>
+                  <Accordion.Item eventKey='editionNoeud'
+                    onClick={
+                      evt => {
+                        if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
+                          set_sub_nav_item_active('')
+                          set_nav_item_active('2')
+                          set_show_nav(true)
+                        } else {
+                          set_sub_nav_item_active('editionNoeud')
+                          set_nav_item_active('2')
+                          set_show_nav(true)
+
+                        }
+                      }
+                    }
+                  >
                     <Accordion.Header style={{ marginLeft: '25px' }}>Edition Noeuds</Accordion.Header>
                     <Accordion.Body>
                       <Row >
                         <Col xs={1}>
                           <Button size="sm" onClick={() => {
+                            set_style_to_apply('default')
+
                             add_new_node()
 
                           }}><FaPlus /></Button>
@@ -2274,7 +2336,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                             onClick={
                               () => {
                                 apply_style_to_nodes()
-                                set_data({ ...data })
                               }
                             }
                           >Appliquer Style</Button>
@@ -2304,37 +2365,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         <Col xs={3}>
                         </Col>
                       </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col xs={2} >
-                          <FormCheck
-                            disabled={multi_selected_nodes.length == 0}
-                            type='checkbox'
-                            label='Parent'
-                            checked={multi_selected_nodes.length != 0 && parent_visible}
-                            onChange={
-                              evt => set_parent_visible(evt.target.checked)
-                            }
-                          />
-                        </Col>
-                        { parent_visible ? (
-                          <Col xs={10}>
-                            <Form.Select 
-                              onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
-                                if ( changeEvent.target.value == 'none' ) {
-                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
-                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 1)
-                                } else {
-                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
-                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 2)
-                                }
-                              }}>
-                              <option key={0} value='none' selected={multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
-                              {
-                                Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
-                              }
-                            </Form.Select>
-                          </Col>) : (<></>) }
-                      </Form.Group>
+
 
                       <div style={{ 'display': 'block' }}>{node_edition}</div>
 
@@ -3273,7 +3304,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       {
         (view != 'none') ? (<SankeyDraw
-          data={data.view.filter(d => d.id == view)[0].view_data as SankeyData}
+          data={viewOfData()}
           set_data={() => null}
           set_multi_selected_nodes={() => null}
           multi_selected_nodes={multi_selected_nodes}
@@ -3284,7 +3315,11 @@ const Menu: FunctionComponent<MenuTypes> = (
           multi_selected_label={multi_selected_label}
 
           select_node={() => null}
-          node_arrow_visible={() => null}
+          node_arrow_visible={
+            (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!viewOfData().links[n.inputLinksId[0]].arrow) ? false : true
+
+
+          }
           select_link={() => null}
 
           link_text={link_text}
@@ -3323,10 +3358,15 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
           set_show_nav={set_show_nav}
           set_nav_item_active={set_nav_item_active}
+          set_sub_nav_item_active={set_sub_nav_item_active}
           nodeTooltipsContent={nodeTooltipsContent}
           linkTooltipsContent={linkTooltipsContent}
           set_show_toast={set_show_toast}
           current={false}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+          view={view}
+          set_view={set_view}
         />) : (<></>)
       }
       <ApplyLayoutDialog

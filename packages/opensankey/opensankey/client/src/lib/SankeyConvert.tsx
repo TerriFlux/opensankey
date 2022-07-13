@@ -435,9 +435,6 @@ export const convert_data = (
           label_box_width:110,
         }
       }
-      if (n.display_style.font_family === undefined) {
-        n.display_style.font_family = 'Cormorant'
-      }
       if (n.node_width === undefined) {
         if ( (data as any).node_width) {
           n.node_width = (data as any).node_width
@@ -522,18 +519,6 @@ export const convert_data = (
         n.colorTag = ''
       }
 
-      if (n.iconName === undefined) {
-        n.iconName = 'none'
-      }
-      if (n.iconColor === undefined) {
-        n.iconColor = '#fff'
-      }
-      if (n.iconRatio === undefined) {
-        n.iconRatio = 80
-      }
-      if (n.iconVisible === undefined) {
-        n.iconVisible = true
-      }
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
@@ -573,10 +558,7 @@ export const convert_data = (
       }
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
-      }
-      if (n.style === undefined) {
-        n.style = 'default'
-      }  
+      }      
     }
   )
 
@@ -675,23 +657,7 @@ export const convert_data = (
       if (l.label_visible === undefined) {
         l.label_visible = true
       }
-      
-      if (l.orthogonal_label_position === undefined) {
-        l.orthogonal_label_position = 'default'
-      }
-      if (l.dashed === undefined) {
-        l.dashed = false
-      }
-      if (l.label_position === undefined) {
-        l.label_position = 'middle'
-      }
-      if (l.gradient === undefined) {
-        l.gradient = false
-      }
-      l.label_visible = Boolean(l.label_visible)
-      if (l.style === undefined) {
-        l.style = 'default'
-      }
+
       if (l.color === undefined) {
         l.color = source_node.color
       }
@@ -898,10 +864,8 @@ export const convert_data = (
               tmp = the_display_value.split(',')                
             } else if (the_display_value.includes('...')) {
               tmp = the_display_value.split('...')           
-            } else if (the_display_value.includes('  ')) {
-              tmp = the_display_value.split('  ')    
             } else {
-              tmp = the_display_value.split(' ')          
+              tmp = the_display_value.split('  ')          
             }
             const free_mini = Number(tmp[0].substring(1))
             const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
@@ -972,10 +936,8 @@ export const convert_data = (
           tmp = v.display_value.split(',')                
         } else if (v.display_value.includes('...')) {
           tmp = v.display_value.split('...')           
-        } else if (v.display_value.includes('  ')) {
-          tmp = v.display_value.split('  ')          
         } else {
-          tmp = v.display_value.split(' ')          
+          tmp = v.display_value.split('  ')          
         }
         const free_mini = Number(tmp[0].substring(1))
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
@@ -996,7 +958,7 @@ export const convert_data = (
       if ( !v.extension) {
         v.extension = {}
       }
-      if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
+      if (data_to_convert.fluxTags['flux_types']) {
         if ( v.extension.data_value ) {
           v['tags']['flux_types'] = 'initial_data'
         } else {
