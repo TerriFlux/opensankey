@@ -117,7 +117,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const [agregation_parent_names, set_agregation_parent_names] = useState<string[]>([])
   const [agregation_dimension_names, set_agregation_dimension_names] = useState<string[]>([])
   const [is_agregation, set_is_agregation] = useState(true)
-
+  let isDown = false
+  
   // const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
