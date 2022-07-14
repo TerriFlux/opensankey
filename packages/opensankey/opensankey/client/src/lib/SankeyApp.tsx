@@ -44,6 +44,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [show_nav, set_show_nav] = useState(false)
   const [show_toast, set_show_toast] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
+  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   const [selected_link, set_selected_link] = useState(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const [selected_node, set_selected_node] = useState(default_node)
@@ -53,9 +54,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
   const [radio_selected] = useState<string>('local')
   const [agregation_level, set_agregation_level] = useState(0)
+
   const [show_draw, set_show_draw] = useState(false)
+  const [mode_selection, set_mode_selection] = useState('s')
 
   const [view, set_view] = useState('none')
+  const [style_to_apply, set_style_to_apply] = useState('default')
 
   //Selectionne le premier flux par default si il y en a un 
 
@@ -110,6 +114,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         show_toast={show_toast}
         set_nav_item_active={set_nav_item_active}
         nav_item_active={nav_item_active}
+        set_sub_nav_item_active={set_sub_nav_item_active}
+        sub_nav_item_active={sub_nav_item_active}
         set_selected_node={set_selected_node}
         selected_node={selected_node}
         set_multi_selected_nodes={set_multi_selected_nodes}
@@ -175,6 +181,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         }
         view={view}
         set_view={set_view}
+        mode_selection={mode_selection}
+        set_mode_selection={set_mode_selection}
+        style_to_apply={style_to_apply}
+        set_style_to_apply={set_style_to_apply}
+
+
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
@@ -245,10 +257,15 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           }}
           set_show_nav={set_show_nav}
           set_nav_item_active={set_nav_item_active}
+          set_sub_nav_item_active={set_sub_nav_item_active}
           nodeTooltipsContent={nodeTooltipsContent}
           linkTooltipsContent={linkTooltipsContent}
           set_show_toast={set_show_toast}
           current={true}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+          view={view}
+          set_view={set_view}
         />) : (<></>)
       }
 
