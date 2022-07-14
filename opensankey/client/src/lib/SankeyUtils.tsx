@@ -553,7 +553,7 @@ const create_object = (data: SankeyData, l: string[]) => {
   if (l.length == 0) {
     const obj = Object.create({})
     obj['value'] = 5
-    obj['display_value'] = ''
+    obj['display_value'] = ' '
     obj['tags'] = {}
     obj['extension'] = {}
 
