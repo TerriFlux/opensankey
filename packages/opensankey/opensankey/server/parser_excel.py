@@ -158,7 +158,7 @@ def parse_sankey_energie_csv(
         if row['value'] < 1000:
             sankey_dict['links']['link' + str(id)]['value'][region_name] = {
                 'value'         : round(row['value'], 1),        
-                'display_value' : 'default'
+                'display_value' : ''
             }
         else:
             sankey_dict['links']['link' + str(id)]['value'][region_name] = {
@@ -276,10 +276,10 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
         if len(existing_links) > 0:
             new_link = existing_links[0]
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'default')
+            set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], mfa_input[sheet_name][row][mfa_input[sheet_name][0].index('value')],'')
         else:
             value = {}
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'default')
+            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)],'')
             new_link = {
                 'idLink'   : 'link'+str(row-1),  
                 'idSource' : source_node['idNode'],
