@@ -54,7 +54,7 @@ const SankeyDrawPropTypes = {
 export const SankeyDrawDefaultProps = {
   set_data: () => null,
   select_node: () => null,
-  node_arrow_visible: (n: SankeyNode) => true,
+  node_arrow_visible: () => true,
 
   select_link: () => null,
 
@@ -78,7 +78,6 @@ export const SankeyDrawDefaultProps = {
   current: true,
 
   mode_selection: '',
-  set_mode_selection: () => null,
 
   view: '',
   set_view: () => null
@@ -108,7 +107,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_show_toast,
   current,
   mode_selection,
-  set_mode_selection,
   view, set_view
 
 }) => {
@@ -126,7 +124,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const display_nodes = data.nodes
   const display_links = data.links
-  const handles_visible = [...(new Array(Object.keys(display_links).length).fill(false))]
 
   // const diff=require('deep-diff')
 
@@ -356,7 +353,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (link_value === undefined) {
           return ''
         }
-        const display_value = getLinkValue(data, d.idLink).display_value
+        //const display_value = getLinkValue(data, d.idLink).display_value
         // if (display_value.includes('*') && !data.show_structure) {
         //   return '40, 5'
         // } else {
@@ -562,7 +559,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width_src = +d3.select('#' + l.idSource).attr('width')
         const height_src = +d3.select('#' + l.idSource).attr('height')
         const width_trgt = +d3.select('#' + l.idTarget).attr('width')
-        const height_trgt = +d3.select('#' + l.idTarget).attr('height')
+        // const height_trgt = +d3.select('#' + l.idTarget).attr('height')
 
         const gradient = defGradient.append('defs')
           .append('linearGradient')
@@ -960,10 +957,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     inv_scale.range([0, user_scale])
   }
 
-  const deselect_nodes_and_links = () => {
-    d3.select('#g_nodes').selectAll('.selected_node').attr('class', 'node')
-    d3.select('#g_links').selectAll('path').attr('class', 'link')
-  }
+  // const deselect_nodes_and_links = () => {
+  //   d3.select('#g_nodes').selectAll('.selected_node').attr('class', 'node')
+  //   d3.select('#g_links').selectAll('path').attr('class', 'link')
+  // }
 
   const drag_node = (
     nodes: { [node_id: string]: SankeyNode },
@@ -1036,7 +1033,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
       //si partie haute du noeud ne se situe pas dans le noeud source
       const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-      const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
+      //const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
 
       if (l.orientation == 'hh') {
         //orientation hh
@@ -1076,7 +1073,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const width_src = +d3.select('#' + link.idSource).attr('width')
           const height_src = +d3.select('#' + link.idSource).attr('height')
           const width_trgt = +d3.select('#' + link.idTarget).attr('width')
-          const height_trgt = +d3.select('#' + link.idTarget).attr('height')
+          //const height_trgt = +d3.select('#' + link.idTarget).attr('height')
 
 
           if (link.orientation == 'hh' || link.orientation == 'hv') {
@@ -1468,7 +1465,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         d3.select('#svg').style('height', data.height + 'px')
         drawGrid()
       }
-      const [min_width, min_height] = min_width_and_height()
+      const [, min_height] = min_width_and_height()
       if (data.height > min_height) {
         data.height = min_height
         d3.select('#svg').style('height', data.height + 'px')
@@ -1490,7 +1487,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#svg').style('width', data.width + 'px')
           drawGrid()
         }
-        const [min_width, min_height] = min_width_and_height()
+        const [min_width,] = min_width_and_height()
         if (data.width > min_width) {
           data.width = min_width
           d3.select('#svg').style('width', data.width + 'px')
@@ -2360,7 +2357,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             console.log(d)
             d3.selectAll('#svg #path-flux').remove()
             const n_link = default_link(data)
-            const { nodes, links } = data
+            const { links } = data
             const fsn = (first_selected_node as SankeyNode)
             console.log(data.links)
             const listId: number[] = []
