@@ -86,13 +86,13 @@ if (!window.SankeyToolsStatic) {
   })
 
 } else {
+  const LZString = require('lz-string')
   if (window.sankey.filiere) {
-    localStorage.setItem('data', JSON.stringify(window.sankey.filiere))
-    localStorage.setItem('initial_data', JSON.stringify(window.sankey.filiere))
+    localStorage.setItem('data', LZString.compress(JSON.stringify(window.sankey.filiere)))
+    localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
     console.log(window.sankey.filiere)
   }
 
-  const LZString = require('lz-string')
   const json_data = LZString.decompress(localStorage.getItem('data')) as string
   console.log(json_data)
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
