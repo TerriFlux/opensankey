@@ -2170,7 +2170,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 window.sankey.advanced = (evt.target as HTMLInputElement).checked
                 set_data({ ...data })
               }}
-              label="Options avancées"
+              label="Options de visualisation"
             />) : (<></>)}
         </Container>
 
