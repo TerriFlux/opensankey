@@ -23,6 +23,8 @@ declare const window: Window &
     }
   }
 
+export type selected_type = {'label':string;'value':string}
+
 export const uploadExcelImpl = (
   data: SankeyData,
   set_data: (data: SankeyData) => void,
@@ -538,7 +540,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  type selected_type = {'label':string;'value':string}
+
   const selected : selected_type[] = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   const props = {
     scroll: true,

@@ -1,15 +1,17 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, useState } from 'react'
 import { Row, Col, Form, FormCheck, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
-import parse from 'html-react-parser'
+import parse, { DOMNode } from 'html-react-parser'
+import { Element } from 'domhandler/lib/node'
 import { convert_data } from './SankeyConvert'
 import { set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faNotesMedical, faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
+import { selected_type } from './SankeyMenu'
 
 
 const SankeyEditionPropTypes = {
@@ -30,7 +32,7 @@ declare const window: Window &
       excel: string
       structure: boolean,
       advanced: boolean
-    }
+    } & { [key: string]: SankeyData }
   }
 
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
@@ -54,8 +56,8 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
 }
 
 export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_data: (data: SankeyData) => void) => {
-  const banner_grouptag = Object.entries(fluxTags).filter(([key, tags_group]) => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
-  const allDD = banner_grouptag.map(([, tags_group]) => {
+  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
+  const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
     if (the_tags_group.banner == 'one') {
       return (
@@ -75,8 +77,8 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
           <FormLabel>{the_tags_group.group_name}</FormLabel>
           <MultiSelect
             style={{ color: 'black' }}
-            valueRenderer={(selected: any, _options: any) => {
-              return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun tag sélectionné'
+            valueRenderer={(selected: selected_type[]) => {
+              return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
             }}
             labelledBy={'hello'}
             overrideStrings={{
@@ -117,7 +119,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   })
 
   const addAllDropDownNode = () => {
-    const banner_grouptag = Object.entries(nodeTags).filter(([key, tags_group]) => tags_group.banner !== 'none')
+    const banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
         return (
@@ -137,8 +139,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
             <MultiSelect
               style={{ color: 'black' }}
-              valueRenderer={(selected: any, _options: any) => {
-                return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun tag sélectionné'
+              valueRenderer={(selected:selected_type[]) => {
+                return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
               }}
               labelledBy={'hello'}
               overrideStrings={{
@@ -161,7 +163,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       if (tags_group.banner == 'one') {
-        const selected = Object.entries(tags_group.tags).filter(([k,v])=>v.selected)[0][0]
+        const selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
         return (
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
@@ -257,7 +259,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 value={tags_group[0]} >
                 {tags_group[1].group_name}
               </option>)}
-          {Object.entries(data.fluxTags).filter(([key,tag_group]) => tag_group.banner !== 'none' ).map(
+          {Object.entries(data.fluxTags).filter(([,tag_group]) => tag_group.banner !== 'none' ).map(
             (tags_group, i) =>
               <option
                 key={i}
@@ -269,11 +271,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     )
   }
 
-  const setDiagram = (evt: any) => {
+  const setDiagram = (evt:ChangeEvent) => {
 
     const the_diagram = (evt.target as HTMLInputElement).value as string
     const sous_filieres = window.sankey.sous_filieres
-    const new_data = JSON.parse(JSON.stringify((window.sankey as any)[sous_filieres[the_diagram] as any]))
+    const new_data = JSON.parse(
+      JSON.stringify(
+        window.sankey[sous_filieres[the_diagram]]
+      )
+    )
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
@@ -583,13 +589,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   {Object.keys(window.sankey.help).map(
                     (key, i) => (<Tab title={key} eventKey={key} key={i}>{
                       parse(window.sankey.help[key], {
-                        replace: (domNode: any) => {
-                          if (domNode.attribs && domNode.attribs.id === 'units') {
+                        replace: (domNode:DOMNode  ) => {
+                          interface AFMSankeyData extends SankeyData { 
+                            units_names : string[][],
+                          }
+                          const domElement: Element = domNode as unknown as Element
+                          if (domElement.attribs && domElement.attribs.id === 'units') {
                             return <div>
-                              {(data as any).units_names.slice(2).map(
-                                (units_desc: any, i: number) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>) }
+                              {(data as AFMSankeyData).units_names.slice(2).map(
+                                (units_desc, i) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>) }
                               )}</div>
-                          } else if (domNode.attribs && domNode.attribs.id === 'selectors') {
+                          } else if (domElement.attribs && domElement.attribs.id === 'selectors') {
                             return <ul>
                               {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'Exchanges' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return (<li key={i} >{tags_group[1].group_name}</li>) })}
                             </ul>

@@ -439,7 +439,7 @@ export const updateLayout = (
         const listId : number[] = []
         Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
         const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-        node.idNode = 'idNode'
+        node.idNode = 'idNode'+idNode
         data.nodes[node.idNode]
       } else {
         continue

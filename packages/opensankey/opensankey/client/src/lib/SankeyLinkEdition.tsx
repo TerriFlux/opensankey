@@ -3,7 +3,6 @@ import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, FormControl, Table } f
 import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
-import { getLinkValue } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -12,13 +11,12 @@ const SankeyLinkEditionPropTypes = {
   show: PropTypes.bool.isRequired,
 
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  set_multi_selected_links: PropTypes.func.isRequired
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link, multi_selected_links, set_multi_selected_links, children }
+  { data, set_data, selected_link, multi_selected_links, children }
 ) => {
   const { fluxTags,dataTags } = data
 
@@ -235,13 +233,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-  const labelSticktoLink = () => {
-    let labelSticktoLink = true
-    multi_selected_links.map(d => {
-      labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
-    })
-    return labelSticktoLink
-  }
+  // const labelSticktoLink = () => {
+  //   let labelSticktoLink = true
+  //   multi_selected_links.map(d => {
+  //     labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
+  //   })
+  //   return labelSticktoLink
+  // }
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
     multi_selected_links.map(d => {
