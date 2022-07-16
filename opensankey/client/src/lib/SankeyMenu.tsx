@@ -2044,19 +2044,19 @@ const Menu: FunctionComponent<MenuTypes> = (
       
       } 
       { !data.static_sankey ? (
-        {modalStyleNode}
+        modalStyleNode
       ): (<></>)}
       { !data.static_sankey ? (
-        {modalPreference}
+        modalPreference
       ): (<></>)}
       { !data.static_sankey ? (
-        {modalStyleLink}
+        modalStyleLink
       ): (<></>)}
       { !data.static_sankey ? (
-        {modalShortcut}
+        modalShortcut
       ): (<></>)}
       { !data.static_sankey ? (
-        {modalHelp}
+        modalHelp
       ): (<></>)}
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
