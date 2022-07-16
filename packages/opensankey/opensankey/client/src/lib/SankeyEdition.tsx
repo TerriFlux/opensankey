@@ -98,7 +98,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const { nodeTags, fluxTags, dataTags } = data
   const [diagram, set_diagram] = useState('')
   const [agregation_level, set_agregation_level] = useState(0)
-  const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0
+  const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   //const use_link_colormap = Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [use_level, set_use_level] = useState(false)
   const [show_readme, set_show_readme] = useState(false)
@@ -211,7 +211,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
               if (evt.target.value === 'no_colormap') {
                 Object.values(data.links).forEach(el => {
-                  el.colorParameter = 'local'
+                  el.colorParameter = 'groupTag'
                   el.colorTag = evt.target.value
                 })
                 Object.values(data.nodes).forEach(el => {
