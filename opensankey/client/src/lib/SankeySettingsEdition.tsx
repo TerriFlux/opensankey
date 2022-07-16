@@ -1,8 +1,7 @@
-import React, { ChangeEvent, useState, FunctionComponent } from 'react'
-import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab } from 'react-bootstrap'
+import React, { useState, FunctionComponent } from 'react'
+import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
-import { findMaxLinkValue } from './SankeyUtils'
+import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
 
 const SankeySettingsEditionPropTypes = {

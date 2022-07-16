@@ -1,14 +1,14 @@
 ﻿/* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { ChangeEvent, FunctionComponent, useRef, useEffect, useState } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator } from 'react'
+import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, reorganize_all_input_outputLinksId, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
+import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaProductHunt, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
@@ -29,7 +29,7 @@ export const uploadExcelImpl = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   sheet: string,
-  post_callback: any
+  post_callback: (data:SankeyData)=>void
 ) => {
   const form_data = new FormData()
   form_data.append(
@@ -105,16 +105,11 @@ const MenuPropTypes = {
   set_multi_selected_label: PropTypes.func.isRequired,
   multi_selected_label: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
 
-
-
   set_selected_link: PropTypes.func.isRequired,
   selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
   example_menu: PropTypes.element,
   portfolio_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
-
-  agregation_level: PropTypes.number.isRequired,
-  set_agregation_level: PropTypes.func.isRequired,
 
   view: PropTypes.string.isRequired,
   set_view: PropTypes.func.isRequired,
@@ -133,7 +128,14 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
-export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
+const ArtefactsItemPropTypes = {
+  artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
+  current_path : PropTypes.string.isRequired
+}
+
+export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
+
+export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
   return (
     <>
       { Array.isArray(artefacts_menu)
@@ -152,7 +154,7 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
               <>
                 <NavDropdown key={index} title={key} id={key} >
                   <ArtefactsItem
-                    artefacts_menu={artefacts_menu[key]}
+                    artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
                     current_path={current_path !== '' ? current_path + '/' + key : key}
                   />
                 </NavDropdown>
@@ -165,18 +167,22 @@ export const ArtefactsItem = ({ artefacts_menu, current_path }: any) => {
   )
 }
 
-export const processExample = (server_data: SankeyData) => {
+type layout_type = {
+  layout: SankeyData
+}
+
+export const processExample = (server_data: SankeyData & layout_type ) => {
   // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
   //   server_data.links['link324'].idSource = 'node63'
   //   delete server_data.links['link325']
   // }
-  if ((server_data as any).layout !== undefined) {
+  if (server_data.layout !== undefined) {
     let nb_agregation_level = 0
     Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
     for (let i=1 ; i<=nb_agregation_level ; i++) {
-      set_nodes_level((server_data as any).layout,(server_data as any).layout.nodes,i,false)
+      set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
-    updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
+    updateLayout(server_data, server_data.layout)
     localStorage.setItem('initial_data',JSON.stringify(server_data))
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
@@ -194,12 +200,31 @@ export const processExample = (server_data: SankeyData) => {
   return 0
 }
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label,callback}: any) => {
+const ExempleMenuDictTypes = PropTypes.objectOf(PropTypes.element.isRequired).isRequired
+type ExempleMenuTypes = InferProps<typeof ExempleMenuDictTypes>
+
+const ExempleItemPropTypes = {
+  exemple_menu : PropTypes.oneOf([PropTypes.element.isRequired,ExempleMenuDictTypes]).isRequired, 
+  url_prefix : PropTypes.string.isRequired, 
+  data : PropTypes.shape(SankeyDataPropTypes).isRequired, 
+  set_data : PropTypes.func.isRequired, 
+  current_path : PropTypes.string.isRequired, 
+  set_multi_selected_nodes : PropTypes.func.isRequired, 
+  set_multi_selected_links: PropTypes.func.isRequired, 
+  set_multi_selected_label: PropTypes.func.isRequired, 
+  callback: PropTypes.func.isRequired
+}
+
+type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
+
+
+
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, set_multi_selected_nodes, set_multi_selected_links,set_multi_selected_label,callback}: ExempleItemTypes) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
         ? exemple_menu.map( (item,index)=> {
-          let the_callback = (server_data : SankeyData)=> 0
+          let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (item.includes('.xlsx')) {
             the_callback = callback
@@ -223,7 +248,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
               <>
                 <NavDropdown key={index} title={key} id={key} >
                   <ExempleItem
-                    exemple_menu={exemple_menu[key]}
+                    exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
                     url_prefix={url_prefix}
                     data={data}
                     set_data={set_data}
@@ -256,8 +281,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_multi_selected_links, multi_selected_links,
     set_selected_link, selected_link,
     example_menu, portfolio_menu, url_prefix,
-    agregation_level,
-    set_agregation_level,
     show_toast,
     set_show_toast,
     view, set_view,
@@ -287,7 +310,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  const display_nodes = data.nodes
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
     if (!n.dimensions) {
@@ -329,7 +351,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const _load_json = useRef<HTMLInputElement>(null)
-  const _load_simple_excel = useRef<HTMLInputElement>(null)
 
   const [processing] = useState(false)
 
@@ -384,7 +405,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const svg = window.d3.select('#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
-    svg.attr('viewBox', [0, 0, data.width, data.height] as any)
+    svg.attr('viewBox', [0, 0, data.width, data.height])
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -436,7 +457,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
   }
-  const [checked, setChecked] = useState(false)
+  const setChecked = useState(false)[1]
 
 
   //Ajoute un nouveau flux et le sélectionne
@@ -517,7 +538,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-  const selected = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  type selected_type = {'label':string;'value':string}
+  const selected : selected_type[] = multi_selected_nodes.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   const props = {
     scroll: true,
     backdrop: false,
@@ -530,8 +552,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
         <MultiSelect
-          valueRenderer={(selected: any) => {
-            return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun noeud sélectionné'
+          valueRenderer={(selected: selected_type[]) => {
+            return selected.length ? selected.map(({ label })=> label + ', ') : 'Aucun noeud sélectionné'
           }}
           options={INITIAL_OPTIONS}
           value={selected}
@@ -558,8 +580,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
         <MultiSelect
-          valueRenderer={(selected: any) => {
-            return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun label sélectionné'
+          valueRenderer={(selected: selected_type[]) => {
+            return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
           }}
           options={INITIAL_OPTIONS_label}
           value={selected_label}
@@ -590,8 +612,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     const DD = (
       <div id='DD_multi_links'>
         <MultiSelect
-          valueRenderer={(selected: any) => {
-            return selected.length ? selected.map(({ label }: any) => label + ', ') : 'Aucun flux sélectionné'
+          valueRenderer={ (selected :selected_type[]) => {
+            return selected.length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
@@ -813,7 +835,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               return (e: ProgressEvent<FileReader>) => {
                 const result = String((e.target as FileReader).result)
                 const js = JSON.parse(result)
-                js.icons.map((d: any) => {
+                type name_type = {name:string}   
+                type icon_type = {paths:string[]}   
+                type type1 = {
+                  properties: name_type
+                  icon: icon_type
+                }
+                js.icons.map((d : type1) => {
                   const name = d.properties.name as string
                   data.icon_catalog[name] = d.icon.paths[0]
                 })
@@ -845,33 +873,33 @@ const Menu: FunctionComponent<MenuTypes> = (
         >Expert</Button>
       </ButtonGroup>
       <Form>
-        <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
           preferenceCheck('MEP')
           set_data({ ...data })
         }} />
         <Form.Check checked disabled type="checkbox" label="Noeuds" />
-        <Form.Check checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {
           preferenceCheck('EN')
           set_data({ ...data })
         }} />
         <Form.Check checked disabled type="checkbox" label="Flux" />
-        <Form.Check checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
           preferenceCheck('EF')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
           preferenceCheck('ED')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
           preferenceCheck('Vis')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={evt => {
+        <Form.Check checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
           preferenceCheck('Leg')
           set_data({ ...data })
         }} />
@@ -946,7 +974,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         <Row >
           <Col xs={1}>
-            <Button size="sm" onClick={(evt) => {
+            <Button size="sm" onClick={() => {
               const new_style = default_node(data)
               new_style.name = 'New Style'
               const new_id = 'style_node_' + String(new Date().getTime())
@@ -1302,7 +1330,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_vert = 'haut'
                         set_data({ ...data })
                       }}
@@ -1317,7 +1345,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_vert = 'milieu'
                         set_data({ ...data })
                       }}
@@ -1331,7 +1359,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_vert = 'bas'
                         set_data({ ...data })
                       }}
@@ -1350,7 +1378,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_horiz = 'gauche'
                         set_data({ ...data })
                       }}
@@ -1364,7 +1392,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_horiz = 'milieu'
                         set_data({ ...data })
                       }}
@@ -1378,7 +1406,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
                       }
 
-                      onChange={evt => {
+                      onChange={() => {
                         data.style_node[selected_style_node].display_style.label_horiz = 'droite'
                         set_data({ ...data })
                       }}
@@ -1514,7 +1542,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         <Row >
           <Col xs={1}>
-            <Button size="sm" onClick={(evt) => {
+            <Button size="sm" onClick={() => {
               const new_style = default_link(data)
               new_style.idLink = 'New Style'
               const new_id = 'style_link_' + String(new Date().getTime())
@@ -1705,7 +1733,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value='hh'
                         checked={data.style_link[selected_style_link].orientation == 'hh'}
                         onChange={
-                          evt => {
+                          () => {
                             data.style_link[selected_style_link].orientation = 'hh'
                             set_data({ ...data })
                           }
@@ -1719,7 +1747,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value='vv'
                         checked={data.style_link[selected_style_link].orientation == 'vv'}
                         onChange={
-                          evt => {
+                          () => {
                             data.style_link[selected_style_link].orientation == 'vv'
                             set_data({ ...data })
                           }
@@ -1733,7 +1761,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value='vh'
                         checked={data.style_link[selected_style_link].orientation == 'vh'}
                         onChange={
-                          evt => {
+                          () => {
                             data.style_link[selected_style_link].orientation = 'vh'
                             set_data({ ...data })
                           }
@@ -1747,7 +1775,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         value='hv'
                         checked={data.style_link[selected_style_link].orientation == 'hv'}
                         onChange={
-                          evt => {
+                          () => {
                             data.style_link[selected_style_link].orientation = 'hv'
                             set_data({ ...data })
                           }
@@ -1766,7 +1794,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       label='Label en noir'
                       checked={data.style_link[selected_style_link].text_color == 'black'}
                       onChange={
-                        (evt) => {
+                        () => {
                           data.style_link[selected_style_link].text_color = 'black'
                           set_data({ ...data })
                         }
@@ -1794,7 +1822,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       label='Label en couleur'
                       checked={data.style_link[selected_style_link].text_color == 'color'}
                       onChange={
-                        (evt) => {
+                        () => {
                           data.style_link[selected_style_link].text_color = data.style_link[selected_style_link].color
                           set_data({ ...data })
                         }
@@ -2026,8 +2054,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Form.Check
               type="switch"
               checked={window.sankey.advanced}
-              onClick={(evt: any) => {
-                window.sankey.advanced = evt.target.checked
+              onClick={evt => {
+                window.sankey.advanced = (evt.target as HTMLInputElement).checked
                 set_data({ ...data })
               }}
               label="Options de visualisation"
@@ -2058,7 +2086,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           const result_data = JSON.parse(result)
                           Object.assign(new_data, result_data)
                           if (result_data.version === undefined) {
-                            (new_data.version as any) = undefined
+                            (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
                           set_data(new_data)
@@ -2126,8 +2154,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Form.Check
               type="switch"
               checked={window.sankey.advanced}
-              onClick={(evt: any) => {
-                window.sankey.advanced = evt.target.checked
+              onClick={ evt => {
+                window.sankey.advanced = (evt.target as HTMLInputElement).checked
                 set_data({ ...data })
               }}
               label="Options avancées"
@@ -2147,23 +2175,29 @@ const Menu: FunctionComponent<MenuTypes> = (
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
               <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-                const ev = document as any
+                const ev = document
                 const tmp = { key: 'p' }
-                ev.onkeydown(tmp)
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
               }}>
                 <FaPlay />
               </Button>
               <Button variant={'outline-success'} onClick={() => {
-                const ev = document as any
+                const ev = document
                 const tmp = { key: 'ArrowUp' }
-                ev.onkeydown(tmp)
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
               }}>
                 <FaBackward />
               </Button>
               <Button variant={'outline-warning'} onClick={() => {
-                const ev = document as any
+                const ev = document
                 const tmp = { key: 'ArrowDown' }
-                ev.onkeydown(tmp)
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
               }}>
                 <FaForward />
               </Button>
@@ -2375,6 +2409,37 @@ const Menu: FunctionComponent<MenuTypes> = (
                         </Col>
                         <Col xs={3}>
                         </Col>
+                      </Form.Group>
+                      <Form.Group as={Row} >
+                        <Col xs={2} >
+                          <FormCheck
+                            disabled={multi_selected_nodes.length == 0}
+                            type='checkbox'
+                            label='Parent'
+                            checked={multi_selected_nodes.length != 0 && parent_visible}
+                            onChange={
+                              evt => set_parent_visible(evt.target.checked)
+                            }
+                          />
+                        </Col>
+                        { parent_visible ? (
+                          <Col xs={10}>
+                            <Form.Select 
+                              onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
+                                if ( changeEvent.target.value == 'none' ) {
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 1)
+                                } else {
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
+                                  multi_selected_nodes.forEach(n=>n.dimensions['Primaire'].level = 2)
+                                }
+                              }}>
+                              <option key={0} value='none' selected={multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
+                              {
+                                Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.length != 0 && multi_selected_nodes[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
+                              }
+                            </Form.Select>
+                          </Col>) : (<></>) }
                       </Form.Group>
 
 
@@ -3400,7 +3465,16 @@ const Menu: FunctionComponent<MenuTypes> = (
   )
 }
 
-const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: any) => {
+const ApplyLayoutDialogPropTypes = {
+  show_apply_layout : PropTypes.bool.isRequired,
+  set_show_apply_layout: PropTypes.func.isRequired, 
+  sankey_data : SankeyDataPropTypes,
+  set_sankey_data : PropTypes.func.isRequired
+}
+
+type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
+
+const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   let file_layout: Blob[] | undefined
   return (
     <Modal
@@ -3473,7 +3547,7 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
-  const [sheet, set_sheet] = useState('results')
+  const [sheet] = useState('results')
 
   return (
     <Modal

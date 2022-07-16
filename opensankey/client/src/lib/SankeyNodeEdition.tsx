@@ -10,7 +10,6 @@ import { default_link } from './SankeyUtils'
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
   radio_selected: PropTypes.string.isRequired,
   set_multi_selected_nodes: PropTypes.func.isRequired,
   multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
@@ -20,7 +19,7 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,
-  selected_node, radio_selected, set_multi_selected_nodes, multi_selected_nodes, children }) => {
+  radio_selected, set_multi_selected_nodes, multi_selected_nodes, children }) => {
   const { nodeTags } = data
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
@@ -773,7 +772,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         idLink = idLink+1
                         reorganize_node_outputLinksId(data.nodes[new_link.idSource], display_nodes, display_links)
                       })
-                      new_output_nodes.forEach(idTarget => {
+                      new_output_nodes.forEach(() => {
                         const new_link = default_link(data)
                         new_link.idSource = d.idNode
                         new_link.idLink = 'link' + idLink

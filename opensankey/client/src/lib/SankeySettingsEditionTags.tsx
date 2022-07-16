@@ -2,7 +2,7 @@ import React, { useState, FunctionComponent } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, Table, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { findMaxLinkValue } from './SankeyUtils'
-import { SankeyDataPropTypes, SankeyLinkValueDict, TagsGroup } from './types'
+import { SankeyDataPropTypes, SankeyLinkValue, SankeyLinkValueDict, TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
 import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
@@ -392,7 +392,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
     const dataTagsArray = Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
     Object.values(data.links).forEach(
       l => {
-        addDataTags(dataTagsArray, l.value, 0)
+        addDataTags(dataTagsArray, l.value as unknown as {[key:string] : SankeyLinkValue}, 0)
       }
     )
 
