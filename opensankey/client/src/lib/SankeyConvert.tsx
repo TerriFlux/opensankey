@@ -296,6 +296,98 @@ export const convert_data = (
   if (!data_to_convert.accordeonToShow) {
     data_to_convert.accordeonToShow = ['MEP']
   }
+  if (!data_to_convert.style_node) {
+    data_to_convert.style_node = {
+      'default': {
+        name: 'par défaut',
+        idNode: 'default',
+        type: 'sector',
+        display: true,
+        node_visible: true,
+        shape_visible: true,
+        label_visible: true,
+        node_width: 40,
+        node_height: 40,
+        iconName: 'none',
+        iconColor: '#fff',
+        iconRatio: 80,
+        iconVisible: true,
+
+        color: '#a9a9a9',
+        colorParameter: 'local',
+        position: 'absolute',
+        x: 100,
+        y: 100,
+        inputLinksId: [],
+        outputLinksId: [],
+        show_value: false,
+        tags: {},
+        colorTag: '',
+        dimensions: {},
+        style: '',
+        display_style: {
+          font_family: 'Cormorant',
+          font_size: 14,
+          uppercase: false,
+          bold: false,
+          italic: false,
+          unit: false,
+          filter: 0,
+          filter_label: 0,
+          global_curvature: 0.5,
+          null_flux: false,
+          label_vert: 'bas',
+          label_horiz: 'milieu',
+          label_box_width: 110,
+        }
+      }
+    }
+  }
+  if (!data_to_convert.style_link) {
+    data_to_convert.style_link = {
+      'default': {
+        idLink: 'par défaut',
+        idSource: 'None',
+        idTarget: 'None',
+
+        // type of link
+        recycling: false,
+        orientation: 'hh',
+        arrow: true,
+
+        // display_attribute
+        label_position: 'middle',
+        orthogonal_label_position: 'middle',
+        label_on_path: true,
+        label_visible: true,
+        text_color: 'black',
+        color: '#a9a9a9',
+        colorParameter: '',
+        colorTag: '',
+        // Ajout
+        gradient: false,
+        dashed:false,
+
+        value: {},
+
+        tooltip_text: '',
+
+        // geometry
+        x_label: 0,
+        y_label: 0,
+
+        left_horiz_shift: 0,
+        right_horiz_shift: 0,
+        vert_shift: 0,
+        shift_gap: 0,
+
+        curvature: 0.5,
+        curved: false,
+        style:''
+      }
+    }
+  }
+
 
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
