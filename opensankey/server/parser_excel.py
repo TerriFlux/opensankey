@@ -538,7 +538,7 @@ def save_simple_excel(
             tags = sankey_data['nodeTags'][tag_name]['tags'] 
             tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
             nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
-        nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+        #nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
         #row = row+1    
 
 
