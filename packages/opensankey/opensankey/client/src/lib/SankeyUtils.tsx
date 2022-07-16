@@ -10,7 +10,7 @@ declare const window: Window &
 
 export const addDataTags = (
   dataTags: TagsGroup[],
-  v: any,
+  v: {[key:string] : SankeyLinkValue},
   depth: number
 ) => {
   const dataTag = Object.values(dataTags)[depth]
@@ -18,13 +18,13 @@ export const addDataTags = (
   for (const i in listKey) {
     if (depth === dataTags.length - 1) {
       v[listKey[i]] = {
-        value: v.value,
-        display_value: v.display_value,
+        value: v.value as unknown as number,
+        display_value: v.display_value as unknown as string,
         tags: {},
         extension: {}
       }
     } else {
-      addDataTags(dataTags, v[listKey[i]], depth + 1)
+      addDataTags(dataTags, v[listKey[i]] as unknown as {[key:string] : SankeyLinkValue}, depth + 1)
     }
   }
 }
@@ -842,8 +842,8 @@ export const hideNullFluxNodes = (
 
     //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
     //Voir avec julien 
-    // if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
-    //   nodes[node.idNode].node_visible = false
-    // }
+    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+      nodes[node.idNode].node_visible = false
+    }
   })
 }

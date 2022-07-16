@@ -1,8 +1,7 @@
-import React, { FunctionComponent, useState, useEffect } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
+import React, { FunctionComponent, useState, useEffect, Validator } from 'react'
+import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
-import { addAllDropDownFlux } from './SankeyEdition'
 import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
@@ -10,7 +9,7 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Col, Dropdown, Form, FormLabel } from 'react-bootstrap'
+import { Dropdown } from 'react-bootstrap'
 import * as d3 from 'd3'
 import GoogleFontLoader from 'react-google-font-loader'
 
@@ -53,7 +52,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [multi_selected_label, set_multi_selected_label] = useState([])
 
   const [radio_selected] = useState<string>('local')
-  const [agregation_level, set_agregation_level] = useState(0)
 
   const [show_draw, set_show_draw] = useState(false)
   const [mode_selection, set_mode_selection] = useState('s')
@@ -92,7 +90,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         example_menu={<>
           <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
-            exemple_menu={exemple_menu}
+            exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
             url_prefix=''
             data={data}
             set_data={set_data}
@@ -104,7 +102,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           /></>}
         portfolio_menu={<>
           <ArtefactsItem
-            artefacts_menu={artefacts_menu}
+            artefacts_menu={artefacts_menu as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
             current_path={''}
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
@@ -126,10 +124,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         multi_selected_label={multi_selected_label}
         set_multi_selected_label={set_multi_selected_label}
 
-
         selected_link={selected_link}
-        agregation_level={agregation_level}
-        set_agregation_level={set_agregation_level}
         url_prefix=''
         settings_edition={
           <SankeySettingsEdition
@@ -141,7 +136,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           <SankeyNodeEdition
             data={data}
             set_data={set_data}
-            selected_node={selected_node}
             radio_selected={radio_selected}
             set_multi_selected_nodes={set_multi_selected_nodes}
             multi_selected_nodes={multi_selected_nodes}
