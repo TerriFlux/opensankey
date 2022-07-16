@@ -21,7 +21,7 @@
 /* @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,600,800,700);
 @import url(http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700); */
 
-@font-face {
+/* @font-face {
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
@@ -56,7 +56,7 @@
   font-style: normal;
   font-weight: 700;
   src: local('Open Sans Condensed Bold'), local('OpenSans-CondensedBold'), url('fonts/OpenSansCondensed700.woff') format('woff');
-}
+} */
 
 
 /* BASIC CONFIGURATION */
