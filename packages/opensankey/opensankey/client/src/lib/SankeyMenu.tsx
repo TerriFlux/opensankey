@@ -2043,11 +2043,21 @@ const Menu: FunctionComponent<MenuTypes> = (
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
       
       } 
-      {modalStyleNode}
-      {modalPreference}
-      {modalStyleLink}
-      {modalShortcut}
-      {modalHelp}
+      { !data.static_sankey ? (
+        {modalStyleNode}
+      ): (<></>)}
+      { !data.static_sankey ? (
+        {modalPreference}
+      ): (<></>)}
+      { !data.static_sankey ? (
+        {modalStyleLink}
+      ): (<></>)}
+      { !data.static_sankey ? (
+        {modalShortcut}
+      ): (<></>)}
+      { !data.static_sankey ? (
+        {modalHelp}
+      ): (<></>)}
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
