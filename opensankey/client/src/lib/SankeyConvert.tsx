@@ -388,7 +388,6 @@ export const convert_data = (
     }
   }
 
-
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
