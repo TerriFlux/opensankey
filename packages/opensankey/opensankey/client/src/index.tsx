@@ -89,12 +89,11 @@ if (!window.SankeyToolsStatic) {
   if (window.sankey.filiere) {
     localStorage.setItem('data', JSON.stringify(window.sankey.filiere))
     localStorage.setItem('initial_data', JSON.stringify(window.sankey.filiere))
+    console.log(window.sankey.filiere)
   }
 
   const LZString = require('lz-string')
   const json_data = LZString.decompress(localStorage.getItem('data')) as string
-  console.log(json_data)
-  // const json_data = localStorage.getItem('data')
   console.log(json_data)
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
