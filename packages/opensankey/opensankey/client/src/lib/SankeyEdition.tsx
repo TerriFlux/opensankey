@@ -486,87 +486,88 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           </Form.Group>
         </Row>
       </div>
-      <Row>
-        <FormGroup as={Col} lg='auto'>
-          <ButtonGroup >
+      { !data.static_sankey ? (
+        <Row>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
 
-            {//Boutons Sélection classique des éléments 
-            }
-            <OverlayTrigger
-              key={'tooltip-selection'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
+              {//Boutons Sélection classique des éléments 
               }
-            >
-              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                <FontAwesomeIcon icon={faArrowPointer} />
-              </Button>
-            </OverlayTrigger>
+              <OverlayTrigger
+                key={'tooltip-selection'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
+                }
+              >
+                <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                  <FontAwesomeIcon icon={faArrowPointer} />
+                </Button>
+              </OverlayTrigger>
 
 
-            <OverlayTrigger
-              key={'tooltip-ajoutNode'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
-              }
-            >
-              <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
-                {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
-                <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
-                  <g>
-                    <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
+              <OverlayTrigger
+                key={'tooltip-ajoutNode'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
+                }
+              >
+                <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
+                  {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
+                  <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
+                    <g>
+                      <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
                  3.348-454.125 0.193c-392.517 0.167-454.895-0.012-459.796-1.293zM496.144 814.818c-15.479-4.95-28.028-18.365-32.372-34.606-1.11-4.15-1.381-26.438-1.391-114.17l-0.012-109.014-110.052-0.304c-109.337-0.302-110.094-0.318-116.493-2.509-39.255-13.44-46.541-64.48-12.521-87.712 2.491-1.701 7.313-4.206 10.715-5.565l6.186-2.472 222.13-0.561 0.276-111.093c0.275-110.769 
                  0.282-111.111 2.488-116.938 11.501-30.393 48.064-42.012 74.593-23.704 6.832 4.715 14.378 14.323 17.681 22.511l2.422 6.006 0.552 223.218 222.13 0.561 5.968 2.256c13.383 5.060 24.816 16.207 29.604 28.862 2.74 7.243 3.797 20.512 2.22 27.868-3.593 16.757-16.519 30.98-33.412 36.764-6.4 2.191-7.156 2.207-116.493 2.509l-110.052 0.304-0.012 109.014c-0.012 87.732-0.282 
                  110.020-1.391 114.17-4.393 16.425-16.977 29.757-32.711 34.655-8.243 2.566-21.94 2.544-30.049-0.050z'></path>
-                  </g>
+                    </g>
                   
-                </svg>
+                  </svg>
 
-              </Button>
-            </OverlayTrigger>
-            <OverlayTrigger
-              key={'tooltip-Noeud+Flux'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
-              }
-            >
-              <Button variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
-                {/* Ajout Noeud+Flux */}
-                <svg viewBox='250 250 500 500' height='20px' width='50px'>
-                  <g>
-                    <path style={{fill:(mode_selection == 'nl')?'white':'#ffce67'}} d='M133.932 420.321c-66.29 0-120.529 43.665-120.529 97.030s54.239 97.030 120.529 97.030c44.596 0 83.161-19.408
+                </Button>
+              </OverlayTrigger>
+              <OverlayTrigger
+                key={'tooltip-Noeud+Flux'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
+                }
+              >
+                <Button variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
+                  {/* Ajout Noeud+Flux */}
+                  <svg viewBox='250 250 500 500' height='20px' width='50px'>
+                    <g>
+                      <path style={{fill:(mode_selection == 'nl')?'white':'#ffce67'}} d='M133.932 420.321c-66.29 0-120.529 43.665-120.529 97.030s54.239 97.030 120.529 97.030c44.596 0 83.161-19.408
                      104.862-48.516l473.676-0.008v-97.022h-473.676c-21.692-29.116-60.266-48.516-104.862-48.516zM133.932 575.566c-39.776
                       0-72.314-26.194-72.314-58.215s32.538-58.215 72.314-58.215c39.776 0 72.314 26.194 72.314 58.215 0.010 32.013-32.538
                        58.215-72.314 58.215zM899.291 483.386v-63.065h-84.372v63.065h-78.338v67.923h78.338v63.065h84.372v-63.065h78.338v-67.923z'></path>
-                  </g>
+                    </g>
 
-                </svg>
+                  </svg>
 
 
-              </Button>
-            </OverlayTrigger>
+                </Button>
+              </OverlayTrigger>
 
-            <OverlayTrigger
-              key={'tooltip-liaison'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
-              }
-            >
-              <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                {/* Ajout liaison entre noeud */}
+              <OverlayTrigger
+                key={'tooltip-liaison'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
+                }
+              >
+                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                  {/* Ajout liaison entre noeud */}
 
-                <FontAwesomeIcon icon={faShareNodes} />
-              </Button>
-            </OverlayTrigger>
-          </ButtonGroup>
-        </FormGroup>
+                  <FontAwesomeIcon icon={faShareNodes} />
+                </Button>
+              </OverlayTrigger>
+            </ButtonGroup>
+          </FormGroup>
 
-      </Row>
-
+        </Row>
+      ) : (<></>)}
 
       {window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
         <Modal
