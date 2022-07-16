@@ -293,6 +293,9 @@ export const convert_data = (
   if (!data_to_convert.nodeTags) {
     data_to_convert.nodeTags = {}
   }
+  if (!data_to_convert.accordeonToShow) {
+    data_to_convert.accordeonToShow = ['MEP']
+  }
 
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
