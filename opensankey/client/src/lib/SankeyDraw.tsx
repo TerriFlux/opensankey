@@ -78,6 +78,7 @@ export const SankeyDrawDefaultProps = {
   current: true,
 
   mode_selection: '',
+  set_mode_selection: () => null,
 
   view: '',
   set_view: () => null
