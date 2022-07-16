@@ -520,12 +520,15 @@ def save_simple_excel(
             if level < 2:
                 continue
             parent_id = node['dimensions']['Primaire']['parent_name']
-            parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+            parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
         else:
             continue
-        parent_row = [i for i in range(1,len(nodes)) if nodes[i][nodes_cols.index(NODES_NODE)] == parent_name][0]
+        parent_rows = [j for j in range(1,len(nodes)) if nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
+        if len(parent_rows) == 0:
+            continue
+        parent_row = parent_rows[0]
         nodes.insert(parent_row+1,[""] * nb_cols_nodes)
-        row = parent_row
+        row = parent_row+1
         nodes[row][nodes_cols.index(NODES_LEVEL)] = node['dimensions']['Primaire']['level']
         nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
         #nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
