@@ -7,6 +7,7 @@ import { render } from 'react-dom'
 import SankeyApp from './lib/SankeyApp'
 import { convert_data } from './lib/SankeyConvert'
 import { default_sankey_data } from './lib/SankeyUtils'
+import LZString from 'lz-string'
 
 window.React = React
 
@@ -35,8 +36,7 @@ if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
     window.sankey = {}
   }
-  const LZString = require('lz-string')
-  const json_data = LZString.decompress(localStorage.getItem('data')) as string
+  const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
   // const json_data = localStorage.getItem('data')
 
   if (json_data !== null && json_data != '' && json_data!='null') {
@@ -86,14 +86,13 @@ if (!window.SankeyToolsStatic) {
   })
 
 } else {
-  const LZString = require('lz-string')
   if (window.sankey.filiere) {
     localStorage.setItem('data', LZString.compress(JSON.stringify(window.sankey.filiere)))
     localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
     console.log(window.sankey.filiere)
   }
 
-  const json_data = LZString.decompress(localStorage.getItem('data')) as string
+  const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
   console.log(json_data)
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
