@@ -4561,7 +4561,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         e.preventDefault()
         //va chercher les différences sauvegardées dans le localStorage
         // const differences = JSON.parse(localStorage.getItem('diff') as string)
-        //const LZString = require('lz-string')
 
         const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
         const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
@@ -4723,15 +4722,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
   const get_diff = () => {
     const diff = require('deep-diff')
-    const LZString = require('lz-string')
-    const old_data_str = LZString.decompress(localStorage.getItem('data')) as string
+    const old_data_str = LZString.decompress(localStorage.getItem('data') as string) as string
     //Si data existe dans le localStorage 
     if (old_data_str != '') {
       //On le parse en JSON
       const old_data = JSON.parse(old_data_str)
       //on va chercher les anciennes différences
       // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
-      const old_diff_str = LZString.decompress(localStorage.getItem('diff')) as string
+      const old_diff_str = LZString.decompress(localStorage.getItem('diff') as string) as string
       let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
       const difference = diff(data, old_data)
 
@@ -4968,7 +4966,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
       if (current) {
         get_diff()
-        const LZString = require('lz-string')
         const cmp = LZString.compress(JSON.stringify(data))
         localStorage.setItem('data', cmp)
       }
