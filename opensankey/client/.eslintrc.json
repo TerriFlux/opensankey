@@ -25,6 +25,7 @@
     "rules": {
         "linebreak-style": 0,
         "@typescript-eslint/explicit-module-boundary-types" : "off",
+        "@typescript-eslint/no-explicit-any" : 2,
         "indent": [
             "error",
             2
