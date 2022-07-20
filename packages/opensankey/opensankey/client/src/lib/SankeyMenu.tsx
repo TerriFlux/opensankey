@@ -450,6 +450,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_multi_selected_label([])
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
+    localStorage.removeItem('initial_data')
     set_selected_style_node('default')
     set_selected_style_link('default')
     set_view('none')

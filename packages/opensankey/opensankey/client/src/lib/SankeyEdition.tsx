@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormCheck, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
@@ -101,8 +101,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const [diagram, set_diagram] = useState('')
   const [agregation_level, set_agregation_level] = useState(0)
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
-  //const use_link_colormap = Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
-  const [use_level, set_use_level] = useState(false)
   const [show_readme, set_show_readme] = useState(false)
 
   let nb_agregation_level = 0
@@ -363,7 +361,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             style={{
               width: '250px',
               marginLeft: '0px',
-              display: (banner_grouptag.length > 0) ? 'block' : 'none'
+              display: (banner_grouptag.length > 0 || nb_agregation_level > 1) ? 'block' : 'none'
             }} lg="auto">
             {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
@@ -373,6 +371,39 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_basic, color: '#6c757d' }}>Sélection des données</FormLabel>
                 <Form.Control placeholder="Pas de sélection" style={{ opacity: opacity_basic, color: '#6c757d' }} disabled /></>)
             }
+            { nb_agregation_level > 1 ? (
+              <><FormLabel>Niveau de détail</FormLabel>
+                <Form.Select id="selectionNode"
+                  style={{ color: 'black'}}
+                  onChange={
+                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                      if (evt.target.value === '') {
+                        return
+                      }
+                      if (evt.target.value === 'initial') {
+                        const json_data = localStorage.getItem('initial_data')
+                        if (json_data) {
+                          const initial_data = JSON.parse(json_data as string)
+                          Object.values(data.nodes).forEach(n => {
+                            n.display = initial_data.nodes[n.idNode].display
+                            n.node_visible = initial_data.nodes[n.idNode].node_visible
+                          })
+                          //initial_data.static_sankey = true
+                          set_data({ ...data })
+                        }
+                      }
+                      for (let level = 1; level <= +evt.target.value + 1; level++) {
+                        set_nodes_level(data, data.nodes, level)
+                      }
+                      set_agregation_level(+evt.target.value)
+                      set_data({ ...data })
+                    }
+                  }
+                  value={agregation_level}
+                >{ localStorage.getItem('initial_data') ? (
+                    <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
+                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
+                </Form.Select></>) : (<></>)}
           </Form.Group>
           <Col lg="auto">
             {additional_selector ? (
@@ -384,10 +415,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           }
 
           <Form.Group as={Col}
-            style={{ color: 'black', marginLeft: '5px', width: '250px', display: (window.sankey.advanced === true && (node_filter || nb_agregation_level > 1)) ? 'block' : 'none' }}
+            style={{ color: 'black', marginLeft: '5px', width: '250px', display: (window.sankey.advanced === true && node_filter) ? 'block' : 'none' }}
             lg="auto"
           >
-            {(window.sankey.advanced === true && (node_filter || nb_agregation_level > 1)) ? (
+            {(window.sankey.advanced === true && node_filter) ? (
               <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>Filtrage des noeuds</b></FormLabel>
             ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>Filtrage des noeuds</FormLabel>)}
 
@@ -396,51 +427,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             ) : (<>
               <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
             }
-            <FormCheck
-              type='switch'
-              label='Niveau de détail'
-              disabled={nb_agregation_level < 2}
-              style={{ opacity: window.sankey.advanced === true ? '1' : '0' }}
-              checked={use_level === true}
-              onChange={evt => {
-                if (evt.target.checked) {
-                  set_nodes_level(data, data.nodes, agregation_level + 1)
-
-                  set_data({ ...data })
-                } else {
-                  const json_data = localStorage.getItem('initial_data')
-                  if (json_data) {
-                    const initial_data = JSON.parse(json_data as string)
-                    Object.values(data.nodes).forEach(n => {
-                      n.display = initial_data.nodes[n.idNode].display
-                      n.node_visible = initial_data.nodes[n.idNode].node_visible
-                    })
-                    //initial_data.static_sankey = true
-                    set_data({ ...data })
-                  }
-                }
-                set_use_level(evt.target.checked)
-              }}
-            />
-            <Form.Select id="selectionNode"
-              style={{ color: 'black', opacity: window.sankey.advanced === true && use_level && nb_agregation_level > 1 ? '1' : '0' }}
-              disabled={!use_level}
-              onChange={
-                (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  if (evt.target.value === '') {
-                    return
-                  }
-                  for (let level = 1; level <= +evt.target.value + 1; level++) {
-                    set_nodes_level(data, data.nodes, level)
-                  }
-                  set_agregation_level(+evt.target.value)
-                  set_data({ ...data })
-                }
-              }
-              value={agregation_level}
-            >
-              {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
-            </Form.Select>
           </Form.Group>
 
           {//----------------------------
