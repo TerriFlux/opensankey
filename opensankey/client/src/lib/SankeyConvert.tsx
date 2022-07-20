@@ -310,6 +310,9 @@ export const convert_data = (
   if (!data_to_convert.accordeonToShow) {
     data_to_convert.accordeonToShow = ['MEP']
   }
+  if (!data_to_convert.icon_catalog) {
+    data_to_convert.icon_catalog = {}
+  }
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {

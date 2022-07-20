@@ -266,7 +266,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                 pass 
         link_data_tags= []
         for dataTag in dataTags:
-            link_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
+            if dataTag in columns:
+                link_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
         link_flux_tags= []
         for fluxTag in fluxTags:
             if fluxTag == 'flux_types':
@@ -310,7 +311,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 node_visible = 1
             else:
                 node_visible = 0                
-            if mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
+            if not NODE_TYPE in nodes_cols or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
                 node_type = 'sector' 
             else: 
                 node_type = 'product'
