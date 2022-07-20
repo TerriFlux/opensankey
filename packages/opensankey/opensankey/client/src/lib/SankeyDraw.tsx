@@ -241,7 +241,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!visible) {
       return false
     }
-    if (test_link_value(data_s.nodes, l, data_s.nodeTags) === 0) {
+    if (test_link_value(data_s,data_s.nodes, l, data_s.nodeTags) === 0) {
       if (data_s.display_style.null_flux) {
         return true
       }
@@ -516,7 +516,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(nodes, l, data.nodeTags)
+        const link_value = test_link_value(data,nodes, l, data.nodeTags)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value/2), pos_x_src + node.node_width + scale(link_value/2)]
         const limit_y = [pos_y_src - scale(link_value/2), pos_y_src + scale(link_value/2)]
@@ -550,7 +550,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(display_nodes, l, data.nodeTags)
+          const link_value = test_link_value(data,display_nodes, l, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -1020,7 +1020,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
 
 
-      const link_value = test_link_value(nodes, l, nodeTags)
+      const link_value = test_link_value(data,nodes, l, nodeTags)
       //Zones limite à ne pas êtres
       const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
       const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -1054,7 +1054,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         //retour à la normal
         d3.select('#' + l.idLink).attr('stroke-width', d => {
-          const link_value = test_link_value(display_nodes, d, data.nodeTags)
+          const link_value = test_link_value(data,display_nodes, d, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
         })
       }
@@ -1708,7 +1708,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     links: { [link_id: string]: SankeyLink },
     selected_tags: TagsCatalog
   ) => {
-    const res = compute_total_offsets(n, nodes, links, selected_tags, test_link_value)
+    const res = compute_total_offsets(n, data, selected_tags, test_link_value)
 
     const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
     let node_size_s_height = Math.max(
@@ -1753,9 +1753,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       source_node = nodes[filter_idSource]
     }
 
-    let res = compute_total_offsets(source_node, nodes, links, nodeTags, test_link_value)
+    let res = compute_total_offsets(source_node, data, nodeTags, test_link_value)
     const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-    res = compute_total_offsets(target_node, nodes, links, nodeTags, test_link_value)
+    res = compute_total_offsets(target_node, data, nodeTags, test_link_value)
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_height = Math.max(
@@ -1810,14 +1810,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return [0, 0, 0, 0]
     }
 
-    const link_value = test_link_value(nodes, link, selected_tags)
+    const link_value = test_link_value(data,nodes, link, selected_tags)
     if (link_value === undefined) {
       return [0, 0, 0, 0]
     }
-    let res = compute_total_offsets(source_node, nodes, links, selected_tags, test_link_value)
+    let res = compute_total_offsets(source_node, data, selected_tags, test_link_value)
     const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
 
-    res = compute_total_offsets(target_node, nodes, links, selected_tags, test_link_value)
+    res = compute_total_offsets(target_node, data, selected_tags, test_link_value)
     const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
 
     let node_size_s_width = inv_scale(source_node.node_width)
@@ -1841,9 +1841,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
 
-    res = compute_total_offsets(source_node, nodes, links, selected_tags, test_link_value, link)
+    res = compute_total_offsets(source_node, data, selected_tags, test_link_value, link)
     const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-    res = compute_total_offsets(target_node, nodes, links, selected_tags, test_link_value, link)
+    res = compute_total_offsets(target_node, data, selected_tags, test_link_value, link)
     const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
 
     const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
@@ -2018,7 +2018,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(nodes, link, nodeTags)
+    const link_value = test_link_value(data,nodes, link, nodeTags)
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -3302,7 +3302,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(nodes, l, data_v2.nodeTags)
+        const link_value = test_link_value(data,nodes, l, data_v2.nodeTags)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -3336,7 +3336,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data_v2.nodes, l, data_v2.nodeTags)
+          const link_value = test_link_value(data_v2,data_v2.nodes, l, data_v2.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -3951,7 +3951,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let cum_h_bottom = 0
     let is_v = true
 
-    const res = compute_total_offsets(n, nodes, links, nodeTags, test_link_value)
+    const res = compute_total_offsets(n, data, nodeTags, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
     for (let i = 0; i < n.inputLinksId.length; i++) {
       const l = links[n.inputLinksId[i]]
@@ -3961,7 +3961,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!new_data.nodes[l.idSource].node_visible && new_data.nodes[l.idTarget].node_visible) {
         continue
       }
-      const link_value = test_link_value(nodes, l, nodeTags)
+      const link_value = test_link_value(data,nodes, l, nodeTags)
       if (link_value === undefined) {
         continue
       }
@@ -4097,7 +4097,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let cum_h_bottom = 0
     let is_v = true
 
-    const res = compute_total_offsets(n, nodes, links, nodeTags, test_link_value)
+    const res = compute_total_offsets(n, data, nodeTags, test_link_value)
     const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
     for (let i = 0; i < n.inputLinksId.length; i++) {
       const l = links[n.inputLinksId[i]]
@@ -4107,7 +4107,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
         continue
       }
-      const link_value = test_link_value(nodes, l, nodeTags)
+      const link_value = test_link_value(data,nodes, l, nodeTags)
       if (link_value === undefined) {
         continue
       }

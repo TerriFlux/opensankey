@@ -2,11 +2,11 @@
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
-import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyLabel, SankeyLabelPropTypes } from './types'
+import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue, test_link_value } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -3412,39 +3412,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           select_link={() => null}
 
           link_text={link_text}
-          test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
-            const n_data = data.view.filter(d => d.id == view)[0].view_data as SankeyData
-
-            const { dataTags } = n_data
-            let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
-            const listKey: string[] = []
-
-            let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-              const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-              if (selected_tags.length == 0 || missing_key) {
-                missing_key = true
-                return
-              }
-              listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
-            })
-            if (missing_key) {
-              return {
-                value: 0,
-                display_value: '',
-                tags: {},
-                extension: {}
-              }
-            }
-            // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-            for (const i in listKey) {
-              val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
-            }
-            if (val === undefined) {
-              return 0
-            }
-            return ((val as unknown) as SankeyLinkValue).value
-          }}
+          test_link_value={test_link_value}
           set_show_nav={set_show_nav}
           set_nav_item_active={set_nav_item_active}
           set_sub_nav_item_active={set_sub_nav_item_active}
