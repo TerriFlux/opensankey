@@ -2,6 +2,7 @@ import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNod
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { agregation, desagregation } from './SankeyLayout'
+import * as d3 from 'd3'
 
 declare const window: Window &
   typeof globalThis & {
@@ -112,12 +113,13 @@ export const getTotalLinks = (
 
 export const compute_total_offsets = (
   node: SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
+  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
   ref_link: SankeyLink | undefined = undefined
 ) => {
+  const { nodes, links} = data
+
   let offset_height_left = 0
   let offset_height_right = 0
   let offset_width_top = 0
@@ -244,7 +246,7 @@ export const compute_total_offsets = (
       if (top_order !== -1) {
         the_id = top_flux[i - 1]
       }
-      const v = test_link_value(nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
 
       if (v === undefined) {
         return
@@ -265,7 +267,7 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      const v = test_link_value(nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       if (v === undefined) {
         return
       }
@@ -286,7 +288,7 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      const v = test_link_value(nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       if (v === undefined) {
         return
       }
@@ -307,7 +309,7 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      const v = test_link_value(nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       if (v === undefined) {
         return
       }
@@ -345,6 +347,45 @@ export const link_text = (
   }
   const the_link_value = toPrecision(link_value)
   return the_link_value
+}
+
+export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
+  const { dataTags } = data
+  if (data.show_structure) {
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, data.user_scale])
+    return inv_scale(Object.values(nodes)[0].node_height / 4)
+  }
+  let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
+  const listKey: string[] = []
+
+  let missing_key = false
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+    const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
+    if (selected_tags.length == 0 || missing_key) {
+      missing_key = true
+      return
+    }
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+  })
+  if (missing_key) {
+    return {
+      value: 0,
+      display_value: '',
+      tags: {},
+      extension: {}
+    }
+  }
+  // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
+
+  for (const i in listKey) {
+    val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+  }
+  if (val === undefined) {
+    return 0
+  }
+  return ((val as unknown) as SankeyLinkValue).value
 }
 
 export const default_sankey_data = (): SankeyData => {

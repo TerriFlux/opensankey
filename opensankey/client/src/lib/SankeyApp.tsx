@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState, useEffect, Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode } from './types'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 import SankeyNodeEdition from './SankeyNodeEdition'
@@ -10,7 +10,6 @@ import Menu, { ExempleItem, ArtefactsItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import { Dropdown } from 'react-bootstrap'
-import * as d3 from 'd3'
 import GoogleFontLoader from 'react-google-font-loader'
 
 let logo = ''
@@ -59,14 +58,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [view, set_view] = useState('none')
   const [style_to_apply, set_style_to_apply] = useState('default')
 
-  //Selectionne le premier flux par default si il y en a un 
-
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
-
   const display_links = data.links
-
 
   return (
 
@@ -193,8 +185,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       {
         (show_draw && view == 'none') ? (<SankeyDraw
           data={data}
-
           set_data={set_data}
+
           set_multi_selected_nodes={set_multi_selected_nodes}
           multi_selected_nodes={multi_selected_nodes}
 
@@ -203,6 +195,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
           set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
+
           select_node={(n: SankeyNode) => {
             set_selected_node(n)
           }}
@@ -213,41 +206,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             set_selected_link(l)
           }}
           link_text={SankeyUtils.link_text}
-          test_link_value={(nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
-            const { dataTags } = data
-            if (data.show_structure) {
-              return inv_scale(Object.values(nodes)[0].node_height / 4)
-            }
-            let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
-            const listKey: string[] = []
-
-            let missing_key = false
-            Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-              const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-              if (selected_tags.length == 0 || missing_key) {
-                missing_key = true
-                return
-              }
-              listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
-            })
-            if (missing_key) {
-              return {
-                value: 0,
-                display_value: '',
-                tags: {},
-                extension: {}
-              }
-            }
-            // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
-
-            for (const i in listKey) {
-              val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
-            }
-            if (val === undefined) {
-              return 0
-            }
-            return ((val as unknown) as SankeyLinkValue).value
-          }}
+          test_link_value={SankeyUtils.test_link_value}
           set_show_nav={set_show_nav}
           set_nav_item_active={set_nav_item_active}
           set_sub_nav_item_active={set_sub_nav_item_active}
