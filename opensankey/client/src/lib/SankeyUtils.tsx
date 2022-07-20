@@ -527,7 +527,12 @@ export const default_node = (
     tags: {},
     colorTag: '',
     // dimensions: { 'Primaire': { parent_name: undefined } },
-    dimensions: {'Primaire':{} },
+    dimensions: {
+      'Primaire':{
+        level:1,
+        parent_name: undefined
+      } 
+    },
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
