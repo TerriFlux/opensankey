@@ -688,6 +688,9 @@ export const convert_data = (
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
       }
+      if (!n.dimensions.Primaire.level) {
+        n.dimensions.Primaire.level = 1  
+      }
       if (n.style === undefined) {
         n.style = 'default'
       }  
