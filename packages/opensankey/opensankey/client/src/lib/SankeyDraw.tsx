@@ -4653,7 +4653,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
           data = dt
-          localStorage.setItem('diff', LZString.compress(JSON.stringify(differences)))
+          localStorage.setItem('diff',  JSON.stringify(differences))
           try {
             //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
             if (current) {

@@ -12,30 +12,7 @@ import * as d3 from 'd3'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
-
-
-const SankeyEditionPropTypes = {
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  additional_selector: PropTypes.element,
-  mode_selection: PropTypes.string.isRequired,
-  set_mode_selection: PropTypes.func.isRequired,
-
-}
-
-declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-    sankey: {
-      sous_filieres: { [key: string]: string }
-      help: { [key: string]: string }
-      excel: string
-      structure: boolean,
-      advanced: boolean
-    } & { [key: string]: SankeyData }
-  }
-
-type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
+import LZString from 'lz-string'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
@@ -96,10 +73,30 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
   return allDD
 }
 
+const SankeyEditionPropTypes = {
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
+  additional_selector: PropTypes.element,
+  mode_selection: PropTypes.string.isRequired,
+  set_mode_selection: PropTypes.func.isRequired
+}
+type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
+
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      sous_filieres: { [key: string]: string }
+      help: { [key: string]: string }
+      excel: string
+      structure: boolean,
+      advanced: boolean
+    } & { [key: string]: SankeyData }
+  }
+
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [diagram, set_diagram] = useState('')
-  const [agregation_level, set_agregation_level] = useState(0)
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
 
@@ -294,8 +291,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
       })
     })
-    set_nodes_level(data, data.nodes, agregation_level + 1)
-    localStorage.setItem('initial_data', JSON.stringify(new_data))
+    set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
+    if ( data.agregation_level === -1 ) {
+      localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
+    }
     set_data({ ...new_data })
   }
 
@@ -380,9 +379,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                       if (evt.target.value === '') {
                         return
                       }
-                      if (evt.target.value === 'initial') {
-                        const json_data = localStorage.getItem('initial_data')
-                        if (json_data) {
+                      if (evt.target.value === '-1') {
+                        const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
+                        if (json_data !== '') {
                           const initial_data = JSON.parse(json_data as string)
                           Object.values(data.nodes).forEach(n => {
                             n.display = initial_data.nodes[n.idNode].display
@@ -395,12 +394,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                       for (let level = 1; level <= +evt.target.value + 1; level++) {
                         set_nodes_level(data, data.nodes, level)
                       }
-                      set_agregation_level(+evt.target.value)
+                      data.agregation_level =+evt.target.value
                       set_data({ ...data })
                     }
                   }
-                  value={agregation_level}
-                >{ localStorage.getItem('initial_data') ? (
+                  value={data.agregation_level}
+                >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
                     <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
                   {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
                 </Form.Select></>) : (<></>)}

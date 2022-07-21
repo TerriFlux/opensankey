@@ -3,6 +3,7 @@ import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { agregation, desagregation } from './SankeyLayout'
 import * as d3 from 'd3'
+import LZString from 'lz-string'
 
 declare const window: Window &
   typeof globalThis & {
@@ -497,6 +498,8 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: false,
     fit_screen: window.SankeyToolsStatic,
 
+    agregation_level: 0,
+
     icon_catalog: {},
     labels: {},
 
@@ -804,8 +807,12 @@ export const uploadExemple = (
 
       example_callback(data)
 
+      if (data.agregation_level === -1) {
+        localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
+      } else {
+        set_nodes_level(data,data.nodes,data.agregation_level+1,true)
+      }
       set_data({ ...data })
-      localStorage.setItem('initial_data', JSON.stringify(data))
       downloadExamples(file_name, the_url_prefix, file_type)
     })
   })
