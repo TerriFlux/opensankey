@@ -13,6 +13,7 @@ import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
+import LZString from 'lz-string'
 
 declare const window: Window &
   typeof globalThis & {
@@ -185,7 +186,11 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
       set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
     updateLayout(server_data, server_data.layout)
-    localStorage.setItem('initial_data',JSON.stringify(server_data))
+    if (server_data.agregation_level === -1) {
+      localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
+    } else {
+      set_nodes_level(server_data,server_data.nodes,server_data.agregation_level+1,true)
+    }
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
     //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
@@ -2102,8 +2107,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
+                          set_nodes_level(new_data,new_data.nodes,new_data.agregation_level+1,true)
                           set_data(new_data)
-                          localStorage.setItem('initial_data', JSON.stringify(new_data))
+                          if ( data.agregation_level === -1 ) {
+                            localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
+                          }
                         }
                       })()
                       reader.readAsText(files[0])
@@ -3586,7 +3594,9 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
                         set_data({ ...sankey_data })
-                        localStorage.setItem('initial_data', JSON.stringify(sankey_data))
+                        if (data.agregation_level === -1) {
+                          localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
+                        }
                       }
                     }
                   )

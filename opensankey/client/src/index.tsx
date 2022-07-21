@@ -8,6 +8,7 @@ import SankeyApp from './lib/SankeyApp'
 import { convert_data } from './lib/SankeyConvert'
 import { default_sankey_data } from './lib/SankeyUtils'
 import LZString from 'lz-string'
+import { SankeyData } from './lib/types'
 
 window.React = React
 
@@ -15,7 +16,7 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      filiere?: string
+      filiere?: SankeyData,
       header?: string,
       has_header?: boolean,
       footer?: boolean,
@@ -86,19 +87,19 @@ if (!window.SankeyToolsStatic) {
   })
 
 } else {
-  if (window.sankey.filiere) {
+  if (window.sankey.filiere) { 
     localStorage.setItem('data', LZString.compress(JSON.stringify(window.sankey.filiere)))
-    localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
-    console.log(window.sankey.filiere)
   }
 
   const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
-  console.log(json_data)
+  //console.log(json_data)
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-
+    if (data.agregation_level === -1) {
+      localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
+    }
     data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
   }
   render(

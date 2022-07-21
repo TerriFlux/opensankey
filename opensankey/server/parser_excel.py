@@ -215,6 +215,11 @@ def parse_excel(mfa_input):
     nodes = {node['idNode']:node for node in nodes.values()}
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
+    nodes_cols = mfa_input[NODES_SHEET][0]
+    nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
+    agregation_level = 1
+    if NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1:
+        agregation_level = -1
     return {
         'version'      : '0.8',
         'dataTags'     : dataTags,
@@ -222,7 +227,8 @@ def parse_excel(mfa_input):
         'fluxTags'     : fluxTags,
         'nodes'        : nodes,
         'links'        : links,
-        'labels'       : {}
+        'labels'       : {},
+        'agregation_level' : agregation_level
     }
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):

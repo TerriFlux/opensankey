@@ -186,6 +186,9 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
+
+  agregation_level: PropTypes.number.isRequired,
+
   user_scale: PropTypes.number.isRequired,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,

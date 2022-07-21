@@ -313,6 +313,9 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
+  if (!data_to_convert.agregation_level) {
+    data_to_convert.agregation_level = 0
+  }
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {
