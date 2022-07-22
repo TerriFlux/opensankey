@@ -1541,6 +1541,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+
   const modalStyleLink = (
     <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
       <Modal.Header closeButton>
@@ -1973,6 +1974,32 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Modal.Footer>
     </Modal>)
 
+  const [show_publish_dialog,set_show_publish_dialog] = useState(false)
+
+  const publishImpl = (file_path:string) =>{
+    // const form_data = new FormData()
+    // form_data.append('file', input_file)
+
+    const path = window.location.href
+
+    const url = path + 'sankey/publish'
+
+    const new_data = JSON.parse(JSON.stringify(data))
+    new_data.file_name = file_path
+
+    const fetchData = {
+      method: 'POST',
+      body: JSON.stringify(new_data, null, 3)
+    }
+
+    fetch(url, fetchData).then( response => {
+      if (!response.ok) {
+        alert(response)
+      }
+    })
+    set_show_publish_dialog(false)
+  }
+
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -2135,6 +2162,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown>
               <NavDropdown id='edition' title="Edition" >
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
+                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >Publier</Dropdown.Item>    
                 <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
                 {edition_menu}
                 <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
@@ -3450,6 +3478,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       ) :
         (<div />)
       }
+      { show_publish_dialog ?  (
+        <PublishModal 
+          set_show_publish_dialog={set_show_publish_dialog} 
+          publishImpl = {publishImpl} 
+          file_path_initial = {data.file_name as string}/>
+      ) :
+        (<div/>)
+      }
     </>
   )
 }
@@ -3616,6 +3652,44 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
 }
 
 ExcelModal.propTypes = ExcelModalPropTypes
+
+const PublishModalPropTypes = {
+  publishImpl: PropTypes.func.isRequired,
+  set_show_publish_dialog: PropTypes.func.isRequired,
+  file_path_initial: PropTypes.string.isRequired
+}
+type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
+
+const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
+  const [file_path,set_file_path] = useState(file_path_initial)
+
+  return (
+    <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >
+      <Modal.Header closeButton>
+        <Modal.Title>Publication/Mise à jour du diagramme</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group as={Row}>
+            <Form.Label>Chemin d'accés</Form.Label>
+            <Col>    
+              <Form.Control
+                type='text'
+                placeholder={file_path_initial}
+                onChange={(evt)=>set_file_path(evt.target.value)}
+              />
+            </Col>     
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>Publier</Button>
+        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>Annuler</Button>
+      </Modal.Footer>
+    </Modal>
+  )
+}
+PublishModal.propTypes = PublishModalPropTypes
 
 Menu.propTypes = MenuPropTypes
 
