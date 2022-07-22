@@ -149,6 +149,7 @@ def upload_exemple():
             layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
+            sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -162,6 +163,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
+        data['file_name'] = exemple
         json_data = json.dumps(data)
 
     response = Response(
@@ -271,6 +273,21 @@ def menus_examples():
             status=500,
             mimetype='application/json'
         )
+    return response
+
+@opensankey.route('/sankey/publish', methods=['POST'])
+def publish():
+    sankey_data_str =  request.get_data().decode("utf-8")
+    sankey_data = json.loads(sankey_data_str)
+    file_name = sankey_data['file_name']
+    data_folder = os.environ.get('MFAData')
+    with open(os.path.join(data_folder,file_name), 'w') as outfile:
+        outfile.write(sankey_data_str)
+    response = Response(
+        response='',
+        status=200,
+        mimetype='application/json'
+    )
     return response
 
 @opensankey.route('/')
