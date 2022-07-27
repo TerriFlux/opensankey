@@ -362,6 +362,9 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   const listKey: string[] = []
 
   let missing_key = false
+  console.log(dataTags)
+  console.log(nodes)
+  console.log(d)
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
