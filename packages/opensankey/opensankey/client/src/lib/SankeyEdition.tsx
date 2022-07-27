@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
@@ -266,9 +266,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     )
   }
 
-  const setDiagram = (evt:ChangeEvent) => {
+  const setDiagram = (evt:React.ChangeEvent<HTMLSelectElement>) => {
 
-    const the_diagram = (evt.target as HTMLInputElement).value as string
+    const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
     const new_data = JSON.parse(
       JSON.stringify(
