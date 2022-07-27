@@ -36,10 +36,10 @@ deploy_opensankey:
         FOLDER: "/home/ubuntu/prod_opensankey"
         APP_NAME : "opensankey"
   tags:
-    - dev
+    - test
   environment:
-    name: dev
-    url: dev.opensankey.fr
+    name: test
+    url: test.opensankey.fr
   cache: 
     key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
     paths:
@@ -55,7 +55,7 @@ deploy_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source dev_opensankey/bin/activate
+    - source test_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 PublishExercicesAFM:
