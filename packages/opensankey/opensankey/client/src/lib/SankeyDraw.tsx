@@ -3722,7 +3722,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     edit_arrow
       .each(n => {
         const new_n = Object.values(data_v2.nodes).filter(d => d.idNode === (n as SankeyNode).idNode)[0]
-        drawArrows(data_v2, new_n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags)
+        drawArrowsWithAnimation(data_v2, new_n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags)
       })
 
     //Déplace les flux déjà existant vers leur nouvelle position
