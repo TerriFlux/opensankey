@@ -3,7 +3,6 @@ import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, FormControl, Table } f
 import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
-import { getLinkValue } from './SankeyUtils'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -12,13 +11,12 @@ const SankeyLinkEditionPropTypes = {
   show: PropTypes.bool.isRequired,
 
   multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  set_multi_selected_links: PropTypes.func.isRequired
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
 
 const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
-  { data, set_data, selected_link, multi_selected_links, set_multi_selected_links, children }
+  { data, set_data, selected_link, multi_selected_links, children }
 ) => {
   const { fluxTags,dataTags } = data
 
@@ -78,7 +76,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return gradChecked
   }
-
+  const dashChecked = () => {
+    let dashChecked = true
+    multi_selected_links.map(d => {
+      dashChecked = (d.dashed) ? dashChecked : false
+    })
+    return dashChecked
+  }
   const labelVisibleChecked = () => {
     let labelVisibleChecked = true
     multi_selected_links.map(d => {
@@ -86,7 +90,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return labelVisibleChecked
   }
-
   const shiftCenter = () => {
     let display_shift = true
     let center = 0.5
@@ -110,7 +113,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_shift) ? shift : 0
   }
-
   const linkOrientation = (param: string) => {
     let allChecked = true
     switch (param) {
@@ -143,7 +145,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     }
 
   }
-
   const courbure = () => {
     let display_courbe = true
     let courbe = 0.5
@@ -155,7 +156,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_courbe) ? courbe : 0
   }
-
   const linkType = (param: string) => {
     let allChecked = true
     if (multi_selected_links.length != 0) {
@@ -233,14 +233,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-
-  const labelSticktoLink = () => {
-    let labelSticktoLink = true
-    multi_selected_links.map(d => {
-      labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
-    })
-    return labelSticktoLink
-  }
+  // const labelSticktoLink = () => {
+  //   let labelSticktoLink = true
+  //   multi_selected_links.map(d => {
+  //     labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
+  //   })
+  //   return labelSticktoLink
+  // }
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
     multi_selected_links.map(d => {
@@ -248,7 +247,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return labelSticktoLink
   }
-
   const labelPositionOrtho = (param: string) => {
     let allChecked = true
     if (multi_selected_links.length != 0) {
@@ -496,9 +494,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           }
                           val = val[tag]
                         })
+                        if(val.display_value==' '){
+                          selected_link.dashed=false
+                        }
                         val.display_value = evt.target.value
-
-
                         set_data({ ...data })
                       }
                     }
@@ -548,6 +547,27 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       evt => {
                         // selected_link.gradient = evt.target.checked
                         Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel >Hachuré:</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Check
+                    inline
+                    type="checkbox"
+                    checked={
+                      dashChecked()
+                    }
+                    onChange={
+                      evt => {
+                        // selected_link.gradient = evt.target.checked
+                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                         set_data({ ...data })
                       }
                     }

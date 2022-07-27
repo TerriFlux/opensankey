@@ -1,8 +1,7 @@
-import React, { ChangeEvent, useState, FunctionComponent } from 'react'
-import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs, Tab } from 'react-bootstrap'
+import React, { useState, FunctionComponent } from 'react'
+import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { arrangeNodes, compute_auto_sankey, updateLayout, reorganize_node_inputLinksId, reorganize_node_outputLinksId } from './SankeyLayout'
-import { findMaxLinkValue } from './SankeyUtils'
+import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
 
 const SankeySettingsEditionPropTypes = {
@@ -23,31 +22,6 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   return (
     <>
       <Form>
-        <Form.Group as={Row}>
-          <Col xs={6}>Police Charger des icones</Col>
-          <Col xs={6}><FormControl
-            //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
-            type='file'
-            onChange={(evt: ChangeEvent) => {
-              const files = (evt.target as HTMLFormElement).files
-              const reader = new FileReader()
-              reader.onload = (() => {
-                return (e: ProgressEvent<FileReader>) => {
-                  const result = String((e.target as FileReader).result)
-                  const js = JSON.parse(result)
-                  js.icons.map((d: any) => {
-                    const name = d.properties.name as string
-                    data.icon_catalog[name] = d.icon.paths[0]
-                  })
-                }
-              })()
-              reader.readAsText(files[0])
-              set_data(data)
-            }}
-          >
-          </FormControl>
-          </Col>
-        </Form.Group>
         <Form.Group as={Row} >
           <Col xs={3}>
             <FormLabel >Echelle</FormLabel>
