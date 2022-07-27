@@ -117,8 +117,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const [agregation_parent_names, set_agregation_parent_names] = useState<string[]>([])
   const [agregation_dimension_names, set_agregation_dimension_names] = useState<string[]>([])
   const [is_agregation, set_is_agregation] = useState(true)
-  //let isDown = false
-  
+
   // const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
@@ -241,7 +240,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!visible) {
       return false
     }
-    if (test_link_value(data_s,data_s.nodes, l, data_s.nodeTags) === 0) {
+    if (test_link_value(data_s, data_s.nodes, l, data_s.nodeTags) === 0) {
       if (data_s.display_style.null_flux) {
         return true
       }
@@ -270,22 +269,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const source_node = data.nodes[l.idSource]
           const target_node = data.nodes[l.idTarget]
           let selected_tag = ''
-          if ( source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
-            const common_tags  = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
-            if (common_tags.length > 0 ) {
+          if (source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
+            const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
+            if (common_tags.length > 0) {
               return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
             }
           }
-          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1 ) {
+          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1 ) {
+          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
             selected_tag = target_node.tags[target_node.colorTag][0]
             return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1 ) {
+          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1 ) {
+          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
             selected_tag = target_node.tags[source_node.colorTag][0]
             if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
               return data.nodeTags[source_node.colorTag].tags[selected_tag].color
@@ -401,7 +400,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style', 'font-weight: bold; font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
-        if ( l.text_color == l.color ) {
+        if (l.text_color === l.color) {
           return link_color(l) as string
         }
         return l.text_color
@@ -516,10 +515,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(data,nodes, l, data.nodeTags)
+        const link_value = test_link_value(data, nodes, l, data.nodeTags)
         //Zones limite à ne pas êtres
-        const limit_x = [pos_x_src - scale(link_value/2), pos_x_src + node.node_width + scale(link_value/2)]
-        const limit_y = [pos_y_src - scale(link_value/2), pos_y_src + scale(link_value/2)]
+        const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
+        const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
 
         let draw_warning = false
 
@@ -550,7 +549,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data,display_nodes, l, data.nodeTags)
+          const link_value = test_link_value(data, display_nodes, l, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -1020,7 +1019,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
 
 
-      const link_value = test_link_value(data,nodes, l, nodeTags)
+      const link_value = test_link_value(data, nodes, l, nodeTags)
       //Zones limite à ne pas êtres
       const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
       const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -1054,7 +1053,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         //retour à la normal
         d3.select('#' + l.idLink).attr('stroke-width', d => {
-          const link_value = test_link_value(data,display_nodes, d, data.nodeTags)
+          const link_value = test_link_value(data, display_nodes, d, data.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
         })
       }
@@ -1810,7 +1809,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return [0, 0, 0, 0]
     }
 
-    const link_value = test_link_value(data,nodes, link, selected_tags)
+    const link_value = test_link_value(data, nodes, link, selected_tags)
     if (link_value === undefined) {
       return [0, 0, 0, 0]
     }
@@ -2018,7 +2017,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data,nodes, link, nodeTags)
+    const link_value = test_link_value(data, nodes, link, nodeTags)
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -3302,7 +3301,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(data,nodes, l, data_v2.nodeTags)
+        const link_value = test_link_value(data, nodes, l, data_v2.nodeTags)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -3336,7 +3335,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data_v2,data_v2.nodes, l, data_v2.nodeTags)
+          const link_value = test_link_value(data_v2, data_v2.nodes, l, data_v2.nodeTags)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -3721,9 +3720,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // edit_arrow.selectAll('.arrow').remove()
     //Déplace les flêchesdéjà existant vers leur nouvelle position
     edit_arrow
-      .each( n => {
+      .each(n => {
         const new_n = Object.values(data_v2.nodes).filter(d => d.idNode === (n as SankeyNode).idNode)[0]
-        drawArrowsWithAnimation(data_v2, new_n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags)
+        drawArrows(data_v2, new_n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags)
       })
 
     //Déplace les flux déjà existant vers leur nouvelle position
@@ -4440,7 +4439,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     margin_top = test[0].getBoundingClientRect().height
   }
 
-  const keyHandler = (e : KeyboardEvent) => {
+  const keyHandler = (e: KeyboardEvent) => {
     if (current) {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         if (e.key == 'ArrowUp') {
@@ -4549,7 +4548,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             id: new_ind,
             view_data: copy,
             nom: 'data_' + new_ind,
-            details:''
+            details: ''
           })
           set_show_toast(true)
           setTimeout(function () {
@@ -4568,14 +4567,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //Si il y a des différences, prend la dernière effectuée
         if (differences !== undefined && differences.length != 0) {
           type difference_type = {
-            kind : string,
-            path : string[],
-            item : {
+            kind: string,
+            path: string[],
+            item: {
               rhs: string,
               kind: string
             },
-            rhs : string,
-            index : string
+            rhs: string,
+            index: string
           }
           const difference = differences.pop() as difference_type[]
 
@@ -4653,7 +4652,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
           data = dt
-          localStorage.setItem('diff',  JSON.stringify(differences))
+          localStorage.setItem('diff', JSON.stringify(differences))
           try {
             //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
             if (current) {
@@ -4776,6 +4775,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [data.width, data.height] = min_width_and_height()
     removeAnimate()
     console.log('---')
+    // let isDown = false
+
     const svgSankey = d3.select('#svg')
     if (data.fit_screen) {
       svgSankey.attr('viewBox', [20, 0, data.width - 20, data.height])
@@ -4785,12 +4786,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       svgSankey.style('width', data.width + 'px')
     }
     svgSankey.style('height', data.height + 'px');
-    (svgSankey as d3.Selection<Element,unknown,HTMLElement,unknown>)
+    (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.zoom()
-        .filter( ev => { // Permet d'obliger Crtl pour activer le zoom
+        .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
           return ev.ctrlKey && ev.buttons == 0
         })
-        .wheelDelta( ev => { // Permet de regler la vitesse du zoom
+        .wheelDelta(ev => { // Permet de regler la vitesse du zoom
           return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
         })
         .on('zoom', function (evt) {
@@ -4837,7 +4838,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousedown', function () {
         //si le mode de souris est noeud+liens alors crée le premier noeuds 
         if (mode_selection == 'nl' && current) {
-          //isDown = true
+          // isDown = true
 
           // creation nouveau noeud
           const new_node1 = default_node(data)
@@ -4888,7 +4889,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //si le mode de souris est noeud+liens alors crée un second noeud au relachement 
         //et crée un lien entre le premier noeud crée lors du click et ce dernier 
         if (mode_selection == 'nl' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
-          //isDown = false
+          // isDown = false
           d3.selectAll('#svg #path-flux').remove()
           Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
 

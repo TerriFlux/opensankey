@@ -2871,7 +2871,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={7}>{dropdownMultiLabel()}</Col>
                   <Col xs={1}>
                     <Button size="sm" variant='danger' onClick={() => {
-                      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.map(l => l.name).includes(d[1].name)))
+                      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.map(l => l.idLabel).includes(d[0])))
                       set_multi_selected_label([])
                       set_data({ ...data })
                     }
