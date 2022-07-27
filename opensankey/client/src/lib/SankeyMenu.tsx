@@ -412,7 +412,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     const svg = window.d3.select('#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
-    svg.attr('viewBox', [0, 0, data.width, data.height])
+    svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
