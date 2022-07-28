@@ -530,7 +530,7 @@ def save_simple_excel(
         row = row+1
         
     for i,node in enumerate(sankey_data['nodes'].values()):
-        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire']:
+        if 'Primaire' in node['dimensions'] and 'level' in node['dimensions']['Primaire'] and 'parent_name' in node['dimensions']['Primaire']:
             level = node['dimensions']['Primaire']['level']
             if level < 2:
                 continue
