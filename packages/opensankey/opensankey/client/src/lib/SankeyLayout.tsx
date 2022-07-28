@@ -472,9 +472,9 @@ export const updateLayout = (
     node.colorParameter = node_layout.colorParameter
     node.color = node_layout.color
 
-    // for (const node_tag_key in node_layout.tags) {
-    //   node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-    // }
+    for (const node_tag_key in node_layout.tags) {
+      node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+    }
     
     node.shape_visible = node_layout.shape_visible
     node.node_visible = node_layout.node_visible
@@ -528,15 +528,15 @@ export const updateLayout = (
     }
   }
 
-  // for (const tag_group_key in new_layout.nodeTags) {
-  //   data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
-  //   // if (tag_group_key in new_layout.nodeTags) {
-  //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
-  //   //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
-  //   //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
-  //   //   }
-  //   // }
-  // }
+  for (const tag_group_key in new_layout.nodeTags) {
+    data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+    // if (tag_group_key in new_layout.nodeTags) {
+    //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
+    //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
+    //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
+    //   }
+    // }
+  }
   for (const tag_group_key in new_layout.fluxTags) {
     data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
   }
