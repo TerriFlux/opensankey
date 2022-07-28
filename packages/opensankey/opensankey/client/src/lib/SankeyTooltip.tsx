@@ -68,7 +68,7 @@ export const  linkTooltipsContent = (
   t += '<tbody><br><tr><th>Valeur</th>'
   let the_value = link_info.value
 
-  if ('display_value' in d && link_info.display_value !== 'default' && !link_info.display_value.includes('[')) {
+  if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
   t += '<td>' + toPrecision(the_value) +'</td>'
@@ -99,6 +99,8 @@ export const  linkTooltipsContent = (
     for (const dim in n.dimensions) {
       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
         const parent_name = n.dimensions[dim].parent_name
+        console.log('__')
+
         if ( parent_name === target_node.idNode) {
           return true
         } /*else {
