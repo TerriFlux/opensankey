@@ -103,8 +103,8 @@ def clean_excel():
     )
     return response
 
-@opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
-def upload_data():
+@opensankey.route('/sankey/upload_excel', methods=['POST'])
+def upload_excel():
     excel_input_file = request.files['file']
     mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
     sankey_data = parser_excel.parse_excel(mfa_input)
@@ -189,7 +189,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
     exemple_found = False
     artefact_found = False
     for file_or_folder in folder_content:
-        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
@@ -204,8 +204,10 @@ def parse_folder(current_dir,menus,artefacts,key=None):
             continue
         if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
             if key not in menus:
-                menus[key] = []
-            menus[key].append(file_or_folder)
+                menus[key] = {}
+            if 'Excel' not in menus[key]:
+                menus[key]['Excel'] = []           
+            menus[key]['Excel'].append(file_or_folder)
             exemple_found = True
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
@@ -223,22 +225,24 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                 if art_found:
                     artefact_found = True
             else:
-                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,artefacts,child_key)
+                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,artefacts,child_key)  
                 if folder_found:
                     exemple_found = True
                 if art_found:
-                    artefact_found = True
+                    artefact_found = True           
         else:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
                 if 'auto_layout' in file_name:
                     continue
-                if 'layout.json' not in file_name and 'simple.xlsx' not in file_name:
+                if 'layout.json' not in file_name:
                     continue
-                if key not in menus or type(menus[key]) is dict:
-                    menus[key] = []
-                menus[key].append(file_name)
+                if key not in menus:
+                    menus[key] = {}
+                if 'JSON' not in menus[key]:
+                    menus[key]['JSON'] = []   
+                menus[key]['JSON'].append(file_name)
                 exemple_found = True
     if not exemple_found and key in menus:
         del menus[key]
