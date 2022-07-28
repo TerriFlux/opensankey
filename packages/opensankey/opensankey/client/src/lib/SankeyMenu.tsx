@@ -300,6 +300,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 ) => {
   const set_show_link = useState(true)[1]
+  const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
   const [parent_visible,set_parent_visible] = useState(false)
