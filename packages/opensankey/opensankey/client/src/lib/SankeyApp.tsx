@@ -80,7 +80,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data({ ...data })
         }}
         example_menu={<>
-          <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+          <Dropdown.Item eventKey="data_repo" href="http://open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
             exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
             url_prefix=''
