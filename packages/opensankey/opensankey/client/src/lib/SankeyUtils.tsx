@@ -828,7 +828,8 @@ export const set_nodes_level = (
   control_display = true
 ) => {
   Object.values(display_nodes).forEach(node => {
-    if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
+    //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
+    if ( control_display && (!node.dimensions['Primaire'])) {
       node.display = false
       node.node_visible = false
       return
