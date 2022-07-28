@@ -2277,7 +2277,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
         let display: string
-        if (d.node_visible) { display = 'inline' } else { display = 'none' }
+        if (d.node_visible && d.position === 'absolute' ) { display = 'inline' } else { display = 'none' }
         return display
       })
       .style('font-family', d => d.display_style.font_family)
@@ -2286,8 +2286,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', d => 'ggg_' + d.idNode)
       .attr('class', 'ggg_nodes')
       .attr('transform', d => {
-        return 'translate(' + d.x + ', ' + d.y + ')'
-
+        if (d.position === 'relative') {
+          if (d.inputLinksId.length > 0) {
+            const source_node = display_nodes[display_links[d.inputLinksId[0]].idSource]
+            const x = source_node.x + d.x
+            const y = source_node.y + d.y
+            return 'translate(' + x + ', ' + y + ')'
+          } else {
+            const target_node = display_nodes[display_links[d.outputLinksId[0]].idTarget]
+            const x = target_node.x + d.x
+            const y = target_node.y + d.y
+            return 'translate(' + x + ', ' + y + ')'            
+          }
+        } else {
+          return 'translate(' + d.x + ', ' + d.y + ')'
+        }
       })
 
     // Gestion du drag 
