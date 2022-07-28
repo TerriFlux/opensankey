@@ -280,8 +280,10 @@ def publish():
     sankey_data_str =  request.get_data().decode("utf-8")
     sankey_data = json.loads(sankey_data_str)
     file_name = sankey_data['file_name']
+    # del sankey_data['file_name']
+    # sankey_data_str = json.dumps(sankey_data,indent=2)
     data_folder = os.environ.get('MFAData')
-    with open(os.path.join(data_folder,file_name), 'w') as outfile:
+    with open(os.path.join(data_folder,file_name), 'w',encoding='utf-8') as outfile:
         outfile.write(sankey_data_str)
     response = Response(
         response='',

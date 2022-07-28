@@ -363,7 +363,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const clickSaveDiagram = () => {
     const data_to_save = { ...data }
-    const str_data = JSON.stringify(data_to_save, null, 3)
+    const str_data = JSON.stringify(data_to_save, null, 2)
     const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
     FileSaver.saveAs(blob, 'sankey_diagram.json')
   }
@@ -1989,7 +1989,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const fetchData = {
       method: 'POST',
-      body: JSON.stringify(new_data, null, 3)
+      body: JSON.stringify(new_data, null, 2)
     }
 
     fetch(url, fetchData).then( response => {
