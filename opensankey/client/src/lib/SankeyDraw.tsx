@@ -283,7 +283,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return data.nodeTags[target_node.colorTag].tags[selected_tag].color
           } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
-            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
+              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
           } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
             selected_tag = target_node.tags[source_node.colorTag][0]
             if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
