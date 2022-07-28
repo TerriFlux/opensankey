@@ -3,13 +3,13 @@ import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tabs, Tab, Table, Bu
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
+import { default_link } from './SankeyUtils'
 
 
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_node: PropTypes.shape(SankeyNodePropTypes).isRequired,
   radio_selected: PropTypes.string.isRequired,
   set_multi_selected_nodes: PropTypes.func.isRequired,
   multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
@@ -19,7 +19,7 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,
-  selected_node, radio_selected, set_multi_selected_nodes, multi_selected_nodes, children }) => {
+  radio_selected, set_multi_selected_nodes, multi_selected_nodes, children }) => {
   const { nodeTags } = data
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
@@ -221,7 +221,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               const verif = tags[0]
               let allChecked = true
               multi_selected_nodes.map((d) => {
-                allChecked = (d.tags[tags_group_key].includes(verif)) ? allChecked : false
+                allChecked = (tags_group_key in d.tags && d.tags[tags_group_key].includes(verif)) ? allChecked : false
               })
               return (
                 <tr key={tags[0]}>
@@ -727,7 +727,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         </Tabs>
         {(multi_selected_nodes.length !== 0) ? (
           <ButtonGroup as={Row}>
-            <Col xs={4}>
+            <Col>
               <Button
                 size="sm"
                 style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
@@ -741,6 +741,53 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   }
                 }
               >Réorganiser flux entrants/sortants</Button>
+            </Col>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    const listId: number[] = []
+                    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
+                    let idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+                    Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => d.name).includes(f.name)).map(d => {
+                      const child_nodes = Object.values(data.nodes).filter(n=>n.dimensions['Primaire'].parent_name === d.idNode)
+                      const new_input_nodes : string[] = []
+                      child_nodes.forEach(n1=> {
+                        const input_links = n1.inputLinksId.filter(idLink => new_input_nodes.includes(data.links[idLink].idSource) === false)
+                        input_links.forEach( idLink => new_input_nodes.push(data.links[idLink].idSource))
+                      })
+                      const new_output_nodes : string[] = []
+                      child_nodes.forEach(n1=> {
+                        const output_links = n1.outputLinksId.filter(idLink => new_output_nodes.includes(data.links[idLink].idSource) === false)
+                        output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
+                      })
+                      new_input_nodes.forEach(idSource => {
+                        const new_link = default_link(data)
+                        new_link.idSource = idSource
+                        new_link.idTarget = d.idNode
+                        new_link.idLink = 'link' + idLink
+                        data.links[new_link.idLink] = new_link
+                        idLink = idLink+1
+                        reorganize_node_outputLinksId(data.nodes[new_link.idSource], display_nodes, display_links)
+                      })
+                      new_output_nodes.forEach(() => {
+                        const new_link = default_link(data)
+                        new_link.idSource = d.idNode
+                        new_link.idLink = 'link' + idLink
+                        data.links[new_link.idLink] = new_link
+                        idLink = idLink+1
+                        reorganize_node_inputLinksId(data.nodes[new_link.idTarget], display_nodes, display_links)
+                      })
+                      reorganize_node_inputLinksId(d, display_nodes, display_links)
+                      reorganize_node_outputLinksId(d, display_nodes, display_links)
+
+                      set_data({ ...data })
+                    })
+                  }
+                }
+              >Copier liens enfants</Button>
             </Col>
 
           </ButtonGroup>) : (<></>)}

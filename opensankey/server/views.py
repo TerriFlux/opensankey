@@ -85,8 +85,12 @@ def save_excel():
     cwd = os.getcwd()
     excel_file = os.path.join(cwd, "tutu.xlsx")
     sankey_data =  request.get_data().decode("utf-8")
-    mfa_output,nodes_names = parser_excel.save_simple_excel(json.loads(sankey_data))
-    io_excel.write_mfa_problem_output_to_excel(excel_file,mfa_output,nodes_names,nodes_names,'w')
+    mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
+    if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
+        verbosity=2
+    else:
+        verbosity=1        
+    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
     return send_file(excel_file, as_attachment=True)
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
@@ -102,7 +106,8 @@ def clean_excel():
 @opensankey.route('/sankey/upload_simple_excel', methods=['POST'])
 def upload_data():
     excel_input_file = request.files['file']
-    sankey_data = parser_excel.parse_simple_excel(excel_input_file)
+    mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
+    sankey_data = parser_excel.parse_excel(mfa_input)
     # context = {
     #     'nodes': nodes,
     #     'links': links
@@ -131,18 +136,20 @@ def upload_exemple():
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
     exemple_folder = os.path.dirname(exemple_file_path)
+    base_file_name = os.path.basename(exemple_file_path)
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        sankey_data = parser_excel.parse_simple_excel(exemple_file_path)
-        # context = {
-        #     'version': '0.6',
-        #     'error'  : error,
-        #     'nodes'  : nodes,
-        #     'links'  : links,
-        #     'h_space': 500,
-        #     'v_space': 250
-        # }
+        mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
+        sankey_data = parser_excel.parse_excel(mfa_input)
+        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+        sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
+        layout_file_name = os.path.join(sankey_folder,layout_file_name)
+        if os.path.exists(layout_file_name):
+            layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
+            layout_data = json.load(layout_file) 
+            sankey_data['layout'] = layout_data
+            sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -156,6 +163,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
+        data['file_name'] = exemple
         json_data = json.dumps(data)
 
     response = Response(
@@ -194,7 +202,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                 artefacts[key].append(file_name)
                 artefact_found = True
             continue
-        if 'simple.xlsx' in file_or_folder:
+        if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
             if key not in menus:
                 menus[key] = []
             menus[key].append(file_or_folder)
@@ -261,6 +269,21 @@ def menus_examples():
             status=500,
             mimetype='application/json'
         )
+    return response
+
+@opensankey.route('/sankey/publish', methods=['POST'])
+def publish():
+    sankey_data_str =  request.get_data().decode("utf-8")
+    sankey_data = json.loads(sankey_data_str)
+    file_name = sankey_data['file_name']
+    data_folder = os.environ.get('MFAData')
+    with open(os.path.join(data_folder,file_name), 'w') as outfile:
+        outfile.write(sankey_data_str)
+    response = Response(
+        response='',
+        status=200,
+        mimetype='application/json'
+    )
     return response
 
 @opensankey.route('/')
