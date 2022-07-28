@@ -804,8 +804,11 @@ export const uploadExemple = (
       data = default_sankey_data()
       Object.assign(data, server_data)
       convert_data(data)
-
+      type layout_type = {
+        layout?: SankeyData
+      }
       example_callback(data)
+      delete (data as unknown as layout_type).layout
 
       if (data.agregation_level === -1) {
         localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
@@ -830,7 +833,7 @@ export const set_nodes_level = (
       node.node_visible = false
       return
     }
-    if (node.dimensions['Primaire'].level === level) {
+    if (node.dimensions['Primaire'] &&  node.dimensions['Primaire'].level === level) {
       desagregation(data,node.idNode,'Primaire',control_display)
       agregation(data,node.idNode,'Primaire',control_display)
       Object.keys(node.dimensions).forEach(dim => {

@@ -688,12 +688,12 @@ export const convert_data = (
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
       }
-      if (!n.dimensions.Primaire) {
-        n.dimensions.Primaire = { level : 1, parent_name: undefined }  
-      }
-      if (!n.dimensions.Primaire.level) {
-        n.dimensions.Primaire.level = 1  
-      }
+      // if (!n.dimensions.Primaire) {
+      //   n.dimensions.Primaire = { level : 1, parent_name: undefined }  
+      // }
+      // if (!n.dimensions.Primaire.level) {
+      //   n.dimensions.Primaire.level = 1  
+      // }
       if (n.style === undefined) {
         n.style = 'default'
       }  
@@ -768,7 +768,8 @@ export const convert_data = (
     l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
       if (l.colorParameter === undefined) {
-        l.colorParameter = 'local'
+        l.colorParameter = 'groupTag'
+        l.colorTag = 'no_colormap'
       }
       if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
         if ( Array.isArray(l_convert.value) ) {
@@ -1176,6 +1177,16 @@ export const convert_data = (
 
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
+  }
+
+  if (!data.colorMap) {
+    data.colorMap === 'no_colormap'
+  }
+  if (data.colorMap === 'no_colormap' ) {
+    Object.values(data.links).forEach(el => {
+      el.colorParameter = 'groupTag'
+      el.colorTag = 'no_colormap'
+    })
   }
 
   data.version = '0.8'
