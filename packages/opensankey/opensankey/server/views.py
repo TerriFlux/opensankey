@@ -113,14 +113,14 @@ def clean_excel():
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
-    excel_input_file = request.files['file']
-    mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
-    sankey_data = parser_excel.parse_excel(mfa_input)
-    # context = {
-    #     'nodes': nodes,
-    #     'links': links
-    # }
     try:
+        excel_input_file = request.files['file']
+        mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
+        sankey_data = parser_excel.parse_excel(mfa_input)
+        # context = {
+        #     'nodes': nodes,
+        #     'links': links
+        # }
         json_data = json.dumps(sankey_data)
         response = Response(
             response=json_data,
