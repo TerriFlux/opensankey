@@ -87,6 +87,13 @@ def save_excel():
         excel_file = os.path.join(cwd, "tutu.xlsx")
         sankey_data =  request.get_data().decode("utf-8")
         mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
+    except Exception as excpt:
+        response = Response(
+            response='save_simple_excel : ' + str(excpt),
+            status=401
+        )
+        return response   
+    try:
         if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
             verbosity=2
         else:
@@ -95,9 +102,8 @@ def save_excel():
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response=str(excpt),
-            status=500,
-            mimetype='application/json'
+            response='write_mfa_problem_output_to_excel' + str(excpt),
+            status=402
         )
         return response     
 
