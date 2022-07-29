@@ -491,7 +491,7 @@ def save_simple_excel(
         tag_key_names = list(sankey_data[tag_group_type])
         tag_group_names = [ tags_group['group_name'] for tags_group in sankey_data[tag_group_type].values()]
         for i in range(len(tag_key_names)):
-            tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()])
+            tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values() if 'color' in tag])
             tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
 
