@@ -997,8 +997,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_node).map(d => {
-                  return (<Dropdown.Item onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+                {Object.keys(data.style_node).map((d,i) => {
+                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
                 })}
 
@@ -1566,9 +1566,9 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {Object.keys(data.style_link).map(d => {
+                {Object.keys(data.style_link).map((d,i) => {
 
-                  return (<Dropdown.Item onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
+                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
 
                 })}
 
@@ -2407,14 +2407,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 })
                                 set_data({ ...data })
                               }}>{'Aucun'}</Dropdown.Item>
-                              {Object.keys(data.style_node).map(d => {
-                                return (<Dropdown.Item onClick={() => {
-                                  set_style_to_apply(d)
-                                  multi_selected_nodes.map(n => {
-                                    n.style = d
-                                  })
-                                  set_data({ ...data })
-                                }}>{data.style_node[d].name}</Dropdown.Item>)
+                              {Object.keys(data.style_node).map((d,i) => {
+                                return (<Dropdown.Item 
+                                  key={i}
+                                  onClick={() => {
+                                    set_style_to_apply(d)
+                                    multi_selected_nodes.map(n => {
+                                      n.style = d
+                                    })
+                                    set_data({ ...data })
+                                  }}
+                                >{data.style_node[d].name}</Dropdown.Item>)
 
                               })}
 
@@ -2768,8 +2771,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 })
                                 set_data({ ...data })
                               }}>{'Aucun'}</Dropdown.Item>
-                              {Object.keys(data.style_link).map(d => {
-                                return (<Dropdown.Item onClick={() => {
+                              {Object.keys(data.style_link).map((d,i) => {
+                                return (<Dropdown.Item key={i} onClick={() => {
                                   set_style_to_apply_to_link(d)
                                   multi_selected_links.map(n => {
                                     n.style = d
