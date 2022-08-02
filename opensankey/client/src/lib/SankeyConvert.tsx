@@ -111,6 +111,12 @@ export const convert_data = (
   
   console.log('FUNCTION : convert_data')
 
+  // if ( 'layout' in data) {
+  //   type layout_type = {
+  //     layout?: SankeyData
+  //   }
+  //   delete (data as unknown as layout_type).layout
+  // }
   if (!data.display_style) {
     (data.display_style as Record<string,unknown> ) = {}
   }
@@ -125,6 +131,9 @@ export const convert_data = (
   }
   if (data_to_convert.fluxTags === undefined) {
     data_to_convert.fluxTags = {}
+  }
+  if (data_to_convert.nodeTags === undefined) {
+    data_to_convert.nodeTags = {}
   }
   if (data.labels === undefined) {
     data.labels = {}
@@ -605,9 +614,9 @@ export const convert_data = (
       if (n.y === undefined) {
         n.y = 0
       }
-      if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
-        n.shape_visible = true
-      }
+      // if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
+      //   n.shape_visible = true
+      // }
       if (n_convert.visible === 1) {
         n.shape_visible = true
       }

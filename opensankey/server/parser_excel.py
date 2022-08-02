@@ -613,7 +613,7 @@ def save_simple_excel(
                 row = p_names2p_idx[product_name]+1
                 ter[table_name][row][col] = 1
             except Exception as excpt:
-                print(excpt)      
+                print('exception 1: '+str(excpt)) 
     else:
         ter = [[None for x in range(len(nodes) + 1)] for y in range(len(nodes) + 1)]
 
@@ -631,7 +631,7 @@ def save_simple_excel(
                 destination_idx = nodes_names.index(destination)
                 ter[origin_idx+1][destination_idx+1] = 1
             except Exception as excpt:
-                print(excpt)
+                print('exception 2: '+str(excpt))
                 
     param_sheet = pd.DataFrame([[VERSION_LABEL,0.8,VERSION_DOC]],columns=[PARAM_NAME,PARAM_VALUE,PARAM_DESC])
         
