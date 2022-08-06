@@ -87,6 +87,7 @@ const MenuPropTypes = {
   node_edition: PropTypes.element,
   link_edition: PropTypes.element,
   logo: PropTypes.string.isRequired,
+  logo_width: PropTypes.number.isRequired,
   app_name: PropTypes.string.isRequired,
   set_show_nav: PropTypes.func.isRequired,
   show_nav: PropTypes.bool.isRequired,
@@ -281,7 +282,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     settings_edition,
     settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
     node_edition, link_edition,
-    logo, app_name,
+    logo, logo_width,app_name,
     set_show_nav, show_nav, set_nav_item_active, set_sub_nav_item_active, sub_nav_item_active, nav_item_active,
     set_selected_node, selected_node,
     set_multi_selected_nodes, multi_selected_nodes,
@@ -2094,7 +2095,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
-          <Navbar.Brand href="#"><img src={logo} width="100" /> {app_name} </Navbar.Brand>
+          <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (
             <Form.Check
               type="switch"
