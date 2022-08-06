@@ -25,6 +25,7 @@ declare const window: Window &
     sankey: {
       advanced?: boolean
       logo?: string,
+      logo_width: number
     }
   }
 
@@ -98,6 +99,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             current_path={''}
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
+        logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
         set_show_nav={set_show_nav}
         show_nav={show_nav}
         set_show_toast={set_show_toast}
