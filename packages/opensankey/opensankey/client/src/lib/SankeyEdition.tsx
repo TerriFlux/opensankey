@@ -41,8 +41,8 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
         <>
           <FormLabel>{the_tags_group.group_name}</FormLabel>
           {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
-            Object.entries(the_tags_group.tags).map(([tag_key, tag]) => {
-              return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+            Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
+              return (<option key={i} value={tag_key}>{tag.name}</option>)
             })}
           </Form.Select>}
         </>)
@@ -121,8 +121,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
             {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                return (<option key={i} value={tag_key}>{tag.name}</option>)
               })}
             </Form.Select>}
           </>)
@@ -163,8 +163,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
             {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag_key} >{tag.name}</option>)
+              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                return (<option key={i} value={tag_key} >{tag.name}</option>)
               })}
             </Form.Select>}
           </>)

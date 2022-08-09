@@ -623,6 +623,12 @@ export const convert_data = (
       if (n_convert.visible === 0) {
         n.shape_visible = false
       }
+      if (n_convert.node_visible === 0) {
+        n.node_visible = false
+      }
+      if (n_convert.node_visible === 1) {
+        n.node_visible = true
+      }
       if (n_convert.show_value === 0 || n_convert.show_value === undefined) {
         n.show_value = false
       }
@@ -1182,6 +1188,10 @@ export const convert_data = (
 
     for (const i in listKey) {
       if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
+        if ( v === undefined) {
+          console.log(listKey[i] + ' not found in v')
+          break
+        }
         flux_max = convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1,flux_max)
       }
     }

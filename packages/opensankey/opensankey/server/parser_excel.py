@@ -237,6 +237,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     sheet_name = DATA_SHEET
     if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
         sheet_name = RESULTS_SHEET
+    if not sheet_name in mfa_input:
+        return
     columns =  mfa_input[sheet_name][0]    
     for row in range(1,len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]

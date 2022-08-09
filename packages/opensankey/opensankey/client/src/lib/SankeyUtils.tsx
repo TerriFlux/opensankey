@@ -73,6 +73,15 @@ export const getLinkValue = (
       break
     }
     val = val[listKey[i]]
+    if (val === undefined) {
+      console.log(listKey[i] + 'not in val')
+      return {
+        value: 0,
+        display_value: '',
+        tags: {},
+        extension: {}
+      }      
+    }
   }
   return (val as unknown) as SankeyLinkValue
 }
@@ -381,6 +390,10 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
 
   for (const i in listKey) {
+    if ( val === undefined) {
+      console.log(listKey[i] + ' not found in val')
+      break
+    }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
   }
   if (val === undefined) {
