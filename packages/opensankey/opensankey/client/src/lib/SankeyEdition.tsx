@@ -366,12 +366,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
               {addAllDropDownLinks()}
             </>)
-              : (<>
-                <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_basic, color: '#6c757d' }}>Sélection des données</FormLabel>
-                <Form.Control placeholder="Pas de sélection" style={{ opacity: opacity_basic, color: '#6c757d' }} disabled /></>)
+              : (<Col></Col>)
             }
             { nb_agregation_level > 1 ? (
-              <><FormLabel>Niveau de détail</FormLabel>
+              <><FormLabel><b>Niveau de détail</b></FormLabel>
                 <Form.Select id="selectionNode"
                   style={{ color: 'black'}}
                   onChange={
@@ -402,7 +400,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
                     <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
                   {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
-                </Form.Select></>) : (<></>)}
+                </Form.Select></>) : (<Col></Col>)}
           </Form.Group>
           <Col lg="auto">
             {additional_selector ? (
