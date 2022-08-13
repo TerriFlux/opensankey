@@ -1,11 +1,11 @@
-import React, { FunctionComponent, useState, useEffect, Validator } from 'react'
+import React, { FunctionComponent, useState, useRef, useEffect, Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
-import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeyLinkEdition from './SankeyLinkEdition'
+// import SankeyNodeEdition from './SankeyNodeEdition'
+// import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem, ArtefactsItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
@@ -40,18 +40,20 @@ type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
   const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
-  const [show_nav, set_show_nav] = useState(false)
+  // const [show_nav, set_show_nav] = useState(false)
   const [show_toast, set_show_toast] = useState(false)
-  const [nav_item_active, set_nav_item_active] = useState<string>('')
-  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
-  const [selected_link, set_selected_link] = useState(start_link)
+  // const [nav_item_active, set_nav_item_active] = useState<string>('')
+  // const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
+  const selected_link = useRef(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
-  const [selected_node, set_selected_node] = useState(default_node)
-  const [multi_selected_nodes, set_multi_selected_nodes] = useState([])
-  const [multi_selected_links, set_multi_selected_links] = useState([])
-  const [multi_selected_label, set_multi_selected_label] = useState([])
-
-  const [radio_selected] = useState<string>('local')
+  const selected_node = useRef(default_node)
+  const multi_selected_nodes = useRef([])
+  const multi_selected_links = useRef([])
+  const multi_selected_label = useRef([])
+  const button_ref = useRef<HTMLLabelElement>(null)
+  const accordion_ref = useRef<HTMLDivElement>(null)
+  const links_accordion_ref = useRef<HTMLDivElement>(null)
+  const nodes_accordion_ref = useRef<HTMLDivElement>(null)
 
   const [show_draw, set_show_draw] = useState(false)
   const [mode_selection, set_mode_selection] = useState('s')
@@ -88,9 +90,9 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             data={data}
             set_data={set_data}
             current_path={''}
-            set_multi_selected_nodes={set_multi_selected_nodes}
-            set_multi_selected_links={set_multi_selected_links}
-            set_multi_selected_label={set_multi_selected_label}
+            multi_selected_nodes={multi_selected_nodes}
+            multi_selected_links={multi_selected_links}
+            multi_selected_label={multi_selected_label}
             callback={processExample}
           /></>}
         portfolio_menu={<>
@@ -100,24 +102,16 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
         logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
-        set_show_nav={set_show_nav}
-        show_nav={show_nav}
         set_show_toast={set_show_toast}
         show_toast={show_toast}
-        set_nav_item_active={set_nav_item_active}
-        nav_item_active={nav_item_active}
-        set_sub_nav_item_active={set_sub_nav_item_active}
-        sub_nav_item_active={sub_nav_item_active}
-        set_selected_node={set_selected_node}
         selected_node={selected_node}
-        set_multi_selected_nodes={set_multi_selected_nodes}
         multi_selected_nodes={multi_selected_nodes}
-        set_multi_selected_links={set_multi_selected_links}
         multi_selected_links={multi_selected_links}
-        set_selected_link={set_selected_link}
         multi_selected_label={multi_selected_label}
-        set_multi_selected_label={set_multi_selected_label}
-
+        accordion_ref={accordion_ref}
+        nodes_accordion_ref={nodes_accordion_ref}
+        links_accordion_ref={links_accordion_ref}
+        button_ref={button_ref}        
         selected_link={selected_link}
         url_prefix=''
         settings_edition={
@@ -126,24 +120,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             set_data={set_data}
           />
         }
-        node_edition={
-          <SankeyNodeEdition
-            data={data}
-            set_data={set_data}
-            radio_selected={radio_selected}
-            set_multi_selected_nodes={set_multi_selected_nodes}
-            multi_selected_nodes={multi_selected_nodes}
-          />
-        }
-        link_edition={
-          <SankeyLinkEdition
-            show={true}
-            data={data}
-            set_data={set_data}
-            selected_link={selected_link}
-            multi_selected_links={multi_selected_links}
-          />
-        }
+        node_edition={null}
+        link_edition={null}
         settings_edition_node_tags={
           <SankeySettingsEditionElementTags
             data={data}
@@ -189,32 +167,28 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           data={data}
           set_data={set_data}
 
-          set_multi_selected_nodes={set_multi_selected_nodes}
           multi_selected_nodes={multi_selected_nodes}
-
-          set_multi_selected_label={set_multi_selected_label}
           multi_selected_label={multi_selected_label}
-
-          set_multi_selected_links={set_multi_selected_links}
           multi_selected_links={multi_selected_links}
 
           select_node={(n: SankeyNode) => {
-            set_selected_node(n)
+            selected_node.current = n
           }}
           node_arrow_visible={
             (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
           }
           select_link={(l: SankeyLink) => {
-            set_selected_link(l)
+            selected_link.current = l
           }}
           link_text={SankeyUtils.link_text}
           test_link_value={SankeyUtils.test_link_value}
-          set_show_nav={set_show_nav}
-          set_nav_item_active={set_nav_item_active}
-          set_sub_nav_item_active={set_sub_nav_item_active}
           nodeTooltipsContent={nodeTooltipsContent}
           linkTooltipsContent={linkTooltipsContent}
           set_show_toast={set_show_toast}
+          button_ref={button_ref}
+          accordion_ref={accordion_ref}
+          nodes_accordion_ref={nodes_accordion_ref}
+          links_accordion_ref={links_accordion_ref}
           current={true}
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
