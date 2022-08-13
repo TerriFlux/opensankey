@@ -7,10 +7,12 @@ import { default_link } from './SankeyUtils'
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
+  //selected_link: PropTypes.shape(SankeyLinkPropTypes).isRequired,
+  selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
+
   show: PropTypes.bool.isRequired,
 
-  multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
+  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
 }
 
 type SankeyLinkEditionTypes = InferProps<typeof SankeyLinkEditionPropTypes>
@@ -26,7 +28,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
 
-  let link = selected_link
+  let link = selected_link.current
   if (link === undefined) {
     link = default_link(data)
   }
@@ -47,8 +49,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   //renvoie la valeur correspondant aux paramètre selectionné
   const value_selected_parameter = (): SankeyLinkValue => {
-    if ( Object.keys(data.links).length === 0 || !(selected_link.idLink in data.links) ) {
-      let val = JSON.parse(JSON.stringify(Object(selected_link.value)))
+    if ( Object.keys(data.links).length === 0 || !(selected_link.current.idLink in data.links) ) {
+      let val = JSON.parse(JSON.stringify(Object(selected_link.current.value)))
       Object.values(tags_selected).map(tag_selected => {
         if (val[tag_selected] === undefined) {
           val[tag_selected] = {}
@@ -57,7 +59,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       })
       return val
     }
-    let val = JSON.parse(JSON.stringify(Object(data.links[selected_link.idLink].value)))
+    let val = JSON.parse(JSON.stringify(Object(data.links[selected_link.current.idLink].value)))
     Object.values(tags_selected).map(tag_selected => {
       if (val[tag_selected] === undefined) {
         val[tag_selected] = {}
@@ -66,26 +68,26 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return val
   }
-  const center = selected_link.left_horiz_shift && selected_link.right_horiz_shift ? (selected_link.left_horiz_shift + selected_link.right_horiz_shift) / 2 : 0.5
+  const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
 
   // DEFINITION DES FONCTIONS VERIFIANT QUE TOUTES LES VALEURS DES DIFÉRENTS PARAMÈTRES SOIENT IDENTIQUES 
   const gradChecked = () => {
     let gradChecked = true
-    multi_selected_links.map(d => {
+    multi_selected_links.current.map(d => {
       gradChecked = (d.gradient) ? gradChecked : false
     })
     return gradChecked
   }
   const dashChecked = () => {
     let dashChecked = true
-    multi_selected_links.map(d => {
+    multi_selected_links.current.map(d => {
       dashChecked = (d.dashed) ? dashChecked : false
     })
     return dashChecked
   }
   const labelVisibleChecked = () => {
     let labelVisibleChecked = true
-    multi_selected_links.map(d => {
+    multi_selected_links.current.map(d => {
       labelVisibleChecked = (d.label_visible) ? labelVisibleChecked : false
     })
     return labelVisibleChecked
@@ -93,10 +95,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const shiftCenter = () => {
     let display_shift = true
     let center = 0.5
-    if (multi_selected_links.length != 0) {
-      center = multi_selected_links[0].left_horiz_shift && multi_selected_links[0].right_horiz_shift ? (multi_selected_links[0].left_horiz_shift + multi_selected_links[0].right_horiz_shift) / 2 : 0.5
+    if (multi_selected_links.current.length != 0) {
+      center = multi_selected_links.current[0].left_horiz_shift && multi_selected_links.current[0].right_horiz_shift ? (multi_selected_links.current[0].left_horiz_shift + multi_selected_links.current[0].right_horiz_shift) / 2 : 0.5
     }
-    multi_selected_links.map((d) => {
+    multi_selected_links.current.map((d) => {
       const tmp = d.left_horiz_shift && d.right_horiz_shift ? (d.left_horiz_shift + d.right_horiz_shift) / 2 : 0.5
       display_shift = (tmp == center) ? display_shift : false
     })
@@ -105,10 +107,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const shift = () => {
     let display_shift = true
     let shift = 0.5
-    if (multi_selected_links.length != 0) {
-      shift = multi_selected_links[0].shift_gap
+    if (multi_selected_links.current.length != 0) {
+      shift = multi_selected_links.current[0].shift_gap
     }
-    multi_selected_links.map((d) => {
+    multi_selected_links.current.map((d) => {
       display_shift = (d.shift_gap == shift) ? display_shift : false
     })
     return (display_shift) ? shift : 0
@@ -117,26 +119,26 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     let allChecked = true
     switch (param) {
     case 'hh':
-      multi_selected_links.map(d => {
+      multi_selected_links.current.map(d => {
         allChecked = (d.orientation == 'hh') ? allChecked : false
       })
       return allChecked
       break
     case 'vv':
-      multi_selected_links.map(d => {
+      multi_selected_links.current.map(d => {
         allChecked = (d.orientation == 'vv') ? allChecked : false
       })
       return allChecked
 
       break
     case 'hv':
-      multi_selected_links.map(d => {
+      multi_selected_links.current.map(d => {
         allChecked = (d.orientation == 'hv') ? allChecked : false
       })
       return allChecked
       break
     case 'vh':
-      multi_selected_links.map(d => {
+      multi_selected_links.current.map(d => {
         allChecked = (d.orientation == 'vh') ? allChecked : false
       })
       return allChecked
@@ -148,30 +150,30 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const courbure = () => {
     let display_courbe = true
     let courbe = 0.5
-    if (multi_selected_links.length != 0) {
-      courbe = multi_selected_links[0].curvature
+    if (multi_selected_links.current.length != 0) {
+      courbe = multi_selected_links.current[0].curvature
     }
-    multi_selected_links.map((d) => {
+    multi_selected_links.current.map((d) => {
       display_courbe = (d.curvature == courbe) ? display_courbe : false
     })
     return (display_courbe) ? courbe : 0
   }
   const linkType = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.length != 0) {
+    if (multi_selected_links.current.length != 0) {
       switch (param) {
       case 'courbe':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.curved) ? allChecked : false
         })
         break
       case 'arrow':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.arrow) ? allChecked : false
         })
         break
       case 'recycle':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.recycling) ? allChecked : false
         })
         break
@@ -184,20 +186,20 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   const linkLabelColor = (param: string) => {
     let allChecked = true
 
-    if (multi_selected_links.length != 0) {
+    if (multi_selected_links.current.length != 0) {
       switch (param) {
       case 'white':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.text_color == 'white') ? allChecked : false
         })
         break
       case 'black':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.text_color == 'black') ? allChecked : false
         })
         break
       case 'color':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.text_color == d.color) ? allChecked : false
         })
         break
@@ -210,20 +212,20 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   const labelPositionVert = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.length != 0) {
+    if (multi_selected_links.current.length != 0) {
       switch (param) {
       case 'beginning':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.label_position == 'beginning') ? allChecked : false
         })
         break
       case 'middle':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.label_position == 'middle') ? allChecked : false
         })
         break
       case 'end':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.label_position == 'end') ? allChecked : false
         })
         break
@@ -235,34 +237,34 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
   // const labelSticktoLink = () => {
   //   let labelSticktoLink = true
-  //   multi_selected_links.map(d => {
+  //   multi_selected_links.current.map(d => {
   //     labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
   //   })
   //   return labelSticktoLink
   // }
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
-    multi_selected_links.map(d => {
+    multi_selected_links.current.map(d => {
       labelSticktoLink = (d.label_position === 'frozen') ? labelSticktoLink : true
     })
     return labelSticktoLink
   }
   const labelPositionOrtho = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.length != 0) {
+    if (multi_selected_links.current.length != 0) {
       switch (param) {
       case 'above':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.orthogonal_label_position == 'above') ? allChecked : false
         })
         break
       case 'middle':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.orthogonal_label_position == 'middle') ? allChecked : false
         })
         break
       case 'below':
-        multi_selected_links.map(d => {
+        multi_selected_links.current.map(d => {
           allChecked = (d.orthogonal_label_position == 'below') ? allChecked : false
         })
         break
@@ -301,11 +303,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
         <Col>
           <FormCheck inline
             type='switch'
-            disabled={multi_selected_links.length === 0 || multi_selected_links[0].colorParameter !== 'groupTag'}
-            checked={multi_selected_links.length > 0  && multi_selected_links[0].colorTag == tags_group_key}
+            disabled={multi_selected_links.current.length === 0 || multi_selected_links.current[0].colorParameter !== 'groupTag'}
+            checked={multi_selected_links.current.length > 0  && multi_selected_links.current[0].colorTag == tags_group_key}
             label='Palette'
             onChange={() => {
-              multi_selected_links.forEach(link => link.colorTag = (link.colorTag === tags_group_key) ? Object.keys(fluxTags)[0] : tags_group_key)
+              multi_selected_links.current.forEach(link => link.colorTag = (link.colorTag === tags_group_key) ? Object.keys(fluxTags)[0] : tags_group_key)
               set_data({ ...data })
             }}
           />
@@ -378,7 +380,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             const new_nb_element = evt.target as HTMLInputElement
                             const new_tag_key = new_nb_element.id
                             const visible = new_nb_element.checked
-                            Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                            Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                               let val = Object(d.value)
                               Object.values(tags_selected).forEach(tag => {
                                 if (val[tag] === undefined) {
@@ -458,8 +460,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={value_selected_parameter().value}
                     onChange={
                       evt => {
-                        let val = Object(selected_link.value)
-                        multi_selected_links.map(d => {
+                        let val = Object(selected_link.current.value)
+                        multi_selected_links.current.map(d => {
                           val = d.value
                           Object.values(tags_selected).forEach(tag => {
                             if (val[tag] === undefined) {
@@ -487,7 +489,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={value_selected_parameter().display_value}
                     onChange={
                       evt => {
-                        let val = Object(selected_link.value)
+                        let val = Object(selected_link.current.value)
                         Object.values(tags_selected).forEach(tag => {
                           if (val[tag] === undefined) {
                             val[tag] = {}
@@ -495,7 +497,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           val = val[tag]
                         })
                         if(val.display_value==' '){
-                          selected_link.dashed=false
+                          selected_link.current.dashed=false
                         }
                         val.display_value = evt.target.value
                         set_data({ ...data })
@@ -517,13 +519,13 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <Form.Control
                     type="color"
-                    value={(multi_selected_links.length == 1) ? multi_selected_links[0].color : '#ffffff'}
+                    value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
                     onChange={
                       evt => {
-                        // selected_link.color = evt.target.value
+                        // selected_link.current.color = evt.target.value
                         const color = evt.target.value
-                        multi_selected_links.map(d => d.color = evt.target.value)
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
+                        multi_selected_links.current.map(d => d.color = evt.target.value)
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
                         set_data({ ...data })
                       }
                     }
@@ -546,7 +548,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         // selected_link.gradient = evt.target.checked
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
                         set_data({ ...data })
                       }
                     }
@@ -567,7 +569,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         // selected_link.gradient = evt.target.checked
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                         set_data({ ...data })
                       }
                     }
@@ -587,7 +589,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={shiftCenter()}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           if (+evt.target.value - d.shift_gap < 0) {
                             return
                           }
@@ -602,7 +604,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     } />
                 </Col>
-                <Col sm={2}>{selected_link.shift_gap}</Col>
+                <Col sm={2}>{selected_link.current.shift_gap}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
@@ -617,7 +619,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={shift()}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           if (center - +evt.target.value < 0) {
                             return
                           }
@@ -633,7 +635,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     } />
                 </Col>
-                <Col sm={2}>{selected_link.shift_gap}</Col>
+                <Col sm={2}>{selected_link.current.shift_gap}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
@@ -646,7 +648,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkType('courbe')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
 
                         set_data({ ...data })
                       }
@@ -660,7 +662,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkType('arrow')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
                         set_data({ ...data })
                       }
                     }
@@ -674,7 +676,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
          
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.recycling = evt.target.checked
                           delete d.left_horiz_shift
                           delete d.right_horiz_shift
@@ -700,7 +702,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={courbure()}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.curvature = +evt.target.value
                         })
 
@@ -708,7 +710,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     } />
                 </Col>
-                <Col sm={2}>{selected_link.curvature}</Col>
+                <Col sm={2}>{selected_link.current.curvature}</Col>
               </Form.Group>
               <Form.Group as={Row} >
                 <Col sm={12}>
@@ -721,7 +723,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkOrientation('hh')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
                         set_data({ ...data })
@@ -737,7 +739,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkOrientation('vv')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
                         set_data({ ...data })
@@ -753,7 +755,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkOrientation('vh')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
                         set_data({ ...data })
@@ -769,7 +771,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     checked={linkOrientation('hv')}
                     onChange={
                       evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                           d.orientation = evt.target.value
                         })
                         set_data({ ...data })
@@ -790,7 +792,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={linkLabelColor('black')}
                   onChange={
                     (evt) => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = evt.target.value
                       })
                       set_data({ ...data })
@@ -806,7 +808,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={linkLabelColor('white')}
                   onChange={
                     (evt) => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = evt.target.value
                       })
                       set_data({ ...data })
@@ -822,7 +824,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={linkLabelColor('color')}
                   onChange={
                     () => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.text_color = d.color
                       })
                       set_data({ ...data })
@@ -838,7 +840,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 checked={labelVisibleChecked()}
                 onChange={
                   evt => {
-                    Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                       d.label_visible = evt.target.checked
                     })
                     set_data({ ...data })
@@ -858,7 +860,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={labelPositionVert('beginning')}
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -874,7 +876,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={labelPositionVert('middle')}
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -890,7 +892,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={labelPositionVert('end')}
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -903,11 +905,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <FormCheck
                 type='checkbox'
                 label='Attaché au flux'
-                disabled={selected_link.label_position === 'frozen'}
+                disabled={selected_link.current.label_position === 'frozen'}
                 checked={labelSticktoLinkDisabled()}
                 onChange={
                   evt => {
-                    Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                       d.label_on_path = evt.target.checked
                     })
                     set_data({ ...data })
@@ -928,7 +930,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -944,7 +946,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   checked={labelPositionOrtho('middle')}
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -961,7 +963,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
                   onChange={
                     evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                       })
                       set_data({ ...data })
@@ -980,9 +982,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   <Form.Control
                     as="textarea"
                     rows={10}
-                    value={selected_link.tooltip_text ? selected_link.tooltip_text : ''}
+                    value={selected_link.current.tooltip_text ? selected_link.current.tooltip_text : ''}
                     onChange={evt => {
-                      selected_link.tooltip_text = evt.target.value
+                      selected_link.current.tooltip_text = evt.target.value
                       set_data({ ...data })
                     }}
                   />
