@@ -425,10 +425,8 @@ export const convert_data = (
         x_label: 0,
         y_label: 0,
 
-        left_horiz_shift: 0,
-        right_horiz_shift: 0,
         vert_shift: 0,
-        shift_gap: 0,
+        shift_gap: 0.1,
 
         curvature: 0.5,
         curved: false,
