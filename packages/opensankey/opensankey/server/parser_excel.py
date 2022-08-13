@@ -342,7 +342,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                     except Exception:
                         pass
             node_definition = None
-            if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
+            if NODES_DEFINITIONS in nodes_cols and type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
                 node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
             node_tags = {}
             for _,node_tag_name in enumerate(nodeTags.keys()):
