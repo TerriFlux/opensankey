@@ -341,7 +341,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const gg_links = d3
       .select('#g_links')
       .selectAll('.gg_links')
-      .data(Object.values(display_links))
+      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display))
       .enter()
       .append('g')
       .attr('id', d => 'gg_' + d.idLink)
@@ -1011,6 +1011,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
     for (const i in stream_io) {
       const l = links[stream_io[i]]
+      if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
+        continue
+      }
 
       //position noeud source ou target
       let pos_x_src, pos_y_src
@@ -1068,7 +1071,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(dragged).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
     d3.select('#tooltip_node' + idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
     const error_msg: { [text: string]: string } = {}
-    Object.values(links).forEach(
+    Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
       link => {
 
 
@@ -2033,7 +2036,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags)
-
+    const handle_pos = handles_positions(links, link, xs, ys, xt, yt)
 
     add_shift_handles(
       link, nodes, links,
@@ -2268,7 +2271,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (remove_previous_nodes) {
       d3.selectAll('.gg_nodes').remove()
     }
-    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes)).enter().append('g')
+    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>n.display)).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
       })
@@ -4121,6 +4124,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //si les noeuds source sont à droite des target
 
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
+        continue
+      }
+      if (!data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
         continue
       }
       const link_value = test_link_value(data,nodes, l, nodeTags)
