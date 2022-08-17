@@ -203,7 +203,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
     exemple_found = False
     artefact_found = False
     for file_or_folder in folder_content:
-        if 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))

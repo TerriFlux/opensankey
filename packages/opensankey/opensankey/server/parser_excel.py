@@ -342,7 +342,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                     except Exception:
                         pass
             node_definition = None
-            if type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
+            if NODES_DEFINITIONS in nodes_cols and type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
                 node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
             node_tags = {}
             for _,node_tag_name in enumerate(nodeTags.keys()):
@@ -519,7 +519,7 @@ def save_simple_excel(
         # else:
         #     nodes[i+1][nodes_cols.index('Forme')] = 'circle'
         #nodes[row][nodes_cols.index(NODES_COLOR)] = node['color']
-        if 'definition' in node:
+        if 'definition' in node and node['definition'] != None:
             nodes[row][nb_cols_nodes-1] = node['definition']             
         for j,tag_name in enumerate(sankey_data['nodeTags']):
             tags = sankey_data['nodeTags'][tag_name]['tags']
@@ -575,8 +575,10 @@ def save_simple_excel(
     links[0] = flux_cols + dataTags_group_names + fluxTags_group_names
     row=1
     for _,link in enumerate(sankey_data['links'].values()):
-        val = link['value']
+        val = link['value']            
         row = add_links(sankey_data, flux_cols, links, row, link, val,0)
+        
+    links = [link for link in links if link[0] != "" ]
 
     # products = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'product']
     # sectors  = [node['name'] for node in sankey_data['nodes'].values() if node['type'] == 'sector']
@@ -625,9 +627,9 @@ def save_simple_excel(
         for j in range(len(nodes_names)):
             ter[0][j+1] = nodes_names[j]
         #     ter['use'][0][j+1] = sectors[j]
-        for row in range(1,len(links)):
-            origin      = links[row][flux_cols.index(DATA_ORIGIN)]
-            destination = links[row][flux_cols.index(DATA_DESTINATION)]
+        for _,link in enumerate(sankey_data['links'].values()):
+            origin      = sankey_data['nodes'][link['idSource']]['name']
+            destination = sankey_data['nodes'][link['idTarget']]['name']
             try:
                 origin_idx = nodes_names.index(origin)
                 destination_idx = nodes_names.index(destination)
@@ -649,12 +651,14 @@ def save_simple_excel(
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     if len(sankey_data['dataTags'].keys()) == depth:
+        display_val = val['display_value']
+        if display_val == ' ':
+            return row
         links[row][flux_cols.index(DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
         links[row][flux_cols.index(DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
-        links[row][flux_cols.index(DATA_VALUE)] = val['value']
+        links[row][flux_cols.index(DATA_VALUE)] = float(val['value'])
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
-                
                 links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
             else:
                 links[row][3+depth+i] = ''

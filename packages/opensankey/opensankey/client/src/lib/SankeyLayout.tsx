@@ -452,9 +452,11 @@ export const updateLayout = (
 
     node.name = node_layout.name
     node.node_width = node_layout.node_width
-    node.node_height = node_layout.node_height    
-    node.x = node_layout.x
-    node.y = node_layout.y
+    node.node_height = node_layout.node_height
+    if (node_layout.x !== 0 && node_layout.y != 0) { 
+      node.x = node_layout.x
+      node.y = node_layout.y
+    }
     if (node.y + 200 > max_vertical_offset) {
       max_vertical_offset = node.y + 200
     }
@@ -472,9 +474,9 @@ export const updateLayout = (
     node.colorParameter = node_layout.colorParameter
     node.color = node_layout.color
 
-    for (const node_tag_key in node_layout.tags) {
-      node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-    }
+    // for (const node_tag_key in node_layout.tags) {
+    //   node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+    // }
     
     node.shape_visible = node_layout.shape_visible
     node.node_visible = node_layout.node_visible
@@ -511,8 +513,8 @@ export const updateLayout = (
     link.label_visible = label_visible
     link.x_label = x_label
     link.y_label = y_label
-    link.left_horiz_shift = link_layout.left_horiz_shift
-    link.right_horiz_shift = link_layout.right_horiz_shift
+    // link.left_horiz_shift = link_layout.left_horiz_shift
+    // link.right_horiz_shift = link_layout.right_horiz_shift
     link.orientation = link_layout.orientation
     link.recycling = recycling
     link.orthogonal_label_position = orthogonal_label_position
@@ -528,21 +530,21 @@ export const updateLayout = (
     }
   }
 
-  for (const tag_group_key in new_layout.nodeTags) {
-    if ( tag_group_key === 'Exchanges' ) {
-      continue
-    }
-    data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
-    // if (tag_group_key in new_layout.nodeTags) {
-    //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
-    //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
-    //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
-    //   }
-    // }
-  }
-  for (const tag_group_key in new_layout.fluxTags) {
-    data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
-  }
+  // for (const tag_group_key in new_layout.nodeTags) {
+  //   if ( tag_group_key === 'Exchanges' ) {
+  //     continue
+  //   }
+  //   data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+  //   // if (tag_group_key in new_layout.nodeTags) {
+  //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
+  //   //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
+  //   //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
+  //   //   }
+  //   // }
+  // }
+  // for (const tag_group_key in new_layout.fluxTags) {
+  //   data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
+  // }
   data.agregation_level = new_layout.agregation_level
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
@@ -588,7 +590,7 @@ export const desagregation = (
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
-    if (n.x === undefined || (n.x === 0 && n.y === 0)) {
+    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idParent].x !==0 && data.nodes[idParent].y !==0 )) {
       n.x = data.nodes[idParent].x
       n.y = data.nodes[idParent].y - current_y
     }

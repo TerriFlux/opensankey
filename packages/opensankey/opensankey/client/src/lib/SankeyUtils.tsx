@@ -74,7 +74,7 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      console.log(listKey[i] + 'not in val')
+      console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
@@ -490,10 +490,11 @@ export const default_sankey_data = (): SankeyData => {
         x_label: 0,
         y_label: 0,
 
-        left_horiz_shift: 0,
-        right_horiz_shift: 0,
+        // left_horiz_shift: 0,
+        // right_horiz_shift: 0,
+        // vert_shift: 0,
         vert_shift: 0,
-        shift_gap: 0,
+        shift_gap: 0.1,
 
         curvature: 0.5,
         curved: false,
@@ -789,10 +790,7 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void,
-  set_multi_selected_nodes: (nodes: string[]) => void,
-  set_multi_selected_links: (links: string[]) => void,
-  set_multi_selected_label: (labels: string[]) => void
+  example_callback: (data: SankeyData) => void
 ) => {
 
   let root = window.location.href
@@ -806,9 +804,6 @@ export const uploadExemple = (
   }
   const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain'
   set_data({ ...default_sankey_data() })
-  set_multi_selected_nodes([])
-  set_multi_selected_links([])
-  set_multi_selected_label([])
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
