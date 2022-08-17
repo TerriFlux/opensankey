@@ -452,9 +452,11 @@ export const updateLayout = (
 
     node.name = node_layout.name
     node.node_width = node_layout.node_width
-    node.node_height = node_layout.node_height    
-    node.x = node_layout.x
-    node.y = node_layout.y
+    node.node_height = node_layout.node_height
+    if (node_layout.x !== 0 && node_layout.y != 0) { 
+      node.x = node_layout.x
+      node.y = node_layout.y
+    }
     if (node.y + 200 > max_vertical_offset) {
       max_vertical_offset = node.y + 200
     }
@@ -588,7 +590,7 @@ export const desagregation = (
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
-    if (n.x === undefined || (n.x === 0 && n.y === 0)) {
+    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idParent].x !==0 && data.nodes[idParent].y !==0 )) {
       n.x = data.nodes[idParent].x
       n.y = data.nodes[idParent].y - current_y
     }
