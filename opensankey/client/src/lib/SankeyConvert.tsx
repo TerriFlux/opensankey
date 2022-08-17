@@ -342,8 +342,11 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
-  if (!data_to_convert.agregation_level) {
-    data_to_convert.agregation_level = 0
+  if (!data_to_convert.agregation) {
+    data_to_convert.agregation = {
+      dimension:'Primaire',
+      level:0
+    }
   }
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
@@ -432,6 +435,20 @@ export const convert_data = (
         curved: false,
         style:''
       }
+    }
+  }
+  if (!data.nodeTags.Dimensions) {
+    data.nodeTags.Dimensions = {
+      group_name : 'Dimensions',
+      color_map: 'jet',
+      show_legend: false,
+      tags : {
+        Primaire : {
+          name : 'Primaire',
+          selected: true
+        }
+      },
+      banner: 'none'
     }
   }
 

@@ -64,6 +64,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     Object.keys(data[elementTagName][tags_group_key].tags).forEach(
       (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
     )
+    if (elementTagName === 'nodeTags' && tags_group_key === 'Dimensions') {
+      Object.values(data.nodes).forEach(node=>node.dimensions['element' + idElement] = {parent_name : undefined, level : 1})
+    }
+
     set_data({ ...data })
   }
   //Ajoute un groupTag

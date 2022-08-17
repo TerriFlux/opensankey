@@ -4876,6 +4876,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         data.nodes[new_node1.idNode] = new_node1
         for (const tag_group_key in data.nodeTags) {
           new_node1.tags[tag_group_key] = []
+          if (tag_group_key === 'Dimensions' ) {
+            for ( const tag in data.nodeTags.Dimensions.tags) {
+              new_node1.dimensions[tag] = {level:1}
+            }
+          }
         }
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)

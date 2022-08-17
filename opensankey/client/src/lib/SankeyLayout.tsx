@@ -545,7 +545,8 @@ export const updateLayout = (
   // for (const tag_group_key in new_layout.fluxTags) {
   //   data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
   // }
-  data.agregation_level = new_layout.agregation_level
+  data.agregation.level = new_layout.agregation.level
+  data.agregation.dimension = new_layout.agregation.dimension
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
   data.colorMap = new_layout.colorMap
@@ -612,13 +613,13 @@ export const agregation = (
   const agregated_node = data.nodes[idParent]    
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
 
-  if (desagregate_nodes.length === 0) {
-    return
-  }
   if (control_display) {
     // show agregated node
     agregated_node.display = true
     agregated_node.node_visible = true
+  }
+  if (desagregate_nodes.length === 0) {
+    return
   }
 
   let mean_x = 0
