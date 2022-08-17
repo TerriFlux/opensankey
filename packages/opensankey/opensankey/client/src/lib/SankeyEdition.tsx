@@ -99,6 +99,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const [diagram, set_diagram] = useState('')
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
+  //const [cube_dimension,set_cube_dimension] = useState('Primaire')
 
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
@@ -292,7 +293,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       })
     })
     set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
-    if ( data.agregation_level === -1 ) {
+    if ( data.agregation.level === -1 ) {
       localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
     }
     set_data({ ...new_data })
@@ -370,6 +371,21 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             }
             { nb_agregation_level > 1 ? (
               <><FormLabel><b>Niveau de détail</b></FormLabel>
+                <Form.Select placeholder='all' 
+                  value={data.agregation.dimension} 
+                  onChange={evt=>{
+                    data.agregation.dimension = evt.target.value
+                    data.agregation.level = 1
+                    Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
+                    set_nodes_level(data, data.nodes, 1)
+                    //set_cube_dimension(evt.target.value)
+                    set_data({...data})
+                  }} 
+                >
+                  {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
+                    return (<option key={i} value={tag_key}>{tag.name}</option>)
+                  })}
+                </Form.Select>
                 <Form.Select id="selectionNode"
                   style={{ color: 'black'}}
                   onChange={
@@ -392,11 +408,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                       for (let level = 1; level <= +evt.target.value + 1; level++) {
                         set_nodes_level(data, data.nodes, level)
                       }
-                      data.agregation_level =+evt.target.value
+                      data.agregation.level =+evt.target.value+1
                       set_data({ ...data })
                     }
                   }
-                  value={data.agregation_level}
+                  value={data.agregation.level-1}
                 >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
                     <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
                   {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}

@@ -190,10 +190,10 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
       set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
     updateLayout(server_data, server_data.layout)
-    if (server_data.agregation_level === -1) {
+    if (server_data.agregation.level === -1) {
       localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
     } else {
-      set_nodes_level(server_data,server_data.nodes,server_data.agregation_level+1,true)
+      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level+1,true)
     }
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
@@ -317,7 +317,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
-  const [parent_visible,set_parent_visible] = useState(false)
   const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
@@ -2172,9 +2171,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          set_nodes_level(new_data,new_data.nodes,new_data.agregation_level+1,true)
+                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level+1,true)
                           set_data(new_data)
-                          if ( data.agregation_level === -1 ) {
+                          if ( data.agregation.level === -1 ) {
                             localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
                           }
                         }
@@ -2202,10 +2201,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
                 <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >Publier</Dropdown.Item>    
                 <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
-                {edition_menu}
                 <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
                 <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
               </NavDropdown >
+              {edition_menu}
               <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
                 {example_menu}
               </NavDropdown >
@@ -2500,37 +2499,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                         </Col>
                         <Col xs={3}>
                         </Col>
-                      </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col xs={2} >
-                          <FormCheck
-                            disabled={multi_selected_nodes.current.length == 0}
-                            type='checkbox'
-                            label='Parent'
-                            checked={multi_selected_nodes.current.length != 0 && parent_visible}
-                            onChange={
-                              evt => set_parent_visible(evt.target.checked)
-                            }
-                          />
-                        </Col>
-                        { parent_visible ? (
-                          <Col xs={10}>
-                            <Form.Select 
-                              onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
-                                if ( changeEvent.target.value == 'none' ) {
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].level = 1)
-                                } else {
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].level = 2)
-                                }
-                              }}>
-                              <option key={0} value='none' selected={multi_selected_nodes.current.length != 0 && multi_selected_nodes.current[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
-                              {
-                                Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.current.length != 0 && multi_selected_nodes.current[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
-                              }
-                            </Form.Select>
-                          </Col>) : (<></>) }
                       </Form.Group>
 
                       <SankeyNodeEdition
@@ -3698,7 +3666,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
                         set_data({ ...sankey_data })
-                        if (data.agregation_level === -1) {
+                        if (data.agregation.level === -1) {
                           localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
                         }
                       }

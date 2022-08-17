@@ -122,11 +122,21 @@ def upload_excel():
     try:
         excel_input_file = request.files['file']
         mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
+    except Exception as expt:
+        print('load_mfa_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
+    try:
         sankey_data = parser_excel.parse_excel(mfa_input)
-        # context = {
-        #     'nodes': nodes,
-        #     'links': links
-        # }
+    except Exception as expt:
+        print('parse_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
+    try:
         json_data = json.dumps(sankey_data)
         response = Response(
             response=json_data,
@@ -134,7 +144,8 @@ def upload_excel():
             mimetype='application/json'
         )
     except Exception as expt:
-        print(expt)
+        json_data = json.dumps(sankey_data)
+        print('dumps' + str(expt))
         response = Response(
             response=json_data,
             status=400
