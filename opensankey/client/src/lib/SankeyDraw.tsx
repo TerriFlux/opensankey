@@ -348,12 +348,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (link_value === undefined) {
           return ''
         }
-        //const display_value = getLinkValue(data, d.idLink).display_value
-        // if (display_value.includes('*') && !data.show_structure) {
-        //   return '40, 5'
-        // } else {
-        //   return ''
-        // }
+        const display_value = getLinkValue(data, d.idLink).display_value
+        if (display_value.includes('*') && !data.show_structure) {
+          return '40, 5'
+        } 
         if (d.dashed) {
           return '40, 5'
         } else {
