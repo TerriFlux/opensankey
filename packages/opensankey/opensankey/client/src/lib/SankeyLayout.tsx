@@ -577,7 +577,7 @@ export const desagregation = (
   console.log('--')
 
   const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
-  if (!idParent) {
+  if (!idParent || !data.nodes[idParent]) {
     return
   }
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
@@ -617,6 +617,9 @@ export const agregation = (
     // show agregated node
     agregated_node.display = true
     agregated_node.node_visible = true
+  }
+  if (desagregate_nodes.length === 0) {
+    return
   }
   if (desagregate_nodes.length === 0) {
     return

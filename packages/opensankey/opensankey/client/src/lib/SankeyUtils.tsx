@@ -863,7 +863,7 @@ export const set_nodes_level = (
       agregation(data,node.idNode,data.agregation.dimension,control_display)
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
-        if (control_display && idParent !== null && idParent !== undefined) {
+        if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
           display_nodes[idParent].node_visible = false
           display_nodes[idParent].display = false
         }
