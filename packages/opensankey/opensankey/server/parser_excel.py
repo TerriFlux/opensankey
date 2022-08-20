@@ -222,7 +222,7 @@ def parse_excel(mfa_input):
         'level'     : 1
     }
     if NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1:
-        agregation['level'] = -1    
+        agregation['level'] = -1  
     return {
         'version'      : '0.8',
         
@@ -350,35 +350,40 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             node_definition = None
             if NODES_DEFINITIONS in nodes_cols and type(mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]) == str:
                 node_definition = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_DEFINITIONS)]
-            node_tags = {}
-            for _,node_tag_name in enumerate(nodeTags.keys()):
-                tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
-                if type(tag_value) != str and math.isnan(tag_value):
-                    continue
-                if tag_value == '':
-                    continue
-                node_tags[node_tag_name] = tag_value.split(':')
             new_node = {
                 'idNode'        : 'node'+str(node_index),
                 'name'          : name,
                 'definition'    : node_definition,
                 'type'          : node_type,
-                'tags'          : node_tags,
                 'display'       : node_visible,
                 'node_visible'  : node_visible,
                 'label_visible' : 1,
                 'shape_visible' : 1,
-                'color'         : color
+                'color'         : color,
+                'tags'          : {}
             }
             node_index = node_index+1
             nodes[name] = new_node
         else:
             new_node = nodes[name]
+
+        for _,node_tag_name in enumerate(nodeTags.keys()):
+            tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
+            if type(tag_value) != str and math.isnan(tag_value):
+                continue
+            if tag_value == '':
+                continue
+            if not node_tag_name in new_node['tags']:
+                new_node['tags'][node_tag_name] = []
+            new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name] + tag_value.split(':')
+            new_node['tags'][node_tag_name] = list(set(new_node['tags'][node_tag_name]))
+        #new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name]
             
         level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
         dimension = 'Primaire'
-        if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
-            mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_DIMENSIONS)]
+        #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
+        if 'Dimensions' in mfa_input[NODES_SHEET][0]:
+            dimension = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
         if not dimension  in new_node['dimensions']:
@@ -386,7 +391,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             
         if level == 1:
             new_node['dimensions'][dimension]['level'] = 1
-            if not has_sankey_col:
+            if not has_sankey_col and dimension == 'Primaire':
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
         else:
