@@ -217,18 +217,24 @@ def parse_excel(mfa_input):
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
     nodes_cols = mfa_input[NODES_SHEET][0]
     nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
-    agregation_level = 1
+    agregation = {
+        'dimension' : 'Primaire',
+        'level'     : 1
+    }
     if NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1:
-        agregation_level = -1
+        agregation['level'] = -1    
     return {
         'version'      : '0.8',
+        
         'dataTags'     : dataTags,
         'nodeTags'     : nodeTags,
         'fluxTags'     : fluxTags,
+        
         'nodes'        : nodes,
         'links'        : links,
         'labels'       : {},
-        'agregation_level' : agregation_level
+        
+        'agregation' : agregation
     }
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
@@ -379,7 +385,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node['dimensions'][dimension] = {}
             
         if level == 1:
-            new_node['dimensions'][dimension]['level'] = 0
+            new_node['dimensions'][dimension]['level'] = 1
             if not has_sankey_col:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
@@ -387,7 +393,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if not has_sankey_col:
                 new_node['display'] = 0 
                 new_node['node_visible'] = 0   
-            new_node['dimensions'][dimension]['level'] = int(level-1)
+            new_node['dimensions'][dimension]['level'] = int(level)
             other_display_node_found = False
             j = i
             while not other_display_node_found:
