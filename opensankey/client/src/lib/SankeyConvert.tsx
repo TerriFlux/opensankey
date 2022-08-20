@@ -87,6 +87,7 @@ interface ConvertSankeyData {
   trade_close_vspace?: number
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
+  agregated_level?: number
 }
 
 interface ConvertSankeyValue {
@@ -348,6 +349,12 @@ export const convert_data = (
       level:0
     }
   }
+  if (!data_to_convert.agregation.dimension) {
+    data_to_convert.agregation.dimension = 'Primaire'
+  }
+  if (data.agregated_level) {
+    delete data.agregated_level
+  } 
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {

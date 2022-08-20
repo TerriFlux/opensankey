@@ -184,6 +184,7 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
   }
 
   if (server_data.layout !== undefined) {
+    convert_data(server_data.layout)
     // let nb_agregation_level = 0
     // Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
     for (let i=1 ; i<=nb_agregation_level ; i++) {

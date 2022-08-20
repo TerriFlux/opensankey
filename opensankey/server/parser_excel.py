@@ -379,7 +379,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node['dimensions'][dimension] = {}
             
         if level == 1:
-            new_node['dimensions'][dimension]['level'] = 1
+            new_node['dimensions'][dimension]['level'] = 0
             if not has_sankey_col:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
@@ -387,7 +387,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if not has_sankey_col:
                 new_node['display'] = 0 
                 new_node['node_visible'] = 0   
-            new_node['dimensions'][dimension]['level'] = int(level)
+            new_node['dimensions'][dimension]['level'] = int(level-1)
             other_display_node_found = False
             j = i
             while not other_display_node_found:
