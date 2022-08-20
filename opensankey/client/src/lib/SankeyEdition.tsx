@@ -405,6 +405,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                           set_data({ ...data })
                         }
                       }
+                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
                       for (let level = 1; level <= +evt.target.value; level++) {
                         set_nodes_level(data, data.nodes, level)
                       }
