@@ -856,7 +856,7 @@ export const set_nodes_level = (
       node.node_visible = false
       return
     }
-    if ((node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) && node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
+    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) && node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
       // shows siblings
       desagregation(data,node.idNode,data.agregation.dimension,control_display)
       // hide children
