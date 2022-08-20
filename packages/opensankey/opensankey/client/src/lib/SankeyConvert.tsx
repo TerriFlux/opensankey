@@ -346,8 +346,11 @@ export const convert_data = (
   if (!data_to_convert.agregation) {
     data_to_convert.agregation = {
       dimension:'Primaire',
-      level:0
+      level:1
     }
+  }
+  if (data_to_convert.agregation.level === 0) {
+    data_to_convert.agregation.level = 1
   }
   if (!data_to_convert.agregation.dimension) {
     data_to_convert.agregation.dimension = 'Primaire'

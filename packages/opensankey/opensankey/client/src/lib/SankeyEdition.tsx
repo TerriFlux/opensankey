@@ -405,17 +405,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                           set_data({ ...data })
                         }
                       }
-                      for (let level = 1; level <= +evt.target.value + 1; level++) {
+                      for (let level = 1; level <= +evt.target.value; level++) {
                         set_nodes_level(data, data.nodes, level)
                       }
-                      data.agregation.level =+evt.target.value+1
+                      data.agregation.level =+evt.target.value
                       set_data({ ...data })
                     }
                   }
-                  value={data.agregation.level-1}
+                  value={data.agregation.level}
                 >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
                     <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
-                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
+                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
                 </Form.Select></>) : (<Col></Col>)}
           </Form.Group>
           <Col lg="auto">

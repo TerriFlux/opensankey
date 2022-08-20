@@ -177,9 +177,9 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
   // }
   let nb_agregation_level = 0
   Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  set_nodes_level(server_data,server_data.nodes,nb_agregation_level-1)
+  set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  for (let i=nb_agregation_level-1 ; i>=0 ; i--) {
+  for (let i=nb_agregation_level ; i>0 ; i--) {
     set_nodes_level(server_data,server_data.nodes,i,false)
   }
 
@@ -194,7 +194,7 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
     if (server_data.agregation.level === -1) {
       localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
     } else {
-      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level+1,true)
+      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
     }
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
@@ -337,7 +337,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  let nb_agregation_level = 0
+  let nb_agregation_level = 1
   Object.values(data.nodes).forEach(n => {
     if (!n.dimensions) {
       return
@@ -2172,7 +2172,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level+1,true)
+                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
                           if ( data.agregation.level === -1 ) {
                             localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))

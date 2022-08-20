@@ -835,7 +835,7 @@ export const uploadExemple = (
       if (data.agregation.level === -1) {
         localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
       } else {
-        set_nodes_level(data,data.nodes,data.agregation.level+1,true)
+        set_nodes_level(data,data.nodes,data.agregation.level,true)
       }
       set_data({ ...data })
       downloadExamples(file_name, the_url_prefix, file_type)
