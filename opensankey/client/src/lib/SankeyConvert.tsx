@@ -599,9 +599,12 @@ export const convert_data = (
           global_curvature: 0.5,
           null_flux: false,
           label_vert:'bas',
-          label_horiz:'droite',
+          label_horiz:'milieu',
           label_box_width:110,
         }
+      }
+      if (n.display_style.label_vert === 'bas' && n.display_style.label_horiz === 'droite') {
+        n.display_style.label_horiz = 'milieu'
       }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Cormorant'

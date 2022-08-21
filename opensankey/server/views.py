@@ -188,7 +188,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
-        data['file_name'] = exemple
+        data['file_name'] = exemple_file_path
         json_data = json.dumps(data)
 
     response = Response(
