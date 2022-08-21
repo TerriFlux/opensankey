@@ -2020,7 +2020,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const path = window.location.href
 
-    const url = path + 'sankey/publish'
+    const url = path + url_prefix + 'sankey/publish'
 
     const new_data = JSON.parse(JSON.stringify(data))
     new_data.file_name = file_path
