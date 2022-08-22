@@ -271,9 +271,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     sous_filieres = window.sankey.sous_filieres
   }
   let is_split = false
-  let diagrams : { [keys :string] : string[] } = {}
+  const diagrams : { [keys :string] : string[] } = {}
   if ( sous_filieres ) {
-    is_split = Object.keys(sous_filieres)[0].includes("/")
+    is_split = Object.keys(sous_filieres)[0].includes('/')
     if (is_split ) {
       Object.keys(sous_filieres).forEach(s=> {
         const path = s.split('/')
@@ -284,7 +284,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         }
       })
     } else {
-       Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
     }
   }
   const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
@@ -352,7 +352,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-        {(data.static_sankey && sous_filieres && !is_split) ? (<>
+          {(data.static_sankey && sous_filieres && !is_split) ? (<>
             <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
               <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
               <Form.Select style={{ width: '200px', color:'black' }}
@@ -409,22 +409,22 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             }
             { nb_agregation_level > 1 ? (
               <><FormLabel><b>Niveau de détail</b></FormLabel>
-              {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
-                <Form.Select placeholder='all' 
-                  value={data.agregation.dimension} 
-                  onChange={evt=>{
-                    data.agregation.dimension = evt.target.value
-                    data.agregation.level = 1
-                    Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
-                    set_nodes_level(data, data.nodes, 1)
-                    //set_cube_dimension(evt.target.value)
-                    set_data({...data})
-                  }} 
-                >
-                  {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
-                    return (<option key={i} value={tag_key}>{tag.name}</option>)
-                  })}
-                </Form.Select>) : (<></>)}
+                {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
+                  <Form.Select placeholder='all' 
+                    value={data.agregation.dimension} 
+                    onChange={evt=>{
+                      data.agregation.dimension = evt.target.value
+                      data.agregation.level = 1
+                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
+                      set_nodes_level(data, data.nodes, 1)
+                      //set_cube_dimension(evt.target.value)
+                      set_data({...data})
+                    }} 
+                  >
+                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                  </Form.Select>) : (<></>)}
                 <Form.Select id="selectionNode"
                   style={{ color: 'black'}}
                   onChange={
