@@ -1,5 +1,6 @@
 ﻿/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
+import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
@@ -2492,9 +2493,44 @@ const Menu: FunctionComponent<MenuTypes> = (
                             }
 
                             onChange={evt => {
-                              const sel = (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
-                              Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
-                              set_data({ ...data })
+                              if (multi_selected_nodes.current.length != 1) {
+                                return
+                              }
+                              multi_selected_nodes.current[0].name = evt.target.value
+                              const d = multi_selected_nodes.current[0]
+                              d3.select('#' + d.idNode + '_text').text(evt.target.value)            
+                              const wrap = textwrap()
+                                .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
+                                .method('tspans')
+                              d3.select('#ggg_' + d.idNode + ' text')
+                                .call(wrap)
+                              if (!d.x_label || data.show_structure) {
+                                d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                  const width = +d3.select('#' + d.idNode).attr('width')
+                      
+                                  if (d.display_style.label_horiz == 'milieu') {
+                                    return width / 2
+                                  } else if (d.display_style.label_horiz == 'droite') {
+                                    return d.display_style.label_vert == 'milieu' ? width : 0
+                                  } else {
+                                    return 0
+                                  }
+                                })
+                              }
+                      
+                              d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                const width = +d3.select('#' + d.idNode).attr('width')
+                                if (d.x_label) {
+                                  return d.x_label
+                                } else if (d.display_style.label_horiz == 'milieu') {
+                                  return width / 2
+                                } else if (d.display_style.label_horiz == 'droite') {
+                                  return width
+                                } else {
+                                  return 0
+                                }
+                              })
+                              setForceUpdate(!forceUpdate)
                             }}
                             disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
                         </Col>
