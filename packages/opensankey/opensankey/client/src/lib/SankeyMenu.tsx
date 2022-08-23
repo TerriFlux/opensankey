@@ -975,7 +975,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       //Style Noeud
       d.shape_visible = style.shape_visible
       d.color = style.color
-      d.type = style.type
+      d.shape = style.shape
+
+
       d.node_width = style.node_width
       d.node_height = style.node_height
 
@@ -1134,16 +1136,16 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col xs={2}>
                     <FormCheck
-                      value="product"
+                      value="ellipse"
                       type='radio'
                       label='Cercle'
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'product' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
                       }
 
                       onChange={evt => {
-                        data.style_node[selected_style_node].type = evt.target.value
+                        data.style_node[selected_style_node].shape = evt.target.value
                         set_data({ ...data })
                       }}
                     />
@@ -1151,16 +1153,16 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Col xs={2}>
                     <FormCheck
-                      value="sector"
+                      value="rect"
                       type='radio'
                       label='Rectangle'
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'sector' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
                       }
 
                       onChange={evt => {
-                        data.style_node[selected_style_node].type = evt.target.value
+                        data.style_node[selected_style_node].shape = evt.target.value
                         set_data({ ...data })
                       }}
                     />
@@ -1478,7 +1480,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       //Style Noeud
       d.shape_visible = style.shape_visible
       d.color = style.color
-      d.type = style.type
+      d.shape = style.shape
       d.node_width = style.node_width
       d.node_height = style.node_height
 

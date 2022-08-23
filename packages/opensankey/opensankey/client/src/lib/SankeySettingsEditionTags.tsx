@@ -265,14 +265,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                   }
                 /></td>
                 { elementNameProp === 'nodes' ? (
-                  <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
-                    set_data({ ...data })
-                  }
-
-                  }>
-                    <option key={'rect' + i} id='rect' selected={data[elementTagName][tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
-                    <option key={'circle' + i} id='circle' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='circle'>Circle</option>
+                  <Form.Select 
+                    onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                      data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
+                      set_data({ ...data })
+                    }}
+                    value={data[elementTagName][tags_group_key].tags[tag_key].shape as string}
+                  >
+                    <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
+                    <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
                   </Form.Select>) : (<></>)
                 }
               </tr>
