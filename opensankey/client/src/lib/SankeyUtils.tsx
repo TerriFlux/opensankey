@@ -415,7 +415,7 @@ export const default_sankey_data = (): SankeyData => {
       'default': {
         name: 'par défaut',
         idNode: 'default',
-        type: 'sector',
+        shape: 'rect',
         display: true,
         node_visible: true,
         shape_visible: true,
@@ -576,7 +576,7 @@ export const default_node = (
   const defaultNode = {
     name: '',
     idNode: 'default',
-    type: 'sector',
+    shape: 'rect',
     display: true,
     node_visible: true,
     shape_visible: true,
@@ -598,7 +598,6 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    // dimensions: { 'Primaire': { parent_name: undefined } },
     dimensions: {
       'Primaire':{
         level:1,

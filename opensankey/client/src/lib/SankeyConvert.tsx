@@ -21,7 +21,8 @@ interface ConvertSankeyNode {
   shape_visible: number | boolean,
   node_visible: number | boolean,  
   trade_close: boolean,
-  show_value: number | boolean
+  show_value: number | boolean,
+  type?: string
 }
 interface ConvertSankeyLink {
   classif?: string
@@ -363,7 +364,6 @@ export const convert_data = (
       'default': {
         name: 'par défaut',
         idNode: 'default',
-        type: 'sector',
         display: true,
         node_visible: true,
         shape_visible: true,
@@ -375,6 +375,7 @@ export const convert_data = (
         iconRatio: 80,
         iconVisible: true,
 
+        shape: 'rect',
         color: '#a9a9a9',
         colorParameter: 'local',
         position: 'absolute',
@@ -534,7 +535,6 @@ export const convert_data = (
   if ((data.display_style.unit as unknown) as number === 1) {
     data.display_style.unit = true
   }
-
   
   if (data.display_style.null_flux === undefined) {
     data.display_style.null_flux = false
@@ -578,6 +578,50 @@ export const convert_data = (
     }
   }
 
+  const has_product = Object.values(nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
+  if (has_product) {
+    if (!('Type de noeud' in data.nodeTags)) {
+      data.nodeTags['Type de noeud'] = {
+        group_name : 'Type de noeud',
+        tags : {
+          'produit' : {
+            name : 'produit',
+            selected : true,
+            color: '',
+            shape: 'ellipse'
+          },
+          'secteur' : {
+            name : 'secteur',
+            selected : true,
+            color: '',
+            shape: 'rect'
+          },
+          'échange' : {
+            name : 'échange',
+            selected : true,
+            color: '',
+            shape: 'rect'
+          }
+        },
+        color_map : '',
+        show_legend : false,
+        banner: 'none'
+      }
+    }
+  }
+  if ( data.nodeTags['Type de noeud'] ) {
+    data.nodeTags['Type de noeud'].banner = 'none' 
+    if (!data.nodeTags['Type de noeud'].tags.produit.shape) {
+      data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
+    }
+    if (!data.nodeTags['Type de noeud'].tags.secteur.shape) {
+      data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
+    }
+    if (!data.nodeTags['Type de noeud'].tags['échange'].shape) {
+      data.nodeTags['Type de noeud'].tags['échange'].shape = 'rect'
+    }
+  }
+
   let import_export = false
   const subchains: string[] = []
   Object.values(nodes).forEach(
@@ -590,9 +634,9 @@ export const convert_data = (
         n.display_style = {
           font_family:'Cormorant',
           font_size: data.display_style.node_font_size,
-          uppercase: n.type === 'product' ? false : true,
-          bold: n.type === 'product' ? false : true,
-          italic: n.type === 'product' ? true : false,
+          uppercase: false,
+          bold: false,
+          italic: false,
           unit: false,
           filter: 0,
           filter_label: 0,
@@ -711,6 +755,16 @@ export const convert_data = (
       if (n.iconVisible === undefined) {
         n.iconVisible = true
       }
+      if (n_convert.type) {
+        n.shape = n_convert.type === 'product' ? 'ellipse' : 'rect'
+        if ( has_product && !n.tags['Type de noeud']) {
+          n.tags['Type de noeud'] = []
+        } 
+        if (has_product && n.tags['Type de noeud'].length === 0 ) {
+          n.tags['Type de noeud'].push(n_convert.type === 'product' ? 'produit' : 'secteur' )
+        }
+        delete n_convert.type
+      }
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
@@ -774,9 +828,9 @@ export const convert_data = (
         show_legend: false,
         color_map: 'jet',
         tags: {
-          'import': { name: 'Importations', selected: true },
-          'export': { name: 'Exportations', selected: true },
-          'interior' : { name: 'Intérieur', selected: true }
+          'import': { name: 'Importations', selected: true, shape: 'rect' },
+          'export': { name: 'Exportations', selected: true, shape: 'rect' },
+          'interior' : { name: 'Intérieur', selected: true, shape: 'rect' }
         },
         banner: 'multi'
       }

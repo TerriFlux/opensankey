@@ -49,7 +49,7 @@ export const SankeyNodePropTypes = {
   outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   // semantic
-  type: PropTypes.oneOf(['product', 'sector']),
+  shape: PropTypes.oneOf(['ellipse', 'rect']).isRequired,
   tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
   style:PropTypes.string.isRequired,
   //display
@@ -153,14 +153,10 @@ export const SankeyLabelPropTypes = {
   label_width: PropTypes.number.isRequired,
   label_height: PropTypes.number.isRequired,
  
-
-
   x: PropTypes.number.isRequired,
   y: PropTypes.number.isRequired,
   x_label: PropTypes.number.isRequired,
   y_label: PropTypes.number.isRequired,
-  
-
 }
 
 export type SankeyLabel = InferProps<typeof SankeyLabelPropTypes>

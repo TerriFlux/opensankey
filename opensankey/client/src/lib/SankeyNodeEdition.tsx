@@ -48,7 +48,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const isAllNodeRect = () => {
     let rect = true
     if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => rect = (d.type !== 'sector') ? false : rect)
+      multi_selected_nodes.current.map(d => rect = (d.shape !== 'rect') ? false : rect)
     } else {
       rect = false
     }
@@ -57,7 +57,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const isAllNodeCircle = () => {
     let circle = true
     if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => circle = (d.type !== 'product') ? false : circle)
+      multi_selected_nodes.current.map(d => circle = (d.shape !== 'ellipse') ? false : circle)
     } else {
       circle = false
     }
@@ -309,12 +309,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={2}>
                     <FormCheck
-                      value="product"
+                      value="ellipse"
                       type='radio'
                       label='Cercle'
                       checked={isAllNodeCircle()}
                       onChange={evt => {
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.shape = evt.target.value)
                         set_data({ ...data })
                       }}
                     />
@@ -322,12 +322,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                   <Col xs={2}>
                     <FormCheck
-                      value="sector"
+                      value="rect"
                       type='radio'
                       label='Rectangle'
                       checked={isAllNodeRect()}
                       onChange={evt => {
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.shape = evt.target.value)
                         set_data({ ...data })
 
                       }}
