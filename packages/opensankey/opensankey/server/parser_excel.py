@@ -301,7 +301,10 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         
         combinaison_row = [None] * len(dataTags)
         combinaison = []
-        combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
+        if len(dataTags) > 0:
+           combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
+        else:
+            combinaison = [[]]
         for link_data_tags in combinaison:    
             link_flux_tags= []
             for fluxTag in fluxTags:
