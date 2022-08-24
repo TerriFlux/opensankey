@@ -2517,12 +2517,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       ggg_nodes
-          .filter(d =>d.tags['Type de noeud'].length === 0)
-          .append('rect')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('height', d => d.node_height)
-          .attr('width', d => d.node_width)
+        .filter(d =>d.tags['Type de noeud'].length === 0)
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('height', d => d.node_height)
+        .attr('width', d => d.node_width)
     } else {
       ggg_nodes
         .filter(d => d.shape === 'rect')
@@ -2950,12 +2950,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       ggg_nodes
-          .filter(d =>d.tags['Type de noeud'].length === 0)
-          .append('rect')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('height', d => d.node_height)
-          .attr('width', d => d.node_width)
+        .filter(d =>d.tags['Type de noeud'].length === 0)
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('height', d => d.node_height)
+        .attr('width', d => d.node_width)
     } else {
       ggg_nodes
         .filter(d => d.shape === 'rect')
