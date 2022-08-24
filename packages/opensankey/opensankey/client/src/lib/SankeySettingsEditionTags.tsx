@@ -97,7 +97,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   const handleDelTag = (n: string) => {
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
+    const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
     delete data[elementTagName][tags_group_key].tags[n]
+
+    Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
 
     set_data({ ...data })
   }
@@ -111,6 +114,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         if (n.colorTag === tags_group_key) {
           n.colorTag = ''
         }
+        delete n.tags[tags_group_key]
       })
     if (Object.keys(data[elementTagName]).length > 0) {
       const lastElmt = Object.keys(data[elementTagName])[Object.keys(data[elementTagName]).length - 1]
