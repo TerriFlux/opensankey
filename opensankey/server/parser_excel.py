@@ -172,6 +172,25 @@ def parse_sankey_energie_csv(
     }
     return sankey_dict
 
+def combine_data_tags(
+    dataTags: dict,
+    depth: int,
+    currentDataTag: dict,
+    combinaison: list,
+    row: list  
+):
+    if depth == len(dataTags):
+        for tag in currentDataTag['tags']:
+            row_copy = copy.deepcopy(row)
+            row_copy[depth-1] = tag
+            combinaison.append(row_copy)
+    else:
+        for tag in currentDataTag['tags']:
+            row_copy = copy.deepcopy(row)
+            row_copy[depth-1] = tag
+            combine_data_tags(dataTags,depth+1,dataTags[depth+1],combinaison, row_copy)   
+        
+
 def set_value(
     link_data_tags:list,
     link_flux_tags:list,
@@ -279,40 +298,35 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             except Exception:
                 pass 
         link_data_tags= []
-        for dataTag in dataTags:
-            if dataTag in columns:
-                link_data_tags.append(mfa_input[FLUX_SHEET][row][columns.index(dataTag)])
-        link_flux_tags= []
-        for fluxTag in fluxTags:
-            if fluxTag == 'flux_types':
-                fluxTag = DATA_TYPE_LABEL
-            link_flux_tags.append(mfa_input[FLUX_SHEET][row][columns.index(fluxTag)])
-
-        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        val = 5 #mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)]
-        display_val = ' '
-        # param_sheet=pd.DataFrame(mfa_input[PARAM_SHEET][1:],columns=mfa_input[PARAM_SHEET][0])
-        # if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
-        #     max_flux = param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values[0]
-        #     if val > float(max_flux):
-        #         display_val = str(round(val))+'*'
-        #         val = round(float(max_flux))
-        # if len(existing_links) > 0:
-        #     new_link = existing_links[0]
-        #     set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
-        # else:
-        value = {}
-        set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
-        new_link = {
-            'idLink'   : 'link'+str(row-1),  
-            'idSource' : source_node['idNode'],
-            'idTarget' : target_node['idNode'],
-            'value'    : value,
-            'color'    : color,
-            'dashed'   : 1
-        }
-        links[new_link['idLink']] = new_link
         
+        combinaison_row = [None] * len(dataTags)
+        combinaison = []
+        combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
+        for link_data_tags in combinaison:    
+            link_flux_tags= []
+            for fluxTag in fluxTags:
+                if fluxTag == 'flux_types':
+                    fluxTag = DATA_TYPE_LABEL
+                link_flux_tags.append('')
+            existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
+            val = 5
+            display_val = ' '
+            if len(existing_links) > 0:
+                new_link = existing_links[0]
+                set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+            else:
+                value = {}
+                set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
+                new_link = {
+                    'idLink'   : 'link'+str(row),  
+                    'idSource' : source_node['idNode'],
+                    'idTarget' : target_node['idNode'],
+                    'value'    : value,
+                    'color'    : color,
+                    'dashed'   : 1
+                }
+                links[new_link['idLink']] = new_link
+            
     for row in range(1,len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]
         target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_DESTINATION)]
