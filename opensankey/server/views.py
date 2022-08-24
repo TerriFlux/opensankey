@@ -86,10 +86,10 @@ def save_excel():
         cwd = os.getcwd()
         excel_file = os.path.join(cwd, "tutu.xlsx")
         sankey_data =  request.get_data().decode("utf-8")
-        mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
     except Exception as excpt:
         response = Response(
-            response='save_simple_excel : ' + str(excpt),
+            response='save_excel : ' + str(excpt),
             status=401
         )
         return response   

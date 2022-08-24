@@ -265,37 +265,37 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
             }
           }
-          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
               return data.nodeTags[source_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
-          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'][0] === 'produit' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
             selected_tag = target_node.tags[target_node.colorTag][0]
             if (selected_tag in data.nodeTags[target_node.colorTag].tags) {
               return data.nodeTags[target_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
-          } else if ((!source_node.tags['Type de noeud'] || source_node.tags['Type de noeud'][0] === 'secteur') && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+          } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'secteur')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
               return data.nodeTags[source_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
-          } else if ((!target_node.tags['Type de noeud'] || target_node.tags['Type de noeud'][0] === 'secteur') && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+          } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
             selected_tag = target_node.tags[source_node.colorTag][0]
             if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
               return data.nodeTags[source_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
-          } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'][0] === 'produit') {
+          } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit') {
             return source_node.color
-          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'][0] === 'produit') {
+          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
             return target_node.color
           } else {
             return l.color
@@ -1746,7 +1746,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + n.idNode).attr('height', scale(node_size_s_height))
 
-    if (n.tags['Type de noeud'] && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
+    if (n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + n.idNode).attr('rx', scale(node_size_s_width / 2))
       d3.select('#' + n.idNode).attr('cx', scale(node_size_s_width / 2))
       d3.select('#' + n.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1797,7 +1797,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + source_node.idNode).attr('width', scale(node_size_s_width))
     d3.select('#' + source_node.idNode).attr('height', scale(node_size_s_height))
-    if (source_node.tags['Type de noeud'] && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse') {
+    if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1806,7 +1806,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + target_node.idNode).attr('width', scale(node_size_t_width))
     d3.select('#' + target_node.idNode).attr('height', scale(node_size_t_height))
-    if (target_node.tags['Type de noeud'] && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse') {
+    if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
@@ -2516,6 +2516,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             .attr('ry', d => d.node_height / 2)
         }
       })
+      ggg_nodes
+          .filter(d =>d.tags['Type de noeud'].length === 0)
+          .append('rect')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('height', d => d.node_height)
+          .attr('width', d => d.node_width)
     } else {
       ggg_nodes
         .filter(d => d.shape === 'rect')
@@ -2942,6 +2949,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             .attr('ry', d => d.node_height / 2)
         }
       })
+      ggg_nodes
+          .filter(d =>d.tags['Type de noeud'].length === 0)
+          .append('rect')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('height', d => d.node_height)
+          .attr('width', d => d.node_width)
     } else {
       ggg_nodes
         .filter(d => d.shape === 'rect')
