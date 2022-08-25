@@ -264,71 +264,72 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         sheet_name = RESULTS_SHEET
     if not sheet_name in mfa_input:
         return
-    columns =  mfa_input[sheet_name][0]    
-    for row in range(len(mfa_input[FLUX_SHEET])):
-        source_name = mfa_input[FLUX_SHEET][row][0]
-        target_name =  mfa_input[FLUX_SHEET][row][1]
-        source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-        target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-        if len(source_nodes) == 0:
-            continue
-        if len(target_nodes) == 0:
-            continue
-        # if len(source_nodes) == 0:
-        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
-        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-        #         continue
-        # if len(target_nodes) == 0:
-        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
-        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-        #         continue
-            
-        source_node = source_nodes[0]
-        target_node = target_nodes[0]
-        color = source_node['color']
-        if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
+    columns =  mfa_input[sheet_name][0] 
+    if FLUX_SHEET in mfa_input:   
+        for row in range(len(mfa_input[FLUX_SHEET])):
+            source_name = mfa_input[FLUX_SHEET][row][0]
+            target_name =  mfa_input[FLUX_SHEET][row][1]
+            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+            if len(source_nodes) == 0:
+                continue
+            if len(target_nodes) == 0:
+                continue
+            # if len(source_nodes) == 0:
+            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
+            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
+            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+            #         continue
+            # if len(target_nodes) == 0:
+            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
+            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
+            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+            #         continue
+                
+            source_node = source_nodes[0]
+            target_node = target_nodes[0]
             color = source_node['color']
-        elif 'Type de noeud' in target_node['tags'] and 'produit' in target_node['tags']['Type de noeud']:
-            color = target_node['color']
-        if not is_hex(color):
-            try:
-               color = webcolors.name_to_hex(color)
-            except Exception:
-                pass 
-        link_data_tags= []
-        
-        combinaison_row = [None] * len(dataTags)
-        combinaison = []
-        if len(dataTags) > 0:
-           combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
-        else:
-            combinaison = [[]]
-        for link_data_tags in combinaison:    
-            link_flux_tags= []
-            for fluxTag in fluxTags:
-                if fluxTag == 'flux_types':
-                    fluxTag = DATA_TYPE_LABEL
-                link_flux_tags.append('')
-            existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-            val = 5
-            display_val = ' '
-            if len(existing_links) > 0:
-                new_link = existing_links[0]
-                set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+            if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
+                color = source_node['color']
+            elif 'Type de noeud' in target_node['tags'] and 'produit' in target_node['tags']['Type de noeud']:
+                color = target_node['color']
+            if not is_hex(color):
+                try:
+                    color = webcolors.name_to_hex(color)
+                except Exception:
+                    pass 
+            link_data_tags= []
+            
+            combinaison_row = [None] * len(dataTags)
+            combinaison = []
+            if len(dataTags) > 0:
+                combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
             else:
-                value = {}
-                set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
-                new_link = {
-                    'idLink'   : 'link'+str(row),  
-                    'idSource' : source_node['idNode'],
-                    'idTarget' : target_node['idNode'],
-                    'value'    : value,
-                    'color'    : color,
-                    'dashed'   : 1
-                }
-                links[new_link['idLink']] = new_link
+                combinaison = [[]]
+            for link_data_tags in combinaison:    
+                link_flux_tags= []
+                for fluxTag in fluxTags:
+                    if fluxTag == 'flux_types':
+                        fluxTag = DATA_TYPE_LABEL
+                    link_flux_tags.append('')
+                existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
+                val = 5
+                display_val = ' '
+                if len(existing_links) > 0:
+                    new_link = existing_links[0]
+                    set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+                else:
+                    value = {}
+                    set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
+                    new_link = {
+                        'idLink'   : 'link'+str(row),  
+                        'idSource' : source_node['idNode'],
+                        'idTarget' : target_node['idNode'],
+                        'value'    : value,
+                        'color'    : color,
+                        'dashed'   : 1
+                    }
+                    links[new_link['idLink']] = new_link
             
     for row in range(1,len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]
