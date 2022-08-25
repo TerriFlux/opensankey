@@ -617,7 +617,7 @@ export const convert_data = (
     if (!data.nodeTags['Type de noeud'].tags.secteur.shape) {
       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
     }
-    if (!data.nodeTags['Type de noeud'].tags['échange'].shape) {
+    if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
       data.nodeTags['Type de noeud'].tags['échange'].shape = 'rect'
     }
   }
