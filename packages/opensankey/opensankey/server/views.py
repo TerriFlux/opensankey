@@ -174,7 +174,7 @@ def upload_exemple():
             layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
-            sankey_data['file_name'] = layout_file_name
+        sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
