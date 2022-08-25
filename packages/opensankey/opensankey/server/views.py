@@ -220,8 +220,8 @@ def parse_folder(current_dir,menus,artefacts,key=None):
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if 'open-sankey' not in file_name:
-                    continue
+                # if 'open-sankey' not in file_name:
+                #     continue
                 if key not in artefacts or type(artefacts[key]) is dict:
                     artefacts[key] = []
                 artefacts[key].append(file_name)
