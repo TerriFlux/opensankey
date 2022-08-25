@@ -765,6 +765,9 @@ export const convert_data = (
         }
         delete n_convert.type
       }
+      if (!n.shape) {
+        n.shape = 'rect'
+      }
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')

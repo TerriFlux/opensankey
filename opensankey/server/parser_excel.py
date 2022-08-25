@@ -188,7 +188,7 @@ def combine_data_tags(
         for tag in currentDataTag['tags']:
             row_copy = copy.deepcopy(row)
             row_copy[depth-1] = tag
-            combine_data_tags(dataTags,depth+1,dataTags[depth+1],combinaison, row_copy)   
+            combine_data_tags(dataTags,depth+1,list(dataTags.values())[depth],combinaison, row_copy)   
         
 
 def set_value(
@@ -353,9 +353,9 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         source_node = source_nodes[0]
         target_node = target_nodes[0]
         color = source_node['color']
-        if source_node['type'] == 'product':
+        if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
             color = source_node['color']
-        elif target_node['type'] == 'product':
+        elif 'Type de noeud' in target_node['tags'] and 'produit' in target_node['tags']['Type de noeud']:
             color = target_node['color']
         if not is_hex(color):
             try:
@@ -418,13 +418,9 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 node_visible = 1
             else:
                 node_visible = 0                
-            if not NODE_TYPE in nodes_cols or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'secteur' or mfa_input[NODES_SHEET][i][nodes_cols.index(NODE_TYPE)] == 'échange':
-                node_type = 'sector' 
-            else: 
-                node_type = 'product'
             color = 'grey'
             if NODES_SANKEY in nodes_cols:
-                mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
+                color = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_COLOR)]
                 if type(color) != str and math.isnan(color) or color == '':
                     color = 'grey'
                 if not is_hex(color):
@@ -439,7 +435,6 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 'idNode'        : 'node'+str(node_index),
                 'name'          : name,
                 'definition'    : node_definition,
-                'type'          : node_type,
                 'display'       : node_visible,
                 'node_visible'  : node_visible,
                 'label_visible' : 1,
@@ -526,6 +521,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                 tmp = [s.strip() for s in tmp]
                 try:
                     color_tmp = [s.strip() for s in mfa_input[TAG_SHEET][i][5].split(':')]
+                    if len(color_tmp) != len(tmp):
+                        color_tmp = ['']
                 except Exception as excpt:
                     color_tmp = ['']
                 tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
