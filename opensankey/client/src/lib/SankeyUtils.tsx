@@ -837,7 +837,9 @@ export const uploadExemple = (
         set_nodes_level(data,data.nodes,data.agregation.level,true)
       }
       set_data({ ...data })
-      downloadExamples(file_name, the_url_prefix, file_type)
+      if (file_name.includes('.xlsx')) {
+        downloadExamples(file_name, the_url_prefix, file_type)
+      }
     })
   })
 }
