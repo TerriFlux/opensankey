@@ -1,5 +1,6 @@
 ﻿/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
+import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
@@ -177,23 +178,24 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
   // }
   let nb_agregation_level = 0
   Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  set_nodes_level(server_data,server_data.nodes,nb_agregation_level-1)
+  set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  for (let i=nb_agregation_level-1 ; i>=0 ; i--) {
+  for (let i=nb_agregation_level ; i>0 ; i--) {
     set_nodes_level(server_data,server_data.nodes,i,false)
   }
 
   if (server_data.layout !== undefined) {
+    convert_data(server_data.layout)
     // let nb_agregation_level = 0
     // Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
     for (let i=1 ; i<=nb_agregation_level ; i++) {
       set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
     updateLayout(server_data, server_data.layout)
-    if (server_data.agregation_level === -1) {
+    if (server_data.agregation.level === -1) {
       localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
     } else {
-      set_nodes_level(server_data,server_data.nodes,server_data.agregation_level+1,true)
+      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
     }
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
@@ -317,7 +319,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
-  const [parent_visible,set_parent_visible] = useState(false)
   const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
@@ -337,7 +338,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  let nb_agregation_level = 0
+  let nb_agregation_level = 1
   Object.values(data.nodes).forEach(n => {
     if (!n.dimensions) {
       return
@@ -974,7 +975,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       //Style Noeud
       d.shape_visible = style.shape_visible
       d.color = style.color
-      d.type = style.type
+      d.shape = style.shape
+
+
       d.node_width = style.node_width
       d.node_height = style.node_height
 
@@ -1133,16 +1136,16 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col xs={2}>
                     <FormCheck
-                      value="product"
+                      value="ellipse"
                       type='radio'
                       label='Cercle'
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'product' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
                       }
 
                       onChange={evt => {
-                        data.style_node[selected_style_node].type = evt.target.value
+                        data.style_node[selected_style_node].shape = evt.target.value
                         set_data({ ...data })
                       }}
                     />
@@ -1150,16 +1153,16 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Col xs={2}>
                     <FormCheck
-                      value="sector"
+                      value="rect"
                       type='radio'
                       label='Rectangle'
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].type == 'sector' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
                       }
 
                       onChange={evt => {
-                        data.style_node[selected_style_node].type = evt.target.value
+                        data.style_node[selected_style_node].shape = evt.target.value
                         set_data({ ...data })
                       }}
                     />
@@ -1477,7 +1480,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       //Style Noeud
       d.shape_visible = style.shape_visible
       d.color = style.color
-      d.type = style.type
+      d.shape = style.shape
       d.node_width = style.node_width
       d.node_height = style.node_height
 
@@ -2020,7 +2023,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const path = window.location.href
 
-    const url = path + 'sankey/publish'
+    const url = path + url_prefix + 'sankey/publish'
 
     const new_data = JSON.parse(JSON.stringify(data))
     new_data.file_name = file_path
@@ -2172,9 +2175,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          set_nodes_level(new_data,new_data.nodes,new_data.agregation_level+1,true)
+                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
-                          if ( data.agregation_level === -1 ) {
+                          if ( data.agregation.level === -1 ) {
                             localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
                           }
                         }
@@ -2202,10 +2205,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
                 <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >Publier</Dropdown.Item>    
                 <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
-                {edition_menu}
                 <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
                 <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
               </NavDropdown >
+              {edition_menu}
               <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
                 {example_menu}
               </NavDropdown >
@@ -2492,45 +2495,49 @@ const Menu: FunctionComponent<MenuTypes> = (
                             }
 
                             onChange={evt => {
-                              const sel = (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
-                              Object.values(data.nodes).filter(d => d.name == sel)[0].name = evt.target.value
-                              set_data({ ...data })
+                              if (multi_selected_nodes.current.length != 1) {
+                                return
+                              }
+                              multi_selected_nodes.current[0].name = evt.target.value
+                              const d = multi_selected_nodes.current[0]
+                              d3.select('#' + d.idNode + '_text').text(evt.target.value)            
+                              const wrap = textwrap()
+                                .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
+                                .method('tspans')
+                              d3.select('#ggg_' + d.idNode + ' text')
+                                .call(wrap)
+                              if (!d.x_label || data.show_structure) {
+                                d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                  const width = +d3.select('#' + d.idNode).attr('width')
+                      
+                                  if (d.display_style.label_horiz == 'milieu') {
+                                    return width / 2
+                                  } else if (d.display_style.label_horiz == 'droite') {
+                                    return d.display_style.label_vert == 'milieu' ? width : 0
+                                  } else {
+                                    return 0
+                                  }
+                                })
+                              }
+                      
+                              d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                const width = +d3.select('#' + d.idNode).attr('width')
+                                if (d.x_label) {
+                                  return d.x_label
+                                } else if (d.display_style.label_horiz == 'milieu') {
+                                  return width / 2
+                                } else if (d.display_style.label_horiz == 'droite') {
+                                  return width
+                                } else {
+                                  return 0
+                                }
+                              })
+                              setForceUpdate(!forceUpdate)
                             }}
                             disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
                         </Col>
                         <Col xs={3}>
                         </Col>
-                      </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col xs={2} >
-                          <FormCheck
-                            disabled={multi_selected_nodes.current.length == 0}
-                            type='checkbox'
-                            label='Parent'
-                            checked={multi_selected_nodes.current.length != 0 && parent_visible}
-                            onChange={
-                              evt => set_parent_visible(evt.target.checked)
-                            }
-                          />
-                        </Col>
-                        { parent_visible ? (
-                          <Col xs={10}>
-                            <Form.Select 
-                              onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
-                                if ( changeEvent.target.value == 'none' ) {
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].parent_name = undefined)
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].level = 1)
-                                } else {
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].parent_name = changeEvent.target.value)
-                                  multi_selected_nodes.current.forEach(n=>n.dimensions['Primaire'].level = 2)
-                                }
-                              }}>
-                              <option key={0} value='none' selected={multi_selected_nodes.current.length != 0 && multi_selected_nodes.current[0].dimensions['Primaire'].parent_name === undefined} >Pas de parent</option>
-                              {
-                                Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.current.length != 0 && multi_selected_nodes.current[0].dimensions['Primaire'].parent_name === n.idNode} >{n.name}</option>)
-                              }
-                            </Form.Select>
-                          </Col>) : (<></>) }
                       </Form.Group>
 
                       <SankeyNodeEdition
@@ -3698,7 +3705,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
                         set_data({ ...sankey_data })
-                        if (data.agregation_level === -1) {
+                        if (data.agregation.level === -1) {
                           localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
                         }
                       }
