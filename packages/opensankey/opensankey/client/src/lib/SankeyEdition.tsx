@@ -365,13 +365,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
               <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
               <Form.Select style={{ width: '200px', color:'black' }}
-                onChange={evt=>set_diagram(evt.target.value)}
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
                 value={diagram}>
                 {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
               </Form.Select>
               {is_split ? 
                 (<Form.Select style={{ width: '200px', color:'black' }}
-                  onChange={evt => {
+                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
                     setDiagram(evt)
                     set_diagram2(evt.target.value)
                   }}
@@ -412,7 +412,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
                   <Form.Select placeholder='all' 
                     value={data.agregation.dimension} 
-                    onChange={evt=>{
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
                       data.agregation.dimension = evt.target.value
                       data.agregation.level = 1
                       Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])

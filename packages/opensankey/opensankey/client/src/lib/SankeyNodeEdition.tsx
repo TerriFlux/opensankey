@@ -731,7 +731,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               <Form >
                 <Form.Group as={Row} >
                   <FormLabel column>Dimension du cube</FormLabel>
-                  <Col><Form.Select placeholder='all' value={cube_dimension} onChange={evt=>set_cube_dimension(evt.target.value)} >
+                  <Col><Form.Select placeholder='all' value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
                     {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
                       return (<option key={i} value={tag_key}>{tag.name}</option>)
                     })}
