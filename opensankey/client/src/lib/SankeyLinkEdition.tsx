@@ -496,9 +496,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           }
                           val = val[tag]
                         })
-                        if(val.display_value==' '){
-                          selected_link.current.dashed=false
-                        }
+                        selected_link.current.dashed=evt.target.value === ' '
                         val.display_value = evt.target.value
                         set_data({ ...data })
                       }

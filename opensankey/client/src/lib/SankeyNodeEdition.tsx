@@ -24,6 +24,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const { nodeTags } = data
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
+  const [parent_visible,set_parent_visible] = useState(false)
+  const [cube_dimension,set_cube_dimension] = useState('Primaire')
 
   const display_nodes = data.nodes
   const display_links = data.links
@@ -46,7 +48,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const isAllNodeRect = () => {
     let rect = true
     if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => rect = (d.type !== 'sector') ? false : rect)
+      multi_selected_nodes.current.map(d => rect = (d.shape !== 'rect') ? false : rect)
     } else {
       rect = false
     }
@@ -55,7 +57,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const isAllNodeCircle = () => {
     let circle = true
     if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => circle = (d.type !== 'product') ? false : circle)
+      multi_selected_nodes.current.map(d => circle = (d.shape !== 'ellipse') ? false : circle)
     } else {
       circle = false
     }
@@ -307,12 +309,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={2}>
                     <FormCheck
-                      value="product"
+                      value="ellipse"
                       type='radio'
                       label='Cercle'
                       checked={isAllNodeCircle()}
                       onChange={evt => {
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.shape = evt.target.value)
                         set_data({ ...data })
                       }}
                     />
@@ -320,12 +322,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                   <Col xs={2}>
                     <FormCheck
-                      value="sector"
+                      value="rect"
                       type='radio'
                       label='Rectangle'
                       checked={isAllNodeRect()}
                       onChange={evt => {
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.type = evt.target.value)
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.name).includes(f.name)).map(d => d.shape = evt.target.value)
                         set_data({ ...data })
 
                       }}
@@ -724,6 +726,63 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Row>
               </Form>
             </Tab>): (<></>)}
+          {(multi_selected_nodes.current.length !== 0 && 'Dimensions' in nodeTags) ? (
+            <Tab eventKey="agregation" title="Agrégations">
+              <Form >
+                <Form.Group as={Row} >
+                  <FormLabel column>Dimension du cube</FormLabel>
+                  <Col><Form.Select placeholder='all' value={cube_dimension} onChange={evt=>set_cube_dimension(evt.target.value)} >
+                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                  </Form.Select></Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={2} >
+                    <FormCheck
+                      disabled={multi_selected_nodes.current.length == 0}
+                      type='checkbox'
+                      label='Parent'
+                      checked={multi_selected_nodes.current.length != 0 && parent_visible}
+                      onChange={
+                        evt => set_parent_visible(evt.target.checked)
+                      }
+                    />
+                  </Col>
+                  { parent_visible ? (
+                    <Col xs={10}>
+                      <Form.Select 
+                        onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
+                          if ( changeEvent.target.value == 'none' ) {
+                            multi_selected_nodes.current.forEach(n=> {
+                              if (cube_dimension in n.dimensions) {
+                                n.dimensions[cube_dimension].parent_name = undefined
+                                n.dimensions[cube_dimension].level = 1
+                              } else {
+                                console.log(cube_dimension +' not in ' +n.name)
+                              }
+                            })
+                          } else {
+                            multi_selected_nodes.current.forEach(n=> {
+                              if (cube_dimension in n.dimensions) {
+                                n.dimensions[cube_dimension].parent_name = changeEvent.target.value
+                                n.dimensions[cube_dimension].level = 2
+                              } else {
+                                console.log(cube_dimension +' not in ' +n.name)
+                              }
+                            })
+                          }
+                        }}>
+                        <option key={0} value='none' selected={multi_selected_nodes.current.length != 0 && cube_dimension in multi_selected_nodes.current[0].dimensions && multi_selected_nodes.current[0].dimensions[cube_dimension].parent_name === undefined} >Pas de parent</option>
+                        {
+                          Object.values(data.nodes).map((n, i) => <option key={i+1} value={n.idNode} selected={ multi_selected_nodes.current.length != 0 && cube_dimension in  multi_selected_nodes.current[0].dimensions && multi_selected_nodes.current[0].dimensions[cube_dimension].parent_name === n.idNode} >{n.name}</option>)
+                        }
+                      </Form.Select>
+                    </Col>) : (<></>) }
+                </Form.Group>
+              </Form>
+            </Tab>
+          ): (<></>)}
           {children} 
         </Tabs>
         {(multi_selected_nodes.current.length !== 0) ? (

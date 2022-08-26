@@ -86,10 +86,10 @@ def save_excel():
         cwd = os.getcwd()
         excel_file = os.path.join(cwd, "tutu.xlsx")
         sankey_data =  request.get_data().decode("utf-8")
-        mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
     except Exception as excpt:
         response = Response(
-            response='save_simple_excel : ' + str(excpt),
+            response='save_excel : ' + str(excpt),
             status=401
         )
         return response   
@@ -122,11 +122,21 @@ def upload_excel():
     try:
         excel_input_file = request.files['file']
         mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
+    except Exception as expt:
+        print('load_mfa_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
+    try:
         sankey_data = parser_excel.parse_excel(mfa_input)
-        # context = {
-        #     'nodes': nodes,
-        #     'links': links
-        # }
+    except Exception as expt:
+        print('parse_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
+    try:
         json_data = json.dumps(sankey_data)
         response = Response(
             response=json_data,
@@ -134,7 +144,8 @@ def upload_excel():
             mimetype='application/json'
         )
     except Exception as expt:
-        print(expt)
+        json_data = json.dumps(sankey_data)
+        print('dumps' + str(expt))
         response = Response(
             response=json_data,
             status=400
@@ -163,7 +174,7 @@ def upload_exemple():
             layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
-            sankey_data['file_name'] = layout_file_name
+        sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -177,7 +188,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
-        data['file_name'] = exemple
+        data['file_name'] = exemple_file_path
         json_data = json.dumps(data)
 
     response = Response(
@@ -203,14 +214,14 @@ def parse_folder(current_dir,menus,artefacts,key=None):
     exemple_found = False
     artefact_found = False
     for file_or_folder in folder_content:
-        if 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if 'open-sankey' not in file_name:
-                    continue
+                # if 'open-sankey' not in file_name:
+                #     continue
                 if key not in artefacts or type(artefacts[key]) is dict:
                     artefacts[key] = []
                 artefacts[key].append(file_name)

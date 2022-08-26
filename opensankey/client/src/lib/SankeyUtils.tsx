@@ -415,7 +415,7 @@ export const default_sankey_data = (): SankeyData => {
       'default': {
         name: 'par défaut',
         idNode: 'default',
-        type: 'sector',
+        shape: 'rect',
         display: true,
         node_visible: true,
         shape_visible: true,
@@ -512,7 +512,7 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: false,
     fit_screen: window.SankeyToolsStatic,
 
-    agregation_level: 0,
+    agregation: {dimension:'Primaire',level:1},
 
     icon_catalog: {},
     labels: {},
@@ -544,7 +544,21 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-    nodeTags: {},
+
+    nodeTags : {
+      'Dimensions' : {
+        group_name : 'Dimensions',
+        color_map: 'jet',
+        show_legend: false,
+        tags : {
+          Primaire : {
+            name : 'Primaire',
+            selected: true
+          }
+        },
+        banner: 'none'
+      }
+    },
     dataTags: {},
     fluxTags: {},
 
@@ -562,7 +576,7 @@ export const default_node = (
   const defaultNode = {
     name: '',
     idNode: 'default',
-    type: 'sector',
+    shape: 'rect',
     display: true,
     node_visible: true,
     shape_visible: true,
@@ -584,7 +598,6 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    // dimensions: { 'Primaire': { parent_name: undefined } },
     dimensions: {
       'Primaire':{
         level:1,
@@ -818,13 +831,15 @@ export const uploadExemple = (
       example_callback(data)
       delete (data as unknown as layout_type).layout
 
-      if (data.agregation_level === -1) {
+      if (data.agregation.level === -1) {
         localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
       } else {
-        set_nodes_level(data,data.nodes,data.agregation_level+1,true)
+        set_nodes_level(data,data.nodes,data.agregation.level,true)
       }
       set_data({ ...data })
-      downloadExamples(file_name, the_url_prefix, file_type)
+      if (file_name.includes('.xlsx')) {
+        downloadExamples(file_name, the_url_prefix, file_type)
+      }
     })
   })
 }
@@ -837,14 +852,16 @@ export const set_nodes_level = (
 ) => {
   Object.values(display_nodes).forEach(node => {
     //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && (!node.dimensions['Primaire'])) {
+    if ( control_display && (!node.dimensions[data.agregation.dimension])) {
       node.display = false
       node.node_visible = false
       return
     }
-    if (node.dimensions['Primaire'] &&  node.dimensions['Primaire'].level === level) {
-      desagregation(data,node.idNode,'Primaire',control_display)
-      agregation(data,node.idNode,'Primaire',control_display)
+    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) && node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
+      // shows siblings
+      desagregation(data,node.idNode,data.agregation.dimension,control_display)
+      // hide children
+      agregation(data,node.idNode,data.agregation.dimension,control_display)
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
         if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
@@ -852,7 +869,7 @@ export const set_nodes_level = (
           display_nodes[idParent].display = false
         }
       })
-    } else if (control_display && node.dimensions['Primaire'].level  && node.dimensions['Primaire'].level > level) {
+    } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
       node.node_visible = false
       node.display = false
     }
