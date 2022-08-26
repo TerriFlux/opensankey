@@ -874,8 +874,8 @@ export const convert_data = (
         show_legend: false,
         color_map: 'custom',
         tags: {
-          'initial_data' : { name: 'Données collectées', selected: true, color:'DimGray' },
-          'computed_data': { name: 'Données calculées' , selected: true, color:'LightGray' },
+          'initial_data' : { name: 'Données collectées', selected: true, color:'#696969' },
+          'computed_data': { name: 'Données calculées' , selected: true, color:'#D3D3D3' },
         },
         banner: 'multi'
       }
@@ -885,10 +885,10 @@ export const convert_data = (
   }
   if (data.fluxTags['flux_types']) {
     if (data.fluxTags['flux_types'].tags.initial_data.color === '') {
-      data.fluxTags['flux_types'].tags.initial_data.color = 'DimGray'
+      data.fluxTags['flux_types'].tags.initial_data.color = '#696969' //DimGray
     }
     if (data.fluxTags['flux_types'].tags.computed_data.color === '') {
-      data.fluxTags['flux_types'].tags.computed_data.color = 'Gray'
+      data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
 
