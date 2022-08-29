@@ -287,9 +287,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return l.color
             }
           } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[source_node.colorTag][0]
-            if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
-              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            selected_tag = target_node.tags[target_node.colorTag][0]
+            if (data.nodeTags[target_node.colorTag].tags[selected_tag]) {
+              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
