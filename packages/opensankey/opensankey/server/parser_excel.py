@@ -236,8 +236,11 @@ def parse_excel(mfa_input):
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
     nodes_cols = mfa_input[NODES_SHEET][0]
     nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
+    dimension = 'Primaire'
+    if 'Dimensions' in nodeTags:
+        dimension = list(nodeTags.keys())[0]
     agregation = {
-        'dimension' : 'Primaire',
+        'dimension' : dimension,
         'level'     : 1
     }
     if NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1:
@@ -262,9 +265,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     sheet_name = DATA_SHEET
     if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
         sheet_name = RESULTS_SHEET
-    if not sheet_name in mfa_input:
-        return
-    columns =  mfa_input[sheet_name][0] 
+
     if FLUX_SHEET in mfa_input:   
         for row in range(len(mfa_input[FLUX_SHEET])):
             source_name = mfa_input[FLUX_SHEET][row][0]
@@ -330,7 +331,9 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         'dashed'   : 1
                     }
                     links[new_link['idLink']] = new_link
-            
+    if not sheet_name in mfa_input:
+        return
+    columns =  mfa_input[sheet_name][0]            
     for row in range(1,len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_ORIGIN)]
         target_name =  mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_DESTINATION)]
