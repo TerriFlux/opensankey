@@ -64,6 +64,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     Object.keys(data[elementTagName][tags_group_key].tags).forEach(
       (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
     )
+    if (elementTagName === 'nodeTags' && tags_group_key === 'Dimensions') {
+      Object.values(data.nodes).forEach(node=>node.dimensions['element' + idElement] = {parent_name : undefined, level : 1})
+    }
+
     set_data({ ...data })
   }
   //Ajoute un groupTag
@@ -93,7 +97,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   const handleDelTag = (n: string) => {
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
+    const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
     delete data[elementTagName][tags_group_key].tags[n]
+
+    Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
 
     set_data({ ...data })
   }
@@ -107,6 +114,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         if (n.colorTag === tags_group_key) {
           n.colorTag = ''
         }
+        delete n.tags[tags_group_key]
       })
     if (Object.keys(data[elementTagName]).length > 0) {
       const lastElmt = Object.keys(data[elementTagName])[Object.keys(data[elementTagName]).length - 1]
@@ -261,14 +269,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                   }
                 /></td>
                 { elementNameProp === 'nodes' ? (
-                  <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
-                    set_data({ ...data })
-                  }
-
-                  }>
-                    <option key={'rect' + i} id='rect' selected={data[elementTagName][tags_group_key].banner === 'one'} value='rect'>Rectangle</option>
-                    <option key={'circle' + i} id='circle' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='circle'>Circle</option>
+                  <Form.Select 
+                    onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                      data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
+                      set_data({ ...data })
+                    }}
+                    value={data[elementTagName][tags_group_key].tags[tag_key].shape as string}
+                  >
+                    <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
+                    <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
                   </Form.Select>) : (<></>)
                 }
               </tr>

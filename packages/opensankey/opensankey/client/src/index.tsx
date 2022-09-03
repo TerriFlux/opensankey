@@ -97,7 +97,7 @@ if (!window.SankeyToolsStatic) {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-    if (data.agregation_level === -1) {
+    if (data.agregation.level === -1) {
       localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
     }
     data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false

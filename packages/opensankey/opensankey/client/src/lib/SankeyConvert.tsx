@@ -1,5 +1,6 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup } from './types'
 import {compute_default_input_outputLinksId} from './SankeyLayout'
+import colormap from 'colormap'
 
 interface ConvertSankeyNode {
   id?: string
@@ -20,7 +21,8 @@ interface ConvertSankeyNode {
   shape_visible: number | boolean,
   node_visible: number | boolean,  
   trade_close: boolean,
-  show_value: number | boolean
+  show_value: number | boolean,
+  type?: string
 }
 interface ConvertSankeyLink {
   classif?: string
@@ -86,6 +88,7 @@ interface ConvertSankeyData {
   trade_close_vspace?: number
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
+  agregated_level?: number
 }
 
 interface ConvertSankeyValue {
@@ -110,6 +113,12 @@ export const convert_data = (
   
   console.log('FUNCTION : convert_data')
 
+  // if ( 'layout' in data) {
+  //   type layout_type = {
+  //     layout?: SankeyData
+  //   }
+  //   delete (data as unknown as layout_type).layout
+  // }
   if (!data.display_style) {
     (data.display_style as Record<string,unknown> ) = {}
   }
@@ -124,6 +133,9 @@ export const convert_data = (
   }
   if (data_to_convert.fluxTags === undefined) {
     data_to_convert.fluxTags = {}
+  }
+  if (data_to_convert.nodeTags === undefined) {
+    data_to_convert.nodeTags = {}
   }
   if (data.labels === undefined) {
     data.labels = {}
@@ -148,6 +160,25 @@ export const convert_data = (
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
       if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+      if(Object.values(tags_group.tags).filter(tag=>tag.color !== '').length === 0) {
+        const nb_tags = Object.keys(tags_group.tags).length
+        if (tags_group.color_map === 'custom') {
+          return
+        }
+        const colors = colormap({
+          colormap: tags_group.color_map,
+          nshades: Math.max(11, nb_tags),
+          format: 'hex',
+          alpha: 1
+        })
+        let step = 1
+        if (nb_tags < 11) {
+          step = Math.round(11 / nb_tags)
+        }
+        Object.keys(tags_group.tags).forEach(
+          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+        )
+      }
     }
   )
   Object.values(data_to_convert.fluxTags).forEach(
@@ -313,15 +344,26 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
-  if (!data_to_convert.agregation_level) {
-    data_to_convert.agregation_level = 0
+  if (!data_to_convert.agregation) {
+    data_to_convert.agregation = {
+      dimension:'Primaire',
+      level:1
+    }
   }
+  if (data_to_convert.agregation.level === 0) {
+    data_to_convert.agregation.level = 1
+  }
+  if (!data_to_convert.agregation.dimension) {
+    data_to_convert.agregation.dimension = 'Primaire'
+  }
+  if (data.agregated_level) {
+    delete data.agregated_level
+  } 
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {
         name: 'par défaut',
         idNode: 'default',
-        type: 'sector',
         display: true,
         node_visible: true,
         shape_visible: true,
@@ -333,6 +375,7 @@ export const convert_data = (
         iconRatio: 80,
         iconVisible: true,
 
+        shape: 'rect',
         color: '#a9a9a9',
         colorParameter: 'local',
         position: 'absolute',
@@ -396,10 +439,8 @@ export const convert_data = (
         x_label: 0,
         y_label: 0,
 
-        left_horiz_shift: 0,
-        right_horiz_shift: 0,
         vert_shift: 0,
-        shift_gap: 0,
+        shift_gap: 0.1,
 
         curvature: 0.5,
         curved: false,
@@ -407,6 +448,21 @@ export const convert_data = (
       }
     }
   }
+  if (!data.nodeTags.Dimensions) {
+    data.nodeTags.Dimensions = {
+      group_name : 'Dimensions',
+      color_map: 'jet',
+      show_legend: false,
+      tags : {
+        Primaire : {
+          name : 'Primaire',
+          selected: true
+        }
+      },
+      banner: 'none'
+    }
+  }
+  data.nodeTags.Dimensions.banner = 'none'
 
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
@@ -480,7 +536,6 @@ export const convert_data = (
   if ((data.display_style.unit as unknown) as number === 1) {
     data.display_style.unit = true
   }
-
   
   if (data.display_style.null_flux === undefined) {
     data.display_style.null_flux = false
@@ -524,6 +579,50 @@ export const convert_data = (
     }
   }
 
+  const has_product = Object.values(nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
+  if (has_product) {
+    if (!('Type de noeud' in data.nodeTags)) {
+      data.nodeTags['Type de noeud'] = {
+        group_name : 'Type de noeud',
+        tags : {
+          'produit' : {
+            name : 'produit',
+            selected : true,
+            color: '',
+            shape: 'ellipse'
+          },
+          'secteur' : {
+            name : 'secteur',
+            selected : true,
+            color: '',
+            shape: 'rect'
+          },
+          'échange' : {
+            name : 'échange',
+            selected : true,
+            color: '',
+            shape: 'rect'
+          }
+        },
+        color_map : '',
+        show_legend : false,
+        banner: 'none'
+      }
+    }
+  }
+  if ( data.nodeTags['Type de noeud'] ) {
+    data.nodeTags['Type de noeud'].banner = 'none' 
+    if (!data.nodeTags['Type de noeud'].tags.produit.shape) {
+      data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
+    }
+    if (!data.nodeTags['Type de noeud'].tags.secteur.shape) {
+      data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
+    }
+    if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
+      data.nodeTags['Type de noeud'].tags['échange'].shape = 'rect'
+    }
+  }
+
   let import_export = false
   const subchains: string[] = []
   Object.values(nodes).forEach(
@@ -536,18 +635,21 @@ export const convert_data = (
         n.display_style = {
           font_family:'Cormorant',
           font_size: data.display_style.node_font_size,
-          uppercase: n.type === 'product' ? false : true,
-          bold: n.type === 'product' ? false : true,
-          italic: n.type === 'product' ? true : false,
+          uppercase: false,
+          bold: false,
+          italic: false,
           unit: false,
           filter: 0,
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
           label_vert:'bas',
-          label_horiz:'droite',
+          label_horiz:'milieu',
           label_box_width:110,
         }
+      }
+      if (n.display_style.label_vert === 'bas' && n.display_style.label_horiz === 'droite') {
+        n.display_style.label_horiz = 'milieu'
       }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Cormorant'
@@ -585,14 +687,20 @@ export const convert_data = (
       if (n.y === undefined) {
         n.y = 0
       }
-      if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
-        n.shape_visible = true
-      }
+      // if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
+      //   n.shape_visible = true
+      // }
       if (n_convert.visible === 1) {
         n.shape_visible = true
       }
       if (n_convert.visible === 0) {
         n.shape_visible = false
+      }
+      if (n_convert.node_visible === 0) {
+        n.node_visible = false
+      }
+      if (n_convert.node_visible === 1) {
+        n.node_visible = true
       }
       if (n_convert.show_value === 0 || n_convert.show_value === undefined) {
         n.show_value = false
@@ -648,6 +756,19 @@ export const convert_data = (
       if (n.iconVisible === undefined) {
         n.iconVisible = true
       }
+      if (n_convert.type) {
+        n.shape = n_convert.type === 'product' ? 'ellipse' : 'rect'
+        if ( has_product && !n.tags['Type de noeud']) {
+          n.tags['Type de noeud'] = []
+        } 
+        if (has_product && n.tags['Type de noeud'].length === 0 ) {
+          n.tags['Type de noeud'].push(n_convert.type === 'product' ? 'produit' : 'secteur' )
+        }
+        delete n_convert.type
+      }
+      if (!n.shape) {
+        n.shape = 'rect'
+      }
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
@@ -688,12 +809,12 @@ export const convert_data = (
       if (!n.dimensions) {
         n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
       }
-      if (!n.dimensions.Primaire) {
-        n.dimensions.Primaire = { level : 1, parent_name: undefined }  
-      }
-      if (!n.dimensions.Primaire.level) {
-        n.dimensions.Primaire.level = 1  
-      }
+      // if (!n.dimensions.Primaire) {
+      //   n.dimensions.Primaire = { level : 1, parent_name: undefined }  
+      // }
+      // if (!n.dimensions.Primaire.level) {
+      //   n.dimensions.Primaire.level = 1  
+      // }
       if (n.style === undefined) {
         n.style = 'default'
       }  
@@ -711,9 +832,9 @@ export const convert_data = (
         show_legend: false,
         color_map: 'jet',
         tags: {
-          'import': { name: 'Importations', selected: true },
-          'export': { name: 'Exportations', selected: true },
-          'interior' : { name: 'Intérieur', selected: true }
+          'import': { name: 'Importations', selected: true, shape: 'rect' },
+          'export': { name: 'Exportations', selected: true, shape: 'rect' },
+          'interior' : { name: 'Intérieur', selected: true, shape: 'rect' }
         },
         banner: 'multi'
       }
@@ -753,13 +874,21 @@ export const convert_data = (
         show_legend: false,
         color_map: 'custom',
         tags: {
-          'initial_data' : { name: 'Données collectées', selected: true, color:'cyan' },
-          'computed_data': { name: 'Données calculées' , selected: true, color:'blue' },
+          'initial_data' : { name: 'Données collectées', selected: true, color:'#696969' },
+          'computed_data': { name: 'Données calculées' , selected: true, color:'#D3D3D3' },
         },
         banner: 'multi'
       }
       delete data.flux_types
       delete data.use_flux_types
+    }
+  }
+  if (data.fluxTags['flux_types']) {
+    if (data.fluxTags['flux_types'].tags.initial_data.color === '') {
+      data.fluxTags['flux_types'].tags.initial_data.color = '#696969' //DimGray
+    }
+    if (data.fluxTags['flux_types'].tags.computed_data.color === '') {
+      data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
 
@@ -768,7 +897,8 @@ export const convert_data = (
     l => {
       const l_convert = (l as unknown) as ConvertSankeyLink
       if (l.colorParameter === undefined) {
-        l.colorParameter = 'local'
+        l.colorParameter = 'groupTag'
+        l.colorTag = 'no_colormap'
       }
       if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
         if ( Array.isArray(l_convert.value) ) {
@@ -1152,6 +1282,10 @@ export const convert_data = (
 
     for (const i in listKey) {
       if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
+        if ( v === undefined) {
+          console.log(listKey[i] + ' not found in v')
+          break
+        }
         flux_max = convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1,flux_max)
       }
     }
@@ -1176,6 +1310,16 @@ export const convert_data = (
 
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
+  }
+
+  if (!data.colorMap) {
+    data.colorMap === 'no_colormap'
+  }
+  if (data.colorMap === 'no_colormap' ) {
+    Object.values(data.links).forEach(el => {
+      el.colorParameter = 'groupTag'
+      el.colorTag = 'no_colormap'
+    })
   }
 
   data.version = '0.8'

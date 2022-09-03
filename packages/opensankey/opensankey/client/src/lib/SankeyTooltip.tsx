@@ -228,13 +228,8 @@ export const nodeTooltipsContent = (
     let has_parent = false
     if (n.dimensions[dim].parent_name) {
       if (! header_written) {
-        if (n.type === 'product' ) {
-          t += '<br><p><b>Produits agrégés et désagrégés<b></p>'
-          t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
-        } else {
-          t += '<br><p><b>Secteurs agrégés et désagrégés</b></p>'
-          t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Secteur agrégé</th><th width="50%">Secteurs désagrégés</th></tr></thead><tbody><tr>'
-        }
+        t += '<br><p><b>Noeuds agrégés et désagrégés<b></p>'
+        t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
         header_written = true        
       }
       has_parent = true
@@ -243,13 +238,8 @@ export const nodeTooltipsContent = (
     const desagregate_nodes = Object.values(data.nodes).filter( node => node.dimensions[dim] && node.dimensions[dim].parent_name === n.idNode )
     if (desagregate_nodes.length>0) {
       if (! header_written) {
-        if (n.type === 'product' ) {
-          t += '<br><p><b>Produits agrégés et désagrégés</b></p>'
-          t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
-        } else {
-          t += '<br><p><b>Secteurs agrégés et désagrégés</b></p>'
-          t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Secteur agrégé</th><th width="50%">Secteurs désagrégés</th></tr></thead><tbody><tr>'
-        }
+        t += '<br><p><b>Noeuds agrégés et désagrégés</b></p>'
+        t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
         header_written = true        
       }
       if (!has_parent) {

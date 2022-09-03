@@ -21,7 +21,7 @@
 /* @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,600,800,700);
 @import url(http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700); */
 
-/* @font-face {
+/*  @font-face {
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
@@ -214,10 +214,6 @@ td {
   -webkit-box-shadow: none;
      -moz-box-shadow: none;
           box-shadow: none;
-}
-.tutu > .dropdown-menu {
-    max-height: 600px;
-    overflow-y: auto;
 }
 
 .dropdown-menu > li > a:hover,
