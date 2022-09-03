@@ -16,7 +16,7 @@ import LZString from 'lz-string'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
-  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[1].name)
+  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
   set_data({ ...data })
 }
 
@@ -41,8 +41,8 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
         <>
           <FormLabel>{the_tags_group.group_name}</FormLabel>
           {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
-            Object.entries(the_tags_group.tags).map(([tag_key, tag]) => {
-              return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+            Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
+              return (<option key={i} value={tag_key}>{tag.name}</option>)
             })}
           </Form.Select>}
         </>)
@@ -96,9 +96,9 @@ declare const window: Window &
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection }) => {
   const { nodeTags, fluxTags, dataTags } = data
-  const [diagram, set_diagram] = useState('')
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
+  //const [cube_dimension,set_cube_dimension] = useState('Primaire')
 
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
@@ -121,8 +121,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
             {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag_key}>{tag.name}</option>)
+              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                return (<option key={i} value={tag_key}>{tag.name}</option>)
               })}
             </Form.Select>}
           </>)
@@ -163,8 +163,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
             {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag]) => {
-                return (<option key={tag_key} value={tag_key} >{tag.name}</option>)
+              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                return (<option key={i} value={tag_key} >{tag.name}</option>)
               })}
             </Form.Select>}
           </>)
@@ -266,19 +266,44 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     )
   }
 
+  let sous_filieres = undefined
+  if (window.sankey && window.sankey.sous_filieres) {
+    sous_filieres = window.sankey.sous_filieres
+  }
+  let is_split = false
+  const diagrams : { [keys :string] : string[] } = {}
+  if ( sous_filieres ) {
+    is_split = Object.keys(sous_filieres)[0].includes('/')
+    if (is_split ) {
+      Object.keys(sous_filieres).forEach(s=> {
+        const path = s.split('/')
+        if ( !(path[0] in diagrams)) {
+          diagrams[path[0]] = [path[1]]
+        } else {
+          diagrams[path[0]].push(path[1])     
+        }
+      })
+    } else {
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+    }
+  }
+  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+
   const setDiagram = (evt:React.ChangeEvent<HTMLSelectElement>) => {
 
     const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
+    const diagram_path = is_split ? diagram+'/'+the_diagram : the_diagram
     const new_data = JSON.parse(
       JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
+        window.sankey[sous_filieres[diagram_path]]
       )
     )
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    set_diagram(the_diagram)
+    //set_diagram(the_diagram)
 
     Object.values(data.nodes).forEach(n => {
       if (!n.dimensions) {
@@ -292,16 +317,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       })
     })
     set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
-    if ( data.agregation_level === -1 ) {
+    if ( data.agregation.level === -1 ) {
       localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
     }
     set_data({ ...new_data })
   }
 
-  let sous_filieres = undefined
-  if (window.sankey && window.sankey.sous_filieres) {
-    sous_filieres = window.sankey.sous_filieres
-  }
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
@@ -332,7 +353,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           display: 'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-          {(data.static_sankey && sous_filieres) ? (<>
+          {(data.static_sankey && sous_filieres && !is_split) ? (<>
             <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
               <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
               <Form.Select style={{ width: '200px', color:'black' }}
@@ -340,6 +361,25 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 value={diagram}>
                 {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
               </Form.Select>
+            </Form.Group></>) : (<></>)}
+          {(data.static_sankey && sous_filieres && is_split) ? (<>
+            <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+              <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+              <Form.Select style={{ width: '200px', color:'black' }}
+                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
+                value={diagram}>
+                {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+              </Form.Select>
+              {is_split ? 
+                (<Form.Select style={{ width: '200px', color:'black' }}
+                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+                    setDiagram(evt)
+                    set_diagram2(evt.target.value)
+                  }}
+                  value={diagram2}>
+                  {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
+                </Form.Select>) :(<></>)
+              }
             </Form.Group></>) : (<></>)}
           <Form.Group as={Col}
             lg="auto"
@@ -366,12 +406,26 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
               {addAllDropDownLinks()}
             </>)
-              : (<>
-                <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_basic, color: '#6c757d' }}>Sélection des données</FormLabel>
-                <Form.Control placeholder="Pas de sélection" style={{ opacity: opacity_basic, color: '#6c757d' }} disabled /></>)
+              : (<Col></Col>)
             }
             { nb_agregation_level > 1 ? (
-              <><FormLabel>Niveau de détail</FormLabel>
+              <><FormLabel><b>Niveau de détail</b></FormLabel>
+                {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
+                  <Form.Select placeholder='all' 
+                    value={data.agregation.dimension} 
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+                      data.agregation.dimension = evt.target.value
+                      data.agregation.level = 1
+                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
+                      set_nodes_level(data, data.nodes, 1)
+                      //set_cube_dimension(evt.target.value)
+                      set_data({...data})
+                    }} 
+                  >
+                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                  </Form.Select>) : (<></>)}
                 <Form.Select id="selectionNode"
                   style={{ color: 'black'}}
                   onChange={
@@ -391,18 +445,19 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                           set_data({ ...data })
                         }
                       }
-                      for (let level = 1; level <= +evt.target.value + 1; level++) {
+                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
+                      for (let level = 1; level <= +evt.target.value; level++) {
                         set_nodes_level(data, data.nodes, level)
                       }
-                      data.agregation_level =+evt.target.value
+                      data.agregation.level =+evt.target.value
                       set_data({ ...data })
                     }
                   }
-                  value={data.agregation_level}
+                  value={data.agregation.level}
                 >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
                     <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
-                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level} value={level}  >{'Niveau '+(level+1)}</option>)}
-                </Form.Select></>) : (<></>)}
+                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
+                </Form.Select></>) : (<Col></Col>)}
           </Form.Group>
           <Col lg="auto">
             {additional_selector ? (
