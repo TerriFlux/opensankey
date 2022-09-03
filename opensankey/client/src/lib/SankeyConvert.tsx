@@ -462,6 +462,7 @@ export const convert_data = (
       banner: 'none'
     }
   }
+  data.nodeTags.Dimensions.banner = 'none'
 
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
@@ -873,13 +874,21 @@ export const convert_data = (
         show_legend: false,
         color_map: 'custom',
         tags: {
-          'initial_data' : { name: 'Données collectées', selected: true, color:'cyan' },
-          'computed_data': { name: 'Données calculées' , selected: true, color:'blue' },
+          'initial_data' : { name: 'Données collectées', selected: true, color:'#696969' },
+          'computed_data': { name: 'Données calculées' , selected: true, color:'#D3D3D3' },
         },
         banner: 'multi'
       }
       delete data.flux_types
       delete data.use_flux_types
+    }
+  }
+  if (data.fluxTags['flux_types']) {
+    if (data.fluxTags['flux_types'].tags.initial_data.color === '') {
+      data.fluxTags['flux_types'].tags.initial_data.color = '#696969' //DimGray
+    }
+    if (data.fluxTags['flux_types'].tags.computed_data.color === '') {
+      data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
 
