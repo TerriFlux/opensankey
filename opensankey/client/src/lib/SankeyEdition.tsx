@@ -303,7 +303,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    //set_diagram(the_diagram)
+    if (!is_split) {
+      set_diagram(the_diagram)
+    }
 
     Object.values(data.nodes).forEach(n => {
       if (!n.dimensions) {
