@@ -294,9 +294,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
     const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
+    const diagram_path = is_split ? diagram+'/'+the_diagram : the_diagram
     const new_data = JSON.parse(
       JSON.stringify(
-        window.sankey[sous_filieres[diagram+'/'+the_diagram]]
+        window.sankey[sous_filieres[diagram_path]]
       )
     )
     //Object.assign(sankey_data, new_data)
