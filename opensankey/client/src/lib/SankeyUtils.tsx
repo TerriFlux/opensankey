@@ -599,7 +599,7 @@ export const default_node = (
     tags: {},
     colorTag: '',
     dimensions: {
-      'Primaire':{
+      'Primaire': {
         level:1,
         parent_name: undefined
       } 

@@ -237,8 +237,8 @@ def parse_excel(mfa_input):
     nodes_cols = mfa_input[NODES_SHEET][0]
     nodes_sheet = pd.DataFrame(mfa_input[NODES_SHEET][1:],columns=mfa_input[NODES_SHEET][0])
     dimension = 'Primaire'
-    if 'Dimensions' in nodeTags:
-        dimension = list(nodeTags.keys())[0]
+    if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
+        dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
     agregation = {
         'dimension' : dimension,
         'level'     : 1
@@ -464,25 +464,41 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         #new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name]
             
         level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
+        first_dimension = 'Primaire'
+        if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
+            first_dimension = list(nodeTags.keys())[0]
         dimension = 'Primaire'
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
         if 'Dimensions' in mfa_input[NODES_SHEET][0]:
-            dimension = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]
+            dimension = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]                
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
         if not dimension  in new_node['dimensions']:
-            new_node['dimensions'][dimension] = {}
+            if dimension == '':
+                for dim in nodeTags['Dimensions']['tags']:
+                    new_node['dimensions'][dim] = {}             
+            else:
+                new_node['dimensions'][dimension] = {}
             
         if level == 1:
-            new_node['dimensions'][dimension]['level'] = 1
-            if not has_sankey_col and dimension == 'Primaire':
+            if dimension == '':
+                for dim in nodeTags['Dimensions']['tags']:
+                    new_node['dimensions'][dim]['level'] = 1           
+            else:
+                new_node['dimensions'][dimension]['level'] = 1
+            if not has_sankey_col and dimension == first_dimension:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
         else:
             if not has_sankey_col:
                 new_node['display'] = 0 
-                new_node['node_visible'] = 0   
-            new_node['dimensions'][dimension]['level'] = int(level)
+                new_node['node_visible'] = 0
+            if dimension == '':
+                for dim in nodeTags['Dimensions']['tags']:
+                    new_node['dimensions'][dim]['level'] = int(level)           
+            else:  
+                new_node['dimensions'][dimension]['level'] = int(level)
+                
             other_display_node_found = False
             j = i
             while not other_display_node_found:
@@ -490,7 +506,11 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 if  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] <  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] :
                     parent_name =  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_NODE)].strip()
                     if parent_name in nodes:
-                        new_node['dimensions'][dimension]['parent_name'] = nodes[parent_name]['idNode']
+                        if dimension == '':
+                            for dim in nodeTags['Dimensions']['tags']:
+                                new_node['dimensions'][dim]['parent_name'] = nodes[parent_name]['idNode']         
+                        else:  
+                            new_node['dimensions'][dimension]['parent_name'] = nodes[parent_name]['idNode']
                     break
                 if  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] == 1:
                     break
