@@ -1786,7 +1786,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
-    if (res === [0, 0, 0, 0] || data.show_structure) {
+    if ((res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) || data.show_structure) {
       node_size_s_height = inv_scale(source_node.node_height)
       node_size_t_height = inv_scale(target_node.node_height)
       node_size_s_width = inv_scale(source_node.node_width)
