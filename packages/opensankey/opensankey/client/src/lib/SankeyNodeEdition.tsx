@@ -25,7 +25,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
   const [parent_visible,set_parent_visible] = useState(false)
-  const [cube_dimension,set_cube_dimension] = useState('Primaire')
+  const [cube_dimension,set_cube_dimension] = useState(('Primaire' in nodeTags.Dimensions.tags || !tags_visible) ? 'Primaire' : Object.keys(nodeTags.Dimensions.tags)[0] )
 
   const display_nodes = data.nodes
   const display_links = data.links
