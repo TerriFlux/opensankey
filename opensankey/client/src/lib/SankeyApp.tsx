@@ -12,13 +12,6 @@ import * as SankeyUtils from './SankeyUtils'
 import { Dropdown } from 'react-bootstrap'
 import GoogleFontLoader from 'react-google-font-loader'
 
-let logo = ''
-try {
-  logo = require('../css/opensankey.png')
-} catch (expt) {
-  console.log('opensankey.png not found')
-}
-
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -32,12 +25,13 @@ declare const window: Window &
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   exemple_menu: PropTypes.object.isRequired,
-  artefacts_menu: PropTypes.object.isRequired
+  artefacts_menu: PropTypes.object.isRequired,
+  logo: PropTypes.string.isRequired,
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu,logo }) => {
   const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   // const [show_nav, set_show_nav] = useState(false)

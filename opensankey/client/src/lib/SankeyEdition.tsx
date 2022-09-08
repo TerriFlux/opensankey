@@ -98,7 +98,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const { nodeTags, fluxTags, dataTags } = data
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
-  //const [cube_dimension,set_cube_dimension] = useState('Primaire')
 
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
