@@ -470,22 +470,20 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         dimension = 'Primaire'
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
         if 'Dimensions' in mfa_input[NODES_SHEET][0]:
-            dimension = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]                
+            dimensions = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]
+            if dimensions == '':
+                dimensions = nodeTags['Dimensions']['tags']
+            else:
+                dimensions = dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
         if not dimension  in new_node['dimensions']:
-            if dimension == '':
-                for dim in nodeTags['Dimensions']['tags']:
-                    new_node['dimensions'][dim] = {}             
-            else:
-                new_node['dimensions'][dimension] = {}
+            for dim in dimensions:
+                new_node['dimensions'][dim] = {}             
             
         if level == 1:
-            if dimension == '':
-                for dim in nodeTags['Dimensions']['tags']:
-                    new_node['dimensions'][dim]['level'] = 1           
-            else:
-                new_node['dimensions'][dimension]['level'] = 1
+            for dim in dimensions:
+                new_node['dimensions'][dim]['level'] = 1           
             if not has_sankey_col and dimension == first_dimension:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
@@ -493,11 +491,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if not has_sankey_col:
                 new_node['display'] = 0 
                 new_node['node_visible'] = 0
-            if dimension == '':
-                for dim in nodeTags['Dimensions']['tags']:
-                    new_node['dimensions'][dim]['level'] = int(level)           
-            else:  
-                new_node['dimensions'][dimension]['level'] = int(level)
+            for dim in dimensions:
+                new_node['dimensions'][dim]['level'] = int(level)           
                 
             other_display_node_found = False
             j = i
@@ -506,11 +501,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 if  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] <  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] :
                     parent_name =  mfa_input[NODES_SHEET][j][mfa_input[NODES_SHEET][0].index(NODES_NODE)].strip()
                     if parent_name in nodes:
-                        if dimension == '':
-                            for dim in nodeTags['Dimensions']['tags']:
-                                new_node['dimensions'][dim]['parent_name'] = nodes[parent_name]['idNode']         
-                        else:  
-                            new_node['dimensions'][dimension]['parent_name'] = nodes[parent_name]['idNode']
+                        for dim in dimensions:
+                            new_node['dimensions'][dim]['parent_name'] = nodes[parent_name]['idNode']         
                     break
                 if  mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(NODES_LEVEL)] == 1:
                     break
