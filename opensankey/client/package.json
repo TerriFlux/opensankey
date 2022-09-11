@@ -7,33 +7,19 @@
     "url": "git@gitlab.com:greel/su-model.git"
   },
   "author": "Alapetite Julien",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "dist": "cross-env NODE_ENV=production babel src/lib --extensions .ts,.tsx,.js --out-dir dist",
-    "dist_dev": "babel src/lib --out-dir dist2 --copy-files --ignore __tests__,spec.js,test.js,__snapshots__",
+    "dist": "tsc -p .",
     "test": "react-scripts test --env=jsdom  -t 'AFMBase'",
     "test_regenerate": "react-scripts test -u",
     "jest-html": "jest-html -c **/main.css,**/bootstrap.css",
     "eject": "react-scripts eject",
     "lint": "eslint --fix --ext .js,.jsx,.tsx .",
-    "publish": "npm run retrieve_index_html && npm run publish_build && npm run copy_data && npm run restore_index_html && npm run publish2",
-    "publish_build": "react-scripts build && shx sed -i \"s/\\/static/static/g\" build/index.html",
-    "restore_index_html": "cpr public/index_keep.html public/index.html -o && shx rm -f public/index_keep.html && shx rm -f build/index_keep.html",
-    "retrieve_index_html": "cpr public/index.html public/index_keep.html -o && cross-conf-env cpr $npm_config_datapath/index.html public/index.html -o",
-    "copy_excel": "cross-conf-env shx --silent cp $npm_config_datapath/*simple.xlsx build || shx true",
-    "copy_layout": "cross-conf-env shx cp $npm_config_datapath/sankey/*layout.json build",
-    "copy_logo": "cross-conf-env shx cp $npm_config_datapath/*.png  build || shx true",
-    "copy_data": "npm run copy_logo && npm run copy_excel && npm run copy_layout",
-    "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/opensankey_$npm_package_version.$npm_config_publish_name.zip && shx rm -f build/index_keep.html && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts",
-    "unzip": "cross-conf-env extract-zip $npm_config_datapath/artefacts/open-sankey_$npm_package_version.$npm_config_publish_name.zip $npm_config_datapath/artefacts/open-sankey_$npm_package_version.$npm_config_publish_name",
-    "zip_output": "cross-conf-env node zip_output.js $npm_config_publish_name",
-    "echo": "cross-conf-env echo $npm_config_datapath",
-    "publish2": "node publish.js",
-    "remove_header": "node remove_header_footer.js"
+    "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/open-sankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts"
   },
   "jest": {
     "snapshotSerializers": [
@@ -93,6 +79,7 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.3",
+    "@types/node": "^18.7.14",
     "@types/react-dom": "^17.0.13",
     "eslint": "^8.6.0",
     "eslint-plugin-mocha": "^8.1.0",

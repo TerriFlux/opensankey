@@ -22,22 +22,17 @@ const SankeyDrawPropTypes = {
   link_text: PropTypes.func.isRequired,
   test_link_value: PropTypes.func.isRequired,
 
-  set_show_nav: PropTypes.func.isRequired,
-  set_nav_item_active: PropTypes.func.isRequired,
-  set_sub_nav_item_active: PropTypes.func.isRequired,
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
+  nodes_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
+  links_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
+
+  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
+  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
+  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
 
   nodeTooltipsContent: PropTypes.func.isRequired,
   linkTooltipsContent: PropTypes.func.isRequired,
-
-  set_multi_selected_nodes: PropTypes.func.isRequired,
-  multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes)).isRequired,
-
-  set_multi_selected_links: PropTypes.func.isRequired,
-  multi_selected_links: PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes)).isRequired,
-
-  set_multi_selected_label: PropTypes.func.isRequired,
-  multi_selected_label: PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes)).isRequired,
-
 
   set_show_toast: PropTypes.func.isRequired,
   current: PropTypes.bool.isRequired,
@@ -46,10 +41,7 @@ const SankeyDrawPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
 
   view: PropTypes.string.isRequired,
-  set_view: PropTypes.func.isRequired,
-
-
-
+  set_view: PropTypes.func.isRequired
 }
 
 export const SankeyDrawDefaultProps = {
@@ -59,21 +51,20 @@ export const SankeyDrawDefaultProps = {
 
   select_link: () => null,
 
-  set_show_nav: () => null,
-  set_nav_item_active: () => null,
-  set_sub_nav_item_active: () => null,
+  // set_show_nav: () => null,
+  // set_nav_item_active: () => null,
+  // set_sub_nav_item_active: () => null,
+  button_ref: null,
+  accordion_ref: null,
+  nodes_accordion_ref: null,
+  links_accordion_ref: null,
 
   nodeTooltipsContent: () => null,
   linkTooltipsContent: () => null,
 
-  set_multi_selected_nodes: () => SankeyDrawDefaultProps.set_multi_selected_nodes,
-  multi_selected_nodes: [],
-
-  set_multi_selected_links: () => SankeyDrawDefaultProps.set_multi_selected_links,
-  multi_selected_links: [],
-
-  set_multi_selected_label: () => SankeyDrawDefaultProps.set_multi_selected_label,
-  multi_selected_label: [],
+  multi_selected_nodes: {current : []},
+  multi_selected_links: {current : []},
+  multi_selected_label: {current : []},
 
   set_show_toast: () => null,
   current: true,
@@ -95,16 +86,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   select_node = SankeyDrawDefaultProps.select_node,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
   select_link = SankeyDrawDefaultProps.select_link,
-  set_show_nav = SankeyDrawDefaultProps.set_show_nav,
-  set_nav_item_active = SankeyDrawDefaultProps.set_nav_item_active,
-  set_sub_nav_item_active = SankeyDrawDefaultProps.set_sub_nav_item_active,
+  button_ref = SankeyDrawDefaultProps.button_ref,
+  accordion_ref = SankeyDrawDefaultProps.accordion_ref,
+  nodes_accordion_ref = SankeyDrawDefaultProps.nodes_accordion_ref,
+  links_accordion_ref = SankeyDrawDefaultProps.links_accordion_ref,
+
   nodeTooltipsContent = SankeyDrawDefaultProps.nodeTooltipsContent,
   linkTooltipsContent = SankeyDrawDefaultProps.linkTooltipsContent,
-  set_multi_selected_nodes = SankeyDrawDefaultProps.set_multi_selected_nodes,
   multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
-  set_multi_selected_links = SankeyDrawDefaultProps.set_multi_selected_links,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
-  set_multi_selected_label = SankeyDrawDefaultProps.set_multi_selected_label,
   multi_selected_label = SankeyDrawDefaultProps.multi_selected_label,
   set_show_toast,
   current,
@@ -275,25 +265,37 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
             }
           }
-          if (source_node.type === 'product' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
-            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'product' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[target_node.colorTag][0]
-            return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-          } else if (source_node.type === 'sector' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
-            selected_tag = source_node.tags[source_node.colorTag][0]
-            return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-          } else if (target_node.type === 'sector' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[source_node.colorTag][0]
-            if (data.nodeTags[source_node.colorTag].tags[selected_tag]) {
+            if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
               return data.nodeTags[source_node.colorTag].tags[selected_tag].color
             } else {
               return l.color
             }
-          } else if (source_node.type === 'product') {
+          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+            selected_tag = target_node.tags[target_node.colorTag][0]
+            if (selected_tag in data.nodeTags[target_node.colorTag].tags) {
+              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
+          } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'secteur')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+            selected_tag = source_node.tags[source_node.colorTag][0]
+            if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
+              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
+          } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+            selected_tag = target_node.tags[target_node.colorTag][0]
+            if (data.nodeTags[target_node.colorTag].tags[selected_tag]) {
+              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
+          } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit') {
             return source_node.color
-          } else if (target_node.type === 'product') {
+          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
             return target_node.color
           } else {
             return l.color
@@ -337,7 +339,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const gg_links = d3
       .select('#g_links')
       .selectAll('.gg_links')
-      .data(Object.values(display_links))
+      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display))
       .enter()
       .append('g')
       .attr('id', d => 'gg_' + d.idLink)
@@ -354,12 +356,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (link_value === undefined) {
           return ''
         }
-        //const display_value = getLinkValue(data, d.idLink).display_value
-        // if (display_value.includes('*') && !data.show_structure) {
-        //   return '40, 5'
-        // } else {
-        //   return ''
-        // }
+        const display_value = getLinkValue(data, d.idLink).display_value
+        if (display_value.includes('*') && !data.show_structure) {
+          return '40, 5'
+        } 
         if (d.dashed) {
           return '40, 5'
         } else {
@@ -899,8 +899,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .style('opacity', 1)
-          .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
-          .style('left', (event.layerX + 30) + 'px')
+          .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
+          .style('left', (event.pageX + 30) + 'px')
       })
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
@@ -913,20 +913,35 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     paths.on('click', function (event, d) {
       if (event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
-
-        multi_selected_links = multi_selected_links.filter(d => (d != null && d.idLink != ''))
-
-        if (multi_selected_links.includes(d)) {
-          multi_selected_links.splice(multi_selected_links.indexOf(d), 1)
-        } else {
-          multi_selected_links.push(d)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
         }
 
-        set_multi_selected_links(multi_selected_links)
+        multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
+
+        if (multi_selected_links.current.includes(d)) {
+          multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
+          d3.selectAll('#gg_' + d.idLink + ' rect').attr('fill-opacity', '0')
+        } else {
+          multi_selected_links.current.push(d)
+          d3.selectAll('#gg_' + d.idLink + ' rect').attr('fill-opacity', '1')
+        }
+
+        if ( accordion_ref && accordion_ref.current) {
+          for ( const child in accordion_ref.current.children) {
+            if (accordion_ref.current.children[child].id === 'Flux') {
+              (accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            }
+          }
+        }
+        if ( links_accordion_ref && links_accordion_ref.current) {
+          (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+        }
 
         select_link(d)
-        set_nav_item_active('3')
-        set_show_nav(true)
+
       }
 
     })
@@ -965,7 +980,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drag_node = (
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; node_font_size: number; link_font_size: number; sector_uppercase?: boolean; product_uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
+    display_style: { italic?: boolean; bold?: boolean; node_font_size: number; link_font_size: number; uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
     nodeTags: TagsCatalog,
     dragged: Element,
     event: { dx: number; dy: number }
@@ -993,7 +1008,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [data.width, data.height] = min_width_and_height()
     if (data.fit_screen) {
       const svgSankey = d3.select('#svg')
-      svgSankey.attr('viewBox', [0, 0, data.width - 40, data.height])
+      svgSankey.attr('viewBox', [0, 0, data.width - 40, data.height] as unknown as string)
     } else {
       d3.select('#svg').style('width', data.width + 'px')
     }
@@ -1007,6 +1022,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
     for (const i in stream_io) {
       const l = links[stream_io[i]]
+      if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
+        continue
+      }
 
       //position noeud source ou target
       let pos_x_src, pos_y_src
@@ -1064,7 +1082,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(dragged).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
     d3.select('#tooltip_node' + idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
     const error_msg: { [text: string]: string } = {}
-    Object.values(links).forEach(
+    Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
       link => {
 
 
@@ -1547,22 +1565,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     shift_name: string,
     position: string
   ) => {
-    if (Object.values(data.links).filter(f => multi_selected_links.map(d => {
-      return (d != undefined) ? d.idLink : ''
-    }).includes(f.idLink)).map(d => d.idLink).includes(link.idLink)) {
+    if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
       d3.select('#gg_' + link.idLink)
         .append('rect')
         .attr('id', shift_name + link.idLink)
-        .attr('fill-opacity', '1')
+        .attr('fill-opacity', '0')
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
-        .on('mouseover', function () {
-          d3.select(this).attr('cursor', 'grab')
-          d3.select(this).attr('fill-opacity', '0.7')
-        })
-        .on('mouseout', function () {
-          d3.select(this).attr('fill-opacity', '1')
-        })
+        // .on('mouseover', function () {
+        //   d3.select(this).attr('cursor', 'grab')
+        //   d3.select(this).attr('fill-opacity', '0.7')
+        // })
+        // .on('mouseout', function () {
+        //   d3.select(this).attr('fill-opacity', '1')
+        // })
         .call(d3.drag<SVGRectElement, unknown>()
           .subject(Object).on('drag', function (event) {
             drag_handle(
@@ -1728,7 +1744,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + n.idNode).attr('height', scale(node_size_s_height))
 
-    if (n.type === 'product') {
+    if (n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + n.idNode).attr('rx', scale(node_size_s_width / 2))
       d3.select('#' + n.idNode).attr('cx', scale(node_size_s_width / 2))
       d3.select('#' + n.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1752,10 +1768,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       source_node = nodes[filter_idSource]
     }
 
-    let res = compute_total_offsets(source_node, data, nodeTags, test_link_value)
-    const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-    res = compute_total_offsets(target_node, data, nodeTags, test_link_value)
-    const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
+    const res_source = compute_total_offsets(source_node, data, nodeTags, test_link_value)
+    const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
+    const res_target = compute_total_offsets(target_node, data, nodeTags, test_link_value)
+    const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
     let node_size_s_height = Math.max(
       inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
@@ -1770,16 +1786,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
-    if (res === [0, 0, 0, 0] || data.show_structure) {
+    if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure) {
       node_size_s_height = inv_scale(source_node.node_height)
-      node_size_t_height = inv_scale(target_node.node_height)
       node_size_s_width = inv_scale(source_node.node_width)
+    }
+    if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure) {
+      node_size_t_height = inv_scale(target_node.node_height)
       node_size_t_width = inv_scale(target_node.node_width)
     }
 
     d3.select('#' + source_node.idNode).attr('width', scale(node_size_s_width))
     d3.select('#' + source_node.idNode).attr('height', scale(node_size_s_height))
-    if (source_node.type === 'product') {
+    if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1788,7 +1806,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + target_node.idNode).attr('width', scale(node_size_t_width))
     d3.select('#' + target_node.idNode).attr('height', scale(node_size_t_height))
-    if (target_node.type === 'product') {
+    if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse') {
       d3.select('#' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
@@ -2009,7 +2027,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     data: SankeyData,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
+    display_style: { node_font_size: number; link_font_size: number; filter: number; filter_label: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
     nodeTags: TagsCatalog,
     link: SankeyLink,
     error_msg: { text?: string } | undefined
@@ -2029,7 +2047,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags)
-
+    handles_positions(links, link, xs, ys, xt, yt)
 
     add_shift_handles(
       link, nodes, links,
@@ -2264,7 +2282,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (remove_previous_nodes) {
       d3.selectAll('.gg_nodes').remove()
     }
-    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes)).enter().append('g')
+    const gg_nodes = d3.select('#g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>n.display)).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
       })
@@ -2273,7 +2291,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
         let display: string
-        if (d.node_visible) { display = 'inline' } else { display = 'none' }
+        if (d.node_visible && d.position === 'absolute' ) { display = 'inline' } else { display = 'none' }
         return display
       })
       .style('font-family', d => d.display_style.font_family)
@@ -2282,8 +2300,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', d => 'ggg_' + d.idNode)
       .attr('class', 'ggg_nodes')
       .attr('transform', d => {
-        return 'translate(' + d.x + ', ' + d.y + ')'
-
+        if (d.position === 'relative') {
+          if (d.inputLinksId.length > 0) {
+            const source_node = display_nodes[display_links[d.inputLinksId[0]].idSource]
+            const x = source_node.x + d.x
+            const y = source_node.y + d.y
+            return 'translate(' + x + ', ' + y + ')'
+          } else {
+            const target_node = display_nodes[display_links[d.outputLinksId[0]].idTarget]
+            const x = target_node.x + d.x
+            const y = target_node.y + d.y
+            return 'translate(' + x + ', ' + y + ')'            
+          }
+        } else {
+          return 'translate(' + d.x + ', ' + d.y + ')'
+        }
       })
 
     // Gestion du drag 
@@ -2323,22 +2354,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!static_sankey && event.ctrlKey) {
         sankeyTooltip.style('opacity', 0)
 
-        multi_selected_nodes = multi_selected_nodes.filter(d => (d != null && d.name != ''))
-
-        if (multi_selected_nodes.includes(d)) {
-          multi_selected_nodes.splice(multi_selected_nodes.indexOf(d), 1)
+        if (multi_selected_nodes.current.includes(d)) {
+          multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
+          d3.select('#' + d.idNode).attr('stroke-width',0)
         } else {
-          multi_selected_nodes.push(d)
+          multi_selected_nodes.current.push(d)
+          d3.select('#' + d.idNode).attr('stroke-width',2)
         }
-
-
-        set_multi_selected_nodes(multi_selected_nodes)
-
         select_node(d)
-        set_sub_nav_item_active('editionNoeud')
-        set_nav_item_active('2')
-        // set_nav_item_active('editionNoeud')
-        set_show_nav(true)
+        if ( accordion_ref && accordion_ref.current) {
+          for ( const child in accordion_ref.current.children) {
+            if (accordion_ref.current.children[child].id === 'Nodes') {
+              (accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            }
+          }
+        }
+        if ( nodes_accordion_ref && nodes_accordion_ref.current) {
+          (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
+        }
       }
     })
 
@@ -2398,7 +2433,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('mouseup', function () {
           d3.selectAll('#svg #path-flux').remove()
-
+          first_selected_node = {}
         })
     }
 
@@ -2460,38 +2495,51 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       set_data({ ...data })
     })
 
-
-    // Gestion du shape (rect ou cicle)
-    // A reprendre
-    ggg_nodes
-      .filter(d => d.type === 'sector')
-      .append('rect')
-      .classed('node', true)
-      .classed('node_shape', true)
-      .attr('width', (d) => {
-
-        const n = multi_selected_nodes.filter(n => n?.name == d.name)[0]
-        const n_size = (n) ? n.node_width : 10
-        // return default_node_size
-        return n_size
+    if ( data.nodeTags['Type de noeud'] ) {
+      Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
+        ggg_nodes
+          .filter(d =>d.tags['Type de noeud'].includes(key))
+          .append(tag.shape as string)
+          .classed('node', true)
+          .classed('node_shape', true)
+        //   .attr('height', d => d.node_height)
+        //   .attr('width', d => d.node_width)
+        // if ( tag.shape === 'ellipse' ) {
+        //   current_selection
+        //     .attr('cx', d => d.node_width / 2)
+        //     .attr('cy', d => d.node_height / 2)
+        //     .attr('rx', d => d.node_width / 2)
+        //     .attr('ry', d => d.node_height / 2)
+        // }
       })
-      .attr('height', (d) => {
-        // return default_node_size
-        return d.node_height
-      })
+      ggg_nodes
+        .filter(d =>d.tags['Type de noeud'].length === 0)
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)
+    } else {
+      ggg_nodes
+        .filter(d => d.shape === 'rect')
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)      
 
-    ggg_nodes
-      .filter(d => d.type === 'product')
-      .append('ellipse')
-      .classed('node', true)
-      .classed('node_shape', true)
-      .attr('cx', d => d.node_width / 2)
-      .attr('cy', d => d.node_height / 2)
-      .attr('rx', d => d.node_width / 2)
-      .attr('ry', d => d.node_height / 2)
-      .attr('height', d => d.node_height)
-      .attr('width', d => d.node_width)
-
+      ggg_nodes
+        .filter(d => d.shape === 'ellipse')
+        .append('ellipse')
+        .classed('node', true)
+        .classed('node_shape', true)
+        // .attr('cx', d => d.node_width / 2)
+        // .attr('cy', d => d.node_height / 2)
+        // .attr('rx', d => d.node_width / 2)
+        // .attr('ry', d => d.node_height / 2)
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)
+    }
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
@@ -2501,7 +2549,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
-        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
+        if (multi_selected_nodes.current.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
           return 2
         } else {
           return 0
@@ -2522,8 +2570,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
 
-            .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
-            .style('left', (event.layerX + 30) + 'px')
+            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
+            .style('left', (event.pageX + 30) + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2709,8 +2757,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', function (event, d) {
         if (d.label_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
-            .style('top', Math.max(margin_top + 50, event.layerY - 10) + 'px')
-            .style('left', (event.layerX + 30) + 'px')
+            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
+            .style('left', (event.pageX + 30) + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2880,36 +2928,51 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
 
-    // Gestion du shape (rect ou cicle)
-    // A reprendre
-    ggg_nodes
-      .filter(d => d.type === 'sector')
-      .append('rect')
-      .classed('node', true)
-      .classed('node_shape', true)
-      .attr('width', (d) => {
-
-        const n = multi_selected_nodes.filter(n => n?.name == d.name)[0]
-        const n_size = (n) ? n.node_width : 10
-        // return default_node_size
-        return n_size
+    if ( data.nodeTags['Type de noeud'] ) {
+      Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
+        const current_selection = ggg_nodes
+          .filter(d =>d.tags['Type de noeud'].includes(key))
+          .append(tag.shape as string)
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('height', d => d.node_height)
+          .attr('width', d => d.node_width)
+        if ( tag.shape === 'ellipse' ) {
+          current_selection
+            .attr('cx', d => d.node_width / 2)
+            .attr('cy', d => d.node_height / 2)
+            .attr('rx', d => d.node_width / 2)
+            .attr('ry', d => d.node_height / 2)
+        }
       })
-      .attr('height', (d) => {
-        // return default_node_size
-        return d.node_height
-      })
+      ggg_nodes
+        .filter(d =>d.tags['Type de noeud'].length === 0)
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('height', d => d.node_height)
+        .attr('width', d => d.node_width)
+    } else {
+      ggg_nodes
+        .filter(d => d.shape === 'rect')
+        .append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('height', d => d.node_height)
+        .attr('width', d => d.node_width)      
 
-    ggg_nodes
-      .filter(d => d.type === 'product')
-      .append('ellipse')
-      .classed('node', true)
-      .classed('node_shape', true)
-      .attr('cx', d => d.node_width / 2)
-      .attr('cy', d => d.node_height / 2)
-      .attr('rx', d => d.node_width / 2)
-      .attr('ry', d => d.node_height / 2)
-      .attr('height', d => d.node_height)
-      .attr('width', d => d.node_width)
+      ggg_nodes
+        .filter(d => d.shape === 'ellipse')
+        .append('ellipse')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('cx', d => d.node_width / 2)
+        .attr('cy', d => d.node_height / 2)
+        .attr('rx', d => d.node_width / 2)
+        .attr('ry', d => d.node_height / 2)
+        .attr('height', d => d.node_height)
+        .attr('width', d => d.node_width)
+    }
 
 
     d3.selectAll('.node')
@@ -2922,7 +2985,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
         d = (d as SankeyNode)
-        if (multi_selected_nodes.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
+        if (multi_selected_nodes.current.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
           return 2
         } else {
           return 0
@@ -3984,7 +4047,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     n: SankeyNode,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { node_font_size: number; link_font_size: number; filter?: number; filter_label?: number; sector_italic?: boolean; product_italic?: boolean; sector_bold?: boolean; product_bold?: boolean; sector_uppercase?: boolean; product_uppercase?: boolean },
+    display_style: { node_font_size: number; link_font_size: number; filter?: number; filter_label?: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
     nodeTags: TagsCatalog
   ) => {
     //Cette version de drawArrows ne calcul plus les formes de morceau de flêche mais utilise l'algorithme de 
@@ -4015,6 +4078,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     for (let i = 0; i < nb_input_tot; i++) {
       const l = links[n.inputLinksId[i]]
       if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
+        continue
+      }
+      if (!data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
         continue
       }
       const link_value = test_link_value(data,nodes, l, nodeTags)
@@ -4213,18 +4279,25 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       gg_label.on('click', (event) => {
         if (event.ctrlKey) {
           sankeyTooltip.style('opacity', 0)
-
-          if (multi_selected_label.includes(d)) {
-            multi_selected_label.splice(multi_selected_label.indexOf(d), 1)
+          if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+            button_ref.current.click()
+          }
+          if (multi_selected_label.current.includes(d)) {
+            multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
           } else {
-            multi_selected_label.push(d)
+            multi_selected_label.current.push(d)
           }
 
-          set_multi_selected_label(multi_selected_label)
+          //set_multi_selected_label(multi_selected_label)
 
           set_data({ ...data })
-          set_nav_item_active('7')
-          set_show_nav(true)
+          if ( accordion_ref && accordion_ref.current) {
+            //accordion_ref.current.setAttribute('activeKey','2');
+            (accordion_ref.current.children[7] as HTMLLabelElement).click();
+            (accordion_ref.current.children[6] as HTMLLabelElement).click()
+          }
+          // set_nav_item_active('7')
+          // set_show_nav(true)
         }
       })
 
@@ -4329,7 +4402,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (current) {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         if (e.key == 'ArrowUp') {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
             if (d != undefined) {
               return d.name
             }
@@ -4358,7 +4431,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           })
         } else if (e.key == 'ArrowDown') {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
             if (d != undefined) {
               return d.name
             }
@@ -4379,7 +4452,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           })
         } else if (e.key == 'ArrowLeft') {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
             if (d != undefined) {
               return d.name
             }
@@ -4400,7 +4473,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           })
         } else if (e.key == 'ArrowRight') {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.map(d => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
             if (d != undefined) {
               return d.name
             }
@@ -4423,7 +4496,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         set_data({ ...data })
       } else if (e.key == 'Escape') {
-        set_show_nav(false)
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        }
+        //set_show_nav(false)
       } else if (e.key == 's' && e.ctrlKey) {
         e.preventDefault()
         if (current) {
@@ -4665,7 +4741,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = d3.select('#svg')
     if (data.fit_screen) {
-      svgSankey.attr('viewBox', [20, 0, data.width - 20, data.height])
+      svgSankey.attr('viewBox', [20, 0, data.width - 20, data.height] as unknown as string)
       svgSankey.style('width', '98.5%')
     } else {
       svgSankey.attr('viewBox', null)
@@ -4698,8 +4774,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })).on('dblclick.zoom', null)
 
     //Ajout des events sur les l'ajout des noeuds aux click 
-    svgSankey.on('click', function (ev: Event) {
-      if (mode_selection == 'n' && current) {
+    svgSankey.on('click', ev => {
+      if (!ev.ctrlKey && mode_selection == 'n' && current) {
         const new_node1 = default_node(data)
         const listId: number[] = []
         Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
@@ -4714,16 +4790,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         data.nodes[new_node1.idNode] = new_node1
         for (const tag_group_key in data.nodeTags) {
           new_node1.tags[tag_group_key] = []
+          if (tag_group_key === 'Dimensions' ) {
+            for ( const tag in data.nodeTags.Dimensions.tags) {
+              new_node1.dimensions[tag] = {level:1}
+            }
+          }
         }
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
         new_node1.x = pos[0]
         new_node1.y = pos[1]
+        set_data({...data})
       } else { ev.preventDefault() }
     })
-      .on('mousedown', function () {
+      .on('mousedown', evt => {
         //si le mode de souris est noeud+liens alors crée le premier noeuds 
-        if (mode_selection == 'nl' && current) {
+        if (!evt.ctrlKey && mode_selection == 'nl' && current) {
           // isDown = true
 
           // creation nouveau noeud
@@ -4748,10 +4830,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
       })
-      .on('mousemove', () => {
+      .on('mousemove', evt => {
         //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
         // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-        if (mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+        if (!evt.ctrlKey && mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
           const pos = d3.pointer(event)
           const node_keys = Object.keys(data.nodes)
           const last_node = data.nodes[node_keys[node_keys.length - 1]]
@@ -4771,10 +4853,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
       })
-      .on('mouseup', function () {
+      .on('mouseup', evt => {
         //si le mode de souris est noeud+liens alors crée un second noeud au relachement 
         //et crée un lien entre le premier noeud crée lors du click et ce dernier 
-        if (mode_selection == 'nl' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+        if (!evt.ctrlKey && mode_selection == 'nl' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
           // isDown = false
           d3.selectAll('#svg #path-flux').remove()
           Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
@@ -4817,7 +4899,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
           data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
 
-
+          set_data({...data})
 
         }
       })
@@ -4880,9 +4962,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if (!ev.ctrlKey && !ev.shiftKey) {
-              set_multi_selected_nodes([])
-              set_multi_selected_links([])
-              set_multi_selected_label([])
+              multi_selected_nodes.current = []
+              multi_selected_links.current = []
+              multi_selected_label.current = []
+              Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select('#' + n.idNode).attr('stroke-width',0))
+              const visible_links = Object.values(data.links)
+              visible_links.forEach(l=> {
+                const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')
+                sel.attr('fill-opacity', '0')
+              })
+              if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
+                button_ref.current.click()
+              }
             }
           }}>
             <g className='grid' id='grid'></g>

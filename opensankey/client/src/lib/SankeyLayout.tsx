@@ -452,9 +452,11 @@ export const updateLayout = (
 
     node.name = node_layout.name
     node.node_width = node_layout.node_width
-    node.node_height = node_layout.node_height    
-    node.x = node_layout.x
-    node.y = node_layout.y
+    node.node_height = node_layout.node_height
+    if (node_layout.x !== 0 && node_layout.y != 0) { 
+      node.x = node_layout.x
+      node.y = node_layout.y
+    }
     if (node.y + 200 > max_vertical_offset) {
       max_vertical_offset = node.y + 200
     }
@@ -529,6 +531,9 @@ export const updateLayout = (
   }
 
   // for (const tag_group_key in new_layout.nodeTags) {
+  //   if ( tag_group_key === 'Exchanges' ) {
+  //     continue
+  //   }
   //   data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
   //   // if (tag_group_key in new_layout.nodeTags) {
   //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
@@ -540,7 +545,8 @@ export const updateLayout = (
   // for (const tag_group_key in new_layout.fluxTags) {
   //   data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
   // }
-  data.agregation_level = new_layout.agregation_level
+  //data.agregation.level = new_layout.agregation.level
+  //data.agregation.dimension = new_layout.agregation.dimension
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
   data.colorMap = new_layout.colorMap
@@ -571,7 +577,7 @@ export const desagregation = (
   console.log('--')
 
   const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
-  if (!idParent) {
+  if (!idParent || !data.nodes[idParent]) {
     return
   }
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
@@ -585,7 +591,7 @@ export const desagregation = (
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
   desagregate_nodes.forEach(n => {
-    if (n.x === undefined || (n.x === 0 && n.y === 0)) {
+    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idParent].x !==0 && data.nodes[idParent].y !==0 )) {
       n.x = data.nodes[idParent].x
       n.y = data.nodes[idParent].y - current_y
     }
@@ -607,13 +613,16 @@ export const agregation = (
   const agregated_node = data.nodes[idParent]    
   const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
 
-  if (desagregate_nodes.length === 0) {
-    return
-  }
   if (control_display) {
     // show agregated node
     agregated_node.display = true
     agregated_node.node_visible = true
+  }
+  if (desagregate_nodes.length === 0) {
+    return
+  }
+  if (desagregate_nodes.length === 0) {
+    return
   }
 
   let mean_x = 0

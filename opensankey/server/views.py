@@ -82,16 +82,30 @@ def clean_pdf():
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])
 def save_excel():
-    cwd = os.getcwd()
-    excel_file = os.path.join(cwd, "tutu.xlsx")
-    sankey_data =  request.get_data().decode("utf-8")
-    mfa_output,_ = parser_excel.save_simple_excel(json.loads(sankey_data))
-    if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
-        verbosity=2
-    else:
-        verbosity=1        
-    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
-    return send_file(excel_file, as_attachment=True)
+    try:
+        cwd = os.getcwd()
+        excel_file = os.path.join(cwd, "tutu.xlsx")
+        sankey_data =  request.get_data().decode("utf-8")
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
+    except Exception as excpt:
+        response = Response(
+            response='save_excel : ' + str(excpt),
+            status=401
+        )
+        return response   
+    try:
+        if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
+            verbosity=2
+        else:
+            verbosity=1        
+        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
+        return send_file(excel_file, as_attachment=True)
+    except Exception as excpt:
+        response = Response(
+            response='write_mfa_problem_output_to_excel' + str(excpt),
+            status=402
+        )
+        return response     
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
@@ -105,13 +119,23 @@ def clean_excel():
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
-    excel_input_file = request.files['file']
-    mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
-    sankey_data = parser_excel.parse_excel(mfa_input)
-    # context = {
-    #     'nodes': nodes,
-    #     'links': links
-    # }
+    try:
+        excel_input_file = request.files['file']
+        mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
+    except Exception as expt:
+        print('load_mfa_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
+    try:
+        sankey_data = parser_excel.parse_excel(mfa_input)
+    except Exception as expt:
+        print('parse_excel' + str(expt))
+        response = Response(
+            response=json_data,
+            status=400
+        )
     try:
         json_data = json.dumps(sankey_data)
         response = Response(
@@ -120,7 +144,8 @@ def upload_excel():
             mimetype='application/json'
         )
     except Exception as expt:
-        print(expt)
+        json_data = json.dumps(sankey_data)
+        print('dumps' + str(expt))
         response = Response(
             response=json_data,
             status=400
@@ -149,7 +174,7 @@ def upload_exemple():
             layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
-            sankey_data['file_name'] = layout_file_name
+        sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
     elif exemple == "Energie/sankeys_territoire_.csv":
         sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
@@ -163,7 +188,7 @@ def upload_exemple():
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
-        data['file_name'] = exemple
+        data['file_name'] = exemple_file_path
         json_data = json.dumps(data)
 
     response = Response(
@@ -189,14 +214,14 @@ def parse_folder(current_dir,menus,artefacts,key=None):
     exemple_found = False
     artefact_found = False
     for file_or_folder in folder_content:
-        if 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if 'open-sankey' not in file_name:
-                    continue
+                # if 'open-sankey' not in file_name:
+                #     continue
                 if key not in artefacts or type(artefacts[key]) is dict:
                     artefacts[key] = []
                 artefacts[key].append(file_name)
@@ -280,8 +305,10 @@ def publish():
     sankey_data_str =  request.get_data().decode("utf-8")
     sankey_data = json.loads(sankey_data_str)
     file_name = sankey_data['file_name']
+    # del sankey_data['file_name']
+    # sankey_data_str = json.dumps(sankey_data,indent=2)
     data_folder = os.environ.get('MFAData')
-    with open(os.path.join(data_folder,file_name), 'w') as outfile:
+    with open(os.path.join(data_folder,file_name), 'w',encoding='utf-8') as outfile:
         outfile.write(sankey_data_str)
     response = Response(
         response='',

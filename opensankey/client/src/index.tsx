@@ -10,6 +10,13 @@ import { default_sankey_data } from './lib/SankeyUtils'
 import LZString from 'lz-string'
 import { SankeyData } from './lib/types'
 
+let logo = ''
+try {
+  logo = require('./css/opensankey.png')
+} catch (expt) {
+  console.log('opensankey.png not found')
+}
+
 window.React = React
 
 declare const window: Window &
@@ -68,6 +75,7 @@ if (!window.SankeyToolsStatic) {
             sankey_data={data}
             exemple_menu={exemple_menu}
             artefacts_menu={artefacts_menu}
+            logo={logo}
           />
         </>,
         document.getElementById('react-container')
@@ -79,6 +87,7 @@ if (!window.SankeyToolsStatic) {
             sankey_data={data}
             exemple_menu={{}}
             artefacts_menu={{}}
+            logo={logo}
           />
         </>,
         document.getElementById('react-container')
@@ -97,7 +106,7 @@ if (!window.SankeyToolsStatic) {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-    if (data.agregation_level === -1) {
+    if (data.agregation.level === -1) {
       localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
     }
     data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
@@ -108,6 +117,7 @@ if (!window.SankeyToolsStatic) {
         sankey_data={data}
         exemple_menu={{}}
         artefacts_menu={{}}
+        logo={logo}
       />
       {window.sankey.footer ? (
         <div id="copyright">
