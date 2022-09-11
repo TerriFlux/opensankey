@@ -1768,10 +1768,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       source_node = nodes[filter_idSource]
     }
 
-    let res = compute_total_offsets(source_node, data, nodeTags, test_link_value)
-    const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-    res = compute_total_offsets(target_node, data, nodeTags, test_link_value)
-    const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
+    const res_source = compute_total_offsets(source_node, data, nodeTags, test_link_value)
+    const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
+    const res_target = compute_total_offsets(target_node, data, nodeTags, test_link_value)
+    const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
     let node_size_s_height = Math.max(
       inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
@@ -1786,10 +1786,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
-    if ((res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0) || data.show_structure) {
+    if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure) {
       node_size_s_height = inv_scale(source_node.node_height)
-      node_size_t_height = inv_scale(target_node.node_height)
       node_size_s_width = inv_scale(source_node.node_width)
+    }
+    if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure) {
+      node_size_t_height = inv_scale(target_node.node_height)
       node_size_t_width = inv_scale(target_node.node_width)
     }
 
@@ -2499,48 +2501,48 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
-        const current_selection = ggg_nodes
+        ggg_nodes
           .filter(d =>d.tags['Type de noeud'].includes(key))
           .append(tag.shape as string)
           .classed('node', true)
           .classed('node_shape', true)
-          .attr('height', d => d.node_height)
-          .attr('width', d => d.node_width)
-        if ( tag.shape === 'ellipse' ) {
-          current_selection
-            .attr('cx', d => d.node_width / 2)
-            .attr('cy', d => d.node_height / 2)
-            .attr('rx', d => d.node_width / 2)
-            .attr('ry', d => d.node_height / 2)
-        }
+        //   .attr('height', d => d.node_height)
+        //   .attr('width', d => d.node_width)
+        // if ( tag.shape === 'ellipse' ) {
+        //   current_selection
+        //     .attr('cx', d => d.node_width / 2)
+        //     .attr('cy', d => d.node_height / 2)
+        //     .attr('rx', d => d.node_width / 2)
+        //     .attr('ry', d => d.node_height / 2)
+        // }
       })
       ggg_nodes
         .filter(d =>d.tags['Type de noeud'].length === 0)
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('height', d => d.node_height)
-        .attr('width', d => d.node_width)
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)
     } else {
       ggg_nodes
         .filter(d => d.shape === 'rect')
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('height', d => d.node_height)
-        .attr('width', d => d.node_width)      
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)      
 
       ggg_nodes
         .filter(d => d.shape === 'ellipse')
         .append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('cx', d => d.node_width / 2)
-        .attr('cy', d => d.node_height / 2)
-        .attr('rx', d => d.node_width / 2)
-        .attr('ry', d => d.node_height / 2)
-        .attr('height', d => d.node_height)
-        .attr('width', d => d.node_width)
+        // .attr('cx', d => d.node_width / 2)
+        // .attr('cy', d => d.node_height / 2)
+        // .attr('rx', d => d.node_width / 2)
+        // .attr('ry', d => d.node_height / 2)
+        // .attr('height', d => d.node_height)
+        // .attr('width', d => d.node_width)
     }
 
     d3.selectAll('.node')
