@@ -73,6 +73,15 @@ export const getLinkValue = (
       break
     }
     val = val[listKey[i]]
+    if (val === undefined) {
+      console.log(listKey[i] + ' not in val')
+      return {
+        value: 0,
+        display_value: '',
+        tags: {},
+        extension: {}
+      }      
+    }
   }
   return (val as unknown) as SankeyLinkValue
 }
@@ -384,6 +393,10 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
 
   for (const i in listKey) {
+    if ( val === undefined) {
+      console.log(listKey[i] + ' not found in val')
+      break
+    }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
   }
   if (val === undefined) {
@@ -405,7 +418,7 @@ export const default_sankey_data = (): SankeyData => {
       'default': {
         name: 'par défaut',
         idNode: 'default',
-        type: 'sector',
+        shape: 'rect',
         display: true,
         node_visible: true,
         shape_visible: true,
@@ -480,10 +493,11 @@ export const default_sankey_data = (): SankeyData => {
         x_label: 0,
         y_label: 0,
 
-        left_horiz_shift: 0,
-        right_horiz_shift: 0,
+        // left_horiz_shift: 0,
+        // right_horiz_shift: 0,
+        // vert_shift: 0,
         vert_shift: 0,
-        shift_gap: 0,
+        shift_gap: 0.1,
 
         curvature: 0.5,
         curved: false,
@@ -501,7 +515,7 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: false,
     fit_screen: window.SankeyToolsStatic,
 
-    agregation_level: 0,
+    agregation: {dimension:'Primaire',level:1},
 
     icon_catalog: {},
     labels: {},
@@ -533,7 +547,21 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-    nodeTags: {},
+
+    nodeTags : {
+      'Dimensions' : {
+        group_name : 'Dimensions',
+        color_map: 'jet',
+        show_legend: false,
+        tags : {
+          Primaire : {
+            name : 'Primaire',
+            selected: true
+          }
+        },
+        banner: 'none'
+      }
+    },
     dataTags: {},
     fluxTags: {},
 
@@ -551,7 +579,7 @@ export const default_node = (
   const defaultNode = {
     name: '',
     idNode: 'default',
-    type: 'sector',
+    shape: 'rect',
     display: true,
     node_visible: true,
     shape_visible: true,
@@ -573,9 +601,8 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    // dimensions: { 'Primaire': { parent_name: undefined } },
     dimensions: {
-      'Primaire':{
+      'Primaire': {
         level:1,
         parent_name: undefined
       } 
@@ -779,10 +806,7 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void,
-  set_multi_selected_nodes: (nodes: string[]) => void,
-  set_multi_selected_links: (links: string[]) => void,
-  set_multi_selected_label: (labels: string[]) => void
+  example_callback: (data: SankeyData) => void
 ) => {
 
   let root = window.location.href
@@ -796,9 +820,6 @@ export const uploadExemple = (
   }
   const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain'
   set_data({ ...default_sankey_data() })
-  set_multi_selected_nodes([])
-  set_multi_selected_links([])
-  set_multi_selected_label([])
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
@@ -807,16 +828,21 @@ export const uploadExemple = (
       data = default_sankey_data()
       Object.assign(data, server_data)
       convert_data(data)
-
+      type layout_type = {
+        layout?: SankeyData
+      }
       example_callback(data)
+      delete (data as unknown as layout_type).layout
 
-      if (data.agregation_level === -1) {
+      if (data.agregation.level === -1) {
         localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
       } else {
-        set_nodes_level(data,data.nodes,data.agregation_level+1,true)
+        set_nodes_level(data,data.nodes,data.agregation.level,true)
       }
       set_data({ ...data })
-      downloadExamples(file_name, the_url_prefix, file_type)
+      if (file_name.includes('.xlsx')) {
+        downloadExamples(file_name, the_url_prefix, file_type)
+      }
     })
   })
 }
@@ -828,22 +854,25 @@ export const set_nodes_level = (
   control_display = true
 ) => {
   Object.values(display_nodes).forEach(node => {
-    if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
+    //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
+    if ( control_display && (!node.dimensions[data.agregation.dimension])) {
       node.display = false
       node.node_visible = false
       return
     }
-    if (node.dimensions['Primaire'].level === level) {
-      desagregation(data,node.idNode,'Primaire',control_display)
-      agregation(data,node.idNode,'Primaire',control_display)
+    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) && node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
+      // shows siblings
+      desagregation(data,node.idNode,data.agregation.dimension,control_display)
+      // hide children
+      agregation(data,node.idNode,data.agregation.dimension,control_display)
       Object.keys(node.dimensions).forEach(dim => {
         const idParent = node.dimensions[dim].parent_name
-        if (control_display && idParent !== null && idParent !== undefined) {
+        if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
           display_nodes[idParent].node_visible = false
           display_nodes[idParent].display = false
         }
       })
-    } else if (control_display && node.dimensions['Primaire'].level  && node.dimensions['Primaire'].level > level) {
+    } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
       node.node_visible = false
       node.display = false
     }
