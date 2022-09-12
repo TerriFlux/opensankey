@@ -466,7 +466,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
         first_dimension = 'Primaire'
         if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-            first_dimension = list(nodeTags.keys())[0]
+            first_dimension = list(nodeTags['Dimensions']['tags'].keys()[0])
         dimension = 'Primaire'
         dimensions = ['Primaire']
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
@@ -478,8 +478,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 dimensions = dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
-        if not 'Dimensions' in new_node['tags']:
-            new_node['tags']['Dimensions'] = ['Primaire']
+        # if not 'Dimensions' in new_node['tags']:
+        #     new_node['tags']['Dimensions'] = [first_dimension]
         if not dimension  in new_node['dimensions']:
             for dim in dimensions:
                 new_node['dimensions'][dim] = {}             
