@@ -60,7 +60,15 @@ export const uploadExcelImpl = (
     }
     Object.assign(data, server_data)
     convert_data(data)
-    compute_auto_sankey(data, 200)
+    //compute_auto_sankey(data, 200)
+    let nb_agregation_level = 0
+    Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+  
+    set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
+    compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
+    for (let i=nb_agregation_level ; i>0 ; i--) {
+      set_nodes_level(server_data,server_data.nodes,i,false)
+    }
     post_callback(data)
     set_data({ ...data })
   }
