@@ -478,6 +478,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 dimensions = dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
+        if not 'Dimensions' in new_node['tags']:
+            new_node['tags']['Dimensions'] = ['Primaire']
         if not dimension  in new_node['dimensions']:
             for dim in dimensions:
                 new_node['dimensions'][dim] = {}             
