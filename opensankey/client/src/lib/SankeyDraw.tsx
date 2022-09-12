@@ -4103,7 +4103,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling)) {
         //Si le lien entre à gauche
         const zone_arrow = [[0, start_point_left], [20, start_point_left], [20, start_point_left + thickness_link], [0, start_point_left + thickness_link]]
-        clipped = clip(arrow_int_left, zone_arrow)
+        clipped = clip(JSON.parse(JSON.stringify(arrow_int_left)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_left)
         start_point_left += thickness_link
       } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
@@ -4119,7 +4119,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y > source_node_y)) {
         //Si le lien entre en haut
         const zone_arrow = [[0, start_point_top], [20, start_point_top], [20, start_point_top + thickness_link], [0, start_point_top + thickness_link]]
-        clipped = clip(arrow_int_top, zone_arrow)
+        clipped = clip(JSON.parse(JSON.stringify(arrow_int_top)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_top)
         start_point_top += thickness_link
         refX = 10
@@ -4128,7 +4128,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y < source_node_y)) {
         //Si le lien entre en bas
         const zone_arrow = [[0, start_point_bottom], [20, start_point_bottom], [20, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]]
-        clipped = clip(arrow_int_bottom, zone_arrow)
+        clipped = clip(JSON.parse(JSON.stringify(arrow_int_bottom)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_bottom)
         start_point_bottom += thickness_link
 
