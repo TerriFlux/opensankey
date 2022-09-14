@@ -262,7 +262,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 )} 
               }
             >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
                 : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
               }</Dropdown.Item>
           )
