@@ -449,13 +449,12 @@ def save_excel(
             tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values() if 'color' in tag])
             tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
-
-    nb_cols_nodes = len(nodes_cols) + len(sankey_data['nodeTags'].keys())
-
+            
     #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values() if tags_group['group_name'] != 'Dimensions']
     if has_column_dimension:
         nodeTags_group_names = ['Dimensions'] + nodeTags_group_names
+    nb_cols_nodes = len(nodes_cols) + len(nodeTags_group_names)
     nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
 
     for dim in sankey_data['nodeTags']['Dimensions']['tags']:
@@ -473,15 +472,19 @@ def save_excel(
             dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
             dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
             if 'definition' in node and node['definition'] != None:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']             
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
+                col_num = col_num+1
                 tags = sankey_data['nodeTags'][tag_name]['tags']
-                if tag_name == 'Dimensions' and has_column_dimension:
+                if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
                     continue
                 try:
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                    dim_nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+                    dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                 except Exception as expt:
                     pass
             #dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
@@ -507,14 +510,18 @@ def save_excel(
             dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
             dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
             if 'definition' in node:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']             
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
-                if tag_name == 'Dimensions' and has_column_dimension:
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
+                col_num = col_num+1
+                if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
                     continue
                 tags = sankey_data['nodeTags'][tag_name]['tags'] 
                 tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                dim_nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
         nodes = nodes+dim_nodes
 
 
