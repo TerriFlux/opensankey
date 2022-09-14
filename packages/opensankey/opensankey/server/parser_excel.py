@@ -289,7 +289,10 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node = nodes[name]
 
         for _,node_tag_name in enumerate(nodeTags.keys()):
-            tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
+            if node_tag_name == 'Dimensions' and not node_tag_name in mfa_input[NODES_SHEET][0]:
+                tag_value = 'Primaire'
+            else:
+                tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
             if tag_value == '':
