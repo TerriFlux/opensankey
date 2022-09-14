@@ -477,7 +477,6 @@ def save_excel(
             for j,tag_name in enumerate(sankey_data['nodeTags']):
                 if not has_column_dimension and tag_name == 'Dimensions':
                     continue
-                col_num = col_num+1
                 tags = sankey_data['nodeTags'][tag_name]['tags']
                 if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
@@ -485,6 +484,7 @@ def save_excel(
                 try:
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
                     dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    col_num = col_num+1
                 except Exception as expt:
                     pass
             #dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
@@ -515,13 +515,13 @@ def save_excel(
             for j,tag_name in enumerate(sankey_data['nodeTags']):
                 if not has_column_dimension and tag_name == 'Dimensions':
                     continue
-                col_num = col_num+1
                 if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
                     continue
                 tags = sankey_data['nodeTags'][tag_name]['tags'] 
                 tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
                 dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                col_num = col_num+1
         nodes = nodes+dim_nodes
 
 
