@@ -73,6 +73,8 @@ setup(name='OpenSankey',
       package_data={
             'opensankey': [
                   'setup.cfg',
+                  'opensankey.ini',
+                  'wsgi.py',
                   'server/*.*',
                   'tests/donnees/*.*',
                   'tests/output_references/*.*',

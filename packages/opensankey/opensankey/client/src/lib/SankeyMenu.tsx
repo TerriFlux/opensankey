@@ -60,7 +60,15 @@ export const uploadExcelImpl = (
     }
     Object.assign(data, server_data)
     convert_data(data)
-    compute_auto_sankey(data, 200)
+    //compute_auto_sankey(data, 200)
+    let nb_agregation_level = 0
+    Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
+  
+    set_nodes_level(data,data.nodes,nb_agregation_level)
+    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+    for (let i=nb_agregation_level ; i>0 ; i--) {
+      set_nodes_level(data,data.nodes,i,false)
+    }
     post_callback(data)
     set_data({ ...data })
   }
@@ -254,7 +262,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 )} 
               }
             >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('simple',' xl').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('reconciled',' recon xl').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
                 : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z0-9])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
               }</Dropdown.Item>
           )

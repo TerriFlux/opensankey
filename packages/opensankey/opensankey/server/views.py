@@ -167,7 +167,10 @@ def upload_exemple():
     if extension == ".xlsx":
         mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
         sankey_data = parser_excel.parse_excel(mfa_input)
-        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+        if '_reconciled' in base_file_name:
+            layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+        else:
+            layout_file_name = os.path.splitext(base_file_name)[0] + '_layout.json'
         sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
         layout_file_name = os.path.join(sankey_folder,layout_file_name)
         if os.path.exists(layout_file_name):
@@ -176,14 +179,6 @@ def upload_exemple():
             sankey_data['layout'] = layout_data
         sankey_data['file_name'] = layout_file_name
         json_data = json.dumps(sankey_data)
-    elif exemple == "Energie/sankeys_territoire_.csv":
-        sankey_dict = parser_excel.parse_sankey_energie_csv(exemple_file_path)
-        layout_file_name = os.path.join(exemple_folder, "sankey","energie_layout.json")
-        layout_file = open(layout_file_name,encoding="utf-8", mode= "r")
-        layout_data = json.load(layout_file)
-        sankey_dict["layout"] = layout_data
-        sankey_dict['version'] = '0.6'
-        json_data = json.dumps(sankey_dict)
     elif extension == ".json":
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
@@ -227,7 +222,7 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                 artefacts[key].append(file_name)
                 artefact_found = True
             continue
-        if 'simple.xlsx' in file_or_folder or 'reconciled.xlsx' in file_or_folder:
+        if '.xlsx' in file_or_folder and not 'old.' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if 'Excel' not in menus[key]:
