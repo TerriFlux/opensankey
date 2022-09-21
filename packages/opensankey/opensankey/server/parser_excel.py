@@ -527,6 +527,39 @@ def save_excel(
                 tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
                 dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                 col_num = col_num+1
+        for i,node in enumerate(sankey_data['nodes'].values()):
+            if 'Dimensions' in node['tags'] and not dim in node['tags']['Dimensions'] and node['tags']['Dimensions'] != []:
+                continue
+            if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and 'parent_name' in node['dimensions'][dim]:
+                level = node['dimensions'][dim]['level']
+                parent_id = node['dimensions'][dim]['parent_name']
+                parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+            else:
+                continue
+            if level != 3:
+                continue
+            parent_rows = [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
+            if len(parent_rows) == 0:
+                continue
+            parent_row = parent_rows[0]
+            dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+            row = parent_row+1
+            dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
+            dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+            if 'definition' in node:
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
+            for j,tag_name in enumerate(sankey_data['nodeTags']):
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
+                if tag_name == 'Dimensions':
+                    dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
+                    continue
+                tags = sankey_data['nodeTags'][tag_name]['tags'] 
+                tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                col_num = col_num+1
+                
         nodes = nodes+dim_nodes
 
 
