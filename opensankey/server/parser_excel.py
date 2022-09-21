@@ -9,169 +9,6 @@ from mfa_problem import mfa_problem_format_io
 def is_hex(s):
     return re.fullmatch(r"^\#?[0-9a-fA-F]+$", s or "") is not None
 
-def parse_sankey_energie_csv(
-    csv_file
-):
-    csv_data = pd.read_csv(
-        csv_file,
-        delimiter=';', encoding='utf-8'
-    )
-    sankey_dict = {}
-    nodes_names = np.unique(np.hstack((csv_data['source'], csv_data['target']))).tolist()
-    regions_names = csv_data['nom_territoire'].unique()
-    sankey_dict = {
-        'nodes'   : {},
-        'links'   : {},
-        'h_space' : 300,
-        'display_style' : {
-            'filter' : 1,
-            'filter_label' : 20
-        },
-
-    }
-    sankey_dict['nodeTags'] = {
-        'Exchanges' : {
-            'group_name'    : 'Echanges',
-            'tags'          : {
-                'interior' : {
-                    'name'     : 'Intérieur',
-                    'selected' : True,
-                    'color'    : '',
-                },
-                'Echangesimport' : {
-                    'name'     : 'Importations',
-                    'selected' : True,
-                    'color'    : ''
-                },
-                'Echangesexport' : {
-                    'name'     : 'Exportations',
-                    'selected' : True,
-                    'color'    : ''
-                }
-            },
-            'banner'     : 'multi'           
-        }
-    }
-    sankey_dict['dataTags'] = {
-        'Regions' : {
-            'group_name' : 'Regions',
-            'tags'       : {},
-            'banner'     : 'one'            
-        }
-    }
-    for region_name in regions_names.tolist():
-        sankey_dict['dataTags']['Regions']['tags'][region_name] = {
-            'name'     : region_name,
-            'selected' : region_name == regions_names[0],
-            'color'    : ''            
-        }
-
-    for node_id, node_name in enumerate(nodes_names):
-        if node_name == 'Importations' or node_name == 'Exportations':
-            continue
-        idNode = 'node' + str(node_id)
-        sankey_dict['nodes'][idNode] = {
-            'idNode'     : idNode,
-            'color'      : webcolors.name_to_hex('grey'),
-            'name'       : node_name,
-            'type'       : 'sector',
-            'orientation': 'vertical',
-            'show_value' : 1,
-            'tags'       : {
-                'Exchanges' : ['interior']
-            }
-        }
-
-    territory_data = csv_data[csv_data['nom_territoire'] == regions_names[0]]
-    for k, row in territory_data.iterrows():
-        source_name = row['source']
-        target_name = row['target']
-        if source_name == 'Importations':
-            node_id = node_id + 1
-            import_node_name = target_name + ' - Echanges - Importations'
-            idNode = 'node' + str(node_id)
-            sankey_dict['nodes'][idNode] = {
-                'idNode': idNode,
-                'color': webcolors.name_to_hex('grey'),
-                'name': import_node_name,
-                'type': 'sector',
-                'orientation': 'vertical',
-                'trade_close': 1,
-                'position'   : 'relative',
-                'show_value' : 1,
-                'tags': { 
-                    'Exchanges' : ['Echangesimport']
-                }
-            }
-            source_name = import_node_name
-
-        if target_name == 'Exportations':
-            node_id = node_id + 1
-            export_node_name = source_name + ' - Echanges - Exportations'
-            idNode = 'node' + str(node_id)
-            sankey_dict['nodes'][idNode] = {
-                'idNode': idNode,
-                'color': webcolors.name_to_hex('grey'),
-                'name': export_node_name,
-                'type': 'sector',
-                'orientation': 'vertical',
-                'trade_close': 1,
-                'position'   : 'relative',
-                'show_value' : 1,
-                'tags': { 'Exchanges' : 
-                    ['Echangesexport']
-                }
-            }
-            target_name = export_node_name
-
-        color = row['colors']
-        if not is_hex(color):
-          color = webcolors.name_to_hex(color)
-        idLink = 'link' + str(k)
-        for key,val in sankey_dict['nodes'].items():
-            if val['name'] == source_name:
-                idSource = key
-                break
-        for key,val in sankey_dict['nodes'].items():
-            if val['name'] == target_name:
-                idTarget = key
-                break
-        sankey_dict['links'][idLink] = {
-            'idLink'     : idLink,
-            'idSource'   : idSource,
-            'idTarget'   : idTarget,
-            'value': {},
-            'label_visible': 0,
-            'color': color,
-            'curvature' : 1,
-            'label_position' : 'beginning',
-            'left_horiz_shift' : 0.40,
-            'right_horiz_shift': 0.50,
-            'natural_unit'     : 'GWh',
-            'conv'             : [1,1]
-        }
-
-    for region_name in regions_names:
-      territory_data = csv_data[csv_data['nom_territoire'] == region_name]
-      id = 0
-      for k, row in territory_data.iterrows():
-        if row['value'] < 1000:
-            sankey_dict['links']['link' + str(id)]['value'][region_name] = {
-                'value'         : round(row['value'], 1),        
-                'display_value' : ''
-            }
-        else:
-            sankey_dict['links']['link' + str(id)]['value'][region_name] = {
-                'value'         : 500,
-                'display_value' : str(round(row['value']))+'*'  
-            }          
-        id = id + 1
-    sankey_dict['units_names'] = ['GWh','GWh']
-    sankey_dict['display_style'] = {
-        'unit' : 1
-    }
-    return sankey_dict
-
 def combine_data_tags(
     dataTags: dict,
     depth: int,
@@ -452,7 +289,10 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node = nodes[name]
 
         for _,node_tag_name in enumerate(nodeTags.keys()):
-            tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
+            if node_tag_name == 'Dimensions' and not node_tag_name in mfa_input[NODES_SHEET][0]:
+                tag_value = 'Primaire'
+            else:
+                tag_value = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index(node_tag_name)]
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
             if tag_value == '':
@@ -465,9 +305,12 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             
         level = mfa_input[NODES_SHEET][i][nodes_cols.index(NODES_LEVEL)]
         first_dimension = 'Primaire'
+        # if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
+        #     first_dimension = list(nodeTags['Dimensions']['tags'].keys()[0])
         if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-            first_dimension = list(nodeTags.keys())[0]
+            first_dimension = list(nodeTags['Dimensions']['tags'].keys())
         dimension = 'Primaire'
+        dimensions = ['Primaire']
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
         if 'Dimensions' in mfa_input[NODES_SHEET][0]:
             dimensions = mfa_input[NODES_SHEET][i][mfa_input[NODES_SHEET][0].index('Dimensions')]
@@ -477,6 +320,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 dimensions = dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
+        # if not 'Dimensions' in new_node['tags']:
+        #     new_node['tags']['Dimensions'] = [first_dimension]
         if not dimension  in new_node['dimensions']:
             for dim in dimensions:
                 new_node['dimensions'][dim] = {}             
@@ -598,7 +443,9 @@ def save_excel(
     if len(tag_key_names) != 0:
         tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
         tags_sheet[0] = [TAG_NAME,TAG_TYPE,TAG_TAGS,TAG_IS_PALETTE,TAG_COLORMAP,TAG_COLOR]
-    
+
+    has_column_dimension = len(sankey_data['nodeTags']['Dimensions']['tags']) > 1
+
     row = 1
     for tag_group_type in ['dataTags','nodeTags','fluxTags']:
         tag_key_names = list(sankey_data[tag_group_type])
@@ -607,11 +454,12 @@ def save_excel(
             tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values() if 'color' in tag])
             tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
-
-    nb_cols_nodes = len(nodes_cols) + len(sankey_data['nodeTags'].keys())
-
+            
     #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
-    nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
+    nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values() if tags_group['group_name'] != 'Dimensions']
+    if has_column_dimension:
+        nodeTags_group_names = ['Dimensions'] + nodeTags_group_names
+    nb_cols_nodes = len(nodes_cols) + len(nodeTags_group_names)
     nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
 
     for dim in sankey_data['nodeTags']['Dimensions']['tags']:
@@ -629,15 +477,19 @@ def save_excel(
             dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
             dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
             if 'definition' in node and node['definition'] != None:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']             
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
                 tags = sankey_data['nodeTags'][tag_name]['tags']
                 if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
                     continue
                 try:
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                    dim_nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+                    dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    col_num = col_num+1
                 except Exception as expt:
                     pass
             #dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
@@ -663,14 +515,51 @@ def save_excel(
             dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
             dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
             if 'definition' in node:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']             
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
                 if tag_name == 'Dimensions':
                     dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
                     continue
                 tags = sankey_data['nodeTags'][tag_name]['tags'] 
                 tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                dim_nodes[row][len(nodes_cols)+j] = (':').join(tags_names)
+                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                col_num = col_num+1
+        for i,node in enumerate(sankey_data['nodes'].values()):
+            if 'Dimensions' in node['tags'] and not dim in node['tags']['Dimensions'] and node['tags']['Dimensions'] != []:
+                continue
+            if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and 'parent_name' in node['dimensions'][dim]:
+                level = node['dimensions'][dim]['level']
+                parent_id = node['dimensions'][dim]['parent_name']
+                parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+            else:
+                continue
+            if level != 3:
+                continue
+            parent_rows = [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
+            if len(parent_rows) == 0:
+                continue
+            parent_row = parent_rows[0]
+            dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+            row = parent_row+1
+            dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
+            dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+            if 'definition' in node:
+                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+            col_num = 0           
+            for j,tag_name in enumerate(sankey_data['nodeTags']):
+                if not has_column_dimension and tag_name == 'Dimensions':
+                    continue
+                if tag_name == 'Dimensions':
+                    dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
+                    continue
+                tags = sankey_data['nodeTags'][tag_name]['tags'] 
+                tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                col_num = col_num+1
+                
         nodes = nodes+dim_nodes
 
 

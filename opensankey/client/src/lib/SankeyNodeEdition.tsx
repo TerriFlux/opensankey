@@ -766,7 +766,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                             multi_selected_nodes.current.forEach(n=> {
                               if (cube_dimension in n.dimensions) {
                                 n.dimensions[cube_dimension].parent_name = changeEvent.target.value
-                                n.dimensions[cube_dimension].level = 2
+                                if (data.nodes[changeEvent.target.value].dimensions[cube_dimension].parent_name !== undefined) {
+                                  n.dimensions[cube_dimension].level = 3
+                                } else {
+                                  n.dimensions[cube_dimension].level = 2
+                                }
                               } else {
                                 console.log(cube_dimension +' not in ' +n.name)
                               }
