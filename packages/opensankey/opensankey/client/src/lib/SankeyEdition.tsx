@@ -321,6 +321,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     if ( data.agregation.level === -1 ) {
       localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
     }
+    new_data.fit_screen = true
+    d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
   }
 
