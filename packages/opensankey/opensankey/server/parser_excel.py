@@ -514,7 +514,7 @@ def save_excel(
             row = parent_row+1
             dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
             dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-            if 'definition' in node:
+            if 'definition' in node and node['definition'] != None:
                 dim_nodes[row][nb_cols_nodes-1] = node['definition']
             col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
