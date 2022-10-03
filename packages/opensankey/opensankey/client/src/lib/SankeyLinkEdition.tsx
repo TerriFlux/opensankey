@@ -490,14 +490,18 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         let val = Object(selected_link.current.value)
-                        Object.values(tags_selected).forEach(tag => {
-                          if (val[tag] === undefined) {
-                            val[tag] = {}
-                          }
-                          val = val[tag]
+                        multi_selected_links.current.map(d => {
+                          val = d.value
+                          Object.values(tags_selected).forEach(tag => {
+                            if (val[tag] === undefined) {
+                              val[tag] = {}
+                            }
+                            val = val[tag]
+                          })
+                          val.display_value = evt.target.value
+                          d.dashed=evt.target.value === ' '
+
                         })
-                        selected_link.current.dashed=evt.target.value === ' '
-                        val.display_value = evt.target.value
                         set_data({ ...data })
                       }
                     }
