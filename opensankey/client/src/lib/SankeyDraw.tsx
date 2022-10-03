@@ -4696,36 +4696,36 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
   }
-  const get_diff = () => {
-    const diff = require('deep-diff')
-    const old_data_str = LZString.decompress(localStorage.getItem('data') as string) as string
-    //Si data existe dans le localStorage 
-    if (old_data_str != '') {
-      //On le parse en JSON
-      const old_data = JSON.parse(old_data_str)
-      //on va chercher les anciennes différences
-      // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
-      const old_diff_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-      let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
-      const difference = diff(data, old_data)
+  // const get_diff = () => {
+  //   const diff = require('deep-diff')
+  //   const old_data_str = LZString.decompress(localStorage.getItem('data') as string) as string
+  //   //Si data existe dans le localStorage 
+  //   if (old_data_str != '') {
+  //     //On le parse en JSON
+  //     const old_data = JSON.parse(old_data_str)
+  //     //on va chercher les anciennes différences
+  //     // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
+  //     const old_diff_str = LZString.decompress(localStorage.getItem('diff') as string) as string
+  //     let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
+  //     const difference = diff(data, old_data)
 
-      //Si il y des différences et que le tableau des anciennes différences existes alors on push dedans la nouvelles différence
-      //sinon on créer un tableau ne contenant que la nouvelle différence
-      if (difference !== undefined) {
-        if (old_diff !== undefined && old_diff !== null) {
-          old_diff.push(difference)
-        } else {
-          old_diff = [difference]
-        }
-      }
+  //     //Si il y des différences et que le tableau des anciennes différences existes alors on push dedans la nouvelles différence
+  //     //sinon on créer un tableau ne contenant que la nouvelle différence
+  //     if (difference !== undefined) {
+  //       if (old_diff !== undefined && old_diff !== null) {
+  //         old_diff.push(difference)
+  //       } else {
+  //         old_diff = [difference]
+  //       }
+  //     }
 
-      const cmp = LZString.compress(JSON.stringify(old_diff))
-      if (old_diff !== undefined) {
-        localStorage.setItem('diff', cmp)
-      }
-    }
+  //     const cmp = LZString.compress(JSON.stringify(old_diff))
+  //     if (old_diff !== undefined) {
+  //       localStorage.setItem('diff', cmp)
+  //     }
+  //   }
 
-  }
+  // }
 
   //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'p')
   const nextView = (data: SankeyData, views: { id: string, view_data: SankeyData, nom: string }[], new_view: string) => {
@@ -4950,17 +4950,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_labels()
 
     drawLegend()
-    try {
-      //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
-      if (current) {
-        get_diff()
-        const cmp = LZString.compress(JSON.stringify(data))
-        localStorage.setItem('data', cmp)
-      }
-    } catch (e) {
-      console.log(e)
-      localStorage.clear()
-    }
+    // try {
+    //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+    //   if (current) {
+    //     get_diff()
+    //     const cmp = LZString.compress(JSON.stringify(data))
+    //     localStorage.setItem('data', cmp)
+    //   }
+    // } catch (e) {
+    //   console.log(e)
+    //   localStorage.clear()
+    // }
 
 
   })
