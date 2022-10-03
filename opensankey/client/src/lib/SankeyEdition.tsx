@@ -457,9 +457,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     }
                   }
                   value={data.agregation.level}
-                >{ LZString.decompress(localStorage.getItem('initial_data') as string) !== '' ? (
-                    <option key='initial' value='-1'  >Vue initiale</option> ) : (<></>)}
-                  {[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
+                >{[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
                 </Form.Select></>) : (<Col></Col>)}
           </Form.Group>
           <Col lg="auto">
