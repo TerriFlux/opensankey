@@ -446,6 +446,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     select2
       .attr('href', d => '#' + d.idLink)
       .attr('id', d => d.idLink + '_text')
+      .attr('pointer-events',d=>(d.label_position!=='frozen')?'none':'auto')
       .attr('class', 'link_value')
       .attr('style', 'font-weight: bold;font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
@@ -3309,10 +3310,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     const paths = gg_links.append('path')
-
+    const positions: { [label_position: string]: string[] } = {
+      'frozen': ['50%', 'start'],
+      'beginning': ['10px', 'start'],
+      'middle': ['50%', 'start'],
+      'end': ['100%', 'end']
+    }
     gg_links
       .filter(
-        d => d.label_position !== 'frozen' && d.label_on_path === true
+        d => d.label_position !== 'frozen' 
       )
       .append('text')
       .attr('pointer-events', 'none')
@@ -3353,6 +3359,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('class', 'link_value')
       .attr('href', d => '#' + d.idLink)
+      .attr('startOffset', l=>positions[l.label_position][0])
+      .attr('text-anchor', l=>positions[l.label_position][1])
 
 
     const select2 = gg_links
