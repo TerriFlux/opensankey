@@ -915,7 +915,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     paths.on('click', function (event, d) {
-      if (event.ctrlKey) {
+      if (event.ctrlKey || event.metaKey) {
         sankeyTooltip.style('opacity', 0)
         if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
           button_ref.current.click()
@@ -2386,7 +2386,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     // Gestion du click  
     ggg_nodes.on('click', (event, d) => {
-      if (!static_sankey && event.ctrlKey) {
+      if (!static_sankey && (event.ctrlKey || event.metaKey)) {
         sankeyTooltip.style('opacity', 0)
         if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
           button_ref.current.click()
@@ -2419,13 +2419,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (mode_selection == 'ln') {
       let first_selected_node = {}
       ggg_nodes.on('mousedown', function (event, d) {
-        if (!event.ctrlKey) {
+        if (!event.ctrlKey && !event.metaKey) {
           // console.log(event, d)
           first_selected_node = d
         }
       })
         .on('mouseup', function (event, d) {
-          if (!event.ctrlKey && Object.keys(first_selected_node).length != 0) {
+          if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
             d3.selectAll('#svg #path-flux').remove()
             const n_link = default_link(data)
             const { links } = data
@@ -4340,7 +4340,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
       gg_label.on('click', (event) => {
-        if (event.ctrlKey) {
+        if (event.ctrlKey || event.metaKey) {
           sankeyTooltip.style('opacity', 0)
           if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
             button_ref.current.click()
@@ -4567,7 +4567,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           button_ref.current.click()
         }
         //set_show_nav(false)
-      } else if (e.key == 's' && e.ctrlKey) {
+      } else if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
         e.preventDefault()
         if (current) {
           const new_ind = 'view_' + String(new Date().getTime())
@@ -4585,7 +4585,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }, 3000)
         }
 
-      } else if (e.key == 'z' && e.ctrlKey) {
+      } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
         e.preventDefault()
         //va chercher les différences sauvegardées dans le localStorage
         // const differences = JSON.parse(localStorage.getItem('diff') as string)
@@ -4817,7 +4817,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.zoom()
         .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
-          return ev.ctrlKey && ev.buttons == 0
+          return (ev.ctrlKey || ev.metaKey) && ev.buttons == 0
         })
         .wheelDelta(ev => { // Permet de regler la vitesse du zoom
           return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
@@ -4874,7 +4874,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     //Ajout des events sur les l'ajout des noeuds aux click 
     svgSankey.on('click', ev => {
-      if (!ev.ctrlKey && mode_selection == 'n' && current) {
+      if ((!ev.ctrlKey && !ev.metaKey)&& mode_selection == 'n' && current) {
         const new_node1 = default_node(data)
         const listId: number[] = []
         Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
@@ -4904,7 +4904,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
       .on('mousedown', evt => {
         //si le mode de souris est noeud+liens alors crée le premier noeuds 
-        if (!evt.ctrlKey && mode_selection == 'nl' && current) {
+        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'nl' && current) {
           // isDown = true
 
           // creation nouveau noeud
@@ -4932,7 +4932,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mousemove', evt => {
         //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
         // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-        if (!evt.ctrlKey && mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
           const pos = d3.pointer(event)
           const node_keys = Object.keys(data.nodes)
           const last_node = data.nodes[node_keys[node_keys.length - 1]]
@@ -4955,7 +4955,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('mouseup', evt => {
         //si le mode de souris est noeud+liens alors crée un second noeud au relachement 
         //et crée un lien entre le premier noeud crée lors du click et ce dernier 
-        if (!evt.ctrlKey && mode_selection == 'nl' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'nl' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
           // isDown = false
           d3.selectAll('#svg #path-flux').remove()
           Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
@@ -5059,7 +5059,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-            if (!ev.ctrlKey && !ev.shiftKey) {
+            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey) {
               multi_selected_nodes.current = []
               multi_selected_links.current = []
               multi_selected_label.current = []
