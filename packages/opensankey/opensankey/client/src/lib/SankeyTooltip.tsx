@@ -207,7 +207,7 @@ export const nodeTooltipsContent = (
       } 
 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-        total += getLinkValue(data,link.idLink).value
+        total += the_value
       }
     }
     if ( n.outputLinksId.length > 0 ) {
