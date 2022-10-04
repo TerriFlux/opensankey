@@ -2805,7 +2805,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else if (n.display_style.label_vert == 'haut') {
           return '-2em'
         } else if (n.display_style.label_vert == 'bas') {
-          return height + height_text * 0.8
+          return height+height_text*1.8
         } else {
           return 0
         }
