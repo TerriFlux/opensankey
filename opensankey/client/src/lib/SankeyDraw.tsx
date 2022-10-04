@@ -2596,8 +2596,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
 
 
-          d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
-          d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
+          // d3.select('#svg').selectAll('.arrow').style('fill', '#dddddd')
+          d3.select('#svg').selectAll('.defsArrow path').style('fill', '#dddddd')
+
+
+          // d3.select('#svg').selectAll('.link').style('stroke-opacity', '0.2')
           d3.select('#svg').selectAll('.link').style('stroke', '#dddddd')
           d3.select('#svg').selectAll('.node').style('fill', '#dddddd')
           d3.select('#svg').selectAll('.link_value').style('display', 'none')
@@ -3201,6 +3204,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               }
             }
           }
+
           if (total === 0) {
             if (d.inputLinksId.length > 0) {
               for (let i = 0; i < d.inputLinksId.length; i++) {
@@ -3977,9 +3981,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const idLink = d3.select(this).attr('id')
         const idTarget = data.links[idLink].idTarget
         // Modification des arrows après l'animation
-        const arrowInitColor = d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow').attr('fill')
-        d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow')
-          .style('fill', arrowInitColor)
+        const arrow=d3.select('#arrow_'+idLink)
+        if(arrow!==undefined && arrow!= null){
+          arrow.select('path').style('fill',d3.select(this).attr('stroke'))
+        }
         // reaffichage des link value après l'animation
         d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
           .style('display', 'inline')
