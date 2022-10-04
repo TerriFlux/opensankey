@@ -4993,6 +4993,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const node_keys = Object.keys(data.nodes)
           new_link.idSource = data.nodes[node_keys[node_keys.length - 2]].idNode
           new_link.idTarget = data.nodes[node_keys[node_keys.length - 1]].idNode
+          if (new_link.idSource === new_link.idTarget) {
+            new_link.recycling = true
+          }
 
           data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
           data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
