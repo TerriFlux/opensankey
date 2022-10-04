@@ -4307,12 +4307,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
 
           //set_multi_selected_label(multi_selected_label)
-
           set_data({ ...data })
           if ( accordion_ref && accordion_ref.current) {
-            //accordion_ref.current.setAttribute('activeKey','2');
-            (accordion_ref.current.children[7] as HTMLLabelElement).click();
-            (accordion_ref.current.children[6] as HTMLLabelElement).click()
+            let index_LL=-1
+            //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
+            for (let i = 0; i < accordion_ref.current.children.length; i++) {
+              index_LL=(accordion_ref.current.children[i]==(accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
+            }
+            if(index_LL!=-1){
+              (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
+            }
           }
           // set_nav_item_active('7')
           // set_show_nav(true)

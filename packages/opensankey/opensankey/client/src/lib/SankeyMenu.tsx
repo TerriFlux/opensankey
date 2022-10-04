@@ -2914,6 +2914,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               eventKey="7"
+              id="LL"
               style={{ 'display': (view == 'none' && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
