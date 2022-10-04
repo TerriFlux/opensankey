@@ -477,15 +477,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     if (!static_sankey) {
+      
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
           if (alt_key_pressed) {
             drag_link_text(link, event)
-          } else {
-            const text_id = d3.select(this).attr('id')
-            const link_to_drag = text_id.substring(text_id.length - 5)
-            drag_link(display_nodes, display_links, display_style, data.nodeTags, (d3.select(link_to_drag).node() as SVGPathElement), event)
           }
+          //Je ne sais pas à quoi ca sert mais cela fait planter le programme quand on essaye de drag le text d'un link sans utiliser alt
+          // else {
+          //   const text_id = d3.select(this).attr('id')
+          //   const link_to_drag = text_id.substring(text_id.length - 5)
+          //   drag_link(display_nodes, display_links, display_style, data.nodeTags, (d3.select(link_to_drag).node() as SVGPathElement), event)
+          // }
         })
       )
     }
@@ -1297,6 +1300,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               d3.select('#' + link.idLink + '_text').attr('side', 'right')
             }
           }
+         
+          if (link.orthogonal_label_position === 'middle') {
+            d3.select('#' + link.idLink + '_text').attr('dy', '0.3em')
+          } else if (link.orthogonal_label_position === 'below') {
+            // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
+            d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px')
+            d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px')
+
+          } else if (link.orthogonal_label_position === 'above') {
+            // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
+            d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 'px')
+
+          }
+        
         }
 
         if (link.idSource === node.idNode || link.idTarget === node.idNode) {
@@ -1693,14 +1710,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       link.x_label = x_pos
       link.y_label = y_pos
     }
+    
+    scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
+    if(link.orthogonal_label_position=='above'){
+      y_pos-=scale(link_value)/2
+    }else if(link.orthogonal_label_position=='below'){
+      y_pos+=scale(link_value)/2
+    }
 
     if (link.label_position === 'frozen' && link.x_label ||
       !link.label_on_path || link.label_on_path === undefined) {
+        
       (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
         .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
+        // .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
         .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
         .text(d => link_text(data, d, link_value, display_style))
-        .attr('visibility', link.label_visible ? 'visible' : 'hidden')
+        .attr('visibility', link.label_visible ? 'visible' : 'hidden');
+      (d3.select('#' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
+        if(link.orthogonal_label_position=='above'){
+          return '-1em'
+        }else if(link.orthogonal_label_position=='below'){
+          return '0.3em'
+        }
+        return '0em'
+      })
     } else {
       const positions: { [label_position: string]: string[] } = {
         'frozen': ['50%', 'start'],
@@ -2391,12 +2425,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
         .on('mouseup', function (event, d) {
           if (!event.ctrlKey && Object.keys(first_selected_node).length != 0) {
-            console.log(d)
             d3.selectAll('#svg #path-flux').remove()
             const n_link = default_link(data)
             const { links } = data
             const fsn = (first_selected_node as SankeyNode)
-            console.log(data.links)
             const listId: number[] = []
             Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
 
@@ -4751,7 +4783,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   useEffect(() => {
     [data.width, data.height] = min_width_and_height()
     removeAnimate()
-    console.log('---')
     // let isDown = false
 
     const svgSankey = d3.select('#svg')
@@ -4901,7 +4932,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           //Ajout du lien entre les deux noeuds créés
           const new_link = default_link(data)
-          console.log(data.links)
           const listIdLink: number[] = []
           Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
           const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0

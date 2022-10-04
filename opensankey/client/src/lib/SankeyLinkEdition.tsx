@@ -864,6 +864,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
+                        d.label_on_path=true
+                        d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                       })
                       set_data({ ...data })
                     }
@@ -880,6 +882,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
+                        d.label_on_path=true
+                        d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                       })
                       set_data({ ...data })
                     }
@@ -896,6 +900,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.label_position = evt.target.value
+                        d.label_on_path=true
+                        d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                       })
                       set_data({ ...data })
                     }
@@ -907,12 +913,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <FormCheck
                 type='checkbox'
                 label='Attaché au flux'
-                disabled={selected_link.current.label_position === 'frozen'}
+                // disabled={selected_link.current.label_position === 'frozen'}
                 checked={labelSticktoLinkDisabled()}
                 onChange={
                   evt => {
                     Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                       d.label_on_path = evt.target.checked
+                      d.label_position=(evt.target.checked)?'middle':d.label_position='frozen'
+                      d.orthogonal_label_position='frozen'
                     })
                     set_data({ ...data })
                   }
@@ -934,6 +942,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
+                        d.label_on_path=true
+                        d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                       })
                       set_data({ ...data })
                     }
@@ -950,6 +960,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
+                        d.label_on_path=true
+                        d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                       })
                       set_data({ ...data })
                     }
@@ -967,6 +979,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     evt => {
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
+                        d.label_on_path=true
+                        d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                       })
                       set_data({ ...data })
                     }
