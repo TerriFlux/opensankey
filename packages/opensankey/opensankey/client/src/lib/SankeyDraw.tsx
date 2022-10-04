@@ -2406,6 +2406,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
             n_link.idSource = fsn.idNode
             n_link.idTarget = d.idNode
+            if (n_link.idSource === n_link.idTarget) {
+              n_link.recycling = true
+            }
 
             fsn.outputLinksId.push(n_link.idLink)
             d.inputLinksId.push(n_link.idLink)
