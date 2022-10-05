@@ -4833,43 +4833,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.select('#svg')
               .style('width', data.width / evt.transform.k + 'px')
               .style('height', data.height / evt.transform.k + 'px')
-            d3.select('#svg #grid').selectAll('.line').remove()
-            if (data.grid_visible && !data.static_sankey) {
-              const width = +d3.select('#svg').style('width').replace('px','')
-              const height = +d3.select('#svg').style('height').replace('px','')
-        
-              const numberLineH = height / data.grid_square_size
-              for (let row = 0; row < numberLineH; row++) {
-                d3.select('#svg #grid').append('line')
-                  .attr('class', 'line line-horiz')
-                  .style('stroke', '#d3d3d3')
-                  .style('stroke-dasharray', 4)
-                  .attr('x1', '0')
-                  .attr('x2', width)
-                  .attr('y1', row * data.grid_square_size)
-                  .attr('y2', row * data.grid_square_size)
-        
-              }
-        
-              const numberLineV = width / data.grid_square_size
-        
-              for (let column = 0; column < numberLineV; column++) {
-                d3.select('#svg #grid').append('line')
-        
-                  .attr('class', 'line line-vert')
-                  .style('stroke-dasharray', 4)
-                  .style('stroke', '#d3d3d3')
-                  .attr('x1', column * data.grid_square_size)
-                  .attr('x2', column * data.grid_square_size)
-                  .attr('y1', 0)
-                  .attr('y2', height)
-              }
-            }
-          } else {
-            // data.width=data.width / evt.transform.k
-            // data.height=data.height/ evt.transform.k
-            drawGrid()
           }
+          // data.width=data.width / evt.transform.k
+          // data.height=data.height/ evt.transform.k
+          // drawGrid()
         })).on('dblclick.zoom', null)
 
     //Ajout des events sur les l'ajout des noeuds aux click 
