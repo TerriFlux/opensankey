@@ -4563,7 +4563,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         set_data({ ...data })
       } else if (e.key == 'Escape') {
-        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+        if ( button_ref && button_ref.current && accordion_ref ) {
           button_ref.current.click()
         }
         //set_show_nav(false)
