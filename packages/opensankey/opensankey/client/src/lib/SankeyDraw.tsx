@@ -4333,8 +4333,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill', d.color)
         .style('fill-opacity', d.transparent ? 0 : 1)
         .attr('stroke', d.color_border)
-        .attr('stroke-opacity', d.transparent_border ? 0 : 1)
-        .attr('stroke-width', 2)
+        .attr('stroke-opacity', (d.transparent_border && !multi_selected_label.current.includes(d)) ? 0 : 1)
+        .attr('stroke-width', (multi_selected_label.current.includes(d))?3:1)
         .attr('rx', 5)
 
 
@@ -4345,6 +4345,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
             button_ref.current.click()
           }
+          d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
           if (multi_selected_label.current.includes(d)) {
             multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
           } else {
@@ -4385,10 +4386,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
             d.position_vert = ''
-            const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
-              old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
-              new_x = old_x + event.dx,
-              new_y = old_y + event.dy
+            d.position_horiz = ''
+            // const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
+            //   old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
+            //   new_x = old_x + event.dx,
+            //   new_y = old_y + event.dy
+            const new_x=event.x,
+              new_y=event.y
             d3.select('#' + d.idLabel + '_text').attr('x', new_x)
             d3.select('#' + d.idLabel + '_text').attr('y', new_y)
 
@@ -4396,9 +4400,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d.y_label = new_y
 
             d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-
           }
-
         })
       )
 
@@ -4406,8 +4408,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .bounds({ height: 100, width: d.label_width })
         .method('tspans')
 
-      d3.select('#' + d.idLabel + ' text')
-        .call(wrap)
+      if(d.position_horiz!==''&&d.position_vert!==''){
+        //Appel wrap seulement si le label n'a pas été drag 
+        //pour éviter que cela cause quelques probleme de position de label drag
+        d3.select('#' + d.idLabel + ' text').call(wrap)
+      }
 
       d3.select('#' + d.idLabel + ' text').selectAll('tspan').attr('dx',0).attr('x',()=>{
         let tmp=0
@@ -4421,9 +4426,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           break
         case 'droite':
           tmp=d.label_width
-          break
-        default:
-          tmp=0
           break
         }
         return tmp
@@ -4440,9 +4442,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             break
           case 'droite':
             tmp='end'
-            break
-          default:
-            tmp='start'
             break
           }
           return tmp
@@ -5074,6 +5073,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               multi_selected_links.current = []
               multi_selected_label.current = []
               Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select('#' + n.idNode).attr('stroke-width',0))
+              Object.values(data.labels).forEach(l=>d3.select('#' + l.idLabel + ' rect').attr('stroke-width',(l.transparent_border)?0:1))
               const visible_links = Object.values(data.links)
               visible_links.forEach(l=> {
                 const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')

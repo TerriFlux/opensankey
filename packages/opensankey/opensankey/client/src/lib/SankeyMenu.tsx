@@ -851,7 +851,21 @@ const Menu: FunctionComponent<MenuTypes> = (
       }
     })
   }
-
+  const label_libre_align_horiz=()=>{
+    multi_selected_label.current.map(d=>{
+      switch(d.position_horiz){
+      case 'milieu':
+        d.x_label=d.label_width/2
+        break
+      case 'droite':
+        d.x_label=d.label_width-3
+        break
+      default:
+        d.x_label=d.label_width-3
+        break
+      }
+    })
+  }
 
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
@@ -2958,7 +2972,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       const new_label = {
                         idLabel: 'label_' + String(new Date().getTime()),
                         name: 'Label' + + String(new Date().getTime()),
-                        label_width: 50,
+                        label_width: 100,
                         label_height: 25,
                         color: 'white',
                         color_border: 'black',
@@ -2972,7 +2986,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         font_uppercase: false,
                         x: 50,
                         y: 50,
-                        x_label: 25,
+                        x_label: 50,
                         y_label: 12,
                       }
                       data.labels[new_label.idLabel] = new_label
@@ -3069,6 +3083,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       value={allLabelWidth()}
                       onChange={evt => {
                         multi_selected_label.current.map(d => d.label_width = +evt.target.value)
+                        label_libre_align_horiz()
                         set_data({ ...data })
                       }}
                     />
@@ -3154,7 +3169,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position texte</FormLabel>
+                    <FormLabel >Position vertical texte</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
