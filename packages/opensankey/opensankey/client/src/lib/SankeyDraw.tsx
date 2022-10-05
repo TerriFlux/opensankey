@@ -2583,7 +2583,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
       // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
-      .attr('opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
+      .attr('fill-opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
