@@ -133,6 +133,20 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }
     return all_same
   }
+  const isAllNodeLabelValueVert = (arg: string, pos: string) => {
+    let all_same = true
+    if (multi_selected_nodes.current.length > 0) {
+      if (arg == 'vert') {
+        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_vert_valeur !== pos) ? false : all_same)
+      } else if (arg == 'horiz') {
+        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_horiz_valeur !== pos) ? false : all_same)
+      }
+    } else {
+      all_same = false
+    }
+    return all_same
+  }
+
   const valueAllNodeLabelBox = () => {
     let display_size = true
     let size = 110
@@ -172,6 +186,116 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     return visible
   }
 
+  const showNodeValuePositionParameter=(<>
+    <Form.Group as={Row}>
+      <Col xs={4}>
+        <FormLabel >Position vertical valeur</FormLabel>
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Haut'
+          checked={isAllNodeLabelValueVert('vert', 'haut')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_vert_valeur = 'haut'
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Milieu'
+          checked={isAllNodeLabelValueVert('vert', 'milieu')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_vert_valeur = 'milieu'
+
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Bas'
+
+          checked={isAllNodeLabelValueVert('vert', 'bas')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_vert_valeur = 'bas'
+
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+    </Form.Group>
+    <Form.Group as={Row} >
+      <Col xs={4}>
+        <FormLabel >Position horizontal valeur</FormLabel>
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Gauche'
+          checked={isAllNodeLabelValueVert('horiz', 'gauche')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_horiz_valeur = 'gauche'
+
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Milieu'
+          checked={isAllNodeLabelValueVert('horiz', 'milieu')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_horiz_valeur = 'milieu'
+
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+      <Col>
+        <FormCheck
+          type='radio'
+          label='Droite'
+          checked={isAllNodeLabelValueVert('horiz', 'droite')}
+          onChange={
+            () => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.display_style.label_horiz_valeur = 'droite'
+                delete d.x_label
+                delete d.y_label
+              })
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+    </Form.Group>
+  </>
+  )
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
     <Tab eventKey="tags" title="Étiquettes"
@@ -417,6 +541,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
 
                 </Form.Group>
+                {(isAllNodeTotal())? showNodeValuePositionParameter
+                  : (<></>)}
+
                 <Form.Group as={Row} >
                   <Col xs={4}>
                     <FormLabel >Taille police</FormLabel>
@@ -510,7 +637,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormLabel >Position vertical</FormLabel>
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Haut'
                       checked={isAllNodeLabelVert('vert', 'haut')}
@@ -527,7 +654,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Milieu'
                       checked={isAllNodeLabelVert('vert', 'milieu')}
@@ -544,7 +671,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Bas'
 
@@ -567,7 +694,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormLabel >Position horizontal</FormLabel>
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Gauche'
                       checked={isAllNodeLabelVert('horiz', 'gauche')}
@@ -584,7 +711,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Milieu'
                       checked={isAllNodeLabelVert('horiz', 'milieu')}
@@ -601,7 +728,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                   <Col>
-                    <FormCheck
+                    <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label='Droite'
                       checked={isAllNodeLabelVert('horiz', 'droite')}
