@@ -150,8 +150,13 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
+      const link_info = getLinkValue(data,link.idLink)
+      let the_value = link_info.value
+      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+        the_value = Number(String(link_info.display_value).replace('*',''))
+      } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-        total += getLinkValue(data,link.idLink).value
+        total += the_value
       }
     }
   }
@@ -167,13 +172,18 @@ export const nodeTooltipsContent = (
       if ( link === undefined ) {
         //alert('Corruption du diagramme')
         return ''
-      }        
+      }
+      const link_info = getLinkValue(data,link.idLink)
+      let the_value = link_info.value
+      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+        the_value = Number(String(link_info.display_value).replace('*',''))
+      } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td>' + source_name + '</td>'
-        t +=  '<td>' + toPrecision( getLinkValue(data,link.idLink).value)
+        t +=  '<td>' + toPrecision( the_value)
         if (n.inputLinksId.length>1) {
-          const percent = Math.round(getLinkValue(data,link.idLink).value*100/total)
+          const percent = Math.round(the_value*100/total)
           t += '</td><td>'+ percent + '%</td></tr>'
         } else {
           t += '</td></tr>'          
@@ -190,8 +200,14 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
+      const link_info = getLinkValue(data,link.idLink)
+      let the_value = link_info.value
+      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+        the_value = Number(String(link_info.display_value).replace('*',''))
+      } 
+
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-        total += getLinkValue(data,link.idLink).value
+        total += the_value
       }
     }
     if ( n.outputLinksId.length > 0 ) {
@@ -205,12 +221,17 @@ export const nodeTooltipsContent = (
           //alert('Corruption du diagramme')
           return ''
         }
+        const link_info = getLinkValue(data,link.idLink)
+        let the_value = link_info.value
+        if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+          the_value = Number(String(link_info.display_value).replace('*',''))
+        }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td>' + target_name + '</td>'
-          t +=  '<td>' + toPrecision( getLinkValue(data,link.idLink).value)
+          t +=  '<td>' + toPrecision( the_value)
           if (n.outputLinksId.length>1) {
-            const percent = Math.round(getLinkValue(data,link.idLink).value*100/total)
+            const percent = Math.round(the_value*100/total)
             t += '</td><td>'+ percent + '%</td></tr>'
           } else {
             t += '</td></tr>'          

@@ -518,6 +518,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     const node_keys = Object.keys(nodes)
     link.idSource = nodes[node_keys[0]].idNode
     link.idTarget = nodes[node_keys[1]].idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
 
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
     nodes[node_keys[1]].inputLinksId.push(link.idLink)
@@ -541,6 +544,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
     source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
 
 
@@ -571,6 +577,10 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
+
 
     target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
 
