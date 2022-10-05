@@ -826,6 +826,22 @@ const Menu: FunctionComponent<MenuTypes> = (
     return up
   }
 
+  const label_libre_align_vert=()=>{
+    multi_selected_label.current.map(d=>{
+      switch(d.position_vert){
+      case 'milieu':
+        d.y_label=d.label_height/2
+        break
+      case 'bas':
+        d.y_label=d.label_height-3
+        break
+      default:
+        d.y_label=d.label_height-3
+        break
+      }
+    })
+  }
+
 
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
@@ -2939,7 +2955,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         transparent: false,
                         transparent_border: false,
                         position_vert: 'milieu',
-                        position_horiz: 'milieu',
+                        position_horiz: 'gauche',
                         font_size: 12,
                         font_weight: false,
                         font_style: false,
@@ -3020,12 +3036,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={8}>
                     <FormControl size='sm'
                       min={0}
-                      max={100}
+                      max={1000}
                       type={'number'}
                       value={allLabelHeight()}
                       onChange={evt => {
-
                         multi_selected_label.current.map(d => d.label_height = +evt.target.value)
+                        label_libre_align_vert()
                         set_data({ ...data })
                       }}
                     />
@@ -3038,7 +3054,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={8}>
                     <FormControl size='sm'
                       min={0}
-                      max={100}
+                      max={1000}
                       type={'number'}
                       value={allLabelWidth()}
                       onChange={evt => {
@@ -3139,7 +3155,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'haut'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.font_size + 3
                           })
 
@@ -3157,7 +3173,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'milieu'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.label_height / 2
                           })
                           set_data({ ...data })
@@ -3175,7 +3191,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'bas'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.label_height - 3
                           })
                           set_data({ ...data })
@@ -3183,7 +3199,60 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     />
                   </Col>
+                </Form.Group><Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Alignement texte</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Gauche'
+                      checked={allNodeLabelVert('horiz', 'gauche')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'gauche'
+                          })
+
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Centre'
+                      checked={allNodeLabelVert('horiz', 'centre')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'centre'
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Droite'
+
+                      checked={allNodeLabelVert('horiz', 'droite')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'droite'
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
                 </Form.Group>
+
+
 
 
 
