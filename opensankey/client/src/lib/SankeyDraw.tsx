@@ -4409,6 +4409,46 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       d3.select('#' + d.idLabel + ' text')
         .call(wrap)
 
+      d3.select('#' + d.idLabel + ' text').selectAll('tspan').attr('dx',0).attr('x',()=>{
+        let tmp=0
+
+        switch(d.position_horiz){
+        case 'gauche':
+          tmp= 0
+          break
+        case 'centre':
+          tmp=d.label_width/2
+          break
+        case 'droite':
+          tmp=d.label_width
+          break
+        default:
+          tmp=0
+          break
+        }
+        return tmp
+      })
+        .attr('text-anchor',()=>{
+          let tmp='gauche'
+
+          switch(d.position_horiz){
+          case 'gauche':
+            tmp= 'start'
+            break
+          case 'centre':
+            tmp='middle'
+            break
+          case 'droite':
+            tmp='end'
+            break
+          default:
+            tmp='start'
+            break
+          }
+          return tmp
+        })
+
+
       gg_label.call(d3.drag<SVGGElement, unknown>()
         .subject(Object).on('drag', function (event) {
           const new_pos_x = d.x + event.dx
