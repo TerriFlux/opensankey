@@ -510,7 +510,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         //position noeud source ou target
         let pos_x_src, pos_y_src
-        if (node.name == nodes[l.idSource].name) {
+        if (node.idNode == nodes[l.idSource].idNode) {
           pos_x_src = nodes[l.idTarget].x
           pos_y_src = nodes[l.idTarget].y
         } else {
@@ -1032,7 +1032,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       //position noeud source ou target
       let pos_x_src, pos_y_src
-      if (node.name == nodes[l.idSource].name) {
+      if (node.idNode == nodes[l.idSource].idNode) {
         pos_x_src = nodes[l.idTarget].x
         pos_y_src = nodes[l.idTarget].y
       } else {
