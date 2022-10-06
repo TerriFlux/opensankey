@@ -125,16 +125,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
-    .style('background-color', 'white')
-    .style('border', 'solid')
-    .style('border-width', '3px')
-    .style('border-radius', '5px')
-    .style('padding', '5px')
-    .style('max-width', '50%')
-    .style('font-size', '12px')
-    .style('z-index', 1800)
-    .style('position', 'absolute')
-    .style('pointer-events', 'none')
 
   let alt_key_pressed = false
 
