@@ -2969,7 +2969,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button size="sm" onClick={() => {
                       const new_label = {
                         idLabel: 'label_' + String(new Date().getTime()),
-                        name: 'Label' + + String(new Date().getTime()),
+                        name: 'Text Label ...',
                         label_width: 100,
                         label_height: 25,
                         color: 'white',
