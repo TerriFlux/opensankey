@@ -4026,8 +4026,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const idTarget = data.links[idLink].idTarget
         // Modification des arrows après l'animation
         const arrow=d3.select('#arrow_'+idLink)
-        if(arrow!==undefined && arrow!= null){
-          arrow.select('path').style('fill',d3.select(this).attr('stroke'))
+        if(arrow!==undefined && arrow!= null){        
+          arrow.select('path').style('fill',(data.links[idLink].gradient)?data.nodes[idTarget].color:d3.select(this).attr('stroke'))
         }
         // reaffichage des link value après l'animation
         d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
@@ -5097,6 +5097,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey) {
+              removeAnimate()
               multi_selected_nodes.current = []
               multi_selected_links.current = []
               multi_selected_label.current = []
