@@ -1614,11 +1614,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('cursor', 'ew-resize')
         .call(d3.drag<SVGRectElement, unknown>()
           .subject(Object).on('drag', function (event) {
-            drag_handle(
-              link, nodes, links, display_style,
-              selected_tags,
-              this, position, event
-            )
+            if(multi_selected_links.current.includes(link)){
+              drag_handle(
+                link, nodes, links, display_style,
+                selected_tags,
+                this, position, event
+              )
+            }
+            
           })
         )
     }
