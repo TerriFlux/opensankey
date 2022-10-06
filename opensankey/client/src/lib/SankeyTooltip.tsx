@@ -152,7 +152,7 @@ export const nodeTooltipsContent = (
       }
       const link_info = getLinkValue(data,link.idLink)
       let the_value = link_info.value
-      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+      if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
@@ -175,7 +175,7 @@ export const nodeTooltipsContent = (
       }
       const link_info = getLinkValue(data,link.idLink)
       let the_value = link_info.value
-      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+      if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
@@ -202,7 +202,7 @@ export const nodeTooltipsContent = (
       }
       const link_info = getLinkValue(data,link.idLink)
       let the_value = link_info.value
-      if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+      if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
 
@@ -223,7 +223,7 @@ export const nodeTooltipsContent = (
         }
         const link_info = getLinkValue(data,link.idLink)
         let the_value = link_info.value
-        if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
+        if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
           the_value = Number(String(link_info.display_value).replace('*',''))
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
