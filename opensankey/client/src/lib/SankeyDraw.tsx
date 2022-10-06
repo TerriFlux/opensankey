@@ -957,11 +957,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
 
     })
+    const arrowVisible=(l :SankeyLink)=>{
+      return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 
+    }
     //Creation des Arrows associés au link
     d3.selectAll('.ggg_nodes')
-      .filter(n => node_arrow_visible(n))
-      .each(function (n) {
+      .filter(n => node_arrow_visible(n))      
+    //   .each(function (n) {
+    //     drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags)
+    //   })
+
+
+    d3.selectAll('.gg_links')
+      .filter(l=>arrowVisible(l as SankeyLink))
+      .each(function (l) {
+        const n =data.nodes[(l as SankeyLink).idTarget]
         drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags)
       })
 
@@ -3984,13 +3995,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     nodeDisplay: string[]
   ) => {
 
-    // console.log('branchAnimate')
-
-
     // Permet la progation de l'animation sur l'ensemble du Sankey
     const nodeStart = nodeData.idNode
-
-
 
     // on pourrait aussi evnetuellement faire un clone des noeuds
     d3.select('#' + nodeData.idNode).style('fill', d3.select('#' + nodeData.idNode).attr('fill'))
@@ -4000,11 +4006,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .filter(function (d) {
         return d.idSource == nodeStart
       })
-    // console.log('gLink', glinks)
 
     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-    // console.log('tmpLinks', tmpLinks)
     tmpLinks.selectAll('.link')
       .each(function (this) {
         const totalLength = (this as SVGGeometryElement).getTotalLength()
@@ -4109,6 +4113,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Cette version de drawArrows ne calcul plus les formes de morceau de flêche mais utilise l'algorithme de 
     //Sutherland-Hodgman pour couper les morceau de flêche
 
+    d3.selectAll('.defsArrow marker').remove()
 
     const res = compute_total_offsets(n, data, nodeTags, test_link_value)
     // const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
@@ -4958,10 +4963,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           new_node1.x = pos[0]
           new_node1.y = pos[1]
           set_data({ ...data })
-
-
         }
-
       })
       .on('mousemove', evt => {
         //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
