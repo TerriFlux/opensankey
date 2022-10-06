@@ -12,7 +12,6 @@ import * as d3 from 'd3'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
-import LZString from 'lz-string'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
@@ -318,9 +317,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       })
     })
     set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
-    if ( data.agregation.level === -1 ) {
-      localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
-    }
+    // if ( data.agregation.level === -1 ) {
+    //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
+    // }
     new_data.fit_screen = true
     d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
@@ -436,18 +435,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                       if (evt.target.value === '') {
                         return
                       }
-                      if (evt.target.value === '-1') {
-                        const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
-                        if (json_data !== '') {
-                          const initial_data = JSON.parse(json_data as string)
-                          Object.values(data.nodes).forEach(n => {
-                            n.display = initial_data.nodes[n.idNode].display
-                            n.node_visible = initial_data.nodes[n.idNode].node_visible
-                          })
-                          //initial_data.static_sankey = true
-                          set_data({ ...data })
-                        }
-                      }
+                      // if (evt.target.value === '-1') {
+                      //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
+                      //   if (json_data !== '') {
+                      //     const initial_data = JSON.parse(json_data as string)
+                      //     Object.values(data.nodes).forEach(n => {
+                      //       n.display = initial_data.nodes[n.idNode].display
+                      //       n.node_visible = initial_data.nodes[n.idNode].node_visible
+                      //     })
+                      //     //initial_data.static_sankey = true
+                      //     set_data({ ...data })
+                      //   }
+                      // }
                       Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
                       for (let level = 1; level <= +evt.target.value; level++) {
                         set_nodes_level(data, data.nodes, level)
