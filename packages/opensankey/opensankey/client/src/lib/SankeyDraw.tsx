@@ -357,6 +357,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return display
       })
       .attr('pointer-events', 'auto')
+      .attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
       .attr('stroke-dasharray', d => {
         const link_value = getLinkValue(data, d.idLink)
         if (link_value === undefined) {
@@ -1599,6 +1600,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // .on('mouseout', function () {
         //   d3.select(this).attr('fill-opacity', '1')
         // })
+        .attr('cursor', 'ew-resize')
         .call(d3.drag<SVGRectElement, unknown>()
           .subject(Object).on('drag', function (event) {
             drag_handle(
@@ -2603,7 +2605,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        d3.select(this).attr('cursor', 'grab')
+        //d3.select(this).attr('cursor', 'grab')
+        d3.select(this).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           sankeyTooltip
             .style('opacity', 1)
@@ -4867,6 +4870,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [data.width, data.height] = min_width_and_height()
     removeAnimate()
     // let isDown = false
+    // Permet d'affecter une class au svg selon le mode
+    if (mode_selection=='s') {
+      d3.select('#svg').attr('class','mode_selection')
+    }
+    if (mode_selection=='n') {
+      d3.select('#svg').attr('class','mode_add_node')
+    }
+    if (mode_selection=='nl') {
+      d3.select('#svg').attr('class','mode_add_node_flux')
+    }
+    if (mode_selection=='ln') {
+      d3.select('#svg').attr('class','mode_add_flux')
+    }
 
     const svgSankey = d3.select('#svg')
     if (data.fit_screen) {

@@ -61,6 +61,23 @@
 
 /* BASIC CONFIGURATION */
 body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;}
+
+.mode_selection {
+	cursor : auto;
+}
+
+.mode_add_node {
+	cursor : url(/public/cursor_n.svg) 10 3, auto;
+}
+
+.mode_add_flux {
+	cursor : url(/public/cursor_ln.svg) 10 3, auto;
+}
+
+.mode_add_node_flux {
+	cursor : url(/public/cursor_nl.svg) 10 3, auto;
+}
+
 h2,h3,h4,h5,h6{font-family:'Open Sans',sans-serif;color:#666;}
 h1 {
 	font-family: 'Open Sans Condensed', sans-serif;
