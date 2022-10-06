@@ -510,7 +510,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         //position noeud source ou target
         let pos_x_src, pos_y_src
-        if (node.name == nodes[l.idSource].name) {
+        if (node.idNode == nodes[l.idSource].idNode) {
           pos_x_src = nodes[l.idTarget].x
           pos_y_src = nodes[l.idTarget].y
         } else {
@@ -1032,7 +1032,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       //position noeud source ou target
       let pos_x_src, pos_y_src
-      if (node.name == nodes[l.idSource].name) {
+      if (node.idNode == nodes[l.idSource].idNode) {
         pos_x_src = nodes[l.idTarget].x
         pos_y_src = nodes[l.idTarget].y
       } else {
@@ -1832,7 +1832,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + source_node.idNode).attr('width', scale(node_size_s_width))
     d3.select('#' + source_node.idNode).attr('height', scale(node_size_s_height))
-    if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse') {
+    if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || !source_node.tags['Type de noeud'] && source_node.shape=='ellipse' ) {
       d3.select('#' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
       d3.select('#' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1841,7 +1841,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#' + target_node.idNode).attr('width', scale(node_size_t_width))
     d3.select('#' + target_node.idNode).attr('height', scale(node_size_t_height))
-    if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse') {
+    if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| !target_node.tags['Type de noeud'] && target_node.shape=='ellipse') {
       d3.select('#' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
       d3.select('#' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
@@ -2573,18 +2573,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        // .attr('cx', d => d.node_width / 2)
-        // .attr('cy', d => d.node_height / 2)
-        // .attr('rx', d => d.node_width / 2)
-        // .attr('ry', d => d.node_height / 2)
-        // .attr('height', d => d.node_height)
-        // .attr('width', d => d.node_width)
+        .attr('cx', d => d.node_width / 2)
+        .attr('cy', d => d.node_height / 2)
+        .attr('rx', d => d.node_width / 2)
+        .attr('ry', d => d.node_height / 2)
+       
     }
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
       // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
-      .attr('opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
+      .attr('fill-opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
@@ -4333,8 +4332,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill', d.color)
         .style('fill-opacity', d.transparent ? 0 : 1)
         .attr('stroke', d.color_border)
-        .attr('stroke-opacity', d.transparent_border ? 0 : 1)
-        .attr('stroke-width', 2)
+        .attr('stroke-opacity', (d.transparent_border && !multi_selected_label.current.includes(d)) ? 0 : 1)
+        .attr('stroke-width', (multi_selected_label.current.includes(d))?3:1)
         .attr('rx', 5)
 
 
@@ -4345,6 +4344,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
             button_ref.current.click()
           }
+          d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
           if (multi_selected_label.current.includes(d)) {
             multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
           } else {
@@ -4385,10 +4385,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .subject(Object).on('drag', function (event) {
           if (alt_key_pressed) {
             d.position_vert = ''
-            const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
-              old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
-              new_x = old_x + event.dx,
-              new_y = old_y + event.dy
+            d.position_horiz = ''
+            // const old_x = +d3.select('#' + d.idLabel + '_text').attr('x'),
+            //   old_y = +d3.select('#' + d.idLabel + '_text').attr('y'),
+            //   new_x = old_x + event.dx,
+            //   new_y = old_y + event.dy
+            const new_x=event.x,
+              new_y=event.y
             d3.select('#' + d.idLabel + '_text').attr('x', new_x)
             d3.select('#' + d.idLabel + '_text').attr('y', new_y)
 
@@ -4396,9 +4399,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d.y_label = new_y
 
             d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-
           }
-
         })
       )
 
@@ -4406,8 +4407,45 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .bounds({ height: 100, width: d.label_width })
         .method('tspans')
 
-      d3.select('#' + d.idLabel + ' text')
-        .call(wrap)
+      if(d.position_horiz!==''&&d.position_vert!==''){
+        //Appel wrap seulement si le label n'a pas été drag 
+        //pour éviter que cela cause quelques probleme de position de label drag
+        d3.select('#' + d.idLabel + ' text').call(wrap)
+      }
+
+      d3.select('#' + d.idLabel + ' text').selectAll('tspan').attr('dx',0).attr('x',()=>{
+        let tmp=0
+
+        switch(d.position_horiz){
+        case 'gauche':
+          tmp= 0
+          break
+        case 'centre':
+          tmp=d.label_width/2
+          break
+        case 'droite':
+          tmp=d.label_width
+          break
+        }
+        return tmp
+      })
+        .attr('text-anchor',()=>{
+          let tmp='gauche'
+
+          switch(d.position_horiz){
+          case 'gauche':
+            tmp= 'start'
+            break
+          case 'centre':
+            tmp='middle'
+            break
+          case 'droite':
+            tmp='end'
+            break
+          }
+          return tmp
+        })
+
 
       gg_label.call(d3.drag<SVGGElement, unknown>()
         .subject(Object).on('drag', function (event) {
@@ -4563,7 +4601,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         set_data({ ...data })
       } else if (e.key == 'Escape') {
-        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+        if ( button_ref && button_ref.current && accordion_ref ) {
           button_ref.current.click()
         }
         //set_show_nav(false)
@@ -5034,6 +5072,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               multi_selected_links.current = []
               multi_selected_label.current = []
               Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select('#' + n.idNode).attr('stroke-width',0))
+              Object.values(data.labels).forEach(l=>d3.select('#' + l.idLabel + ' rect').attr('stroke-width',(l.transparent_border)?0:1))
               const visible_links = Object.values(data.links)
               visible_links.forEach(l=> {
                 const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')
