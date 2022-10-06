@@ -1012,7 +1012,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [data.width, data.height] = min_width_and_height()
     if (data.fit_screen) {
       const svgSankey = d3.select('#svg')
-      svgSankey.attr('viewBox', [0, 0, data.width - 40, data.height] as unknown as string)
+      svgSankey.attr('viewBox', [0, 0, data.width , data.height] as unknown as string)
     } else {
       d3.select('#svg').style('width', data.width + 'px')
     }
@@ -4845,7 +4845,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = d3.select('#svg')
     if (data.fit_screen) {
-      svgSankey.attr('viewBox', [20, 0, data.width - 20, data.height] as unknown as string)
+      svgSankey.attr('viewBox', [0, 0, data.width , data.height] as unknown as string)
       svgSankey.style('width', '98.5%')
     } else {
       svgSankey.attr('viewBox', null)
@@ -4870,6 +4870,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (evt.transform.k < 1 && !data.fit_screen) {
             d3.select('#svg')
               .style('border', 2 / evt.transform.k + 'px solid #78c2ad')
+              .style('width', data.width + 'px')
           }
           
           // data.width=data.width / evt.transform.k
