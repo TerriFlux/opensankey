@@ -2853,7 +2853,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .style('text-align', 'center')
       // .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
       // .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
-      .style('font-size', d => d.display_style.font_size + 'px')
+      .style('font-size', d => d.display_style.value_font_size + 'px')
       // .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => {
         let total = 0
