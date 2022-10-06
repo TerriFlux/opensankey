@@ -1007,7 +1007,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Footer>
   </Modal>)
 
-
   //Modal et fonctions pour l'édition et affectation des styles de noeud
   const [showStyle, setShowStyle] = useState(false)
   const showStyleEdition = () => {
