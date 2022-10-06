@@ -401,6 +401,8 @@ export const convert_data = (
           null_flux: false,
           label_vert: 'bas',
           label_horiz: 'milieu',
+          label_vert_valeur: 'milieu',
+          label_horiz_valeur: 'milieu',
           label_box_width: 110,
         }
       }
@@ -645,6 +647,8 @@ export const convert_data = (
           null_flux: false,
           label_vert:'bas',
           label_horiz:'milieu',
+          label_vert_valeur: 'bas',
+          label_horiz_valeur: 'milieu',
           label_box_width:110,
         }
       }

@@ -2057,6 +2057,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return [xs, ys, xt, yt]
   }
 
+  const node_value_and_text_same_pos=(node :SankeyNode)=>{
+    return (node.label_visible && node.display_style.label_horiz_valeur==node.display_style.label_horiz && node.display_style.label_vert_valeur==node.display_style.label_vert)
+  }
+
   // DRAW LINK   
   const drawCurve = (
     data: SankeyData,
@@ -2818,11 +2822,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         const _text = document.getElementById(n.idNode + '_text')
         const width_text = (_text) ? _text.getBoundingClientRect().width : 0
-        if (n.display_style.label_horiz == 'milieu') {
+        if (n.display_style.label_horiz_valeur == 'milieu') {
           return width / 2
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz_valeur == 'gauche') {
           return -width / 2
-        } else if (n.display_style.label_horiz == 'droite') {
+        } else if (n.display_style.label_horiz_valeur == 'droite') {
           return width + width_text / 2
         } else {
           return 0
@@ -2832,18 +2836,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         const _text = document.getElementById(n.idNode + '_text')
         const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-        if (n.display_style.label_vert == 'milieu') {
-          return height / 2 + height_text / 2
-        } else if (n.display_style.label_vert == 'haut') {
-          return '-2em'
-        } else if (n.display_style.label_vert == 'bas') {
-          return height+height_text*1.8
+        if (n.display_style.label_vert_valeur == 'milieu') {
+          // return height / 2 + height_text / 2
+          return height / 2 + ((node_value_and_text_same_pos(n))?n.display_style.font_size:0)
+        } else if (n.display_style.label_vert_valeur == 'haut') {
+          return -n.display_style.font_size+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
+        } else if (n.display_style.label_vert_valeur == 'bas') {
+          return height+((node_value_and_text_same_pos(n))?height_text*1.8:n.display_style.font_size)
         } else {
           return 0
         }
       })
       .attr('text-anchor', () => 'middle')
-      .attr('visibility', n => n.node_visible && n.label_visible ? 'visible' : 'hidden')
+      .attr('visibility', n => n.node_visible && n.show_value ? 'visible' : 'hidden')
       // .style('text-align', 'center')
       // .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
       // .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
