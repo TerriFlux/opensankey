@@ -4867,11 +4867,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select('#svg')
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
           svgSankey.attr('viewBox', null)
-          //if (evt.transform.k < 1 && !data.fit_screen) {
-          //   d3.select('#svg')
-          //     .style('width', data.width / evt.transform.k + 'px')
-          //     .style('height', data.height / evt.transform.k + 'px')
-          // }
+          if (evt.transform.k < 1 && !data.fit_screen) {
+            d3.select('#svg')
+              .style('border', 2 / evt.transform.k + 'px solid #78c2ad')
+          }
+          
           // data.width=data.width / evt.transform.k
           // data.height=data.height/ evt.transform.k
           // drawGrid()
