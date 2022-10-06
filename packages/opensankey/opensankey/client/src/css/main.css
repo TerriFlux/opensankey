@@ -62,6 +62,50 @@
 /* BASIC CONFIGURATION */
 body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;}
 
+.sankey-tooltip {
+	background-color : white;
+	border : 1px solid #66a593;
+	border-radius : 4px;
+	min-width: 250px;
+	font-size : 12px;
+	z-index : 1800;
+	position : absolute;
+	pointer-events : none;
+
+}
+.sankey-tooltip .title {
+	font-weight: bold;
+	text-align: center;
+	background: #66a593;
+	color: white;
+}
+.sankey-tooltip .subtitle {
+	font-size: 1.2em;
+}
+.sankey-tooltip .tab-title {
+	font-weight: bold;
+	font-size : 1.1em;
+}
+.sankey-tooltip table {
+	color : black;
+}
+.sankey-tooltip table thead th {
+	color : #66a593;
+	font-weight: bold;
+}
+
+.sankey-tooltip table th {
+	padding : 0px
+}
+.sankey-tooltip table td {
+	padding : 4px
+}
+.sankey-tooltip ul {
+	margin-bottom: 0;
+	padding-left: 10px;
+}
+
+
 .mode_selection {
 	cursor : auto;
 }
