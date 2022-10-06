@@ -15,7 +15,6 @@ import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
-import LZString from 'lz-string'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 
@@ -200,11 +199,11 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
       set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
     updateLayout(server_data, server_data.layout)
-    if (server_data.agregation.level === -1) {
-      localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
-    } else {
-      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
-    }
+    // if (server_data.agregation.level === -1) {
+    //   localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
+    // } else {
+    set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
+    //}
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
     //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
@@ -2225,9 +2224,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                           convert_data(new_data)
                           set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
-                          if ( data.agregation.level === -1 ) {
-                            localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
-                          }
+                          // if ( data.agregation.level === -1 ) {
+                          //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
+                          // }
                         }
                       })()
                       reader.readAsText(files[0])
@@ -3808,9 +3807,9 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
                         set_data({ ...sankey_data })
-                        if (data.agregation.level === -1) {
-                          localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
-                        }
+                        // if (data.agregation.level === -1) {
+                        //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
+                        // }
                       }
                     }
                   )
