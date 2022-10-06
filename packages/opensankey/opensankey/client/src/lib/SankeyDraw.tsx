@@ -1601,7 +1601,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       d3.select('#gg_' + link.idLink)
         .append('rect')
         .attr('id', shift_name + link.idLink)
-        .attr('fill-opacity', '0')
+        .attr('fill-opacity', (multi_selected_links.current.includes(link))?1:0)
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
         // .on('mouseover', function () {
