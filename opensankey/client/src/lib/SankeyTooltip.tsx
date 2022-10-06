@@ -51,9 +51,8 @@ export const  linkTooltipsContent = (
   d : SankeyLink | SankeyNode
 ) => {  
   const l = d as SankeyLink
-  let t = '<p style=\'text-align: center;margin-bottom:0px\'><b>'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' -> ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</b></p>'
+  let t = '<p class="title" style="margin-bottom: 5px;">'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' → ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</p>'
 
-  
   if (l.tooltip_text) {
     //t += '<p><b>Définition'+ '</b></p>' 
     t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>' 
@@ -64,8 +63,8 @@ export const  linkTooltipsContent = (
   let desagregate_source_nodes : SankeyNode[] = []
   let desagregate_target_nodes : SankeyNode[] = []
   const link_info = getLinkValue(data,l.idLink)
-  t += '<table class="table table-striped table-dark" >'
-  t += '<tbody><br><tr><th>Valeur</th>'
+  t += '<table class="table" style="margin-bottom: 5px;">'
+  t += '<tbody><tr><th>Valeur</th>'
   let the_value = link_info.value
 
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
@@ -135,11 +134,14 @@ export const nodeTooltipsContent = (
   const {nodes} = data
   const display_links = data.links
 
-  let t =  '<p style=\'text-align: center;margin-bottom:0px\' ><b>'  + n.name.split('\\n').join(' ') + '</b></p>'
+  let t =  '<p class="title" style="margin-bottom: 5px;">'  + n.name.split('\\n').join(' ') + '</p>'
+  
+  t += '<div style="padding-left :5px;padding-right :5px">'
 
   if (n.tooltip_text) {
     //t += '<p><b>Définition'+ '</b></p>' 
-    t += '<p>'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
+    //t += '<p class="subtitle">'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
+    t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n') + '</p>' 
   }
 
   let total=0
@@ -160,12 +162,12 @@ export const nodeTooltipsContent = (
       }
     }
   }
-  t += '<br>'
+  //t += '<br>'
   if ( n.inputLinksId.length > 0 ) {
-    t += '<p><b>Entrées'+ '</b></p>' 
-    t += '<table class="table table-striped table-dark" >'
+    t += '<ul><li><p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p></li></ul>' 
+    t += '<table class="table" style="margin-bottom: 5px;">'
     t +=   '<thead><tr>'
-    t +=      '<th width="200px"></th><th width="120px">Valeur</th><th width="120px">Pourcentage</th>'      
+    t +=      '<th></th><th>Valeur</th><th>Pourcentage</th>'      
     t += '</tr></thead>'
     for (let i=0;i<n.inputLinksId.length;i++) {
       const link = display_links[n.inputLinksId[i]]
@@ -211,10 +213,11 @@ export const nodeTooltipsContent = (
       }
     }
     if ( n.outputLinksId.length > 0 ) {
-      t += '<p><b>Sorties</b></p>'        
-      t += '<table class="table table-striped table-dark" >'
+      t += '<ul><li><p class="tab-title" style="margin-bottom: 5px;">Sorties</p></li></ul>'        
+      t += '<table class="table" style="margin-bottom: 5px;">'
       t +=   '<thead><tr>'
-      t +=      '<th width="200px"></th><th width="120px">Valeur</th><th width="120px">Pourcentage</th>'      
+      t +=      '<th></th><th>Valeur</th><th>Pourcentage</th>'  
+      t += '</tr></thead>'    
       for (let i=0;i<n.outputLinksId.length;i++) {
         const link = data.links[n.outputLinksId[i]]
         if (link === undefined ) {
@@ -275,6 +278,6 @@ export const nodeTooltipsContent = (
     t += '</tr>'
   })
   t += '</tbody></table>'
-
+  t += '</div>'
   return t
 }
