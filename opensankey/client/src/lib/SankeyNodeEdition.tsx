@@ -103,6 +103,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     })
     return (display_size) ? size : 11
   }
+  const allNodeValueFontSize = () => {
+    let display_size = true
+    let size = 11
+    if (multi_selected_nodes.current.length != 0) {
+      size = multi_selected_nodes.current[0].display_style.value_font_size
+    }
+    multi_selected_nodes.current.map((d) => {
+      display_size = (d.display_style.value_font_size == size) ? display_size : false
+    })
+    return (display_size) ? size : 11
+  }
 
   const isAllNodeBold = () => {
     let visible = true
@@ -186,116 +197,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     return visible
   }
 
-  const showNodeValuePositionParameter=(<>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >Position vertical valeur</FormLabel>
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Haut'
-          checked={isAllNodeLabelValueVert('vert', 'haut')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_vert_valeur = 'haut'
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Milieu'
-          checked={isAllNodeLabelValueVert('vert', 'milieu')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_vert_valeur = 'milieu'
-
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Bas'
-
-          checked={isAllNodeLabelValueVert('vert', 'bas')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_vert_valeur = 'bas'
-
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel >Position horizontal valeur</FormLabel>
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Gauche'
-          checked={isAllNodeLabelValueVert('horiz', 'gauche')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_horiz_valeur = 'gauche'
-
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Milieu'
-          checked={isAllNodeLabelValueVert('horiz', 'milieu')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_horiz_valeur = 'milieu'
-
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          type='radio'
-          label='Droite'
-          checked={isAllNodeLabelValueVert('horiz', 'droite')}
-          onChange={
-            () => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.display_style.label_horiz_valeur = 'droite'
-                delete d.x_label
-                delete d.y_label
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-    </Form.Group>
-  </>
-  )
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
     <Tab eventKey="tags" title="Étiquettes"
@@ -510,7 +411,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
 
                 <Form.Group as={Row} >
-                  <Col xs={4}>Visibilité</Col>
+                  <Col xs={4}>Visibilité du label</Col>
                   <Col xs={1}>
                     <FormCheck inline
                       type='switch'
@@ -523,115 +424,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                 </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >Afficher la valeur du noeud</FormLabel>
-                  </Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={isAllNodeTotal()}
-                      onChange={evt => {
-                      // node.shape_visible = evt.target.checked
-                      // node.node_visible = node.label_visible || node.shape_visible
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                </Form.Group>
-                {(isAllNodeTotal())? showNodeValuePositionParameter
-                  : (<></>)}
-
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      min={11} max={20}
-                      type={'number'}
-                      value={allNodeLabelFontSize()}
-                      onChange={evt => {
-                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel >Police</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label='Gras'
-                      checked={isAllNodeBold()}
-                      onChange={
-                        evt => {
-                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label='Majuscule'
-                      checked={isAllNodeUpper()}
-                      onChange={
-                        evt => {
-                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.uppercase = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label='Italique'
-                      checked={isAllNodeItalic()}
-                      onChange={
-                        evt => {
-                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel>
-                    Coupure des labels
-                    </FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      value={valueAllNodeLabelBox()}
-                      type={'number'}
-                      placeholder={'110'}
-                      min={0}
-                      max={500}
-                      onChange={evt => {
-                        if (!isNaN(+evt.target.value)) {
-                          const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
-                          set_data({ ...data })
-                        }
-
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-
-
                 <Form.Group as={Row}>
                   <Col xs={4}>
                     <FormLabel >Position vertical</FormLabel>
@@ -744,6 +536,241 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       }
                     />
                   </Col>
+                </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Taille police</FormLabel>
+                  </Col>
+                  <Col xs={5}>
+                    <FormControl
+                      min={11} max={20}
+                      type={'number'}
+                      value={allNodeLabelFontSize()}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel >Police</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Gras'
+                      checked={isAllNodeBold()}
+                      onChange={
+                        evt => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Majuscule'
+                      checked={isAllNodeUpper()}
+                      onChange={
+                        evt => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.uppercase = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='checkbox'
+                      label='Italique'
+                      checked={isAllNodeItalic()}
+                      onChange={
+                        evt => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel>
+                    Coupure des labels
+                    </FormLabel>
+                  </Col>
+                  <Col xs={5}>
+                    <FormControl
+                      value={valueAllNodeLabelBox()}
+                      type={'number'}
+                      placeholder={'110'}
+                      min={0}
+                      max={500}
+                      onChange={evt => {
+                        if (!isNaN(+evt.target.value)) {
+                          const val = (+evt.target.value < 0) ? 0 : +evt.target.value
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
+                          set_data({ ...data })
+                        }
+
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
+                </Form.Group>
+
+
+                <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Visibilité de la valeur </FormLabel>
+                  </Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={isAllNodeTotal()}
+                      onChange={evt => {
+                      // node.shape_visible = evt.target.checked
+                      // node.node_visible = node.label_visible || node.shape_visible
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+
+                </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Position vertical</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      disabled={!isAllNodeTotal()}
+                      type='radio'
+                      label='Haut'
+                      checked={isAllNodeLabelValueVert('vert', 'haut')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_vert_valeur = 'haut'
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      disabled={!isAllNodeTotal()}
+                      type='radio'
+                      label='Milieu'
+                      checked={isAllNodeLabelValueVert('vert', 'milieu')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_vert_valeur = 'milieu'
+
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Bas'
+                      disabled={!isAllNodeTotal()}
+                      checked={isAllNodeLabelValueVert('vert', 'bas')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_vert_valeur = 'bas'
+
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Position horizontal</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck disabled={!isAllNodeTotal()}
+                      type='radio'
+                      label='Gauche'
+                      checked={isAllNodeLabelValueVert('horiz', 'gauche')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_horiz_valeur = 'gauche'
+
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck disabled={!isAllNodeTotal()}
+                      type='radio'
+                      label='Milieu'
+                      checked={isAllNodeLabelValueVert('horiz', 'milieu')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_horiz_valeur = 'milieu'
+
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck disabled={!isAllNodeTotal()}
+                      type='radio'
+                      label='Droite'
+                      checked={isAllNodeLabelValueVert('horiz', 'droite')}
+                      onChange={
+                        () => {
+                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                            d.display_style.label_horiz_valeur = 'droite'
+                            delete d.x_label
+                            delete d.y_label
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >Taille police</FormLabel>
+                  </Col>
+                  <Col xs={5}>
+                    <FormControl
+                      min={11} max={20}
+                      type={'number'}
+                      value={allNodeValueFontSize()}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col>px</Col>
                 </Form.Group>
               </Form>
             </Tab>) : (<></>)}
