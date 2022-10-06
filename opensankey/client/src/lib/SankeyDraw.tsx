@@ -4418,22 +4418,35 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         d3.select('#' + d.idLabel + ' text').call(wrap)
       }
 
-      d3.select('#' + d.idLabel + ' text').selectAll('tspan').attr('dx',0).attr('x',()=>{
-        let tmp=0
+      d3.select('#' + d.idLabel + ' text').select('tspan')
+        .attr('dy',()=>{
+          if((d.position_vert=='bas') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+            const tmp=d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
+            return -tmp+'em'
+          }else if((d.position_vert=='milieu') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+            const tmp=d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
+            return -tmp/2+'em'
+          }
+          return 0
+        })
 
-        switch(d.position_horiz){
-        case 'gauche':
-          tmp= 0
-          break
-        case 'centre':
-          tmp=d.label_width/2
-          break
-        case 'droite':
-          tmp=d.label_width
-          break
-        }
-        return tmp
-      })
+      d3.select('#' + d.idLabel + ' text').selectAll('tspan').attr('dx',2)
+        .attr('x',()=>{
+          let tmp=0
+
+          switch(d.position_horiz){
+          case 'gauche':
+            tmp= 0
+            break
+          case 'centre':
+            tmp=d.label_width/2
+            break
+          case 'droite':
+            tmp=d.label_width
+            break
+          }
+          return tmp
+        })
         .attr('text-anchor',()=>{
           let tmp='gauche'
 
