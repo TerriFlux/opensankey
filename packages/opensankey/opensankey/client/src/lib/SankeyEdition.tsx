@@ -77,7 +77,8 @@ const SankeyEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   additional_selector: PropTypes.element,
   mode_selection: PropTypes.string.isRequired,
-  set_mode_selection: PropTypes.func.isRequired
+  set_mode_selection: PropTypes.func.isRequired,
+  mode_visualisation:PropTypes.bool.isRequired,
 }
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
@@ -93,7 +94,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
@@ -540,7 +541,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
                 }
               >
-                <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                <Button disabled={mode_visualisation} variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
                   <FontAwesomeIcon icon={faArrowPointer} />
                 </Button>
               </OverlayTrigger>
@@ -553,7 +554,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
                 }
               >
-                <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
+                <Button disabled={mode_visualisation} variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
                   {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
                   <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
                     <g>
@@ -574,7 +575,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
                 }
               >
-                <Button variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
+                <Button disabled={mode_visualisation} variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
                   {/* Ajout Noeud+Flux */}
                   <svg viewBox='250 250 500 500' height='20px' width='50px'>
                     <g>
@@ -597,7 +598,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
                 }
               >
-                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                <Button disabled={mode_visualisation} variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
                   {/* Ajout liaison entre noeud */}
 
                   <FontAwesomeIcon icon={faShareNodes} />
