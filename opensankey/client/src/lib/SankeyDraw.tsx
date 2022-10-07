@@ -267,6 +267,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
             }
           }
+          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && 
+            target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' &&
+            target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+            selected_tag = target_node.tags[target_node.colorTag][0]
+            if (selected_tag in data.nodeTags[target_node.colorTag].tags) {
+              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
+            } else {
+              return l.color
+            }
+          }
           if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
             selected_tag = source_node.tags[source_node.colorTag][0]
             if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
