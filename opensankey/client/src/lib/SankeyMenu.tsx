@@ -129,7 +129,10 @@ const MenuPropTypes = {
 
 
   style_to_apply: PropTypes.string.isRequired,
-  set_style_to_apply: PropTypes.func.isRequired
+  set_style_to_apply: PropTypes.func.isRequired,
+
+  mode_visualisation:PropTypes.bool.isRequired,
+  set_mode_visualisation:PropTypes.func.isRequired
 }
 
 
@@ -319,7 +322,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     mode_selection,
     set_mode_selection
     , style_to_apply,
-    set_style_to_apply
+    set_style_to_apply,
+    mode_visualisation,
+    set_mode_visualisation
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -950,9 +955,28 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Form.Group>
 
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      <ButtonGroup>
+        <Button variant={(mode_visualisation)?'success':'outline-success'}
+          onClick={() => {
+            data.accordeonToShow = ['Vis','Leg']
+            set_mode_selection('s')
+            set_mode_visualisation(true)
+            set_data({ ...data })
 
+          }}
+        >Visualisation</Button>
+        <Button variant={(mode_visualisation)?'outline-warning':'warning'}
+          onClick={() => {
+            set_mode_visualisation(false)
+          }}
+        >Construction</Button>
+      </ButtonGroup>
+
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      
       <ButtonGroup>
         <Button variant='info'
+          disabled={mode_visualisation}
           onClick={() => {
             data.accordeonToShow = ['MEP']
             set_data({ ...data })
@@ -960,6 +984,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
         >Simple</Button>
         <Button variant='dark'
+          disabled={mode_visualisation}
           onClick={() => {
             data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
             set_data({ ...data })
@@ -967,33 +992,33 @@ const Menu: FunctionComponent<MenuTypes> = (
         >Expert</Button>
       </ButtonGroup>
       <Form>
-        <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
           preferenceCheck('MEP')
           set_data({ ...data })
         }} />
-        <Form.Check checked disabled type="checkbox" label="Noeuds" />
-        <Form.Check checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Noeuds" />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {Form.Check
           preferenceCheck('EN')
           set_data({ ...data })
         }} />
-        <Form.Check checked disabled type="checkbox" label="Flux" />
-        <Form.Check checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Flux" />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
           preferenceCheck('EF')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
           preferenceCheck('ED')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
           preferenceCheck('Vis')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
           preferenceCheck('Leg')
           set_data({ ...data })
         }} />
@@ -2308,6 +2333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           additional_selector={additional_selector}
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
+          mode_visualisation={mode_visualisation}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
@@ -2379,7 +2405,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
               eventKey="2"
               id="Nodes"
               onClick={
@@ -2631,7 +2657,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
 
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
               id='Flux'
               eventKey="3"
               onClick={evt => {
@@ -3636,6 +3662,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
           view={view}
           set_view={set_view}
+          mode_visualisation={mode_visualisation}
+          
         />) : (<></>)
       }
       <ApplyLayoutDialog

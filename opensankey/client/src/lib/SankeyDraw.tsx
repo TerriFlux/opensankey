@@ -41,7 +41,9 @@ const SankeyDrawPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
 
   view: PropTypes.string.isRequired,
-  set_view: PropTypes.func.isRequired
+  set_view: PropTypes.func.isRequired,
+
+  mode_visualisation:PropTypes.bool.isRequired,
 }
 
 export const SankeyDrawDefaultProps = {
@@ -73,7 +75,10 @@ export const SankeyDrawDefaultProps = {
   set_mode_selection: () => null,
 
   view: '',
-  set_view: () => null
+  set_view: () => null,
+
+  mode_visualisation:false,
+
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -99,7 +104,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_show_toast,
   current,
   mode_selection,
-  view, set_view
+  view, set_view,
+  mode_visualisation
 
 }) => {
 
@@ -365,7 +371,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     const paths = gg_links.append('path')
-    if (!static_sankey) {
+    if (!static_sankey && !mode_visualisation) {
       let error_msg: { text: string | undefined } | undefined
       paths.call(d3.drag<SVGPathElement, SankeyLink>()
         .subject(Object)
@@ -456,7 +462,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('visibility', d => link_visible(d, data) && getLinkValue(data, d.idLink).value >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden')
 
-    if (!static_sankey) {
+    if (!static_sankey && !mode_visualisation) {
       // A voir avec Julien
       select2.call(d3.drag<SVGTextElement, SankeyLink>()
         .subject(Object).on('drag', function (event, link) {
@@ -914,7 +920,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     paths.on('click', function (event, d) {
-      if (event.ctrlKey || event.metaKey) {
+      if ((event.ctrlKey || event.metaKey) && !mode_visualisation) {
         sankeyTooltip.style('opacity', 0)
         if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
           button_ref.current.click()
@@ -1591,7 +1597,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       d3.select('#gg_' + link.idLink)
         .append('rect')
         .attr('id', shift_name + link.idLink)
-        .attr('fill-opacity', (multi_selected_links.current.includes(link))?1:0)
+        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
         // .on('mouseover', function () {
@@ -1604,7 +1610,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('cursor', 'ew-resize')
         .call(d3.drag<SVGRectElement, unknown>()
           .subject(Object).on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
+            if(multi_selected_links.current.includes(link) && !mode_visualisation){
               drag_handle(
                 link, nodes, links, display_style,
                 selected_tags,
@@ -2397,7 +2403,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     // Gestion du click  
     ggg_nodes.on('click', (event, d) => {
-      if (!static_sankey && (event.ctrlKey || event.metaKey)) {
+      if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
         sankeyTooltip.style('opacity', 0)
         if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
           button_ref.current.click()
@@ -4349,7 +4355,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
       gg_label.on('click', (event) => {
-        if (event.ctrlKey || event.metaKey) {
+        if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
           sankeyTooltip.style('opacity', 0)
           if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
             button_ref.current.click()
@@ -4506,7 +4512,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drawGrid = () => {
 
     d3.select('#svg #grid').selectAll('.line').remove()
-    if (data.grid_visible && !data.static_sankey) {
+    if (data.grid_visible && !data.static_sankey && !mode_visualisation) {
       const numberLineH = data.height / data.grid_square_size
       for (let row = 0; row < numberLineH; row++) {
         d3.select('#svg #grid').append('line')

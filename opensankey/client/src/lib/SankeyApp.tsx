@@ -57,6 +57,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
   const display_links = data.links
 
+  const [mode_visualisation, set_mode_visualisation] = useState(false)
+
   return (
 
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
@@ -144,7 +146,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         set_mode_selection={set_mode_selection}
         style_to_apply={style_to_apply}
         set_style_to_apply={set_style_to_apply}
-
+        mode_visualisation={mode_visualisation}
+        set_mode_visualisation={set_mode_visualisation}
 
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -188,6 +191,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_mode_selection={set_mode_selection}
           view={view}
           set_view={set_view}
+          mode_visualisation={mode_visualisation}
         />) : (<></>)
       }
 
