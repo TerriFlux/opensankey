@@ -531,9 +531,6 @@ export const updateLayout = (
   }
 
   // for (const tag_group_key in new_layout.nodeTags) {
-  //   if ( tag_group_key === 'Exchanges' ) {
-  //     continue
-  //   }
   //   data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
   //   // if (tag_group_key in new_layout.nodeTags) {
   //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map

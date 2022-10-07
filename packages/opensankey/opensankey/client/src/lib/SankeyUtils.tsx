@@ -857,23 +857,28 @@ export const set_nodes_level = (
 ) => {
   Object.values(display_nodes).forEach(node => {
     //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && (!node.dimensions[data.agregation.dimension])) {
+    if ( control_display && node.tags['Dimensions'] && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
       node.display = false
       node.node_visible = false
       return
     }
-    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) && node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
-      // shows siblings
-      desagregation(data,node.idNode,data.agregation.dimension,control_display)
-      // hide children
-      agregation(data,node.idNode,data.agregation.dimension,control_display)
-      Object.keys(node.dimensions).forEach(dim => {
-        const idParent = node.dimensions[dim].parent_name
-        if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
-          display_nodes[idParent].node_visible = false
-          display_nodes[idParent].display = false
-        }
-      })
+    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
+      if (node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
+        // shows siblings
+        desagregation(data,node.idNode,data.agregation.dimension,control_display)
+        // hide children
+        agregation(data,node.idNode,data.agregation.dimension,control_display)
+        Object.keys(node.dimensions).forEach(dim => {
+          const idParent = node.dimensions[dim].parent_name
+          if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
+            display_nodes[idParent].node_visible = false
+            display_nodes[idParent].display = false
+          }
+        })
+      } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
+        node.node_visible = false
+        node.display = false
+      }
     } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
       node.node_visible = false
       node.display = false
