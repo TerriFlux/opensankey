@@ -10,9 +10,8 @@ import { set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
-import LZString from 'lz-string'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
@@ -78,7 +77,8 @@ const SankeyEditionPropTypes = {
   set_data: PropTypes.func.isRequired,
   additional_selector: PropTypes.element,
   mode_selection: PropTypes.string.isRequired,
-  set_mode_selection: PropTypes.func.isRequired
+  set_mode_selection: PropTypes.func.isRequired,
+  mode_visualisation:PropTypes.bool.isRequired,
 }
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
@@ -94,7 +94,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const use_node_colormap = Object.keys(data.nodeTags).filter(tags_key => data.nodeTags[tags_key].banner !== 'none').length > 0 || Object.keys(data.fluxTags).filter(tags_key => data.fluxTags[tags_key].banner !== 'none').length > 0
   const [show_readme, set_show_readme] = useState(false)
@@ -318,9 +318,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       })
     })
     set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
-    if ( data.agregation.level === -1 ) {
-      localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
-    }
+    // if ( data.agregation.level === -1 ) {
+    //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
+    // }
     new_data.fit_screen = true
     d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
@@ -353,7 +353,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: 'block'
+          display: (!palette && (!(banner_grouptag.length > 0 || nb_agregation_level > 1)) && (!(window.sankey.advanced === true && node_filter)) && (!(window.sankey.advanced === true && flux_filter)))?'none':'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
           {(data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -436,18 +436,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                       if (evt.target.value === '') {
                         return
                       }
-                      if (evt.target.value === '-1') {
-                        const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
-                        if (json_data !== '') {
-                          const initial_data = JSON.parse(json_data as string)
-                          Object.values(data.nodes).forEach(n => {
-                            n.display = initial_data.nodes[n.idNode].display
-                            n.node_visible = initial_data.nodes[n.idNode].node_visible
-                          })
-                          //initial_data.static_sankey = true
-                          set_data({ ...data })
-                        }
-                      }
+                      // if (evt.target.value === '-1') {
+                      //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
+                      //   if (json_data !== '') {
+                      //     const initial_data = JSON.parse(json_data as string)
+                      //     Object.values(data.nodes).forEach(n => {
+                      //       n.display = initial_data.nodes[n.idNode].display
+                      //       n.node_visible = initial_data.nodes[n.idNode].node_visible
+                      //     })
+                      //     //initial_data.static_sankey = true
+                      //     set_data({ ...data })
+                      //   }
+                      // }
                       Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
                       for (let level = 1; level <= +evt.target.value; level++) {
                         set_nodes_level(data, data.nodes, level)
@@ -504,108 +504,130 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <Button href={window.sankey.excel}>Résultats</Button>
             </Form.Group>
           ) : (<></>)}
-          <Form.Group as={Col} lg="auto" style={{ marginRight: '5px' }} className='colonneAide'>
-            <br />
-            <Button
-              style={{ width: '75px' }}
-              size="sm"
-              onClick={() => set_show_readme(true)}
-            >
-              Aide
-            </Button>
-            <br />
-            <br />
-            <Button
-              style={{ width: '75px' }}
-              size="sm"
-              onClick={() => {
-                data.fit_screen = true
-                d3.select('#svg').on('.zoom', null)
-                set_data({ ...data })
-              }}
-            >Réajuster cadre</Button>
-          </Form.Group>
         </Row>
       </div>
       { !data.static_sankey ? (
         <Row>
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
+          <Col>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
 
-              {//Boutons Sélection classique des éléments 
-              }
-              <OverlayTrigger
-                key={'tooltip-selection'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
+                {//Boutons Sélection classique des éléments 
                 }
-              >
-                <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                  <FontAwesomeIcon icon={faArrowPointer} />
-                </Button>
-              </OverlayTrigger>
+                <OverlayTrigger
+                  key={'tooltip-selection'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
+                  }
+                >
+                  <Button disabled={mode_visualisation} variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                    <FontAwesomeIcon icon={faArrowPointer} />
+                  </Button>
+                </OverlayTrigger>
 
 
-              <OverlayTrigger
-                key={'tooltip-ajoutNode'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
-                }
-              >
-                <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
-                  {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
-                  <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
-                    <g>
-                      <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
+                <OverlayTrigger
+                  key={'tooltip-ajoutNode'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
+                  }
+                >
+                  <Button disabled={mode_visualisation} variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
+                    {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
+                    <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
+                      <g>
+                        <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
                  3.348-454.125 0.193c-392.517 0.167-454.895-0.012-459.796-1.293zM496.144 814.818c-15.479-4.95-28.028-18.365-32.372-34.606-1.11-4.15-1.381-26.438-1.391-114.17l-0.012-109.014-110.052-0.304c-109.337-0.302-110.094-0.318-116.493-2.509-39.255-13.44-46.541-64.48-12.521-87.712 2.491-1.701 7.313-4.206 10.715-5.565l6.186-2.472 222.13-0.561 0.276-111.093c0.275-110.769 
                  0.282-111.111 2.488-116.938 11.501-30.393 48.064-42.012 74.593-23.704 6.832 4.715 14.378 14.323 17.681 22.511l2.422 6.006 0.552 223.218 222.13 0.561 5.968 2.256c13.383 5.060 24.816 16.207 29.604 28.862 2.74 7.243 3.797 20.512 2.22 27.868-3.593 16.757-16.519 30.98-33.412 36.764-6.4 2.191-7.156 2.207-116.493 2.509l-110.052 0.304-0.012 109.014c-0.012 87.732-0.282 
                  110.020-1.391 114.17-4.393 16.425-16.977 29.757-32.711 34.655-8.243 2.566-21.94 2.544-30.049-0.050z'></path>
-                    </g>
+                      </g>
                   
-                  </svg>
+                    </svg>
 
-                </Button>
-              </OverlayTrigger>
-              <OverlayTrigger
-                key={'tooltip-Noeud+Flux'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
-                }
-              >
-                <Button variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
-                  {/* Ajout Noeud+Flux */}
-                  <svg viewBox='250 250 500 500' height='20px' width='50px'>
-                    <g>
-                      <path style={{fill:(mode_selection == 'nl')?'white':'#ffce67'}} d='M133.932 420.321c-66.29 0-120.529 43.665-120.529 97.030s54.239 97.030 120.529 97.030c44.596 0 83.161-19.408
+                  </Button>
+                </OverlayTrigger>
+                <OverlayTrigger
+                  key={'tooltip-Noeud+Flux'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
+                  }
+                >
+                  <Button disabled={mode_visualisation} variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
+                    {/* Ajout Noeud+Flux */}
+                    <svg viewBox='250 250 500 500' height='20px' width='50px'>
+                      <g>
+                        <path style={{fill:(mode_selection == 'nl')?'white':'#ffce67'}} d='M133.932 420.321c-66.29 0-120.529 43.665-120.529 97.030s54.239 97.030 120.529 97.030c44.596 0 83.161-19.408
                      104.862-48.516l473.676-0.008v-97.022h-473.676c-21.692-29.116-60.266-48.516-104.862-48.516zM133.932 575.566c-39.776
                       0-72.314-26.194-72.314-58.215s32.538-58.215 72.314-58.215c39.776 0 72.314 26.194 72.314 58.215 0.010 32.013-32.538
                        58.215-72.314 58.215zM899.291 483.386v-63.065h-84.372v63.065h-78.338v67.923h78.338v63.065h84.372v-63.065h78.338v-67.923z'></path>
-                    </g>
+                      </g>
 
-                  </svg>
+                    </svg>
 
 
-                </Button>
-              </OverlayTrigger>
+                  </Button>
+                </OverlayTrigger>
 
-              <OverlayTrigger
-                key={'tooltip-liaison'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
+                <OverlayTrigger
+                  key={'tooltip-liaison'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
+                  }
+                >
+                  <Button disabled={mode_visualisation} variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                    {/* Ajout liaison entre noeud */}
+
+                    <FontAwesomeIcon icon={faShareNodes} />
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+
+          <Col className='text-right'>
+
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
+
+                {//Boutons Sélection classique des éléments 
                 }
-              >
-                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                  {/* Ajout liaison entre noeud */}
+                <OverlayTrigger
+                  key={'tooltip-adjust'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
+                  }
+                >
+                  <Button variant='dark' onClick={() => { 
+                    data.fit_screen = true
+                    d3.select('#svg').on('.zoom', null)
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faMaximize} />
+                  </Button>
+                </OverlayTrigger>
 
-                  <FontAwesomeIcon icon={faShareNodes} />
-                </Button>
-              </OverlayTrigger>
-            </ButtonGroup>
-          </FormGroup>
+
+                <OverlayTrigger
+                  key={'tooltip-help'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-help'}>Info supplementaires sur le diagramme</Tooltip>
+                  }
+                >
+                  <Button variant='info' onClick={() => { set_show_readme(true) }} >
+                    ?
+                  </Button>
+                </OverlayTrigger>
+
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+
 
         </Row>
       ) : (<></>)}

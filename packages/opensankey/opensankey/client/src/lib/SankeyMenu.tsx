@@ -15,7 +15,6 @@ import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
-import LZString from 'lz-string'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 
@@ -130,7 +129,10 @@ const MenuPropTypes = {
 
 
   style_to_apply: PropTypes.string.isRequired,
-  set_style_to_apply: PropTypes.func.isRequired
+  set_style_to_apply: PropTypes.func.isRequired,
+
+  mode_visualisation:PropTypes.bool.isRequired,
+  set_mode_visualisation:PropTypes.func.isRequired
 }
 
 
@@ -200,11 +202,11 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
       set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
     }
     updateLayout(server_data, server_data.layout)
-    if (server_data.agregation.level === -1) {
-      localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
-    } else {
-      set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
-    }
+    // if (server_data.agregation.level === -1) {
+    //   localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
+    // } else {
+    set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
+    //}
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
     //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
@@ -320,7 +322,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     mode_selection,
     set_mode_selection
     , style_to_apply,
-    set_style_to_apply
+    set_style_to_apply,
+    mode_visualisation,
+    set_mode_visualisation
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -518,6 +522,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     const node_keys = Object.keys(nodes)
     link.idSource = nodes[node_keys[0]].idNode
     link.idTarget = nodes[node_keys[1]].idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
 
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
     nodes[node_keys[1]].inputLinksId.push(link.idLink)
@@ -541,6 +548,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
     source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
 
 
@@ -571,6 +581,10 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
+    if (link.idSource === link.idTarget) {
+      link.recycling = true
+    }
+
 
     target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
 
@@ -826,6 +840,36 @@ const Menu: FunctionComponent<MenuTypes> = (
     return up
   }
 
+  const label_libre_align_vert=()=>{
+    multi_selected_label.current.map(d=>{
+      switch(d.position_vert){
+      case 'milieu':
+        d.y_label=d.label_height/2
+        break
+      case 'bas':
+        d.y_label=d.label_height-3
+        break
+      default:
+        d.y_label=d.label_height-3
+        break
+      }
+    })
+  }
+  const label_libre_align_horiz=()=>{
+    multi_selected_label.current.map(d=>{
+      switch(d.position_horiz){
+      case 'milieu':
+        d.x_label=d.label_width/2
+        break
+      case 'droite':
+        d.x_label=d.label_width-3
+        break
+      default:
+        d.x_label=d.label_width-3
+        break
+      }
+    })
+  }
 
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
@@ -911,9 +955,28 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Form.Group>
 
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      <ButtonGroup>
+        <Button variant={(mode_visualisation)?'success':'outline-success'}
+          onClick={() => {
+            data.accordeonToShow = ['Vis','Leg']
+            set_mode_selection('s')
+            set_mode_visualisation(true)
+            set_data({ ...data })
 
+          }}
+        >Visualisation</Button>
+        <Button variant={(mode_visualisation)?'outline-warning':'warning'}
+          onClick={() => {
+            set_mode_visualisation(false)
+          }}
+        >Construction</Button>
+      </ButtonGroup>
+
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      
       <ButtonGroup>
         <Button variant='info'
+          disabled={mode_visualisation}
           onClick={() => {
             data.accordeonToShow = ['MEP']
             set_data({ ...data })
@@ -921,6 +984,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }}
         >Simple</Button>
         <Button variant='dark'
+          disabled={mode_visualisation}
           onClick={() => {
             data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
             set_data({ ...data })
@@ -928,33 +992,33 @@ const Menu: FunctionComponent<MenuTypes> = (
         >Expert</Button>
       </ButtonGroup>
       <Form>
-        <Form.Check checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
           preferenceCheck('MEP')
           set_data({ ...data })
         }} />
-        <Form.Check checked disabled type="checkbox" label="Noeuds" />
-        <Form.Check checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Noeuds" />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {Form.Check
           preferenceCheck('EN')
           set_data({ ...data })
         }} />
-        <Form.Check checked disabled type="checkbox" label="Flux" />
-        <Form.Check checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Flux" />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
           preferenceCheck('EF')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
           preferenceCheck('ED')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
           preferenceCheck('Vis')
           set_data({ ...data })
         }} />
-        <Form.Check checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
           preferenceCheck('Leg')
           set_data({ ...data })
         }} />
@@ -967,7 +1031,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Button>
     </Modal.Footer>
   </Modal>)
-
 
   //Modal et fonctions pour l'édition et affectation des styles de noeud
   const [showStyle, setShowStyle] = useState(false)
@@ -2185,9 +2248,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                           convert_data(new_data)
                           set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
-                          if ( data.agregation.level === -1 ) {
-                            localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
-                          }
+                          // if ( data.agregation.level === -1 ) {
+                          //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
+                          // }
                         }
                       })()
                       reader.readAsText(files[0])
@@ -2270,6 +2333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           additional_selector={additional_selector}
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
+          mode_visualisation={mode_visualisation}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
@@ -2341,7 +2405,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
               eventKey="2"
               id="Nodes"
               onClick={
@@ -2593,7 +2657,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
 
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
               id='Flux'
               eventKey="3"
               onClick={evt => {
@@ -2914,6 +2978,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
             <Accordion.Item
               eventKey="7"
+              id="LL"
               style={{ 'display': (view == 'none' && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
@@ -2930,22 +2995,22 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Button size="sm" onClick={() => {
                       const new_label = {
                         idLabel: 'label_' + String(new Date().getTime()),
-                        name: 'Label' + + String(new Date().getTime()),
-                        label_width: 50,
+                        name: 'Text Label ...',
+                        label_width: 100,
                         label_height: 25,
                         color: 'white',
                         color_border: 'black',
                         transparent: false,
                         transparent_border: false,
                         position_vert: 'milieu',
-                        position_horiz: 'milieu',
+                        position_horiz: 'gauche',
                         font_size: 12,
                         font_weight: false,
                         font_style: false,
                         font_uppercase: false,
                         x: 50,
                         y: 50,
-                        x_label: 25,
+                        x_label: 50,
                         y_label: 12,
                       }
                       data.labels[new_label.idLabel] = new_label
@@ -3019,12 +3084,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={8}>
                     <FormControl size='sm'
                       min={0}
-                      max={100}
+                      max={1000}
                       type={'number'}
                       value={allLabelHeight()}
                       onChange={evt => {
-
                         multi_selected_label.current.map(d => d.label_height = +evt.target.value)
+                        label_libre_align_vert()
                         set_data({ ...data })
                       }}
                     />
@@ -3037,11 +3102,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col xs={8}>
                     <FormControl size='sm'
                       min={0}
-                      max={100}
+                      max={1000}
                       type={'number'}
                       value={allLabelWidth()}
                       onChange={evt => {
                         multi_selected_label.current.map(d => d.label_width = +evt.target.value)
+                        label_libre_align_horiz()
                         set_data({ ...data })
                       }}
                     />
@@ -3127,7 +3193,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position texte</FormLabel>
+                    <FormLabel >Position vertical texte</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
@@ -3138,7 +3204,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'haut'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.font_size + 3
                           })
 
@@ -3156,7 +3222,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'milieu'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.label_height / 2
                           })
                           set_data({ ...data })
@@ -3174,7 +3240,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         () => {
                           multi_selected_label.current.map(d => {
                             d.position_vert = 'bas'
-                            d.x_label = d.label_width / 2
+                            // d.x_label = d.label_width / 2
                             d.y_label = d.label_height - 3
                           })
                           set_data({ ...data })
@@ -3182,7 +3248,60 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     />
                   </Col>
+                </Form.Group><Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >Alignement texte</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Gauche'
+                      checked={allNodeLabelVert('horiz', 'gauche')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'gauche'
+                          })
+
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Centre'
+                      checked={allNodeLabelVert('horiz', 'centre')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'centre'
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <FormCheck
+                      type='radio'
+                      label='Droite'
+
+                      checked={allNodeLabelVert('horiz', 'droite')}
+                      onChange={
+                        () => {
+                          multi_selected_label.current.map(d => {
+                            d.position_horiz = 'droite'
+                          })
+                          set_data({ ...data })
+                        }
+                      }
+                    />
+                  </Col>
                 </Form.Group>
+
+
 
 
 
@@ -3543,6 +3662,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
           view={view}
           set_view={set_view}
+          mode_visualisation={mode_visualisation}
+          
         />) : (<></>)
       }
       <ApplyLayoutDialog
@@ -3713,9 +3834,9 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         const data: SankeyData = JSON.parse(result)
                         updateLayout(sankey_data, data)
                         set_data({ ...sankey_data })
-                        if (data.agregation.level === -1) {
-                          localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
-                        }
+                        // if (data.agregation.level === -1) {
+                        //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
+                        // }
                       }
                     }
                   )

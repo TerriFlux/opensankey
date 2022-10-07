@@ -66,6 +66,9 @@ export const SankeyNodePropTypes = {
     null_flux: PropTypes.bool.isRequired,
     label_vert: PropTypes.string.isRequired,
     label_horiz: PropTypes.string.isRequired,
+    label_vert_valeur: PropTypes.string.isRequired,
+    label_horiz_valeur: PropTypes.string.isRequired,
+    value_font_size:PropTypes.number.isRequired,
     label_box_width: PropTypes.number.isRequired
   }).isRequired,
 }
