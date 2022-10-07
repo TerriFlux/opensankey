@@ -2684,7 +2684,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (tag && !n.shape_visible) {
             return tag.color as string
           } else {
-            console.log('tutu')
+            //console.log('tutu')
           }
         }
         return n.iconColor
@@ -3076,7 +3076,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (tag && !n.shape_visible) {
             return tag.color as string
           } else {
-            console.log('tutu')
+            //console.log('tutu')
           }
         }
         return n.iconColor
@@ -4111,7 +4111,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     Object.values(links).filter(l=>n.inputLinksId.includes(l.idLink)).map(l=>{
-      console.log(l)
+      //console.log(l)
       d3.selectAll('.defsArrow marker#arrow_'+l.idLink).remove()
     })
     
