@@ -57,6 +57,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
 
   const display_links = data.links
 
+  const [mode_visualisation, set_mode_visualisation] = useState(false)
+
   return (
 
     <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
@@ -77,7 +79,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data({ ...data })
         }}
         example_menu={<>
-          <Dropdown.Item eventKey="data_repo" href="http://test.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
+          <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
             exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
             url_prefix=''
@@ -144,7 +146,8 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         set_mode_selection={set_mode_selection}
         style_to_apply={style_to_apply}
         set_style_to_apply={set_style_to_apply}
-
+        mode_visualisation={mode_visualisation}
+        set_mode_visualisation={set_mode_visualisation}
 
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -188,6 +191,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_mode_selection={set_mode_selection}
           view={view}
           set_view={set_view}
+          mode_visualisation={mode_visualisation}
         />) : (<></>)
       }
 
