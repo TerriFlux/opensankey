@@ -3913,6 +3913,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
+  const direct_son_as_distant_sibling=(n:SankeyNode)=>{
+    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+
+
+    // A CCOMPLETER
+    return 0
+  }
+
   //fonction pour animer que les nouveaux liens 
   const branchAnimateForView = (
     data: SankeyData,
@@ -4037,6 +4047,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
         if (!nodeDisplay.includes(idTarget)) {
           nodeDisplay.push(idTarget)
+          console.log(nodeData.name)
+          console.log(calcPath(data.nodes,nodeData,data.links))
+          direct_son_as_distant_sibling(nodeData)
           branchAnimate(data.nodes[idTarget], nodeDisplay)
         }
       })
