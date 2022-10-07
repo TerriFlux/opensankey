@@ -2677,6 +2677,25 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('x', 0)
       .append('g')
       .append('path')
+      .on('mouseover', function (event, d) {
+        //d3.select(this).attr('cursor', 'grab')
+        d3.select(this).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
+        if ((static_sankey || event.shiftKey)) {
+          sankeyTooltip
+            .style('opacity', 1)
+            .html(nodeTooltipsContent(data, d as SankeyNode))
+        }
+      })
+      .on('mousemove', function (event,) {
+        if ((static_sankey || event.shiftKey)) {
+          sankeyTooltip
+            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
+            .style('left', (event.pageX + 30) + 'px')
+        }
+      })
+      .on('mouseout', function () {
+        sankeyTooltip.style('opacity', 0)
+      })
       .style('fill', n => {
         if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
@@ -2799,26 +2818,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-      })
-      .on('mouseover', function (event, d) {
-        d3.select(this).attr('cursor', 'grab')
-        if (d.label_visible && (static_sankey || event.shiftKey)) {
-          sankeyTooltip
-            .style('opacity', 1)
-            .html(nodeTooltipsContent(data, d as SankeyNode))
-        }
-      })
-      .on('mousemove', function (event, d) {
-        if (d.label_visible && (static_sankey || event.shiftKey)) {
-          sankeyTooltip
-            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 30) + 'px')
-        }
-      })
-      .on('mouseout', function (event, d) {
-        if (d.label_visible) {
-          sankeyTooltip.style('opacity', 0)
-        }
       })
 
     //Affiche valueur Noeud
