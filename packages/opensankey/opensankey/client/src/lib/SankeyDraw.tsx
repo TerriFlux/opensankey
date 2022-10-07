@@ -4109,7 +4109,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //Cette version de drawArrows ne calcul plus les formes de morceau de flêche mais utilise l'algorithme de 
     //Sutherland-Hodgman pour couper les morceau de flêche
 
-    d3.selectAll('.defsArrow marker').remove()
+
+    Object.values(links).filter(l=>n.inputLinksId.includes(l.idLink)).map(l=>{
+      console.log(l)
+      d3.selectAll('.defsArrow marker#arrow_'+l.idLink).remove()
+    })
+    
 
     const res = compute_total_offsets(n, data, nodeTags, test_link_value)
     // const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
