@@ -10,7 +10,7 @@ import { set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
@@ -353,7 +353,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: 'block'
+          display: (!palette && (!(banner_grouptag.length > 0 || nb_agregation_level > 1)) && (!(window.sankey.advanced === true && node_filter)) && (!(window.sankey.advanced === true && flux_filter)))?'none':'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
           {(data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -504,33 +504,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <Button href={window.sankey.excel}>Résultats</Button>
             </Form.Group>
           ) : (<></>)}
-          <Form.Group as={Col} lg="auto" style={{ marginRight: '5px' }} className='colonneAide'>
-            <br />
-            <Button
-              style={{ width: '75px' }}
-              size="sm"
-              onClick={() => set_show_readme(true)}
-            >
-              Aide
-            </Button>
-            <br />
-            <br />
-            <Button
-              style={{ width: '75px' }}
-              size="sm"
-              onClick={() => {
-                data.fit_screen = true
-                d3.select('#svg').on('.zoom', null)
-                set_data({ ...data })
-              }}
-            >Réajuster cadre</Button>
-          </Form.Group>
         </Row>
       </div>
       { !data.static_sankey ? (
         <Row>
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
+          <Col>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
 
               {//Boutons Sélection classique des éléments 
               }
@@ -585,11 +565,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                        58.215-72.314 58.215zM899.291 483.386v-63.065h-84.372v63.065h-78.338v67.923h78.338v63.065h84.372v-63.065h78.338v-67.923z'></path>
                     </g>
 
-                  </svg>
+                    </svg>
 
 
-                </Button>
-              </OverlayTrigger>
+                  </Button>
+                </OverlayTrigger>
 
               <OverlayTrigger
                 key={'tooltip-liaison'}
@@ -601,11 +581,53 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Button disabled={mode_visualisation} variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
                   {/* Ajout liaison entre noeud */}
 
-                  <FontAwesomeIcon icon={faShareNodes} />
-                </Button>
-              </OverlayTrigger>
-            </ButtonGroup>
-          </FormGroup>
+                    <FontAwesomeIcon icon={faShareNodes} />
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+
+          <Col className='text-right'>
+
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
+
+                {//Boutons Sélection classique des éléments 
+                }
+                <OverlayTrigger
+                  key={'tooltip-adjust'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
+                  }
+                >
+                  <Button variant='dark' onClick={() => { 
+                    data.fit_screen = true
+                    d3.select('#svg').on('.zoom', null)
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faMaximize} />
+                  </Button>
+                </OverlayTrigger>
+
+
+                <OverlayTrigger
+                  key={'tooltip-help'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-help'}>Info supplementaires sur le diagramme</Tooltip>
+                  }
+                >
+                  <Button variant='info' onClick={() => { set_show_readme(true) }} >
+                    ?
+                  </Button>
+                </OverlayTrigger>
+
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+
 
         </Row>
       ) : (<></>)}

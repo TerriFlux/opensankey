@@ -318,7 +318,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='color'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllNodeVisible()}
                       value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].color : '#ffffff'}
                       onChange={evt => {
                         const color = evt.target.value
@@ -337,6 +337,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       value="ellipse"
                       type='radio'
                       label='Cercle'
+                      disabled={!isAllNodeVisible()}
                       checked={isAllNodeCircle()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
@@ -350,6 +351,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       value="rect"
                       type='radio'
                       label='Rectangle'
+                      disabled={!isAllNodeVisible()}
                       checked={isAllNodeRect()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
@@ -370,6 +372,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       min={0} max={100}
                       type={'number'}
                       value={displayedValueNodeWidth()}
+                      disabled={!isAllNodeVisible()}
                       onChange={
                         evt => {
                           multi_selected_nodes.current.map(d => d.node_width = +evt.target.value)
@@ -390,6 +393,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       min={0} max={100}
                       type={'number'}
                       value={displayedValueNodeHeight()}
+                      disabled={!isAllNodeVisible()}
                       onChange={
                         evt => {
                           //set_multi_selected_nodes(multi_selected_nodes)
@@ -544,8 +548,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={5}>
                     <FormControl
-                      min={11} max={20}
+                      min={11}
                       type={'number'}
+                      disabled={!isAllLabelVisible()}
                       value={allNodeLabelFontSize()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
@@ -564,6 +569,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='checkbox'
                       label='Gras'
                       checked={isAllNodeBold()}
+                      disabled={!isAllLabelVisible()}
                       onChange={
                         evt => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
@@ -609,6 +615,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormControl
                       value={valueAllNodeLabelBox()}
                       type={'number'}
+                      disabled={!isAllLabelVisible()}
                       placeholder={'110'}
                       min={0}
                       max={500}
@@ -757,12 +764,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
+
+                    <FormLabel >Taille police
+                    </FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
-                      min={11} max={20}
+                      min={11}
                       type={'number'}
+                      disabled={!isAllNodeTotal()}
                       value={allNodeValueFontSize()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
@@ -801,7 +811,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={5}>
                     <Form.Select
-
+                      disabled={!isAllIconVisible()}
                       onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                           d.iconName = evt.target.value
@@ -824,7 +834,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='color'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllIconVisible()}
                       value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
                       onChange={evt => {
                         const color = evt.target.value
@@ -841,7 +851,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='number'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllIconVisible()}
                       value={valueAllIconRatio()}
                       onChange={evt => {
                         let ratio = +evt.target.value
@@ -858,7 +868,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
               </Form>
             </Tab>) : (<></>)}
-          {Object.keys(nodeTags).length > 0 && multi_selected_nodes.current.length !== 0 ? node_tag : (<></>)}
+          {Object.keys(nodeTags).length > 0 && multi_selected_nodes.current.length !== 0 && data.accordeonToShow.includes('EN') ? node_tag : (<></>)}
           {(multi_selected_nodes.current.length !== 0) ? (
             <Tab eventKey="node_tooltip" title="Info-bulle">
               <Form >
