@@ -19,7 +19,7 @@ function write_children_table(
         const desagregated_link_info = getLinkValue(data,desagregated_link.idLink)
         if (!header_written) {
           t += '<p>Flux désagrégés </p>'
-          t += '<table class="table table-striped table-dark" >'
+          t += '<table class="table table-striped " >'
           t += '<thead><tr>'
           t += '<th>Flux désagrégés</th>'
           t += '<th>Valeur</th>'
@@ -253,7 +253,7 @@ export const nodeTooltipsContent = (
     if (n.dimensions[dim].parent_name) {
       if (! header_written) {
         t += '<br><p><b>Noeuds agrégés et désagrégés<b></p>'
-        t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
+        t += '<table class="table table-striped " ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
         header_written = true        
       }
       has_parent = true
@@ -263,7 +263,7 @@ export const nodeTooltipsContent = (
     if (desagregate_nodes.length>0) {
       if (! header_written) {
         t += '<br><p><b>Noeuds agrégés et désagrégés</b></p>'
-        t += '<table class="table table-striped table-dark" ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
+        t += '<table class="table table-striped " ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
         header_written = true        
       }
       if (!has_parent) {
