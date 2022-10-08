@@ -70,7 +70,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       <Menu
         data={data}
         set_data={set_data}
-        app_name={!window.SankeyToolsStatic ? 'version beta 0.9' : ''}
+        app_name={!window.SankeyToolsStatic ? 'preversion 1.0' : ''}
         set_current_filter={(
           new_current_filter: number
         ) => {
