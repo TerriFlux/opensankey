@@ -277,16 +277,14 @@ def parse_folder(current_dir,menus,opensankey,key=None):
 def menus_examples():
     base_url = request.base_url
     opensankey = True
-    if 'opensankey' in base_url:
+    if 'opensankey' in base_url or 'open-sankey' in base_url:
        opensankey = False        
     data_folder = os.environ.get('MFAData')
     menus = {}
-    artefacts = {}
     try:
-        parse_folder(data_folder,menus,artefacts)
+        parse_folder(data_folder,menus,opensankey)
         context = {
-                'exemples_menu'    : menus,
-                'artefacts_menu': artefacts
+                'exemples_menu'    : menus
         }
         json_data = json.dumps(context)
         response = Response(
