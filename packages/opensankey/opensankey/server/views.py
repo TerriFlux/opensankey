@@ -203,24 +203,31 @@ def download_examples():
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')
 
-def parse_folder(current_dir,menus,artefacts,key=None):
+def parse_folder(current_dir,menus,opensankey,key=None):
     folder_content = listdir(current_dir)
     folder_content.sort()
     exemple_found = False
-    artefact_found = False
+    # artefact_found = False
     for file_or_folder in folder_content:
         if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
+        if opensankey:
+            if os.path.isdir(os.path.join(current_dir,file_or_folder)):
+                file_names = listdir(os.path.join(current_dir, file_or_folder))
+                if not '.opensankey' in file_names:
+                    continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                # if 'open-sankey' not in file_name:
-                #     continue
-                if key not in artefacts or type(artefacts[key]) is dict:
-                    artefacts[key] = []
-                artefacts[key].append(file_name)
-                artefact_found = True
+                if '.gitkeep' in file_name:
+                    continue
+                if key not in menus:
+                    menus[key] = {}
+                if 'artefacts' not in menus[key]:
+                    menus[key]['artefacts'] = []  
+                menus[key]['artefacts'].append(file_name)
+                # artefact_found = True
             continue
         if '.xlsx' in file_or_folder and not 'old.' in file_or_folder:
             if key not in menus:
@@ -237,19 +244,15 @@ def parse_folder(current_dir,menus,artefacts,key=None):
             if key != None:
                 if key not in menus:
                     menus[key] = {}
-                if key not in artefacts:
-                    artefacts[key] = {}
-                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],artefacts[key],child_key)
+                # if key not in artefacts:
+                #     artefacts[key] = {}
+                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],opensankey,child_key)
                 if folder_found:
                     exemple_found = True
-                if art_found:
-                    artefact_found = True
             else:
-                folder_found,art_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,artefacts,child_key)  
+                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,opensankey,child_key)  
                 if folder_found:
-                    exemple_found = True
-                if art_found:
-                    artefact_found = True           
+                    exemple_found = True         
         else:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
@@ -260,33 +263,37 @@ def parse_folder(current_dir,menus,artefacts,key=None):
                     continue
                 if key not in menus:
                     menus[key] = {}
-                if 'JSON' not in menus[key]:
-                    menus[key]['JSON'] = []   
-                menus[key]['JSON'].append(file_name)
+                if 'Sankey' not in menus[key]:
+                    menus[key]['Sankey'] = []   
+                menus[key]['Sankey'].append(file_name)
                 exemple_found = True
     if not exemple_found and key in menus:
         del menus[key]
-    if not artefact_found and key in artefacts:
-        del artefacts[key]
-    return exemple_found,artefact_found
+    # if not artefact_found and key in artefacts:
+    #     del artefacts[key]
+    return exemple_found
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
 def menus_examples():
+    base_url = request.base_url
+    opensankey = True
+    if 'opensankey' in base_url:
+       opensankey = False        
     data_folder = os.environ.get('MFAData')
     menus = {}
     artefacts = {}
     try:
         parse_folder(data_folder,menus,artefacts)
-        context = {
+    context = {
             'exemples_menu'    : menus,
             'artefacts_menu': artefacts
-        }
-        json_data = json.dumps(context)
-        response = Response(
-            response=json_data,
-            status=200,
-            mimetype='application/json'
-        )
+    }
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
     except Exception as expt:
         response = Response(
             response=str(expt),
