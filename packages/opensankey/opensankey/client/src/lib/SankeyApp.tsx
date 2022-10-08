@@ -9,7 +9,6 @@ import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from 
 import Menu, { ExempleItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Dropdown } from 'react-bootstrap'
 import GoogleFontLoader from 'react-google-font-loader'
 
 declare const window: Window &
