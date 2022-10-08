@@ -250,7 +250,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
-            let url = window.location.origin + '/fm/userfiles/' + current_path + item
+            let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
             let suffix = 'ZIP'
             if (!item.includes('zip')) {
               url = url + '/index.html'
