@@ -277,7 +277,7 @@ def parse_folder(current_dir,menus,opensankey,key=None):
 def menus_examples():
     base_url = request.base_url
     opensankey = True
-    if 'opensankey' in base_url or 'open-sankey' in base_url:
+    if '5000' in base_url and 'opensankey' in base_url or not 'open-sankey' in base_url:
        opensankey = False        
     data_folder = os.environ.get('MFAData')
     menus = {}
