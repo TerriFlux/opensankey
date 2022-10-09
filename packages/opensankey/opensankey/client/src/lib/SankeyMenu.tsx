@@ -2643,6 +2643,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         set_data={set_data}
                         radio_selected={radio_selected}
                         multi_selected_nodes={multi_selected_nodes}
+                        multi_selected_links={multi_selected_links}
                       >{node_edition}</SankeyNodeEdition>
 
 
