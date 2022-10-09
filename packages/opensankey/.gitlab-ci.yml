@@ -57,4 +57,3 @@ deploy_opensankey:
     - cd "$FOLDER"
     - source test_opensankey/bin/activate
     - bash update_build_opensankey.sh
-

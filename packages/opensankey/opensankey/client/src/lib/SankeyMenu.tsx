@@ -115,7 +115,8 @@ const MenuPropTypes = {
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
   example_menu: PropTypes.element,
-  portfolio_menu: PropTypes.element,
+  // portfolio_menu: PropTypes.element,
+  formations_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
   view: PropTypes.string.isRequired,
@@ -138,44 +139,44 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
-const ArtefactsItemPropTypes = {
-  artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
-  current_path : PropTypes.string.isRequired
-}
+// const ArtefactsItemPropTypes = {
+//   artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
+//   current_path : PropTypes.string.isRequired
+// }
 
-export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
+// export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
 
-export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
-  return (
-    <>
-      { Array.isArray(artefacts_menu)
-        ? artefacts_menu.map((item, index) => {
-          let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
-          if (!item.includes('zip')) {
-            url = url + '/index.html'
-          }
-          return (
-            <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
-          )
-        }
-        ) : Object.keys(artefacts_menu).map(
-          (key, index) => {
-            return (
-              <>
-                <NavDropdown key={index} title={key} id={key} >
-                  <ArtefactsItem
-                    artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-                    current_path={current_path !== '' ? current_path + '/' + key : key}
-                  />
-                </NavDropdown>
-              </>
-            )
-          }
-        )
-      }
-    </>
-  )
-}
+// export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
+//   return (
+//     <>
+//       { Array.isArray(artefacts_menu)
+//         ? artefacts_menu.map((item, index) => {
+//           let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
+//           if (!item.includes('zip')) {
+//             url = url + '/index.html'
+//           }
+//           return (
+//             <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
+//           )
+//         }
+//         ) : Object.keys(artefacts_menu).map(
+//           (key, index) => {
+//             return (
+//               <>
+//                 <NavDropdown key={index} title={key} id={key} >
+//                   <ArtefactsItem
+//                     artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
+//                     current_path={current_path !== '' ? current_path + '/' + key : key}
+//                   />
+//                 </NavDropdown>
+//               </>
+//             )
+//           }
+//         )
+//       }
+//     </>
+//   )
+// }
 
 type layout_type = {
   layout: SankeyData
@@ -248,6 +249,17 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
         ? exemple_menu.map( (item,index)=> {
           let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
+          if (!item.includes('.xlsx') && !item.includes('.json')) {
+            let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
+            let suffix = 'ZIP'
+            if (!item.includes('zip')) {
+              url = url + '/index.html'
+              suffix = 'HTML'
+            }
+            return (
+              <Dropdown.Item key={index} href={url} target="_blank">{current_path.split('/').slice(0, -1).pop() + ' ' + suffix}</Dropdown.Item>
+            )
+          }
           if (item.includes('.xlsx')) {
             the_callback = callback
             path = current_path+'/'+item
@@ -263,23 +275,32 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                   path, url_prefix, data, set_data,the_callback
                 )} 
               }
-            >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('reconciled',' recon xl').split(/(?=[A-Z])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
-                : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' sortie') : item.split('.x')[0].replace(/_/g, ' ') + ' entrée'
+                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json','') : item.replace('afmsankey_0.9.0.','')
               }</Dropdown.Item>
           )
         }
         ) : Object.keys(exemple_menu).map(
           (key, index) => {
+            let title = key
+            if (title === 'artefacts') {
+              title = 'Page Web et Zip' 
+            }
+            let the_current_path = current_path
+            if (!key.includes('OpenSankey')) {
+              the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
+            } else {
+              the_current_path = current_path + '/' + key
+            }
             return (
               <>
-                <NavDropdown key={index} title={key} id={key} >
+                <NavDropdown key={index} title={title} id={key} >
                   <ExempleItem
                     exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
                     url_prefix={url_prefix}
                     data={data}
                     set_data={set_data}
-                    current_path={current_path !== '' ? current_path + '/' + key.replace('JSON', '').replace('Excel', '') : key.replace('JSON', '').replace('Excel', '')}
+                    current_path={the_current_path}
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
@@ -312,7 +333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     multi_selected_nodes,
     multi_selected_links,
     selected_link,
-    example_menu, portfolio_menu, url_prefix,
+    example_menu, formations_menu,url_prefix,
     show_toast,
     set_show_toast,
     view, set_view,
@@ -2280,12 +2301,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
               </NavDropdown >
               {edition_menu}
-              <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
+              { formations_menu ? (
+                <NavDropdown title="Formations" id="formation" >
+                  {formations_menu}
+                </NavDropdown > ) :(<></>)
+              }
+              <NavDropdown title="Exemples" id="exemples" >
                 {example_menu}
               </NavDropdown >
-              <NavDropdown title="Portfolio" id="portfolio" >
+              {/* <NavDropdown title="Portfolio" id="portfolio" >
                 {portfolio_menu}
-              </NavDropdown >
+              </NavDropdown > */}
 
               <NavDropdown id='Aide' title="Aide" >
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >Raccourci Clavier</Dropdown.Item>
