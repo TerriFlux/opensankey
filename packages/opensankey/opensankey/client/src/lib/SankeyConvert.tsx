@@ -186,6 +186,25 @@ export const convert_data = (
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
       if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
+      if(Object.values(tags_group.tags).filter(tag=>tag.color !== '').length === 0) {
+        const nb_tags = Object.keys(tags_group.tags).length
+        if (tags_group.color_map === 'custom') {
+          return
+        }
+        const colors = colormap({
+          colormap: tags_group.color_map,
+          nshades: Math.max(11, nb_tags),
+          format: 'hex',
+          alpha: 1
+        })
+        let step = 1
+        if (nb_tags < 11) {
+          step = Math.round(11 / nb_tags)
+        }
+        Object.keys(tags_group.tags).forEach(
+          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+        )
+      }
     }
   )
   Object.values(data_to_convert.dataTags).forEach(
