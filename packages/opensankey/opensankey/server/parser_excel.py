@@ -29,8 +29,8 @@ def combine_data_tags(
         
 
 def set_value(
-    link_data_tags:list,
-    link_flux_tags:list,
+    row_data_tags:list,
+    row_flux_tags:list,
     fluxTags:dict,
     depth: int,
     v: dict,
@@ -39,27 +39,25 @@ def set_value(
 ):
     v_tags = {}
     for i,key in enumerate(fluxTags.keys()):
-        tag_value = link_flux_tags[i]
+        tag_value = row_flux_tags[i]
         if key == 'Type de donnée':
             key = 'flux_types'
         if key == 'flux_types':
-            if link_flux_tags[i] == 'Donnée calculée':
+            if row_flux_tags[i] == 'Donnée calculée':
                 tag_value = 'computed_data'
             else:
                 tag_value = 'initial_data'
         v_tags[key]=tag_value
-    if depth == len(link_data_tags):
+    if depth == len(row_data_tags):
         v['value'] = value
         v['display_value'] = display_value
         v['tags'] = v_tags
         v['extension'] = {}        
     else:
-        data_tag = link_data_tags[depth]
+        data_tag = row_data_tags[depth]
         if data_tag not in v:
             v[data_tag] = {}
-        set_value(link_data_tags,link_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
-
-
+        set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
 
 def parse_excel(mfa_input):
     dataTags = {}
@@ -136,7 +134,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     color = webcolors.name_to_hex(color)
                 except Exception:
                     pass 
-            link_data_tags= []
+            row_data_tags= []
             
             combinaison_row = [None] * len(dataTags)
             combinaison = []
@@ -144,21 +142,21 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                 combine_data_tags(dataTags,1,list(dataTags.values())[0],combinaison,combinaison_row)
             else:
                 combinaison = [[]]
-            for link_data_tags in combinaison:    
-                link_flux_tags= []
+            for row_data_tags in combinaison:    
+                row_flux_tags= []
                 for fluxTag in fluxTags:
                     if fluxTag == 'flux_types':
                         fluxTag = DATA_TYPE_LABEL
-                    link_flux_tags.append('')
+                    row_flux_tags.append('')
                 existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
                 val = 5
                 display_val = ' '
                 if len(existing_links) > 0:
                     new_link = existing_links[0]
-                    set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+                    set_value(row_data_tags,row_flux_tags,fluxTags,0,new_link['value'], val,display_val)
                 else:
                     value = {}
-                    set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
+                    set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
                     new_link = {
                         'idLink'   : 'link'+str(row),  
                         'idSource' : source_node['idNode'],
@@ -203,15 +201,15 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                color = webcolors.name_to_hex(color)
             except Exception:
                 pass 
-        link_data_tags= []
+        row_data_tags= []
         for dataTag in dataTags:
             if dataTag in columns:
-                link_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
-        link_flux_tags= []
+                row_data_tags.append(mfa_input[sheet_name][row][columns.index(dataTag)])
+        row_flux_tags= []
         for fluxTag in fluxTags:
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
-            link_flux_tags.append(mfa_input[sheet_name][row][columns.index(fluxTag)])
+            row_flux_tags.append(mfa_input[sheet_name][row][columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
         val = mfa_input[sheet_name][row][mfa_input[sheet_name][0].index(DATA_VALUE)]
@@ -222,13 +220,29 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             if val > float(max_flux):
                 display_val = str(round(val))+'*'
                 val = round(float(max_flux))
-        if len(existing_links) > 0:
-            new_link = existing_links[0]
+        is_existing_link = len(existing_links) > 0
+        if is_existing_link:
+            existing_link = existing_links[0]
+            existing_v = existing_link['value']
+            #To be an existing link at least one row_data_tag must differ
+            is_existing_link = False
+            for row_data_tag in row_data_tags:                
+                if not row_data_tag in existing_v:
+                    is_existing_link = True
+                    break
+                else:
+                    existing_v = existing_v[row_data_tag]
+            if is_existing_link == False:
+                for row_flux_tag in row_flux_tags:
+                    if not row_flux_tag in existing_v['tags']:
+                        is_existing_link = False
+                                   
+        if is_existing_link:                     
             new_link['dashed'] = 0
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+            set_value(row_data_tags,row_flux_tags,fluxTags,0,new_link['value'], val,display_val)
         else:
             value = {}
-            set_value(link_data_tags,link_flux_tags,fluxTags,0,value, val, display_val)
+            set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
             new_link = {
                 'idLink'   : 'link'+str(row-1),  
                 'idSource' : source_node['idNode'],
