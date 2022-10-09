@@ -220,6 +220,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     for (const i in listKey) {
       val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+      if ( val === undefined) {
+        break
+      }
+    }
+    if ( val === undefined) {
+      return false
     }
     const v = (val as unknown) as SankeyLinkValue
     let visible = true
