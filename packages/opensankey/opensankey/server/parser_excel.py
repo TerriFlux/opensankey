@@ -322,7 +322,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         # if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
         #     first_dimension = list(nodeTags['Dimensions']['tags'].keys()[0])
         if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-            first_dimension = list(nodeTags['Dimensions']['tags'].keys())
+            first_dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
         dimension = 'Primaire'
         dimensions = ['Primaire']
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
