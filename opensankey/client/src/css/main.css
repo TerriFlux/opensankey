@@ -62,6 +62,10 @@
 /* BASIC CONFIGURATION */
 body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;}
 
+
+/* ------------------------------------------------
+ TOOLTIP
+------------------------------------------------ */
 .sankey-tooltip {
 	background-color : white;
 	border : 1px solid #66a593;
@@ -105,21 +109,67 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 	padding-left: 10px;
 }
 
+/* ------------------------------------------------
+ SURCHARGE BOOTSTRAP
+------------------------------------------------ */
+.navbar {
+	padding-bottom: 0px;
+}
+.btn {
+	border-radius: 0rem;
+	padding: 0.2rem 0.5rem;
 
-.mode_selection {
-	cursor : auto;
 }
 
-.mode_add_node {
-	cursor : url(/public/cursor_n.svg) 10 3, auto;
+primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled):not(.disabled):active, .show > .btn-outline-primary.dropdown-toggle{
+	background-color: #66a593;
+	border-color :#66a593; 
 }
 
-.mode_add_flux {
-	cursor : url(/public/cursor_ln.svg) 10 3, auto;
+.btn-check:focus + .btn, .btn:focus {
+	box-shadow: none;
+}
+.btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .show > .btn-primary.dropdown-toggle {
+	color: #66a593;
+	background-color: #66a59366;
+	border-color: #66a593;
 }
 
-.mode_add_node_flux {
-	cursor : url(/public/cursor_nl.svg) 10 3, auto;
+.btn-primary:not(:disabled):not(.disabled).active:focus, .btn-primary:not(:disabled):not(.disabled):active:focus, .show > .btn-primary.dropdown-toggle:focus {
+	box-shadow: 0 0 0 .2rem #66a593;
+}
+.offcanvas {
+	transition : none
+}
+
+/* ------------------------------------------------
+ MENU
+------------------------------------------------ */
+.MenuNavigation {
+	padding-bottom: 5px;
+}
+
+.sankey-toolbar.row {
+	background: #f2f2f2;
+	padding-top: 10px;
+	padding-bottom: 15px;
+}
+.sankey-toolbar.row .col-lg-auto {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.sankey-menu .accordion-item {
+	border-radius : 0px
+}
+
+.sankey-menu .nav-tabs {
+	border : none
+}
+
+.sankey-menu .level2 button {
+	padding-left: 50px;
+	font-size: 0.95rem;
 }
 
 h2,h3,h4,h5,h6{font-family:'Open Sans',sans-serif;color:#666;}

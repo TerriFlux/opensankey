@@ -4559,9 +4559,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   //const node_font = data.display_style.node_font_family_selected
   const link_font = data.display_style.link_font_family_selected
   const test = document.getElementsByClassName('navbar')
+  console.log(test)
   let margin_top = 0
   if (test && test.length > 0) {
-    margin_top = test[0].getBoundingClientRect().height
+    console.log(test[0].getBoundingClientRect().height)
+    margin_top = test[0].getBoundingClientRect().height -20
   }
 
   const keyHandler = (e: KeyboardEvent) => {
