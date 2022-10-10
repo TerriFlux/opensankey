@@ -507,7 +507,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Row>
       </div>
       { !data.static_sankey ? (
-        <Row>
+        <Row className='sankey-toolbar'>
           <Col>
             <FormGroup as={Col} lg='auto'>
               <ButtonGroup >
