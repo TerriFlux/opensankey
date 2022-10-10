@@ -66,20 +66,21 @@ if (!window.SankeyToolsStatic) {
   }
 
   let exemple_menu = {}
-  let artefacts_menu = {}
+  let formations_menu = {}
   const path = window.location.origin
   const url = path + '/sankey/menu_examples'
   fetch(url, fetchData).then(response => {
     response.text().then(text => {
       const json_data = JSON.parse(text)
       exemple_menu = json_data.exemples_menu
-      artefacts_menu = json_data.artefacts_menu
+      formations_menu = {...json_data.exemples_menu['Formations']}
+      delete json_data.exemples_menu['Formations']
       render(
         <>
           <SankeyApp
             sankey_data={data}
             exemple_menu={exemple_menu}
-            artefacts_menu={artefacts_menu}
+            formations_menu={formations_menu}
             logo={logo}
           />
         </>,
@@ -91,7 +92,7 @@ if (!window.SankeyToolsStatic) {
           <SankeyApp
             sankey_data={data}
             exemple_menu={{}}
-            artefacts_menu={{}}
+            formations_menu={{}}
             logo={logo}
           />
         </>,
@@ -121,7 +122,7 @@ if (!window.SankeyToolsStatic) {
       <SankeyApp
         sankey_data={data}
         exemple_menu={{}}
-        artefacts_menu={{}}
+        formations_menu={{}}
         logo={logo}
       />
       {window.sankey.footer ? (

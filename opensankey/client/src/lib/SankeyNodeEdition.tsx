@@ -1,10 +1,10 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tabs, Tab, Table, Button, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes, SankeyNodePropTypes } from './types'
+import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNodePropTypes } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { default_link } from './SankeyUtils'
-
+import * as d3 from 'd3'
 
 
 const SankeyNodeEditionPropTypes = {
@@ -14,13 +14,13 @@ const SankeyNodeEditionPropTypes = {
   // set_multi_selected_nodes: PropTypes.func.isRequired,
   // multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-
+  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,
-  radio_selected, multi_selected_nodes, children }) => {
+  radio_selected, multi_selected_nodes,multi_selected_links, children }) => {
   const { nodeTags } = data
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
@@ -318,7 +318,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='color'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllNodeVisible()}
                       value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].color : '#ffffff'}
                       onChange={evt => {
                         const color = evt.target.value
@@ -337,6 +337,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       value="ellipse"
                       type='radio'
                       label='Cercle'
+                      disabled={!isAllNodeVisible()}
                       checked={isAllNodeCircle()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
@@ -350,6 +351,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       value="rect"
                       type='radio'
                       label='Rectangle'
+                      disabled={!isAllNodeVisible()}
                       checked={isAllNodeRect()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
@@ -370,6 +372,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       min={0} max={100}
                       type={'number'}
                       value={displayedValueNodeWidth()}
+                      disabled={!isAllNodeVisible()}
                       onChange={
                         evt => {
                           multi_selected_nodes.current.map(d => d.node_width = +evt.target.value)
@@ -390,6 +393,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       min={0} max={100}
                       type={'number'}
                       value={displayedValueNodeHeight()}
+                      disabled={!isAllNodeVisible()}
                       onChange={
                         evt => {
                           //set_multi_selected_nodes(multi_selected_nodes)
@@ -544,8 +548,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={5}>
                     <FormControl
-                      min={11} max={20}
+                      min={11}
                       type={'number'}
+                      disabled={!isAllLabelVisible()}
                       value={allNodeLabelFontSize()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
@@ -564,6 +569,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='checkbox'
                       label='Gras'
                       checked={isAllNodeBold()}
+                      disabled={!isAllLabelVisible()}
                       onChange={
                         evt => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
@@ -609,6 +615,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormControl
                       value={valueAllNodeLabelBox()}
                       type={'number'}
+                      disabled={!isAllLabelVisible()}
                       placeholder={'110'}
                       min={0}
                       max={500}
@@ -757,12 +764,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
+
+                    <FormLabel >Taille police
+                    </FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
-                      min={11} max={20}
+                      min={11}
                       type={'number'}
+                      disabled={!isAllNodeTotal()}
                       value={allNodeValueFontSize()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
@@ -801,7 +811,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={5}>
                     <Form.Select
-
+                      disabled={!isAllIconVisible()}
                       onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                           d.iconName = evt.target.value
@@ -824,7 +834,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='color'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllIconVisible()}
                       value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
                       onChange={evt => {
                         const color = evt.target.value
@@ -841,7 +851,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col xs={3}>
                     <Form.Control
                       type='number'
-                      disabled={radio_selected !== 'local'}
+                      disabled={radio_selected !== 'local' || !isAllIconVisible()}
                       value={valueAllIconRatio()}
                       onChange={evt => {
                         let ratio = +evt.target.value
@@ -858,7 +868,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
               </Form>
             </Tab>) : (<></>)}
-          {Object.keys(nodeTags).length > 0 && multi_selected_nodes.current.length !== 0 ? node_tag : (<></>)}
+          {Object.keys(nodeTags).length > 0 && multi_selected_nodes.current.length !== 0 && data.accordeonToShow.includes('EN') ? node_tag : (<></>)}
           {(multi_selected_nodes.current.length !== 0) ? (
             <Tab eventKey="node_tooltip" title="Info-bulle">
               <Form >
@@ -938,6 +948,53 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       </Form.Select>
                     </Col>) : (<></>) }
                 </Form.Group>
+                <Col xs={4}>
+                  <Button
+                    size="sm"
+                    style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                    onClick={
+                      () => {
+                        const listId: number[] = []
+                        Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
+                        let idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                          const child_nodes = Object.values(data.nodes).filter(n=>n.dimensions['Primaire'].parent_name === d.idNode)
+                          const new_input_nodes : string[] = []
+                          child_nodes.forEach(n1=> {
+                            const input_links = n1.inputLinksId.filter(idLink => new_input_nodes.includes(data.links[idLink].idSource) === false)
+                            input_links.forEach( idLink => new_input_nodes.push(data.links[idLink].idSource))
+                          })
+                          const new_output_nodes : string[] = []
+                          child_nodes.forEach(n1=> {
+                            const output_links = n1.outputLinksId.filter(idLink => new_output_nodes.includes(data.links[idLink].idSource) === false)
+                            output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
+                          })
+                          new_input_nodes.forEach(idSource => {
+                            const new_link = default_link(data)
+                            new_link.idSource = idSource
+                            new_link.idTarget = d.idNode
+                            new_link.idLink = 'link' + idLink
+                            data.links[new_link.idLink] = new_link
+                            idLink = idLink+1
+                            reorganize_node_outputLinksId(data.nodes[new_link.idSource], display_nodes, display_links)
+                          })
+                          new_output_nodes.forEach(() => {
+                            const new_link = default_link(data)
+                            new_link.idSource = d.idNode
+                            new_link.idLink = 'link' + idLink
+                            data.links[new_link.idLink] = new_link
+                            idLink = idLink+1
+                            reorganize_node_inputLinksId(data.nodes[new_link.idTarget], display_nodes, display_links)
+                          })
+                          reorganize_node_inputLinksId(d, display_nodes, display_links)
+                          reorganize_node_outputLinksId(d, display_nodes, display_links)
+
+                          set_data({ ...data })
+                        })
+                      }
+                    }
+                  >Copier liens enfants</Button>
+                </Col>
               </Form>
             </Tab>
           ): (<></>)}
@@ -960,54 +1017,36 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 }
               >Réorganiser flux entrants/sortants</Button>
             </Col>
-            <Col xs={4}>
+            <Col>
               <Button
                 size="sm"
                 style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
                 onClick={
                   () => {
-                    const listId: number[] = []
-                    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-                    let idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+                    multi_selected_links.current = []
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                      const child_nodes = Object.values(data.nodes).filter(n=>n.dimensions['Primaire'].parent_name === d.idNode)
-                      const new_input_nodes : string[] = []
-                      child_nodes.forEach(n1=> {
-                        const input_links = n1.inputLinksId.filter(idLink => new_input_nodes.includes(data.links[idLink].idSource) === false)
-                        input_links.forEach( idLink => new_input_nodes.push(data.links[idLink].idSource))
-                      })
-                      const new_output_nodes : string[] = []
-                      child_nodes.forEach(n1=> {
-                        const output_links = n1.outputLinksId.filter(idLink => new_output_nodes.includes(data.links[idLink].idSource) === false)
-                        output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
-                      })
-                      new_input_nodes.forEach(idSource => {
-                        const new_link = default_link(data)
-                        new_link.idSource = idSource
-                        new_link.idTarget = d.idNode
-                        new_link.idLink = 'link' + idLink
-                        data.links[new_link.idLink] = new_link
-                        idLink = idLink+1
-                        reorganize_node_outputLinksId(data.nodes[new_link.idSource], display_nodes, display_links)
-                      })
-                      new_output_nodes.forEach(() => {
-                        const new_link = default_link(data)
-                        new_link.idSource = d.idNode
-                        new_link.idLink = 'link' + idLink
-                        data.links[new_link.idLink] = new_link
-                        idLink = idLink+1
-                        reorganize_node_inputLinksId(data.nodes[new_link.idTarget], display_nodes, display_links)
-                      })
-                      reorganize_node_inputLinksId(d, display_nodes, display_links)
-                      reorganize_node_outputLinksId(d, display_nodes, display_links)
-
-                      set_data({ ...data })
+                      multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                     })
+                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
-              >Copier liens enfants</Button>
+              >Sélectionner tous les liens sortants</Button>
             </Col>
-
+            <Col>
+              <Button
+                size="sm"
+                style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                onClick={
+                  () => {
+                    multi_selected_links.current = []
+                    Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                      multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+                    })
+                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                  }
+                }
+              >Sélectionner tous les liens entrants</Button>
+            </Col>
           </ButtonGroup>) : (<></>)}
       </Col>
     </Row >
