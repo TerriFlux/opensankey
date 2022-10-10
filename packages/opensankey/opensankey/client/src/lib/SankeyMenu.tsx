@@ -2310,7 +2310,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
               {!data.static_sankey ? (
-                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
+                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
                     ref={button_ref as Ref<HTMLLabelElement>}
                     id="toggle-check"
@@ -2383,8 +2383,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         /> */}
       </Navbar>
 
-      {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
-        <Offcanvas.Body style={{ 'padding': '0px' }}>
+      {(show_nav) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+        <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
             {//MENU AIDE 
             }
@@ -2471,7 +2471,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }
                   >
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Noeuds</Accordion.Header>
+                    <Accordion.Header className='level2' >Edition Noeuds</Accordion.Header>
                     <Accordion.Body>
                       <Row >
                         <Col xs={1}>
@@ -2675,8 +2675,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Flux</Accordion.Header>
-              <Accordion.Body style={{ padding: '0px' }}>
+              <Accordion.Header >Flux</Accordion.Header>
+              <Accordion.Body  style={{ padding: '0px' }}>
 
                 <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
                   <Accordion.Item
@@ -2694,7 +2694,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }}
                   >
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Étiquettes Flux</Accordion.Header>
+                    <Accordion.Header className='level2' >Étiquettes Flux</Accordion.Header>
                     <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
                   </Accordion.Item>
 
@@ -2715,7 +2715,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     }>
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Flux</Accordion.Header>
+                    <Accordion.Header className='level2'>Edition Flux</Accordion.Header>
                     <Accordion.Body>
                       <Form.Group>
                         <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
