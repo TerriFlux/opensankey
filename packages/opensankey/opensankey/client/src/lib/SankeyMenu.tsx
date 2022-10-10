@@ -2228,16 +2228,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
-          {!window.SankeyToolsStatic ? (
-            <Form.Check
-              type="switch"
-              checked={window.sankey.advanced}
-              onClick={evt => {
-                window.sankey.advanced = (evt.target as HTMLInputElement).checked
-                set_data({ ...data })
-              }}
-              label="Options de visualisation"
-            />) : (<></>)}
           {!window.SankeyToolsStatic ? (<>
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
@@ -2338,16 +2328,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           ) : (<><br />
             <h2>{window.sankey.header}</h2>
             <br /></>)}
-          {window.SankeyToolsStatic ? (
-            <Form.Check
-              type="switch"
-              checked={window.sankey.advanced}
-              onClick={ evt => {
-                window.sankey.advanced = (evt.target as HTMLInputElement).checked
-                set_data({ ...data })
-              }}
-              label="Options de visualisation"
-            />) : (<></>)}
         </Container>
 
         {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
