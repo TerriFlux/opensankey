@@ -3913,16 +3913,66 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
-  const direct_son_as_distant_sibling=(n:SankeyNode)=>{
+  // const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode)=>{
+  //   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+  //   //exemple : n0 -> n1  et n0 -> n2 -> n1
+  //   //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+  //   // console.log(target)
+  //   const next_link = target.inputLinksId.filter(f=>!data.links[f].recycling)
+  //   const tmp=[0]
+  //   next_link.filter(f=>!data.links[f].recycling).forEach(id => {
+  //     const node_source=data.nodes[data.links[id].idSource]
+
+  //     if(node_source.idNode==n.idNode){
+  //       tmp.push(0)
+  //     }else if(node_source.inputLinksId.length!=0 ){
+  //       tmp.push((1 + direct_son_as_distant_sibling(n,node_source)))
+  //     }else{
+  //       tmp.push(NaN)
+  //     }
+  //   })
+  //   let val=0
+  //   // const t=tmp.reduce((a,b)=>{return a+b},0)
+  //   tmp.map(d=>val+=d)
+  //   return val  
+  // }
+
+  const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
     //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
     //exemple : n0 -> n1  et n0 -> n2 -> n1
     //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+    // console.log(target)
+    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !link_to_avoid.includes(f)))
+    const tmp=[0]
+    next_link.filter(f=>!data.links[f].recycling).map(d=>data.links[d]).forEach(l => {
+      const target_node=data.nodes[l.idTarget]
 
 
-    // A CCOMPLETER
-    return 0
+      // console.log(target_node.idNode+'=>'+target.idNode)
+      // console.log(deep)
+      // console.log(tmp)
+      console.log('-')
+
+
+      if(target_node.idNode==target.idNode){
+        return deep
+      }else if(target_node.outputLinksId.length>0){
+        link_to_avoid.push(l.idLink)
+        tmp.push( direct_son_as_distant_sibling(target_node,target,deep+1,link_to_avoid))
+      }else if(target_node.outputLinksId.length==0){
+        return 0
+      }
+
+     
+    })
+
+    const local_max=Math.max(...tmp)
+    console.log(local_max)
+    
+    return (local_max>deep)?local_max:deep
+
+    
   }
-
   //fonction pour animer que les nouveaux liens 
   const branchAnimateForView = (
     data: SankeyData,
@@ -4046,11 +4096,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
         if (!nodeDisplay.includes(idTarget)) {
+
           nodeDisplay.push(idTarget)
-          console.log(nodeData.name)
-          console.log(calcPath(data.nodes,nodeData,data.links))
-          direct_son_as_distant_sibling(nodeData)
-          branchAnimate(data.nodes[idTarget], nodeDisplay)
+
+          let max=0
+          const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[idTarget],0,[idLink])
+          max=(tmp>max)?tmp:max
+          // const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[n])
+          // max=(tmp>max)?tmp:max
+          console.log(nodeData.idNode+'====>'+idTarget)
+          console.log(max)
+
+          setTimeout(()=>{
+            branchAnimate(data.nodes[idTarget], nodeDisplay)
+          },max*2000)
         }
       })
   }
