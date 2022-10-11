@@ -3913,64 +3913,29 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
-  // const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode)=>{
-  //   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
-  //   //exemple : n0 -> n1  et n0 -> n2 -> n1
-  //   //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
-  //   // console.log(target)
-  //   const next_link = target.inputLinksId.filter(f=>!data.links[f].recycling)
-  //   const tmp=[0]
-  //   next_link.filter(f=>!data.links[f].recycling).forEach(id => {
-  //     const node_source=data.nodes[data.links[id].idSource]
-
-  //     if(node_source.idNode==n.idNode){
-  //       tmp.push(0)
-  //     }else if(node_source.inputLinksId.length!=0 ){
-  //       tmp.push((1 + direct_son_as_distant_sibling(n,node_source)))
-  //     }else{
-  //       tmp.push(NaN)
-  //     }
-  //   })
-  //   let val=0
-  //   // const t=tmp.reduce((a,b)=>{return a+b},0)
-  //   tmp.map(d=>val+=d)
-  //   return val  
-  // }
-
+  
   const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
     //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
     //exemple : n0 -> n1  et n0 -> n2 -> n1
     //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
     // console.log(target)
-    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !link_to_avoid.includes(f)))
-    const tmp=[0]
-    next_link.filter(f=>!data.links[f].recycling).map(d=>data.links[d]).forEach(l => {
-      const target_node=data.nodes[l.idTarget]
+    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+    let max=0
 
+    if(n.idNode==target.idNode){
+      return deep-1
+    }else if(next_link.length>0) {
+      next_link.map(id=>{
+        const next_node=data.nodes[data.links[id].idTarget]
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid=link_to_avoid.concat([id])
+        const tmp=direct_son_as_distant_sibling(next_node,target,deep+1,to_avoid)
+        max=(tmp>max)?tmp:max
+      })
+    }
 
-      // console.log(target_node.idNode+'=>'+target.idNode)
-      // console.log(deep)
-      // console.log(tmp)
-      console.log('-')
-
-
-      if(target_node.idNode==target.idNode){
-        return deep
-      }else if(target_node.outputLinksId.length>0){
-        link_to_avoid.push(l.idLink)
-        tmp.push( direct_son_as_distant_sibling(target_node,target,deep+1,link_to_avoid))
-      }else if(target_node.outputLinksId.length==0){
-        return 0
-      }
-
-     
-    })
-
-    const local_max=Math.max(...tmp)
-    console.log(local_max)
-    
-    return (local_max>deep)?local_max:deep
-
+    return max
+  
     
   }
   //fonction pour animer que les nouveaux liens 
