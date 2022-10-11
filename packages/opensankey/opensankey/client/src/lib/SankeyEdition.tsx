@@ -31,20 +31,66 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
   const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
+    const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
+
     if (the_tags_group.banner == 'one') {
       return (
         <>
           <FormLabel>{the_tags_group.group_name}</FormLabel>
-          {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
-            Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
-              return (<option key={i} value={tag_key}>{tag.name}</option>)
-            })}
-          </Form.Select>}
+          <FormGroup as={Row}>
+            <Col xs={10}>
+              {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
+                Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key}>{tag.name}</option>)
+                })}
+              </Form.Select>}
+            </Col>
+            <Col xs={2}>
+              <FormCheck inline
+                type='switch'
+                checked={data.colorMap==tags_selected[0]}
+                onChange={evt => {
+                  Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+
+                  
+                  Object.values(data.nodes).forEach(el => {
+                    el.colorParameter = 'local'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  Object.values(data.links).forEach(el => {
+                    el.colorParameter = 'groupTag'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  data.colorMap = 'no_colormap'
+                    
+                  
+                  if(evt.target.checked){
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = tags_selected[0]
+                    })
+                    Object.values(data['nodes']).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = tags_selected[0]
+                    })
+                    data.colorMap = tags_selected[0]
+                    data['nodeTags'][tags_selected[0]].show_legend = true
+                  }
+
+                  set_data({ ...data })
+
+                }}
+              />
+            </Col>
+          </FormGroup>
+
         </>)
     } else if (the_tags_group.banner == 'multi') {
       const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
       return (
         <>
           <FormLabel>{the_tags_group.group_name}</FormLabel>
@@ -161,20 +207,65 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const addAllDropDownNode = () => {
     const banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
     const allDD = banner_grouptag.map(([, tags_group]) => {
+      const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
+
       if (tags_group.banner == 'one') {
         return (
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
-            {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                return (<option key={i} value={tag_key}>{tag.name}</option>)
-              })}
-            </Form.Select>}
+            <FormGroup as={Row}>
+              <Col xs={10}>
+                {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                    return (<option key={i} value={tag_key}>{tag.name}</option>)
+                  })}
+                </Form.Select>}
+              </Col>
+              <Col xs={2}>
+                <FormCheck inline
+                  type='switch'
+                  checked={data.colorMap==tags_selected[0]}
+                  onChange={evt => {
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+
+                    
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = 'no_colormap'
+                    })
+
+                    data.colorMap = 'no_colormap'
+                      
+                    
+                    if(evt.target.checked){
+                      Object.values(data.nodes).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      Object.values(data['nodes']).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      data.colorMap = tags_selected[0]
+                      data['nodeTags'][tags_selected[0]].show_legend = true
+                    }
+
+                    set_data({ ...data })
+
+                  }}
+                />
+              </Col>
+            </FormGroup>
           </>)
       } else if (tags_group.banner == 'multi') {
         const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
         const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-        const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
 
         return (
           <>
