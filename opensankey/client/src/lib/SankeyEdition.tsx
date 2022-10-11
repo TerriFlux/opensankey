@@ -324,6 +324,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     new_data.fit_screen = true
     d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
+    
   }
 
   const diagram_label = 'Diagrammes'
@@ -506,6 +507,33 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           ) : (<></>)}
         </Row>
       </div>
+      { data.static_sankey ? (
+        <Row className='sankey-toolbar'>
+          <Col className='text-right'>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
+
+                {//Boutons Sélection classique des éléments 
+                }
+                <OverlayTrigger
+                  key={'tooltip-adjust'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
+                  }
+                >
+                  <Button variant='dark' onClick={() => { 
+                    data.fit_screen = true
+                    d3.select('#svg').on('.zoom', null)
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faMaximize} />
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+        </Row>) : (<></>)}
       { !data.static_sankey ? (
         <Row className='sankey-toolbar'>
           <Col>
