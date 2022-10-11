@@ -220,7 +220,7 @@ def parse_folder(current_dir,menus,opensankey,key=None):
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
             for file_name in file_names:
-                if '.gitkeep' in file_name:
+                if '.gitkeep' in file_name or '.opensankey' in file_name:
                     continue
                 if key not in menus:
                     menus[key] = {}
