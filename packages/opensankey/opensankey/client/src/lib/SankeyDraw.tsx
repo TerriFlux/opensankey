@@ -905,7 +905,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
       .on('mouseover', function (event, d) {
@@ -3814,7 +3814,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
 
