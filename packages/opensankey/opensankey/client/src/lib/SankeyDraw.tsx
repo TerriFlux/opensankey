@@ -3935,6 +3935,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
+  
+  const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
+    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+    // console.log(target)
+    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+    let max=0
+
+    if(n.idNode==target.idNode){
+      return deep-1
+    }else if(next_link.length>0) {
+      next_link.map(id=>{
+        const next_node=data.nodes[data.links[id].idTarget]
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid=link_to_avoid.concat([id])
+        const tmp=direct_son_as_distant_sibling(next_node,target,deep+1,to_avoid)
+        max=(tmp>max)?tmp:max
+      })
+    }
+
+    return max
+  
+    
+  }
   //fonction pour animer que les nouveaux liens 
   const branchAnimateForView = (
     data: SankeyData,
@@ -4058,8 +4083,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
         if (!nodeDisplay.includes(idTarget)) {
+
           nodeDisplay.push(idTarget)
-          branchAnimate(data.nodes[idTarget], nodeDisplay)
+
+          let max=0
+          const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[idTarget],0,[idLink])
+          max=(tmp>max)?tmp:max
+          // const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[n])
+          // max=(tmp>max)?tmp:max
+          console.log(nodeData.idNode+'====>'+idTarget)
+          console.log(max)
+
+          setTimeout(()=>{
+            branchAnimate(data.nodes[idTarget], nodeDisplay)
+          },max*2000)
         }
       })
   }
