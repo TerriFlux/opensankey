@@ -3618,6 +3618,24 @@ const Menu: FunctionComponent<MenuTypes> = (
                     />
                   </Col>
                 </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Largeur Légende</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="number"
+                      step={1}
+                      value={data.legend_width}
+                      onChange={evt =>{
+                        data.legend_width=+evt.target.value
+                        set_data({ ...data })
+                      }}
+                     
+                    />
+                  </Col>
+                </Form.Group>
               </Accordion.Body>
             </Accordion.Item>
 

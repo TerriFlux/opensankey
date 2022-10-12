@@ -4330,7 +4330,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
     let dx = 0
-    const pas = 180
+    const pas = data.legend_width
 
 
     d3.select('#g_legend').selectAll('*').remove()
