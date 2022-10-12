@@ -4095,7 +4095,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           console.log(max)
 
           setTimeout(()=>{
-          branchAnimate(data.nodes[idTarget], nodeDisplay)
+            branchAnimate(data.nodes[idTarget], nodeDisplay)
           },max*2000)
         }
       })
