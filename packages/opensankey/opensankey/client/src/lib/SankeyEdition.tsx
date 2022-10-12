@@ -117,7 +117,6 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                 type='switch'
                 checked={data.colorMap==tags_selected[0]}
                 onChange={evt => {
-                  console.log('toto')
 
                   Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
                   Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
