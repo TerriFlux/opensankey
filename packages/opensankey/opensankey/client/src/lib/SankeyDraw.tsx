@@ -4330,7 +4330,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
     let dx = 0
-    const pas = 180
+    const pas = data.legend_width
 
 
     d3.select('#g_legend').selectAll('*').remove()
@@ -4602,10 +4602,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   //const node_font = data.display_style.node_font_family_selected
   const link_font = data.display_style.link_font_family_selected
   const test = document.getElementsByClassName('navbar')
-  console.log(test)
   let margin_top = 0
   if (test && test.length > 0) {
-    console.log(test[0].getBoundingClientRect().height)
     margin_top = test[0].getBoundingClientRect().height -20
   }
 
@@ -5027,6 +5025,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const pos = d3.pointer(event)
         new_node1.x = pos[0]
         new_node1.y = pos[1]
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
+          button_ref.current.click()
+        }
+        if ( accordion_ref && accordion_ref.current) {
+          for ( const child in accordion_ref.current.children) {
+            if (accordion_ref.current.children[child].id === 'Nodes') {
+              (accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            }
+          }
+        }
+        if ( nodes_accordion_ref && nodes_accordion_ref.current) {
+          (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
+        }
+        multi_selected_nodes.current=[new_node1]
+        
         set_data({...data})
       } else { ev.preventDefault() }
     })
@@ -5187,7 +5202,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey) {
+            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
               multi_selected_links.current = []
@@ -5199,9 +5214,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')
                 sel.attr('fill-opacity', '0')
               })
-              if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
-                button_ref.current.click()
-              }
+              // if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
+              //   button_ref.current.click()
+              // }
             }
           }}>
             <g className='grid' id='grid'></g>
