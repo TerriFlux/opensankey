@@ -169,7 +169,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     if not sheet_name in mfa_input:
         return
     columns =  mfa_input[sheet_name].columns.tolist()           
-    for row in range(0,len(mfa_input[sheet_name])):
+    for row in range(len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name].iat[row,columns.index(DATA_ORIGIN)]
         target_name =  mfa_input[sheet_name].iat[row,columns.index(DATA_DESTINATION)]
         source_nodes = [node for node in nodes.values() if node['name'] == source_name]
@@ -212,7 +212,9 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             row_flux_tags.append(mfa_input[sheet_name].iat[row,columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        val = mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)]
+        val = float(mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)])
+        if math.isnan(val):
+            continue
         display_val = ''
         param_sheet=mfa_input[PARAM_SHEET]
         if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
@@ -226,6 +228,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             existing_v = existing_link['value']
             #To be an existing link at least one row_data_tag must differ
             is_existing_link = False
+            if len(row_data_tags) == 0:
+                is_existing_link = True
             for row_data_tag in row_data_tags:                
                 if not row_data_tag in existing_v:
                     is_existing_link = True
@@ -238,13 +242,13 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         is_existing_link = False
                                    
         if is_existing_link:                     
-            new_link['dashed'] = 0
-            set_value(row_data_tags,row_flux_tags,fluxTags,0,new_link['value'], val,display_val)
+            existing_link['dashed'] = 0
+            set_value(row_data_tags,row_flux_tags,fluxTags,0,existing_link['value'], val,display_val)
         else:
             value = {}
             set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
             new_link = {
-                'idLink'   : 'link'+str(row-1),  
+                'idLink'   : 'link'+str(row),  
                 'idSource' : source_node['idNode'],
                 'idTarget' : target_node['idNode'],
                 'value'    : value,
