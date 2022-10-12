@@ -623,6 +623,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
+    console.log(multi_selected_nodes.current)
     const DD = (
       <div id='DD_multi_node'>
         <MultiSelect
@@ -3615,6 +3616,24 @@ const Menu: FunctionComponent<MenuTypes> = (
                         data.legend_position = legend_position
                         set_data({ ...data })
                       }}
+                    />
+                  </Col>
+                </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Largeur Légende</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="number"
+                      step={1}
+                      value={data.legend_width}
+                      onChange={evt =>{
+                        data.legend_width=+evt.target.value
+                        set_data({ ...data })
+                      }}
+                     
                     />
                   </Col>
                 </Form.Group>
