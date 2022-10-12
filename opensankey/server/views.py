@@ -203,7 +203,7 @@ def download_examples():
         return send_file(exemple_file_path, as_attachment=True)
     return Response(exemple_file_path, status=400, mimetype='text')
 
-def parse_folder(current_dir,menus,opensankey,key=None):
+def parse_folder(current_dir,menus,key=None):
     folder_content = listdir(current_dir)
     folder_content.sort()
     exemple_found = False
@@ -211,11 +211,6 @@ def parse_folder(current_dir,menus,opensankey,key=None):
     for file_or_folder in folder_content:
         if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
             continue
-        if opensankey:
-            if os.path.isdir(os.path.join(current_dir,file_or_folder)):
-                file_names = listdir(os.path.join(current_dir, file_or_folder))
-                if not '.opensankey' in file_names:
-                    continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
             file_names.sort()
@@ -246,11 +241,11 @@ def parse_folder(current_dir,menus,opensankey,key=None):
                     menus[key] = {}
                 # if key not in artefacts:
                 #     artefacts[key] = {}
-                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],opensankey,child_key)
+                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus[key],child_key)
                 if folder_found:
                     exemple_found = True
             else:
-                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,opensankey,child_key)  
+                folder_found = parse_folder(os.path.join(current_dir,file_or_folder),menus,child_key)  
                 if folder_found:
                     exemple_found = True         
         else:
@@ -274,15 +269,11 @@ def parse_folder(current_dir,menus,opensankey,key=None):
     return exemple_found
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
-def menus_examples():
-    base_url = request.base_url
-    opensankey = True
-    if '5000' in base_url and 'opensankey' in base_url or not 'open-sankey' in base_url:
-       opensankey = False        
+def menus_examples():     
     data_folder = os.environ.get('MFAData')
     menus = {}
     try:
-        parse_folder(data_folder,menus,opensankey)
+        parse_folder(data_folder,menus)
         context = {
                 'exemples_menu'    : menus
         }
