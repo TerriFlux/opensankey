@@ -303,7 +303,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='switch'
                       checked={isAllNodeVisible()}
                       onChange={evt => {
-
+                        console.log('here')
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
                         set_data({ ...data })
                       }}
