@@ -4610,15 +4610,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           let tmp = 0
 
           switch (d.position_horiz) {
-            case 'gauche':
-              tmp = 0
-              break
-            case 'centre':
-              tmp = d.label_width / 2
-              break
-            case 'droite':
-              tmp = d.label_width
-              break
+          case 'gauche':
+            tmp = 0
+            break
+          case 'centre':
+            tmp = d.label_width / 2
+            break
+          case 'droite':
+            tmp = d.label_width
+            break
           }
           return tmp
         })
@@ -4626,15 +4626,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           let tmp = 'gauche'
 
           switch (d.position_horiz) {
-            case 'gauche':
-              tmp = 'start'
-              break
-            case 'centre':
-              tmp = 'middle'
-              break
-            case 'droite':
-              tmp = 'end'
-              break
+          case 'gauche':
+            tmp = 'start'
+            break
+          case 'centre':
+            tmp = 'middle'
+            break
+          case 'droite':
+            tmp = 'end'
+            break
           }
           return tmp
         })
