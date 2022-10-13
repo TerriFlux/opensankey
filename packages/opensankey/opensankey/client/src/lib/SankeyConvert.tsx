@@ -829,13 +829,13 @@ export const convert_data = (
           n.dimensions = {}
         }
         if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
-          n.dimensions = { 'Exchanges': { level : 1, parent_name: undefined } }
+          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
           n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
           if (!('Dimensions' in n.tags)) {
             n.tags.Dimensions = []
           }
-          if (!('Exchanges' in n.tags.Dimensions)) {
-            n.tags.Dimensions.push('Exchanges')
+          if (!('Echanges' in n.tags.Dimensions)) {
+            n.tags.Dimensions.push('Echanges')
           }
           if (!('Primaire' in n.tags.Dimensions)) {
             n.tags.Dimensions.push('Primaire')
@@ -845,15 +845,15 @@ export const convert_data = (
           names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
           const parent_name = names.join(' - ')
           const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
-          n.dimensions = { 'Exchanges': { level : 2, parent_name: parent_node.idNode } }
+          n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
           if ( 'Primaire' in n.dimensions) {
             delete n.dimensions.Primaire
           }
           if (!('Dimensions' in n.tags)) {
             n.tags.Dimensions = []
           }
-          if (!('Exchanges' in n.tags.Dimensions)) {
-            n.tags.Dimensions.push('Exchanges')
+          if (!('Echanges' in n.tags.Dimensions)) {
+            n.tags.Dimensions.push('Echanges')
           }
           if ( 'Primaire' in n.tags.Dimensions) {
             n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
@@ -884,8 +884,8 @@ export const convert_data = (
       if (!('Dimensions' in n.tags)) {
         n.tags.Dimensions = ['Primaire']
       }
-      if (!('Exchanges' in n.tags.Dimensions)) {
-        n.tags.Dimensions.push('Exchanges')
+      if (!('Echanges' in n.tags.Dimensions)) {
+        n.tags.Dimensions.push('Echanges')
       }      
     })
   }
@@ -893,9 +893,9 @@ export const convert_data = (
   if (data_to_convert.nodeTags['Exchanges']) {
     //data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
     delete data_to_convert.nodeTags['Exchanges']
-    if (!('Exchanges' in data.nodeTags.Dimensions.tags)) {
-      data.nodeTags.Dimensions.tags['Exchanges'] = {
-        name : 'Exchanges',
+    if (!('Echanges' in data.nodeTags.Dimensions.tags)) {
+      data.nodeTags.Dimensions.tags['Echanges'] = {
+        name : 'Echanges',
         selected: false
       }
     }
