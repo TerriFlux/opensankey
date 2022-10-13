@@ -2481,12 +2481,32 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             fsn.outputLinksId.push(n_link.idLink)
             d.inputLinksId.push(n_link.idLink)
 
+
+            multi_selected_links.current=[n_link]
+
+            if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
+              button_ref.current.click()
+            }
+            if ( accordion_ref && accordion_ref.current) {
+              for ( const child in accordion_ref.current.children) {
+                if (accordion_ref.current.children[child].id === 'Flux') {
+                  (accordion_ref.current.children[0] as HTMLLabelElement).click();
+                  (accordion_ref.current.children[child] as HTMLLabelElement).click()
+                }
+              }
+            }
+            if ( links_accordion_ref && links_accordion_ref.current) {
+              (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+            }
+
             set_data({ ...data })
           }
         })
 
       d3.select('#svg')
         .on('mousemove', function () {
+
           if (Object.keys(first_selected_node).length != 0) {
             const pos = d3.pointer(event)
             const fsn = (first_selected_node as SankeyNode)
@@ -2643,10 +2663,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mousemove', function (event, d) {
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
-          sankeyTooltip
+          const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+          let pos_tooltip_y= event.clientY
+          const size_browser=window.innerHeight 
+          pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
 
-            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 30) + 'px')
+          const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+          let pos_tooltip_x= event.clientX
+          const size_browser_w=window.innerWidth 
+          pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
+          
+          sankeyTooltip
+            .style('top',pos_tooltip_y + 'px')
+            .style('left',pos_tooltip_x + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2712,9 +2741,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mousemove', function (event,) {
         if ((static_sankey || event.shiftKey)) {
+          const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+          let pos_tooltip_y= event.clientY
+          const size_browser=window.innerHeight 
+          pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
+
+          const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+          let pos_tooltip_x= event.clientX
+          const size_browser_w=window.innerWidth 
+          pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
           sankeyTooltip
-            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 30) + 'px')
+            .style('top',pos_tooltip_y + 'px')
+            .style('left',pos_tooltip_x + 'px')
         }
       })
       .on('mouseout', function () {
@@ -5070,6 +5108,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', evt => {
+        // console.log(evt.clientY)
+        // console.log('h:'+screen.height)
+        // console.log('w:'+window.innerHeight)
         //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
         // alors crée une droite entre le premier noeud clické et le pointeur du curseur
         if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
