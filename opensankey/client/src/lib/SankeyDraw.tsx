@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValueDict, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 import LZString from 'lz-string'
 
@@ -4877,6 +4877,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           console.log('Aucune action en mémoire pour un retour en arrière')
         }
 
+      } else if(e.key=='Backspace' || e.key=='Delete'){
+        multi_selected_nodes.current.forEach(el=>{
+          delete_node(data,el)
+        })
+        multi_selected_links.current.forEach(el=>{
+          delete_link(data,el)
+        })
+
+        multi_selected_nodes.current=[]
+        multi_selected_links.current=[]
+        set_data({...data})
       }
     } else {
       //Si nous somme dans une vue les action du clavier sont différentes :
