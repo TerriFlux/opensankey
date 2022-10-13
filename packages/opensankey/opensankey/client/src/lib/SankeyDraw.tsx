@@ -1772,7 +1772,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const positions: { [label_position: string]: string[] } = {
         'frozen': ['50%', 'start'],
         'beginning': ['10px', 'start'],
-        'middle': ['50%', 'start'],
+        'middle': ['50%', 'middle'],
         'end': ['100%', 'end']
       };
 
