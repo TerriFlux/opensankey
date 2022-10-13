@@ -2166,6 +2166,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         <p>Fonctionnement des clics :</p>
         <p><b>CTRL + Clic (noeuds) :</b> Sélectionne le noeuds click dans l'onglet "<b>Noeuds</b>" du menu</p>
         <p><b>CTRL + Clic (flux) :</b> Sélectionne le flux click dans l'onglet "<b>Flux</b>" du menu</p>
+        <p><b>Suppr</b> ou <b>Retour arrière :</b> Supprime les noeuds et flux sélectionnés</p>
         <p><b>Clic (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
         <p><b>Clic droit (noeuds) :</b>  Agrége le noeud</p>
         <p><b>Alt Clic droit (noeuds) :</b>  Désagrége le noeud</p>
