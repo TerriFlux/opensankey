@@ -115,7 +115,8 @@ const MenuPropTypes = {
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
   example_menu: PropTypes.element,
-  portfolio_menu: PropTypes.element,
+  // portfolio_menu: PropTypes.element,
+  formations_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
   view: PropTypes.string.isRequired,
@@ -138,44 +139,44 @@ const MenuPropTypes = {
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
-const ArtefactsItemPropTypes = {
-  artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
-  current_path : PropTypes.string.isRequired
-}
+// const ArtefactsItemPropTypes = {
+//   artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
+//   current_path : PropTypes.string.isRequired
+// }
 
-export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
+// export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
 
-export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
-  return (
-    <>
-      { Array.isArray(artefacts_menu)
-        ? artefacts_menu.map((item, index) => {
-          let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
-          if (!item.includes('zip')) {
-            url = url + '/index.html'
-          }
-          return (
-            <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
-          )
-        }
-        ) : Object.keys(artefacts_menu).map(
-          (key, index) => {
-            return (
-              <>
-                <NavDropdown key={index} title={key} id={key} >
-                  <ArtefactsItem
-                    artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-                    current_path={current_path !== '' ? current_path + '/' + key : key}
-                  />
-                </NavDropdown>
-              </>
-            )
-          }
-        )
-      }
-    </>
-  )
-}
+// export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
+//   return (
+//     <>
+//       { Array.isArray(artefacts_menu)
+//         ? artefacts_menu.map((item, index) => {
+//           let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
+//           if (!item.includes('zip')) {
+//             url = url + '/index.html'
+//           }
+//           return (
+//             <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
+//           )
+//         }
+//         ) : Object.keys(artefacts_menu).map(
+//           (key, index) => {
+//             return (
+//               <>
+//                 <NavDropdown key={index} title={key} id={key} >
+//                   <ArtefactsItem
+//                     artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
+//                     current_path={current_path !== '' ? current_path + '/' + key : key}
+//                   />
+//                 </NavDropdown>
+//               </>
+//             )
+//           }
+//         )
+//       }
+//     </>
+//   )
+// }
 
 type layout_type = {
   layout: SankeyData
@@ -248,6 +249,17 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
         ? exemple_menu.map( (item,index)=> {
           let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
+          if (!item.includes('.xlsx') && !item.includes('.json')) {
+            let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
+            let suffix = 'ZIP'
+            if (!item.includes('zip')) {
+              url = url + '/index.html'
+              suffix = 'HTML'
+            }
+            return (
+              <Dropdown.Item key={index} href={url} target="_blank">{current_path.split('/').slice(0, -1).pop() + ' ' + suffix}</Dropdown.Item>
+            )
+          }
           if (item.includes('.xlsx')) {
             the_callback = callback
             path = current_path+'/'+item
@@ -263,23 +275,32 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                   path, url_prefix, data, set_data,the_callback
                 )} 
               }
-            >{item.includes('xlsx') ? 
-                item.split('.x')[0].replace(/_/g, ' ').replace(' layout','').replace('reconciled',' recon xl').split(/(?=[A-Z])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
-                : item.split('.j')[0].replace(/_/g, ' ').replace(' layout','').split(/(?=[A-Z])/).join(' ').replace('A F M','AFM').replace('T E C','TEC').replace('C G A P A T','CGAPAT').replace('M P','MP')
+            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' sortie') : item.split('.x')[0].replace(/_/g, ' ') + ' entrée'
+                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json','') : item.replace('afmsankey_0.9.0.','')
               }</Dropdown.Item>
           )
         }
         ) : Object.keys(exemple_menu).map(
           (key, index) => {
+            let title = key
+            if (title === 'artefacts') {
+              title = 'Page Web et Zip' 
+            }
+            let the_current_path = current_path
+            if (!key.includes('OpenSankey')) {
+              the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
+            } else {
+              the_current_path = current_path + '/' + key
+            }
             return (
               <>
-                <NavDropdown key={index} title={key} id={key} >
+                <NavDropdown key={index} title={title} id={key} >
                   <ExempleItem
                     exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
                     url_prefix={url_prefix}
                     data={data}
                     set_data={set_data}
-                    current_path={current_path !== '' ? current_path + '/' + key.replace('JSON', '').replace('Excel', '') : key.replace('JSON', '').replace('Excel', '')}
+                    current_path={the_current_path}
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
@@ -312,7 +333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     multi_selected_nodes,
     multi_selected_links,
     selected_link,
-    example_menu, portfolio_menu, url_prefix,
+    example_menu, formations_menu,url_prefix,
     show_toast,
     set_show_toast,
     view, set_view,
@@ -602,6 +623,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
+    console.log(multi_selected_nodes.current)
     const DD = (
       <div id='DD_multi_node'>
         <MultiSelect
@@ -2207,16 +2229,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
-          {!window.SankeyToolsStatic ? (
-            <Form.Check
-              type="switch"
-              checked={window.sankey.advanced}
-              onClick={evt => {
-                window.sankey.advanced = (evt.target as HTMLInputElement).checked
-                set_data({ ...data })
-              }}
-              label="Options de visualisation"
-            />) : (<></>)}
           {!window.SankeyToolsStatic ? (<>
             <Nav>
               <NavDropdown title="Fichiers" id="files" >
@@ -2280,12 +2292,17 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
               </NavDropdown >
               {edition_menu}
-              <NavDropdown title="Exemples" id="exemples" className={'tutu'}>
+              { formations_menu ? (
+                <NavDropdown title="Formations" id="formation" >
+                  {formations_menu}
+                </NavDropdown > ) :(<></>)
+              }
+              <NavDropdown title="Exemples" id="exemples" >
                 {example_menu}
               </NavDropdown >
-              <NavDropdown title="Portfolio" id="portfolio" >
+              {/* <NavDropdown title="Portfolio" id="portfolio" >
                 {portfolio_menu}
-              </NavDropdown >
+              </NavDropdown > */}
 
               <NavDropdown id='Aide' title="Aide" >
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >Raccourci Clavier</Dropdown.Item>
@@ -2294,7 +2311,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
               {!data.static_sankey ? (
-                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '480px' : '80px' }}>
+                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
                     ref={button_ref as Ref<HTMLLabelElement>}
                     id="toggle-check"
@@ -2312,16 +2329,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           ) : (<><br />
             <h2>{window.sankey.header}</h2>
             <br /></>)}
-          {window.SankeyToolsStatic ? (
-            <Form.Check
-              type="switch"
-              checked={window.sankey.advanced}
-              onClick={ evt => {
-                window.sankey.advanced = (evt.target as HTMLInputElement).checked
-                set_data({ ...data })
-              }}
-              label="Options de visualisation"
-            />) : (<></>)}
         </Container>
 
         {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
@@ -2377,8 +2384,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         /> */}
       </Navbar>
 
-      {(show_nav) ? <Offcanvas show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '70px' }}>
-        <Offcanvas.Body style={{ 'padding': '0px' }}>
+      {(show_nav) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+        <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
             {//MENU AIDE 
             }
@@ -2465,7 +2472,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }
                   >
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Noeuds</Accordion.Header>
+                    <Accordion.Header className='level2' >Edition Noeuds</Accordion.Header>
                     <Accordion.Body>
                       <Row >
                         <Col xs={1}>
@@ -2617,6 +2624,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         set_data={set_data}
                         radio_selected={radio_selected}
                         multi_selected_nodes={multi_selected_nodes}
+                        multi_selected_links={multi_selected_links}
                       >{node_edition}</SankeyNodeEdition>
 
 
@@ -2668,8 +2676,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Flux</Accordion.Header>
-              <Accordion.Body style={{ padding: '0px' }}>
+              <Accordion.Header >Flux</Accordion.Header>
+              <Accordion.Body  style={{ padding: '0px' }}>
 
                 <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
                   <Accordion.Item
@@ -2687,7 +2695,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }}
                   >
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Étiquettes Flux</Accordion.Header>
+                    <Accordion.Header className='level2' >Étiquettes Flux</Accordion.Header>
                     <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
                   </Accordion.Item>
 
@@ -2708,7 +2716,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         }
                       }
                     }>
-                    <Accordion.Header style={{ marginLeft: '25px' }}>Edition Flux</Accordion.Header>
+                    <Accordion.Header className='level2'>Edition Flux</Accordion.Header>
                     <Accordion.Body>
                       <Form.Group>
                         <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
@@ -3608,6 +3616,24 @@ const Menu: FunctionComponent<MenuTypes> = (
                         data.legend_position = legend_position
                         set_data({ ...data })
                       }}
+                    />
+                  </Col>
+                </Form.Group>
+
+                <Form.Group as={Row} >
+                  <Col xs={3}>
+                    <FormLabel>Largeur Légende</FormLabel>
+                  </Col>
+                  <Col>
+                    <FormControl
+                      type="number"
+                      step={1}
+                      value={data.legend_width}
+                      onChange={evt =>{
+                        data.legend_width=+evt.target.value
+                        set_data({ ...data })
+                      }}
+                     
                     />
                   </Col>
                 </Form.Group>

@@ -6,10 +6,9 @@ import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
 // import SankeyNodeEdition from './SankeyNodeEdition'
 // import SankeyLinkEdition from './SankeyLinkEdition'
-import Menu, { ExempleItem, ArtefactsItem, processExample } from './SankeyMenu'
+import Menu, { ExempleItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
-import { Dropdown } from 'react-bootstrap'
 import GoogleFontLoader from 'react-google-font-loader'
 
 declare const window: Window &
@@ -25,13 +24,13 @@ declare const window: Window &
 const SankeyAppPropTypes = {
   sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   exemple_menu: PropTypes.object.isRequired,
-  artefacts_menu: PropTypes.object.isRequired,
+  formations_menu: PropTypes.object.isRequired,
   logo: PropTypes.string.isRequired,
 }
 
 type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu, artefacts_menu,logo }) => {
+const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu,formations_menu,logo }) => {
   const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
   // const [show_nav, set_show_nav] = useState(false)
@@ -70,7 +69,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       <Menu
         data={data}
         set_data={set_data}
-        app_name={!window.SankeyToolsStatic ? 'version beta 0.9' : ''}
+        app_name={!window.SankeyToolsStatic ? 'preversion 1.0' : ''}
         set_current_filter={(
           new_current_filter: number
         ) => {
@@ -78,8 +77,19 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           display_style.filter = +new_current_filter
           set_data({ ...data })
         }}
+        formations_menu={<>
+          <ExempleItem 
+            exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
+            data={data}
+            set_data={set_data}
+            current_path={'Formations'}
+            url_prefix='/opensankey/'
+            multi_selected_links={multi_selected_links}
+            multi_selected_nodes={multi_selected_nodes}
+            multi_selected_label={multi_selected_label}
+            callback={processExample}
+          /></>}
         example_menu={<>
-          <Dropdown.Item eventKey="data_repo" href="http://dev.open-sankey.fr/fm/index.html" target="_blank">Données</Dropdown.Item>
           <ExempleItem
             exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
             url_prefix=''
@@ -91,11 +101,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_label={multi_selected_label}
             callback={processExample}
           /></>}
-        portfolio_menu={<>
-          <ArtefactsItem
-            artefacts_menu={artefacts_menu as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-            current_path={''}
-          /></>}
+        // portfolio_menu={<>
+        //   <ArtefactsItem
+        //     artefacts_menu={artefacts_menu as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
+        //     current_path={''}
+        //   /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
         logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
         set_show_toast={set_show_toast}
