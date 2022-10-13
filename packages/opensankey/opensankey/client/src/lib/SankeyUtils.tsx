@@ -565,6 +565,8 @@ export const default_sankey_data = (): SankeyData => {
     fluxTags: {},
 
     colorMap: 'no_colormap', 
+
+    legend_width:180,
     
     view: []
   }

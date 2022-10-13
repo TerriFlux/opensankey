@@ -220,6 +220,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     for (const i in listKey) {
       val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+      if ( val === undefined) {
+        break
+      }
+    }
+    if ( val === undefined) {
+      return false
     }
     const v = (val as unknown) as SankeyLinkValue
     let visible = true
@@ -899,7 +905,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
       .on('mouseover', function (event, d) {
@@ -2475,12 +2481,32 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             fsn.outputLinksId.push(n_link.idLink)
             d.inputLinksId.push(n_link.idLink)
 
+
+            multi_selected_links.current=[n_link]
+
+            if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
+              button_ref.current.click()
+            }
+            if ( accordion_ref && accordion_ref.current) {
+              for ( const child in accordion_ref.current.children) {
+                if (accordion_ref.current.children[child].id === 'Flux') {
+                  (accordion_ref.current.children[0] as HTMLLabelElement).click();
+                  (accordion_ref.current.children[child] as HTMLLabelElement).click()
+                }
+              }
+            }
+            if ( links_accordion_ref && links_accordion_ref.current) {
+              (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+            }
+
             set_data({ ...data })
           }
         })
 
       d3.select('#svg')
         .on('mousemove', function () {
+
           if (Object.keys(first_selected_node).length != 0) {
             const pos = d3.pointer(event)
             const fsn = (first_selected_node as SankeyNode)
@@ -2637,10 +2663,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mousemove', function (event, d) {
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
-          sankeyTooltip
+          const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+          let pos_tooltip_y= event.clientY
+          const size_browser=window.innerHeight 
+          pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
 
-            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 30) + 'px')
+          const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+          let pos_tooltip_x= event.clientX
+          const size_browser_w=window.innerWidth 
+          pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
+          
+          sankeyTooltip
+            .style('top',pos_tooltip_y + 'px')
+            .style('left',pos_tooltip_x + 'px')
         }
       })
       .on('mouseout', function (event, d) {
@@ -2706,9 +2741,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mousemove', function (event,) {
         if ((static_sankey || event.shiftKey)) {
+          const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+          let pos_tooltip_y= event.clientY
+          const size_browser=window.innerHeight 
+          pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
+
+          const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+          let pos_tooltip_x= event.clientX
+          const size_browser_w=window.innerWidth 
+          pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
           sankeyTooltip
-            .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
-            .style('left', (event.pageX + 30) + 'px')
+            .style('top',pos_tooltip_y + 'px')
+            .style('left',pos_tooltip_x + 'px')
         }
       })
       .on('mouseout', function () {
@@ -3808,7 +3852,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
 
-        return (l.gradient) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
 
@@ -3929,6 +3973,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
+  
+  const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
+    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+    // console.log(target)
+    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+    let max=0
+
+    if(n.idNode==target.idNode){
+      return deep-1
+    }else if(next_link.length>0) {
+      next_link.map(id=>{
+        const next_node=data.nodes[data.links[id].idTarget]
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid=link_to_avoid.concat([id])
+        const tmp=direct_son_as_distant_sibling(next_node,target,deep+1,to_avoid)
+        max=(tmp>max)?tmp:max
+      })
+    }
+
+    return max
+  
+    
+  }
   //fonction pour animer que les nouveaux liens 
   const branchAnimateForView = (
     data: SankeyData,
@@ -4052,8 +4121,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //Propagration de l'animation sur les flux sortant du target_node
         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
         if (!nodeDisplay.includes(idTarget)) {
+
           nodeDisplay.push(idTarget)
-          branchAnimate(data.nodes[idTarget], nodeDisplay)
+
+          let max=0
+          const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[idTarget],0,[idLink])
+          max=(tmp>max)?tmp:max
+          // const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[n])
+          // max=(tmp>max)?tmp:max
+          console.log(nodeData.idNode+'====>'+idTarget)
+          console.log(max)
+
+          setTimeout(()=>{
+            branchAnimate(data.nodes[idTarget], nodeDisplay)
+          },max*2000)
         }
       })
   }
@@ -4287,7 +4368,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
     let dx = 0
-    const pas = 180
+    const pas = data.legend_width
 
 
     d3.select('#g_legend').selectAll('*').remove()
@@ -4561,7 +4642,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const test = document.getElementsByClassName('navbar')
   let margin_top = 0
   if (test && test.length > 0) {
-    margin_top = test[0].getBoundingClientRect().height
+    margin_top = test[0].getBoundingClientRect().height -20
   }
 
   const keyHandler = (e: KeyboardEvent) => {
@@ -4982,6 +5063,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const pos = d3.pointer(event)
         new_node1.x = pos[0]
         new_node1.y = pos[1]
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
+          button_ref.current.click()
+        }
+        if ( accordion_ref && accordion_ref.current) {
+          for ( const child in accordion_ref.current.children) {
+            if (accordion_ref.current.children[child].id === 'Nodes') {
+              (accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            }
+          }
+        }
+        if ( nodes_accordion_ref && nodes_accordion_ref.current) {
+          (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
+        }
+        multi_selected_nodes.current=[new_node1]
+        
         set_data({...data})
       } else { ev.preventDefault() }
     })
@@ -5010,6 +5108,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', evt => {
+        // console.log(evt.clientY)
+        // console.log('h:'+screen.height)
+        // console.log('w:'+window.innerHeight)
         //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
         // alors crée une droite entre le premier noeud clické et le pointeur du curseur
         if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'nl' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
@@ -5142,7 +5243,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
         <div id="svg-container" style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey) {
+            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
               multi_selected_links.current = []
@@ -5154,9 +5255,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')
                 sel.attr('fill-opacity', '0')
               })
-              if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
-                button_ref.current.click()
-              }
+              // if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
+              //   button_ref.current.click()
+              // }
             }
           }}>
             <g className='grid' id='grid'></g>
