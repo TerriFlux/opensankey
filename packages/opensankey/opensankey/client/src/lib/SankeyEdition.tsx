@@ -1,16 +1,16 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip,FormCheck } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip,FormCheck,Popover } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
 import { Element } from 'domhandler/lib/node'
 import { convert_data } from './SankeyConvert'
-import { set_nodes_level } from './SankeyUtils'
+import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
@@ -171,6 +171,8 @@ const SankeyEditionPropTypes = {
   mode_selection: PropTypes.string.isRequired,
   set_mode_selection: PropTypes.func.isRequired,
   mode_visualisation:PropTypes.bool.isRequired,
+  set_current_filter: PropTypes.func.isRequired,
+
 }
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
 
@@ -186,9 +188,19 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
+  const {filter}=data.display_style
+  let max_link_value = 0
+  Object.values(data.links).forEach(link => {
+    const new_max_link_value = findMaxLinkValue(
+      max_link_value,
+      link.value
+    )
+    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
+  })
+  max_link_value += 1
 
   let nb_agregation_level = 0
   Object.values(data.nodes).forEach(n => {
@@ -452,6 +464,61 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     set_mode_selection(val)
   }
 
+  const link_filter=
+  <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">Filtre Flux</Popover.Header>
+    <Popover.Body >
+      <Form style={{width:'600px'}}>
+        <Form.Group as={Row} >
+          <Col>
+            <FormLabel >Filtre</FormLabel>
+          </Col>
+          <Col>
+            <Form.Range
+              min="0"
+              max={max_link_value}
+              value={filter}
+              onChange={evt => set_current_filter(Number(evt.target.value))} />
+          </Col>
+          <Col>{filter}</Col>
+        </Form.Group>
+        <Form.Group as={Row} >
+          <Col>
+            <FormLabel>Filtre label</FormLabel>
+          </Col>
+          <Col >
+            <Form.Range
+              min="0"
+              max={max_link_value}
+              value={data.display_style.filter_label}
+              onChange={evt => {
+                data.display_style.filter_label = +evt.target.value
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+          <Col>{data.display_style.filter_label}</Col>
+        </Form.Group>
+        <Form.Group as={Row} >
+          <Col>
+            <FormLabel >Flux nuls:</FormLabel>
+          </Col>
+          <Col >
+            <FormCheck
+              type='checkbox'
+              label='Visible'
+              onChange={evt => {
+                data.display_style.null_flux = evt.target.checked
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+        </Form.Group>
+      </Form>
+    </Popover.Body>
+  </Popover>
+  
+
   return (
     <>
       <div className='herowrap'
@@ -713,8 +780,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             <FormGroup as={Col} lg='auto'>
               <ButtonGroup >
 
-                {//Boutons Sélection classique des éléments 
-                }
+                <OverlayTrigger
+                  key={'tooltip-link-filter'}
+                  placement={'left'}
+                  trigger={'click'}
+                  overlay={link_filter}
+                >
+                  <Button variant='danger' id='button-filter-link' >
+                    <FontAwesomeIcon icon={faFilter} />
+                  </Button>
+                </OverlayTrigger>
+
+
                 <OverlayTrigger
                   key={'tooltip-adjust'}
                   placement={'top'}
