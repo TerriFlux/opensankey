@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValueDict, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 import LZString from 'lz-string'
 
@@ -4262,12 +4262,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       let clipped = [] as number[][]
       if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling)) {
         //Si le lien entre à gauche
-        const zone_arrow = [[0, start_point_left], [20, start_point_left], [20, start_point_left + thickness_link], [0, start_point_left + thickness_link]]
+        const zone_arrow = [[0, start_point_left], [10, start_point_left], [10, start_point_left + thickness_link], [0, start_point_left + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_left)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_left)
         start_point_left += thickness_link
       } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
-        const zone_arrow = [[0, start_point_right], [20, start_point_right], [20, start_point_right + thickness_link], [0, start_point_right + thickness_link]]
+        const zone_arrow = [[0, start_point_right], [10, start_point_right], [10, start_point_right + thickness_link], [0, start_point_right + thickness_link]]
         clipped = clip(arrow_int_right, zone_arrow)
         clipped.map(d => {
           d[1] = d[1] - start_point_right
@@ -4278,7 +4278,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         start_point_right += thickness_link
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y > source_node_y)) {
         //Si le lien entre en haut
-        const zone_arrow = [[0, start_point_top], [20, start_point_top], [20, start_point_top + thickness_link], [0, start_point_top + thickness_link]]
+        const zone_arrow = [[0, start_point_top], [10, start_point_top], [10, start_point_top + thickness_link], [0, start_point_top + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_top)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_top)
         start_point_top += thickness_link
@@ -4287,7 +4287,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y < source_node_y)) {
         //Si le lien entre en bas
-        const zone_arrow = [[0, start_point_bottom], [20, start_point_bottom], [20, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]]
+        const zone_arrow = [[0, start_point_bottom], [10, start_point_bottom], [10, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_bottom)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_bottom)
         start_point_bottom += thickness_link
@@ -4297,13 +4297,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!display_style.filter || link_value >= display_style.filter) {
 
         const n = JSON.parse(JSON.stringify(clipped))
-
         const point = d3.line()(n)
         arr.append('marker').attr('id', 'arrow_' + l.idLink)
           .attr('viewBox', [0, 0, thickness_link, thickness_link])
           .attr('refY', thickness_link / 2)
           .attr('refX', refX)
-          .attr('markerWidth', 1)
+          .attr('markerWidth', (thickness_link<0.5)?5:2000)
           .attr('markerHeight', 1)
           .attr('orient', orient)
           .append('path')
@@ -4381,7 +4380,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const all_tags = Object.values(data.nodeTags).concat(Object.values(data.fluxTags))
     all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
-
+      
       // Ajout du tagGroup.name  
       legend.append('text')
         .attr('transform', function () {
@@ -4401,8 +4400,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .append('svg:g')
         // on filtre les tags avec selected à true (Visible)
         .filter(function (d) { return d[1].selected })
+        .attr('id',d=>{
+          return 'tag_'+d[1].name.replaceAll(' ','__')
+        })
         .attr('transform', function (d, i) {
           return 'translate(' + dx + ',' + (i * 30 + 30) + ')'
+        })
+        .on('mouseover',(event,d)=>{
+          Object.values(data.links).filter(l=>{
+            const tmp=getLinkValue(data,l.idLink)
+            return tmp.tags[tag_group.group_name]!=d[1].name
+          }).forEach(el=>{
+            d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.1)
+            d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
+            d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.1)
+          })
+        })
+        .on('mouseout',()=>{
+          d3.selectAll('.link').attr('stroke-opacity',0.85)
+          d3.selectAll('.defsArrow path').attr('stroke-opacity',0.85)
+          d3.selectAll('.defsArrow path').attr('opacity',0.85)
         })
 
       // Ajout du shape  
@@ -4878,6 +4895,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           console.log('Aucune action en mémoire pour un retour en arrière')
         }
 
+      } else if(e.key=='Backspace' || e.key=='Delete'){
+        multi_selected_nodes.current.forEach(el=>{
+          delete_node(data,el)
+        })
+        multi_selected_links.current.forEach(el=>{
+          delete_link(data,el)
+        })
+
+        multi_selected_nodes.current=[]
+        multi_selected_links.current=[]
+        set_data({...data})
       }
     } else {
       //Si nous somme dans une vue les action du clavier sont différentes :
