@@ -4262,12 +4262,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       let clipped = [] as number[][]
       if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling)) {
         //Si le lien entre à gauche
-        const zone_arrow = [[0, start_point_left], [20, start_point_left], [20, start_point_left + thickness_link], [0, start_point_left + thickness_link]]
+        const zone_arrow = [[0, start_point_left], [10, start_point_left], [10, start_point_left + thickness_link], [0, start_point_left + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_left)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_left)
         start_point_left += thickness_link
       } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
-        const zone_arrow = [[0, start_point_right], [20, start_point_right], [20, start_point_right + thickness_link], [0, start_point_right + thickness_link]]
+        const zone_arrow = [[0, start_point_right], [10, start_point_right], [10, start_point_right + thickness_link], [0, start_point_right + thickness_link]]
         clipped = clip(arrow_int_right, zone_arrow)
         clipped.map(d => {
           d[1] = d[1] - start_point_right
@@ -4278,7 +4278,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         start_point_right += thickness_link
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y > source_node_y)) {
         //Si le lien entre en haut
-        const zone_arrow = [[0, start_point_top], [20, start_point_top], [20, start_point_top + thickness_link], [0, start_point_top + thickness_link]]
+        const zone_arrow = [[0, start_point_top], [10, start_point_top], [10, start_point_top + thickness_link], [0, start_point_top + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_top)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_top)
         start_point_top += thickness_link
@@ -4287,7 +4287,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y < source_node_y)) {
         //Si le lien entre en bas
-        const zone_arrow = [[0, start_point_bottom], [20, start_point_bottom], [20, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]]
+        const zone_arrow = [[0, start_point_bottom], [10, start_point_bottom], [10, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]]
         clipped = clip(JSON.parse(JSON.stringify(arrow_int_bottom)), zone_arrow)
         clipped.map(d => d[1] = d[1] - start_point_bottom)
         start_point_bottom += thickness_link
@@ -4297,13 +4297,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!display_style.filter || link_value >= display_style.filter) {
 
         const n = JSON.parse(JSON.stringify(clipped))
-
         const point = d3.line()(n)
         arr.append('marker').attr('id', 'arrow_' + l.idLink)
           .attr('viewBox', [0, 0, thickness_link, thickness_link])
           .attr('refY', thickness_link / 2)
           .attr('refX', refX)
-          .attr('markerWidth', 1)
+          .attr('markerWidth', (thickness_link<0.5)?5:2000)
           .attr('markerHeight', 1)
           .attr('orient', orient)
           .append('path')
