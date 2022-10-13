@@ -86,6 +86,7 @@ interface ConvertSankeyData {
   trade_hspace?: number
   trade_close_hspace?: number
   trade_close_vspace?: number
+  trade_sectors?: string[]
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
   agregated_level?: number
@@ -243,9 +244,7 @@ export const convert_data = (
   if (data_to_convert.nodeTags['SubChain']) {
     data_to_convert.nodeTags['SubChain'].group_name = 'Sous-Filières'
   }
-  if (data_to_convert.nodeTags['Exchanges']) {
-    data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
-  }
+
   Object.entries(data_to_convert.dataTags).forEach(
     ([key,tags_group]) => {
       if (tags_group.banner === 'display'|| key === 'flux_types' || key ==='Uncert' ) {
@@ -806,28 +805,62 @@ export const convert_data = (
       }
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
         import_export = true
-        n.node_visible = true
-        const exchange_tag = Object.keys(data.nodeTags['Exchanges'].tags).filter(tag=>tag.includes('import'))
-        n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['import']
-        
+        n.node_visible = true        
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
         import_export = true
-        n.node_visible = true
-        const exchange_tag = Object.keys(data.nodeTags['Exchanges'].tags).filter(tag=>tag.includes('export'))
-        n.tags['Exchanges'] = exchange_tag.length > 0 ? [exchange_tag[0]] : ['export']
-       
+        n.node_visible = true       
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       }
       if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
+        import_export = true
         n.position = 'relative'
         n.x = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_hspace as number) : data.trade_close_hspace as number
         n.y = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_vspace as number) : data.trade_close_vspace as number      
       }
+      if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
+        import_export = true
+        n.tags['Type de noeud'] = ['échange']
+        if (!n.dimensions) {
+          n.dimensions = {}
+        }
+        if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
+          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
+          n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
+          if (!('Dimensions' in n.tags)) {
+            n.tags.Dimensions = []
+          }
+          if (!('Echanges' in n.tags.Dimensions)) {
+            n.tags.Dimensions.push('Echanges')
+          }
+          if (!('Primaire' in n.tags.Dimensions)) {
+            n.tags.Dimensions.push('Primaire')
+          }          
+        } else {
+          const names = n.name.split(' - ')
+          names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
+          const parent_name = names.join(' - ')
+          const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
+          n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
+          if ( 'Primaire' in n.dimensions) {
+            delete n.dimensions.Primaire
+          }
+          if (!('Dimensions' in n.tags)) {
+            n.tags.Dimensions = []
+          }
+          if (!('Echanges' in n.tags.Dimensions)) {
+            n.tags.Dimensions.push('Echanges')
+          }
+          if ( 'Primaire' in n.tags.Dimensions) {
+            n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
+          }
+        }  
+      }
+      delete n.tags['Exchanges']
       if (!n.position) {
         n.position = 'absolute'        
       }
@@ -846,24 +879,30 @@ export const convert_data = (
     }
   )
 
-  if ('trade_close' in data.display_style) {
-    delete data.display_style.trade_close
+  if (import_export) {
+    Object.values(data_to_convert.nodes).forEach(n=>{
+      if (!('Dimensions' in n.tags)) {
+        n.tags.Dimensions = ['Primaire']
+      }
+      if (!('Echanges' in n.tags.Dimensions)) {
+        n.tags.Dimensions.push('Echanges')
+      }      
+    })
   }
 
-  if (import_export) {
-    if (Object.entries(data.nodeTags).filter(tag => tag[0] === 'Exchanges').length === 0) {
-      data.nodeTags['Exchanges'] = {
-        group_name: 'Echanges',
-        show_legend: false,
-        color_map: 'jet',
-        tags: {
-          'import': { name: 'Importations', selected: true, shape: 'rect' },
-          'export': { name: 'Exportations', selected: true, shape: 'rect' },
-          'interior' : { name: 'Intérieur', selected: true, shape: 'rect' }
-        },
-        banner: 'multi'
+  if (data_to_convert.nodeTags['Exchanges']) {
+    //data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
+    delete data_to_convert.nodeTags['Exchanges']
+    if (!('Echanges' in data.nodeTags.Dimensions.tags)) {
+      data.nodeTags.Dimensions.tags['Echanges'] = {
+        name : 'Echanges',
+        selected: false
       }
     }
+  }
+
+  if ('trade_close' in data.display_style) {
+    delete data.display_style.trade_close
   }
 
   if (data.subchains && data.subchains[0] !== '') {
@@ -1327,6 +1366,10 @@ export const convert_data = (
 
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
+  }
+
+  if ( data.agregation.level === -1 ) {
+    data.agregation.level = 1
   }
 
   if (display_style.filter_label === undefined) {

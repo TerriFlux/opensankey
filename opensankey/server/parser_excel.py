@@ -618,7 +618,7 @@ def save_excel(
     node_tag_keys = list(sankey_data['nodeTags'])
     if NODE_TYPE in node_tag_keys:
         mfa_output = {
-            'nodes' : nodes,
+            'nodes' : pd.DataFrame(nodes[1:],columns=nodes[0])
         }
         ter,sectors_names,products_names = mfa_problem_format_io.create_empty_ter(mfa_output)
         s_names2s_idx = {e: i for i, e in enumerate(sectors_names)}
@@ -641,11 +641,13 @@ def save_excel(
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
                 
+        ter['use']    = pd.DataFrame(ter['use'])
+        ter['supply'] = pd.DataFrame(ter['supply'])
         mfa_output = {
-            PARAM_SHEET : [param_sheet.columns.values.tolist()]+param_sheet.values.tolist(),
-            TAG_SHEET  : tags_sheet,
-            NODES_SHEET : nodes,
-            DATA_SHEET  : links,
+            PARAM_SHEET : param_sheet,
+            TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
+            NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
+            DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
             TER_SHEET   : ter
         }
     else:
@@ -666,12 +668,13 @@ def save_excel(
                 io_table[origin_idx+1][destination_idx+1] = 1
             except Exception as excpt:
                 print('exception 2: '+str(excpt))
+        io_table = np.array(io_table)   
         mfa_output = {
-            PARAM_SHEET : [param_sheet.columns.values.tolist()]+param_sheet.values.tolist(),
-            TAG_SHEET  : tags_sheet,
-            NODES_SHEET : nodes,
-            DATA_SHEET  : links,
-            IO_SHEET   : io_table
+            PARAM_SHEET : param_sheet,
+            TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
+            NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
+            DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
+            IO_SHEET    : pd.DataFrame(data=io_table[1:,1:],index=io_table[1:,0],columns=io_table[0,1:])
         }
 
     return mfa_output,nodes_names
