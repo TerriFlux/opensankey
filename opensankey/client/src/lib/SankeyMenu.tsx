@@ -2342,6 +2342,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
           mode_visualisation={mode_visualisation}
+          set_current_filter={set_current_filter}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
