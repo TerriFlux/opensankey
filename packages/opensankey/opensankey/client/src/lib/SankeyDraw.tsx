@@ -4380,7 +4380,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const all_tags = Object.values(data.nodeTags).concat(Object.values(data.fluxTags))
     all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
-
+      
       // Ajout du tagGroup.name  
       legend.append('text')
         .attr('transform', function () {
@@ -4400,8 +4400,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .append('svg:g')
         // on filtre les tags avec selected à true (Visible)
         .filter(function (d) { return d[1].selected })
+        .attr('id',d=>{
+          return 'tag_'+d[1].name.replaceAll(' ','__')
+        })
         .attr('transform', function (d, i) {
           return 'translate(' + dx + ',' + (i * 30 + 30) + ')'
+        })
+        .on('mouseover',(event,d)=>{
+          Object.values(data.links).filter(l=>{
+            const tmp=getLinkValue(data,l.idLink)
+            return tmp.tags[tag_group.group_name]!=d[1].name
+          }).forEach(el=>{
+            d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.1)
+            d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
+            d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.1)
+          })
+        })
+        .on('mouseout',()=>{
+          d3.selectAll('.link').attr('stroke-opacity',0.85)
+          d3.selectAll('.defsArrow path').attr('stroke-opacity',0.85)
+          d3.selectAll('.defsArrow path').attr('opacity',0.85)
         })
 
       // Ajout du shape  
