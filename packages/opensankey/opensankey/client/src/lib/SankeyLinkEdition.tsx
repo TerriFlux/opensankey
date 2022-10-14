@@ -506,7 +506,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             val = val[tag]
                           })
                           val.display_value = evt.target.value
-                          d.dashed=evt.target.value === ' '
+                          
 
                         })
                         set_data({ ...data })
