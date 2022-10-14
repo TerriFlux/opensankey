@@ -635,8 +635,8 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 5
-    obj['display_value'] = ' '
+    obj['value'] = 1/data.user_scale/100
+    obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
 
@@ -693,7 +693,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    dashed:true
+    dashed:false
   }
 }
 
