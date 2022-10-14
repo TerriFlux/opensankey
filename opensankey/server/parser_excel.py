@@ -317,6 +317,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 new_node['tags'][node_tag_name] = []
             new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name] + tag_value.split(':')
             new_node['tags'][node_tag_name] = list(set(new_node['tags'][node_tag_name]))
+            new_node['tags'][node_tag_name].sort()
         #new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name]
             
         level = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)]
