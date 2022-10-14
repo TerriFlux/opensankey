@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip,FormCheck,Popover } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip,FormCheck,Popover, FormControl } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
@@ -480,7 +480,22 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               value={filter}
               onChange={evt => set_current_filter(Number(evt.target.value))} />
           </Col>
-          <Col>{filter}</Col>
+          <Col>
+            <FormControl
+              size='sm'
+              type='number'
+              min={0}
+              max={filter}
+              value={filter}
+              onChange={(evt)=>{
+                let tmp=+evt.target.value
+                if(tmp>max_link_value){
+                  tmp=max_link_value
+                }
+                set_current_filter(tmp)
+              }}
+            />
+          </Col>
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
@@ -497,7 +512,23 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               }}
             />
           </Col>
-          <Col>{data.display_style.filter_label}</Col>
+          <Col>
+            <FormControl
+              size='sm'
+              type='number'
+              min={0}
+              max={max_link_value}
+              value={data.display_style.filter_label}
+              onChange={(evt)=>{
+                let tmp=+evt.target.value
+                if(tmp>max_link_value){
+                  tmp=max_link_value
+                }
+                data.display_style.filter_label = tmp
+                set_data({...data})
+              }}
+            />
+          </Col>
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
