@@ -62,7 +62,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
     Object.values(tags_selected).map(tag_selected => {
       if (val[tag_selected] === undefined) {
-        val[tag_selected] = {}
+        val[tag_selected] = {'display_value': '',tags:{},value:0}
       }
       val = val[tag_selected]
     })
@@ -418,7 +418,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 //Définition des valeurs selon les paramètre dataTags
                 Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
                   if (Object.keys(dataTag.tags).length != 0) {
-
+                    // console.log(dataTagKey)
+                    // console.log(tags_selected)
                     return (
                       <Row key={dataTagKey}>
                         <Col >
