@@ -1199,6 +1199,9 @@ export const convert_data = (
           const editable_link = links_no_type[link.idLink]
           let the_value : number | number[] = link.value
           let the_display_value = link.display_value as string
+          if ( the_display_value == undefined ) {
+            the_display_value = ''
+          }
           if ( Array.isArray(link.value) ) {
             the_value = (link.value as number[])[0]
             the_display_value = (link.display_value as string[])[0] as string

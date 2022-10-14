@@ -5,7 +5,7 @@ import inspect
 from os import listdir
 import json
 from parameterized import parameterized
-
+import mfa_problem.io_excel as io_excel
 # try:
 #     import sankeytools.server.nodes_position as nodes_position
 # except Exception:
@@ -26,49 +26,55 @@ test_parameters = []
 def parse_folder(current_dir):
     folder_content = listdir(current_dir)
     for file_or_folder in folder_content:
-        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'artefacts' in file_or_folder:
-            continue
-        if os.path.isfile(os.path.join(current_dir,file_or_folder)):
-            continue
-        if file_or_folder != 'sankey':
-            parse_folder(os.path.join(current_dir,file_or_folder))
-        else:
-            file_names = listdir(os.path.join(current_dir, file_or_folder))
-            for file_name in file_names:
-                if 'simple' not in file_name:
-                    continue
-                try:
-                    full_path_file_name = os.path.join(current_dir, file_or_folder, file_name)
-                    key = os.path.join(os.path.relpath(current_dir, mfa_data_dir), file_name)
-                    key = os.path.splitext(key)[0] + ' sankey'
-                    with open(full_path_file_name, "r") as outfile:
-                        content = json.load(outfile)
-                        expected_results[key] = content
-                except Exception:
-                    pass
-
-def parse_folder2(current_dir):  
-    folder_content = listdir(current_dir)     
-    for file_or_folder in folder_content:
-        if 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'artefacts' in file_or_folder:
+        if 'mfadata' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder or 'artefacts' in file_or_folder:
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
             file_name = os.path.join(current_dir,file_or_folder)
             file_name = os.path.relpath(file_name, mfa_data_dir)
-            if 'xlsx' in file_name and 'simple' in file_name and not 'old' in file_name and not 'new' in file_name:
-                data_set = os.path.splitext(file_name)[0]
+            data_set = os.path.splitext(file_name)[0]
+            if 'xlsx' in file_name and 'old' not in file_name:
                 if data_set+' sankey' not in expected_results:
                     expected_results[data_set+' sankey'] = {}
+        elif file_or_folder != 'ref_output' and file_or_folder != 'ref_input' and file_or_folder != 'sankey':
+            parse_folder(os.path.join(current_dir,file_or_folder))
+        else:
+            file_names = listdir(os.path.join(current_dir, file_or_folder))
+            for file_name in file_names:
+                try:
+                    if 'xlsx' in file_name:
+                        continue
+                    if 'expected' not in file_name or 'sankey' not in file_name:
+                        continue
+                    key = os.path.splitext(file_name)[0][len('expected_'):]
+                    full_path_file_name = os.path.join(current_dir, file_or_folder, file_name)
+                    with open(full_path_file_name, "r") as outfile:
+                        content = json.load(outfile)
+                        expected_results[os.path.join(os.path.relpath(current_dir, mfa_data_dir), key)] = content
+                except Exception:
+                    pass            
+
+def fill_test_parameters(current_dir):
+    folder_content = listdir(current_dir)
+    for file_or_folder in folder_content:
+        if 'mfadata' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder or 'artefacts' in file_or_folder:
+            continue
+        if os.path.isfile(os.path.join(current_dir,file_or_folder)):
+            file_name = os.path.join(current_dir,file_or_folder)
+            file_name = os.path.relpath(file_name, mfa_data_dir)
+            data_set = os.path.splitext(file_name)[0]
+            if 'xlsx' in file_name and 'old' not in file_name:
+                if data_set+' sankey' not in expected_results:
+                    continue
                 test_parameters.append((
                     data_set+ ' sankey',
                     data_set+ '.xlsx',
                     expected_results[data_set+' sankey']                
                 ))
-        elif file_or_folder != 'sankey':
-            parse_folder2(os.path.join(current_dir,file_or_folder))
+        elif file_or_folder != 'ref_output' and file_or_folder != 'ref_input' and file_or_folder != 'sankey':
+            fill_test_parameters(os.path.join(current_dir,file_or_folder)) 
 
 parse_folder(mfa_data_dir)
-parse_folder2(mfa_data_dir)
+fill_test_parameters(mfa_data_dir)
 
 # Identify the expected results and specify the list of files to test
 # expected_results = {}
@@ -123,8 +129,9 @@ class DictResultTest(unittest.TestCase):
         file_name: str,
         expected_results: dict
     ):
-        sankey_data = parser_excel.parse_simple_excel(
-            os.path.join(mfa_data_dir,file_name)
+        mfa_input,_ = io_excel.load_mfa_excel(os.path.join(mfa_data_dir,file_name))
+        sankey_data = parser_excel.parse_excel(
+            mfa_input
         )
         if not self.generate_results:
             self.check_dict(sankey_data,expected_results)                                         
@@ -134,13 +141,28 @@ class DictResultTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         if cls.generate_results:
-            for test_name in cls.new_results:
-                content = json.dumps(cls.new_results[test_name], indent=2)
+            for name in cls.new_results:
+                try:
+                    content = json.dumps(cls.new_results[name], indent=2)
+                except Exception as excpt:
+                    for col in cls.new_results[name]:
+                        try:
+                            content = json.dumps(cls.new_results[name][col], indent=2)
+                        except Exception as excpt:
+                            print(excpt)
+                #     except Exception as excpt2:
+                #         content = json.dumps(cls.new_results[name]['Results'][0], indent=2)
+                #         content = json.dumps(cls.new_results[name]['Results'][1], indent=2)
+                #         content = json.dumps(cls.new_results[name]['Results'][2], indent=2)
                 current_dir = os.environ.get('MFAData')
-                head, tail = os.path.split(test_name)
-                file_name = os.path.join(current_dir, head, 'sankey', tail.replace(' sankey','') + '.json')
+                head, tail = os.path.split(name)
+                if not os.path.isdir(os.path.join(current_dir, head, 'ref_output')):
+                    continue
+                file_name = os.path.join(current_dir, head, 'ref_output','expected_' + tail + '.json')      
+                          
                 with open(file_name, "w") as outfile:
                     outfile.write(content)
+
 
 if __name__ == '__main__':
     if sys.argv[1] == '--generate_results':
@@ -152,7 +174,10 @@ if __name__ == '__main__':
     loader = unittest.TestLoader()
     names = loader.getTestCaseNames(DictResultTest)
     for name in names:
-        if sys.argv[1] in name:
+        if len(sys.argv) > 1:
+            if sys.argv[1] in name:
+                suite.addTest(DictResultTest(name))
+        else:
             suite.addTest(DictResultTest(name))
     #suite.addTest(MFAProblemTestReconciliation("test_reconciliation_no_uncert_66_V_g_tal_triticale_1_4_no_uncert"))
     runner = unittest.TextTestRunner()
