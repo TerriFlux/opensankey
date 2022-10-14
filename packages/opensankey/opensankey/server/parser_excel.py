@@ -60,6 +60,8 @@ def set_value(
         set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
 
 def parse_excel(mfa_input):
+    if not NODES_SHEET in mfa_input:
+        return
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
@@ -261,6 +263,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
 def parse_nodes(mfa_input, nodes, nodeTags):
     # current_parent_level = 1
     # previous_level = 1
+    if not NODES_SHEET in mfa_input:
+        return
     nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
     nodes_sheet = mfa_input[NODES_SHEET]
     has_sankey_col = NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
