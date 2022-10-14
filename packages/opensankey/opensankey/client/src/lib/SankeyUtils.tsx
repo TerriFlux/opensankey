@@ -859,7 +859,7 @@ export const set_nodes_level = (
 ) => {
   Object.values(display_nodes).forEach(node => {
     //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && node.tags['Dimensions'] && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
+    if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
       node.display = false
       node.node_visible = false
       return
