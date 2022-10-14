@@ -45,7 +45,7 @@ test:
     GIT_STRATEGY: none
   script:
     - source /home/gitlab-runner/gitlab/bin/activate
-    - pip install dist/OpenSankey-0.1-cp38-cp38-linux_x86_64.whl
+    - pip install dist/OpenSankey-0.1-py3-none-any.whl
     - python -m unittest discover opensankey.tests
     - python -m unittest discover opensankey.tests
     - flake8 --exit-zero
