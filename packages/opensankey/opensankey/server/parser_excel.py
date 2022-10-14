@@ -207,12 +207,16 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         for fluxTag in fluxTags:
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
+                if not fluxTag in columns:
+                    row_flux_tags.append('Donnée collectée')
+                    continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row,columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        val = float(mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)])
-        if math.isnan(val):
+        val = mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)]
+        if val == None:
             continue
+        val = float(val)
         display_val = ''
         param_sheet=mfa_input[PARAM_SHEET]
         if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
