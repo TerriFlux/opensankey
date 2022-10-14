@@ -113,6 +113,8 @@ class DictResultTest(unittest.TestCase):
         cls.new_results = expected_results
 
     def check_dict(self,to_test,ref):
+        if ref == None:
+            return
         for key in ref:
             if type(to_test[key]) is dict:
                 self.check_dict(to_test[key], ref[key])  
