@@ -2261,6 +2261,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                           convert_data(new_data)
                           set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
+                          const test = document.getElementsByClassName('navbar')
+                          let margin_top = 0
+                          if (test && test.length > 0) {
+                            margin_top = test[0].getBoundingClientRect().height
+                            d3.select('#svg-container').style('margin-top',margin_top+'px')
+                          }
                           // if ( data.agregation.level === -1 ) {
                           //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
                           // }
