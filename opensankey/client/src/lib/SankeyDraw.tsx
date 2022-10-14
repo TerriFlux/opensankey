@@ -4895,7 +4895,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           console.log('Aucune action en mémoire pour un retour en arrière')
         }
 
-      } else if(e.key=='Backspace' || e.key=='Delete'){
+      } else if(e.key=='Delete'){
         multi_selected_nodes.current.forEach(el=>{
           delete_node(data,el)
         })
