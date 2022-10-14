@@ -904,7 +904,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           )
 
         }
-
+        
         return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
@@ -3851,7 +3851,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           )
 
         }
-
         return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
       }
       )
@@ -4309,22 +4308,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .attr('d', point)
           .attr('stroke', 'none')
           .attr('fill', () => {
-            if (l.gradient) {
-              const n = nodes[l.idTarget]
-              if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                const selected_tag = n.tags[n.colorTag][0]
-                const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                if (tag) {
-                  return tag.color as string
-                }
-              }
-              if (n.shape_visible || n.iconName === 'none') {
-                return n.color
-              } else {
-                return n.iconColor
-              }
-            }
-            return link_color(l) as string
+            return (l.gradient && l.colorParameter==='local') ? (node_color(data.nodes[l.idTarget] as SankeyNode) as string) : link_color(l) as string
           })
           .attr('stroke-width', '0px')
           .attr('stroke-opacity', 0.85)

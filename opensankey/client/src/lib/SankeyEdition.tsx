@@ -60,10 +60,9 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                   })
 
                   Object.values(data.links).forEach(el => {
-                    el.colorParameter = 'groupTag'
+                    el.colorParameter = 'local'
                     el.colorTag = 'no_colormap'
                   })
-
                   data.colorMap = 'no_colormap'
                     
                   
@@ -129,7 +128,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                   })
 
                   Object.values(data.links).forEach(el => {
-                    el.colorParameter = 'groupTag'
+                    el.colorParameter = 'local'
                     el.colorTag = 'no_colormap'
                   })
 
@@ -247,7 +246,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     })
 
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'groupTag'
+                      el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
 
@@ -314,7 +313,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     })
 
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'groupTag'
+                      el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
 
