@@ -294,7 +294,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             }
             return (
               <>
-                <NavDropdown key={index} title={title} id={key} >
+                <NavDropdown drop='start' key={index} title={title} id={key} >
                   <ExempleItem
                     exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
                     url_prefix={url_prefix}
