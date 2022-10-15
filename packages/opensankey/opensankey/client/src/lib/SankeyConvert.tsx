@@ -803,6 +803,9 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
+      if ( n.tags['Type de noeud'][0] == 'échange' ) {
+        import_export = true
+      }
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
         import_export = true
         n.node_visible = true        
