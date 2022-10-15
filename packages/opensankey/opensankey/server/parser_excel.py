@@ -60,6 +60,8 @@ def set_value(
         set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
 
 def parse_excel(mfa_input):
+    if not NODES_SHEET in mfa_input:
+        return
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
@@ -78,8 +80,6 @@ def parse_excel(mfa_input):
         'dimension' : dimension,
         'level'     : 1
     }
-    if NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1:
-        agregation['level'] = -1  
     return {
         'version'      : '0.8',
         
@@ -209,12 +209,16 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         for fluxTag in fluxTags:
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
+                if not fluxTag in columns:
+                    row_flux_tags.append('Donnée collectée')
+                    continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row,columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        val = float(mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)])
-        if math.isnan(val):
+        val = mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)]
+        if val == None:
             continue
+        val = float(val)
         display_val = ''
         param_sheet=mfa_input[PARAM_SHEET]
         if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
@@ -259,6 +263,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
 def parse_nodes(mfa_input, nodes, nodeTags):
     # current_parent_level = 1
     # previous_level = 1
+    if not NODES_SHEET in mfa_input:
+        return
     nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
     nodes_sheet = mfa_input[NODES_SHEET]
     has_sankey_col = NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
@@ -307,7 +313,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node = nodes[name]
 
         for _,node_tag_name in enumerate(nodeTags.keys()):
-            if node_tag_name == 'Dimensions' and not node_tag_name in mfa_input[NODES_SHEET][0]:
+            if node_tag_name == 'Dimensions' and not node_tag_name in mfa_input[NODES_SHEET].columns:
                 tag_value = 'Primaire'
             else:
                 tag_value = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(node_tag_name)]
@@ -319,6 +325,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 new_node['tags'][node_tag_name] = []
             new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name] + tag_value.split(':')
             new_node['tags'][node_tag_name] = list(set(new_node['tags'][node_tag_name]))
+            new_node['tags'][node_tag_name].sort()
         #new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name]
             
         level = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)]
@@ -327,34 +334,34 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         #     first_dimension = list(nodeTags['Dimensions']['tags'].keys()[0])
         if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
             first_dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
-        dimension = 'Primaire'
-        dimensions = ['Primaire']
+        node_dimensions = [first_dimension]
         #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
         if 'Dimensions' in mfa_input[NODES_SHEET].columns:
-            dimensions = mfa_input[NODES_SHEET].iat[i,nodes_cols.index('Dimensions')]
-            if dimensions == '':
-                dimensions = nodeTags['Dimensions']['tags']
+            node_dimensions = mfa_input[NODES_SHEET].iat[i,nodes_cols.index('Dimensions')]
+            if node_dimensions == '':
+                node_dimensions = nodeTags['Dimensions']['tags']
             else:
-                dimensions = dimensions.split(':')               
+                node_dimensions = node_dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
         # if not 'Dimensions' in new_node['tags']:
         #     new_node['tags']['Dimensions'] = [first_dimension]
-        if not dimension  in new_node['dimensions']:
-            for dim in dimensions:
+        #if not dimension  in new_node['dimensions']:
+        for dim in node_dimensions:
+            if not dim in new_node['dimensions']:
                 new_node['dimensions'][dim] = {}             
             
         if level == 1:
-            for dim in dimensions:
+            for dim in node_dimensions:
                 new_node['dimensions'][dim]['level'] = 1           
-            if not has_sankey_col and dimension == first_dimension:
+            if not has_sankey_col and first_dimension in node_dimensions:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
         else:
             if not has_sankey_col:
                 new_node['display'] = 0 
                 new_node['node_visible'] = 0
-            for dim in dimensions:
+            for dim in node_dimensions:
                 new_node['dimensions'][dim]['level'] = int(level)           
                 
             other_display_node_found = False
@@ -364,7 +371,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 if  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_LEVEL)] <  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] :
                     parent_name =  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_NODE)].strip()
                     if parent_name in nodes:
-                        for dim in dimensions:
+                        for dim in node_dimensions:
                             new_node['dimensions'][dim]['parent_name'] = nodes[parent_name]['idNode']         
                     break
                 if  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] == 1:
@@ -620,7 +627,7 @@ def save_excel(
     node_tag_keys = list(sankey_data['nodeTags'])
     if NODE_TYPE in node_tag_keys:
         mfa_output = {
-            'nodes' : nodes,
+            'nodes' : pd.DataFrame(nodes[1:],columns=nodes[0])
         }
         ter,sectors_names,products_names = mfa_problem_format_io.create_empty_ter(mfa_output)
         s_names2s_idx = {e: i for i, e in enumerate(sectors_names)}
@@ -643,11 +650,13 @@ def save_excel(
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
                 
+        ter['use']    = pd.DataFrame(ter['use'])
+        ter['supply'] = pd.DataFrame(ter['supply'])
         mfa_output = {
-            PARAM_SHEET : [param_sheet.columns.values.tolist()]+param_sheet.values.tolist(),
-            TAG_SHEET  : tags_sheet,
-            NODES_SHEET : nodes,
-            DATA_SHEET  : links,
+            PARAM_SHEET : param_sheet,
+            TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
+            NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
+            DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
             TER_SHEET   : ter
         }
     else:
@@ -668,12 +677,13 @@ def save_excel(
                 io_table[origin_idx+1][destination_idx+1] = 1
             except Exception as excpt:
                 print('exception 2: '+str(excpt))
+        io_table = np.array(io_table)   
         mfa_output = {
-            PARAM_SHEET : [param_sheet.columns.values.tolist()]+param_sheet.values.tolist(),
-            TAG_SHEET  : tags_sheet,
-            NODES_SHEET : nodes,
-            DATA_SHEET  : links,
-            IO_SHEET   : io_table
+            PARAM_SHEET : param_sheet,
+            TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
+            NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
+            DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
+            IO_SHEET    : pd.DataFrame(data=io_table[1:,1:],index=io_table[1:,0],columns=io_table[0,1:])
         }
 
     return mfa_output,nodes_names

@@ -1,6 +1,7 @@
 stages:
+    - build
+    - test
     - deploy
-    - publish
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
@@ -15,6 +16,43 @@ cache:
   paths:
     - .cache/pip
 
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR : "$CI_PROJECT_DIR/.cache/pip"
+  MFAData       : "/home/ubuntu/dev_opensankey/MFAData"
+
+build:
+  stage: build
+  tags:
+    - dev, prod, test
+  script:
+    - source /home/gitlab-runner/gitlab/bin/activate
+    - echo $CI_PROJECT_DIR
+    - echo $EIGEN_INCLUDE
+    - python setup.py bdist_wheel
+  artifacts:
+    paths:
+      - dist/*.whl
+  except:
+    - schedules
+
+test:
+  stage: test
+  tags:
+    - dev, prod, test
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - source /home/gitlab-runner/gitlab/bin/activate
+    - pip install dist/OpenSankey-0.1-py3-none-any.whl
+    - python -m unittest discover opensankey.tests
+    - python -m unittest discover opensankey.tests
+    - flake8 --exit-zero
+  except:
+    - schedules
+  dependencies:
+    - build
 
 deploy_opensankey:
   stage: deploy

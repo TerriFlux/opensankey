@@ -294,7 +294,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             }
             return (
               <>
-                <NavDropdown key={index} title={title} id={key} >
+                <NavDropdown drop='start' key={index} title={title} id={key} >
                   <ExempleItem
                     exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
                     url_prefix={url_prefix}
@@ -2166,6 +2166,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         <p>Fonctionnement des clics :</p>
         <p><b>CTRL + Clic (noeuds) :</b> Sélectionne le noeuds click dans l'onglet "<b>Noeuds</b>" du menu</p>
         <p><b>CTRL + Clic (flux) :</b> Sélectionne le flux click dans l'onglet "<b>Flux</b>" du menu</p>
+        <p><b>Suppr</b> ou <b>Retour arrière :</b> Supprime les noeuds et flux sélectionnés</p>
         <p><b>Clic (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
         <p><b>Clic droit (noeuds) :</b>  Agrége le noeud</p>
         <p><b>Alt Clic droit (noeuds) :</b>  Désagrége le noeud</p>
@@ -2260,6 +2261,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                           convert_data(new_data)
                           set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
                           set_data(new_data)
+                          const test = document.getElementsByClassName('navbar')
+                          let margin_top = 0
+                          if (test && test.length > 0) {
+                            margin_top = test[0].getBoundingClientRect().height
+                            d3.select('#svg-container').style('margin-top',margin_top+'px')
+                          }
                           // if ( data.agregation.level === -1 ) {
                           //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
                           // }
@@ -2341,6 +2348,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
           mode_visualisation={mode_visualisation}
+          set_current_filter={set_current_filter}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >

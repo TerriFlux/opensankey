@@ -94,7 +94,7 @@ def save_excel():
         )
         return response   
     try:
-        if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET][0]:
+        if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET].columns:
             verbosity=2
         else:
             verbosity=1        
