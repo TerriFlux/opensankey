@@ -10,8 +10,9 @@ import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter, faLeaf } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
+import { agregation, desagregation } from './SankeyLayout'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
@@ -189,7 +190,7 @@ declare const window: Window &
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter }) => {
   const { nodeTags, fluxTags, dataTags } = data
-  const [show_readme, set_show_readme] = useState(false)
+  const [show_readme, set_show_readme] = useState(false)  
   const {filter}=data.display_style
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -201,18 +202,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   })
   max_link_value += 1
 
-  let nb_agregation_level = 0
-  Object.values(data.nodes).forEach(n => {
-    if (!n.dimensions) {
-      return
-    }
-    Object.entries(n.dimensions).forEach(dim => {
-      if (!dim[1].level) {
-        return
-      }
-      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-    })
+  const nb_agregation_level : {[key:string]: number } =  {}
+  Object.values(data.agregation).forEach(dim => {
+    nb_agregation_level[dim.dimension] = 0
+    Object.values(data.nodes).forEach( n => 
+      nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
+        n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
+    )
   })
+  let has_agregation = false
+  Object.values(nb_agregation_level).forEach(nb_level => has_agregation = has_agregation || nb_level>1 )
 
   const addAllDropDownNode = () => {
     const banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
@@ -258,9 +257,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data['nodes']).forEach(el => {
+                      Object.values(data.links).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
@@ -325,9 +324,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data['nodes']).forEach(el => {
+                      Object.values(data.links).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
@@ -418,26 +417,37 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       JSON.stringify(
         window.sankey[sous_filieres[diagram_path]]
       )
-    )
+    ) as SankeyData
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
     if (!is_split) {
       set_diagram(the_diagram)
     }
-
-    Object.values(data.nodes).forEach(n => {
-      if (!n.dimensions) {
-        return
-      }
-      Object.entries(n.dimensions).forEach(dim => {
-        if (!dim[1].level) {
-          return
+ 
+    // Object.values(data.nodes).forEach(n => {
+    //   if (!n.dimensions) {
+    //     return
+    //   }
+    //   Object.entries(n.dimensions).forEach(dim => {
+    //     if (!dim[1].level) {
+    //       return
+    //     }
+    //     nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
+    //   })
+    // })
+    Object.values(new_data.agregation).forEach(ag=>  set_nodes_level(new_data,new_data.nodes,ag.level,ag.dimension))
+    Object.values(new_data.agregation).forEach(ag=>Object.values(new_data.nodes).forEach(node => {
+      if (node.dimensions[ag.dimension] ) {
+        if (node.dimensions[ag.dimension].level! == ag.level) {
+          const children = Object.values(new_data.nodes).filter(n=>n.dimensions[ag.dimension] && n.dimensions[ag.dimension]['parent_name'] === node.idNode)
+          if (children.length > 0 && children[0].display == true) {
+            node.node_visible = false
+            node.display = false
+          }
         }
-        nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-      })
-    })
-    set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
+      }
+    }))
     // if ( data.agregation.level === -1 ) {
     //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
     // }
@@ -558,7 +568,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: ((!(banner_grouptag.length > 0 || nb_agregation_level > 1)) && (!( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
+          display: ((!(banner_grouptag.length > 0 || has_agregation)) && (!( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
         <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
           {(data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -593,7 +603,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             style={{
               width: '250px',
               marginLeft: '0px',
-              display: (banner_grouptag.length > 0 || nb_agregation_level > 1) ? 'block' : 'none'
+              display: (banner_grouptag.length > 0 || has_agregation) ? 'block' : 'none'
             }} lg="auto">
             {banner_grouptag.length > 0 ? (<>
               <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
@@ -601,54 +611,91 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </>)
               : (<Col></Col>)
             }
-            { nb_agregation_level > 1 ? (
-              <><FormLabel><b>Niveau de détail</b></FormLabel>
-                {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
-                  <Form.Select placeholder='all' 
-                    value={data.agregation.dimension} 
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-                      data.agregation.dimension = evt.target.value
-                      data.agregation.level = 1
-                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
-                      set_nodes_level(data, data.nodes, 1)
-                      //set_cube_dimension(evt.target.value)
-                      set_data({...data})
-                    }} 
-                  >
-                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                  </Form.Select>) : (<></>)}
-                <Form.Select id="selectionNode"
-                  style={{ color: 'black'}}
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      if (evt.target.value === '') {
-                        return
-                      }
-                      // if (evt.target.value === '-1') {
-                      //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
-                      //   if (json_data !== '') {
-                      //     const initial_data = JSON.parse(json_data as string)
-                      //     Object.values(data.nodes).forEach(n => {
-                      //       n.display = initial_data.nodes[n.idNode].display
-                      //       n.node_visible = initial_data.nodes[n.idNode].node_visible
-                      //     })
-                      //     //initial_data.static_sankey = true
-                      //     set_data({ ...data })
-                      //   }
-                      // }
-                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
-                      for (let level = 1; level <= +evt.target.value; level++) {
-                        set_nodes_level(data, data.nodes, level)
-                      }
-                      data.agregation.level =+evt.target.value
-                      set_data({ ...data })
-                    }
-                  }
-                  value={data.agregation.level}
-                >{[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
-                </Form.Select></>) : (<Col></Col>)}
+            { has_agregation ? (
+              <><FormLabel><b>Niveaux de détail</b></FormLabel>
+                {Object.entries(nodeTags['Dimensions'].tags).filter(([, tag]) => tag.selected).map(([key, tag],) => { 
+                  return (
+                    <>
+                      <FormLabel className="text-center" style={{justifyContent: 'center'}}  >{tag.name}</FormLabel>
+                      <Form.Select id={key}
+                        key={key}
+                        style={{ color: 'black'}}
+                        onChange={
+                          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            if (evt.target.value === '') {
+                              return
+                            }
+                            data.agregation[tag.name].level =+evt.target.value
+                            Object.values(data.nodes).forEach(node => {
+                              node.node_visible = true
+                              node.display = true 
+                            })
+                            const selected_tags =  Object.values(data.nodeTags.Dimensions.tags).filter(tag=>tag.selected)
+                            selected_tags.forEach(tag=>set_nodes_level(data, data.nodes, data.agregation[tag.name].level, data.agregation[tag.name].dimension))
+                            selected_tags.forEach(tag=>
+                              Object.values(data.nodes).forEach(node => {
+                                if (node.name == 'Ecorces') {
+                                  console.log('tutu')
+                                }
+                                const node_dim = node.dimensions[data.agregation[tag.name].dimension]
+                                if (node_dim ) {
+                                  if (node_dim.level! == data.agregation[tag.name].level) {
+                                    const children = Object.values(data.nodes).filter(child_node=> {
+                                      return selected_tags.filter(tag2=> {
+                                        const child_node_dim = child_node.dimensions[data.agregation[tag2.name].dimension]
+                                        return child_node_dim && child_node_dim['parent_name'] === node.idNode
+                                      }).length>0
+                                    })
+                                    if (children.length > 0 && children[0].display == true) {
+                                      node.node_visible = false
+                                      node.display = false
+                                    }
+                                  }
+                                }
+                              })
+                            )
+                            Object.values(data.nodeTags.Dimensions.tags).filter(tag=>tag.selected).forEach(tag=>
+                              Object.values(data.nodes).forEach(node => {
+                                if (node.dimensions[data.agregation[tag.name].dimension] ) {
+                                  if (node.dimensions[data.agregation[tag.name].dimension].level! == data.agregation[tag.name].level) {
+                                    const parent_id = node.dimensions[data.agregation[tag.name].dimension].parent_name
+                                    if (!parent_id) {
+                                      return
+                                    }
+                                    const parent_node = data.nodes[parent_id]
+                                    if (parent_node.display == true) {
+                                      node.node_visible = false
+                                      node.display = false
+                                    }
+                                  }
+                                }
+                              })
+                            )
+                            Object.values(data.nodeTags.Dimensions.tags).filter(tag=>tag.selected).forEach(tag=>
+                              Object.values(data.nodes).forEach(node => {  
+                                if (!node.node_visible) {
+                                  return false
+                                }
+                                if (!node.dimensions[data.agregation[tag.name].dimension] ) {
+                                  return false
+                                }              
+                                desagregation(data,node.idNode,data.agregation[tag.name].dimension,false)
+                                // hide children
+                                agregation(data,node.idNode,data.agregation[tag.name].dimension,false)
+                              }
+                            ))
+                            set_data({...data})
+                          }
+
+                        }
+                        value={data.agregation[tag.name].level}
+                      >{[...Array(nb_agregation_level[tag.name]).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
+                      </Form.Select>
+                    </>
+                  )
+                })}
+              </>
+            ) : (<></>)}
           </Form.Group>
           <Col lg="auto">
             {additional_selector ? (

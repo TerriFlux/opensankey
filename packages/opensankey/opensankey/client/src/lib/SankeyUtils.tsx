@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { agregation, desagregation } from './SankeyLayout'
+//import { agregation, desagregation } from './SankeyLayout'
 import * as d3 from 'd3'
 
 declare const window: Window &
@@ -514,7 +514,7 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: false,
     fit_screen: window.SankeyToolsStatic,
 
-    agregation: {dimension:'Primaire',level:1},
+    agregation: {'Primaire':{dimension:'Primaire',level:1}},
 
     icon_catalog: {},
     labels: {},
@@ -837,12 +837,8 @@ export const uploadExemple = (
       }
       example_callback(data)
       delete (data as unknown as layout_type).layout
+      Object.values(data.agregation).forEach( ag => set_nodes_level(data,data.nodes,ag.level,ag.dimension) )
 
-      // if (data.agregation.level === -1) {
-      //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
-      // } else {
-      set_nodes_level(data,data.nodes,data.agregation.level,true)
-      //}
       set_data({ ...data })
       if (file_name.includes('.xlsx')) {
         downloadExamples(file_name, the_url_prefix, file_type)
@@ -855,35 +851,20 @@ export const set_nodes_level = (
   data: SankeyData,
   display_nodes: { [key: string]: SankeyNode },
   level: number,
-  control_display = true
+  agregation_dimension: string
 ) => {
   Object.values(display_nodes).forEach(node => {
-    //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
-      node.display = false
-      node.node_visible = false
-      return
-    }
-    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
-      if (node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
-        // shows siblings
-        desagregation(data,node.idNode,data.agregation.dimension,control_display)
-        // hide children
-        agregation(data,node.idNode,data.agregation.dimension,control_display)
-        Object.keys(node.dimensions).forEach(dim => {
-          const idParent = node.dimensions[dim].parent_name
-          if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
-            display_nodes[idParent].node_visible = false
-            display_nodes[idParent].display = false
-          }
-        })
-      } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
+    if (node.dimensions[agregation_dimension] ) {
+      if (node.dimensions[agregation_dimension].level! > level) {
         node.node_visible = false
-        node.display = false
+        node.display = false   
+      } else if (node.dimensions[agregation_dimension].level! < level) {
+        const children = Object.values(display_nodes).filter(n=>n.dimensions[agregation_dimension] && n.dimensions[agregation_dimension]['parent_name'] === node.idNode)
+        if (children.length > 0) {
+          node.node_visible = false
+          node.display = false
+        }
       }
-    } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
-      node.node_visible = false
-      node.display = false
     }
   })
 }

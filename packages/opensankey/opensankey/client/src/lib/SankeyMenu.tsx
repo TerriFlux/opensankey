@@ -59,15 +59,22 @@ export const uploadExcelImpl = (
     }
     Object.assign(data, server_data)
     convert_data(data)
-    //compute_auto_sankey(data, 200)
-    let nb_agregation_level = 0
-    Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  
-    set_nodes_level(data,data.nodes,nb_agregation_level)
+    const nb_agregation_level : {[key:string]: number } =  {}
+    Object.values(data.agregation).forEach(dim => {
+      nb_agregation_level[dim.dimension] = 0
+      Object.values(data.nodes).forEach( n => 
+        nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
+          n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
+      )
+    })
+    Object.entries(nb_agregation_level).forEach( ag =>
+      set_nodes_level(data,data.nodes,ag[1],ag[0])
+    )
+
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-    for (let i=nb_agregation_level ; i>0 ; i--) {
-      set_nodes_level(data,data.nodes,i,false)
-    }
+    // for (let i=nb_agregation_level ; i>0 ; i--) {
+    //   set_nodes_level(data,data.nodes,i,false)
+    // }
     post_callback(data)
     set_data({ ...data })
   }
@@ -187,26 +194,34 @@ export const processExample = (server_data: SankeyData & layout_type ) => {
   //   server_data.links['link324'].idSource = 'node63'
   //   delete server_data.links['link325']
   // }
-  let nb_agregation_level = 0
-  Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
+  const nb_agregation_level : {[key:string]: number } =  {}
+  Object.values(server_data.agregation).forEach(dim => {
+    nb_agregation_level[dim.dimension] = 0
+    Object.values(server_data.nodes).forEach( n => 
+      nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
+        n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
+    )
+  })
+  Object.entries(nb_agregation_level).forEach( ag =>
+    set_nodes_level(server_data,server_data.nodes,ag[1],ag[0])
+  )
   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  for (let i=nb_agregation_level ; i>0 ; i--) {
-    set_nodes_level(server_data,server_data.nodes,i,false)
-  }
+  // for (let i=nb_agregation_level ; i>0 ; i--) {
+  //   set_nodes_level(server_data,server_data.nodes,i,false)
+  // }
 
   if (server_data.layout !== undefined) {
     convert_data(server_data.layout)
     // let nb_agregation_level = 0
     // Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-    for (let i=1 ; i<=nb_agregation_level ; i++) {
-      set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
-    }
+    // for (let i=1 ; i<=nb_agregation_level ; i++) {
+    //   set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
+    // }
     updateLayout(server_data, server_data.layout)
     // if (server_data.agregation.level === -1) {
     //   localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
     // } else {
-    set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
+    // set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
     //}
     // for (let i=1 ; i<=nb_agregation_level ; i++) {
     //   set_nodes_level(server_data,server_data.nodes,i)
@@ -2259,7 +2274,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
+                          Object.values(new_data.agregation).forEach(ag=>  set_nodes_level(new_data,new_data.nodes,ag.level,ag.dimension))
                           set_data(new_data)
                           const test = document.getElementsByClassName('navbar')
                           let margin_top = 0
@@ -2267,9 +2282,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                             margin_top = test[0].getBoundingClientRect().height
                             d3.select('#svg-container').style('margin-top',margin_top+'px')
                           }
-                          // if ( data.agregation.level === -1 ) {
-                          //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
-                          // }
                         }
                       })()
                       reader.readAsText(files[0])
