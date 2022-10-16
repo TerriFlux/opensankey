@@ -187,10 +187,10 @@ export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   file_name: PropTypes.string,
 
-  agregation: PropTypes.shape({
+  agregation: PropTypes.objectOf(PropTypes.shape({
     dimension: PropTypes.string.isRequired,
     level: PropTypes.number.isRequired,
-  }).isRequired,
+  }).isRequired).isRequired,
 
   user_scale: PropTypes.number.isRequired,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,

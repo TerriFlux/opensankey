@@ -362,21 +362,7 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
-  if (!data_to_convert.agregation) {
-    data_to_convert.agregation = {
-      dimension:'Primaire',
-      level:1
-    }
-  }
-  if (data_to_convert.agregation.level === 0) {
-    data_to_convert.agregation.level = 1
-  }
-  if (!data_to_convert.agregation.dimension) {
-    data_to_convert.agregation.dimension = 'Primaire'
-  }
-  if (data.agregated_level) {
-    delete data.agregated_level
-  } 
+
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {
@@ -484,7 +470,26 @@ export const convert_data = (
     }
   }
   data.nodeTags.Dimensions.banner = 'none'
-
+  if (!data_to_convert.agregation) {
+    data_to_convert.agregation = {}
+    Object.values(data.nodeTags.Dimensions.tags).forEach( tag => data_to_convert.agregation[tag.name] = {dimension:tag.name,level:1})
+  } else {
+    if (data_to_convert.agregation.level) {
+      data_to_convert.agregation = {}
+      Object.values(data.nodeTags.Dimensions.tags).forEach( tag => data_to_convert.agregation[tag.name] = {dimension:tag.name,level:1})
+    }
+  }
+  Object.values(data_to_convert.agregation).forEach(ag=>{
+    if (ag.level === 0) {
+      ag.level = 1
+    }
+  })
+  // if (!ag.dimension) {
+  //   data_to_convert.agregation.dimension = 'Primaire'
+  // }
+  if (data.agregated_level) {
+    delete data.agregated_level
+  } 
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
@@ -803,7 +808,7 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
-      if ( n.tags['Type de noeud'][0] == 'échange' ) {
+      if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'][0] == 'échange' ) {
         import_export = true
       }
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
@@ -863,6 +868,7 @@ export const convert_data = (
           }
         }  
       }
+
       delete n.tags['Exchanges']
       if (!n.position) {
         n.position = 'absolute'        
@@ -887,9 +893,9 @@ export const convert_data = (
       if (!('Dimensions' in n.tags)) {
         n.tags.Dimensions = ['Primaire']
       }
-      if (!('Echanges' in n.tags.Dimensions)) {
-        n.tags.Dimensions.push('Echanges')
-      }      
+      // if (!('Echanges' in n.tags.Dimensions)) {
+      //   n.tags.Dimensions.push('Echanges')
+      // }      
     })
   }
 
@@ -1374,9 +1380,9 @@ export const convert_data = (
     delete (data as ConvertSankeyData).sankey_type
   }
 
-  if ( data.agregation.level === -1 ) {
-    data.agregation.level = 1
-  }
+  // if ( data.agregation.level === -1 ) {
+  //   data.agregation.level = 1
+  // }
 
   if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10

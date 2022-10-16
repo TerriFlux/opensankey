@@ -71,8 +71,8 @@ def parse_excel(mfa_input):
     nodes = {node['idNode']:node for node in nodes.values()}
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
-    nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
-    nodes_sheet = mfa_input[NODES_SHEET]
+    # nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
+    # nodes_sheet = mfa_input[NODES_SHEET]
     dimension = 'Primaire'
     if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
         dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
@@ -352,8 +352,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 new_node['dimensions'][dim] = {}             
             
         if level == 1:
-            for dim in node_dimensions:
-                new_node['dimensions'][dim]['level'] = 1           
+            # for dim in node_dimensions:
+            #     new_node['dimensions'][dim]['level'] = 1           
             if not has_sankey_col and first_dimension in node_dimensions:
                 new_node['display'] = 1  
                 new_node['node_visible'] = 1     
@@ -361,8 +361,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if not has_sankey_col:
                 new_node['display'] = 0 
                 new_node['node_visible'] = 0
-            for dim in node_dimensions:
-                new_node['dimensions'][dim]['level'] = int(level)           
+            # for dim in node_dimensions:
+            #     new_node['dimensions'][dim]['level'] = int(level)           
                 
             other_display_node_found = False
             j = i
@@ -376,7 +376,28 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                     break
                 if  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] == 1:
                     break
-
+                
+    for dim in nodeTags['Dimensions']['tags']:      
+        dim_nodes = [node for node in nodes.values() if dim in node['dimensions']]          
+        for _,node in enumerate(dim_nodes):
+            if not 'parent_name'  in node['dimensions'][dim]:
+                node['dimensions'][dim]['level'] = 1 
+        first_level_nodes = [node['idNode'] for node in dim_nodes if 'level' in node['dimensions'][dim] and node['dimensions'][dim]['level'] == 1]
+        for _,node in enumerate(dim_nodes):
+            if 'parent_name'  in node['dimensions'][dim]:
+                parent_node = node['dimensions'][dim]['parent_name']
+                if parent_node in first_level_nodes:
+                    node['dimensions'][dim]['level'] = 2
+                # elif not parent_node in dim_nodes:
+                #     node['dimensions'][dim]['level'] = 1                    
+        second_level_nodes = [node['idNode'] for node in dim_nodes if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and node['dimensions'][dim]['level'] == 2]
+        for _,node in enumerate(dim_nodes):
+            if 'parent_name'  in node['dimensions'][dim]:
+                parent_node = node['dimensions'][dim]['parent_name']
+                if parent_node in second_level_nodes:
+                    node['dimensions'][dim]['level'] = 3
+                elif not parent_node in dim_nodes:
+                     node['dimensions'][dim]['level'] = 2                                            
 
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
     if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
