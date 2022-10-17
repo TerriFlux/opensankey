@@ -551,6 +551,8 @@ export const updateLayout = (
   data.legend_position = new_layout.legend_position;
   ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
 
+  data.accordeonToShow = new_layout.accordeonToShow
+
   if ('width' in new_layout) {
     data.width = new_layout.width
   }
