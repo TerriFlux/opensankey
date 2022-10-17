@@ -469,7 +469,7 @@ export const convert_data = (
       banner: 'none'
     }
   }
-  data.nodeTags.Dimensions.banner = 'none'
+  //data.nodeTags.Dimensions.banner = 'none'
   if (!data_to_convert.agregation) {
     data_to_convert.agregation = {}
     Object.values(data.nodeTags.Dimensions.tags).forEach( tag => data_to_convert.agregation[tag.name] = {dimension:tag.name,level:1})
