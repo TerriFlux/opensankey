@@ -5267,9 +5267,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 const sel = d3.selectAll('#gg_' + l.idLink+ ' rect')
                 sel.attr('fill-opacity', '0')
               })
-              // if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current!==null) {
-              //   button_ref.current.click()
-              // }
+              set_data({...data})
+
             }
           }}>
             <g className='grid' id='grid'></g>
