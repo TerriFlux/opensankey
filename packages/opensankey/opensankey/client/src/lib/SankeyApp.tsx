@@ -10,6 +10,8 @@ import Menu, { ExempleItem, processExample } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
 import GoogleFontLoader from 'react-google-font-loader'
+import { useBeforeunload } from 'react-beforeunload'
+import LZString from 'lz-string'
 
 declare const window: Window &
   typeof globalThis & {
@@ -57,6 +59,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const display_links = data.links
 
   const [mode_visualisation, set_mode_visualisation] = useState(false)
+  
+  useBeforeunload((event : BeforeUnloadEvent) => {
+    event.preventDefault()
+    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+  })
 
   return (
 
