@@ -2253,9 +2253,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
-              <NavDropdown title="Fichiers" id="files" >
-                <NavDropdown id='ouvrir' title="Ouvrir" >
-                  <Dropdown.Item
+              <NavDropdown  title="Fichiers" id="files" >
+                <NavDropdown drop='start' id='ouvrir' title="Ouvrir"  >
+                  <Dropdown.Item 
                     onClick={() => {
                       if (_load_json.current) {
                         _load_json.current.name = ''
@@ -2298,12 +2298,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   >Excel</Dropdown.Item>
                   {open_menu}
                 </NavDropdown>
-                <NavDropdown id='enregistrer' title="Enregistrer" >
+                <NavDropdown  drop='start' id='enregistrer' title="Enregistrer" >
                   <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
                   <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
                   {save_menu}
                 </NavDropdown>
-                <NavDropdown id='exporter' title="Exporter" >
+                <NavDropdown drop='start' id='exporter' title="Exporter" >
                   <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
                   <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
                 </NavDropdown>
