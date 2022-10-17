@@ -843,6 +843,12 @@ export const uploadExemple = (
       if (file_name.includes('.xlsx')) {
         downloadExamples(file_name, the_url_prefix, file_type)
       }
+      const test = document.getElementsByClassName('navbar')
+      let margin_top = 0
+      if (test && test.length > 0) {
+        margin_top = test[0].getBoundingClientRect().height
+        d3.select('#svg-container').style('margin-top',margin_top+'px')
+      }
     })
   })
 }
