@@ -376,7 +376,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                     break
                 if  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] == 1:
                     break
-                
+    if not  'Dimensions' in nodeTags:
+        return
     for dim in nodeTags['Dimensions']['tags']:      
         dim_nodes = [node for node in nodes.values() if dim in node['dimensions']]          
         for _,node in enumerate(dim_nodes):
