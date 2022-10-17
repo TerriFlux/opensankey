@@ -41,10 +41,6 @@ if (!window.sankey) {
 
 const data = default_sankey_data()
 
-window.onbeforeunload = () => {
-  localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-}
-
 if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
     window.sankey = {}
