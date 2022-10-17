@@ -530,8 +530,35 @@ export const updateLayout = (
     }
   }
 
-  // for (const tag_group_key in new_layout.nodeTags) {
-  //   data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+  for (const tag_group_key in data.nodeTags) {
+    if (!(tag_group_key in new_layout.nodeTags)) {
+      continue
+    }
+    data.nodeTags[tag_group_key].show_legend = new_layout.nodeTags[tag_group_key].show_legend
+    data.nodeTags[tag_group_key].banner = new_layout.nodeTags[tag_group_key].banner
+    for (const tag in data.nodeTags[tag_group_key].tags) {
+      if (!(tag in new_layout.nodeTags[tag_group_key].tags)) {
+        continue
+      }
+      data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
+      data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+    }
+  }
+  for (const tag_group_key in data.fluxTags) {
+    if (!(tag_group_key in new_layout.fluxTags)) {
+      continue
+    }
+    data.fluxTags[tag_group_key].show_legend = new_layout.fluxTags[tag_group_key].show_legend
+    data.fluxTags[tag_group_key].banner = new_layout.fluxTags[tag_group_key].banner
+    for (const tag in data.fluxTags[tag_group_key].tags) {
+      if (!(tag in new_layout.fluxTags[tag_group_key].tags)) {
+        continue
+      }
+      data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
+      data.fluxTags[tag_group_key].tags[tag].selected = new_layout.fluxTags[tag_group_key].tags[tag].selected
+    }
+  }
+  //data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
   //   // if (tag_group_key in new_layout.nodeTags) {
   //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
   //   //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
@@ -542,8 +569,10 @@ export const updateLayout = (
   // for (const tag_group_key in new_layout.fluxTags) {
   //   data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
   // }
-  //data.agregation.level = new_layout.agregation.level
-  //data.agregation.dimension = new_layout.agregation.dimension
+
+  // data.agregation.level = new_layout.agregation.level
+  // data.agregation.dimension = new_layout.agregation.dimension
+
   data.icon_catalog = new_layout.icon_catalog
   Object.assign(data.labels,new_layout.labels)
   data.colorMap = new_layout.colorMap
