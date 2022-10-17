@@ -10,7 +10,7 @@ import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter, faLeaf } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { agregation, desagregation } from './SankeyLayout'
 
@@ -683,7 +683,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                                 // hide children
                                 agregation(data,node.idNode,data.agregation[tag.name].dimension,false)
                               }
-                            ))
+                              )
+                            )
                             set_data({...data})
                           }
 
