@@ -258,9 +258,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data['nodes']).forEach(el => {
+                      Object.values(data.links).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
@@ -325,9 +325,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data['nodes']).forEach(el => {
+                      Object.values(data.links).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true

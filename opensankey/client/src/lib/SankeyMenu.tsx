@@ -76,6 +76,12 @@ export const uploadExcelImpl = (
       // try {
       const json_data = JSON.parse(text)
       callback(json_data)
+      const test = document.getElementsByClassName('navbar')
+      let margin_top = 0
+      if (test && test.length > 0) {
+        margin_top = test[0].getBoundingClientRect().height
+        d3.select('#svg-container').style('margin-top',margin_top+'px')
+      }
       // } catch(err) {
       //   alert(err)
       // }
