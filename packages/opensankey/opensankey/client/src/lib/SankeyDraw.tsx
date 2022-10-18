@@ -4294,7 +4294,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
 
       if (!display_style.filter || link_value >= display_style.filter) {
-
+        const colorArrow=(data.nodes[l.idTarget].shape_visible || data.nodes[l.idTarget].iconName === 'none')?(node_color(data.nodes[l.idTarget] as SankeyNode) as string):data.nodes[l.idTarget].iconColor
         const n = JSON.parse(JSON.stringify(clipped))
         const point = d3.line()(n)
         arr.append('marker').attr('id', 'arrow_' + l.idLink)
@@ -4308,7 +4308,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .attr('d', point)
           .attr('stroke', 'none')
           .attr('fill', () => {
-            return (l.gradient && l.colorParameter==='local') ? (node_color(data.nodes[l.idTarget] as SankeyNode) as string) : link_color(l) as string
+            return (l.gradient && l.colorParameter==='local') ? colorArrow : link_color(l) as string
           })
           .attr('stroke-width', '0px')
           .attr('stroke-opacity', 0.85)
