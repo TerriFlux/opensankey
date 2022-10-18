@@ -222,19 +222,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </option>)}
           </Form.Select>
         </Col>
-        <Col>
-          <FormCheck inline
-            type='switch'
-            disabled={multi_selected_nodes.current.length === 0 || multi_selected_nodes.current[0].colorParameter !== 'groupTag'}
-            checked={multi_selected_nodes.current.length > 0  && multi_selected_nodes.current[0].colorTag == tags_group_key}
-            label='Palette'
-            onChange={() => {
-              multi_selected_nodes.current.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(nodeTags)[0] : tags_group_key)
-
-              set_data({ ...data })
-            }}
-          />
-        </Col>
       </Form.Group>
       <Table striped bordered hover className='node_tags_affiliation' >
         <thead>
