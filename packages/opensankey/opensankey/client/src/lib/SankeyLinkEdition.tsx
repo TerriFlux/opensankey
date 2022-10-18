@@ -307,18 +307,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </option>)}
           </Form.Select>
         </Col>
-        <Col>
-          <FormCheck inline
-            type='switch'
-            disabled={multi_selected_links.current.length === 0 || multi_selected_links.current[0].colorParameter !== 'groupTag'}
-            checked={multi_selected_links.current.length > 0  && multi_selected_links.current[0].colorTag == tags_group_key}
-            label='Palette'
-            onChange={() => {
-              multi_selected_links.current.forEach(link => link.colorTag = (link.colorTag === tags_group_key) ? Object.keys(fluxTags)[0] : tags_group_key)
-              set_data({ ...data })
-            }}
-          />
-        </Col>
       </Form.Group>
       {
         //Définition des valeurs selon les paramètre dataTags
