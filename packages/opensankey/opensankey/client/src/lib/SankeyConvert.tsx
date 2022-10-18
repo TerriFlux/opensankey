@@ -889,16 +889,16 @@ export const convert_data = (
     }
   )
 
-  if (import_export) {
-    Object.values(data_to_convert.nodes).forEach(n=>{
-      if (!('Dimensions' in n.tags)) {
-        n.tags.Dimensions = ['Primaire']
-      }
-      // if (!('Echanges' in n.tags.Dimensions)) {
-      //   n.tags.Dimensions.push('Echanges')
-      // }      
-    })
-  }
+  // if (import_export) {
+  //   Object.values(data_to_convert.nodes).forEach(n=>{
+  //     if (!('Dimensions' in n.tags)) {
+  //       n.tags.Dimensions = ['Primaire']
+  //     }
+  //     // if (!('Echanges' in n.tags.Dimensions)) {
+  //     //   n.tags.Dimensions.push('Echanges')
+  //     // }      
+  //   })
+  // }
 
   if (data_to_convert.nodeTags['Exchanges']) {
     //data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
