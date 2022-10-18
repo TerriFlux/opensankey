@@ -586,6 +586,86 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   />
                 </Col>
               </Form.Group>
+              <Form.Group as={Row} >
+                <Col>
+                  <FormLabel>Orientation flux:</FormLabel>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} >
+                <Col sm={3}>
+                  <FormCheck
+                    
+                    name='orientation'
+                    type='radio'
+                    label='Horiz-Horiz'
+                    value='hh'
+                    checked={linkOrientation('hh')}
+                    onChange={
+                      evt => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                          d.orientation = evt.target.value
+                        })
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+                <Col sm={3}>
+
+                  <FormCheck
+                    
+                    name='orientation'
+                    type='radio'
+                    label='Vert-Vert'
+                    value='vv'
+                    checked={linkOrientation('vv')}
+                    onChange={
+                      evt => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                          d.orientation = evt.target.value
+                        })
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+                <Col sm={3}>
+
+                  <FormCheck
+                    
+                    name='orientation'
+                    type='radio'
+                    label='Vert-Horiz'
+                    value='vh'
+                    checked={linkOrientation('vh')}
+                    onChange={
+                      evt => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                          d.orientation = evt.target.value
+                        })
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+                <Col sm={3}>
+                  <FormCheck
+                    name='orientation'
+                    type='radio'
+                    label='Horiz-Vert'
+                    value='hv'
+                    checked={linkOrientation('hv')}
+                    onChange={
+                      evt => {
+                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                          d.orientation = evt.target.value
+                        })
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Form.Group>
 
               <Form.Group as={Row} >
                 <Col>
@@ -597,6 +677,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     min={0} max={1} step={0.01}
                     type={'number'}
                     value={shiftCenter()}
+                    disabled={(linkOrientation('hv')||linkOrientation('vh'))}
                     onChange={
                       evt => {
                         Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -627,6 +708,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     min={0} max={0.5} step={0.01}
                     type={'number'}
                     value={shift()}
+                    disabled={(linkOrientation('hv')||linkOrientation('vh'))}
                     onChange={
                       evt => {
                         Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -722,74 +804,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col sm={2}>{selected_link.current.curvature}</Col>
               </Form.Group>
-              <Form.Group as={Row} >
-                <Col sm={12}>
-                  <FormCheck
-                    inline
-                    name='orientation'
-                    type='radio'
-                    label='Horiz-Horiz'
-                    value='hh'
-                    checked={linkOrientation('hh')}
-                    onChange={
-                      evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                          d.orientation = evt.target.value
-                        })
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                  <FormCheck
-                    inline
-                    name='orientation'
-                    type='radio'
-                    label='Vert-Vert'
-                    value='vv'
-                    checked={linkOrientation('vv')}
-                    onChange={
-                      evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                          d.orientation = evt.target.value
-                        })
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                  <FormCheck
-                    inline
-                    name='orientation'
-                    type='radio'
-                    label='Vert-Horiz'
-                    value='vh'
-                    checked={linkOrientation('vh')}
-                    onChange={
-                      evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                          d.orientation = evt.target.value
-                        })
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                  <FormCheck
-                    inline
-                    name='orientation'
-                    type='radio'
-                    label='Horiz-Vert'
-                    value='hv'
-                    checked={linkOrientation('hv')}
-                    onChange={
-                      evt => {
-                        Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                          d.orientation = evt.target.value
-                        })
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Col>
-              </Form.Group>
+              
             </Form>
           </Tab>
           <Tab eventKey="label" title="Label">
