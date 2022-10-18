@@ -261,7 +261,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           if (tagGroup in data.fluxTags && v.tags[tagGroup] in data.fluxTags[tagGroup].tags) {
             colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
           } else {
-            colorNode = l.color
+            colorNode = 'grey'
           }
         } else {
           const source_node = data.nodes[l.idSource]
