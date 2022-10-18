@@ -644,6 +644,7 @@ export const convert_data = (
     }
   }
 
+  let import_export = false
   const subchains: string[] = []
   Object.values(nodes).forEach(
     n => {
@@ -802,24 +803,30 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
-
+      if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'][0] == 'échange' ) {
+        import_export = true
+      }
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
+        import_export = true
         n.node_visible = true        
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
+        import_export = true
         n.node_visible = true       
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       }
       if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
+        import_export = true
         n.position = 'relative'
         n.x = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_hspace as number) : data.trade_close_hspace as number
         n.y = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_vspace as number) : data.trade_close_vspace as number      
       }
       if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
+        import_export = true
         n.tags['Type de noeud'] = ['échange']
         if (!n.dimensions) {
           n.dimensions = {}
