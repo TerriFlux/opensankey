@@ -4362,8 +4362,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.values(data.nodeTags).concat(Object.values(data.fluxTags))
-    all_tags.filter(tag_group => tag_group.show_legend).forEach(tag_group => {
+    const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
+    Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
       
       // Ajout du tagGroup.name  
       legend.append('text')
@@ -4372,14 +4372,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .attr('x', 0)
         .attr('y', 20)
-        .text(tag_group.group_name)
+        .text(tag_group[1].group_name)
         .attr('style', 'font-weight:bold')
         .call(wrap)
 
       const legendElements = legend.append('g')
         .selectAll('g')
         // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-        .data(Object.entries(tag_group.tags))
+        .data(Object.entries(tag_group[1].tags))
         .enter()
         .append('svg:g')
         // on filtre les tags avec selected à true (Visible)
@@ -4393,17 +4393,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .on('mouseover',(event,d)=>{
           Object.values(data.links).filter(l=>{
             const tmp=getLinkValue(data,l.idLink)
-            return tmp.tags[tag_group.group_name]!=d[1].name
+            return tmp.tags[tag_group[0]]!=d[0]
           }).forEach(el=>{
             d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.1)
             d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
             d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.1)
+          })
+          //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
+          const tmp=Object.entries(data.nodeTags).filter(n=>{
+            return n[1].show_legend
+          })[0][0]
+          Object.values(data.nodes).filter(n=>{
+            return (n.tags[tmp] && !n.tags[tmp].includes(d[0]))
+          }).forEach(el=>{
+            d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
           })
         })
         .on('mouseout',()=>{
           d3.selectAll('.link').attr('stroke-opacity',0.85)
           d3.selectAll('.defsArrow path').attr('stroke-opacity',0.85)
           d3.selectAll('.defsArrow path').attr('opacity',0.85)
+          d3.selectAll('.node_shape').attr('fill-opacity',1)
         })
 
       // Ajout du shape  
