@@ -401,16 +401,16 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 parent_node = node['dimensions'][dim]['parent_name']
                 if parent_node in second_level_nodes:
                     node['dimensions'][dim]['level'] = 3
-                elif not parent_node in dim_nodes:
-                     node['dimensions'][dim]['level'] = 2                                            
+                # elif not parent_node in dim_nodes:
+                #      node['dimensions'][dim]['level'] = 2                                            
         third_level_nodes = [node['idNode'] for node in dim_nodes if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and node['dimensions'][dim]['level'] == 3]
         for _,node in enumerate(dim_nodes):
             if 'parent_name'  in node['dimensions'][dim]:
                 parent_node = node['dimensions'][dim]['parent_name']
                 if parent_node in third_level_nodes:
                     node['dimensions'][dim]['level'] = 4
-                elif not parent_node in dim_nodes:
-                     node['dimensions'][dim]['level'] = 2  
+                # elif not parent_node in dim_nodes:
+                #      node['dimensions'][dim]['level'] = 2  
                      
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
     if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
