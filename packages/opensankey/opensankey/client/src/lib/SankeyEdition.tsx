@@ -425,32 +425,31 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       set_diagram(the_diagram)
     }
  
-    // Object.values(data.nodes).forEach(n => {
-    //   if (!n.dimensions) {
-    //     return
-    //   }
-    //   Object.entries(n.dimensions).forEach(dim => {
-    //     if (!dim[1].level) {
-    //       return
-    //     }
-    //     nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-    //   })
-    // })
-    Object.values(new_data.agregation).forEach(ag=>  set_nodes_level(new_data,new_data.nodes,ag.level,ag.dimension))
-    Object.values(new_data.agregation).forEach(ag=>Object.values(new_data.nodes).forEach(node => {
-      if (node.dimensions[ag.dimension] ) {
-        if (node.dimensions[ag.dimension].level! == ag.level) {
-          const children = Object.values(new_data.nodes).filter(n=>n.dimensions[ag.dimension] && n.dimensions[ag.dimension]['parent_name'] === node.idNode)
-          if (children.length > 0 && children[0].display == true) {
-            node.node_visible = false
-            node.display = false
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true 
+    })
+    const selected_tags =  Object.values(data.nodeTags.Dimensions.tags).filter(tag=>tag.selected)
+    selected_tags.forEach(tag=>set_nodes_level(data, data.nodes, data.agregation[tag.name].level, data.agregation[tag.name].dimension))
+    selected_tags.forEach(tag=>
+      Object.values(data.nodes).forEach(node => {
+        const node_dim = node.dimensions[data.agregation[tag.name].dimension]
+        if (node_dim ) {
+          if (node_dim.level! == data.agregation[tag.name].level) {
+            const children = Object.values(data.nodes).filter(child_node=> {
+              return selected_tags.filter(tag2=> {
+                const child_node_dim = child_node.dimensions[data.agregation[tag2.name].dimension]
+                return child_node_dim && child_node_dim['parent_name'] === node.idNode
+              }).length>0
+            })
+            if (children.length > 0 && children[0].display == true) {
+              node.node_visible = false
+              node.display = false
+            }
           }
         }
-      }
-    }))
-    // if ( data.agregation.level === -1 ) {
-    //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
-    // }
+      })
+    )
     new_data.fit_screen = true
     d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
@@ -634,9 +633,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                             selected_tags.forEach(tag=>set_nodes_level(data, data.nodes, data.agregation[tag.name].level, data.agregation[tag.name].dimension))
                             selected_tags.forEach(tag=>
                               Object.values(data.nodes).forEach(node => {
-                                if (node.name == 'Ecorces') {
-                                  console.log('tutu')
-                                }
                                 const node_dim = node.dimensions[data.agregation[tag.name].dimension]
                                 if (node_dim ) {
                                   if (node_dim.level! == data.agregation[tag.name].level) {
