@@ -430,9 +430,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (l.orthogonal_label_position === 'middle') {
           return '0.3em'
         } else if (l.orthogonal_label_position === 'below') {
-          return scale(getLinkValue(data, l.idLink).value) / 2 + 10 + 'px'
+          const tmp=getLinkValue(data, l.idLink).value
+
+          return scale((tmp)?tmp:0) / 2 + 10 + 'px'
         } else if (l.orthogonal_label_position === 'above') {
-          return -scale(getLinkValue(data, l.idLink).value) / 2 + 'px'
+          const tmp=getLinkValue(data, l.idLink).value
+
+          return -scale((tmp)?tmp:0) / 2 + 'px'
         }
         return '0.3em'
       })
@@ -476,7 +480,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         return l.text_color
       })
-      .attr('visibility', d => link_visible(d, data) && getLinkValue(data, d.idLink).value >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden')
+      .attr('visibility', d => {
+        let tmp=getLinkValue(data, d.idLink).value
+        tmp=(tmp)?tmp:0
+        
+        return  link_visible(d, data) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
+      })
 
     if (!static_sankey && !mode_visualisation) {
       // A voir avec Julien
@@ -519,7 +528,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'link')
       .attr('id', d => d.idLink)
       .attr('fill', 'none')
-      .attr('stroke-opacity', d => data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data, d.idLink).value >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
+      .attr('stroke-opacity', d => {
+        let tmp=getLinkValue(data, d.idLink).value
+        tmp=(tmp)?tmp:0
+        return data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0})
       .attr('stroke-width', l => {
 
 
@@ -575,7 +587,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else {
 
           const link_value = test_link_value(data, display_nodes, l, data.nodeTags)
-          return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
+          const tmp =(link_value=='')?1:link_value
+          // console.log(scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0)))
+          return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
 
         }
 
@@ -914,7 +928,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .html(linkTooltipsContent(data, d))
-        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data, d.idLink).value >= display_style.filter) {
+        
+        let tmp=getLinkValue(data, d.idLink).value
+        tmp=(tmp)?tmp:0
+        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible  && tmp >= display_style.filter) {
           d3.select('#arrow_'+d.idLink).attr('opacity','0.5')
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
@@ -930,7 +947,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .on('mouseout', function (event, d) {
         sankeyTooltip.style('opacity', 0)
-        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && getLinkValue(data, d.idLink).value >= display_style.filter) {
+        let tmp=getLinkValue(data, d.idLink).value
+        tmp=(tmp)?tmp:0
+        if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && tmp >= display_style.filter) {
           const opacity = String(getLinkValue(data, d.idLink).display_value).includes('[') ? 0.85 : 0.85
           d3.select('#arrow_'+d.idLink).attr('opacity','1')
           return d3.select(this).attr('stroke-opacity', opacity)
@@ -1102,7 +1121,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           //retour à la normal
           d3.select('#' + l.idLink).attr('stroke-width', d => {
             const link_value = test_link_value(data, display_nodes, d, data.nodeTags)
-            return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
+            const tmp=(link_value=='')?1:link_value
+            return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
           })
         }
       }
@@ -1331,13 +1351,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             if (link.orthogonal_label_position === 'middle') {
               d3.select('#' + link.idLink + '_text').attr('dy', '0.3em')
             } else if (link.orthogonal_label_position === 'below') {
+              let tmp=getLinkValue(data, link.idLink).value
+              tmp=(tmp)?tmp:0
               // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
-              d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px')
-              d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px')
+              d3.select('#' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
+              d3.select('#' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
   
             } else if (link.orthogonal_label_position === 'above') {
+              let tmp=getLinkValue(data, link.idLink).value
+              tmp=(tmp)?tmp:0
               // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
-              d3.select('#' + link.idLink + '_text').attr('dy',scale(getLinkValue(data, link.idLink).value) / 2 + 'px')
+              d3.select('#' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 'px')
   
             }
           
@@ -1423,25 +1447,31 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (i > source_order) {
           break
         }
-        output_offset += getLinkValue(data, link.idLink).value
+        let tmp=getLinkValue(data, link.idLink).value
+        tmp=(tmp)?tmp:0
+        output_offset += tmp
       }
       const number_of_links = node.outputLinksId.length
       const value = getLinkValue(data, idLink).value
-      if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
-        if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
-          swap(node.outputLinksId, source_order, source_order + 1)
-        }
-        if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
-          swap(node.outputLinksId, source_order, source_order - 1)
-        }
-      } else if (links[idLink].orientation === 'vv') {
-        if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
-          swap(node.outputLinksId, source_order, source_order + 1)
-        }
-        if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(output_offset)) {
-          swap(node.outputLinksId, source_order, source_order - 1)
+      if(value){
+        if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
+          if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
+            swap(node.outputLinksId, source_order, source_order + 1)
+          }
+          if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
+            swap(node.outputLinksId, source_order, source_order - 1)
+          }
+        } else if (links[idLink].orientation === 'vv') {
+          if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
+            swap(node.outputLinksId, source_order, source_order + 1)
+          }
+          if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(output_offset)) {
+            swap(node.outputLinksId, source_order, source_order - 1)
+          }
         }
       }
+      
+
     }
     if (linked_node.type === 'target') {
       const target_order = node.inputLinksId.indexOf(idLink)
@@ -1450,23 +1480,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (i > target_order) {
           break
         }
-        input_offset += getLinkValue(data, node.inputLinksId[i - 1]).value
+        let tmp=getLinkValue(data,node.inputLinksId[i - 1]).value
+        tmp=(tmp)?tmp:0
+        input_offset +=tmp
       }
       const number_of_links = node.inputLinksId.length
       const value = getLinkValue(data, idLink).value
-      if (links[idLink].orientation === 'hh') {
-        if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
-          swap(node.inputLinksId, target_order, target_order + 1)
-        }
-        if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
-          swap(node.inputLinksId, target_order, target_order - 1)
-        }
-      } else if (links[idLink].orientation === 'vv') {
-        if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
-          swap(node.inputLinksId, target_order, target_order + 1)
-        }
-        if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(input_offset)) {
-          swap(node.inputLinksId, target_order, target_order - 1)
+      if(value){
+        if (links[idLink].orientation === 'hh') {
+          if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
+            swap(node.inputLinksId, target_order, target_order + 1)
+          }
+          if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
+            swap(node.inputLinksId, target_order, target_order - 1)
+          }
+        } else if (links[idLink].orientation === 'vv') {
+          if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
+            swap(node.inputLinksId, target_order, target_order + 1)
+          }
+          if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(input_offset)) {
+            swap(node.inputLinksId, target_order, target_order - 1)
+          }
         }
       }
       drawArrows(data, node, nodes, links, display_style, nodeTags)
@@ -1535,7 +1569,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
     } else if (handle_type === 'left') {
       const left_horiz_shift = d.left_horiz_shift ? d.left_horiz_shift : 0
-      if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(getLinkValue(data, d.idLink).value) / 2) {
+      let tmp=getLinkValue(data, d.idLink).value
+      tmp=(tmp)?tmp:0
+      if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(tmp) / 2) {
         d.left_horiz_shift = left_horiz_shift + the_event.dx
       } else {
         return
@@ -1950,6 +1986,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     let xt = target_node_x
     let yt = target_node_y
 
+    const tmp=getLinkValue(data, link.idLink).value
+
+
     if (link.orientation === 'hh') {
       //side to side
       if (source_node_x > target_node_x && !link.recycling || source_node_x < target_node_x && link.recycling) {
@@ -1959,7 +1998,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // target -> right
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (link.arrow) {
+        if (link.arrow && tmp !== '') {
           xt = xt + 10
         }
       } else {
@@ -1968,7 +2007,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         xs += scale(node_size_s_width)
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (link.arrow) {
+        if (link.arrow && tmp !== '' ) {
           xt = xt - 10
         }
       }
@@ -1982,7 +2021,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //ys = ys
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (link.arrow) {
+        if (link.arrow && tmp !== '') {
           yt = yt + 10
         }
       } else {
@@ -1990,7 +2029,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
         ys += scale(node_size_s_height)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (link.arrow) {
+        if (link.arrow && tmp !== '') {
           yt = yt - 10
         }
       }
@@ -2006,7 +2045,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
           yt += scale(node_size_t_height)
 
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             yt = yt + 10
           }
         } else {
@@ -2015,7 +2054,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
 
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             yt = yt - 10
           }
         }
@@ -2028,7 +2067,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
           yt += scale(node_size_t_height)
 
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             yt = yt + 10
           }
         } else {
@@ -2038,7 +2077,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
 
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             yt = yt - 10
           }
         }
@@ -2053,7 +2092,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
           xt += scale(node_size_t_width)
           yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             xt += 10
           }
         } else {
@@ -2062,7 +2101,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           ys += scale(node_size_s_height)
           xt += scale(node_size_t_width)
           yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             xt += 10
           }
         }
@@ -2072,7 +2111,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
 
           yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             xt = xt - 10
           }
         } else {
@@ -2080,7 +2119,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
           ys += scale(node_size_s_height)
           yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-          if (link.arrow) {
+          if (link.arrow && tmp !== '') {
             xt = xt - 10
           }
         }
@@ -2227,7 +2266,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     xt: number,
     yt: number
   ) => {
-
+    let tmp=getLinkValue(data, link.idLink).value
+    tmp=(tmp)?tmp:0
 
     if (link.orientation === 'hh' && link.recycling) {
       // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
@@ -2240,10 +2280,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!link.vert_shift) {
         link.vert_shift = 0
       }
+      
       if (xt < xs) {
         const x_left = xt - default_horiz_shift + link.left_horiz_shift // x14 
         const x_right = xs + default_horiz_shift + link.right_horiz_shift  // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
+        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
         const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
         const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
         const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
@@ -2251,7 +2292,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         const x_right = xt + default_horiz_shift + link.right_horiz_shift  // x14 
         const x_left = xs - default_horiz_shift + link.left_horiz_shift // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
+        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
         const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
         const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
         const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
@@ -2268,9 +2309,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!link.vert_shift) {
         link.vert_shift = 0
       }
-      const y_left = yt - default_horiz_shift + link.left_horiz_shift - scale(getLinkValue(data, link.idLink).value) // x14 
-      const y_right = ys + default_horiz_shift + link.right_horiz_shift + scale(getLinkValue(data, link.idLink).value) // x2 
-      const x_vert = Math.max(xs, xt) + scale(2 * getLinkValue(data, link.idLink).value) + link.vert_shift // y8 
+      const y_left = yt - default_horiz_shift + link.left_horiz_shift - scale(tmp) // x14 
+      const y_right = ys + default_horiz_shift + link.right_horiz_shift + scale(tmp) // x2 
+      const x_vert = Math.max(xs, xt) + scale(2 * tmp) + link.vert_shift // y8 
       const vert = 'translate(' + (x_vert - default_handle_size / 2) + ', ' + (y_left + (y_right - y_left) / 2 - default_handle_size / 2) + ')'
       const left = 'translate(' + (xt + (x_vert - xt) / 2 - default_handle_size / 2) + ' ,' + (y_left - default_handle_size / 2) + ')'
       const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
@@ -2925,7 +2966,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       // .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => {
         let total = 0
-
+        
         if (d.show_value) {
           if (d.outputLinksId.length > 0) {
             for (let i = 0; i < d.outputLinksId.length; i++) {
@@ -2934,8 +2975,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 //alert('Corruption du diagramme')
                 return ''
               }
+
+              let tmp=getLinkValue(data, link.idLink).value
+              tmp=(tmp)?tmp:0
               if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
-                total += getLinkValue(data, link.idLink).value
+                total += tmp
               }
             }
           }
@@ -2947,8 +2991,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   //alert('Corruption du diagramme')
                   return ''
                 }
+                let tmp=getLinkValue(data, link.idLink).value
+                tmp=(tmp)?tmp:0
                 if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
-                  total += getLinkValue(data, link.idLink).value
+                  total += tmp
                 }
               }
             }
@@ -3304,8 +3350,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 //alert('Corruption du diagramme')
                 return ''
               }
+              let tmp=getLinkValue(data_v2, link.idLink).value
+              tmp=(tmp)?tmp:0
               if (new_nodes[link.idSource].node_visible && new_nodes[link.idTarget].node_visible) {
-                total += getLinkValue(data_v2, link.idLink).value
+                total += tmp
               }
             }
           }
@@ -3318,8 +3366,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                   //alert('Corruption du diagramme')
                   return ''
                 }
+                let tmp=getLinkValue(data_v2, link.idLink).value
+                tmp=(tmp)?tmp:0
                 if (new_nodes[link.idSource].node_visible && new_nodes[link.idTarget].node_visible) {
-                  total += getLinkValue(data_v2, link.idLink).value
+                  total += tmp
                 }
               }
             }
@@ -3411,9 +3461,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (l.orthogonal_label_position === 'middle') {
           return '0.3em'
         } else if (l.orthogonal_label_position === 'below') {
-          return scale(getLinkValue(data_v2, l.idLink).value) / 2 + 10 + 'px'
+          const tmp=getLinkValue(data_v2, l.idLink).value
+          return scale((tmp)?tmp:0) / 2 + 10 + 'px'
         } else if (l.orthogonal_label_position === 'above') {
-          return -scale(getLinkValue(data_v2, l.idLink).value) / 2 + 'px'
+          const tmp=getLinkValue(data_v2, l.idLink).value
+
+          return -scale((tmp)?tmp:0) / 2 + 'px'
         }
         return '0.3em'
       })
@@ -3458,7 +3511,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         return l.text_color
       })
-      .attr('visibility', d => link_visible(d, data_v2) && getLinkValue(data_v2, d.idLink).value >= Math.max(data_v2.display_style.filter, data_v2.display_style.filter_label) ? 'visible' : 'hidden')
+      .attr('visibility', d => {
+        let tmp=getLinkValue(data_v2, d.idLink).value
+        tmp=(tmp)?tmp:0
+        return link_visible(d, data_v2) && tmp >= Math.max(data_v2.display_style.filter, data_v2.display_style.filter_label) ? 'visible' : 'hidden'
+      })
 
     let error_msg: { text?: string | undefined } | undefined
     paths
@@ -3466,7 +3523,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('id', d => d.idLink)
       .attr('fill', 'none')
       // .attr('stroke-opacity', d => data_v2.nodes[d.idSource].node_visible && data_v2.nodes[d.idTarget].node_visible && getLinkValue(data_v2, d.idLink).value >= data_v2.display_style.filter ? (!((data_v2 as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data_v2, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
-      .attr('stroke-opacity', d => data_v2.nodes[d.idTarget].node_visible && getLinkValue(data_v2, d.idLink).value >= data_v2.display_style.filter ? 0.5 : 0)
+      .attr('stroke-opacity', d => {
+        let tmp=getLinkValue(data_v2, d.idLink).value
+        tmp=(tmp)?tmp:0
+        return data_v2.nodes[d.idTarget].node_visible && tmp >= data_v2.display_style.filter ? 0.5 : 0})
       .attr('stroke-width', l => {
 
 
@@ -4128,8 +4188,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           max=(tmp>max)?tmp:max
           // const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[n])
           // max=(tmp>max)?tmp:max
-          console.log(nodeData.idNode+'====>'+idTarget)
-          console.log(max)
+
 
           setTimeout(()=>{
             branchAnimate(data.nodes[idTarget], nodeDisplay)
