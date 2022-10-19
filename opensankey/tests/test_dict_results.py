@@ -16,6 +16,9 @@ import mfa_problem.io_excel as io_excel
 # try:
 #     import sankeytools.server.parser_excel as parser_excel
 # except Exception:
+
+MAXSIZE = 100000
+
 sys.path.insert(0,os.getcwd())
 from opensankey.server import parser_excel
 
@@ -30,6 +33,9 @@ def parse_folder(current_dir):
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
             file_name = os.path.join(current_dir,file_or_folder)
+            file_stats = os.stat(os.path.join(current_dir,file_or_folder))
+            if file_stats.st_size > MAXSIZE:
+                continue
             file_name = os.path.relpath(file_name, mfa_data_dir)
             data_set = os.path.splitext(file_name)[0]
             if 'xlsx' in file_name and 'old' not in file_name:
@@ -59,6 +65,9 @@ def fill_test_parameters(current_dir):
         if 'mfadata' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder or 'artefacts' in file_or_folder:
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
+            file_stats = os.stat(os.path.join(current_dir,file_or_folder))
+            if file_stats.st_size > MAXSIZE:
+                continue
             file_name = os.path.join(current_dir,file_or_folder)
             file_name = os.path.relpath(file_name, mfa_data_dir)
             data_set = os.path.splitext(file_name)[0]
