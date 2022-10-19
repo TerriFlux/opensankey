@@ -598,6 +598,9 @@ export const convert_data = (
   if (data.legend_position === undefined) {
     data.legend_position = [0,10]
   }
+  if (data.legend_width === undefined) {
+    data.legend_width = 180
+  }
 
   const attributes_to_remove = ['previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
   for (const attr in attributes_to_remove) {
