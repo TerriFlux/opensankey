@@ -485,7 +485,7 @@ export const default_sankey_data = (): SankeyData => {
         colorTag: '',
         // Ajout
         gradient: false,
-        dashed:false,
+        dashed:true,
 
         value: {},
 
@@ -696,7 +696,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    dashed:false
+    dashed:true
   }
 }
 

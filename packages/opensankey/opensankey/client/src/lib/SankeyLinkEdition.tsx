@@ -470,8 +470,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     onChange={
                       evt => {
                         if(evt.target.value!=='' && !isNaN(+evt.target.value )){
+                          const was_empty=test_value(value_selected_parameter().value)===''
                           let val = Object(selected_link.current.value)
                           multi_selected_links.current.map(d => {
+                            d.dashed=!was_empty
                             val = d.value
                             Object.values(tags_selected).forEach(tag => {
                               if (val[tag] === undefined) {
@@ -483,9 +485,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   
                           })
                         }else{
+
                           let val = Object(selected_link.current.value)
                           multi_selected_links.current.map(d => {
                             val = d.value
+                            d.dashed=true
                             Object.values(tags_selected).forEach(tag => {
                               if (val[tag] === undefined) {
                                 val[tag] = {}
