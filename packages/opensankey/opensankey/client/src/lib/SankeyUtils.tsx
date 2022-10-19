@@ -901,12 +901,15 @@ export const uploadExemple = (
         alert(error)
         return
       }
-      Object.assign(data,processExample(server_data))
-      callback(data)
-      set_data({ ...data })
-
       if (file_name.includes('.xlsx')) {
+        Object.assign(data,processExample(server_data))
+        callback(data)
+        set_data({ ...data })
         downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      } else {
+        Object.assign(data,server_data)
+        convert_data(data)
+        set_data({ ...data})
       }
     })
   })
