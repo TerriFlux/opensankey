@@ -4402,12 +4402,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
           const tmp=Object.entries(data.nodeTags).filter(n=>{
             return n[1].show_legend
-          })[0][0]
-          Object.values(data.nodes).filter(n=>{
-            return (n.tags[tmp] && !n.tags[tmp].includes(d[0]))
-          }).forEach(el=>{
-            d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
           })
+          const tmp2=(tmp.length>0)?tmp[0][0]:''
+          if(tmp.length>0){
+            Object.values(data.nodes).filter(n=>{
+              return (n.tags[tmp2] && !n.tags[tmp2].includes(d[0]))
+            }).forEach(el=>{
+              d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
+            })
+          }else{
+            Object.values(data.nodes).forEach(el=>{
+              d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
+            })
+          }
+          
         })
         .on('mouseout',()=>{
           d3.selectAll('.link').attr('stroke-opacity',0.85)
