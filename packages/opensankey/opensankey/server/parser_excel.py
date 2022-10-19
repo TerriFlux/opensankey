@@ -76,10 +76,12 @@ def parse_excel(mfa_input):
     dimension = 'Primaire'
     if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
         dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
-    agregation = {
-        'dimension' : dimension,
-        'level'     : 1
-    }
+    agregation = {}
+    for dimension in nodeTags['Dimensions']['tags'].values():
+        agregation[dimension['name']] = {
+            'dimension' : dimension,
+            'level'     : 1
+        }
     return {
         'version'      : '0.8',
         
