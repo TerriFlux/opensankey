@@ -68,6 +68,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return val
   }
+
+  const test_value=(v:number | null | undefined)=>{
+    return ((v || v===0)&& v!==undefined) ? v:''
+  }
   const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
 
   // DEFINITION DES FONCTIONS VERIFIANT QUE TOUTES LES VALEURS DES DIFÉRENTS PARAMÈTRES SOIENT IDENTIQUES 
@@ -450,24 +454,42 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 </Col>
                 <Col>
                   <Form.Control
-                    type='number'
-                    min={0}
-                    step={0.1}
-                    value={value_selected_parameter().value}
+                    type='text'
+                    value={test_value(value_selected_parameter().value)}
                     onChange={
                       evt => {
-                        let val = Object(selected_link.current.value)
-                        multi_selected_links.current.map(d => {
-                          val = d.value
-                          Object.values(tags_selected).forEach(tag => {
-                            if (val[tag] === undefined) {
-                              val[tag] = {}
-                            }
-                            val = val[tag]
+                        if(evt.target.value!=='' && !isNaN(+evt.target.value )){
+                          const was_empty=test_value(value_selected_parameter().value)===''
+                          let val = Object(selected_link.current.value)
+                          multi_selected_links.current.map(d => {
+                            d.dashed=!was_empty
+                            val = d.value
+                            Object.values(tags_selected).forEach(tag => {
+                              if (val[tag] === undefined) {
+                                val[tag] = {}
+                              }
+                              val = val[tag]
+                            })
+                            val.value = +evt.target.value
+  
                           })
-                          val.value = +evt.target.value
+                        }else{
 
-                        })
+                          let val = Object(selected_link.current.value)
+                          multi_selected_links.current.map(d => {
+                            val = d.value
+                            d.dashed=true
+                            Object.values(tags_selected).forEach(tag => {
+                              if (val[tag] === undefined) {
+                                val[tag] = {}
+                              }
+                              val = val[tag]
+                            })
+                            val.value = ''
+  
+                          })
+                        }
+                        
       
                         set_data({ ...data })
                       }
@@ -495,7 +517,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             val = val[tag]
                           })
                           val.display_value = evt.target.value
-                          d.dashed=evt.target.value === ' '
+                          
 
                         })
                         set_data({ ...data })
