@@ -34,7 +34,7 @@ function write_children_table(
         }
         t += '<tr>'
         t += '<td>' + data.nodes[desagregated_link.idSource].name + '->' + data.nodes[desagregated_link.idTarget].name + '</td>'
-        t += '<td>' + toPrecision(value_to_display) + '</td>'
+        t += '<td>' + toPrecision((value_to_display)?value_to_display:0) + '</td>'
         t += '</tr>'
       }
     )
@@ -70,7 +70,7 @@ export const  linkTooltipsContent = (
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
-  t += '<td>' + toPrecision(the_value) +'</td>'
+  t += '<td>' + toPrecision((the_value)?the_value:0) +'</td>'
   t += '</td>'
   t += '</tr>'
   t += '</tbody></table>'
@@ -98,7 +98,6 @@ export const  linkTooltipsContent = (
     for (const dim in n.dimensions) {
       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
         const parent_name = n.dimensions[dim].parent_name
-        console.log('__')
 
         if ( parent_name === target_node.idNode) {
           return true
@@ -158,7 +157,7 @@ export const nodeTooltipsContent = (
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-        total += the_value
+        total += (the_value)?the_value:0
       }
     }
   }
@@ -183,9 +182,9 @@ export const nodeTooltipsContent = (
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td>' + source_name + '</td>'
-        t +=  '<td>' + toPrecision( the_value)
+        t +=  '<td>' + toPrecision( (the_value)?the_value:0)
         if (n.inputLinksId.length>1) {
-          const percent = Math.round(the_value*100/total)
+          const percent = Math.round(((the_value)?the_value:0)*100/total)
           t += '</td><td>'+ percent + '%</td></tr>'
         } else {
           t += '</td></tr>'          
@@ -209,7 +208,7 @@ export const nodeTooltipsContent = (
       } 
 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
-        total += the_value
+        total += (the_value)?the_value:0
       }
     }
     if ( n.outputLinksId.length > 0 ) {
@@ -232,9 +231,9 @@ export const nodeTooltipsContent = (
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td>' + target_name + '</td>'
-          t +=  '<td>' + toPrecision( the_value)
+          t +=  '<td>' + toPrecision( (the_value)?the_value:0)
           if (n.outputLinksId.length>1) {
-            const percent = Math.round(the_value*100/total)
+            const percent = Math.round(((the_value)?the_value:0)*100/total)
             t += '</td><td>'+ percent + '%</td></tr>'
           } else {
             t += '</td></tr>'          
