@@ -1339,7 +1339,7 @@ export const convert_data = (
           v['tags']['flux_types'] = 'computed_data'
         }
       }
-      if (v.value > flux_max) {
+      if (v.value && v.value > flux_max) {
         flux_max = v.value
       }
       return flux_max
