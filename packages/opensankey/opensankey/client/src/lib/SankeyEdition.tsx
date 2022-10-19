@@ -349,36 +349,36 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const addAllDropDownLinks = () => {
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
-      if (tags_group.banner == 'one') {
-        const selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
-        return (
-          <>
-            <FormLabel>{tags_group.group_name}</FormLabel>
-            {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-              Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                return (<option key={i} value={tag_key} >{tag.name}</option>)
-              })}
-            </Form.Select>}
-          </>)
-      } else if (tags_group.banner == 'multi') {
-        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-        return (
-          <>
-            <FormLabel>{tags_group.group_name}</FormLabel>
-            <MultiSelect
-              style={{ color: 'black' }}
-              labelledBy={'hello'}
-              overrideStrings={{
-                'selectAll': 'Tout sélectionner',
-              }}
-              value={selected}
-              options={options}
-              onChange={(selected: [{ label: string, value: string }]) => {
-                handleMultiDropdown(selected, tags_group, data, set_data)
-              }} />
-          </>)
-      }
+      // if (tags_group.banner == 'one') {
+      const selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      return (
+        <>
+          <FormLabel>{tags_group.group_name}</FormLabel>
+          {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+            Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+              return (<option key={i} value={tag_key} >{tag.name}</option>)
+            })}
+          </Form.Select>}
+        </>)
+      // } else if (tags_group.banner == 'multi') {
+      //   const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      //   const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      //   return (
+      //     <>
+      //       <FormLabel>{tags_group.group_name}</FormLabel>
+      //       <MultiSelect
+      //         style={{ color: 'black' }}
+      //         labelledBy={'hello'}
+      //         overrideStrings={{
+      //           'selectAll': 'Tout sélectionner',
+      //         }}
+      //         value={selected}
+      //         options={options}
+      //         onChange={(selected: [{ label: string, value: string }]) => {
+      //           handleMultiDropdown(selected, tags_group, data, set_data)
+      //         }} />
+      //     </>)
+      // }
 
 
     })
