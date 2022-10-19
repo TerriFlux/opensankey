@@ -910,7 +910,7 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val && val.value) {
+          if (val && val.value!=undefined) {
             total_input += val.value
           } else {
             console.log('val is undefined')
@@ -928,10 +928,8 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          console.log(val && val.value)
           
-          if (val && val.value ) {
-            console.log('val.value')
+          if (val && val.value!=undefined ) {
             total_output += val.value
           } else {
             console.log('val is undefined')
@@ -939,11 +937,11 @@ export const hideNullFluxNodes = (
         }
       }
     }
+    
 
     //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
     //Voir avec julien 
     if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
-      console.log('==')
       nodes[node.idNode].node_visible = false
     }
   })

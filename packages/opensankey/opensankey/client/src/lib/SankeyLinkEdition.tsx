@@ -70,7 +70,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   }
 
   const test_value=(v:number | null | undefined)=>{
-    return (v || v==0) ? v:''
+    return ((v || v===0)&& v!==undefined) ? v:''
   }
   const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
 
@@ -469,7 +469,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                     value={test_value(value_selected_parameter().value)}
                     onChange={
                       evt => {
-                        if(!isNaN(+evt.target.value)){
+                        if(evt.target.value!=='' && !isNaN(+evt.target.value )){
                           let val = Object(selected_link.current.value)
                           multi_selected_links.current.map(d => {
                             val = d.value
@@ -483,7 +483,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   
                           })
                         }else{
-                          console.log('hello')
                           let val = Object(selected_link.current.value)
                           multi_selected_links.current.map(d => {
                             val = d.value
