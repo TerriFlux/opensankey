@@ -531,9 +531,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-opacity', d => {
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
-        console.log(getLinkValue(data, d.idLink).value)
-        console.log(tmp>=display_style.filter)
-        console.log(data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
         return data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0})
       .attr('stroke-width', l => {
 
@@ -4189,8 +4186,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           max=(tmp>max)?tmp:max
           // const tmp=direct_son_as_distant_sibling(nodeData,data.nodes[n])
           // max=(tmp>max)?tmp:max
-          console.log(nodeData.idNode+'====>'+idTarget)
-          console.log(max)
+
 
           setTimeout(()=>{
             branchAnimate(data.nodes[idTarget], nodeDisplay)

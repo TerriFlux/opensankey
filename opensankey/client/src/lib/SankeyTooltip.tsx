@@ -98,7 +98,6 @@ export const  linkTooltipsContent = (
     for (const dim in n.dimensions) {
       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
         const parent_name = n.dimensions[dim].parent_name
-        console.log('__')
 
         if ( parent_name === target_node.idNode) {
           return true

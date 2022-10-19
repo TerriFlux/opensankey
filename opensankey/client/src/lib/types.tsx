@@ -76,7 +76,7 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 
 export const SankeyLinkValueTypes =
 {
-  value: PropTypes.number,
+  value: PropTypes.any,
   display_value: PropTypes.string.isRequired,
   // corresponding to tag_favorite. to be used in conjunction with colorTag
   //  const selected_tag = getLinkValue(data,l.idLink).tags[l.colorTag]
