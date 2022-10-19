@@ -75,10 +75,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
     // Méthode pour incrementer idGroup
-    const listId: number[] = []
-    Object.keys(data[elementTagName]).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
-    const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    data[elementTagName]['tag_group_' + idGroup] = {
+    const idGroup = Object.keys(data[elementTagName]).length+1
+    //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
+    data[elementTagName]['tag_group_' + String(new Date().getTime())] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
