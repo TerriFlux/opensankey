@@ -354,11 +354,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       return (
         <>
           <FormLabel>{tags_group.group_name}</FormLabel>
-          {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-            Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-              return (<option key={i} value={tag_key} >{tag.name}</option>)
-            })}
-          </Form.Select>}
+          <FormGroup as={Row}>
+            <Col xs={10}>
+              {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
+                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key} >{tag.name}</option>)
+                })}
+              </Form.Select>}
+            </Col>
+          </FormGroup>
         </>)
       // } else if (tags_group.banner == 'multi') {
       //   const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
