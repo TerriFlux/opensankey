@@ -100,7 +100,9 @@ export const findMaxLinkValue = (
       new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
     })
   } else {
-    new_max_node_value = (value_dict as SankeyLinkValue).value > new_max_node_value ? (value_dict as SankeyLinkValue).value : new_max_node_value
+    const tmp=(value_dict as SankeyLinkValue).value
+    new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
+    
   }
   return new_max_node_value
 }
@@ -114,7 +116,8 @@ export const getTotalLinks = (
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
     if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
       const tmp = getLinkValue(data, element).value
-      total += tmp
+      
+      total += (tmp)?tmp:0
     }
   })
   return total
@@ -482,7 +485,7 @@ export const default_sankey_data = (): SankeyData => {
         colorTag: '',
         // Ajout
         gradient: false,
-        dashed:false,
+        dashed:true,
 
         value: {},
 
@@ -635,8 +638,8 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 5
-    obj['display_value'] = ' '
+    obj['value'] = ''
+    obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
 
@@ -913,7 +916,7 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val) {
+          if (val && val.value!=undefined) {
             total_input += val.value
           } else {
             console.log('val is undefined')
@@ -931,7 +934,8 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val) {
+          
+          if (val && val.value!=undefined ) {
             total_output += val.value
           } else {
             console.log('val is undefined')
@@ -939,6 +943,7 @@ export const hideNullFluxNodes = (
         }
       }
     }
+    
 
     //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
     //Voir avec julien 
