@@ -5229,6 +5229,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_labels()
 
     drawLegend()
+
+    const test = document.getElementsByClassName('navbar')
+    let margin_top = 0
+    if (test && test.length > 0) {
+      margin_top = test[0].getBoundingClientRect().height
+      d3.select('#svg-container').style('margin-top',margin_top+'px')
+    }
+
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
     //   if (current) {
