@@ -71,15 +71,17 @@ def parse_excel(mfa_input):
     nodes = {node['idNode']:node for node in nodes.values()}
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
-    # nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
-    # nodes_sheet = mfa_input[NODES_SHEET]
-    dimension = 'Primaire'
-    if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-        dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
+    if not 'Dimensions' in nodeTags:
+        nodeTags['Dimensions'] = {
+            'group_name'  : 'Dimensions',
+            'show_legend' : 0,
+            'tags'        : { 'Primaire' : { 'name' : 'Primaire', 'selected' : 1}},
+            'banner'      : 'none'                   
+        }                
     agregation = {}
-    for dimension in nodeTags['Dimensions']['tags'].values():
-        agregation[dimension['name']] = {
-            'dimension' : dimension,
+    for dim in nodeTags['Dimensions']['tags'].values():
+        agregation[dim['name']] = {
+            'dimension' : dim['name'],
             'level'     : 1
         }
     return {
