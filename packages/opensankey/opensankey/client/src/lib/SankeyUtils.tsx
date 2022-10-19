@@ -100,7 +100,9 @@ export const findMaxLinkValue = (
       new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
     })
   } else {
-    new_max_node_value = (value_dict as SankeyLinkValue).value > new_max_node_value ? (value_dict as SankeyLinkValue).value : new_max_node_value
+    const tmp=(value_dict as SankeyLinkValue).value
+    new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
+    
   }
   return new_max_node_value
 }
@@ -114,7 +116,8 @@ export const getTotalLinks = (
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
     if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
       const tmp = getLinkValue(data, element).value
-      total += tmp
+      
+      total += (tmp)?tmp:0
     }
   })
   return total
@@ -635,7 +638,7 @@ const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
-    obj['value'] = 1/data.user_scale/100
+    obj['value'] = ''
     obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
@@ -907,7 +910,7 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val) {
+          if (val && val.value) {
             total_input += val.value
           } else {
             console.log('val is undefined')
@@ -925,7 +928,10 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val) {
+          console.log(val && val.value)
+          
+          if (val && val.value ) {
+            console.log('val.value')
             total_output += val.value
           } else {
             console.log('val is undefined')
@@ -937,6 +943,7 @@ export const hideNullFluxNodes = (
     //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
     //Voir avec julien 
     if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+      console.log('==')
       nodes[node.idNode].node_visible = false
     }
   })
