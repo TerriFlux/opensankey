@@ -302,7 +302,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         </thead>
         <tbody>
           {
-            Object.keys(data[elementTagName]).map(
+            Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -358,7 +358,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           }
         </tbody>
       </Table>
-      {Object.keys(data[elementTagName]).length > 0 ? tagSetting : <></>}
+      {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').length > 0 ? tagSetting : <></>}
     </>
   )
 }
