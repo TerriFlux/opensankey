@@ -44,9 +44,9 @@ test:
   variables:
     GIT_STRATEGY: none
   only:
-      - test
-      - prod
-      - main
+    - test
+    - prod
+    - main
   script:
     - source /home/gitlab-runner/gitlab/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
@@ -65,9 +65,9 @@ deploy_opensankey:
     FOLDER: /home/ubuntu/test_opensankey
     APP_NAME : test_opensankey
   only:
-      - test
-      - prod
-      - main
+    - test
+    - prod
+    - main
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
