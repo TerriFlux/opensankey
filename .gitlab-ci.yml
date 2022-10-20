@@ -20,7 +20,7 @@ cache:
 # only cache local items.
 variables:
   PIP_CACHE_DIR : "$CI_PROJECT_DIR/.cache/pip"
-  MFAData       : "/home/ubuntu/dev_opensankey/MFAData"
+  MFAData       : "/home/ubuntu/test_opensankey/MFAData"
 
 build:
   stage: build
