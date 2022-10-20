@@ -72,12 +72,12 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                       el.colorParameter = 'groupTag'
                       el.colorTag = tags_selected[0]
                     })
-                    Object.values(data['nodes']).forEach(el => {
+                    Object.values(data.links).forEach(el => {
                       el.colorParameter = 'groupTag'
                       el.colorTag = tags_selected[0]
                     })
                     data.colorMap = tags_selected[0]
-                    data['nodeTags'][tags_selected[0]].show_legend = true
+                    data.fluxTags[tags_selected[0]].show_legend = true
                   }
 
                   set_data({ ...data })
