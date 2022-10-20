@@ -64,10 +64,6 @@ deploy_opensankey:
     NODE_ENV: "production"
     FOLDER: /home/ubuntu/test_opensankey
     APP_NAME : test_opensankey
-  only:
-    - test
-    - prod
-    - main
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:                              
