@@ -569,6 +569,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       type='checkbox'
                       label='Majuscule'
+                      disabled={!isAllLabelVisible()}
                       checked={isAllNodeUpper()}
                       onChange={
                         evt => {
@@ -583,6 +584,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='checkbox'
                       label='Italique'
                       checked={isAllNodeItalic()}
+                      disabled={!isAllLabelVisible()}
                       onChange={
                         evt => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
