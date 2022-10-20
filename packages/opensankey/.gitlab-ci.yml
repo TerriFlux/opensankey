@@ -43,6 +43,10 @@ test:
     - dev, prod, test
   variables:
     GIT_STRATEGY: none
+  only:
+    - test
+    - prod
+    - main
   script:
     - source /home/gitlab-runner/gitlab/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
