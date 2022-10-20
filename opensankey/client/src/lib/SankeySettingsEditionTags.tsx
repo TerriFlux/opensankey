@@ -77,7 +77,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     // Méthode pour incrementer idGroup
     const idGroup = Object.keys(data[elementTagName]).length+1
     //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
-    data[elementTagName]['tag_group_' + String(new Date().getTime())] = {
+    const k='tag_group_' + String(new Date().getTime())
+    data[elementTagName][k] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
@@ -90,7 +91,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     if (Object.keys(data[elementTagName]).length === 1) {
       Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
     }
-    set_tags_group_key('tag_group_' + idGroup)
+    set_tags_group_key(k)
     set_data({ ...data })
   }
 
