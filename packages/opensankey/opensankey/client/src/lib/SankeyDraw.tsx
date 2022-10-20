@@ -229,9 +229,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     const v = (val as unknown) as SankeyLinkValue
     let visible = true
-    Object.keys(v.tags).forEach(tag_group => {
+    Object.keys(data.fluxTags).forEach(tag_group => {
       const selected_tag = v.tags[tag_group]
-      if (selected_tag && tag_group in fluxTags && !fluxTags[tag_group].tags[selected_tag].selected) {
+      if (selected_tag && selected_tag in fluxTags[tag_group].tags  && !fluxTags[tag_group].tags[selected_tag].selected) {
         visible = false
       }
     })
