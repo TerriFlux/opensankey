@@ -222,19 +222,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </option>)}
           </Form.Select>
         </Col>
-        <Col>
-          <FormCheck inline
-            type='switch'
-            disabled={multi_selected_nodes.current.length === 0 || multi_selected_nodes.current[0].colorParameter !== 'groupTag'}
-            checked={multi_selected_nodes.current.length > 0  && multi_selected_nodes.current[0].colorTag == tags_group_key}
-            label='Palette'
-            onChange={() => {
-              multi_selected_nodes.current.forEach(node => node.colorTag = (node.colorTag === tags_group_key) ? Object.keys(nodeTags)[0] : tags_group_key)
-
-              set_data({ ...data })
-            }}
-          />
-        </Col>
       </Form.Group>
       <Table striped bordered hover className='node_tags_affiliation' >
         <thead>
@@ -313,7 +300,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>Couleur</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -330,7 +317,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel>Forme</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>Forme</FormLabel>
                   </Col>
                   <Col xs={2}>
                     <FormCheck
@@ -365,7 +352,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Largeur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >Taille minimum Largeur</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -382,11 +369,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         }
                       } />
                   </Col>
-                  <Col>px</Col>
+                  <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Hauteur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >Taille minimum Hauteur</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -402,7 +389,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         }
                       } />
                   </Col>
-                  <Col>px</Col>
+                  <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
 
 
@@ -430,7 +417,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Position vertical</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
@@ -487,7 +474,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Position horizontal</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Position horizontal</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
@@ -544,7 +531,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Taille police</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -558,11 +545,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       }}
                     />
                   </Col>
-                  <Col>px</Col>
+                  <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel >Police</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Police</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
@@ -582,6 +569,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       type='checkbox'
                       label='Majuscule'
+                      disabled={!isAllLabelVisible()}
                       checked={isAllNodeUpper()}
                       onChange={
                         evt => {
@@ -596,6 +584,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='checkbox'
                       label='Italique'
                       checked={isAllNodeItalic()}
+                      disabled={!isAllLabelVisible()}
                       onChange={
                         evt => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
@@ -607,7 +596,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>
                     Coupure des labels
                     </FormLabel>
                   </Col>
@@ -629,7 +618,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       }}
                     />
                   </Col>
-                  <Col>px</Col>
+                  <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
 
 
@@ -655,7 +644,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Position vertical</FormLabel>
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Position vertical</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
@@ -710,7 +699,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position horizontal</FormLabel>
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Position horizontal</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllNodeTotal()}
@@ -765,7 +754,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Form.Group as={Row} >
                   <Col xs={4}>
 
-                    <FormLabel >Taille police
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Taille police
                     </FormLabel>
                   </Col>
                   <Col xs={5}>
@@ -780,7 +769,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       }}
                     />
                   </Col>
-                  <Col>px</Col>
+                  <Col style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
               </Form>
             </Tab>) : (<></>)}
@@ -807,7 +796,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel>Sélection Icon</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}}>Sélection Icon</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <Form.Select
@@ -829,7 +818,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >Couleur</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -846,7 +835,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Ratio ICON/NOEUD</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >Ratio ICON/NOEUD</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -863,7 +852,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                   <Col xs={4}>
-                    <FormLabel >%</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >%</FormLabel>
                   </Col>
                 </Form.Group>
               </Form>

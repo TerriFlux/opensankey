@@ -1345,7 +1345,7 @@ export const convert_data = (
           v['tags']['flux_types'] = 'computed_data'
         }
       }
-      if (v.value > flux_max) {
+      if (v.value && v.value > flux_max) {
         flux_max = v.value
       }
       return flux_max
@@ -1384,7 +1384,9 @@ export const convert_data = (
   if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10
   }
-
+  if (!data.show_banner) {
+    data.show_banner = true
+  }
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
@@ -1394,7 +1396,7 @@ export const convert_data = (
   }
   if (data.colorMap === 'no_colormap' ) {
     Object.values(data.links).forEach(el => {
-      el.colorParameter = 'groupTag'
+      el.colorParameter = 'local'
       el.colorTag = 'no_colormap'
     })
   }
