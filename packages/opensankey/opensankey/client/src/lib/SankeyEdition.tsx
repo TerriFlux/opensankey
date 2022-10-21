@@ -10,7 +10,7 @@ import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
@@ -727,6 +727,35 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </FormGroup>
           </Col>
         </Row>) : (<></>)}
+      { data.static_sankey ? (
+        <Row className='sankey-toolbar'>
+          <Col className='text-right'>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
+
+                {//Boutons Sélection classique des éléments 
+                }
+                <OverlayTrigger
+                  key={'tooltip-structur'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
+                  }
+                >
+                  <Button variant='info' onClick={() => { 
+                    console.log('toto')
+                    // data.fit_screen = true
+                    // d3.select('#svg').on('.zoom', null)
+                    // set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faCodeBranch} />
+                    Hello
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
+        </Row>) : (<></>)}
       { !data.static_sankey ? (
         <Row className='sankey-toolbar'>
           <Col>
@@ -839,6 +868,22 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     set_data({ ...data })
                   }} >
                     <FontAwesomeIcon icon={faMaximize} />
+                  </Button>
+                </OverlayTrigger>
+
+
+                <OverlayTrigger
+                  key={'tooltip-structur'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
+                  }
+                >
+                  <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
+                    data.show_structure = !data.show_structure
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faCodeBranch} />
                   </Button>
                 </OverlayTrigger>
 

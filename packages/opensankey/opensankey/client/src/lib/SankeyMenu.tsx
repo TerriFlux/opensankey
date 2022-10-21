@@ -3,14 +3,14 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Table, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
 import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue, test_link_value } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaArrowUp, FaArrowDown, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
@@ -358,7 +358,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
-  const { filter } = data.display_style
+  // const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -1049,10 +1049,10 @@ const Menu: FunctionComponent<MenuTypes> = (
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+        {/* <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
           preferenceCheck('Vis')
           set_data({ ...data })
-        }} />
+        }} /> */}
         <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
           preferenceCheck('Leg')
           set_data({ ...data })
@@ -3409,7 +3409,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
               </Accordion.Body>
             </Accordion.Item>
-            <Accordion.Item
+            {/* <Accordion.Item
               eventKey="Visualisation"
               style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
               onClick={
@@ -3593,7 +3593,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Tab>
                 </Tabs>
               </Accordion.Body>
-            </Accordion.Item>
+            </Accordion.Item> */}
             <Accordion.Item
               style={{ 'display': (view == 'none' && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
               eventKey="legend"
