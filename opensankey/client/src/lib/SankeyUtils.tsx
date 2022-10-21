@@ -507,6 +507,8 @@ export const default_sankey_data = (): SankeyData => {
       }
     },
 
+
+    show_banner:false,
     width: window.innerWidth - 40,
     height: window.innerHeight - 40,
 

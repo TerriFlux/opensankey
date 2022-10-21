@@ -10,7 +10,7 @@ import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
@@ -564,141 +564,185 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           alignItems: 'baseline',
           display: ((!(banner_grouptag.length > 0 || nb_agregation_level > 1)) && (!( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
-        <Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-          {(data.static_sankey && sous_filieres && !is_split) ? (<>
-            <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
-              <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-              <Form.Select style={{ width: '200px', color:'black' }}
-                onChange={setDiagram}
-                value={diagram}>
-                {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-              </Form.Select>
-            </Form.Group></>) : (<></>)}
-          {(data.static_sankey && sous_filieres && is_split) ? (<>
-            <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
-              <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-              <Form.Select style={{ width: '200px', color:'black' }}
-                onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
-                value={diagram}>
-                {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
-              </Form.Select>
-              {is_split ? 
-                (<Form.Select style={{ width: '200px', color:'black' }}
-                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-                    setDiagram(evt)
-                    set_diagram2(evt.target.value)
-                  }}
-                  value={diagram2}>
-                  {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
-                </Form.Select>) :(<></>)
-              }
-            </Form.Group></>) : (<></>)}
-          <Form.Group as={Col}
-            style={{
-              width: '250px',
-              marginLeft: '0px',
-              display: (banner_grouptag.length > 0 || nb_agregation_level > 1) ? 'block' : 'none'
-            }} lg="auto">
-            {banner_grouptag.length > 0 ? (<>
-              <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
-              {addAllDropDownLinks()}
-            </>)
-              : (<Col></Col>)
-            }
-            { nb_agregation_level > 1 ? (
-              <><FormLabel><b>Niveau de détail</b></FormLabel>
-                {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
-                  <Form.Select placeholder='all' 
-                    value={data.agregation.dimension} 
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-                      data.agregation.dimension = evt.target.value
-                      data.agregation.level = 1
-                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
-                      set_nodes_level(data, data.nodes, 1)
-                      //set_cube_dimension(evt.target.value)
-                      set_data({...data})
-                    }} 
-                  >
-                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                  </Form.Select>) : (<></>)}
-                <Form.Select id="selectionNode"
-                  style={{ color: 'black'}}
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      if (evt.target.value === '') {
-                        return
-                      }
-                      // if (evt.target.value === '-1') {
-                      //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
-                      //   if (json_data !== '') {
-                      //     const initial_data = JSON.parse(json_data as string)
-                      //     Object.values(data.nodes).forEach(n => {
-                      //       n.display = initial_data.nodes[n.idNode].display
-                      //       n.node_visible = initial_data.nodes[n.idNode].node_visible
-                      //     })
-                      //     //initial_data.static_sankey = true
-                      //     set_data({ ...data })
-                      //   }
-                      // }
-                      Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
-                      for (let level = 1; level <= +evt.target.value; level++) {
-                        set_nodes_level(data, data.nodes, level)
-                      }
-                      data.agregation.level =+evt.target.value
-                      set_data({ ...data })
-                    }
+
+        {
+          data.show_banner?
+            (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
+              {(data.static_sankey && sous_filieres && !is_split) ? (<>
+                <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+                  <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+                  <Form.Select style={{ width: '200px', color:'black' }}
+                    onChange={setDiagram}
+                    value={diagram}>
+                    {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+                  </Form.Select>
+                </Form.Group></>) : (<></>)}
+              {(data.static_sankey && sous_filieres && is_split) ? (<>
+                <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+                  <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+                  <Form.Select style={{ width: '200px', color:'black' }}
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
+                    value={diagram}>
+                    {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+                  </Form.Select>
+                  {is_split ? 
+                    (<Form.Select style={{ width: '200px', color:'black' }}
+                      onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+                        setDiagram(evt)
+                        set_diagram2(evt.target.value)
+                      }}
+                      value={diagram2}>
+                      {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
+                    </Form.Select>) :(<></>)
                   }
-                  value={data.agregation.level}
-                >{[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
-                </Form.Select></>) : (<Col></Col>)}
-          </Form.Group>
-          <Col lg="auto">
-            {additional_selector ? (
-              additional_selector
-            ) : (<></>)}
-          </Col>
+                </Form.Group></>) : (<></>)}
+              <Form.Group as={Col}
+                style={{
+                  width: '250px',
+                  marginLeft: '0px',
+                  display: (banner_grouptag.length > 0 || nb_agregation_level > 1) ? 'block' : 'none'
+                }} lg="auto">
+                {banner_grouptag.length > 0 ? (<>
+                  <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
+                  {addAllDropDownLinks()}
+                </>)
+                  : (<Col></Col>)
+                }
+                { nb_agregation_level > 1 ? (
+                  <><FormLabel><b>Niveau de détail</b></FormLabel>
+                    {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
+                      <Form.Select placeholder='all' 
+                        value={data.agregation.dimension} 
+                        onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+                          data.agregation.dimension = evt.target.value
+                          data.agregation.level = 1
+                          Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
+                          set_nodes_level(data, data.nodes, 1)
+                          //set_cube_dimension(evt.target.value)
+                          set_data({...data})
+                        }} 
+                      >
+                        {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
+                          return (<option key={i} value={tag_key}>{tag.name}</option>)
+                        })}
+                      </Form.Select>) : (<></>)}
+                    <Form.Select id="selectionNode"
+                      style={{ color: 'black'}}
+                      onChange={
+                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          if (evt.target.value === '') {
+                            return
+                          }
+                          // if (evt.target.value === '-1') {
+                          //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
+                          //   if (json_data !== '') {
+                          //     const initial_data = JSON.parse(json_data as string)
+                          //     Object.values(data.nodes).forEach(n => {
+                          //       n.display = initial_data.nodes[n.idNode].display
+                          //       n.node_visible = initial_data.nodes[n.idNode].node_visible
+                          //     })
+                          //     //initial_data.static_sankey = true
+                          //     set_data({ ...data })
+                          //   }
+                          // }
+                          Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
+                          for (let level = 1; level <= +evt.target.value; level++) {
+                            set_nodes_level(data, data.nodes, level)
+                          }
+                          data.agregation.level =+evt.target.value
+                          set_data({ ...data })
+                        }
+                      }
+                      value={data.agregation.level}
+                    >{[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
+                    </Form.Select></>) : (<Col></Col>)}
+              </Form.Group>
+              <Col lg="auto">
+                {additional_selector ? (
+                  additional_selector
+                ) : (<></>)}
+              </Col>
 
-          {//----------------------------
-          }
+              {//----------------------------
+              }
 
-          <Form.Group as={Col}
-            style={{ color: 'black', marginLeft: '5px', width: '250px', display: ( node_filter) ? 'block' : 'none' }}
-            lg="auto"
-          >
-            {( node_filter) ? (
-              <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>Filtrage des noeuds</b></FormLabel>
-            ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>Filtrage des noeuds</FormLabel>)}
+              <Form.Group as={Col}
+                style={{ color: 'black', marginLeft: '5px', width: '250px', display: ( node_filter) ? 'block' : 'none' }}
+                lg="auto"
+              >
+                {( node_filter) ? (
+                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>Filtrage des noeuds</b></FormLabel>
+                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>Filtrage des noeuds</FormLabel>)}
 
-            { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-              {addAllDropDownNode()}</>
-            ) : (<>
-              <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-            }
-          </Form.Group>
+                { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+                  {addAllDropDownNode()}</>
+                ) : (<>
+                  <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+                }
+              </Form.Group>
 
-          {//----------------------------
-          }
-          <Form.Group as={Col} style={{ width: '250px', marginLeft: '0px', display: ( flux_filter) ? 'block' : 'none' }} lg="auto">
-            { flux_filter ? (
-              <>
-                <FormLabel style={{ justifyContent: 'center' }}><b>Filtrage des flux</b></FormLabel>
-                {addAllDropDownFlux(data.fluxTags, data, set_data)}
-              </>)
-              : (<>
-                <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>Filtrage des flux</FormLabel>
-                <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-            }
-          </Form.Group>
-          {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
-          {window.sankey && window.sankey.excel ? (
-            <Form.Group as={Col} lg="auto" >
-              <FormLabel className="text-center" >Téléchargements</FormLabel>
-              <Button href={window.sankey.excel}>Résultats</Button>
-            </Form.Group>
-          ) : (<></>)}
-        </Row>
+              {//----------------------------
+              }
+              <Form.Group as={Col} style={{ width: '250px', marginLeft: '0px', display: ( flux_filter) ? 'block' : 'none' }} lg="auto">
+                { flux_filter ? (
+                  <>
+                    <FormLabel style={{ justifyContent: 'center' }}><b>Filtrage des flux</b></FormLabel>
+                    {addAllDropDownFlux(data.fluxTags, data, set_data)}
+                  </>)
+                  : (<>
+                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>Filtrage des flux</FormLabel>
+                    <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+                }
+              </Form.Group>
+              {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
+              {window.sankey && window.sankey.excel ? (
+                <Form.Group as={Col} lg="auto" >
+                  <FormLabel className="text-center" >Téléchargements</FormLabel>
+                  <Button href={window.sankey.excel}>Résultats</Button>
+                </Form.Group>
+              ) : (<></>)}
+            </Row>
+            <Row>
+              <Col className='text-right'>
+                <Button variant='dark' size='sm'
+                  onClick={()=>{
+                    data.show_banner=false
+                    set_data({...data})
+                  }}
+                >
+                  <FontAwesomeIcon icon={faAngleDoubleUp} />
+                </Button>
+              </Col>
+            </Row></>)
+            :
+            <Row>
+              <Col >
+                {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
+                  return (<Form.Label>{el.group_name} : {Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
+
+                })}</>):(<></>)}
+              </Col>
+              <Col className='text-right'>
+                <FormGroup as={Col}>
+                  <Button variant='outline-dark' size='sm'
+                    onClick={()=>{
+                      data.show_banner=true
+                      set_data({...data})
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faAngleDoubleDown} />
+                  </Button>
+
+                </FormGroup>
+                
+              </Col>
+            </Row>
+        }
+        
+
+
+
+        
       </div>
       { data.static_sankey ? (
         <Row className='sankey-toolbar'>
