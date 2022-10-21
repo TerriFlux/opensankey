@@ -462,7 +462,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           const was_empty=test_value(value_selected_parameter().value)===''
                           let val = Object(selected_link.current.value)
                           multi_selected_links.current.map(d => {
-                            d.dashed=!was_empty
+                            d.dashed=(was_empty)?false:d.dashed
                             val = d.value
                             Object.values(tags_selected).forEach(tag => {
                               if (val[tag] === undefined) {
