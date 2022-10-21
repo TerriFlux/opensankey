@@ -4700,6 +4700,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return 'translate(' + dx + ',' + (i * 30 + 30) + ')'
         })
         .on('mouseover',(event,d)=>{
+
+          //Recherche les noeuds liés à des flux dont on survole la légende d'étiquette
+          const nodes_tied_to_link_hovered=([] as string [])
+          Object.values(data.links).filter(l=>{
+            const tmp=getLinkValue(data,l.idLink)
+            return tmp.tags[tag_group[0]]==d[0]
+          }).forEach(el=>{
+            nodes_tied_to_link_hovered.push(el.idSource)
+            nodes_tied_to_link_hovered.push(el.idTarget)
+          })
+          //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
           Object.values(data.links).filter(l=>{
             const tmp=getLinkValue(data,l.idLink)
             return tmp.tags[tag_group[0]]!=d[0]
@@ -4708,21 +4719,46 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
             d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.1)
           })
+
           //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
           const tmp=Object.entries(data.nodeTags).filter(n=>{
             return n[1].show_legend
           })
+
+          let link_tied_to_node_hovered=([] as string[])
           const tmp2=(tmp.length>0)?tmp[0][0]:''
+
           if(tmp.length>0){
+            //Récupère les liens entrant/sortant  des noeuds dont on survole l'étiquette
             Object.values(data.nodes).filter(n=>{
-              return (n.tags[tmp2] && !n.tags[tmp2].includes(d[0]))
+              return (n.tags[tmp2] && n.tags[tmp2].includes(d[0]))
+            }).forEach(el=>{
+              link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.outputLinksId)
+              link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.inputLinksId)
+            })
+
+            //Reduit l'opacité de tous les flux qui ne sont pas rattaché à un noeuds survolé par l'étiquette
+            Object.values(data.links).filter(l=>{
+              return link_tied_to_node_hovered.includes(l.idLink)
+            }).forEach(el=>{
+              d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.85)
+              d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.85)
+              d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.85)
+            })
+
+
+            //Reduit l'opacité de tous les noeuds qui n'ont pas l'étiquette
+            Object.values(data.nodes).filter(n=>{
+              return (n.tags[tmp2] && !n.tags[tmp2].includes(d[0]) && !nodes_tied_to_link_hovered.includes(n.idNode))
             }).forEach(el=>{
               d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
             })
           }else{
-            Object.values(data.nodes).forEach(el=>{
-              d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
-            })
+            Object.values(data.nodes)
+              .filter(n=>!nodes_tied_to_link_hovered.includes(n.idNode))
+              .forEach(el=>{
+                d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
+              })
           }
           
         })
