@@ -949,7 +949,7 @@ export const hideNullFluxNodes = (
 
     //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
     //Voir avec julien 
-    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0) {
+    if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0 && !sankey_data.display_style.null_flux) {
       nodes[node.idNode].node_visible = false
     }
   })

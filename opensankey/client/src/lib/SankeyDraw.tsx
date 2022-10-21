@@ -2247,7 +2247,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // target -> right
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (link.arrow && tmp !== '') {
+        if (link.arrow && tmp !== ''  && tmp!=0) {
           xt = xt + 10
         }
       } else {
@@ -2256,7 +2256,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         xs += scale(node_size_s_width)
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (link.arrow && tmp !== '' ) {
+        if (link.arrow && tmp !== ''  && tmp!=0 ) {
           xt = xt - 10
         }
       }
@@ -2270,7 +2270,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         //ys = ys
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (link.arrow && tmp !== '') {
+        if (link.arrow && tmp !== ''  && tmp!=0) {
           yt = yt + 10
         }
       } else {
@@ -2278,7 +2278,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
         ys += scale(node_size_s_height)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (link.arrow && tmp !== '') {
+        if (link.arrow && tmp !== ''  && tmp!=0) {
           yt = yt - 10
         }
       }
@@ -2294,7 +2294,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
           yt += scale(node_size_t_height)
 
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             yt = yt + 10
           }
         } else {
@@ -2303,7 +2303,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
 
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             yt = yt - 10
           }
         }
@@ -2316,7 +2316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
           yt += scale(node_size_t_height)
 
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             yt = yt + 10
           }
         } else {
@@ -2326,7 +2326,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
           xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
 
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             yt = yt - 10
           }
         }
@@ -2341,7 +2341,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
           xt += scale(node_size_t_width)
           yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             xt += 10
           }
         } else {
@@ -2350,7 +2350,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           ys += scale(node_size_s_height)
           xt += scale(node_size_t_width)
           yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             xt += 10
           }
         }
@@ -2360,7 +2360,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
 
           yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             xt = xt - 10
           }
         } else {
@@ -2368,7 +2368,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
           ys += scale(node_size_s_height)
           yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-          if (link.arrow && tmp !== '') {
+          if (link.arrow && tmp !== ''  && tmp!=0) {
             xt = xt - 10
           }
         }
