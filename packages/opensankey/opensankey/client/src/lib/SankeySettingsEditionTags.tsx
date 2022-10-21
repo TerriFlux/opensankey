@@ -75,10 +75,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
     // Méthode pour incrementer idGroup
-    const listId: number[] = []
-    Object.keys(data[elementTagName]).forEach(elt => listId.push(Number(elt.replace('tag_group_', ''))))
-    const idGroup = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    data[elementTagName]['tag_group_' + idGroup] = {
+    const idGroup = Object.keys(data[elementTagName]).length+1
+    //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
+    const k='tag_group_' + String(new Date().getTime())
+    data[elementTagName][k] = {
       group_name: 'Étiquette Group ' + idGroup,
       show_legend: false,
       color_map: 'jet',
@@ -91,16 +91,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     if (Object.keys(data[elementTagName]).length === 1) {
       Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
     }
-    set_tags_group_key('tag_group_' + idGroup)
+    set_tags_group_key(k)
     set_data({ ...data })
   }
 
   const handleDelTag = (n: string) => {
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
-    const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
+    //const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
     delete data[elementTagName][tags_group_key].tags[n]
 
-    Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
+    //Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
 
     set_data({ ...data })
   }
@@ -114,7 +114,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         if (n.colorTag === tags_group_key) {
           n.colorTag = ''
         }
-        delete n.tags[tags_group_key]
+        if (elementNameProp === 'nodes') {
+          delete n.tags[tags_group_key]
+        }
       })
     if (Object.keys(data[elementTagName]).length > 0) {
       const lastElmt = Object.keys(data[elementTagName])[Object.keys(data[elementTagName]).length - 1]
@@ -303,7 +305,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         </thead>
         <tbody>
           {
-            Object.keys(data[elementTagName]).map(
+            Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -359,7 +361,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           }
         </tbody>
       </Table>
-      {Object.keys(data[elementTagName]).length > 0 ? tagSetting : <></>}
+      {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').length > 0 ? tagSetting : <></>}
     </>
   )
 }
