@@ -95,7 +95,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_links={multi_selected_links}
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_label={multi_selected_label}
-            callback={SankeyUtils.processExample}
+            callback={()=>0}
           /></>}
         example_menu={<>
           <ExempleItem
@@ -107,7 +107,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_links={multi_selected_links}
             multi_selected_label={multi_selected_label}
-            callback={SankeyUtils.processExample}
+            callback={()=>0}
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
         logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
