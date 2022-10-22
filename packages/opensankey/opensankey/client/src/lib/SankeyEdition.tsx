@@ -757,7 +757,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   <FontAwesomeIcon icon={faAngleDoubleUp} />
                 </Button>
               </Col>
-            </Row>
+            </Row></>)
+            :
             <Row>
               <Col >
                 {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
@@ -779,7 +780,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 </FormGroup>
                 
               </Col>
-            </Row></>) : (<></>)
+            </Row>
         }
         
       </div>
