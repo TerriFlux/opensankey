@@ -811,35 +811,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </FormGroup>
           </Col>
         </Row>) : (<></>)}
-      { data.static_sankey ? (
-        <Row className='sankey-toolbar'>
-          <Col className='text-right'>
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
-
-                {//Boutons Sélection classique des éléments 
-                }
-                <OverlayTrigger
-                  key={'tooltip-structur'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
-                  }
-                >
-                  <Button variant='info' onClick={() => { 
-                    console.log('toto')
-                    // data.fit_screen = true
-                    // d3.select('#svg').on('.zoom', null)
-                    // set_data({ ...data })
-                  }} >
-                    <FontAwesomeIcon icon={faCodeBranch} />
-                    Hello
-                  </Button>
-                </OverlayTrigger>
-              </ButtonGroup>
-            </FormGroup>
-          </Col>
-        </Row>) : (<></>)}
       { !data.static_sankey ? (
         <Row className='sankey-toolbar'>
           <Col>
