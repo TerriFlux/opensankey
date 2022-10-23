@@ -569,19 +569,12 @@ const Menu: FunctionComponent<MenuTypes> = (
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
-            Object.values(data.links).forEach( l => {
-              
+            Object.values(data.links).forEach( l => 
               d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-
-            } 
             )
             multi_selected_links.current.forEach( l => {
               const sel = d3.selectAll('#gg_' + l.idLink + ' rect')
               sel.attr('fill-opacity', '1')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-
-              
             })
             setForceUpdate(!forceUpdate) 
           }}
