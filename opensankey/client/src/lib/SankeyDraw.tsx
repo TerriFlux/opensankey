@@ -967,22 +967,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         if (multi_selected_links.current.includes(d)) {
           multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-          d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-          d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-          d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-          d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-          d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-          d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
-
+          d3.selectAll('#gg_' + d.idLink + ' rect').attr('fill-opacity', '0')
         } else {
           multi_selected_links.current.push(d)
-          d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
-          d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-          d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('cursor', 's-resize')
-          d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-          d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-          d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
-
+          d3.selectAll('#gg_' + d.idLink + ' rect').attr('fill-opacity', '1')
         }
 
         if ( accordion_ref && accordion_ref.current) {
@@ -1029,16 +1017,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         data.nodeTags, d, error_msg
       )
     })
-
-    d3.selectAll('.gg_links')
-      .filter(l=>{
-        return Number(d3.select('#'+(l as SankeyLink).idLink).attr('stroke-opacity'))!=0
-      })
-      .each(function (l) {
-        add_drag_link_zone((l as SankeyLink),data.nodes)
-      })
-   
-
     if (error_msg && error_msg.text) {
       alert(error_msg.text)
     }
@@ -1453,15 +1431,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     dragged: SVGPathElement | null,
     event: d3.D3DragEvent<Element, SankeyLink, unknown>
   ) => {
-    //Peut etre appelé sur un drag de path qui a directement l'id du link 
-    //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
-    const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
+    const idLink = d3.select(dragged).attr('id')
     const p2 = d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))
     const linked_node = identify_node(nodes, links, links[idLink], p2)
     if (linked_node === undefined) {
       return
     }
     const node = nodes[linked_node.node_id]
+
     if (linked_node.type === 'source') {
       const source_order = node.outputLinksId.indexOf(idLink)
       let output_offset = 0
@@ -1661,238 +1638,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   }
 
-
-  const add_drag_link_zone=(
-    link: SankeyLink,
-    nodes: { [node_id: string]: SankeyNode }
-  )=>{
-    d3.selectAll('#drag_zone_s_' + link.idLink).remove()
-    d3.selectAll('#drag_zone_t_' + link.idLink).remove()
-    if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) ) {
-
-      let error_msg: { text: string | undefined } | undefined
-      
-      const source_node=nodes[link.idSource]
-      const target_node=nodes[link.idTarget]
-      const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, data.links, (data.nodeTags as TagsCatalog))
-      
-      const pos_d=drag_zone_position(link,xs,ys,xt,yt)
-      d3.select('#gg_' + link.idLink)
-        .append('rect')
-        .attr('id', 'drag_zone_s_' + link.idLink)
-        .attr('class','drag_zone')
-        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
-        .attr('width', 10)
-        .attr('height', 10)
-        .attr('stroke','black')
-        .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
-        .attr('fill','black')
-        .attr('fill-opacity','0')
-        .attr('transform',pos_d[0])
-        .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
-              drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event)
-              Object.values(display_links).forEach(
-                (link: SankeyLink) => {
-                  d3.select('#' + link.idLink).attr('d',
-                    () => {
-                      return drawCurve(data,
-                        display_nodes, display_links, data.display_style,
-                        data.nodeTags, link,
-                        error_msg
-                      )
-                    }
-                  )
-                }
-              )
-            }            
-          })
-        
-        )
-
-      d3.select('#gg_' + link.idLink)
-        .append('rect')
-        .attr('id', 'drag_zone_t_' + link.idLink)
-        .attr('class','drag_zone')
-        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
-        .attr('width', 10)
-        .attr('height', 10)
-        .attr('stroke','black')
-        .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
-        .attr('fill','black')
-        .attr('fill-opacity','0')
-        .attr('transform',pos_d[1])
-        .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
-              drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event)
-              Object.values(display_links).forEach(
-                (link: SankeyLink) => {
-                  d3.select('#' + link.idLink).attr('d',
-                    () => {
-                      return drawCurve(data,
-                        display_nodes, display_links, data.display_style,
-                        data.nodeTags, link,
-                        error_msg
-                      )
-                    }
-                  )
-                }
-              )
-            }    
-            
-          })
-        
-        )
-
-    }
-  }
-
-
-  const drag_zone_position=(link:SankeyLink,
-    xs: number,
-    ys: number,
-    xt: number,
-    yt: number
-  )=>{      
-    const pos_drag_zone_left = 1 / 50
-
-    const pos_drag_zone_right = 49 / 50
-    
-    const link_value = test_link_value(data, display_nodes, link, data.nodeTags)
-    const tmp=(link_value=='')?1:link_value
-
-
-    if (link.orientation === 'hh' && link.recycling) {
-      // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
-      if (!link.vert_shift) {
-        link.vert_shift = 0
-      }
-      
-      if (xt < xs) {
-        const x_left = xt - default_horiz_shift + pos_drag_zone_left // x14 
-        const x_right = xs + default_horiz_shift + pos_drag_zone_right  // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
-        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-        return [vert, left, right]
-      } else {
-        const x_right = xt + default_horiz_shift + pos_drag_zone_right  // x14 
-        const x_left = xs - default_horiz_shift + pos_drag_zone_left // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
-        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-        return [vert, left, right]
-      }
-    } else if (link.orientation === 'vv' && link.recycling) {
-      // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
-     
-      if (!link.vert_shift) {
-        link.vert_shift = 0
-      }
-      const y_left = yt - default_horiz_shift + pos_drag_zone_left - scale(tmp) // x14 
-      const y_right = ys + default_horiz_shift + pos_drag_zone_right + scale(tmp) // x2 
-      const x_vert = Math.max(xs, xt) + scale(2 * tmp) + link.vert_shift // y8 
-      const vert = 'translate(' + (x_vert - default_handle_size / 2) + ', ' + (y_left + (y_right - y_left) / 2 - default_handle_size / 2) + ')'
-      const left = 'translate(' + (xt + (x_vert - xt) / 2 - default_handle_size / 2) + ' ,' + (y_left - default_handle_size / 2) + ')'
-      const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
-      return [vert, left, right]
-    } else if (link.orientation === 'hh') {
-
-      const shift_left = 'translate(' + (xs + (xt - xs) * pos_drag_zone_left) + ', ' + (ys - default_handle_size / 2) + ')'
-      const shift_right = 'translate(' + (xs + (xt - xs) * pos_drag_zone_right) + ', ' + (yt - default_handle_size / 2) + ')'
-      return [shift_left, shift_right]
-    } else if (link.orientation === 'vv') {
-      
-      const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_left) + ')'
-      const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_right) + ')'
-      return [shift_left, shift_right]
-
-    } else if (link.orientation === 'vh') {
-      const x_center_draw = xs
-      const y_center_draw = yt
-      return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']
-    } else if (link.orientation === 'hv') {
-      const x_center_draw = xt
-      const y_center_draw = ys
-      return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']
-    }
-    return ['']
-  }
-
-  const center_handle_position=(link:SankeyLink,
-    xs: number,
-    ys: number,
-    xt: number,
-    yt: number
-  )=>{      
-    const center_handle = 1/2
-    const link_value = test_link_value(data, display_nodes, link, data.nodeTags)
-    const tmp=(link_value=='')?1:link_value
-
-    const handle_pos = handles_positions(data.links, link, xs, ys, xt, yt)
-
-    const [xs2,ys2]=handle_pos[0].replace('translate(','').replace(')','').split(',')
-    const [xt2,yt2]=(handle_pos[1].replace('translate(','').replace(')','').split(','))
-    const sx=Number(xs2)
-    const sy=Number(ys2)
-    const tx=Number(xt2)
-    const ty=Number(yt2)
-    if (link.orientation === 'hh') {
-
-      const shift_left = 'translate(' + (sx + (tx - sx) * center_handle) + ', ' + (sy - default_handle_size+((ty-sy)+scale(tmp)) / 2) + ')'
-      return [shift_left]
-    } else if (link.orientation === 'vv') {
-      
-      const shift_left = 'translate(' + (sx - default_handle_size+((tx-sx)+scale(tmp)) / 2) + ', ' + (sy + (ty - sy) * center_handle) + ')'
-      return [shift_left]
-
-    }
-    return ['']
-  }
-
-  const add_center_handle=(link:SankeyLink,
-    selected_tags: { [tag_group: string]: string[] },
-  )=>{
-    d3.selectAll('#center_handle_' + link.idLink).remove()
-    if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) && (link.orientation=='hh' || link.orientation=='vv') && !link.recycling ) {
-    
-      const source_node=data.nodes[link.idSource]
-      const target_node=data.nodes[link.idTarget]
-      const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog))
-
-      const pos_d=center_handle_position(link,xs,ys,xt,yt)
-      d3.select('#gg_' + link.idLink)
-        .append('circle')
-        .attr('id', 'center_handle_' + link.idLink)
-        .attr('class','center_handle')
-        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
-        .attr('r','5')
-        .attr('stroke','black')
-        .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
-        .attr('fill','black')
-        .attr('transform',pos_d[0])
-        .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-        .call(d3.drag<SVGCircleElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
-              const shift_handle=d3.selectAll('#gg_'+link.idLink+' .handle').nodes()
-              drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event)
-              drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event)
-            }            
-          })
-        )
-    }
-
-  }
   const add_shift_handle = (
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
@@ -1906,11 +1651,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       d3.select('#gg_' + link.idLink)
         .append('rect')
         .attr('id', shift_name + link.idLink)
-        .attr('class','handle')
         .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
-        .attr('cursor',(multi_selected_links.current.includes(link)&& !mode_visualisation)?'ew-resize':'pointer')
+        // .on('mouseover', function () {
+        //   d3.select(this).attr('cursor', 'grab')
+        //   d3.select(this).attr('fill-opacity', '0.7')
+        // })
+        // .on('mouseout', function () {
+        //   d3.select(this).attr('fill-opacity', '1')
+        // })
+        .attr('cursor', 'ew-resize')
         .call(d3.drag<SVGRectElement, unknown>()
           .subject(Object).on('drag', function (event) {
             if(multi_selected_links.current.includes(link) && !mode_visualisation){
@@ -2406,14 +2157,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags)
-    // handles_positions(links, link, xs, ys, xt, yt)
+    handles_positions(links, link, xs, ys, xt, yt)
 
     add_shift_handles(
       link, nodes, links,
       display_style, nodeTags, xs, ys, xt, yt
     )
-    add_drag_link_zone(link,nodes)
-    add_center_handle(link,nodeTags)
+
     if (link_value > display_style.filter_label) {
       drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt)
     }
