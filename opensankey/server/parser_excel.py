@@ -153,8 +153,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         fluxTag = DATA_TYPE_LABEL
                     row_flux_tags.append('')
                 existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-                val = 5
-                display_val = ' '
+                val = None
+                display_val = ''
                 if len(existing_links) > 0:
                     new_link = existing_links[0]
                     set_value(row_data_tags,row_flux_tags,fluxTags,0,new_link['value'], val,display_val)
