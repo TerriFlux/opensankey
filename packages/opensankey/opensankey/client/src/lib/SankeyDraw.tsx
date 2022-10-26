@@ -1462,11 +1462,50 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return
     }
     const node = nodes[linked_node.node_id]
+    let id_input_filtered=node.inputLinksId.filter(id=>{
+      
+      return id && data.links[id] && link_visible(data.links[id],data) &&!data.links[id].recycling})
+    let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data)&&!data.links[id].recycling)
+
+    const link_dragged=data.links[idLink]
+    let io=''
+       
     if (linked_node.type === 'source') {
-      const source_order = node.outputLinksId.indexOf(idLink)
+      
+      if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
+        if(data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x){
+          io='right'
+        }else{
+          io='left'
+        }
+      }else if(link_dragged.orientation=='vv' ||link_dragged.orientation=='vh'){
+        if(data.nodes[link_dragged.idTarget].y<data.nodes[linked_node.node_id].y){
+          io='top'
+        }else{
+          io='bottom'
+        }
+      }
+      //Filtre les liens qui arrivent du même coté que le liens dragged
+      id_output_filtered=id_output_filtered.filter(id=>{
+        let good_orientation=false
+        if(io=='right'){
+          good_orientation=data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        }else if(io=='left'){
+          good_orientation=data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        }else if (io=='top'){
+          good_orientation=data.nodes[data.links[id].idTarget].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        }else if(io=='bottom'){
+          good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        }
+        return good_orientation 
+      })
+
+
+      const true_source_order = node.outputLinksId.indexOf(idLink)
+      const source_order = id_output_filtered.indexOf(idLink)
       let output_offset = 0
-      for (let i = 1; i < node.outputLinksId.length; i++) {
-        const link = links[node.outputLinksId[i - 1]]
+      for (let i = 1; i < id_output_filtered.length; i++) {
+        const link = links[id_output_filtered[i - 1]]
         if (i > source_order) {
           break
         }
@@ -1474,22 +1513,32 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         tmp=(tmp)?tmp:0
         output_offset += tmp
       }
-      const number_of_links = node.outputLinksId.length
+      const number_of_links = id_output_filtered.length
+
       const value = getLinkValue(data, idLink).value
+
+      let next_link_index=-1
+      let prec_link_index=-1
+      if(source_order>0){
+        prec_link_index=node.outputLinksId.indexOf(id_output_filtered[source_order-1])
+      }
+      if(source_order<number_of_links-1){
+        next_link_index=node.outputLinksId.indexOf(id_output_filtered[source_order+1])
+      }
       if(value){
         if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
           if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
-            swap(node.outputLinksId, source_order, source_order + 1)
+            swap(node.outputLinksId, true_source_order, next_link_index)
           }
           if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
-            swap(node.outputLinksId, source_order, source_order - 1)
+            swap(node.outputLinksId, true_source_order, prec_link_index)
           }
         } else if (links[idLink].orientation === 'vv') {
           if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
-            swap(node.outputLinksId, source_order, source_order + 1)
+            swap(node.outputLinksId, true_source_order, next_link_index)
           }
           if (source_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(output_offset)) {
-            swap(node.outputLinksId, source_order, source_order - 1)
+            swap(node.outputLinksId, true_source_order, prec_link_index)
           }
         }
       }
@@ -1497,7 +1546,39 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     }
     if (linked_node.type === 'target') {
-      const target_order = node.inputLinksId.indexOf(idLink)
+
+      if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
+        if(data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x){
+          io='right'
+        }else{
+          io='left'
+        }
+      }else if(link_dragged.orientation=='vv' ||link_dragged.orientation=='vh'){
+        if(data.nodes[link_dragged.idSource].y<data.nodes[linked_node.node_id].y){
+          io='top'
+        }else{
+          io='bottom'
+        }
+      }
+      //Filtre les liens qui arrivent du même coté que le liens dragged
+      
+      id_input_filtered=id_input_filtered.filter(id=>{
+        let good_orientation=false
+        if(io=='right'){
+          good_orientation=data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        }else if(io=='left'){
+          good_orientation=data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        }else if (io=='top'){
+          good_orientation=data.nodes[data.links[id].idSource].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        }else if(io=='bottom'){
+          good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        }
+        return good_orientation 
+      })
+
+
+      const true_target_order = node.inputLinksId.indexOf(idLink)
+      const target_order = id_input_filtered.indexOf(idLink)
       let input_offset = 0
       for (let i = 1; i < node.inputLinksId.length; i++) {
         if (i > target_order) {
@@ -1507,22 +1588,33 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         tmp=(tmp)?tmp:0
         input_offset +=tmp
       }
-      const number_of_links = node.inputLinksId.length
+      const number_of_links = id_input_filtered.length
       const value = getLinkValue(data, idLink).value
+
+      //Recheche la les liens suivant et précédent qui sont du même coté pour pour ensuite les swap
+      let next_link_index=-1
+      let prec_link_index=-1
+      if(target_order>0){
+        prec_link_index=node.inputLinksId.indexOf(id_input_filtered[target_order-1])
+      }
+      if(target_order<number_of_links-1){
+        next_link_index=node.inputLinksId.indexOf(id_input_filtered[target_order+1])
+      }
+      console.log(id_input_filtered)
       if(value){
         if (links[idLink].orientation === 'hh') {
           if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
-            swap(node.inputLinksId, target_order, target_order + 1)
+            swap(node.inputLinksId, true_target_order, next_link_index)
           }
           if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
-            swap(node.inputLinksId, target_order, target_order - 1)
+            swap(node.inputLinksId, true_target_order, prec_link_index)
           }
         } else if (links[idLink].orientation === 'vv') {
           if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
-            swap(node.inputLinksId, target_order, target_order + 1)
+            swap(node.inputLinksId, true_target_order, next_link_index)
           }
           if (target_order > 0 && d3.pointer(event, (d3.select('#g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(input_offset)) {
-            swap(node.inputLinksId, target_order, target_order - 1)
+            swap(node.inputLinksId, true_target_order, prec_link_index)
           }
         }
       }
