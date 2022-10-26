@@ -4422,7 +4422,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // Modification des arrows après l'animation
         const arrow=d3.select('#arrow_'+idLink)
         if(arrow!==undefined && arrow!= null){        
-          arrow.select('path').style('fill',(data.links[idLink].gradient)?data.nodes[idTarget].color:d3.select(this).attr('stroke'))
+          const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget]):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+          const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
+          if(t){
+            arrow.select('path').style('fill',t)
+          }
         }
         // reaffichage des link value après l'animation
         d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
