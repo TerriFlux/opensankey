@@ -8,7 +8,7 @@ import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodeProp
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue, test_link_value } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -3697,7 +3697,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           select_link={() => null}
 
           link_text={link_text}
-          test_link_value={test_link_value}
+          // test_link_value={test_link_value}
           // set_show_nav={set_show_nav}
           // set_nav_item_active={set_nav_item_active}
           // set_sub_nav_item_active={set_sub_nav_item_active}
