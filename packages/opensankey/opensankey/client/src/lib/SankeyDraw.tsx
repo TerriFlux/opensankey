@@ -2,10 +2,10 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValueDict, SankeyLinkValue } from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link,link_visible,test_link_value,link_color } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 import LZString from 'lz-string'
 
@@ -20,7 +20,7 @@ const SankeyDrawPropTypes = {
 
   select_link: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
-  test_link_value: PropTypes.func.isRequired,
+  // test_link_value: PropTypes.func.isRequired,
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
@@ -86,7 +86,7 @@ type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   link_text,
-  test_link_value,
+  // test_link_value,
   set_data = SankeyDrawDefaultProps.set_data,
   select_node = SankeyDrawDefaultProps.select_node,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
@@ -193,143 +193,143 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     return colorNode
   }
-  const link_visible = (l: SankeyLink, data_s: SankeyData) => {
-    const { dataTags, fluxTags } = data_s
-    if (data_s.show_structure) {
-      if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
-        return false
-      }
-    }
-    if (!data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget].node_visible) {
-      return false
-    }
-    let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
-    const listKey = [] as string[]
-    let missing_key = false
-    Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
-      const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-      if (selected_tags.length == 0 || missing_key) {
-        missing_key = true
-        return
-      }
-      listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
-    })
-    if (missing_key) {
-      return false
-    }
+  // const link_visible = (l: SankeyLink, data_s: SankeyData) => {
+  //   const { dataTags, fluxTags } = data_s
+  //   if (data_s.show_structure) {
+  //     if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
+  //       return false
+  //     }
+  //   }
+  //   if (!data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget].node_visible) {
+  //     return false
+  //   }
+  //   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
+  //   const listKey = [] as string[]
+  //   let missing_key = false
+  //   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+  //     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
+  //     if (selected_tags.length == 0 || missing_key) {
+  //       missing_key = true
+  //       return
+  //     }
+  //     listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+  //   })
+  //   if (missing_key) {
+  //     return false
+  //   }
 
-    for (const i in listKey) {
-      val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
-      if ( val === undefined) {
-        break
-      }
-    }
-    if ( val === undefined) {
-      return false
-    }
-    const v = (val as unknown) as SankeyLinkValue
-    let visible = true
-    Object.keys(data.fluxTags).forEach(tag_group => {
-      const selected_tag = v.tags[tag_group]
-      if (selected_tag && selected_tag in fluxTags[tag_group].tags  && !fluxTags[tag_group].tags[selected_tag].selected) {
-        visible = false
-      }
-    })
-    if (!visible) {
-      return false
-    }
-    if (test_link_value(data_s, data_s.nodes, l, data_s.nodeTags) === 0) {
-      if (data_s.display_style.null_flux) {
-        return true
-      }
-      return false
-    }
-    return true
-  }
-  const link_color = (l: SankeyLink) => {
-    let colorNode
-    if (l.colorParameter === 'groupTag') {
-      //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-      //on controle ici qu'il y a bien un favorite tag
-      if (l.colorTag !== undefined && l.colorTag !== '') {
-        if (l.colorTag !== 'no_colormap') {
-          const tagGroup = l.colorTag
-          const v = getLinkValue(data, l.idLink)
-          if (v === undefined) {
-            return l.color
-          }
-          if (tagGroup in data.fluxTags && v.tags[tagGroup] in data.fluxTags[tagGroup].tags) {
-            colorNode = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
-          } else {
-            colorNode = 'grey'
-          }
-        } else {
-          const source_node = data.nodes[l.idSource]
-          const target_node = data.nodes[l.idTarget]
-          let selected_tag = ''
-          if (source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
-            const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
-            if (common_tags.length > 0) {
-              return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
-            }
-          }
-          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && 
-            target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' &&
-            target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[target_node.colorTag][0]
-            if (selected_tag in data.nodeTags[target_node.colorTag].tags) {
-              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-            } else {
-              return l.color
-            }
-          }
-          if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
-            selected_tag = source_node.tags[source_node.colorTag][0]
-            if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
-              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-            } else {
-              return l.color
-            }
-          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[target_node.colorTag][0]
-            if (selected_tag in data.nodeTags[target_node.colorTag].tags) {
-              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-            } else {
-              return l.color
-            }
-          } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'secteur')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
-            selected_tag = source_node.tags[source_node.colorTag][0]
-            if (selected_tag in data.nodeTags[source_node.colorTag].tags) {
-              return data.nodeTags[source_node.colorTag].tags[selected_tag].color
-            } else {
-              return l.color
-            }
-          } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
-            selected_tag = target_node.tags[target_node.colorTag][0]
-            if (data.nodeTags[target_node.colorTag].tags[selected_tag]) {
-              return data.nodeTags[target_node.colorTag].tags[selected_tag].color
-            } else {
-              return l.color
-            }
-          } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit') {
-            return source_node.color
-          } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
-            return target_node.color
-          } else {
-            return l.color
-          }
-        }
-      } else {
-        colorNode = l.color
-      }
-    }
-    if (l.colorParameter === 'local') {
-      // Le couleur est définie dans les parametres locaux du noeud
-      colorNode = l.color
-    }
+  //   for (const i in listKey) {
+  //     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+  //     if ( val === undefined) {
+  //       break
+  //     }
+  //   }
+  //   if ( val === undefined) {
+  //     return false
+  //   }
+  //   const v = (val as unknown) as SankeyLinkValue
+  //   let visible = true
+  //   Object.keys(data.fluxTags).forEach(tag_group => {
+  //     const selected_tag = v.tags[tag_group]
+  //     if (selected_tag && selected_tag in fluxTags[tag_group].tags  && !fluxTags[tag_group].tags[selected_tag].selected) {
+  //       visible = false
+  //     }
+  //   })
+  //   if (!visible) {
+  //     return false
+  //   }
+  //   if (test_link_value(data_s, data_s.nodes, l, data_s.nodeTags) === 0) {
+  //     if (data_s.display_style.null_flux) {
+  //       return true
+  //     }
+  //     return false
+  //   }
+  //   return true
+  // }
+  // const link_color = (l: SankeyLink,data_s:SankeyData) => {
+  //   let colorNode
+  //   if (l.colorParameter === 'groupTag') {
+  //     //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+  //     //on controle ici qu'il y a bien un favorite tag
+  //     if (l.colorTag !== undefined && l.colorTag !== '') {
+  //       if (l.colorTag !== 'no_colormap') {
+  //         const tagGroup = l.colorTag
+  //         const v = getLinkValue(data_s, l.idLink)
+  //         if (v === undefined) {
+  //           return l.color
+  //         }
+  //         if (tagGroup in data_s.fluxTags && v.tags[tagGroup] in data_s.fluxTags[tagGroup].tags) {
+  //           colorNode = data_s.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
+  //         } else {
+  //           colorNode = 'grey'
+  //         }
+  //       } else {
+  //         const source_node = data_s.nodes[l.idSource]
+  //         const target_node = data_s.nodes[l.idTarget]
+  //         let selected_tag = ''
+  //         if (source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
+  //           const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
+  //           if (common_tags.length > 0) {
+  //             return data_s.nodeTags[source_node.colorTag].tags[common_tags[0]].color
+  //           }
+  //         }
+  //         if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && 
+  //           target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' &&
+  //           target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+  //           selected_tag = target_node.tags[target_node.colorTag][0]
+  //           if (selected_tag in data_s.nodeTags[target_node.colorTag].tags) {
+  //             return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
+  //           } else {
+  //             return l.color
+  //           }
+  //         }
+  //         if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+  //           selected_tag = source_node.tags[source_node.colorTag][0]
+  //           if (selected_tag in data_s.nodeTags[source_node.colorTag].tags) {
+  //             return data_s.nodeTags[source_node.colorTag].tags[selected_tag].color
+  //           } else {
+  //             return l.color
+  //           }
+  //         } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+  //           selected_tag = target_node.tags[target_node.colorTag][0]
+  //           if (selected_tag in data_s.nodeTags[target_node.colorTag].tags) {
+  //             return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
+  //           } else {
+  //             return l.color
+  //           }
+  //         } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'secteur')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+  //           selected_tag = source_node.tags[source_node.colorTag][0]
+  //           if (selected_tag in data_s.nodeTags[source_node.colorTag].tags) {
+  //             return data_s.nodeTags[source_node.colorTag].tags[selected_tag].color
+  //           } else {
+  //             return l.color
+  //           }
+  //         } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+  //           selected_tag = target_node.tags[target_node.colorTag][0]
+  //           if (data_s.nodeTags[target_node.colorTag].tags[selected_tag]) {
+  //             return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
+  //           } else {
+  //             return l.color
+  //           }
+  //         } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit') {
+  //           return source_node.color
+  //         } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
+  //           return target_node.color
+  //         } else {
+  //           return l.color
+  //         }
+  //       }
+  //     } else {
+  //       colorNode = l.color
+  //     }
+  //   }
+  //   if (l.colorParameter === 'local') {
+  //     // Le couleur est définie dans les parametres locaux du noeud
+  //     colorNode = l.color
+  //   }
 
-    return colorNode
-  }
+  //   return colorNode
+  // }
 
   const add_links = (
     static_sankey: boolean,
@@ -422,7 +422,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('style', 'font-weight: bold; font-size:' + display_style.link_font_size + 'px;')
       .attr('fill', l => {
         if (l.text_color === l.color) {
-          return link_color(l) as string
+          return link_color(l,data) as string
         }
         return l.text_color
       })
@@ -552,7 +552,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(data, nodes, l, data.nodeTags)
+        const link_value = test_link_value(data, nodes, l)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
         const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
@@ -586,7 +586,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data, display_nodes, l, data.nodeTags)
+          const link_value = test_link_value(data, display_nodes, l)
           const tmp =(link_value=='')?1:link_value
           // console.log(scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0)))
           return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
@@ -919,7 +919,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         }
         
-        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data) as string
       }
       )
       .on('mouseover', function (event, d) {
@@ -1108,7 +1108,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
   
   
-        const link_value = test_link_value(data, nodes, l, nodeTags)
+        const link_value = test_link_value(data, nodes, l)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -1142,7 +1142,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         } else {
           //retour à la normal
           d3.select('#' + l.idLink).attr('stroke-width', d => {
-            const link_value = test_link_value(data, display_nodes, d, data.nodeTags)
+            const link_value = test_link_value(data, display_nodes, (d as SankeyLink))
             const tmp=(link_value=='')?1:link_value
             return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
           })
@@ -1764,7 +1764,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const pos_drag_zone_right = 49 / 50
     
-    const link_value = test_link_value(data, display_nodes, link, data.nodeTags)
+    const link_value = test_link_value(data, display_nodes, link)
     const tmp=(link_value=='')?1:link_value
 
 
@@ -1834,7 +1834,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     yt: number
   )=>{      
     const center_handle = 1/2
-    const link_value = test_link_value(data, display_nodes, link, data.nodeTags)
+    const link_value = test_link_value(data, display_nodes, link)
     const tmp=(link_value=='')?1:link_value
 
     const handle_pos = handles_positions(data.links, link, xs, ys, xt, yt)
@@ -2179,7 +2179,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return [0, 0, 0, 0]
     }
 
-    const link_value = test_link_value(data, nodes, link, selected_tags)
+    const link_value = test_link_value(data, nodes, link)
     if (link_value === undefined) {
       return [0, 0, 0, 0]
     }
@@ -2394,7 +2394,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data, nodes, link, nodeTags)
+    const link_value = test_link_value(data, nodes, link)
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -3797,7 +3797,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(data, nodes, l, data_v2.nodeTags)
+        const link_value = test_link_value(data, nodes, l)
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
         const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
@@ -3831,7 +3831,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data_v2, data_v2.nodes, l, data_v2.nodeTags)
+          const link_value = test_link_value(data_v2, data_v2.nodes, l)
           return scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
 
         }
@@ -4161,7 +4161,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           )
 
         }
-        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l) as string
+        return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data_v2) as string
       }
       )
 
@@ -4551,7 +4551,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if (!data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
         continue
       }
-      const link_value = test_link_value(data,nodes, l, nodeTags)
+      const link_value = test_link_value(data,nodes, l)
       if (link_value === undefined) {
         continue
       }
@@ -4617,7 +4617,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .attr('d', point)
           .attr('stroke', 'none')
           .attr('fill', () => {
-            return (l.gradient && l.colorParameter==='local') ? colorArrow : link_color(l) as string
+            return (l.gradient && l.colorParameter==='local') ? colorArrow : link_color(l,data) as string
           })
           .attr('stroke-width', '0px')
           .attr('stroke-opacity', 0.85)
