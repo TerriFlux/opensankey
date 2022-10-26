@@ -191,7 +191,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             selected_link.current = l
           }}
           link_text={SankeyUtils.link_text}
-          test_link_value={SankeyUtils.test_link_value}
+          // test_link_value={SankeyUtils.test_link_value}
           nodeTooltipsContent={nodeTooltipsContent}
           linkTooltipsContent={linkTooltipsContent}
           set_show_toast={set_show_toast}
