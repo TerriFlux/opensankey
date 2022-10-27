@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link,link_visible,test_link_value,link_color } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link,link_visible,test_link_value,link_color,getTotalInputLink } from './SankeyUtils'
 import { desagregation, agregation, AgregationModal } from './SankeyLayout'
 import LZString from 'lz-string'
 
@@ -552,7 +552,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
 
-        const link_value = test_link_value(data, nodes, l)
+        let link_value = test_link_value(data, nodes, l)
+        const val=getLinkValue(data,l.idLink)
+        if(val.is_percent){
+          const total=getTotalInputLink(data,data.nodes[l.idSource])
+          link_value=total*(val.percent/100)
+        }
         //Zones limite à ne pas êtres
         const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
         const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
@@ -586,8 +591,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return '1px'
         } else {
 
-          const link_value = test_link_value(data, display_nodes, l)
+          // const link_value = test_link_value(data, display_nodes, l)
+          let link_value = test_link_value(data, display_nodes, l)
+          const val=getLinkValue(data,l.idLink)
+          if(val.is_percent){
+            const total=getTotalInputLink(data,data.nodes[l.idSource])
+            console.log(total)
+            link_value=total*(val.percent/100)
+          }
+
+
           const tmp =(link_value=='')?1:link_value
+
+
+
           // console.log(scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0)))
           return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
 
@@ -2394,7 +2411,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data, nodes, link)
+    // const link_value = test_link_value(data, nodes, link)
+    let link_value = test_link_value(data, nodes, link)
+    const val=getLinkValue(data,link.idLink)
+    if(val.is_percent){
+      const total=getTotalInputLink(data,data.nodes[link.idSource])
+      link_value=total*(val.percent/100)
+    }
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]

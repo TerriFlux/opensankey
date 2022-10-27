@@ -450,10 +450,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 })}
               <Row >
                 <Col>
-                  <FormLabel>Valeur pour ces paramètres</FormLabel>
+                  <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Valeur pour ces paramètres</FormLabel>
                 </Col>
                 <Col>
                   <Form.Control
+                    disabled={value_selected_parameter().is_percent}
                     type='text'
                     value={test_value(value_selected_parameter().value)}
                     onChange={
@@ -490,6 +491,66 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                           })
                         }
                         
+      
+                        set_data({ ...data })
+                      }
+                    }
+                  />
+                </Col>
+              </Row>
+
+              <Row>
+                <Col>
+                  <FormCheck
+                    type='checkbox'
+                    checked={value_selected_parameter().is_percent}
+                    label='Valeur proportinnel à la valeur du noeuds source'
+                    onChange={evt=>{
+                      let val = Object(selected_link.current.value)
+
+                      multi_selected_links.current.map(d => {
+                        
+                        val = d.value
+                        Object.values(tags_selected).forEach(tag => {
+                          if (val[tag] === undefined) {
+                            val[tag] = {}
+                          }
+                          val = val[tag]
+                        })
+                        val.is_percent = evt.target.checked
+
+                      })
+                      set_data({...data})
+                    }}
+                  />
+                </Col>
+              </Row>
+
+              <Row >
+                <Col xs={3}>
+                  <FormLabel style={{color:(value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Pourcent</FormLabel>
+                </Col>
+                <Col xs={3}>
+                  <FormLabel style={{color:(value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>{value_selected_parameter().percent}</FormLabel>
+                </Col>
+                <Col>
+                  <Form.Range
+                    disabled={!value_selected_parameter().is_percent}
+                    value={value_selected_parameter().percent}
+                    onChange={
+                      evt => {
+                        
+                        let val = Object(selected_link.current.value)
+                        multi_selected_links.current.map(d => {
+                          val = d.value
+                          Object.values(tags_selected).forEach(tag => {
+                            if (val[tag] === undefined) {
+                              val[tag] = {}
+                            }
+                            val = val[tag]
+                          })
+                          val.percent = +evt.target.value
+                        })
       
                         set_data({ ...data })
                       }
