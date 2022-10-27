@@ -21,6 +21,8 @@ export const addDataTags = (
       v[listKey[i]] = {
         value: v.value as unknown as number,
         display_value: v.display_value as unknown as string,
+        is_percent:false as unknown as boolean,
+        percent:0 as unknown as number,
         tags: {},
         extension: {}
       }
@@ -43,6 +45,8 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: '',
+      is_percent:false,
+      percent:0,
       tags: {},
       extension: {}
     }
@@ -63,6 +67,8 @@ export const getLinkValue = (
       value: 0,
       display_value: '',
       tags: {},
+      is_percent:false,
+      percent:0,
       extension: {}
     }
   }
@@ -78,6 +84,8 @@ export const getLinkValue = (
         value: 0,
         display_value: '',
         tags: {},
+        is_percent:false,
+        percent:0,
         extension: {}
       }      
     }
@@ -105,6 +113,19 @@ export const findMaxLinkValue = (
     
   }
   return new_max_node_value
+}
+export const getTotalInputLink=(data:SankeyData,
+  node:SankeyNode)=>{
+  let total = 0
+  node.inputLinksId.forEach(element => {
+    // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
+    if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
+      const tmp = getLinkValue(data, element).value
+      
+      total += (tmp)?tmp:0
+    }
+  })
+  return total
 }
 
 export const getTotalLinks = (
