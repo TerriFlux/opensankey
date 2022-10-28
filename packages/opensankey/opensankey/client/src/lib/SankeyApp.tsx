@@ -90,7 +90,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             data={data}
             set_data={set_data}
             current_path={'Formations'}
-            url_prefix='/opensankey/'
+            url_prefix=''
             multi_selected_links={multi_selected_links}
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_label={multi_selected_label}
@@ -108,11 +108,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_label={multi_selected_label}
             callback={processExample}
           /></>}
-        // portfolio_menu={<>
-        //   <ArtefactsItem
-        //     artefacts_menu={artefacts_menu as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-        //     current_path={''}
-        //   /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
         logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
         set_show_toast={set_show_toast}
