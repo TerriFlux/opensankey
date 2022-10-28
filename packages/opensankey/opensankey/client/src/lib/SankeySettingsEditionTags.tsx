@@ -166,7 +166,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
           }}>
-          {Object.keys(data[elementTagName]).map(
+          {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
             (key, i) =>
               <option
                 key={i}
