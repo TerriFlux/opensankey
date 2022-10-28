@@ -364,10 +364,10 @@ export const link_text = (
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
   if (data.show_structure) {
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, data.user_scale])
-    return inv_scale(Object.values(nodes)[0].node_height / 4)
+    // const inv_scale = d3.scaleLinear()
+    //   .domain([0, 100])
+    //   .range([0, data.user_scale])
+    return 5
   }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []

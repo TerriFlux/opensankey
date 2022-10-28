@@ -117,7 +117,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   // const default_node_size = data.node_width
   const default_handle_size = 10
   const default_horiz_shift = 50
-  const min_thickness = 1
+  const min_thickness = 5
 
   const display_nodes = data.nodes
   const display_links = data.links
