@@ -1,4 +1,4 @@
-﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
@@ -6,9 +6,9 @@ import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
+import { reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue,uploadExcelImpl } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -28,67 +28,6 @@ declare const window: Window &
   }
 
 export type selected_type = {'label':string;'value':string}
-
-export const uploadExcelImpl = (
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  set_show_excel_dialog: (b: boolean) => void,
-  input_file: Blob,
-  sheet: string,
-  post_callback: (data:SankeyData)=>void
-) => {
-  const form_data = new FormData()
-  form_data.append(
-    'file', input_file
-  )
-  // form_data.append(
-  //   'sheet', sheet
-  // )
-  const path = window.location.href
-
-  const url = path + 'sankey/upload_excel'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-  const callback = (server_data: SankeyData & { error: string }) => {
-    const error = server_data['error']
-    if (error && error.length != 0) {
-      alert(error)
-      return
-    }
-    Object.assign(data, server_data)
-    convert_data(data)
-    //compute_auto_sankey(data, 200)
-    let nb_agregation_level = 0
-    Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  
-    set_nodes_level(data,data.nodes,nb_agregation_level)
-    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-    for (let i=nb_agregation_level ; i>0 ; i--) {
-      set_nodes_level(data,data.nodes,i,false)
-    }
-    post_callback(data)
-    set_data({ ...data })
-  }
-  fetch(url, fetchData).then(response => {
-    response.text().then(text => {
-      // try {
-      const json_data = JSON.parse(text)
-      callback(json_data)
-      const test = document.getElementsByClassName('navbar')
-      let margin_top = 0
-      if (test && test.length > 0) {
-        margin_top = test[0].getBoundingClientRect().height
-        d3.select('#svg-container').style('margin-top',margin_top+'px')
-      }
-      // } catch(err) {
-      //   alert(err)
-      // }
-    })
-  })
-  set_show_excel_dialog(false)
-}
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -139,97 +78,13 @@ const MenuPropTypes = {
   set_style_to_apply: PropTypes.func.isRequired,
 
   mode_visualisation:PropTypes.bool.isRequired,
-  set_mode_visualisation:PropTypes.func.isRequired
+  set_mode_visualisation:PropTypes.func.isRequired,
+
+  callback:PropTypes.func.isRequired
 }
 
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
-
-// const ArtefactsItemPropTypes = {
-//   artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
-//   current_path : PropTypes.string.isRequired
-// }
-
-// export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
-
-// export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
-//   return (
-//     <>
-//       { Array.isArray(artefacts_menu)
-//         ? artefacts_menu.map((item, index) => {
-//           let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
-//           if (!item.includes('zip')) {
-//             url = url + '/index.html'
-//           }
-//           return (
-//             <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
-//           )
-//         }
-//         ) : Object.keys(artefacts_menu).map(
-//           (key, index) => {
-//             return (
-//               <>
-//                 <NavDropdown key={index} title={key} id={key} >
-//                   <ArtefactsItem
-//                     artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-//                     current_path={current_path !== '' ? current_path + '/' + key : key}
-//                   />
-//                 </NavDropdown>
-//               </>
-//             )
-//           }
-//         )
-//       }
-//     </>
-//   )
-// }
-
-type layout_type = {
-  layout: SankeyData
-}
-
-export const processExample = (server_data: SankeyData & layout_type ) => {
-  // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
-  //   server_data.links['link324'].idSource = 'node63'
-  //   delete server_data.links['link325']
-  // }
-  let nb_agregation_level = 0
-  Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
-  compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  for (let i=nb_agregation_level ; i>0 ; i--) {
-    set_nodes_level(server_data,server_data.nodes,i,false)
-  }
-
-  if (server_data.layout !== undefined) {
-    convert_data(server_data.layout)
-    // let nb_agregation_level = 0
-    // Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-    for (let i=1 ; i<=nb_agregation_level ; i++) {
-      set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
-    }
-    updateLayout(server_data, server_data.layout)
-    // if (server_data.agregation.level === -1) {
-    //   localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
-    // } else {
-    set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
-    //}
-    // for (let i=1 ; i<=nb_agregation_level ; i++) {
-    //   set_nodes_level(server_data,server_data.nodes,i)
-    //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-    // }
-    // delete (server_data as SankeyData & { layout?: SankeyData }).layout
-    // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
-  // } else {
-  //   set_nodes_level(server_data,server_data.nodes,2)
-  //   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  //   set_nodes_level(server_data,server_data.nodes,1)
-  //   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  //   return 0             
-  // }
-  }
-  return 0
-}
 
 const ExempleMenuDictTypes = PropTypes.objectOf(PropTypes.element.isRequired).isRequired
 type ExempleMenuTypes = InferProps<typeof ExempleMenuDictTypes>
@@ -351,7 +206,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     , style_to_apply,
     set_style_to_apply,
     mode_visualisation,
-    set_mode_visualisation
+    set_mode_visualisation,
+    callback
   }
 ) => {
   const set_show_link = useState(true)[1]
@@ -3725,7 +3581,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           uploadExcelImpl={uploadExcelImpl}
           set_data={set_data}
           data={data}
-          set_show_excel_dialog={set_show_excel_dialog} />
+          set_show_excel_dialog={set_show_excel_dialog}
+          url_prefix={url_prefix}
+          callback={callback} />
       ) :
         (<div />)
       }
@@ -3816,14 +3674,15 @@ const ExcelModalPropTypes = {
   handleCloseDialog: PropTypes.func.isRequired,
   set_data: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired
+  set_show_excel_dialog: PropTypes.func.isRequired,
+  url_prefix: PropTypes.string.isRequired,
+  callback: PropTypes.func.isRequired,
 }
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog }) => {
+const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
-  const [sheet] = useState('results')
 
   return (
     <Modal
@@ -3861,16 +3720,8 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
         <Button
           variant="secondary"
           onClick={
-            () => uploadExcelImpl(
-              data,
-              set_data,
-              set_show_excel_dialog,
-              input_file_name,
-              sheet,
-              (sankey_data: SankeyData) => {
-                if (layout_file === undefined) {
-                  return
-                }
+            () => {
+              if (layout_file !== undefined) {
                 const reader = new FileReader()
                 reader.onload = (() => {
                   return (
@@ -3878,20 +3729,23 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                       let result = (e.target as FileReader).result
                       if (result) {
                         result = String(result).split('<br>').join('\\\\n')
-                        const data: SankeyData = JSON.parse(result)
-                        updateLayout(sankey_data, data)
-                        set_data({ ...sankey_data })
-                        // if (data.agregation.level === -1) {
-                        //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
-                        // }
+                        const layout : SankeyData = JSON.parse(result);
+                        (data as SankeyData & { layout?: SankeyData }).layout = layout
                       }
                     }
                   )
-                }
-                )()
+                })
                 reader.readAsText(layout_file)
               }
-            )
+              uploadExcelImpl(
+                data,
+                set_data,
+                set_show_excel_dialog,
+                input_file_name,
+                url_prefix,
+                callback
+              )
+            }
           }
         >Ouvrir</Button>
         <Button
