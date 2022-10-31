@@ -781,10 +781,10 @@ def save_excel(
 
 def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     if len(sankey_data['dataTags'].keys()) == depth:
-        display_val = val['display_value']
+        #display_val = val['display_value']
         links[row][flux_cols.index(DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
         links[row][flux_cols.index(DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
-        if display_val != ' ':
+        if val['value'] != '':
             links[row][flux_cols.index(DATA_VALUE)] = float(val['value'])
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:

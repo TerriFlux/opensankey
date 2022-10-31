@@ -1,4 +1,4 @@
-﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
