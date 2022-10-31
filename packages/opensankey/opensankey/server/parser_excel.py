@@ -60,8 +60,8 @@ def set_value(
         set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
 
 def parse_excel(mfa_input):
-    if not NODES_SHEET in mfa_input:
-        return
+    # if not NODES_SHEET in mfa_input:
+    #     return
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
@@ -104,30 +104,59 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     sheet_name = DATA_SHEET
     if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
         sheet_name = RESULTS_SHEET
+        
+    if not NODES_SHEET in mfa_input:
+        node_index = 0
 
     if FLUX_SHEET in mfa_input:   
         for row in range(len(mfa_input[FLUX_SHEET])):
             source_name = mfa_input[FLUX_SHEET].iat[row,0]
             target_name =  mfa_input[FLUX_SHEET].iat[row,1]
-            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-            if len(source_nodes) == 0:
-                continue
-            if len(target_nodes) == 0:
-                continue
-            # if len(source_nodes) == 0:
-            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
-            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-            #         continue
-            # if len(target_nodes) == 0:
-            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
-            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-            #         continue
+            if NODES_SHEET in mfa_input:
+                source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+                target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+                if len(source_nodes) == 0:
+                    continue
+                if len(target_nodes) == 0:
+                    continue
+                source_node = source_nodes[0]
+                target_node = target_nodes[0]
+            else:
+                source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+                if len(source_nodes) == 0:
+                    source_node = {
+                        'idNode'        : 'node'+str(node_index),
+                        'name'          : source_name,
+                        'definition'    : '',
+                        'display'       : 1,
+                        'node_visible'  : 1,
+                        'label_visible' : 1,
+                        'shape_visible' : 1,
+                        'color'         : color,
+                        'tags'          : {}
+                    }
+                    node_index = node_index+1
+                    nodes[source_name] = source_node
+                else:
+                   source_node = source_nodes[0] 
+                target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+                if len(target_nodes) == 0:
+                    target_node = {
+                        'idNode'        : 'node'+str(node_index),
+                        'name'          : target_name,
+                        'definition'    : '',
+                        'display'       : 1,
+                        'node_visible'  : 1,
+                        'label_visible' : 1,
+                        'shape_visible' : 1,
+                        'color'         : color,
+                        'tags'          : {}
+                    }
+                    node_index = node_index+1
+                    nodes[target_name] = target_node
+                else:
+                    target_node = target_nodes[0]
                 
-            source_node = source_nodes[0]
-            target_node = target_nodes[0]
             color = source_node['color']
             if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
                 color = source_node['color']
@@ -176,25 +205,61 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     for row in range(len(mfa_input[sheet_name])):
         source_name = mfa_input[sheet_name].iat[row,columns.index(DATA_ORIGIN)]
         target_name =  mfa_input[sheet_name].iat[row,columns.index(DATA_DESTINATION)]
-        source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-        target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-        if len(source_nodes) == 0:
-            continue
-        if len(target_nodes) == 0:
-            continue
-        # if len(source_nodes) == 0:
-        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
-        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-        #         continue
-        # if len(target_nodes) == 0:
-        #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-        #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
-        #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
-        #         continue
-            
-        source_node = source_nodes[0]
-        target_node = target_nodes[0]
+        if NODES_SHEET in mfa_input:
+            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+            if len(source_nodes) == 0:
+                continue
+            if len(target_nodes) == 0:
+                continue
+            # if len(source_nodes) == 0:
+            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (source_name + ' - Importations')]
+            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
+            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+            #         continue
+            # if len(target_nodes) == 0:
+            #     source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
+            #     target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
+            #     if len(source_nodes) == 0 or len(target_nodes) == 0:            
+            #         continue
+                
+            source_node = source_nodes[0]
+            target_node = target_nodes[0]        
+        else:
+            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
+            if len(source_nodes) == 0:
+                source_node = {
+                    'idNode'        : 'node'+str(node_index),
+                    'name'          : source_name,
+                    'definition'    : '',
+                    'display'       : 1,
+                    'node_visible'  : 1,
+                    'label_visible' : 1,
+                    'shape_visible' : 1,
+                    'color'         : 'grey',
+                    'tags'          : {}
+                }
+                node_index = node_index+1
+                nodes[source_node['idNode']] = source_node
+            else:
+               source_node = source_nodes[0] 
+            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+            if len(target_nodes) == 0:
+                target_node = {
+                    'idNode'        : 'node'+str(node_index),
+                    'name'          : target_name,
+                    'definition'    : '',
+                    'display'       : 1,
+                    'node_visible'  : 1,
+                    'label_visible' : 1,
+                    'shape_visible' : 1,
+                    'color'         : 'grey',
+                    'tags'          : {}
+                }
+                node_index = node_index+1
+                nodes[target_node['idNode']] = target_node        
+            else:
+                target_node = target_nodes[0] 
         color = source_node['color']
         if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
             color = source_node['color']
@@ -224,12 +289,12 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             continue
         val = float(val)
         display_val = ''
-        param_sheet=mfa_input[PARAM_SHEET]
-        if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
-            max_flux = param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values[0]
-            if val > float(max_flux):
-                display_val = str(round(val))+'*'
-                val = round(float(max_flux))
+        # param_sheet=mfa_input[PARAM_SHEET]
+        # if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
+        #     max_flux = param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values[0]
+        #     if val > float(max_flux):
+        #         display_val = str(round(val))+'*'
+        #         val = round(float(max_flux))
         is_existing_link = len(existing_links) > 0
         if is_existing_link:
             existing_link = existing_links[0]
