@@ -289,12 +289,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             continue
         val = float(val)
         display_val = ''
-        # param_sheet=mfa_input[PARAM_SHEET]
-        # if len(param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values) > 0:
-        #     max_flux = param_sheet[param_sheet[PARAM_NAME]==MAXIMUM_FLUX][PARAM_VALUE].values[0]
-        #     if val > float(max_flux):
-        #         display_val = str(round(val))+'*'
-        #         val = round(float(max_flux))
         is_existing_link = len(existing_links) > 0
         if is_existing_link:
             existing_link = existing_links[0]
@@ -752,7 +746,6 @@ def save_excel(
         ter['use']    = pd.DataFrame(ter['use'])
         ter['supply'] = pd.DataFrame(ter['supply'])
         mfa_output = {
-            PARAM_SHEET : param_sheet,
             TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
             NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
             DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
@@ -778,7 +771,6 @@ def save_excel(
                 print('exception 2: '+str(excpt))
         io_table = np.array(io_table)   
         mfa_output = {
-            PARAM_SHEET : param_sheet,
             TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
             NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
             DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
