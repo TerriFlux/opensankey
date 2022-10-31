@@ -473,6 +473,9 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             val.value = +evt.target.value
   
                           })
+                          if (Object.keys(data.links).length == 1) {
+                            data.user_scale = +evt.target.value
+                          }
                         }else{
 
                           let val = Object(selected_link.current.value)
@@ -886,25 +889,39 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             <Form.Group as={Row}>
               <Col>
                 <FormCheck
-                  type='checkbox'
+                  type='radio'
                   label='Aligner avec le chemin du flux'
                   // disabled={selected_link.current.label_position === 'frozen'}
                   checked={labelSticktoLinkDisabled()}
-                  onChange={
-                    evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        d.label_on_path = evt.target.checked
+                  onClick={()=>{
+                    const val=labelSticktoLinkDisabled()
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.label_on_path = !val
+                      if(!val){
                         d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                         d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
-                      })
-                      set_data({ ...data })
-                    }
+                      }
+                    })
+                    set_data({ ...data })
+
                   }
+
+                  }
+                  // onChange={
+                  //   evt => {
+                  //     Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  //       d.label_on_path = evt.target.checked
+                  //       d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                  //       d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                  //     })
+                  //     set_data({ ...data })
+                  //   }
+                  // }
                 />
               </Col>
               <Col>
                 <FormCheck 
-                  type='checkbox'
+                  type='radio'
                   label='Label Flux Libre'
                   // disabled={selected_link.current.label_position === 'frozen'}
                   checked={labelLinkFree()}
