@@ -2,7 +2,7 @@ import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNod
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey, updateLayout, agregation, desagregation } from './SankeyLayout'
-import * as d3 from 'd3'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -1069,8 +1069,8 @@ export const set_nodes_level = (
   Object.values(display_nodes).forEach(node => {
     //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
     if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
-        node.display = false   
-          node.node_visible = false
+      node.display = false   
+      node.node_visible = false
       return
     }
     if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
@@ -1088,8 +1088,8 @@ export const set_nodes_level = (
         })
       } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
         node.node_visible = false
-          node.display = false
-        }
+        node.display = false
+      }
     } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
       node.node_visible = false
       node.display = false
