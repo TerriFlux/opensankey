@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { agregation, desagregation } from './SankeyLayout'
+import { compute_auto_sankey, updateLayout, agregation, desagregation } from './SankeyLayout'
 import * as d3 from 'd3'
 
 declare const window: Window &
@@ -924,6 +924,10 @@ export const setSelectedTags = (
   }
 }
 
+type layout_type = {
+  layout: SankeyData
+}
+
 const downloadExamples = (
   file_name: string,
   the_url_prefix: string,
@@ -950,14 +954,79 @@ const downloadExamples = (
     })
 }
 
+export const processExample = (server_data: SankeyData ) => {
+  const data = default_sankey_data()
+  Object.assign(data, server_data)
+  convert_data(data)
+
+  // const nb_agregation_level : {[key:string]: number } =  {}
+  // Object.values(data.agregation).forEach(dim => {
+  //   nb_agregation_level[dim.dimension] = 0
+  //   Object.values(data.nodes).forEach( n => 
+  //     nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
+  //       n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
+  //   )
+  // })
+  set_nodes_level(data,data.nodes,1)
+  if ( (data as SankeyData & layout_type).layout === undefined) {
+    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+  } else {
+    convert_data((data as SankeyData & layout_type).layout)
+    updateLayout(data, (data as SankeyData & layout_type).layout)
+    delete (data as SankeyData & { layout?: SankeyData }).layout
+  }
+
+  return data
+}
+
+export const uploadExcelImpl = (
+  data: SankeyData,
+  set_data: (data: SankeyData) => void,
+  set_show_excel_dialog: (b: boolean) => void,
+  input_file: Blob,
+  the_url_prefix: string,
+  callback: (data:SankeyData)=>void
+) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
+  }
+  const url = root + 'sankey/upload_excel'
+  const form_data = new FormData()
+  form_data.append(
+    'file', input_file
+  )
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+  fetch(url, fetchData).then(response => {
+    response.text().then(text => {
+      try {
+        const server_data = JSON.parse(text)
+        const error = server_data['error']
+        if (error && error.length != 0) {
+          alert(error)
+          return
+        }
+        Object.assign(data,processExample(server_data))
+        callback(data)
+        set_data({ ...data })
+      } catch(err) {
+        alert(err)
+      }
+    })
+  })
+  set_show_excel_dialog(false)
+}
+
 export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void
+  callback: (data: SankeyData) => void
 ) => {
-
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
@@ -967,36 +1036,25 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain'
-  set_data({ ...default_sankey_data() })
+  //set_data({ ...default_sankey_data() })
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-
       const server_data = JSON.parse(text)
-      data = default_sankey_data()
-      Object.assign(data, server_data)
-      convert_data(data)
-      type layout_type = {
-        layout?: SankeyData
+      const error = server_data['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
       }
-      example_callback(data)
-      delete (data as unknown as layout_type).layout
-
-      // if (data.agregation.level === -1) {
-      //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
-      // } else {
-      set_nodes_level(data,data.nodes,data.agregation.level,true)
-      //}
-      set_data({ ...data })
       if (file_name.includes('.xlsx')) {
-        downloadExamples(file_name, the_url_prefix, file_type)
-      }
-      const test = document.getElementsByClassName('navbar')
-      let margin_top = 0
-      if (test && test.length > 0) {
-        margin_top = test[0].getBoundingClientRect().height
-        d3.select('#svg-container').style('margin-top',margin_top+'px')
+        Object.assign(data,processExample(server_data))
+        callback(data)
+        set_data({ ...data })
+        downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      } else {
+        Object.assign(data,server_data)
+        convert_data(data)
+        set_data({ ...data})
       }
     })
   })
@@ -1011,8 +1069,8 @@ export const set_nodes_level = (
   Object.values(display_nodes).forEach(node => {
     //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
     if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
-      node.display = false
-      node.node_visible = false
+        node.display = false   
+          node.node_visible = false
       return
     }
     if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
@@ -1030,8 +1088,8 @@ export const set_nodes_level = (
         })
       } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
         node.node_visible = false
-        node.display = false
-      }
+          node.display = false
+        }
     } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
       node.node_visible = false
       node.display = false

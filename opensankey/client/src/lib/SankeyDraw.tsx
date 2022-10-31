@@ -2527,7 +2527,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     if (link.orientation === 'hv' && !link.recycling) {
       if (data.show_structure) {
-        [ys, xt] = [source_node.y + 20, target_node.x + 20]
+        [ys, xt] = [source_node.y + 5, target_node.x + 5]
         if (source_node.y > target_node.y) {
           yt = yt + 30
         }
@@ -2584,7 +2584,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       const vert_shift = link.vert_shift ? link.vert_shift : 0
       if (data.show_structure) {
-        [ys, yt] = [source_node.y + 20, target_node.y + 20]
+        [ys, yt] = [source_node.y + 5, target_node.y + 5]
       }
       return SankeyShapes.bezier_link_classic_recycling(
         link.idSource, link.idTarget,
