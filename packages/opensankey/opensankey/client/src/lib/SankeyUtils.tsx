@@ -2,7 +2,6 @@ import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNod
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey, updateLayout } from './SankeyLayout'
-import * as d3 from 'd3'
 
 declare const window: Window &
   typeof globalThis & {
