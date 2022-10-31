@@ -714,7 +714,7 @@ def save_excel(
     #     }
     #     return mfa_output,products,sectors
     
-    param_sheet = pd.DataFrame([[VERSION_LABEL,0.8,VERSION_DOC]],columns=[PARAM_NAME,PARAM_VALUE,PARAM_DESC])
+    #param_sheet = pd.DataFrame([[VERSION_LABEL,0.8,VERSION_DOC]],columns=[PARAM_NAME,PARAM_VALUE,PARAM_DESC])
     
     nodes_names = list(OrderedDict.fromkeys([node[1] for node in nodes[1:]]))
     node_tag_keys = list(sankey_data['nodeTags'])
