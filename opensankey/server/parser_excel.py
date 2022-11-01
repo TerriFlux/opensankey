@@ -737,14 +737,12 @@ def save_excel(
                 product_name = origin
                 table_name = 'use'
             try:          
-                col = s_names2s_idx[sector_name]+1
-                row = p_names2p_idx[product_name]+1
-                ter[table_name][row][col] = 1
+                col = s_names2s_idx[sector_name]
+                row = p_names2p_idx[product_name]
+                ter[table_name].iat[row,col] = 1
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
-                
-        ter['use']    = pd.DataFrame(ter['use'])
-        ter['supply'] = pd.DataFrame(ter['supply'])
+
         mfa_output = {
             TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
             NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
