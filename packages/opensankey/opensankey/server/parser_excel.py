@@ -707,8 +707,6 @@ def save_excel(
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
                 
-        ter['use']    = pd.DataFrame(ter['use'])
-        ter['supply'] = pd.DataFrame(ter['supply'])
         mfa_output = {
             TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
             NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
