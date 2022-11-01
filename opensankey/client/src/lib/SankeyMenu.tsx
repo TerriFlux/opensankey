@@ -3704,7 +3704,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
             />
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label>Layout</Form.Label>
+            <Form.Label>Diagramme de mise en page</Form.Label>
             <Form.Control
               type="file"
               //ref={layout_file_}
