@@ -485,7 +485,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
-    console.log(multi_selected_nodes.current)
     const DD = (
       <div id='DD_multi_node'>
         <MultiSelect
