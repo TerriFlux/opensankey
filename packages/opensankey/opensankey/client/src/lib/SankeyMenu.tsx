@@ -485,7 +485,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
-    console.log(multi_selected_nodes.current)
     const DD = (
       <div id='DD_multi_node'>
         <MultiSelect
@@ -3701,7 +3700,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
             />
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label>Layout</Form.Label>
+            <Form.Label>Diagramme de mise en page</Form.Label>
             <Form.Control
               type="file"
               //ref={layout_file_}

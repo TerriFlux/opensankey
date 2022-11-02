@@ -882,28 +882,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
                   </Button>
                 </OverlayTrigger>
-                <OverlayTrigger
-                  key={'tooltip-Noeud+Flux'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-Noeud+Flux'}>Ajoute un noeud au click puis après drag et relachement produit un second noeud avec un flux le reliant au premier </Tooltip>
-                  }
-                >
-                  <Button disabled={mode_visualisation} variant={(!(mode_selection == 'nl')) ? 'outline-warning' : 'warning'} onClick={() => { setSelectionMode('nl') }} >
-                    {/* Ajout Noeud+Flux */}
-                    <svg viewBox='250 250 500 500' height='20px' width='50px'>
-                      <g>
-                        <path style={{fill:(mode_selection == 'nl')?'white':'#ffce67'}} d='M133.932 420.321c-66.29 0-120.529 43.665-120.529 97.030s54.239 97.030 120.529 97.030c44.596 0 83.161-19.408
-                     104.862-48.516l473.676-0.008v-97.022h-473.676c-21.692-29.116-60.266-48.516-104.862-48.516zM133.932 575.566c-39.776
-                      0-72.314-26.194-72.314-58.215s32.538-58.215 72.314-58.215c39.776 0 72.314 26.194 72.314 58.215 0.010 32.013-32.538
-                       58.215-72.314 58.215zM899.291 483.386v-63.065h-84.372v63.065h-78.338v67.923h78.338v63.065h84.372v-63.065h78.338v-67.923z'></path>
-                      </g>
-
-                    </svg>
-
-
-                  </Button>
-                </OverlayTrigger>
 
                 <OverlayTrigger
                   key={'tooltip-liaison'}
