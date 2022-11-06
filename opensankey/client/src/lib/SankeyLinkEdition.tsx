@@ -821,10 +821,26 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form>
           </Tab>
           <Tab eventKey="label" title="Label">
+            <Form.Group >
+              <FormCheck
+                type='switch'
+                label='Label visible'
+                checked={labelVisibleChecked()}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.label_visible = evt.target.checked
+                    })
+                    set_data({ ...data })
+                  }
+                }
+              />
+            </Form.Group>
             <Form.Group as={Row} >
               <Col>
                 <FormCheck
                   value='black'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Label en noir'
                   checked={linkLabelColor('black')}
@@ -841,6 +857,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <FormCheck
                   value='white'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Label blanc'
                   checked={linkLabelColor('white')}
@@ -857,6 +874,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <FormCheck
                   value='same_color'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Label en couleur'
                   checked={linkLabelColor('color')}
@@ -871,24 +889,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 />
               </Col>
             </Form.Group>
-            <Form.Group >
-              <FormCheck
-                type='checkbox'
-                label='Label visible'
-                checked={labelVisibleChecked()}
-                onChange={
-                  evt => {
-                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                      d.label_visible = evt.target.checked
-                    })
-                    set_data({ ...data })
-                  }
-                }
-              />
-            </Form.Group>
+            
             <Form.Group as={Row}>
               <Col>
                 <FormCheck
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Aligner avec le chemin du flux'
                   // disabled={selected_link.current.label_position === 'frozen'}
@@ -919,32 +924,16 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   // }
                 />
               </Col>
-              <Col>
-                <FormCheck 
-                  type='radio'
-                  label='Label Flux Libre'
-                  // disabled={selected_link.current.label_position === 'frozen'}
-                  checked={labelLinkFree()}
-                  onChange={
-                    evt => {
-                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                        d.label_on_path = (evt.target.checked)?false:d.label_on_path
-                        d.label_position=(evt.target.checked)?'frozen':'middle'
-                        d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
-                      })
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
+              
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel>Position laterale:</FormLabel>
+                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>Position laterale:</FormLabel>
               </Col>
               <Col>
                 <Form.Check
                   value='beginning'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Début'
                   checked={labelPositionVert('beginning')}
@@ -962,6 +951,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <Form.Check
                   value='middle'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Milieu'
                   checked={labelPositionVert('middle')}
@@ -979,6 +969,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <Form.Check
                   value='end'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Fin'
                   checked={labelPositionVert('end')}
@@ -996,11 +987,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel>Position orthogonale:</FormLabel>
+                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>Position orthogonale:</FormLabel>
               </Col>
               <Col>
                 <Form.Check
                   value='below'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Dessous'
                   checked={labelPositionOrtho('below')}
@@ -1019,6 +1011,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <Form.Check
                   value='middle'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Milieu'
                   checked={labelPositionOrtho('middle')}
@@ -1036,6 +1029,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               <Col>
                 <Form.Check
                   value='above'
+                  disabled={!labelVisibleChecked()}
                   type='radio'
                   label='Dessus'
                   checked={labelPositionOrtho('above')}
@@ -1045,6 +1039,27 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                         d.orthogonal_label_position = evt.target.value
                         d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                      })
+                      set_data({ ...data })
+                    }
+                  }
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Col>
+                <FormCheck 
+                  disabled={!labelVisibleChecked()}
+                  type='checkbox'
+                  label='Positionner le label à la souris'
+                  // disabled={selected_link.current.label_position === 'frozen'}
+                  checked={labelLinkFree()}
+                  onChange={
+                    evt => {
+                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                        d.label_on_path = (evt.target.checked)?false:d.label_on_path
+                        d.label_position=(evt.target.checked)?'frozen':'middle'
+                        d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
                       })
                       set_data({ ...data })
                     }
