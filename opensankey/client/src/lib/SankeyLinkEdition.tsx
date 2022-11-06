@@ -824,7 +824,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             <Form.Group >
               <FormCheck
                 type='switch'
-                label='Label visible'
+                label='Visibilité du label'
                 checked={labelVisibleChecked()}
                 onChange={
                   evt => {
