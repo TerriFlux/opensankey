@@ -1844,7 +1844,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Form.Group >
                   <FormCheck
                     type='checkbox'
-                    label='Label visible'
+                    label='Visibilité du label'
                     checked={data.style_link[selected_style_link].label_visible}
                     onChange={
                       evt => {
