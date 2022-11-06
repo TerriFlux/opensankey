@@ -5206,6 +5206,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return tmp.tags[tag_group[0]]!=d[0]
           }).forEach(el=>{
             d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.1)
+            d3.selectAll('#gg_'+el.idLink+' text').style('opacity',0.1)
             d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
             d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.1)
           })
@@ -5234,20 +5235,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               d3.selectAll('#'+el.idLink).attr('stroke-opacity',0.85)
               d3.selectAll('#arrow_'+el.idLink+' path').attr('stroke-opacity',0.85)
               d3.selectAll('#arrow_'+el.idLink+' path').attr('opacity',0.85)
-            })
+              d3.selectAll('#gg_'+el.idLink+' text').style('opacity',1)
 
+            })
 
             //Reduit l'opacité de tous les noeuds qui n'ont pas l'étiquette
             Object.values(data.nodes).filter(n=>{
-              return (n.tags[tmp2] && !n.tags[tmp2].includes(d[0]) && !nodes_tied_to_link_hovered.includes(n.idNode))
+              return ((n.tags[tmp2] && !n.tags[tmp2].includes(d[0]) && !nodes_tied_to_link_hovered.includes(n.idNode))||(!n.tags[tmp2]))
             }).forEach(el=>{
-              d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
+              d3.selectAll('#ggg_'+el.idNode).attr('opacity',0.1)
+
             })
           }else{
             Object.values(data.nodes)
               .filter(n=>!nodes_tied_to_link_hovered.includes(n.idNode))
               .forEach(el=>{
-                d3.selectAll('.node_shape#'+el.idNode).attr('fill-opacity',0.1)
+
+                d3.selectAll('#ggg_'+el.idNode).attr('opacity',0.1)
               })
           }
           
@@ -5256,7 +5260,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.selectAll('.link').attr('stroke-opacity',0.85)
           d3.selectAll('.defsArrow path').attr('stroke-opacity',0.85)
           d3.selectAll('.defsArrow path').attr('opacity',0.85)
-          d3.selectAll('.node_shape').attr('fill-opacity',1)
+          d3.selectAll('.gg_links text').style('opacity',1)
+          d3.selectAll('.ggg_nodes').attr('opacity',1)
         })
 
       // Ajout du shape  
