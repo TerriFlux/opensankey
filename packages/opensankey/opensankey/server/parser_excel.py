@@ -377,6 +377,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
             if tag_value == '':
+                if node_tag_name == 'Dimensions':
+                    new_node['tags']['Dimensions'] = list(nodeTags['Dimensions']['tags'].keys())
                 continue
             if not node_tag_name in new_node['tags']:
                 new_node['tags'][node_tag_name] = []
