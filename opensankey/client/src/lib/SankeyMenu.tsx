@@ -2185,7 +2185,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </NavDropdown >
 
 
-              {!data.static_sankey ? (
+              {!data.static_sankey && !mode_visualisation ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
                     ref={button_ref as Ref<HTMLLabelElement>}
@@ -2260,7 +2260,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         /> */}
       </Navbar>
 
-      {(show_nav) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+      {(show_nav && !mode_visualisation) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
             {//MENU AIDE 
@@ -2288,7 +2288,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="2"
               id="Nodes"
               onClick={
@@ -2541,7 +2541,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
 
             <Accordion.Item
-              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               id='Flux'
               eventKey="3"
               onClick={evt => {

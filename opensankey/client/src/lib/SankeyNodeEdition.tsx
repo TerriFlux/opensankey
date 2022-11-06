@@ -458,7 +458,57 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     
     set_data({...data})
   }
-
+  
+  const has_link_come_from=(io:string,pos:string)=>{
+    const n=multi_selected_nodes.current[0]
+    let link_io=([] as string[])
+    if(io=='input'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+        })
+      }else if(pos=='right'){
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }
+    }else if(io=='output'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='right'){
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          return data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }
+    }
+    return link_io.length==0
+  }
 
   const [tab_colored,set_tab_colored]=useState(false)
   const tab_pos_link=(pos:string,io:string)=>{
@@ -1353,6 +1403,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       checked={link_io=='output'}
                       onChange={() => {
                         set_link_io('output')
+                        set_link_pos('')
                       }}
                     />
                   </Col>
@@ -1364,6 +1415,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       checked={link_io=='input'}
                       onChange={() => {
                         set_link_io('input')
+                        set_link_pos('')
                       }}
                     />
                   </Col>
@@ -1376,6 +1428,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={2}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'left')}
                       value="left"
                       type='radio'
                       label='Gauche'
@@ -1387,6 +1440,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={2}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'right')}
                       value="right"
                       type='radio'
                       label='Droite'
@@ -1398,6 +1452,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={3}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'top')}
                       value="top"
                       type='radio'
                       label='Au-dessus'
@@ -1409,6 +1464,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={3}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'bottom')}
                       value="bottom"
                       type='radio'
                       label='En-Dessous'
