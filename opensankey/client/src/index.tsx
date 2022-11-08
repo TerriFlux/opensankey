@@ -9,6 +9,7 @@ import { convert_data } from './lib/SankeyConvert'
 import { default_sankey_data } from './lib/SankeyUtils'
 import LZString from 'lz-string'
 import { SankeyData } from './lib/types'
+import './traduction'
 
 let logo = ''
 try {
