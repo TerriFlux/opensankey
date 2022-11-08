@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { agregation, desagregation } from './SankeyLayout'
+import {useTranslation} from 'react-i18next'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
@@ -192,6 +193,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)  
   const {filter}=data.display_style
+  const {t} =useTranslation()
+
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = findMaxLinkValue(
@@ -478,12 +481,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   const link_filter=
   <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">Filtre Flux</Popover.Header>
+    <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
     <Popover.Body >
       <Form style={{width:'600px'}}>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel >Filtre</FormLabel>
+            <FormLabel >{t('Banner.filtre')}</FormLabel>
           </Col>
           <Col>
             <Form.Range
@@ -511,7 +514,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel>Filtre label</FormLabel>
+            <FormLabel>{t('Banner.fl')}</FormLabel>
           </Col>
           <Col >
             <Form.Range
@@ -544,12 +547,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel >Flux nuls:</FormLabel>
+            <FormLabel >{t('Banner.fn')}:</FormLabel>
           </Col>
           <Col >
             <FormCheck
               type='checkbox'
-              label='Visible'
+              label={t('Banner.visible')}
               onChange={evt => {
                 data.display_style.null_flux = evt.target.checked
                 set_data({ ...data })
@@ -612,13 +615,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   display: (banner_grouptag.length > 0 || has_agregation) ? 'block' : 'none'
                 }} lg="auto">
                 {banner_grouptag.length > 0 ? (<>
-                  <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
+                  <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.sdd')}</b></FormLabel>
                   {addAllDropDownLinks()}
                 </>)
                   : (<Col></Col>)
                 }
                 { has_agregation ? (
-                  <><FormLabel><b>Niveaux de détail</b></FormLabel>
+                  <><FormLabel><b>{t('Banner.ndd')}</b></FormLabel>
                     {Object.entries(nodeTags['Dimensions'].tags).filter(([, tag]) => tag.selected).map(([key, tag],) => { 
                       return (
                         <>
@@ -715,8 +718,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 lg="auto"
               >
                 {( node_filter) ? (
-                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>Filtrage des noeuds</b></FormLabel>
-                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>Filtrage des noeuds</FormLabel>)}
+                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>{t('Banner.fdn')}</b></FormLabel>
+                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>{t('Banner.fdn')}</FormLabel>)}
 
                 { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
                   {addAllDropDownNode()}</>
@@ -730,19 +733,19 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <Form.Group as={Col} style={{ width: '250px', marginLeft: '0px', display: ( flux_filter) ? 'block' : 'none' }} lg="auto">
                 { flux_filter ? (
                   <>
-                    <FormLabel style={{ justifyContent: 'center' }}><b>Filtrage des flux</b></FormLabel>
+                    <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.fdf')}</b></FormLabel>
                     {addAllDropDownFlux(data.fluxTags, data, set_data)}
                   </>)
                   : (<>
-                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>Filtrage des flux</FormLabel>
+                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>{t('Banner.fdf')}</FormLabel>
                     <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
                 }
               </Form.Group>
               {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
               {window.sankey && window.sankey.excel ? (
                 <Form.Group as={Col} lg="auto" >
-                  <FormLabel className="text-center" >Téléchargements</FormLabel>
-                  <Button href={window.sankey.excel}>Résultats</Button>
+                  <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
+                  <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
                 </Form.Group>
               ) : (<></>)}
             </Row>
@@ -796,7 +799,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-adjust'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
+                  overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
                   }
                 >
                   <Button variant='dark' onClick={() => { 
@@ -823,7 +826,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-structur'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
+                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
                   }
                 >
                   <Button variant='info' onClick={() => { 
@@ -852,7 +855,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-selection'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
+                  overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
                   }
                 >
                   <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
@@ -865,7 +868,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-ajoutNode'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
+                  overlay={<Tooltip id={'tooltip-ajoutNode'}>{t('Banner.tooltipAjoutNode')} </Tooltip>
                   }
                 >
                   <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
@@ -887,7 +890,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-liaison'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
+                  overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
                   }
                 >
                   <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
@@ -922,7 +925,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-adjust'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
+                  overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
                   }
                 >
                   <Button variant='dark' onClick={() => { 
@@ -939,7 +942,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-structur'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
+                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
                   }
                 >
                   <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
@@ -955,7 +958,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   key={'tooltip-help'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-help'}>Info supplementaires sur le diagramme</Tooltip>
+                  overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
                   }
                 >
                   <Button variant='info' onClick={() => { set_show_readme(true) }} >
