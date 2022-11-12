@@ -29,8 +29,10 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
           <Col>
             <FormControl
               type="text"
-              value={data.user_scale}
-              onChange={evt => set_user_scale(+evt.target.value)}
+              value={user_scale}
+              onChange={evt => {
+                set_user_scale(+evt.target.value)
+              }}
               onBlur={() => {
                 data.user_scale = user_scale
                 set_data({ ...data })

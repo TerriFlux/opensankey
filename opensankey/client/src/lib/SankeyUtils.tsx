@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, updateLayout } from './SankeyLayout'
+import { agregation, compute_auto_sankey, desagregation, updateLayout } from './SankeyLayout'
 
 declare const window: Window &
   typeof globalThis & {
@@ -518,8 +518,6 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: false,
     fit_screen: window.SankeyToolsStatic,
 
-    agregation: {'Primaire':{dimension:'Primaire',level:1}},
-
     icon_catalog: {},
     labels: {},
 
@@ -550,21 +548,7 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-
-    nodeTags : {
-      'Dimensions' : {
-        group_name : 'Dimensions',
-        color_map: 'jet',
-        show_legend: false,
-        tags : {
-          Primaire : {
-            name : 'Primaire',
-            selected: true
-          }
-        },
-        banner: 'none'
-      }
-    },
+    nodeTags: {},
     dataTags: {},
     fluxTags: {},
 
@@ -746,12 +730,7 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: {
-      'Primaire': {
-        level:1,
-        parent_name: undefined
-      } 
-    },
+    dimensions: {},
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
@@ -891,13 +870,13 @@ export const setSelectedTags = (
 ) => {
 
   const { nodeTags } = sankey_data
-  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = true
+    node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
-    Object.keys(nodeTags).forEach(tags_group_key => {
+    Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
       if (break_loop) {
         return
       }
@@ -907,7 +886,7 @@ export const setSelectedTags = (
         return
       }
       no_tag = false
-      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
       if (!visible) {
         node.node_visible = false
         break_loop = true
@@ -915,7 +894,7 @@ export const setSelectedTags = (
     })
     // for the labels
     if (no_tag && !node.shape_visible && !node.label_visible) {
-      node.node_visible = true
+      node.node_visible = node.display && true
     }
   })
   if (!sankey_data.show_structure) {
@@ -958,15 +937,8 @@ export const processExample = (server_data: SankeyData ) => {
   Object.assign(data, server_data)
   convert_data(data)
 
-  const nb_agregation_level : {[key:string]: number } =  {}
-  Object.values(data.agregation).forEach(dim => {
-    nb_agregation_level[dim.dimension] = 0
-    Object.values(data.nodes).forEach( n => 
-      nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
-        n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
-    )
-  })
-  Object.keys(nb_agregation_level).forEach( dim => set_nodes_level(data,data.nodes,1,dim))
+
+  set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
@@ -1060,25 +1032,43 @@ export const uploadExemple = (
 }
 
 export const set_nodes_level = (
-  data: SankeyData,
-  display_nodes: { [key: string]: SankeyNode },
-  level: number,
-  agregation_dimension: string
+  sankey_data: SankeyData
 ) => {
-  Object.values(display_nodes).forEach(node => {
-    if (node.dimensions[agregation_dimension] ) {
-      if (node.dimensions[agregation_dimension].level! > level) {
-        node.node_visible = false
-        node.display = false   
-      } else if (node.dimensions[agregation_dimension].level! < level) {
-        const children = Object.values(display_nodes).filter(n=>n.dimensions[agregation_dimension] && n.dimensions[agregation_dimension]['parent_name'] === node.idNode)
-        if (children.length > 0) {
-          node.node_visible = false
-          node.display = false
-        }
-      }
-    }
+
+  const { nodeTags } = sankey_data
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
+
+  const levelTags = Object.keys(nodeTags).filter(key=>nodeTags[key].banner === 'level')
+
+  display_nodes.filter(n=>n.display).forEach(n=>{
+    levelTags.forEach(tags_group_key => {
+      desagregation(sankey_data,n.idNode,tags_group_key,false)
+      agregation(sankey_data,n.idNode,tags_group_key,false)
+    })
   })
+
+  display_nodes.forEach(node => {
+    node.display = true
+    node.node_visible = true
+    let break_loop = false
+    levelTags.forEach(tags_group_key => {
+      if (break_loop) {
+        return
+      }
+      const tags_group = nodeTags[tags_group_key]
+      if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
+        // tags do not apply to node
+        return
+      }
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
+      if (!visible) {
+        node.display = false
+        node.node_visible = false
+        break_loop = true
+      }
+    })
+  })
+  //setSelectedTags(sankey_data)
 }
 
 export const hideNullFluxNodes = (

@@ -233,18 +233,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  let nb_agregation_level = 1
-  Object.values(data.nodes).forEach(n => {
-    if (!n.dimensions) {
-      return
-    }
-    Object.entries(n.dimensions).forEach(dim => {
-      if (!dim[1].level) {
-        return
-      }
-      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-    })
-  })
   //Ajoute un nouveau noeud puis le selectionne
   const add_new_node = () => {
     const { nodes } = data
@@ -2127,7 +2115,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          Object.values(new_data.agregation).forEach(ag=>  set_nodes_level(new_data,new_data.nodes,ag.level,ag.dimension))
+                          set_nodes_level(data)
                           set_data(new_data)
                           const test = document.getElementsByClassName('navbar')
                           let margin_top = 0

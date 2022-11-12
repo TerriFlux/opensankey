@@ -64,7 +64,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     Object.keys(data[elementTagName][tags_group_key].tags).forEach(
       (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
     )
-    if (elementTagName === 'nodeTags' && tags_group_key === 'Dimensions') {
+    if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
       Object.values(data.nodes).forEach(node=>node.dimensions['element' + idElement] = {parent_name : undefined, level : 1})
     }
 
@@ -166,7 +166,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
           }}>
-          {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
+          {Object.keys(data[elementTagName]).map(
             (key, i) =>
               <option
                 key={i}
@@ -305,7 +305,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         </thead>
         <tbody>
           {
-            Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
+            Object.keys(data[elementTagName]).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -347,6 +347,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                       <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>Aucun</option>
                       <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>Unique</option>
                       <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>Multiple</option>
+                      <option key={'multi' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>Niveau</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
@@ -361,7 +362,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           }
         </tbody>
       </Table>
-      {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').length > 0 ? tagSetting : <></>}
+      {Object.keys(data[elementTagName]).length > 0 ? tagSetting : <></>}
     </>
   )
 }

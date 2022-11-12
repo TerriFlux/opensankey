@@ -236,7 +236,7 @@ export const explore_branch = (
   let no_input_link = true
   let highest_branch_length = current_length
   Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && nodes[link.idSource].node_visible ) {
+    if (link.idTarget === idNode && nodes[link.idSource].node_visible && nodes[link.idSource].display ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
         const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes)
@@ -283,7 +283,9 @@ export const compute_auto_sankey = (
     max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
-  data.user_scale = max_link_value
+  if (max_link_value !== 1) {
+    data.user_scale = max_link_value
+  }
 
   const vspace = data.v_space
   const horizontal_indices: { [node_id:string]:number} = {}
@@ -294,25 +296,24 @@ export const compute_auto_sankey = (
       max_horizontal_index = horizontal_index
     }
   })
-  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible).forEach(l => {
+  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible && data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(l => {
     if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
       l.recycling = true
     }
   })
 
-  const width = max_horizontal_index * h_space
-
+  const width = max_horizontal_index* h_space 
 
   Object.values(data.nodes).forEach(node => {
-    if (!node.node_visible) {
+    if (!node.node_visible || !node.display) {
       return
     }
-    node.x = 50 + horizontal_indices[node.idNode] / max_horizontal_index * width //* 0.9
+    node.x = max_horizontal_index !== 0 ? 50 + horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
   })
 
   // Reorder links using the x of source name as criteria 
   // Compute input_outputLinksId
-  Object.values(data.nodes).filter(n=>n.node_visible).forEach(n => data.nodes[n.idNode] = {...n})
+  Object.values(data.nodes).filter(n=>n.node_visible && n.display).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
 
   // Vertical position of vertical nodes
@@ -321,7 +322,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
     if (the_nodes.length > 1) {
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
@@ -345,13 +346,13 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
     let total_nb_outputLinksId_up = 0
     let total_nb_outputLinksId_down = 0
     the_nodes.forEach((node) => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
@@ -370,7 +371,7 @@ export const compute_auto_sankey = (
     the_nodes.forEach(node => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible ) {
+          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
@@ -598,63 +599,86 @@ export const updateLayout = (
 
 export const desagregation = (
   data: SankeyData,   
-  idChildNode: string, 
+  idNode: string, 
   cur_dimension: string,
   control_display = true
 ) => {
-
-  const idParent = data.nodes[idChildNode].dimensions[cur_dimension].parent_name
-  if (!idParent || !data.nodes[idParent]) {
+  const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
+  if (dim_desagregate_nodes.length == 0) {
     return
   }
-  const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idParent )
   if (control_display) {
-    desagregate_nodes.forEach( n => {
+    dim_desagregate_nodes.forEach( n => {
       n.display = true
       n.node_visible = true
     })
   }
-  const nb_desagregated = desagregate_nodes.length
+  const nb_desagregated = dim_desagregate_nodes.length
   let current_y = data.v_space/2
   const delta_y = data.v_space / (nb_desagregated-1)
-  desagregate_nodes.forEach(n => {
-    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idParent].x !==0 && data.nodes[idParent].y !==0 )) {
-      n.x = data.nodes[idParent].x
-      n.y = data.nodes[idParent].y - current_y
+  dim_desagregate_nodes.forEach(n => {
+    if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
+      n.x = data.nodes[idNode].x
+      n.y = data.nodes[idNode].y - current_y
     }
     current_y = current_y - delta_y
   })
   if (control_display) {
     // Hides agregated nodes
-    data.nodes[idParent].display = false
-    data.nodes[idParent].node_visible = false
+    data.nodes[idNode].display = false
+    data.nodes[idNode].node_visible = false
   }
 }
 
 export const agregation = (
   data : SankeyData, 
-  idParent: string,
+  idNode: string,
   cur_dimension: string,
   control_display = true
 ) =>  {
-  const agregated_node = data.nodes[idParent]    
-  const desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === agregated_node.idNode )
+  if ( !(cur_dimension in data.nodes[idNode].dimensions)) {
+    return
+  }
+  const desagregated_node = data.nodes[idNode]
+  const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name!]
+  if (!parent_node) {
+    return
+  }
+  const dim_desagregated_nodes = Object.values(data.nodes).filter( 
+    n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === desagregated_node.dimensions[cur_dimension].parent_name 
+  )
+  // const all_desagregated_source_nodes = Object.values(data.nodes).filter( 
+  //   n => {
+  //     for (const dim in n.dimensions) {
+  //       const cur_parent_node = data.nodes[desagregated_node.dimensions[dim].parent_name!]
+  //       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
+  //         if (n.dimensions[dim].parent_name === cur_parent_node.idNode) {
+  //           return true
+  //         }
+  //       }
+  //       return false
+  //     }
+  //   }
+  // )
+  // all_desagregated_source_nodes.forEach(n => {
+  //   if (control_display) {
+  //     data.nodes[n.idNode].display = false
+  //     data.nodes[n.idNode].node_visible = false
+  //   }
+  // })
 
   if (control_display) {
     // show agregated node
-    agregated_node.display = true
-    agregated_node.node_visible = true
+    parent_node.display = true
+    parent_node.node_visible = true
   }
-  if (desagregate_nodes.length === 0) {
-    return
-  }
-  if (desagregate_nodes.length === 0) {
+  if (dim_desagregated_nodes.length === 0) {
     return
   }
 
   let mean_x = 0
   let mean_y = 0
-  desagregate_nodes.forEach(n => {
+  dim_desagregated_nodes.forEach(n => {
     if (control_display) {
       data.nodes[n.idNode].display = false
       data.nodes[n.idNode].node_visible = false
@@ -664,20 +688,19 @@ export const agregation = (
       mean_y += n.y
     }
   })
-  mean_x = mean_x/desagregate_nodes.length
-  mean_y = mean_y/desagregate_nodes.length
+  mean_x = mean_x/dim_desagregated_nodes.length
+  mean_y = mean_y/dim_desagregated_nodes.length
 
-  if (agregated_node.x === undefined || (agregated_node.x === 0 && agregated_node.y === 0) ) {
-    agregated_node.x = mean_x
-    agregated_node.y = mean_y
+  if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
+    parent_node.x = mean_x
+    parent_node.y = mean_y
   }
 }
 
 const AgregationModalPropTypes = {
   data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data : PropTypes.func.isRequired,
-  parent_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  dimension_names : PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  agregation_node : PropTypes.string.isRequired,
   set_show_agregation : PropTypes.func.isRequired,
   show_agregation : PropTypes.bool.isRequired,
   is_agregation: PropTypes.bool.isRequired
@@ -686,49 +709,112 @@ const AgregationModalPropTypes = {
 type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, parent_names, dimension_names, set_show_agregation,show_agregation,is_agregation}
+  {data, set_data, agregation_node, set_show_agregation,show_agregation,is_agregation}
 ) => {
-  let idParent = parent_names[0]
-
-  return (
-    <Modal 
-      show={show_agregation} 
-      onHide={ () => set_show_agregation(false) } >
-      <Modal.Header closeButton>
-        <Modal.Title>{is_agregation ? 'Noeuds agrégation' : 'Noeuds desagrégation'}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group>
-            <Row>
-              <Col>    
-                <Form.Select
-                  onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idParent = evt.target.value}
-                >
-                  {parent_names.map(
-                    (curIdParent, i) => <option key={i} value={curIdParent} selected={idParent === curIdParent} >{data.nodes[curIdParent].name}</option>
-                  )}
-                </Form.Select>
-              </Col>
-            </Row>      
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button 
-          variant="secondary" 
-          onClick={()=> {
-            if (is_agregation) {
-              agregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
-            } else {
-              desagregation(data,idParent,dimension_names[parent_names.indexOf(idParent)])
-            }
-            set_data({...data})
-            set_show_agregation(false)
-          }}
-        >{is_agregation ? 'Agrégation' : 'Désagrégation'}</Button>
-        <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
-      </Modal.Footer>
-    </Modal>
-  )
+  const n = data.nodes[agregation_node]
+  if ( is_agregation ) {
+    const parent_names: string[] = []
+    const dim_names: string[] = []
+    Object.keys(n.dimensions).forEach(
+      dim => {
+        if (n.dimensions[dim].parent_name) {
+          parent_names.push(n.dimensions[dim].parent_name as string)
+          dim_names.push(dim)
+        }
+      }
+    )
+    if (parent_names.length === 0) {
+      return <></>
+    }
+    let idParent = parent_names[0]
+    return (
+      <Modal 
+        show={show_agregation} 
+        onHide={ () => set_show_agregation(false) } >
+        <Modal.Header closeButton>
+          <Modal.Title>Noeuds agrégation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Row>
+                <Col>    
+                  <Form.Select
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idParent = evt.target.value}
+                  >
+                    {parent_names.map(
+                      (curIdParent, i) => <option key={i} value={curIdParent} selected={idParent === curIdParent} >{data.nodes[curIdParent].name}</option>
+                    )}
+                  </Form.Select>
+                </Col>
+              </Row>      
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={()=> {
+              agregation(data,agregation_node,dim_names[parent_names.indexOf(idParent)])
+              set_data({...data})
+              set_show_agregation(false)
+            }}
+          >Agrégation</Button>
+          <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
+        </Modal.Footer>
+      </Modal>
+    )
+  } else {
+    const child_names: string[] = []
+    const dim_names: string[] = []
+    Object.values(data.nodes).forEach(n2 => {
+      for (const dim in n2.dimensions) {
+        if (dim in n2.dimensions && n2.dimensions[dim].parent_name == n.idNode) {
+          if (dim_names.indexOf(dim) === -1) {
+            child_names.push(n2.idNode)
+            dim_names.push(dim)
+          }
+        }
+      }
+      return false
+    })
+    let idChild = child_names[0]
+    return (
+      <Modal 
+        show={show_agregation} 
+        onHide={ () => set_show_agregation(false) } >
+        <Modal.Header closeButton>
+          <Modal.Title>Noeuds desagrégation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Row>
+                <Col>    
+                  <Form.Select
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idChild = evt.target.value}
+                  >
+                    {child_names.map(
+                      (curIdParent, i) => <option key={i} value={curIdParent} selected={idChild === curIdParent} >{data.nodes[curIdParent].name}</option>
+                    )}
+                  </Form.Select>
+                </Col>
+              </Row>      
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={()=> {
+              desagregation(data,agregation_node,dim_names[child_names.indexOf(idChild)])
+              set_data({...data})
+              set_show_agregation(false)
+            }}
+          >Désagrégation</Button>
+          <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
+        </Modal.Footer>
+      </Modal>
+    )
+  }
 }
