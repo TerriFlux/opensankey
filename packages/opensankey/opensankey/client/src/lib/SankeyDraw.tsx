@@ -110,8 +110,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 }) => {
 
   const [show_agregation, set_show_agregation] = useState(false)
-  const [agregation_parent_names, set_agregation_parent_names] = useState<string[]>([])
-  const [agregation_dimension_names, set_agregation_dimension_names] = useState<string[]>([])
+  const [agregation_node, set_agregation_node] = useState('')
   const [is_agregation, set_is_agregation] = useState(true)
 
   // const default_node_size = data.node_width
@@ -2966,12 +2965,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         if (child_names.length > 1) {
-          set_agregation_parent_names(child_names)
-          set_agregation_dimension_names(dim_names)
+          set_agregation_node(n.idNode)
           set_is_agregation(false)
           set_show_agregation(true)
         } else {
-          desagregation(data, child_names[0], dim_names[0])
+          desagregation(data, n.idNode, dim_names[0])
         }
       } else {
         const parent_names: string[] = []
@@ -2988,12 +2986,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return
         }
         if (parent_names.length > 1) {
-          set_agregation_parent_names(parent_names)
-          set_agregation_dimension_names(dim_names)
+          set_agregation_node(n.idNode)
           set_is_agregation(true)
           set_show_agregation(true)
         } else {
-          agregation(data, parent_names[0], dim_names[0])
+          agregation(data, n.idNode, dim_names[0])
         }
       }
       set_data({ ...data })
@@ -4674,7 +4671,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         continue
       }
       const link_value = test_link_value(data,nodes, l)
-      if (link_value === undefined) {
+      if (link_value === undefined || link_value === '') {
         continue
       }
 
@@ -5548,10 +5545,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         data.nodes[new_node1.idNode] = new_node1
         for (const tag_group_key in data.nodeTags) {
           new_node1.tags[tag_group_key] = []
-          if (tag_group_key === 'Dimensions' ) {
-            for ( const tag in data.nodeTags.Dimensions.tags) {
-              new_node1.dimensions[tag] = {level:1}
-            }
+          if (data.nodeTags[tag_group_key]['banner'] === 'level' ) {
+            new_node1.dimensions[tag_group_key] = {level:1}
           }
         }
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
@@ -5835,16 +5830,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           </svg>
         </div>
       </div>
-
-      <AgregationModal
-        show_agregation={show_agregation}
-        data={data}
-        set_data={set_data}
-        parent_names={agregation_parent_names}
-        dimension_names={agregation_dimension_names}
-        set_show_agregation={set_show_agregation}
-        is_agregation={is_agregation}
-      />
+      { agregation_node !== '' ?
+        <AgregationModal
+          show_agregation={show_agregation}
+          data={data}
+          set_data={set_data}
+          agregation_node={agregation_node}
+          set_show_agregation={set_show_agregation}
+          is_agregation={is_agregation}
+        /> : <></>}
     </>
   )
 }

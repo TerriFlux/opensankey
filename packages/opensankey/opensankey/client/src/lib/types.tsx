@@ -187,11 +187,6 @@ export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   file_name: PropTypes.string,
 
-  agregation: PropTypes.objectOf(PropTypes.shape({
-    dimension: PropTypes.string.isRequired,
-    level: PropTypes.number.isRequired,
-  }).isRequired).isRequired,
-
   user_scale: PropTypes.number.isRequired,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
