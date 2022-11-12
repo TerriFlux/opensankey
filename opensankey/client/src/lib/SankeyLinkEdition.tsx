@@ -3,6 +3,7 @@ import { Row, Form, Col, FormLabel, FormCheck, Tabs, Tab, FormControl, Table } f
 import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
+import {useTranslation} from 'react-i18next'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -21,6 +22,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
   { data, set_data, selected_link, multi_selected_links, children }
 ) => {
   const { fluxTags,dataTags } = data
+  const {t} =useTranslation()
 
   const tags_visible = Object.keys(fluxTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(fluxTags)[0] : '')
@@ -288,11 +290,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const link_tag = (
-    <Tab eventKey="tags" title="Étiquettes"
+    <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
       <Form.Group as={Row} >
         <Col xs={2}>
-          <FormLabel >Groupe d'étiquettes:</FormLabel>
+          <FormLabel >{t('Tags.GE')}:</FormLabel>
         </Col>
         <Col xs={6}>
           <Form.Select
@@ -357,8 +359,8 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
         <Table striped bordered hover className='link_tags_affiliation'>
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Appartenance</th>
+              <th>{t('Tags.Nom')}</th>
+              <th>{t('Noeud.tags_node.Appartenance')}</th>
             </tr>
           </thead>
           <tbody>
@@ -404,7 +406,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     <Row>
       <Col sm={12}>
         <Tabs defaultActiveKey="flux_data" id="settings-layout">
-          <Tab eventKey="flux_data" title="Données">
+          <Tab eventKey="flux_data" title={t('Flux.data.données')}>
             <Form >
               {
                 //Définition des valeurs selon les paramètre dataTags
@@ -450,7 +452,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 })}
               <Row >
                 <Col>
-                  <FormLabel>Valeur pour ces paramètres</FormLabel>
+                  <FormLabel>{t('Flux.data.vpp')}</FormLabel>
                 </Col>
                 <Col>
                   <Form.Control
@@ -502,7 +504,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Row>
               <Row >
                 <Col>
-                  <FormLabel>Affichage</FormLabel>
+                  <FormLabel>{t('Flux.data.affichage')}</FormLabel>
                 </Col>
                 <Col>
                   <Form.Control
@@ -532,12 +534,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
             </Form>
           </Tab>
-          <Tab eventKey="flux_attributes" title="Apparence">
+          <Tab eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>
             <Form >
 
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Couleur:</FormLabel>
+                  <FormLabel >{t('Flux.apparence.couleur')}:</FormLabel>
                 </Col>
                 <Col>
                   <Form.Control
@@ -559,7 +561,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Gradient:</FormLabel>
+                  <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
                 </Col>
                 <Col>
                   <Form.Check
@@ -580,7 +582,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Hachuré:</FormLabel>
+                  <FormLabel >{t('Flux.apparence.hach')}:</FormLabel>
                 </Col>
                 <Col>
                   <Form.Check
@@ -601,7 +603,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel>Orientation flux:</FormLabel>
+                  <FormLabel>{t('Flux.apparence.of')}:</FormLabel>
                 </Col>
               </Form.Group>
               <Form.Group as={Row} >
@@ -682,7 +684,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
 
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Position du centre</FormLabel>
+                  <FormLabel >{t('Flux.apparence.pdc')}</FormLabel>
                 </Col>
                 <Col>
                  
@@ -712,7 +714,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Ecart entre Poignées</FormLabel>
+                  <FormLabel >{t('Flux.apparence.eep')}</FormLabel>
                 </Col>
                 <Col>
                   
@@ -744,12 +746,12 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel>Type:</FormLabel>
+                  <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
                 </Col>
                 <Col>
                   <FormCheck
                     type='checkbox'
-                    label='Courbe'
+                    label={t('Flux.apparence.courbe')}
                     checked={linkType('courbe')}
                     onChange={
                       evt => {
@@ -763,7 +765,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <FormCheck
                     type='checkbox'
-                    label='Flèche'
+                    label={t('Flux.apparence.fleche')}
                     checked={linkType('arrow')}
                     onChange={
                       evt => {
@@ -776,7 +778,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <Col>
                   <FormCheck
                     type='checkbox'
-                    label='Recyclage'
+                    label={t('Flux.apparence.recy')}
                     checked={linkType('recycle')}
                     onChange={
                       evt => {
@@ -796,7 +798,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               </Form.Group>
               <Form.Group as={Row} >
                 <Col>
-                  <FormLabel >Courbure</FormLabel>
+                  <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
                 </Col>
                 
                 <Col>
@@ -820,7 +822,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
               
             </Form>
           </Tab>
-          <Tab eventKey="label" title="Label">
+          <Tab eventKey="label" title={t('Flux.label.label')}>
             <Form.Group >
               <FormCheck
                 type='switch'
@@ -842,7 +844,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='black'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Label en noir'
+                  label={t('Flux.label.len')}
                   checked={linkLabelColor('black')}
                   onChange={
                     (evt) => {
@@ -859,7 +861,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='white'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Label blanc'
+                  label={t('Flux.label.lb')}
                   checked={linkLabelColor('white')}
                   onChange={
                     (evt) => {
@@ -876,7 +878,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='same_color'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Label en couleur'
+                  label={t('Flux.label.lec')}
                   checked={linkLabelColor('color')}
                   onChange={
                     () => {
@@ -895,7 +897,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <FormCheck
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Aligner avec le chemin du flux'
+                  label={t('Flux.label.acf')}
                   // disabled={selected_link.current.label_position === 'frozen'}
                   checked={labelSticktoLinkDisabled()}
                   onClick={()=>{
@@ -928,14 +930,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>Position laterale:</FormLabel>
+                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>{t('Flux.label.pl')}:</FormLabel>
               </Col>
               <Col>
                 <Form.Check
                   value='beginning'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Début'
+                  label={t('Flux.label.deb')}
                   checked={labelPositionVert('beginning')}
                   onChange={
                     evt => {
@@ -953,7 +955,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='middle'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Milieu'
+                  label={t('Noeud.labels.Milieu')}
                   checked={labelPositionVert('middle')}
                   onChange={
                     evt => {
@@ -971,7 +973,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='end'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Fin'
+                  label={t('Flux.label.fin')}
                   checked={labelPositionVert('end')}
                   onChange={
                     evt => {
@@ -987,14 +989,14 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form.Group>
             <Form.Group as={Row} >
               <Col>
-                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>Position orthogonale:</FormLabel>
+                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>{t('Flux.label.po')}:</FormLabel>
               </Col>
               <Col>
                 <Form.Check
                   value='below'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Dessous'
+                  label={t('Flux.label.dessous')}
                   checked={labelPositionOrtho('below')}
 
                   onChange={
@@ -1013,7 +1015,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='middle'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Milieu'
+                  label={t('Noeud.labels.Milieu')}
                   checked={labelPositionOrtho('middle')}
                   onChange={
                     evt => {
@@ -1031,7 +1033,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   value='above'
                   disabled={!labelVisibleChecked()}
                   type='radio'
-                  label='Dessus'
+                  label={t('Flux.label.dessus')}
                   checked={labelPositionOrtho('above')}
 
                   onChange={
@@ -1051,7 +1053,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                 <FormCheck 
                   disabled={!labelVisibleChecked()}
                   type='checkbox'
-                  label='Positionner le label à la souris'
+                  label={t('Flux.label.pls')}
                   // disabled={selected_link.current.label_position === 'frozen'}
                   checked={labelLinkFree()}
                   onChange={
@@ -1069,10 +1071,10 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
             </Form.Group>
           </Tab>
           {Object.keys(fluxTags).length > 0 ? link_tag : (<></>)}
-          <Tab eventKey="flux_tooltip" title="Info-bulle">
+          <Tab eventKey="flux_tooltip" title={t('Noeud.IB')}>
             <Form >
               <Row>
-                <FormLabel column sm={1}>Info-bulle:</FormLabel>
+                <FormLabel column sm={1}>{t('Noeud.IB')}:</FormLabel>
                 <Col sm={11}>
                   <Form.Control
                     as="textarea"

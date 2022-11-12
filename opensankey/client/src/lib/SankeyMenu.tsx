@@ -17,7 +17,9 @@ import SankeyDraw from './SankeyDraw'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-
+import {useTranslation} from 'react-i18next'
+import ReactCountryFlag from 'react-country-flag'
+import i18n from 'i18next'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -222,6 +224,13 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [radio_selected] = useState<string>('local')
   
   const [forceUpdate, setForceUpdate] = useState(false)
+  const {t} =useTranslation()
+
+
+  const listLang={
+    GB: { lng:'en', nativeName: 'English' },
+    FR: { lng:'fr',nativeName: 'French' }
+  }
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -579,7 +588,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const menuButton = () => {
     if (show_nav) {
-      return 'Configuration Sankey'
+      return t('Menu.confSankey')
     } else {
       return <FaAngleDoubleLeft />
     }
@@ -870,25 +879,25 @@ const Menu: FunctionComponent<MenuTypes> = (
         >Expert</Button>
       </ButtonGroup>
       <Form>
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
           preferenceCheck('MEP')
           set_data({ ...data })
         }} />
-        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Noeuds" />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {Form.Check
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label={t('Menu.Noeuds')} />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
           preferenceCheck('EN')
           set_data({ ...data })
         }} />
-        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Flux" />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label={t('Menu.flux')} />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
           preferenceCheck('EF')
           set_data({ ...data })
         }} />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
           preferenceCheck('ED')
           set_data({ ...data })
         }} />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
@@ -1013,13 +1022,13 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
 
           <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToNodes}>Appliquer le style aux noeuds</Button>
+            <Button variant="warning" onClick={applyStyleToNodes}>{t('Noeud.apparence.asn')}</Button>
           </Col>
         </Row>
 
         <Form.Group as={Row} >
           <Col xs={2} >
-            <FormLabel >Nom Style</FormLabel>
+            <FormLabel >{t('Menu.ns')}</FormLabel>
           </Col>
           <Col xs={10} >
 
@@ -1040,11 +1049,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         <Col md={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            <Tab eventKey="nodes_desc" title="Apparence">
+            <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Visibilité</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -1063,7 +1072,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Couleur')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -1081,13 +1090,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel>Forme</FormLabel>
+                    <FormLabel>{t('Noeud.apparence.Forme')}</FormLabel>
                   </Col>
                   <Col xs={2}>
                     <FormCheck
                       value="ellipse"
                       type='radio'
-                      label='Cercle'
+                      label={t('Noeud.apparence.Cercle')}
 
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
@@ -1104,7 +1113,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value="rect"
                       type='radio'
-                      label='Rectangle'
+                      label={t('Noeud.apparence.Rectangle')}
 
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
@@ -1121,7 +1130,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Largeur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -1141,7 +1150,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Hauteur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -1165,11 +1174,11 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Form>
             </Tab>
 
-            <Tab eventKey="label_desc" title="Labels">
+            <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
               <Form>
 
                 <Row>
-                  <Col xs={6}>Police des labels</Col>
+                  <Col xs={6}>{t('Flux.pdl')}</Col>
                   <Col xs={6}><Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1190,7 +1199,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Row>
 
                 <Form.Group as={Row} >
-                  <Col xs={4}>Visibilité</Col>
+                  <Col xs={4}>{t('Noeud.apparence.Visibilité')}</Col>
                   <Col xs={1}>
                     <FormCheck inline
                       type='switch'
@@ -1207,7 +1216,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Afficher la valeur du noeud</FormLabel>
+                    <FormLabel >{t('Noeud.labels.vdv')}</FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -1226,7 +1235,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
+                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -1246,12 +1255,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel >Police</FormLabel>
+                    <FormLabel >{t('Noeud.labels.police')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Gras'
+                      label={t('LL.gras')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.bold : false
                       }
@@ -1265,7 +1274,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Majuscule'
+                      label={t('LL.maj')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.uppercase : false
                       }
@@ -1279,7 +1288,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Italique'
+                      label={t('LL.ita')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.italic : false
                       }
@@ -1293,7 +1302,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel>Coupure des labels</FormLabel>
+                    <FormLabel>{t('Noeud.labels.cl')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -1317,12 +1326,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical</FormLabel>
+                    <FormLabel >{t('Noeud.labels.pv')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Haut'
+                      label={t('Noeud.labels.haut')}
 
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
@@ -1338,7 +1347,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
                       }
@@ -1352,7 +1361,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
                       }
@@ -1366,12 +1375,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Position horizontal</FormLabel>
+                    <FormLabel >{t('Noeud.labels.ph')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Gauche'
+                      label={t('Noeud.labels.gauche')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
                       }
@@ -1385,7 +1394,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
                       }
@@ -1399,7 +1408,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Droite'
+                      label={t('Noeud.labels.droite')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
                       }
@@ -1583,13 +1592,13 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
 
           <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToLinks}>Appliquer le style aux flux</Button>
+            <Button variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
           </Col>
         </Row>
 
         <Form.Group as={Row} >
           <Col xs={2} >
-            <FormLabel >Nom Style</FormLabel>
+            <FormLabel >{t('Menu.ns')}</FormLabel>
           </Col>
           <Col xs={10} >
 
@@ -1611,12 +1620,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Row>
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
-              <Tab eventKey="flux_attributes" title="Apparence">
+              <Tab eventKey="flux_attributes" title={t('Noeud.apparence.apparence')}>
                 <Form >
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Couleur:</FormLabel>
+                      <FormLabel >{t('Noeud.apparence.Visibilité')}:</FormLabel>
                     </Col>
                     <Col>
                       <Form.Control
@@ -1637,7 +1646,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Gradient:</FormLabel>
+                      <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
                     </Col>
                     <Col>
                       <Form.Check
@@ -1659,12 +1668,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel>Type:</FormLabel>
+                      <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
                     </Col>
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Courbe'
+                        label={t('Flux.apparence.courbe')}
                         checked={data.style_link[selected_style_link].curved}
                         onChange={
                           evt => {
@@ -1677,7 +1686,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Flèche'
+                        label={t('Flux.apparence.fleche')}
                         checked={data.style_link[selected_style_link].arrow}
                         onChange={
                           evt => {
@@ -1690,7 +1699,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Recyclage'
+                        label={t('Flux.apparence.recy')}
                         checked={(data.style_link[selected_style_link].recycling) ? true : false}
                         onChange={
                           evt => {
@@ -1703,7 +1712,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Form.Group>
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Courbure</FormLabel>
+                      <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
                     </Col>
 
                     <Col>
@@ -1784,13 +1793,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Form.Group>
                 </Form>
               </Tab>
-              <Tab eventKey="label" title="Label">
+              <Tab eventKey="label" title={t('Flux.label.label')}>
                 <Form.Group as={Row} >
                   <Col>
                     <FormCheck
                       value='black'
                       type='radio'
-                      label='Label en noir'
+                      label={t('Flux.label.len')}
                       checked={data.style_link[selected_style_link].text_color == 'black'}
                       onChange={
                         () => {
@@ -1804,7 +1813,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value='white'
                       type='radio'
-                      label='Label blanc'
+                      label={t('Flux.label.lb')}
                       checked={data.style_link[selected_style_link].text_color == 'white'}
                       onChange={
                         (evt) => {
@@ -1818,7 +1827,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value='same_color'
                       type='radio'
-                      label='Label en couleur'
+                      label={t('Flux.label.lec')}
                       checked={data.style_link[selected_style_link].text_color == 'color'}
                       onChange={
                         () => {
@@ -1844,13 +1853,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel>Position laterale:</FormLabel>
+                    <FormLabel>{t('Flux.label.pl')}:</FormLabel>
                   </Col>
                   <Col>
                     <Form.Check
                       value='beginning'
                       type='radio'
-                      label='Début'
+                      label={t('Flux.label.deb')}
                       checked={data.style_link[selected_style_link].label_position == 'beginning'}
                       onChange={
                         evt => {
@@ -1864,7 +1873,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='middle'
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={data.style_link[selected_style_link].label_position == 'middle'}
                       onChange={
                         evt => {
@@ -1878,7 +1887,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='end'
                       type='radio'
-                      label='Fin'
+                      label={t('Flux.label.fin')}
                       checked={data.style_link[selected_style_link].label_position == 'end'}
                       onChange={
                         evt => {
@@ -1892,7 +1901,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Form.Group>
                   <FormCheck
                     type='checkbox'
-                    label='Attaché au flux'
+                    label={t('Flux.label.acf')}
                     disabled={selected_link.current.label_position === 'frozen'}
                     checked={data.style_link[selected_style_link].label_on_path}
                     onChange={
@@ -1905,13 +1914,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel>Position orthogonale:</FormLabel>
+                    <FormLabel>{t('Flux.label.po')}:</FormLabel>
                   </Col>
                   <Col>
                     <Form.Check
                       value='below'
                       type='radio'
-                      label='Dessous'
+                      label={t('Flux.label.dessous')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'below'}
 
                       onChange={
@@ -1926,7 +1935,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='middle'
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'middle'}
                       onChange={
                         evt => {
@@ -1940,7 +1949,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='above'
                       type='radio'
-                      label='Dessus'
+                      label={t('Flux.label.dessus')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'above'}
 
                       onChange={
@@ -2016,7 +2025,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const modalShortcut = (
     <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
       <Modal.Header closeButton>
-        <Modal.Title>Raccourci Clavier</Modal.Title>
+        <Modal.Title>{t('Menu.rc')}</Modal.Title>
       </Modal.Header>
       <Modal.Body >
         <p>Fonctionnement des clics :</p>
@@ -2088,8 +2097,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
-              <NavDropdown  title="Fichiers" id="files" >
-                <NavDropdown drop='start' id='ouvrir' title="Ouvrir"  >
+              <NavDropdown  title={t('Menu.Fichiers')} id="files" >
+                <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
                   <Dropdown.Item 
                     onClick={() => {
                       if (_load_json.current) {
@@ -2133,40 +2142,50 @@ const Menu: FunctionComponent<MenuTypes> = (
                   >Excel</Dropdown.Item>
                   {open_menu}
                 </NavDropdown>
-                <NavDropdown  drop='start' id='enregistrer' title="Enregistrer" >
+                <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
                   <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
                   <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
                   {save_menu}
                 </NavDropdown>
-                <NavDropdown drop='start' id='exporter' title="Exporter" >
-                  <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
-                  <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
+                <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
+                  <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSavePDF} >{t('Menu.exporter')} PDF</Dropdown.Item>
                 </NavDropdown>
-                <Dropdown.Item onClick={() => { setShowPreference(true) }}>Préférences</Dropdown.Item>
+                <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
               </NavDropdown>
-              <NavDropdown id='edition' title="Edition" >
-                <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
-                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >Publier</Dropdown.Item>    
-                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
+              <NavDropdown id='edition' title={t('Menu.Edition')} >
+                <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
+                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>    
+                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
+                <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
+                <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
               </NavDropdown >
               {edition_menu}
               { formations_menu ? (
-                <NavDropdown title="Formations" id="formation" >
+                <NavDropdown title={t('Menu.Formations')} id="formation" >
                   {formations_menu}
                 </NavDropdown > ) :(<></>)
               }
-              <NavDropdown title="Exemples" id="exemples" >
+              <NavDropdown title={t('Menu.Exemples')} id="exemples" >
                 {example_menu}
               </NavDropdown >
               {/* <NavDropdown title="Portfolio" id="portfolio" >
                 {portfolio_menu}
               </NavDropdown > */}
 
-              <NavDropdown id='Aide' title="Aide" >
-                <Dropdown.Item onClick={() => setshowShortcut(true)} >Raccourci Clavier</Dropdown.Item>
-                <Dropdown.Item onClick={() => setshowHelp(true)}>Aide Supplémentaire</Dropdown.Item>
+              <NavDropdown id='Aide' title={t('Menu.Aide')} >
+                <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
+                <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
+
+                <NavDropdown id='lang' drop='start' title='Language'>
+                  {Object.entries(listLang).map(d=>{
+                    return <Dropdown.Item onClick={()=>{
+                      i18n.changeLanguage(d[1].lng)
+                    }}  ><ReactCountryFlag countryCode={d[0]} svg title={d[0]}></ReactCountryFlag>{d[0]}</Dropdown.Item>
+                  })}
+                  
+                </NavDropdown>
+
               </NavDropdown >
 
 
@@ -2267,7 +2286,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               {
                 //MENU PARAMETRE GENERAUX
               }
-              <Accordion.Header>Mise en page</Accordion.Header>
+              <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
               </Accordion.Body>
@@ -2278,7 +2297,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               id="Nodes"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === 'Noeuds' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -2287,7 +2306,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
             >
 
-              <Accordion.Header>Noeuds</Accordion.Header>
+              <Accordion.Header>{t('Menu.Noeuds')}</Accordion.Header>
               <Accordion.Body style={{ padding: '0px' }}>
 
                 <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
@@ -2310,7 +2329,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     }
                   >
                     <Accordion.Header style={{ marginLeft: '25px'/*,padding:'10px' */ }} >
-                      Étiquettes Noeuds
+                      {t('Menu.EN')}
                     </Accordion.Header>
                     <Accordion.Body>
                       {settings_edition_node_tags}
@@ -2333,7 +2352,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }
                   >
-                    <Accordion.Header className='level2' >Edition Noeuds</Accordion.Header>
+                    <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
                     <Accordion.Body>
                       <Row >
                         <Col xs={1}>
@@ -2417,7 +2436,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 apply_style_to_nodes()
                               }
                             }
-                          >Appliquer Style</Button>
+                          >{t('Flux.as')}</Button>
 
                         </Col>
                       </Row>
@@ -2537,7 +2556,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header >Flux</Accordion.Header>
+              <Accordion.Header >{t('Menu.flux')}</Accordion.Header>
               <Accordion.Body  style={{ padding: '0px' }}>
 
                 <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
@@ -2556,7 +2575,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }}
                   >
-                    <Accordion.Header className='level2' >Étiquettes Flux</Accordion.Header>
+                    <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
                     <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
                   </Accordion.Item>
 
@@ -2582,7 +2601,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <Form.Group>
                         <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
                         <Row>
-                          <Col xs={6}>Police des labels</Col>
+                          <Col xs={6}>{t('Flux.pdl')}</Col>
                           <Col xs={6}><Form.Select
                             onChange={
                               (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -2637,7 +2656,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Source</FormLabel>
+                          <FormLabel>{t('Flux.src')}</FormLabel>
                         </Col>
                         <Col>
                           <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
@@ -2647,7 +2666,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Cible</FormLabel>
+                          <FormLabel>{t('Flux.trgt')}</FormLabel>
                         </Col>
                         <Col>
                           <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
@@ -2690,7 +2709,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       <Row>
                         <Col>
-                          <FormLabel>Déplacement z-index flux</FormLabel>
+                          <FormLabel>{t('Flux.dzf')}</FormLabel>
                         </Col>
                         <Col >
                           {//Boutton pour monter le lien sélctionné
@@ -2765,7 +2784,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       <Row >
                         <Col xs={1}>
-                          <FormLabel>Style:</FormLabel>
+                          <FormLabel>{t('Flux.dzf')}:</FormLabel>
                         </Col>
 
                         <Col xs={6}>
@@ -2806,7 +2825,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 set_data({ ...data })
                               }
                             }
-                          >Appliquer Style</Button>
+                          >{t('Flux.as')}</Button>
 
                         </Col>
                       </Row>
@@ -2842,7 +2861,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Étiquettes Données</Accordion.Header>
+              <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
               <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
@@ -2857,7 +2876,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Labels Libres</Accordion.Header>
+              <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row}>
                   <Col xs={1}>
@@ -2948,7 +2967,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Hauteur Label</FormLabel>
+                    <FormLabel >{t('LL.hl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -2966,7 +2985,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Largeur Label</FormLabel>
+                    <FormLabel >{t('LL.ll')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -2985,7 +3004,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Fond transparent</FormLabel>
+                    <FormLabel >{t('LL.ft')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <Form.Check
@@ -3003,7 +3022,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur Fond Label</FormLabel>
+                    <FormLabel >{t('LL.cfl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3024,7 +3043,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Bordure transparent</FormLabel>
+                    <FormLabel >{t('LL.bt')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <Form.Check
@@ -3042,7 +3061,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur Bordure Label</FormLabel>
+                    <FormLabel >{t('LL.cbl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3062,12 +3081,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical texte</FormLabel>
+                    <FormLabel >{t('LL.pvt')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Haut'
+                      label={t('Noeud.labels.haut')}
                       checked={allNodeLabelVert('vert', 'haut')}
                       onChange={
                         () => {
@@ -3085,7 +3104,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={allNodeLabelVert('vert', 'milieu')}
                       onChange={
                         () => {
@@ -3102,7 +3121,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
 
                       checked={allNodeLabelVert('vert', 'bas')}
                       onChange={
@@ -3119,12 +3138,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Form.Group><Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Alignement texte</FormLabel>
+                    <FormLabel >{t('LL.at')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Gauche'
+                      label={t('Noeud.labels.gauche')}
                       checked={allNodeLabelVert('horiz', 'gauche')}
                       onChange={
                         () => {
@@ -3140,7 +3159,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Centre'
+                      label={t('LL.centre')}
                       checked={allNodeLabelVert('horiz', 'centre')}
                       onChange={
                         () => {
@@ -3155,7 +3174,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Droite'
+                      label={t('Noeud.labels.droite')}
 
                       checked={allNodeLabelVert('horiz', 'droite')}
                       onChange={
@@ -3176,7 +3195,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Taille Police</FormLabel>
+                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3196,12 +3215,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel >Labels</FormLabel>
+                    <FormLabel >{t('LL.labels')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Gras'
+                      label={t('LL.gras')}
                       checked={allLabelTextBold()}
                       onChange={
                         evt => {
@@ -3214,7 +3233,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Majuscule'
+                      label={t('LL.maj')}
                       checked={allLabelTextUpper()}
                       onChange={
                         evt => {
@@ -3227,7 +3246,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Italique'
+                      label={t('LL.ita')}
                       checked={allLabelTextItalic()}
                       onChange={
                         evt => {
@@ -3446,11 +3465,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 }
               }>
-              <Accordion.Header>Légendes</Accordion.Header>
+              <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel >Légende X</FormLabel>
+                    <FormLabel >{t('Menu.LegX')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3466,7 +3485,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel>Légende Y</FormLabel>
+                    <FormLabel>{t('Menu.LegY')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3483,7 +3502,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel>Largeur Légende</FormLabel>
+                    <FormLabel>{t('Menu.LegWidth')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3594,6 +3613,8 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   let file_layout: Blob[] | undefined
+  const {t} =useTranslation()
+
   return (
     <Modal
       bsSize="large"
@@ -3605,13 +3626,13 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
         alignItems: 'center'
       }}>
       <Modal.Header closeButton>
-        <Modal.Title>Appliquer mise en page</Modal.Title>
+        <Modal.Title>{t('Menu.amp')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form >
           <Form.Group as={Row} >
             <Col xs={3}>
-              <FormLabel>Fichier de mise en page</FormLabel>
+              <FormLabel>{t('Menu.fmep')}</FormLabel>
             </Col>
             <Col xs={5}>
               <Form.Control
@@ -3643,7 +3664,7 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
                     })()
                     reader.readAsText(file_layout[0])
                   }
-                }>Appliquer Disposition
+                }>{t('Menu.ad')}
               </Button>
             </Col>
           </Form.Group>
@@ -3667,6 +3688,7 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
+  const {t} =useTranslation()
 
   return (
     <Modal
@@ -3735,7 +3757,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
         <Button
           variant="secondary"
           onClick={handleCloseDialog}
-        >Annuler</Button>
+        >{t('Menu.ca')}</Button>
       </Modal.Footer>
     </Modal>)
 }
@@ -3751,16 +3773,17 @@ type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
 
 const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
   const [file_path,set_file_path] = useState(file_path_initial)
+  const {t} =useTranslation()
 
   return (
     <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >
       <Modal.Header closeButton>
-        <Modal.Title>Publication/Mise à jour du diagramme</Modal.Title>
+        <Modal.Title>{t('Menu.pdd')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
           <Form.Group as={Row}>
-            <Form.Label>Chemin d'accés</Form.Label>
+            <Form.Label>{t('Menu.ca')}</Form.Label>
             <Col>    
               <Form.Control
                 type='text'
@@ -3772,8 +3795,8 @@ const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_sh
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>Publier</Button>
-        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>Annuler</Button>
+        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>{t('Menu.pub')}</Button>
+        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>{t('Menu.ca')}</Button>
       </Modal.Footer>
     </Modal>
   )

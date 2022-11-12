@@ -6,6 +6,8 @@ import { SankeyDataPropTypes, SankeyLinkValue, SankeyLinkValueDict, TagsGroup } 
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
 import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
+import {useTranslation} from 'react-i18next'
+
 
 const SankeySettingsEditionTagsPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -32,6 +34,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     data[elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'][tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
+  const {t} =useTranslation()
 
   let element_tags : string [] = []
   if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
@@ -158,7 +161,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   const tagSetting = (<>
     <Form.Group as={Row} >
       <Col>
-        <FormLabel >Groupe d'étiquettes:</FormLabel>
+        <FormLabel >{t('Tags.GE')}:</FormLabel>
       </Col>
       <Col>
         <Form.Select onChange={
@@ -218,10 +221,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         <tr>
 
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button> </th>
-          <th>Nom</th>
-          <th>Visible</th>
-          <th>Couleur</th>
-          { elementNameProp === 'nodes' ? (<th>Forme</th>) : (<></>)}
+          <th>{t('Tags.Nom')}</th>
+          <th>{t('Tags.Visible')}</th>
+          <th>{t('Tags.Couleur')}</th>
+          { elementNameProp === 'nodes' ? (<th>{t('Tags.Forme')}</th>) : (<></>)}
         </tr>
       </thead>
       <tbody>
@@ -296,11 +299,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         <thead>
           <tr>
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
-            <th>Nom</th>
-            <th>Légende</th>
-            <th>Étiquette</th>
-            <th>Bannière</th>
-            <th>Position</th>
+            <th>{t('Tags.Nom')}</th>
+            <th>{t('Tags.Leg')}</th>
+            <th>{t('Tags.tags')}</th>
+            <th>{t('Tags.Bannière')}</th>
+            <th>{t('Tags.Position')}</th>
           </tr>
         </thead>
         <tbody>
@@ -344,10 +347,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     </td>
                     <td>{Object.keys(data[elementTagName][tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>Aucun</option>
-                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>Unique</option>
-                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>Multiple</option>
-                      <option key={'multi' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>Niveau</option>
+                      <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>{t('Tags.Aucun')}</option>
+                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>{t('Tags.Unique')}</option>
+                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>{t('Tags.Multiple')}</option>
+                      <option key={'level' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>{t('Tags.Niveau')}</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
@@ -377,6 +380,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
   const [data_tags_group_key, set_data_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
 
   const { links, dataTags } = data
+  const {t} =useTranslation()
 
   let max_link_value = 0
   Object.values(links).forEach(link => {
@@ -475,8 +479,8 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       <thead>
         <tr>
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
-          <th>Nom</th>
-          <th>Sélectionné</th>
+          <th>{t('Tags.Nom')}</th>
+          <th>{t('Tags.selct')}</th>
         </tr>
       </thead>
       <tbody>
@@ -539,8 +543,8 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
         <thead>
           <tr>
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
-            <th>Nom</th>
-            <th>Étiquette</th>
+            <th>{t('Tags.Nom')}</th>
+            <th>{t('Tags.tags')}</th>
           </tr>
         </thead>
         <tbody>
