@@ -362,8 +362,9 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
-  
-
+  if (data.agregated_level) {
+    delete data.agregated_level
+  } 
   if (!data_to_convert.style_node) {
     data_to_convert.style_node = {
       'default': {
@@ -874,7 +875,6 @@ export const convert_data = (
           // }
         }  
       }
-
       delete n.tags['Exchanges']
       if (!n.position) {
         n.position = 'absolute'        
@@ -893,17 +893,6 @@ export const convert_data = (
       }  
     }
   )
-
-  // if (import_export) {
-  //   Object.values(data_to_convert.nodes).forEach(n=>{
-  //     if (!('Dimensions' in n.tags)) {
-  //       n.tags.Dimensions = ['Primaire']
-  //     }
-  //     // if (!('Echanges' in n.tags.Dimensions)) {
-  //     //   n.tags.Dimensions.push('Echanges')
-  //     // }      
-  //   })
-  // }
 
   if (data_to_convert.nodeTags['Exchanges']) {
     //data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
@@ -1385,10 +1374,6 @@ export const convert_data = (
   if ('sankey_type' in data) {
     delete (data as ConvertSankeyData).sankey_type
   }
-
-  // if ( data.agregation.level === -1 ) {
-  //   data.agregation.level = 1
-  // }
 
   if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10

@@ -541,7 +541,7 @@ export const updateLayout = (
       if (!(tag in new_layout.nodeTags[tag_group_key].tags)) {
         continue
       }
-      //data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
+      data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
       data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
     }
   }
@@ -555,7 +555,7 @@ export const updateLayout = (
       if (!(tag in new_layout.fluxTags[tag_group_key].tags)) {
         continue
       }
-      //data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
+      data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
       data.fluxTags[tag_group_key].tags[tag].selected = new_layout.fluxTags[tag_group_key].tags[tag].selected
     }
   }
