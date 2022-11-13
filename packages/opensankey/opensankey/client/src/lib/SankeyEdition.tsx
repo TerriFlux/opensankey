@@ -193,7 +193,7 @@ declare const window: Window &
 
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter }) => {
   const { nodeTags, fluxTags, dataTags } = data
-  const [show_readme, set_show_readme] = useState(false)  
+  const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
   const {t} =useTranslation()
 
