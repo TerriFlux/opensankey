@@ -280,7 +280,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               </Col>
             </FormGroup>
           </>)
-      } else if (tags_group.banner === 'level') {
+      } else if (tags_group.banner === 'level' ) {
         const selected = Object.values(tags_group.tags).filter(tag=>tag.selected)[0].name
         return (
           <>
