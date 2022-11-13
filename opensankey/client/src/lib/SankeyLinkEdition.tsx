@@ -475,7 +475,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             val.value = +evt.target.value
   
                           })
-                          if (Object.keys(data.links).length == 1) {
+                          if (Object.keys(data.links).length == 1 && +evt.target.value !== 0) {
                             data.user_scale = +evt.target.value
                           }
                         }else{
