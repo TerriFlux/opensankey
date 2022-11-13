@@ -2784,7 +2784,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       <Row >
                         <Col xs={1}>
-                          <FormLabel>{t('Flux.dzf')}:</FormLabel>
+                          <FormLabel>{t('Flux.style')}:</FormLabel>
                         </Col>
 
                         <Col xs={6}>
