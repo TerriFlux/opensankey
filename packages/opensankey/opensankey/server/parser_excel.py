@@ -294,18 +294,23 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     if not row_flux_tag in existing_v['tags']:
                         is_existing_link = False
                                    
-        if is_existing_link:                     
-            existing_link['dashed'] = 0
+        if is_existing_link:
+            if val != '':              
+                existing_link['dashed'] = 0
             set_value(row_data_tags,row_flux_tags,fluxTags,0,existing_link['value'], val,display_val)
         else:
             value = {}
             set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
+            dashed = 1
+            if val != '':
+                dashed = 0
             new_link = {
                 'idLink'   : 'link'+str(row),  
                 'idSource' : source_node['idNode'],
                 'idTarget' : target_node['idNode'],
                 'value'    : value,
-                'color'    : color
+                'color'    : color,
+                'dashed'   : dashed
             }
             links[new_link['idLink']] = new_link
 
