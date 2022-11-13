@@ -420,6 +420,12 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 if  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_LEVEL)] == 1:
                     break
     if len(levelTags) == 0:
+        nodeTags['Primaire'] = {
+            'group_name' : 'Primaire',
+            'show_legend' : 0,
+            'tags'        : {},
+            'banner'      : 'level'                   
+        }
         max_level = 0
         for node in nodes.values():
             if int(node['tags']['Primaire'][0]) > max_level:
@@ -432,12 +438,6 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             except Exception:
                 pass
         if max_level > 1:
-            nodeTags['Primaire'] = {
-                'group_name' : 'Primaire',
-                'show_legend' : 0,
-                'tags'        : {},
-                'banner'      : 'level'                   
-            }
             for tag in range(1,max_level+1):
                 selected = False
                 if tag == 1:
