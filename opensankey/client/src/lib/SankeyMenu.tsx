@@ -227,10 +227,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const {t} =useTranslation()
 
 
-  const listLang={
-    GB: { lng:'en', nativeName: 'English' },
-    FR: { lng:'fr',nativeName: 'French' }
-  }
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -2176,18 +2172,21 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown id='Aide' title={t('Menu.Aide')} >
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
                 <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-
-                <NavDropdown id='lang' drop='start' title='Language'>
-                  {Object.entries(listLang).map(d=>{
-                    return <Dropdown.Item onClick={()=>{
-                      i18n.changeLanguage(d[1].lng)
-                    }}  ><ReactCountryFlag countryCode={d[0]} svg title={d[0]}></ReactCountryFlag>{d[0]}</Dropdown.Item>
-                  })}
-                  
-                </NavDropdown>
-
               </NavDropdown >
+              <ReactCountryFlag countryCode={'GB'} svg title={'GB'}
+                style={{
+                  fontSize: '2em',
+                  lineHeight: '2em',
+                }}
+              ></ReactCountryFlag>
+              <Form.Check
+                type='switch'
+                checked={i18n.language=='en'}
+                onChange={evt => {
+                  i18n.changeLanguage((evt.target.checked)?'en':'fr')
 
+                }}
+              />
 
               {!data.static_sankey && !mode_visualisation ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
