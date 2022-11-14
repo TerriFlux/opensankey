@@ -18,7 +18,6 @@ import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
-import ReactCountryFlag from 'react-country-flag'
 import i18n from 'i18next'
 declare const window: Window &
   typeof globalThis & {
@@ -2173,18 +2172,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
                 <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
               </NavDropdown >
-              <ReactCountryFlag countryCode={'GB'} svg title={'GB'}
-                style={{
-                  fontSize: '2em',
-                  lineHeight: '2em',
-                }}
-              ></ReactCountryFlag>
+              
+              <Form.Label style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
               <Form.Check
+                style={{marginTop:'0.5em',marginLeft:'0.em'}}
                 type='switch'
                 checked={i18n.language=='en'}
                 onChange={evt => {
                   i18n.changeLanguage((evt.target.checked)?'en':'fr')
-
                 }}
               />
 
