@@ -2285,14 +2285,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
       return [vert, left, right]
     } else if (link.orientation === 'hh') {
-
-      const shift_left = 'translate(' + (xs + (xt - xs) * pos_drag_zone_left) + ', ' + (ys - default_handle_size / 2) + ')'
-      const shift_right = 'translate(' + (xs + (xt - xs) * pos_drag_zone_right) + ', ' + (yt - default_handle_size / 2) + ')'
+      const right_s=(xs>xt)?0:-10
+      const left_s=(xs>xt)?-10:0
+      const shift_left = 'translate(' + (xs + (xt - xs) * pos_drag_zone_left+left_s) + ', ' + (ys - default_handle_size / 2) + ')'
+      const shift_right = 'translate(' + (xs + (xt - xs) * pos_drag_zone_right+right_s) + ', ' + (yt - default_handle_size / 2) + ')'
       return [shift_left, shift_right]
     } else if (link.orientation === 'vv') {
-      
-      const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_left) + ')'
-      const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_right) + ')'
+      const right_s=(ys>yt)?0:-10
+      const left_s=(ys>yt)?-10:0
+      const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_left+left_s) + ')'
+      const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_right+right_s) + ')'
       return [shift_left, shift_right]
 
     } else if (link.orientation === 'vh') {
@@ -2314,11 +2316,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     yt: number
   )=>{      
     const center_handle = 1/2
-    const link_value = test_link_value(data, display_nodes, link)
-    const tmp=(link_value=='')?1:link_value
 
     const handle_pos = handles_positions(data.links, link, xs, ys, xt, yt)
-    console.log(handle_pos)
 
     if((link.orientation=='hh' || link.orientation=='vv')){
       const [xs2,ys2]=handle_pos[0].replace('translate(','').replace(')','').split(',')
@@ -2329,11 +2328,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const ty=Number(yt2)
       if (link.orientation === 'hh') {
   
-        const shift_left = 'translate(' + (sx + (tx - sx) * center_handle) + ', ' + (sy - default_handle_size+((ty-sy)+scale(tmp)) / 2) + ')'
+        const shift_left = 'translate(' + (sx + (tx - sx) * center_handle) + ', ' + (sy + (ty - sy) * center_handle+default_handle_size/2) + ')'
         return [shift_left]
       } else if (link.orientation === 'vv') {
         
-        const shift_left = 'translate(' + (sx - default_handle_size+((tx-sx)+scale(tmp)) / 2) + ', ' + (sy + (ty - sy) * center_handle) + ')'
+        const shift_left = 'translate(' + (sx + (tx - sx) * center_handle+default_handle_size/2) + ', ' + (sy + (ty - sy) * center_handle) + ')'
         return [shift_left]
   
       }
@@ -5191,7 +5190,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const legendElements = legend.append('g')
         .selectAll('g')
         // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-        .data(Object.entries(tag_group[1].tags))
+        .data(Object.entries(tag_group[1].tags)
+          .filter(tag=>{
+            if(Object.keys(data.fluxTags).includes(tag_group[0])){
+              const t=Object.values(data.links).filter(l=>{
+                const tmp=getLinkValue(data,l.idLink)
+                return link_visible(l,data) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
+              }).length
+              return t>0
+            }else if(Object.keys(data.nodeTags).includes(tag_group[0])){
+              const t2=Object.values(data.nodes).filter(n=>{
+                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ||n.iconVisible)
+              }).length
+              return t2
+            }
+            return  false
+          })
+        )
         .enter()
         .append('svg:g')
         // on filtre les tags avec selected à true (Visible)
