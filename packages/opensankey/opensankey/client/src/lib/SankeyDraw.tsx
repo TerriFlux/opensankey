@@ -5897,7 +5897,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const svgSankey = d3.select('#svg')
     if (data.fit_screen) {
       svgSankey.attr('viewBox', [0, 0, data.width , data.height] as unknown as string)
-      svgSankey.style('width', '98.5%')
+      svgSankey.style('width', window.screen.width*0.975)
     } else {
       svgSankey.attr('viewBox', null)
       svgSankey.style('width', data.width + 'px')
@@ -6162,9 +6162,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     update_scale(data.user_scale)
-    if (data.fit_screen) {
-      d3.select('#svg').attr('transform', 'scale(1)')
-    }
+    // if (data.fit_screen) {
+    //   console.log('there')
+    //   // d3.select('#svg').attr('transform', 'scale(1)')
+    // }
 
     d3.select('#svg').selectAll('.defsArrow').remove()
     d3.select('#svg').append('defs').attr('class', 'defsArrow')

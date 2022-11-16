@@ -218,6 +218,39 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   // let has_agregation = false
   // Object.values(nb_agregation_level).forEach(nb_level => has_agregation = has_agregation || nb_level>1 )
 
+  const default_horiz_shift = 50
+
+  const min_width_and_height = () => {
+    let height = 0
+    let width = 0
+    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
+      width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
+    })
+
+    Object.values(data.labels).forEach(n => {
+      height = (n.y) ? Math.max(height, n.y) : height
+      width = (n.x ) ? Math.max(width, n.x) : width
+    })
+
+    height = height + 200
+    width = width + 200
+    Object.values(data.links).forEach(l => {
+      if (l.recycling) {
+        height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
+      }
+    })
+
+    Object.values(data.links).forEach(l => {
+      if (l.recycling) {
+        width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
+      }
+    })
+    return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
+  }
+
+
+
   const addAllDropDownNode = (level:boolean) => {
     let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
     if (level) {
@@ -854,7 +887,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 >
                   <Button variant='dark' onClick={() => { 
                     data.fit_screen = true
-                    d3.select('#svg').on('.zoom', null)
+                    const zoomed=(transform:string)=> {
+                      [data.width, data.height] = min_width_and_height()
+                      
+                      d3.select('#svg').attr('transform', transform)
+                      d3.select('#svg')
+                        .style('border', Math.round(2 ) + 'px solid #78c2ad')
+                        .style('width', data.width + 'px')
+                    }
+                    const zoom = d3.zoom()
+                      .scaleExtent([1, 40])
+                      .on('zoom', zoomed)
+                    zoom.scaleTo(d3.select('#svg'),1)
                     set_data({ ...data })
                   }} >
                     <FontAwesomeIcon icon={faMaximize} />
