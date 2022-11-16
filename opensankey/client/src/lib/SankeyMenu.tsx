@@ -18,7 +18,6 @@ import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
-import ReactCountryFlag from 'react-country-flag'
 import i18n from 'i18next'
 declare const window: Window &
   typeof globalThis & {
@@ -227,10 +226,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   const {t} =useTranslation()
 
 
-  const listLang={
-    GB: { lng:'en', nativeName: 'English' },
-    FR: { lng:'fr',nativeName: 'French' }
-  }
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -2176,18 +2171,17 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown id='Aide' title={t('Menu.Aide')} >
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
                 <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-
-                <NavDropdown id='lang' drop='start' title='Language'>
-                  {Object.entries(listLang).map(d=>{
-                    return <Dropdown.Item onClick={()=>{
-                      i18n.changeLanguage(d[1].lng)
-                    }}  ><ReactCountryFlag countryCode={d[0]} svg title={d[0]}></ReactCountryFlag>{d[0]}</Dropdown.Item>
-                  })}
-                  
-                </NavDropdown>
-
               </NavDropdown >
-
+              
+              <Form.Label style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
+              <Form.Check
+                style={{marginTop:'0.5em',marginLeft:'0.em'}}
+                type='switch'
+                checked={i18n.language=='en'}
+                onChange={evt => {
+                  i18n.changeLanguage((evt.target.checked)?'en':'fr')
+                }}
+              />
 
               {!data.static_sankey && !mode_visualisation ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
