@@ -574,14 +574,19 @@ def save_excel(
     
     has_dimensions = len([node for node in sankey_data['nodes'].values() if len(node['dimensions'].keys())]) > 0
     has_definitions = False
+    for row,node in enumerate(sankey_data['nodes'].values()):
+        if 'tooltip_text' in node and node['tooltip_text'] != None and node['tooltip_text'] != '':
+            nb_cols_nodes = nb_cols_nodes+1
+            nodes[0].append(NODES_DEFINITIONS)
+            has_definitions = True
+            break
     if not has_dimensions:
         for row,node in enumerate(sankey_data['nodes'].values()):
             nodes.append([""] * nb_cols_nodes)
             nodes[row+1][nodes_cols.index(NODES_LEVEL)] = 1
             nodes[row+1][nodes_cols.index(NODES_NODE)] = node['name']
-            if 'definition' in node and node['definition'] != None and node['definition'] != '':
-                has_definitions = True
-                nodes[row+1][nb_cols_nodes-1] = node['definition']
+            if 'tooltip_text' in node and node['tooltip_text'] != None and node['tooltip_text'] != '':
+                nodes[row+1][nb_cols_nodes-1] = node['tooltip_text']
             col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
                 tags = sankey_data['nodeTags'][tag_name]['tags']
@@ -628,8 +633,8 @@ def save_excel(
                 dim_nodes.append([""] * nb_cols_nodes)
                 dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
                 dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-                if 'definition' in node and node['definition'] != None:
-                    dim_nodes[row][nb_cols_nodes-1] = node['definition']
+                if 'tooltip_text' in node and node['tooltip_text'] != None:
+                    dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
                 col_num = 0           
                 for j,tag_name in enumerate(sankey_data['nodeTags']):
                     tags = sankey_data['nodeTags'][tag_name]['tags']
@@ -657,12 +662,11 @@ def save_excel(
                 row = parent_row+1
                 dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = dim_nodes[parent_row][0]+1
                 dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-                if 'definition' in node and node['definition'] != None:
-                    dim_nodes[row][nb_cols_nodes-1] = node['definition']
+                if 'tooltip_text' in node and node['tooltip_text'] != None:
+                    dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
                 col_num = 0           
                 for j,tag_name in enumerate(sankey_data['nodeTags']):
                     if tag_name == 'Dimensions':
-                        dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][levelTag]['name']
                         continue
                     tags = sankey_data['nodeTags'][tag_name]['tags'] 
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
