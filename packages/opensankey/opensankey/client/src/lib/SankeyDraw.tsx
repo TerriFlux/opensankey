@@ -5534,7 +5534,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const keyHandler = (e: KeyboardEvent) => {
     if (current) {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && document.activeElement?.tagName!=='INPUT') {
         if (e.key == 'ArrowUp') {
           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
             if (d != undefined) {
@@ -5766,16 +5766,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
       } else if(e.key=='Delete'){
-        multi_selected_nodes.current.forEach(el=>{
-          delete_node(data,el)
-        })
-        multi_selected_links.current.forEach(el=>{
-          delete_link(data,el)
-        })
+        if(document.activeElement?.tagName!=='INPUT')
+        {   
+          multi_selected_nodes.current.forEach(el=>{
+            delete_node(data,el)
+          })
+          multi_selected_links.current.forEach(el=>{
+            delete_link(data,el)
+          })
 
-        multi_selected_nodes.current=[]
-        multi_selected_links.current=[]
-        set_data({...data})
+          multi_selected_nodes.current=[]
+          multi_selected_links.current=[]
+          set_data({...data})
+        }
       }
     } else {
       //Si nous somme dans une vue les action du clavier sont différentes :
