@@ -28,10 +28,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
   const [parent_visible,set_parent_visible] = useState(false)
   const [cube_dimension,set_cube_dimension] = useState(
-    Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.values(nodeTags).filter(tag=>tag.banner == 'level')[0].group_name : 'Primaire' 
+    Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.entries(nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0] : 'Primaire' 
   )
   const {t} =useTranslation()
 
+  if (Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0 && cube_dimension == 'Primaire') {
+    if (Object.values(nodeTags).filter(tag=>tag.banner == 'level' && tag.group_name == 'Primaire').length == 0) {
+      set_cube_dimension(Object.entries(nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0])
+    }
+  }
 
   const display_nodes = data.nodes
   const display_links = data.links
@@ -1291,8 +1296,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Form.Group as={Row} >
                   <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>
                   <Col><Form.Select placeholder='all' value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
-                    {Object.values(nodeTags).filter(tag=>tag.banner == 'level').map((tag,i) => {
-                      return (<option key={i} value={tag.group_name}>{tag.group_name}</option>)
+                    {Object.entries(nodeTags).filter(tag=>tag[1].banner == 'level').map((tag,i) => {
+                      return (<option key={i} value={tag[0]}>{tag[1].group_name}</option>)
                     })}
                   </Form.Select></Col>
                 </Form.Group>
@@ -1314,25 +1319,24 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
                           if ( changeEvent.target.value == 'none' ) {
                             multi_selected_nodes.current.forEach(n=> {
-                              if (cube_dimension in n.dimensions) {
-                                n.dimensions[cube_dimension].parent_name = undefined
-                                n.dimensions[cube_dimension].level = 1
-                              } else {
-                                console.log(cube_dimension +' not in ' +n.name)
+                              if (!(cube_dimension in n.dimensions)) {
+                                n.dimensions[cube_dimension] = {}
                               }
+                              n.dimensions[cube_dimension].parent_name = undefined
+
                             })
                           } else {
                             multi_selected_nodes.current.forEach(n=> {
-                              if (cube_dimension in n.dimensions) {
-                                n.dimensions[cube_dimension].parent_name = changeEvent.target.value
-                                if (data.nodes[changeEvent.target.value].dimensions[cube_dimension].parent_name !== undefined) {
-                                  n.dimensions[cube_dimension].level = 3
-                                } else {
-                                  n.dimensions[cube_dimension].level = 2
-                                }
-                              } else {
-                                console.log(cube_dimension +' not in ' +n.name)
+
+                              if (!(cube_dimension in n.dimensions)) {
+                                n.dimensions[cube_dimension] = {}
                               }
+                              n.dimensions[cube_dimension].parent_name = changeEvent.target.value
+                              // if (data.nodes[changeEvent.target.value].dimensions[cube_dimension].parent_name !== undefined) {
+                              //   n.dimensions[cube_dimension].level = 3
+                              // } else {
+                              //   n.dimensions[cube_dimension].level = 2
+                              // }
                             })
                           }
                         }}>

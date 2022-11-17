@@ -67,9 +67,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     Object.keys(data[elementTagName][tags_group_key].tags).forEach(
       (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
     )
-    if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
-      Object.values(data.nodes).forEach(node=>node.dimensions['element' + idElement] = {parent_name : undefined, level : 1})
-    }
+    // if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
+    //   Object.values(data.nodes).forEach(node=>node.dimensions[tags_group_key] = {parent_name : undefined})
+    // }
 
     set_data({ ...data })
   }
