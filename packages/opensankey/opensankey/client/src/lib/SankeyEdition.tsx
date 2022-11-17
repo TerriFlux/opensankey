@@ -207,17 +207,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   })
   max_link_value += 1
 
-  // const nb_agregation_level : {[key:string]: number } =  {}
-  // Object.values(data.agregation).forEach(dim => {
-  //   nb_agregation_level[dim.dimension] = 0
-  //   Object.values(data.nodes).forEach( n => 
-  //     nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
-  //       n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
-  //   )
-  // })
-  // let has_agregation = false
-  // Object.values(nb_agregation_level).forEach(nb_level => has_agregation = has_agregation || nb_level>1 )
-
   const default_horiz_shift = 50
 
   const min_width_and_height = () => {
@@ -314,7 +303,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </FormGroup>
           </>)
       } else if (tags_group.banner === 'level' ) {
-        const selected = Object.values(tags_group.tags).filter(tag=>tag.selected)[0].name
+        const selected = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)[0][0]
         return (
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
