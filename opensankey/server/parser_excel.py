@@ -592,7 +592,7 @@ def save_excel(
                 tags = sankey_data['nodeTags'][tag_name]['tags']
                 try:
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                    nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    nodes[row+1][len(nodes_cols)+col_num] = (':').join(tags_names)
                     col_num = col_num+1
                 except Exception as expt:
                     pass
