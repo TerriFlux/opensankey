@@ -23,8 +23,8 @@ const resources = {
         'LegWidth':'Width Legend',
         'Fichiers':'Files',
         'Edition':'Edition',
-        'Formations':'Formations',
-        'Exemples':'Examples',
+        'Formations':'Tutorials',
+        'Exemples':'Demo',
         'Aide':'Help',
 
         'ouvrir':'Open',
@@ -249,8 +249,8 @@ const resources = {
         'LegWidth':'Largeur Légende',
         'Fichiers':'Fichiers',
         'Edition':'Edition',
-        'Formations':'Formations',
-        'Exemples':'Exemples',
+        'Formations':'Tutoriaux',
+        'Exemples':'Démo',
         'Aide':'Aide',
 
         'ouvrir':'Ouvrir',
