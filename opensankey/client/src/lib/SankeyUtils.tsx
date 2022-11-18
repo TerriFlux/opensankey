@@ -721,9 +721,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
-  // console.log('-> Affectation du default_node')
-
-  const defaultNode = {
+  const defaultNode :  SankeyNode = {
     name: '',
     idNode: 'default',
     shape: 'rect',
@@ -769,6 +767,9 @@ export const default_node = (
       value_font_size:14,
       label_box_width: 110,
     },
+  }
+  for (const tag_group_key in data.nodeTags) {
+    defaultNode.tags[tag_group_key]  = []
   }
   return defaultNode
 }

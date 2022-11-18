@@ -13,8 +13,6 @@ const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  // set_multi_selected_nodes: PropTypes.func.isRequired,
-  // multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired
 }
@@ -1332,11 +1330,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                                 n.dimensions[cube_dimension] = {}
                               }
                               n.dimensions[cube_dimension].parent_name = changeEvent.target.value
-                              // if (data.nodes[changeEvent.target.value].dimensions[cube_dimension].parent_name !== undefined) {
-                              //   n.dimensions[cube_dimension].level = 3
-                              // } else {
-                              //   n.dimensions[cube_dimension].level = 2
-                              // }
                             })
                           }
                         }}>
