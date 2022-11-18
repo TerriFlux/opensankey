@@ -89,7 +89,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       banner: 'multi'
     }
     if (elementName === 'nodes' ) {
-      Object.values(data[elementName]).forEach(n => n.tags['tag_group_' + idGroup] = [])
+      Object.values(data[elementName]).forEach(n => n.tags[k] = [])
     }
     if (Object.keys(data[elementTagName]).length === 1) {
       Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])

@@ -302,8 +302,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               </Col>
             </FormGroup>
           </>)
-      } else if (tags_group.banner === 'level' ) {
-        const selected = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)[0][0]
+      } else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
+        const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
+        const selected = tmp.length > 0 ? tmp[0][0] : ''
         return (
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>

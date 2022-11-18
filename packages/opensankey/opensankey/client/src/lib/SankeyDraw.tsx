@@ -5947,12 +5947,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           new_node1.x = 200
         }
         data.nodes[new_node1.idNode] = new_node1
-        for (const tag_group_key in data.nodeTags) {
-          new_node1.tags[tag_group_key] = []
-          if (data.nodeTags[tag_group_key]['banner'] === 'level' ) {
-            new_node1.dimensions[tag_group_key] = {level:1}
-          }
-        }
+
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
         new_node1.x = pos[0]
@@ -5980,9 +5975,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             new_node1.name = 'node_tmp'
 
             data.nodes[new_node1.idNode] = new_node1
-            for (const tag_group_key in data.nodeTags) {
-              new_node1.tags[tag_group_key] = []
-            }
             // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
             const pos = d3.pointer(event)
             new_node1.x = pos[0]
@@ -6063,9 +6055,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             new_node1.x = 200
           }
           data.nodes[new_node1.idNode] = new_node1
-          for (const tag_group_key in data.nodeTags) {
-            new_node1.tags[tag_group_key] = []
-          }
           // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
           const pos = d3.pointer(event)
           new_node1.x = pos[0]
@@ -6102,9 +6091,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           n_node.idNode = 'node' + idNode
           n_node.name = 'node'+idNode
           data.nodes[n_node.idNode] = n_node
-          for (const tag_group_key in data.nodeTags) {
-            n_node.tags[tag_group_key] = []
-          }
           // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
           const pos = d3.pointer(event)
           n_node.x = pos[0]
