@@ -123,6 +123,7 @@ export const getTotalLinks = (
 }
 
 export const compute_total_offsets = (
+  inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
@@ -259,10 +260,10 @@ export const compute_total_offsets = (
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
 
-      if (v === undefined) {
+      if (v === undefined || v=='') {
         return
       }
-      offset_width_top += +v
+      offset_width_top += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
   let bottom_order = -1
@@ -282,7 +283,7 @@ export const compute_total_offsets = (
       if (v === undefined) {
         return
       }
-      offset_width_bottom += +v
+      offset_width_bottom += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
@@ -303,7 +304,7 @@ export const compute_total_offsets = (
       if (v === undefined) {
         return
       }
-      offset_height_left += +v
+      offset_height_left += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
@@ -324,7 +325,7 @@ export const compute_total_offsets = (
       if (v === undefined) {
         return
       }
-      offset_height_right += +v
+      offset_height_right += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
