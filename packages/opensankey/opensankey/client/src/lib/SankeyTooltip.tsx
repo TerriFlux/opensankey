@@ -66,13 +66,13 @@ export const  linkTooltipsContent = (
   t += '<table class="table" style="margin-bottom: 5px;">'
   t += '<tbody><tr><th>Valeur</th>'
   let the_value = link_info.value
-
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
   t += '<td>' + toPrecision((the_value)?the_value:0) +'</td>'
   t += '</td>'
   t += '</tr>'
+  Object.entries(link_info.tags).forEach(([tag_group,tag])=> t+='<tr><th>'+data.fluxTags[tag_group].group_name+'</th><td>'+data.fluxTags[tag_group].tags[tag].name+'</td><tr>')
   t += '</tbody></table>'
 
   const source_node = data.nodes[l.idSource]
@@ -195,7 +195,7 @@ export const nodeTooltipsContent = (
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td>' + source_name + '</td>'
         t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
-        Object.keys(data.fluxTags).forEach(tag=> t +='<td>'+link_info.tags[tag]+'</td>')
+        Object.keys(data.fluxTags).forEach(tag=> t += tag in link_info.tags ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td>' : '<td></td>')
         if (n.inputLinksId.length>1) {
           const percent = Math.round(((the_value)?the_value:0)*100/total)
           t += '<td>'+ percent + '%</td></tr>'
@@ -258,7 +258,7 @@ export const nodeTooltipsContent = (
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td>' + target_name + '</td>'
           t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
-          Object.keys(data.fluxTags).forEach(tag=> t +='<td>'+link_info.tags[tag]+'</td>')
+          Object.keys(data.fluxTags).forEach(tag=> t += tag in link_info.tags ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td>' : '<td></td>')
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value:0)*100/total)
             t += '<td>'+ percent + '%</td></tr>'
