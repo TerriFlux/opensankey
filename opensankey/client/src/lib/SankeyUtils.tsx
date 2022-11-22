@@ -1058,7 +1058,7 @@ export const set_nodes_level = (
   const { nodeTags } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
-  const levelTags = Object.keys(nodeTags).filter(key=>nodeTags[key].banner === 'level')
+  const levelTags = Object.keys(nodeTags).filter(key=>nodeTags[key].banner === 'level' && nodeTags[key].activated)
 
   display_nodes.filter(n=>n.display).forEach(n=>{
     levelTags.forEach(tags_group_key => {
