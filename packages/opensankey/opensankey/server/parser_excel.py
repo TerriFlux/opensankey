@@ -441,7 +441,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 'group_name' : 'Primaire',
                 'show_legend' : 0,
                 'tags'        : {},
-                'banner'      : 'level'                   
+                'banner'      : 'level',
+                'activated'   : 1                    
             }
             for tag in range(1,max_level+1):
                 selected = False
@@ -476,7 +477,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : 'one'                   
+                    'banner'      : 'one',
+                    'activated'   : 1                      
                 }
            elif mfa_input[TAG_SHEET].iat[i,1] == 'nodeTags' or mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
                 if mfa_input[TAG_SHEET].iat[i,0] == 'Dimensions':
@@ -510,7 +512,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : banner                   
+                    'banner'      : banner,
+                    'activated'   : 1                  
                 }              
            elif mfa_input[TAG_SHEET].iat[i,1] == 'fluxTags':
                 tmp = mfa_input[TAG_SHEET].iat[i,2].split(':')
@@ -537,7 +540,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : banner                   
+                    'banner'      : banner,
+                    'activated'   : 1                   
                 }
 
 def save_excel(

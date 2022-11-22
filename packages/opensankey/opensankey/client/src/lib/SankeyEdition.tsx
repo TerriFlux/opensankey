@@ -316,6 +316,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   })}
                 </Form.Select>}
               </Col>
+              <Col xs={2}>
+                <FormCheck inline
+                  type='switch'
+                  checked={tags_group.activated}
+                  onChange={evt => {
+                    tags_group.activated = evt.target.checked 
+                    set_data({ ...data })
+                  }}
+                />
+              </Col>
             </FormGroup>
           </>)
       } else if (tags_group.banner == 'multi') {
