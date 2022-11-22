@@ -152,7 +152,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             if (!key.includes('OpenSankey')) {
               the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
             } else {
-              the_current_path = current_path + '/' + key
+              the_current_path = current_path !== '' ? current_path + '/' + key : key
             }
             return (
               <>
