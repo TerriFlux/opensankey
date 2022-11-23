@@ -159,6 +159,9 @@ export const convert_data = (
   Object.values(data_to_convert.nodeTags).forEach(
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if (tags_group.activated == undefined) {
+        tags_group.activated = true
+      }
       tags_group.activated = Boolean(tags_group.activated)
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
       if(tags_group.color_map === undefined) { tags_group.color_map='jet'}

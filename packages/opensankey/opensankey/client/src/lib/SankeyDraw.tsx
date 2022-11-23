@@ -2539,7 +2539,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     let link_value = test_link_value(data, nodes, link)
 
-    if (link_value === undefined || link_value=='') {
+    if (link_value === undefined) {
       return [0, 0, 0, 0]
     }
 
