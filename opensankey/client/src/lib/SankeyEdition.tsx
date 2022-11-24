@@ -745,7 +745,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         
       </div>
       <Row className='sankey-toolbar'>
-        {(mode_visualisation)?<></>:<Col>
+        {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
 
