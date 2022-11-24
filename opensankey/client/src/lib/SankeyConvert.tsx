@@ -1390,7 +1390,7 @@ export const convert_data = (
   if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10
   }
-  if (!data.show_banner) {
+  if (data.show_banner == undefined) {
     data.show_banner = true
   }
   if (data.version === '0.1') {
