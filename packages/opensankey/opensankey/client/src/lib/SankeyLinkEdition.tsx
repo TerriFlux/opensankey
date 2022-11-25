@@ -4,6 +4,7 @@ import { SankeyDataPropTypes, SankeyLinkPropTypes, SankeyLinkValue } from './typ
 import PropTypes, { InferProps } from 'prop-types'
 import { default_link } from './SankeyUtils'
 import {useTranslation} from 'react-i18next'
+import * as d3 from 'd3'
 
 const SankeyLinkEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -475,7 +476,11 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                             val.value = +evt.target.value
   
                           })
-                          if (Object.keys(data.links).length == 1 && +evt.target.value !== 0) {
+
+                          const scale = d3.scaleLinear()
+                            .domain([0, data.user_scale])
+                            .range([0, 100])
+                          if (scale(+evt.target.value) > 500) {
                             data.user_scale = +evt.target.value
                           }
                         }else{
