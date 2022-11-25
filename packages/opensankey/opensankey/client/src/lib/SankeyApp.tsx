@@ -35,10 +35,9 @@ type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu,formations_menu,logo }) => {
   const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
-  // const [show_nav, set_show_nav] = useState(false)
+
   const [show_toast, set_show_toast] = useState(false)
-  // const [nav_item_active, set_nav_item_active] = useState<string>('')
-  // const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
+
   const selected_link = useRef(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const selected_node = useRef(default_node)
@@ -59,7 +58,20 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const display_links = data.links
 
   const [mode_visualisation, set_mode_visualisation] = useState(false)
-  
+  const [show_load,set_show_load] = useState(false)
+  const [processing,setProcessing] = useState(false)
+  const [failure,setFailure] = useState(false)
+  const [not_started,setNotStarted] = useState(true)
+  const [path,setPath] = useState('')
+
+  const launch = (path:string) => {
+    setPath(path)
+    set_show_load(true)
+    setProcessing(true)
+    setFailure(true)
+    setNotStarted(false)
+  }
+
   useBeforeunload((event : BeforeUnloadEvent) => {
     event.preventDefault()
     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
@@ -96,6 +108,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_label={multi_selected_label}
             callback={()=>0}
+            launch={launch}
           /></>}
         example_menu={<>
           <ExempleItem
@@ -108,6 +121,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_links={multi_selected_links}
             multi_selected_label={multi_selected_label}
             callback={()=>0}
+            launch={launch}
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
         logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}        
@@ -123,6 +137,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         button_ref={button_ref}        
         selected_link={selected_link}
         url_prefix=''
+        path={path}
         settings_edition={
           <SankeySettingsEdition
             data={data}
@@ -161,7 +176,14 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         set_style_to_apply={set_style_to_apply}
         mode_visualisation={mode_visualisation}
         set_mode_visualisation={set_mode_visualisation}
-
+        show_load={show_load}
+        set_show_load={set_show_load}
+        processing={processing}
+        setProcessing={setProcessing}
+        failure={failure}
+        setFailure={setFailure}
+        not_started={not_started}
+        setNotStarted={setNotStarted}    
       />
       {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
       }
