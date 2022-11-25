@@ -926,7 +926,7 @@ type layout_type = {
   layout: SankeyData
 }
 
-const downloadExamples = (
+export const downloadExamples = (
   file_name: string,
   the_url_prefix: string,
   filetype: string
@@ -1041,7 +1041,7 @@ export const uploadExemple = (
         Object.assign(data,processExample(server_data))
         callback(data)
         set_data({ ...data })
-        downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         Object.assign(data,server_data)
         convert_data(data)

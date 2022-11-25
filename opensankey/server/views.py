@@ -3,11 +3,10 @@ from flask import request
 from flask import Response
 from flask import send_file
 from flask import render_template
+from flask import session
 
-import pandas as pd
 import cloudconvert
-import numpy as np
-from shutil import copyfile
+import tempfile
 from os import listdir
 
 import os
@@ -15,6 +14,8 @@ import json
 import time
 
 import mfa_problem.io_excel as io_excel
+import mfa_problem.su_trace as trace
+
 from . import parser_excel
 
 try:
@@ -156,6 +157,13 @@ def upload_excel():
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
 def upload_exemple():
+    session['load_started'] = True
+    tmp_dir = tempfile.mkdtemp()
+    logname = tmp_dir + os.path.sep + "rollover.log"
+    session['logname'] = logname
+    trace.logger_init(logname,"w")
+    session['base_filename'] = trace.base_filename()
+        
     data_folder = os.environ.get('MFAData')
     #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
@@ -165,8 +173,38 @@ def upload_exemple():
     error=''
     extension = os.path.splitext(exemple_file_path)[1]
     if extension == ".xlsx":
-        mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
-        sankey_data = parser_excel.parse_excel(mfa_input)
+        trace.logger.info('Loading Excel.')
+        try:
+            mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
+            trace.logger.info('Loading Excel Succeeded: ')
+        except Exception as expt:
+            trace.logger.error('Loading Excel Failed: '    + str(expt))
+            f=open(session['base_filename'], "r")
+            results = f.read()
+            results_dict = { "output" : results }
+            json_data = json.dumps(results_dict)
+            response = Response(
+                response=json_data,
+                status=500,
+                mimetype='application/json'
+            )
+            return response
+        trace.logger.info('Construct Diagram.')
+        try:            
+            sankey_data = parser_excel.parse_excel(mfa_input)
+            trace.logger.info('Construct Diagram Succeeded: ')
+        except Exception as expt:
+            trace.logger.error('Construct Diagram Failed: '    + str(expt))
+            f=open(session['base_filename'], "r")
+            results = f.read()
+            results_dict = { "output" : results }
+            json_data = json.dumps(results_dict)
+            response = Response(
+                response=json_data,
+                status=500,
+                mimetype='application/json'
+            )
+            return response
         if '_reconciled' in base_file_name:
             layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
         else:
@@ -185,6 +223,7 @@ def upload_exemple():
         data = json.load(json_file)
         data['file_name'] = exemple_file_path
         json_data = json.dumps(data)
+    trace.logger.info('-- FINISHED --')
 
     response = Response(
         response=json_data,
@@ -316,4 +355,44 @@ def start():
         static_site='false'
     )
 
+@opensankey.route('/load_stop', methods=['POST'])
+def load_stop():
+    session['load_started'] = False
+    response = Response(
+        json.dumps({}),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
+@opensankey.route('/load_process', methods=['POST'])
+def load_process():
+    if not "load_started" in session or session["load_started"] == False:
+        return Response(
+            json.dumps({}),
+            status=200,
+            mimetype='application/json'
+        )        
+    try:
+        if os.path.isfile(session['base_filename']):
+            f=open(session['base_filename'], "r")
+            results = f.read()
+            results_dict = { "output" : results }
+            json_data = json.dumps(results_dict)
+            return Response(
+                json_data,
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            return Response(
+                json.dumps({'output':'ERROR: load_process: le fichier tmp_log n\'existe pas.'}),
+                status=500,
+                mimetype='application/json'
+            )            
+    except:
+        return Response(
+            json.dumps({'output':'ERROR:load_process: le fichier tmp_log ne peut pas être ouvert.'}),
+            status=500,
+            mimetype='application/json'
+        )

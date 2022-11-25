@@ -14,11 +14,13 @@ import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngle
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
+import {downloadExamples} from './SankeyUtils'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
 import i18n from 'i18next'
+import SankeyLoad from './SankeyLoad'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -81,7 +83,17 @@ const MenuPropTypes = {
   mode_visualisation:PropTypes.bool.isRequired,
   set_mode_visualisation:PropTypes.func.isRequired,
 
-  callback:PropTypes.func.isRequired
+  callback:PropTypes.func.isRequired,
+
+  show_load: PropTypes.bool.isRequired,
+  set_show_load: PropTypes.func.isRequired,
+  processing : PropTypes.bool.isRequired,
+  setProcessing : PropTypes.func.isRequired,
+  failure : PropTypes.bool.isRequired,
+  setFailure : PropTypes.func.isRequired,
+  not_started : PropTypes.bool.isRequired,
+  setNotStarted : PropTypes.func.isRequired,
+  path: PropTypes.string.isRequired
 }
 
 
@@ -99,12 +111,13 @@ const ExempleItemPropTypes = {
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  callback: PropTypes.func.isRequired
+  callback: PropTypes.func.isRequired,
+  launch: PropTypes.func.isRequired
 }
 
 type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,callback}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,callback,launch}: ExempleItemTypes) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
@@ -133,6 +146,9 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 multi_selected_nodes.current = []
                 multi_selected_links.current = []
                 multi_selected_label.current = []
+                if (path.includes('xlsx')) {
+                  launch(path, url_prefix)
+                }
                 uploadExemple(
                   path, url_prefix, data, set_data,the_callback
                 )} 
@@ -167,6 +183,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
                     callback={callback}
+                    launch={launch}
                   />
                 </NavDropdown>
               </>
@@ -208,9 +225,17 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_style_to_apply,
     mode_visualisation,
     set_mode_visualisation,
-    callback
+    callback,
+    show_load,
+    set_show_load,
+    processing,setProcessing,
+    failure,setFailure,
+    not_started,setNotStarted,
+    path
   }
 ) => {
+
+
   const set_show_link = useState(true)[1]
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
@@ -268,7 +293,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const _load_json = useRef<HTMLInputElement>(null)
 
-  const [processing] = useState(false)
+  //const [processing] = useState(false)
 
   const clickSaveDiagram = () => {
     const data_to_save = { ...data }
@@ -3587,8 +3612,23 @@ const Menu: FunctionComponent<MenuTypes> = (
       { show_publish_dialog ?  (
         <PublishModal 
           set_show_publish_dialog={set_show_publish_dialog} 
-          publishImpl = {publishImpl} 
+          publishImpl = {publishImpl}
           file_path_initial = {data.file_name as string}/>
+      ) :
+        (<div/>)
+      }
+      { show_load ?  (
+        <SankeyLoad
+          successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+          show_dialog={show_load}
+          set_show_dialog={set_show_load}
+          processing={processing}
+          setProcessing={setProcessing}
+          failure={failure}
+          setFailure={setFailure}
+          not_started={not_started}
+          setNotStarted={setNotStarted}  
+        />
       ) :
         (<div/>)
       }
@@ -3800,5 +3840,4 @@ PublishModal.propTypes = PublishModalPropTypes
 Menu.propTypes = MenuPropTypes
 
 export default Menu
-
 
