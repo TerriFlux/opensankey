@@ -135,7 +135,7 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
         root = root.replace('sankey-diagrams/', '')
       }
       //const url = root + 'load_process'
-      const url = root + url_prefix + 'load_process'
+      const url = root + 'load_process'
       const fetchData = {
         method: 'POST',
         body: ''
