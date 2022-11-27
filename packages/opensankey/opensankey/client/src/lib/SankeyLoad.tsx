@@ -2,6 +2,7 @@ import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 
 interface SankeyLoadProdTypes {
+  url_prefix: string,
   successAction: () => void,
   show_dialog : boolean,
   set_show_dialog : (b:boolean)=>void,
@@ -14,6 +15,7 @@ interface SankeyLoadProdTypes {
 }
 
 const SankeyLoad = ({
+  url_prefix,
   successAction,
   show_dialog,set_show_dialog,
   processing,setProcessing,
@@ -89,6 +91,7 @@ const SankeyLoad = ({
             </Row>
             {processing ? (
               <Counter 
+                url_prefix={url_prefix}
                 finishReconciliation={()=>{
                   setProcessing(false)
                   setFailure(false)
@@ -123,11 +126,16 @@ const SankeyLoad = ({
 }
 
 
-const Counter = ({finishReconciliation,value,result,setResult}:{finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
+const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
       const path = window.location.href
-      const url = path + 'load_process'
+      let root = window.location.href
+      if (root.includes('sankey-diagrams') && url_prefix !== '') {
+        root = root.replace('sankey-diagrams/', '')
+      }
+      //const url = root + 'load_process'
+      const url = root + url_prefix + 'load_process'
       const fetchData = {
         method: 'POST',
         body: ''

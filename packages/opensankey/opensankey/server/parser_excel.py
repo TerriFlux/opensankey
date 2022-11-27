@@ -601,7 +601,7 @@ def save_excel(
     else:
         levelTags = [tags for tags in sankey_data['nodeTags'].keys() if sankey_data['nodeTags'][tags]['banner'] == 'level']
         if len(levelTags) == 0:
-            levelTags = 'Primaire'
+            levelTags = ['Primaire']
 
         for i in range(len(levelTags)):
             levelTag = levelTags[i]

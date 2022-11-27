@@ -3619,6 +3619,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       }
       { show_load ?  (
         <SankeyLoad
+          url_prefix={url_prefix}
           successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
           show_dialog={show_load}
           set_show_dialog={set_show_load}
