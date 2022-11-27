@@ -129,7 +129,7 @@ const SankeyLoad = ({
 const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
-      const path = window.location.href
+      //const path = window.location.href
       let root = window.location.href
       if (root.includes('sankey-diagrams') && url_prefix !== '') {
         root = root.replace('sankey-diagrams/', '')
