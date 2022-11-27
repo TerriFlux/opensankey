@@ -3804,21 +3804,32 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                         result = String(result).split('<br>').join('\\\\n')
                         const layout : SankeyData = JSON.parse(result);
                         (data as SankeyData & { layout?: SankeyData }).layout = layout
+                        launch('')
+                        uploadExcelImpl(
+                          data,
+                          set_data,
+                          set_show_excel_dialog,
+                          input_file_name,
+                          url_prefix,
+                          callback
+                        )
                       }
                     }
                   )
-                })
+                })()
                 reader.readAsText(layout_file)
+              } else {
+                launch('')
+                uploadExcelImpl(
+                  data,
+                  set_data,
+                  set_show_excel_dialog,
+                  input_file_name,
+                  url_prefix,
+                  callback
+                )
               }
-              launch('')
-              uploadExcelImpl(
-                data,
-                set_data,
-                set_show_excel_dialog,
-                input_file_name,
-                url_prefix,
-                callback
-              )
+
             }
           }
         >Ouvrir</Button>
