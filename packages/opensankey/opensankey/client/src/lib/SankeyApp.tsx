@@ -97,6 +97,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_data({ ...data })
         }}
         callback={()=>0}
+        launch={launch}
         formations_menu={<>
           <ExempleItem 
             exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
@@ -107,7 +108,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_links={multi_selected_links}
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_label={multi_selected_label}
-            callback={()=>0}
             launch={launch}
           /></>}
         example_menu={<>
@@ -120,7 +120,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_links={multi_selected_links}
             multi_selected_label={multi_selected_label}
-            callback={()=>0}
             launch={launch}
           /></>}
         logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}

@@ -8,7 +8,7 @@ import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodeProp
 import { convert_data } from './SankeyConvert'
 import { reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue,uploadExcelImpl } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -93,7 +93,8 @@ const MenuPropTypes = {
   setFailure : PropTypes.func.isRequired,
   not_started : PropTypes.bool.isRequired,
   setNotStarted : PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired
+  path: PropTypes.string.isRequired,
+  launch: PropTypes.func.isRequired
 }
 
 
@@ -111,18 +112,18 @@ const ExempleItemPropTypes = {
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  callback: PropTypes.func.isRequired,
+  //callback: PropTypes.func.isRequired,
   launch: PropTypes.func.isRequired
 }
 
 type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,callback,launch}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
   return (
     <>
       { Array.isArray(exemple_menu) 
         ? exemple_menu.map( (item,index)=> {
-          let the_callback = ()=> 0
+          //let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
             let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
@@ -136,7 +137,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             )
           }
           if (item.includes('.xlsx')) {
-            the_callback = callback
+            //the_callback = callback
             path = current_path+'/'+item
           }
           return (
@@ -148,9 +149,9 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 multi_selected_label.current = []
                 if (path.includes('xlsx')) {
                   launch(path, url_prefix)
-                }
+                } 
                 uploadExemple(
-                  path, url_prefix, data, set_data,the_callback
+                  path, url_prefix, data, set_data
                 )} 
               }
             >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' sortie') : item.split('.x')[0].replace(/_/g, ' ') + ' entrée'
@@ -182,7 +183,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
-                    callback={callback}
+                    //callback={callback}
                     launch={launch}
                   />
                 </NavDropdown>
@@ -231,7 +232,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     processing,setProcessing,
     failure,setFailure,
     not_started,setNotStarted,
-    path
+    path,
+    launch
   }
 ) => {
 
@@ -1560,6 +1562,34 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+
+  if (not_started == false && processing == false) {
+    const path = window.location.href
+    const url = path + 'loads_retrieves_result'
+    const form_data = new FormData()
+    const fetchData = {
+      method: 'POST',
+      body: form_data
+    }
+    fetch(url, fetchData).then(response => {
+      response.text().then(text => {
+        try {
+          const server_data = JSON.parse(text)
+          server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+          Object.assign(data,processExample(server_data))
+          callback(data)
+          delete (data as SankeyData & { layout?: SankeyData }).layout
+          set_data({ ...data })
+          set_show_load(false)
+        } catch(err) {
+          alert(err)
+        }
+      })
+    })
+    setProcessing(false)
+    setFailure(false)
+    setNotStarted(true)
+  }     
 
   const modalStyleLink = (
     <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
@@ -3599,6 +3629,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
       {show_excel_dialog ? (
         <ExcelModal
+          launch={launch}
           handleCloseDialog={() => set_show_excel_dialog(false)}
           uploadExcelImpl={uploadExcelImpl}
           set_data={set_data}
@@ -3717,10 +3748,11 @@ const ExcelModalPropTypes = {
   set_show_excel_dialog: PropTypes.func.isRequired,
   url_prefix: PropTypes.string.isRequired,
   callback: PropTypes.func.isRequired,
+  launch: PropTypes.func.isRequired
 }
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback }) => {
+const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
   const {t} =useTranslation()
@@ -3778,6 +3810,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                 })
                 reader.readAsText(layout_file)
               }
+              launch('')
               uploadExcelImpl(
                 data,
                 set_data,

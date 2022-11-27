@@ -975,8 +975,7 @@ export const uploadExcelImpl = (
   set_data: (data: SankeyData) => void,
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
-  the_url_prefix: string,
-  callback: (data:SankeyData)=>void
+  the_url_prefix: string
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
@@ -991,23 +990,7 @@ export const uploadExcelImpl = (
     method: 'POST',
     body: form_data
   }
-  fetch(url, fetchData).then(response => {
-    response.text().then(text => {
-      try {
-        const server_data = JSON.parse(text)
-        const error = server_data['error']
-        if (error && error.length != 0) {
-          alert(error)
-          return
-        }
-        Object.assign(data,processExample(server_data))
-        callback(data)
-        set_data({ ...data })
-      } catch(err) {
-        alert(err)
-      }
-    })
-  })
+  fetch(url, fetchData)
   set_show_excel_dialog(false)
 }
 
@@ -1015,8 +998,7 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  callback: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
@@ -1038,9 +1020,9 @@ export const uploadExemple = (
         return
       }
       if (file_name.includes('.xlsx')) {
-        Object.assign(data,processExample(server_data))
-        callback(data)
-        set_data({ ...data })
+        // Object.assign(data,processExample(server_data))
+        // callback(data)
+        // set_data({ ...data })
         //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         Object.assign(data,server_data)
