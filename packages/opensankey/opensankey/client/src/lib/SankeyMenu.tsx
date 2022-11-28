@@ -1575,7 +1575,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       response.text().then(text => {
         try {
           const server_data = JSON.parse(text)
-          server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+          if ((data as SankeyData & { layout?: SankeyData }).layout ) {
+            server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+          }
           Object.assign(data,processExample(server_data))
           callback(data)
           delete (data as SankeyData & { layout?: SankeyData }).layout
