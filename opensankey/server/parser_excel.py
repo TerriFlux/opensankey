@@ -811,6 +811,8 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     data_tags = list(sankey_data['dataTags'][dataTagGroup]['tags'].keys())
     for i,data_tag_key in enumerate(data_tags):
         links[row][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']
+        if not data_tag_key in val:
+            continue
         new_row = add_links(sankey_data, flux_cols, links, row, link, val[data_tag_key],depth+1)
         for i in range(row,new_row):
             links[i][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']
