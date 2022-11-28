@@ -130,9 +130,9 @@ def upload_excel():
 
     excel_input_file = request.files['file']
     output_directory = tempfile.mkdtemp()
-    trace.
     session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
     excel_input_file.save(session['output_file_name'])
+    trace.logger.debug(session['output_file_name'])
     thread = Thread(
         target=upload_excel_thread, 
         args=(
@@ -145,7 +145,8 @@ def upload_excel():
     )
     thread.daemon = True
     thread.start()
-    
+    trace.logger.debug('thread launched')
+        
     response = Response(
         response='{}',
         status=200,
