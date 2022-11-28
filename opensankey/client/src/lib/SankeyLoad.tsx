@@ -158,10 +158,15 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
   if ( infos.length > 2) {
     const info = infos[infos.length-2]
     if (info.includes('FINISHED')) {
+      console.log('finished')
       finishReconciliation(false)
     } else if (info.includes('FAILED')) {
       finishReconciliation(true)
+    } else {
+      console.log(info)
     }
+  } else {
+    console.log('else')
   }
   return (
     <Row >
