@@ -127,25 +127,38 @@ def upload_excel():
     session['logname'] = logname
     trace.logger_init(logname,"w")
     session['base_filename'] = trace.base_filename()
-
+    trace.logger.debug(session['base_filename'])
     excel_input_file = request.files['file']
     output_directory = tempfile.mkdtemp()
     session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
     excel_input_file.save(session['output_file_name'])
     trace.logger.debug(session['output_file_name'])
-    thread = Thread(
-        target=upload_excel_thread, 
-        args=(
-            session['output_file_name'],
-            session['base_filename'],
-            logname,
-            session['output_file_name'],
-            False
+    file_stats = os.stat(session['output_file_name'])
+    if file_stats.st_size > 1000000:
+        thread = Thread(
+            target=upload_excel_thread, 
+            args=(
+                session['output_file_name'],
+                session['base_filename'],
+                logname,
+                session['output_file_name'],
+                False
+            )
         )
-    )
-    thread.daemon = True
-    thread.start()
-    trace.logger.debug('thread launched')
+        thread.daemon = True
+        thread.start()
+        trace.logger.debug('thread launched')
+    else:
+        try:
+            upload_excel_thread(
+                session['output_file_name'],
+                session['base_filename'],
+                logname,
+                session['output_file_name'],
+                False
+            )
+        except excpt:
+            trace.logger.debug('upload_excel_thread failed : ' + str(excpt))
         
     response = Response(
         response='{}',
@@ -390,17 +403,25 @@ def load_retrieves_result():
 @opensankey.route('/load_process', methods=['POST'])
 def load_process():
     if not "load_started" in session or session["load_started"] == False:
+        trace.logger.info(session['base_filename'])
+        trace.logger.info('not started')
         return Response(
             json.dumps({}),
             status=200,
             mimetype='application/json'
         )        
     try:
+        trace.logger.info(session['base_filename'])
+        trace.logger.info('open')
         if os.path.isfile(session['base_filename']):
+            trace.logger.info('is file')
             f=open(session['base_filename'], "r")
+            trace.logger.info('opened')
             results = f.read()
+            trace.logger.info('read')
             results_dict = { "output" : results }
             json_data = json.dumps(results_dict)
+            trace.logger.info('dumps')
             return Response(
                 json_data,
                 status=200,
