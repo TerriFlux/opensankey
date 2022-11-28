@@ -130,15 +130,16 @@ def upload_excel():
     trace.logger.debug(session['base_filename'])
     excel_input_file = request.files['file']
     output_directory = tempfile.mkdtemp()
-    session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
-    excel_input_file.save(session['output_file_name'])
+    input_file_name = os.path.join(output_directory,'tutu.xlsx')
+    excel_input_file.save(input_file_name)
+    session['output_file_name'] = os.path.join(output_directory,'tutu.json')
     trace.logger.debug(session['output_file_name'])
-    file_stats = os.stat(session['output_file_name'])
+    file_stats = os.stat(input_file_name)
     if file_stats.st_size > 1000000:
         thread = Thread(
             target=upload_excel_thread, 
             args=(
-                session['output_file_name'],
+                input_file_name,
                 session['base_filename'],
                 logname,
                 session['output_file_name'],
@@ -151,7 +152,7 @@ def upload_excel():
     else:
         try:
             upload_excel_thread(
-                session['output_file_name'],
+                input_file_name,
                 session['base_filename'],
                 logname,
                 session['output_file_name'],
@@ -224,35 +225,56 @@ def upload_exemple():
     #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
-    exemple_folder = os.path.dirname(exemple_file_path)
+    #exemple_folder = os.path.dirname(exemple_file_path)
     base_file_name = os.path.basename(exemple_file_path)
-    error=''
+    #error=''
     extension = os.path.splitext(exemple_file_path)[1]
     output_directory = tempfile.mkdtemp()
-    session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
+    trace.logger.debug(exemple_file_path)
+    session['output_file_name'] = os.path.join(output_directory,'tutu.json')
     trace.logger.debug(session['output_file_name'])
     if extension == ".xlsx":
-        thread = Thread(
-            target=upload_excel_thread, 
-            args=(
-                exemple_file_path,
-                base_file_name,
-                logname,
-                session['output_file_name'],
-                True
+        file_stats = os.stat(exemple_file_path)
+        if file_stats.st_size > 1000000:
+            thread = Thread(
+                target=upload_excel_thread, 
+                args=(
+                    exemple_file_path,
+                    base_file_name,
+                    logname,
+                    session['output_file_name'],
+                    True
+                )
             )
-        )
-        thread.daemon = True
-        thread.start()
-        trace.logger.debug('thread launched')
-        # json_file = open(output_file_name,encoding="utf-8", mode= "r")
-        # json_data = json.loads(json_file)
-        response = Response(
-            response='{}',
-            status=200,
-            mimetype='application/json'
-        )
-        return response
+            thread.daemon = True
+            thread.start()
+            trace.logger.debug('thread launched')
+            return Response(
+                response='{}',
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            try:
+                upload_excel_thread(
+                    exemple_file_path,
+                    base_file_name,
+                    logname,
+                    session['output_file_name'],
+                    True
+                )
+                return Response(
+                    response='{}',
+                    status=200,
+                    mimetype='application/json'
+                )
+            except excpt:
+                trace.logger.debug('upload_excel_thread failed : ' + str(excpt))
+                return Response(
+                    response='{}',
+                    status=500,
+                    mimetype='application/json'
+                )
     elif extension == ".json":
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
