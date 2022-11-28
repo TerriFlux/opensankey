@@ -59,10 +59,10 @@ const SankeyLoad = ({
       </Modal.Header>
       <Modal.Body>
         <Form >
-          <FormGroup>
-            <hr/>   
-            <Row>  
-              <Col sm={2}>         
+          <FormGroup>  
+            <Row>
+              <Col sm={5}/>
+              <Col sm={2}>    
                 {not_started ? (<></>) :   
                   processing ? (
                     <Button variant="warning"><span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> En traitement...</Button>):(
@@ -74,8 +74,9 @@ const SankeyLoad = ({
                           set_show_dialog(false)
                         }}>{success_status}</Button>
                   )}
-              </Col></Row> 
-            <hr/> 
+              </Col><Col sm={5}/></Row> 
+            <br/>              
+            <br/>
             <Row>
               <Col sm={12}><h3 style={{textAlign:'center'}}>Terminal</h3></Col> 
             </Row>
