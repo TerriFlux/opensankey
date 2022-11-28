@@ -130,6 +130,7 @@ def upload_excel():
 
     excel_input_file = request.files['file']
     output_directory = tempfile.mkdtemp()
+    trace.
     session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
     excel_input_file.save(session['output_file_name'])
     thread = Thread(
@@ -163,6 +164,7 @@ def upload_excel_thread(
 ):
     mfa_problem_main.su_trace.logger_init(log_name,'a')
     trace.logger.info('Loading Excel.')
+    trace.logger.info(exemple_file_path)
     try:
         mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
         trace.logger.info('Loading Excel Succeeded: ')
@@ -186,11 +188,14 @@ def upload_excel_thread(
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
         sankey_data['file_name'] = layout_file_name
-    json_data = json.dumps(sankey_data)
-    with open(output_file_name, "w") as outfile:
-        outfile.write(json_data)
-    
-    trace.logger.info('-- FINISHED --')
+    try: 
+        json_data = json.dumps(sankey_data)
+        with open(output_file_name, "w") as outfile:
+            outfile.write(json_data)
+        trace.logger.info('-- FINISHED --')
+    except Exception as expt:
+        trace.logger.error('Writing JSON failed: '    + str(expt))
+        trace.logger.info('-- FAILED --')
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
 def upload_exemple():
@@ -211,6 +216,7 @@ def upload_exemple():
     extension = os.path.splitext(exemple_file_path)[1]
     output_directory = tempfile.mkdtemp()
     session['output_file_name'] = os.path.join(output_directory,'tutu.xlsx')
+    trace.logger.debug(session['output_file_name'])
     if extension == ".xlsx":
         thread = Thread(
             target=upload_excel_thread, 
@@ -224,6 +230,8 @@ def upload_exemple():
         )
         thread.daemon = True
         thread.start()
+        
+    trace.logger.debug('thread launched')
     # json_file = open(output_file_name,encoding="utf-8", mode= "r")
     # json_data = json.loads(json_file)
     response = Response(
@@ -359,15 +367,24 @@ def start():
 @opensankey.route('/loads_retrieves_result', methods=['POST'])
 def load_retrieves_result():
     session['load_started'] = False
-    json_file = open(session['output_file_name'],encoding="utf-8", mode= "r")
-    json_data = json.load(json_file)
-    json_file.close()
-    response = Response(
-        json.dumps(json_data),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+    try:
+        json_file = open(session['output_file_name'],encoding="utf-8", mode= "r")
+        json_data = json.load(json_file)
+        json_file.close()
+        response = Response(
+            json.dumps(json_data),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception:
+        trace.logger.error('load_retrieves_result failed')
+        response = Response(
+            json.dumps(json_data),
+            status=510,
+            mimetype='application/json'
+        )
+        return response
 
 @opensankey.route('/load_process', methods=['POST'])
 def load_process():
