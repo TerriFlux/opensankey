@@ -244,16 +244,28 @@ def upload_exemple():
         )
         thread.daemon = True
         thread.start()
-        
-    trace.logger.debug('thread launched')
-    # json_file = open(output_file_name,encoding="utf-8", mode= "r")
-    # json_data = json.loads(json_file)
-    response = Response(
-        response='{}',
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+        trace.logger.debug('thread launched')
+        # json_file = open(output_file_name,encoding="utf-8", mode= "r")
+        # json_data = json.loads(json_file)
+        response = Response(
+            response='{}',
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    elif extension == ".json":
+        json_file_name = os.path.join(data_folder, exemple)
+        json_file = open(json_file_name,encoding="utf-8", mode= "r")
+        data = json.load(json_file)
+        data['file_name'] = exemple_file_path
+        json_data = json.dumps(data)
+        response = Response(
+            response=json_data,
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
