@@ -160,14 +160,12 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
   //let {value, result} = parent
   const infos = result !== undefined ? result.split('\n') : []
   if ( infos.length > 2) {
-    const info = infos[infos.length-2]
-    if (info.includes('FINISHED')) {
+    //const info = infos[infos.length-2]
+    if (result.includes('FINISHED')) {
       console.log('finished')
       finishReconciliation(false)
-    } else if (info.includes('FAILED')) {
+    } else if (result.includes('FAILED')) {
       finishReconciliation(true)
-    } else {
-      console.log(info)
     }
   } else {
     console.log('else')
