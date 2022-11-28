@@ -140,15 +140,15 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
         method: 'POST',
         body: ''
       }
-      console.log('fetch')
+      //console.log('fetch')
       fetch(url, fetchData).then(
         function(response) {
-          console.log('response')
+          //console.log('response')
           if(response.ok) {
-            console.log('response ok')
+            //console.log('response ok')
             response.json().then(
               function (data) {
-                console.log('setResult')
+                //console.log('setResult')
                 setResult(data.output)
               }
             )
@@ -162,13 +162,13 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
   if ( infos.length > 2) {
     //const info = infos[infos.length-2]
     if (result.includes('FINISHED')) {
-      console.log('finished')
+      //console.log('finished')
       finishReconciliation(false)
     } else if (result.includes('FAILED')) {
       finishReconciliation(true)
     }
   } else {
-    console.log('else')
+    //console.log('else')
   }
   return (
     <Row >

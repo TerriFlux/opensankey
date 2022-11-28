@@ -178,7 +178,7 @@ def upload_excel_thread(
 ):
     mfa_problem_main.su_trace.logger_init(log_name,'a')
     trace.logger.info('Loading Excel.')
-    trace.logger.info(exemple_file_path)
+    trace.logger.debug(exemple_file_path)
     try:
         mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
         trace.logger.info('Loading Excel Succeeded: ')
@@ -403,25 +403,25 @@ def load_retrieves_result():
 @opensankey.route('/load_process', methods=['POST'])
 def load_process():
     if not "load_started" in session or session["load_started"] == False:
-        trace.logger.info(session['base_filename'])
-        trace.logger.info('not started')
+        trace.logger.debug(session['base_filename'])
+        trace.logger.debug('not started')
         return Response(
             json.dumps({}),
             status=200,
             mimetype='application/json'
         )        
     try:
-        trace.logger.info(session['base_filename'])
-        trace.logger.info('open')
+        #trace.logger.debug(session['base_filename'])
+        #trace.logger.debug('open')
         if os.path.isfile(session['base_filename']):
-            trace.logger.info('is file')
+            #trace.logger.debug('is file')
             f=open(session['base_filename'], "r")
-            trace.logger.info('opened')
+            #trace.logger.debug('opened')
             results = f.read()
-            trace.logger.info('read')
+            #trace.logger.debug('read')
             results_dict = { "output" : results }
             json_data = json.dumps(results_dict)
-            trace.logger.info('dumps')
+            #trace.logger.debug('dumps')
             return Response(
                 json_data,
                 status=200,
