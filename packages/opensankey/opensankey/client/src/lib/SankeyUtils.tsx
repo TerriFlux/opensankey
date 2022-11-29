@@ -2,6 +2,8 @@ import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNod
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { agregation, compute_auto_sankey, desagregation, updateLayout } from './SankeyLayout'
+import * as d3 from 'd3'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -364,10 +366,10 @@ export const link_text = (
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
   if (data.show_structure) {
-    // const inv_scale = d3.scaleLinear()
-    //   .domain([0, 100])
-    //   .range([0, data.user_scale])
-    return 5
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, data.user_scale])
+    return inv_scale(5)
   }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []
