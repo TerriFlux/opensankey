@@ -85,10 +85,10 @@ def clean_pdf():
 @opensankey.route('/sankey/save_excel', methods=['POST'])
 def save_excel():
     try:
-        cwd = os.getcwd()
-        excel_file = os.path.join(cwd, "tutu.xlsx")
-        sankey_data =  request.get_data().decode("utf-8")
-        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
+    cwd = os.getcwd()
+    excel_file = os.path.join(cwd, "tutu.xlsx")
+    sankey_data =  request.get_data().decode("utf-8")
+    mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
     except Exception as excpt:
         response = Response(
             response='save_excel : ' + str(excpt),
@@ -96,12 +96,12 @@ def save_excel():
         )
         return response   
     try:
-        if io_excel.NODES_SHEET in mfa_output and io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET].columns:
-            verbosity=2
-        else:
-            verbosity=1        
-        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
-        return send_file(excel_file, as_attachment=True)
+    if io_excel.NODES_SHEET in mfa_output and io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET].columns:
+        verbosity=2
+    else:
+        verbosity=1        
+    io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
+    return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
             response='write_mfa_problem_output_to_excel' + str(excpt),
@@ -185,12 +185,17 @@ def upload_excel_thread(
         trace.logger.info('Loading Excel Succeeded: ')
     except Exception as expt:
         trace.logger.error('Loading Excel Failed: '    + str(expt))
+        trace.logger.error('Construct Diagram Failed: '    + str(expt))
+        trace.logger.error('-- FAILED --')
+        return
     trace.logger.info('Construct Diagram.')
     try:            
         sankey_data = parser_excel.parse_excel(mfa_input)
         trace.logger.info('Construct Diagram Succeeded: ')
     except Exception as expt:
         trace.logger.error('Construct Diagram Failed: '    + str(expt))
+        trace.logger.error('-- FAILED --')
+        return
     if '_reconciled' in base_file_name:
         layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
     else:
