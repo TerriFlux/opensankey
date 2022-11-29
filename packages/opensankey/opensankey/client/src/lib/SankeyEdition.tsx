@@ -10,7 +10,7 @@ import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
@@ -598,6 +598,17 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     </Popover.Body>
   </Popover>
   
+  const detail_level=
+  <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
+    <Popover.Body>
+      {(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
+        {addAllDropDownNode(true)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
+    </Popover.Body>
+  </Popover>
+  
 
   return (
     <>
@@ -653,12 +664,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   {addAllDropDownLinks()}
                 </>)
                   : (<Col></Col>)
-                }
-                { (Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
-                  <FormLabel><b>{t('Banner.ndd')}</b></FormLabel>
-                  {addAllDropDownNode(true)}</>
-                ) : (<>
-                  <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
                 }
               </Form.Group>
               <Col lg="auto">
@@ -808,6 +813,18 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
+
+
+              <OverlayTrigger
+                key={'tooltip-details-level'}
+                placement={'left'}
+                trigger={'click'}
+                overlay={detail_level}
+              >
+                <Button variant='warning' id='button-details-level' >
+                  <FontAwesomeIcon icon={faFolderTree} />
+                </Button>
+              </OverlayTrigger>
 
               <OverlayTrigger
                 key={'tooltip-link-filter'}
