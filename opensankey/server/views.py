@@ -433,7 +433,7 @@ def load_retrieves_result():
     except Exception:
         trace.logger.error('load_retrieves_result failed')
         response = Response(
-            json.dumps(json_data),
+            json.dumps('{}'),
             status=510,
             mimetype='application/json'
         )
