@@ -2120,21 +2120,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
       
       if (xt < xs) {
-        const x_left = xt - default_horiz_shift + pos_drag_zone_left // x14 
-        const x_right = xs + default_horiz_shift + pos_drag_zone_right  // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
-        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-        return [vert, left, right]
+
+        const vert = 'translate(' + (xs) + ', ' + (ys - default_handle_size / 2) + ')'
+        const left = 'translate(' + (xt - default_handle_size ) + ' ,' + (yt - default_handle_size / 2) + ')'
+        return [vert, left]
       } else {
-        const x_right = xt + default_horiz_shift + pos_drag_zone_right  // x14 
-        const x_left = xs - default_horiz_shift + pos_drag_zone_left // x2 
-        const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8 
-        const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-        const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-        const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-        return [vert, left, right]
+
+        const vert = 'translate(' + (xt ) + ', ' + (yt - default_handle_size / 2) + ')'
+        const left = 'translate(' + (xs - default_handle_size ) + ' ,' + (ys  - default_handle_size / 2) + ')'
+        return [vert, left]
       }
     } else if (link.orientation === 'vv' && link.recycling) {
       // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
