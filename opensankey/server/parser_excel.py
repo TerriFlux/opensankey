@@ -279,19 +279,15 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         if is_existing_link:
             existing_link = existing_links[0]
             existing_v = existing_link['value']
-            #To be an existing link at least one row_data_tag must differ
-            is_existing_link = False
-            if len(row_data_tags) == 0:
-                is_existing_link = True
+
             for row_data_tag in row_data_tags:                
                 if not row_data_tag in existing_v:
-                    is_existing_link = True
                     break
                 else:
                     existing_v = existing_v[row_data_tag]
-            if is_existing_link == False:
-                for row_flux_tag in row_flux_tags:
-                    if not row_flux_tag in existing_v['tags']:
+            if 'tags' in existing_v:
+                for i,row_flux_tag in enumerate(row_flux_tags):
+                    if row_flux_tag != existing_v['tags'][list(fluxTags.keys())[i]] and existing_v['tags'][list(fluxTags.keys())[i]] != '':
                         is_existing_link = False
                                    
         if is_existing_link:
@@ -803,7 +799,11 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
             links[row][flux_cols.index(DATA_VALUE)] = float(val['value'])
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
-                links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
+                try:
+                    links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
+                except Exception as expt:
+                    print(str(expt))
+                    pass
             else:
                 links[row][3+depth+i] = ''
         return row+1
