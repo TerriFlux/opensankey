@@ -671,41 +671,40 @@ def save_excel(
                         except Exception:
                             print('tutu')
                     col_num = col_num+1 
+            nodes = nodes+dim_nodes  
            
-            for i,node in enumerate(sankey_data['nodes'].values()):
+        for i,node in enumerate(sankey_data['nodes'].values()):
+            for i in range(len(levelTags)):
+                levelTag = levelTags[i]
                 if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
                     #level = node['dimensions'][levelTag]['level']
                     parent_id = node['dimensions'][levelTag]['parent_name']
                     parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
                 else:
                     continue
-                parent_rows = [k for k in range(len(dim_nodes)) if dim_nodes[k][nodes_cols.index(NODES_NODE)] == parent_name]
+                parent_rows = [k for k in range(len(nodes)) if nodes[k][nodes_cols.index(NODES_NODE)] == parent_name]
                 if len(parent_rows) == 0:
                     continue
                 parent_row = parent_rows[0]
-                if dim_nodes[parent_row][0] != 2:
+                if nodes[parent_row][0] != 2:
                     continue
                 # if node['tags'][levelTag] == sankey_data['nodes'][parent_id]['tags'][levelTag]:
                 #     continue
-                dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+                nodes.insert(parent_row+1,[""] * nb_cols_nodes)
                 row = parent_row+1
-                dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = dim_nodes[parent_row][0]+1
-                dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                nodes[row][nodes_cols.index(NODES_LEVEL)] = nodes[parent_row][0]+1
+                nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
                 if 'definition' in node:
-                    dim_nodes[row][nb_cols_nodes-1] = node['definition']
+                    nodes[row][nb_cols_nodes-1] = node['definition']
                 col_num = 0           
                 for j,tag_name in enumerate(sankey_data['nodeTags']):
                     tags = sankey_data['nodeTags'][tag_name]['tags'] 
                     tags_names = ['']
                     if tag_name in node['tags']:
                         tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                        dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
-                    col_num = col_num+1
-            nodes = nodes+dim_nodes               
+                        nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    col_num = col_num+1             
             
-
-
-
     flux_cols = [
         DATA_ORIGIN, DATA_DESTINATION, DATA_VALUE
     ]
