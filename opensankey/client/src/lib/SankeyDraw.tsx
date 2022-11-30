@@ -3485,7 +3485,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .style('font-size', d => d.display_style.font_size + 'px')
       .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => {
-
+        if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange') {
+          return d.name.split(' - ')[1]
+        }
         return d.name.split(' - ')[0].replace('-', ' ')
       })
       .each(d => {

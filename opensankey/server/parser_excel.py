@@ -555,6 +555,8 @@ def save_excel(
         tags_sheet[0] = [TAG_NAME,TAG_TYPE,TAG_TAGS,TAG_IS_PALETTE,TAG_COLORMAP,TAG_COLOR]
 
     row = 1
+    skip = False
+    has_level = False
     for tag_group_type in ['dataTags','nodeTags','fluxTags']:
         tag_key_names = list(sankey_data[tag_group_type])
         tag_group_names = [ tags_group['group_name'] for tags_group in sankey_data[tag_group_type].values()]
@@ -562,17 +564,29 @@ def save_excel(
             banner = sankey_data[tag_group_type][tag_key_names[i]]['banner']
             tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values() if 'color' in tag])
             the_tag_group_type = tag_group_type
+            if tag_group_names[i] == 'Primaire':
+                skip = True
+                for i,node in enumerate(sankey_data['nodes'].values()):
+                    if 'Primaire' in node['dimensions'] and 'parent_name' in node['dimensions']['Primaire']:
+                        skip = False
+                if skip:
+                    del sankey_data['nodeTags']['Primaire']
+                    continue
             if banner == 'level':
                 the_tag_group_type = 'levelTags'
+                has_level = True
             tags_sheet[row]=[tag_group_names[i],the_tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
+            
+    if len(tags_sheet) == 2 and skip:
+        tags_sheet =[]
     
     #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
     nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
     nb_cols_nodes = len(nodes_cols) + len(nodeTags_group_names)
     nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
     
-    has_dimensions = len([node for node in sankey_data['nodes'].values() if len(node['dimensions'].keys())]) > 0
+    has_dimensions = len([node for node in sankey_data['nodes'].values() if len(node['dimensions'].keys())]) > 0 and has_level
     has_definitions = False
     for row,node in enumerate(sankey_data['nodes'].values()):
         if 'tooltip_text' in node and node['tooltip_text'] != None and node['tooltip_text'] != '':
