@@ -567,7 +567,7 @@ def save_excel(
             the_tag_group_type = tag_group_type
             if tag_group_names[i] == 'Primaire':
                 skip = True
-                for i,node in enumerate(sankey_data['nodes'].values()):
+                for j,node in enumerate(sankey_data['nodes'].values()):
                     if 'Primaire' in node['dimensions'] and 'parent_name' in node['dimensions']['Primaire']:
                         skip = False
                 if skip:
