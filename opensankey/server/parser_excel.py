@@ -541,7 +541,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                 }
 
 def save_excel(
-    sankey_data : dict
+    sankey_data : dict,
+    save_all : bool
 ):
     nodes_cols =  [NODES_LEVEL, NODES_NODE]
     #nodes_cols = mfa_input[NODES_SHEET][0]
@@ -795,7 +796,7 @@ def save_excel(
         mfa_output = {}
         if len(tags_sheet) > 0:
             mfa_output[TAG_SHEET] = pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0])
-        if len(nodes) > 0 and (has_dimensions or has_definitions) or len(links) == 1:
+        if len(nodes) > 0 and (has_dimensions or has_definitions) or len(links) == 1 or save_all:
             mfa_output[NODES_SHEET] = pd.DataFrame(nodes[1:],columns=nodes[0])
         if len(links) > 0:
             mfa_output[DATA_SHEET] = pd.DataFrame(links[1:],columns=links[0])
