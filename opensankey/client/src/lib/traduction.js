@@ -249,7 +249,7 @@ const resources = {
         'LegWidth':'Largeur Légende',
         'Fichiers':'Fichiers',
         'Edition':'Edition',
-        'Formations':'Tutoriaux',
+        'Formations':'Tutoriels',
         'Exemples':'Démo',
         'Aide':'Aide',
 
