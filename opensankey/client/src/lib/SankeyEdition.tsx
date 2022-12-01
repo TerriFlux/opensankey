@@ -405,7 +405,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       // if (tags_group.banner == 'one') {
-      const selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      let selected = ''
+      if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
+        selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      }
       return (
         <>
           <FormLabel>{tags_group.group_name}</FormLabel>
