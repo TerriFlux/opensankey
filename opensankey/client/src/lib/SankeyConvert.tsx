@@ -1408,4 +1408,17 @@ export const convert_data = (
   }
 
   data.version = '0.8'
+
+  if(Object.keys(data.nodeTags).length>0 && !data.accordeonToShow.includes('EN')){
+    data.accordeonToShow.push('EN')
+  }
+  if(Object.keys(data.fluxTags).length>0 && !data.accordeonToShow.includes('EF')){
+    data.accordeonToShow.push('EF')
+  }
+  if(Object.keys(data.dataTags).length>0 && !data.accordeonToShow.includes('ED')){
+    data.accordeonToShow.push('ED')
+  }
+  if(Object.keys(data.labels).length>0 && !data.accordeonToShow.includes('LL')){
+    data.accordeonToShow.push('LL')
+  }
 }
