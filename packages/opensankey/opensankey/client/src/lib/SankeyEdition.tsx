@@ -822,6 +822,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 key={'tooltip-details-level'}
                 placement={'left'}
                 trigger={'click'}
+                rootClose
                 overlay={detail_level}
               >
                 <Button variant='warning' id='button-details-level' >
@@ -833,6 +834,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 key={'tooltip-link-filter'}
                 placement={'left'}
                 trigger={'click'}
+                rootClose
                 overlay={link_filter}
               >
                 <Button variant='danger' id='button-filter-link' >
