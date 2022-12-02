@@ -240,8 +240,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const display_value = getLinkValue(data, d.idLink).display_value
         if (display_value.includes('*') && !data.show_structure) {
           return '40, 5'
-        } 
-        if (d.dashed) {
+        }
+        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0
+        if (d.dashed || is_free) {
           return '5, 5'
         } else {
           return ''
@@ -412,7 +413,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           pos_x_src = nodes[l.idSource].x
           pos_y_src = nodes[l.idSource].y
         }
-
+        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
+        if (is_free) {
+          return 2
+        }
 
         let link_value = test_link_value(data, nodes, l)
         link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
@@ -4044,7 +4048,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return ''
         }
         //const display_value = getLinkValue(data_v2, d.idLink).display_value
-        if (d.dashed) {
+        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0
+        if (is_free) {
+          return '5, 5'
+        }
+        if (d.dashed || is_free) {
           return '40, 5'
         } else {
           return ''
@@ -4159,6 +4167,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           pos_y_src = nodes[l.idSource].y
         }
 
+        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
+        if (is_free) {
+          return 2
+        }
 
         const link_value = test_link_value(data, nodes, l)
         //Zones limite à ne pas êtres
