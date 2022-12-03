@@ -441,7 +441,7 @@ const resources = {
         'tooltipSelection':'Permet de drag les noeuds',
         'tooltipHelp':'Info supplementaires sur le diagramme',
         'tooltipAjoutNode':'Ajoute un noeud au click de la souris',
-        'tooltipLiason':'Clické puis relacher entre deux noeuds existant pour les liés avec un flux',
+        'tooltipLiason':'Clicker puis relacher entre deux noeuds existant pour les liés avec un flux',
       }
           
     }
