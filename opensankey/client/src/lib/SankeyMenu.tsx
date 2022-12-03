@@ -121,8 +121,8 @@ type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
 export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
   return (
     <>
-      { Array.isArray(exemple_menu) 
-        ? exemple_menu.map( (item,index)=> {
+      { ('Files' in exemple_menu) 
+        ? (exemple_menu['Files'] as string[]).map( (item,index)=> {
           //let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
@@ -154,8 +154,8 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                   path, url_prefix, data, set_data
                 )} 
               }
-            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' sortie') : item.split('.x')[0].replace(/_/g, ' ') + ' entrée'
-                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json','') : item.replace('afmsankey_0.9.0.','')
+            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
               }</Dropdown.Item>
           )
         }
@@ -164,6 +164,9 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             let title = key
             if (title === 'artefacts') {
               title = 'Page Web et Zip' 
+            }
+            if (key == 'Tests') {
+              return <></>
             }
             let the_current_path = current_path
             if (!key.includes('OpenSankey')) {
@@ -1582,7 +1585,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           callback(data)
           delete (data as SankeyData & { layout?: SankeyData }).layout
           set_data({ ...data })
-          set_show_load(false)
+          //set_show_load(false)
         } catch(err) {
           alert(err)
         }
@@ -3660,7 +3663,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           setProcessing={setProcessing}
           failure={failure}
           setFailure={setFailure}
-          not_started={not_started}
           setNotStarted={setNotStarted}  
         />
       ) :

@@ -310,7 +310,7 @@ def parse_folder(current_dir,menus,key=None):
     exemple_found = False
     # artefact_found = False
     for file_or_folder in folder_content:
-        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder  or 'new' in file_or_folder or 'prev' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
@@ -328,9 +328,14 @@ def parse_folder(current_dir,menus,key=None):
         if '.xlsx' in file_or_folder and not 'old.' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
-            if 'Excel' not in menus[key]:
-                menus[key]['Excel'] = []           
-            menus[key]['Excel'].append(file_or_folder)
+            if 'Files' not in menus[key]:
+                menus[key]['Files'] = []
+            reconciled_file = os.path.splitext(file_or_folder)[0]+'_reconciled.xlsx'
+            reconciled_path = os.path.join(current_dir, reconciled_file)
+            if os.path.isfile(reconciled_path):
+                continue
+            menus[key]['Files'].append(file_or_folder)
+            menus[key]['Files'].sort()
             exemple_found = True
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
@@ -359,9 +364,10 @@ def parse_folder(current_dir,menus,key=None):
                     continue
                 if key not in menus:
                     menus[key] = {}
-                if 'Sankey' not in menus[key]:
-                    menus[key]['Sankey'] = []   
-                menus[key]['Sankey'].append(file_name)
+                if 'Files' not in menus[key]:
+                    menus[key]['Files'] = []   
+                menus[key]['Files'].append(file_name)
+                menus[key]['Files'].sort()
                 exemple_found = True
     if not exemple_found and key in menus:
         del menus[key]

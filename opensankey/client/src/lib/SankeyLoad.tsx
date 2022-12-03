@@ -10,7 +10,6 @@ interface SankeyLoadProdTypes {
   setProcessing : (b:boolean)=>void
   failure : boolean,
   setFailure : (b:boolean)=>void
-  not_started : boolean,
   setNotStarted : (b:boolean)=>void
 }
 
@@ -20,7 +19,7 @@ const SankeyLoad = ({
   show_dialog,set_show_dialog,
   processing,setProcessing,
   failure,setFailure,
-  not_started,setNotStarted
+  setNotStarted
 } : SankeyLoadProdTypes) => {
   const [result,setResult] = useState('')
   const [value,setValue] = useState([1,2])
@@ -63,17 +62,17 @@ const SankeyLoad = ({
             <Row>
               <Col sm={5}/>
               <Col sm={2}>    
-                {not_started ? (<></>) :   
+                { 
                   processing ? (
                     <Button variant="warning"><span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> En traitement...</Button>):(
                     failure ? 
-                      <Button variant="danger" onClick={reset}>{failure_status}</Button> : 
-                      <Button variant="success" 
+                      (<Button variant="danger" onClick={reset}>{failure_status}</Button>) : 
+                      (<Button variant="success" 
                         onClick={()=>{
                           successAction()
                           set_show_dialog(false)
-                        }}>{success_status}</Button>
-                  )}
+                        }}>{success_status}</Button>))
+                }
               </Col><Col sm={5}/></Row> 
             <br/>              
             <br/>
