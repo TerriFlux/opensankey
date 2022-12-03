@@ -4046,6 +4046,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('pointer-events', 'auto')
       .attr('stroke-dasharray', d => {
+        if (data.show_structure) {
+          return '5, 5'
+        }
         const link_value = getLinkValue(data_v2, d.idLink)
         if (link_value === undefined) {
           return ''
