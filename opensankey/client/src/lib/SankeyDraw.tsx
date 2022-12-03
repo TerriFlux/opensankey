@@ -418,7 +418,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
         if (is_free) {
-          return 2
+          return 5
         }
 
         let link_value = test_link_value(data, nodes, l)
@@ -4175,7 +4175,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
         const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
         if (is_free) {
-          return 2
+          return 5
         }
 
         const link_value = test_link_value(data, nodes, l)
