@@ -10,7 +10,7 @@ import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
@@ -175,6 +175,7 @@ const SankeyEditionPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
   mode_visualisation:PropTypes.bool.isRequired,
   set_current_filter: PropTypes.func.isRequired,
+  url_prefix: PropTypes.string.isRequired,
 
 }
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
@@ -191,7 +192,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -880,12 +881,28 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               >
                 <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
                   data.show_structure = !data.show_structure
+                  data.show_data = false
                   set_data({ ...data })
                 }} >
                   <FontAwesomeIcon icon={faCodeBranch} />
                 </Button>
               </OverlayTrigger>
-
+              { url_prefix !== '' ?
+                <OverlayTrigger
+                  key={'tooltip-structur'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipData')} </Tooltip>
+                  }
+                >
+                  <Button variant={(data.show_data?'outline-success':'success')} onClick={() => { 
+                    data.show_data = !data.show_data
+                    data.show_structure = false
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faDiagramProject} />
+                  </Button>
+                </OverlayTrigger> : <></>}
 
               <OverlayTrigger
                 key={'tooltip-help'}
