@@ -2275,6 +2275,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
           mode_visualisation={mode_visualisation}
           set_current_filter={set_current_filter}
+          url_prefix={url_prefix}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >

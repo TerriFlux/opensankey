@@ -371,6 +371,17 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
       .range([0, data.user_scale])
     return inv_scale(5)
   }
+  if (data.show_data ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      const inv_scale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, data.user_scale])
+      return inv_scale(5)
+    }
+  }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []
 
@@ -519,6 +530,7 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [0, 10],
 
     show_structure: false,
+    show_data: true,
     fit_screen: window.SankeyToolsStatic,
 
     icon_catalog: {},

@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets, getLinkValue, setSelectedTags, default_node, default_link, delete_node, delete_link,link_visible,test_link_value,link_color } from './SankeyUtils'
@@ -235,6 +235,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-dasharray', d => {
         if (data.show_structure) {
           return '5, 5'
+        }
+        if (data.show_data ) {
+          const link_value = getLinkValue(data, d.idLink)
+          if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+            return '5, 5'
+          }
         }
         const link_value = getLinkValue(data, d.idLink)
         if (link_value === undefined) {
@@ -4048,6 +4054,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-dasharray', d => {
         if (data.show_structure) {
           return '5, 5'
+        }
+        if (data.show_data ) {
+          const link_value = getLinkValue(data, d.idLink)
+          if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+            return '5, 5'
+          }
         }
         const link_value = getLinkValue(data_v2, d.idLink)
         if (link_value === undefined) {

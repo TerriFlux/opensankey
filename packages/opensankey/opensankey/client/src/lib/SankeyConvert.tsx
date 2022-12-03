@@ -1393,6 +1393,9 @@ export const convert_data = (
   if (data.show_banner == undefined) {
     data.show_banner = true
   }
+  if (data.show_data == undefined) {
+    data.show_data = false
+  }
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
