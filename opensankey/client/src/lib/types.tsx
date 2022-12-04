@@ -175,7 +175,8 @@ export const TagsGroupPropTypes = {
     selected: PropTypes.bool.isRequired,
   }).isRequired).isRequired,
   banner: PropTypes.string.isRequired,
-  activated: PropTypes.bool.isRequired
+  activated: PropTypes.bool.isRequired,
+  siblings: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
 }
 export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 

@@ -323,6 +323,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   checked={tags_group.activated}
                   onChange={evt => {
                     tags_group.activated = evt.target.checked 
+                    tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
+                    set_nodes_level(data)
                     set_data({ ...data })
                   }}
                 />

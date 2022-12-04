@@ -87,7 +87,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       color_map: 'jet',
       tags: {},
       banner: 'multi',
-      activated: true
+      activated: true,
+      siblings: []
     }
     if (elementName === 'nodes' ) {
       Object.values(data[elementName]).forEach(n => n.tags[k] = [])
@@ -429,7 +430,8 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       color_map: 'jet',
       tags: {},
       banner: 'multi',
-      activated: true
+      activated: true,
+      siblings: []
     }
 
     set_data_tags_group_key('tag_group_' + idGroup)
