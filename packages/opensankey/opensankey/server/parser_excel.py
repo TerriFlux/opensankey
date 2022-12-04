@@ -479,38 +479,43 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
            elif mfa_input[TAG_SHEET].iat[i,1] == 'nodeTags' or mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
                 if mfa_input[TAG_SHEET].iat[i,0] == 'Dimensions':
                     continue
-                tmp = mfa_input[TAG_SHEET].iat[i,2].split(':')
-                tmp = [s.strip() for s in tmp]
-                try:
-                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET].iat[i,5].split(':')]
-                    if len(color_tmp) != len(tmp):
+                tag_group_names = mfa_input[TAG_SHEET].iat[i,0].split('/')
+                tag_names = mfa_input[TAG_SHEET].iat[i,2].split('/')
+                colors = mfa_input[TAG_SHEET].iat[i,5].split('/')
+                for j,tag_group_name in enumerate(tag_group_names):
+                    tmp2 = tag_names[j].split(':')
+                    tmp2 = [s.strip() for s in tmp2]
+                    try:
+                        color_tmp = [s.strip() for s in colors[j].split(':')]
+                        if len(color_tmp) != len(tmp2):
+                            color_tmp = ['']
+                    except Exception as excpt:
                         color_tmp = ['']
-                except Exception as excpt:
-                    color_tmp = ['']
-                selected = 1
-                if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
-                    selected = 0
-                tags = { s : {'name':s,'selected': selected, 'color' : ''} for i,s in enumerate(tmp)}
-                if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
-                    tags['1']['selected'] = 1
-                if color_tmp[0] != '':
-                    for j,tag_key in enumerate(tags.keys()):
-                        color = color_tmp[j]
-                        if not is_hex(color):
-                            color = webcolors.name_to_hex(color)
-                        tags[tag_key]['color'] = color
-                banner = 'multi'
-                if mfa_input[TAG_SHEET].iat[i,0] == NODE_TYPE:
-                    banner = 'none'                    
-                if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
-                    banner = 'level'             
-                nodeTags[mfa_input[TAG_SHEET].iat[i,0]] = {
-                    'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
-                    'show_legend' : 0,
-                    'tags'        : tags,
-                    'banner'      : banner,
-                    'activated'   : 1                  
-                }              
+                    selected = 1
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        selected = 0
+                    tags = { s : {'name':s,'selected': selected, 'color' : ''} for i,s in enumerate(tmp2)}
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        tags['1']['selected'] = 1
+                    if color_tmp[0] != '':
+                        for k,tag_key in enumerate(tags.keys()):
+                            color = color_tmp[k]
+                            if not is_hex(color):
+                                color = webcolors.name_to_hex(color)
+                            tags[tag_key]['color'] = color
+                    banner = 'multi'
+                    if tag_group_name == NODE_TYPE:
+                        banner = 'none'                    
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        banner = 'level'             
+                    nodeTags[tag_group_name] = {
+                        'group_name'  : tag_group_name,
+                        'show_legend' : 0,
+                        'tags'        : tags,
+                        'banner'      : banner,
+                        'activated'   : 1,
+                        'siblings'    : [n for n in tag_group_names if n != tag_group_name]              
+                    }              
            elif mfa_input[TAG_SHEET].iat[i,1] == 'fluxTags':
                 tmp = mfa_input[TAG_SHEET].iat[i,2].split(':')
                 tmp = [s.strip() for s in tmp]

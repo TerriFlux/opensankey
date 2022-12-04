@@ -237,7 +237,8 @@ export const convert_data = (
         computed_data : { name : 'Données calculées'  , selected: true, color : 'blue' },
       },
       banner : 'multi',
-      activated: true
+      activated: true,
+      siblings: []
     }
     delete data_to_convert.nodeTags['flux_types']
   }
@@ -315,7 +316,8 @@ export const convert_data = (
         show_legend: false,
         tags: Object.assign({}, ...data.region_names.map((region_name) => ({ [region_name]: { name: region_name, color: '', selected: region_name === data.region_name } }))),
         banner: 'one',
-        activated: true
+        activated: true,
+        siblings: []
       }
     }
     if (key_names.length > 1 && data.periods) {
@@ -325,7 +327,8 @@ export const convert_data = (
         show_legend: false,
         tags: Object.assign({}, ...key_names.map((key_name) => ({ [key_name]: { name: key_name, color: '', selected: key_names[0] } }))),
         banner: 'one',
-        activated: true
+        activated: true,
+        siblings: []
       }
     }
     delete data.periods
@@ -610,7 +613,8 @@ export const convert_data = (
         color_map : '',
         show_legend : false,
         banner: 'none',
-        activated: true
+        activated: true,
+        siblings: []
       }
     }
   }
@@ -635,7 +639,8 @@ export const convert_data = (
         show_legend: false,
         banner: 'level',
         tags: {},
-        activated: true
+        activated: true,
+        siblings: []
       }
       Object.values(nodes).forEach(n=>{
         if (n.dimensions[tag]) {
@@ -928,7 +933,8 @@ export const convert_data = (
         show_legend: false,
         tags: tags_dict,
         banner: 'multi',
-        activated: true
+        activated: true,
+        siblings: []
       }
       delete data.subchains
     }
@@ -941,7 +947,8 @@ export const convert_data = (
         color_map: 'jet',
         tags: tags_dict,
         banner: 'multi',
-        activated: true
+        activated: true,
+        siblings: []
       }
     }
   }
@@ -957,7 +964,8 @@ export const convert_data = (
           'computed_data': { name: 'Données calculées' , selected: true, color:'#D3D3D3' },
         },
         banner: 'multi',
-        activated: true
+        activated: true,
+        siblings: []
       }
       delete data.flux_types
       delete data.use_flux_types
