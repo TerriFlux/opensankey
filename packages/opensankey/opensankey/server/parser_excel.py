@@ -507,13 +507,14 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     if tag_group_name == NODE_TYPE:
                         banner = 'none'                    
                     if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
-                        banner = 'level'             
+                        banner = 'level'      
+                    activated = j==0       
                     nodeTags[tag_group_name] = {
                         'group_name'  : tag_group_name,
                         'show_legend' : 0,
                         'tags'        : tags,
                         'banner'      : banner,
-                        'activated'   : 1,
+                        'activated'   : activated,
                         'siblings'    : [n for n in tag_group_names if n != tag_group_name]              
                     }              
            elif mfa_input[TAG_SHEET].iat[i,1] == 'fluxTags':
