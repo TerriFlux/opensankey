@@ -394,6 +394,7 @@ export const convert_data = (
         shape: 'rect',
         color: '#a9a9a9',
         colorParameter: 'local',
+        colorSustainable:false,
         position: 'absolute',
         x: 100,
         y: 100,

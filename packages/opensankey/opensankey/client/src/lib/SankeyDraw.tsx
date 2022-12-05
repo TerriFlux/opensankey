@@ -184,6 +184,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       } else {
         colorNode = 'grey'
       }
+      colorNode=(n.colorSustainable)? n.color:colorNode
     }
     if (n.colorParameter === 'local') {
       // Le couleur est définie dans les parametres locaux du noeud
