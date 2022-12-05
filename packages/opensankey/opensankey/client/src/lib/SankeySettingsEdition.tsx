@@ -17,6 +17,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   children
 }) => {
   const [user_scale, set_user_scale] = useState(data.user_scale)
+  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
   const {t} =useTranslation()
@@ -42,6 +43,24 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             />
             <FormControl.Feedback />
             <Form.Text>    ({t('MEP.vp100')})</Form.Text>
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row} >
+          <Col xs={3}>
+            <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
+          </Col>
+          <Col>
+            <FormControl
+              type="text"
+              value={maximum_flux == null ? undefined : maximum_flux}
+              onChange={evt => {
+                set_maximum_flux(+evt.target.value)
+              }}
+              onBlur={() => {
+                data.maximum_flux = maximum_flux
+                set_data({ ...data })
+              }}
+            />
           </Col>
         </Form.Group>
         <Form.Group as={Row} >

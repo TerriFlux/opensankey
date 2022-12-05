@@ -352,6 +352,7 @@ export const link_text = (
   d: SankeyLink,
   link_value: number
 ) => {
+  let the_link_value = getLinkValue(data, d.idLink).value
   const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== '' && str_display!=='*') {
     return str_display
@@ -359,7 +360,15 @@ export const link_text = (
   if (data.show_structure) {
     return
   }
-  const the_link_value = toPrecision(link_value)
+  if (data.show_data ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      return
+    }
+  }
+  the_link_value = toPrecision(the_link_value)
   return the_link_value
 }
 
@@ -413,6 +422,9 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   }
   if (val === undefined) {
     return 0
+  }
+  if ( data.maximum_flux && ((val as unknown) as SankeyLinkValue).value > data.maximum_flux) {
+    return data.maximum_flux
   }
   return ((val as unknown) as SankeyLinkValue).value
 }
