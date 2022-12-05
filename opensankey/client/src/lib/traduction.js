@@ -48,6 +48,7 @@ const resources = {
       },
       MEP:{
         'Echelle':'Scale',
+        'MaxFlux':'Maximum flux',
         'vp100':'value for 100px',
         'TCG':'Size grid square',
         'GV':'Grid visible',
@@ -274,7 +275,8 @@ const resources = {
         'ns':'Nom Style'
       },
       MEP:{
-        'Echelle':'Echelle',
+        'Echelle': 'Echelle',
+        'MaxFlux': 'Flux Maximum',
         'vp100':'valeur pour 100px',
         'TCG':'Taille Carré Grille',
         'GV':'Grille visible',

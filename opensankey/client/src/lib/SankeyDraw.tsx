@@ -1025,6 +1025,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } else {
             //retour à la normal
             d3.select('#' + l.idLink).attr('stroke-width', d => {
+              const is_free = getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini !== undefined && +getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini == 0
+              if (is_free) {
+                return 5
+              }
               const link_value = test_link_value(data, display_nodes, (d as SankeyLink))
               const tmp=(link_value=='')?1:link_value
               return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))

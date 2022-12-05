@@ -190,6 +190,7 @@ export const SankeyDataPropTypes = {
   file_name: PropTypes.string,
 
   user_scale: PropTypes.number.isRequired,
+  maximum_flux: PropTypes.number,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
