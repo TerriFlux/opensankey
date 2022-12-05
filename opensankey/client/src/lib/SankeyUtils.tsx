@@ -350,7 +350,6 @@ export const toPrecision = (
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
-  link_value: number
 ) => {
   let the_link_value = getLinkValue(data, d.idLink).value
   const str_display = String(getLinkValue(data, d.idLink).display_value)
