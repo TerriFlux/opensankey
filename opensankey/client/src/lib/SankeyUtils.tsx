@@ -542,7 +542,7 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [0, 10],
 
     show_structure: false,
-    show_data: true,
+    show_data: false,
     fit_screen: window.SankeyToolsStatic,
 
     icon_catalog: {},
