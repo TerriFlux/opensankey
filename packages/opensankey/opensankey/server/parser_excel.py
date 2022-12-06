@@ -264,7 +264,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
                 if not fluxTag in columns:
-                    row_flux_tags.append('Donnée collectée')
+                    #row_flux_tags.append('Donnée collectée')
+                    row_flux_tags.append('')
                     continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row,columns.index(fluxTag)])
 

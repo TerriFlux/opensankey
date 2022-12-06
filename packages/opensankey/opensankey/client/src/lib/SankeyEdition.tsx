@@ -244,7 +244,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const addAllDropDownNode = (level:boolean) => {
     let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
     if (level) {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level')
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
     }
     const allDD = banner_grouptag.map(([, tags_group]) => {
       const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
@@ -304,11 +304,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </FormGroup>
           </>)
       } else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
+        if (Object.keys(tags_group.tags).length < 2) {
+          return <></>
+        }
         const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
         const selected = tmp.length > 0 ? tmp[0][0] : ''
         return (
           <>
-            <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
+            {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
             <FormGroup as={Row}>
               <Col xs={10}>
                 {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
@@ -474,22 +477,22 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
-  const setDiagram = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+  const setDiagram = (the_diagram : string) => {
 
-    const the_diagram = evt.target.value as string
+    //const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
-    const diagram_path = is_split ? diagram+'/'+the_diagram : the_diagram
+
     const new_data = JSON.parse(
       JSON.stringify(
-        window.sankey[sous_filieres[diagram_path]]
+        window.sankey[sous_filieres[the_diagram]]
       )
     ) as SankeyData
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    if (!is_split) {
-      set_diagram(the_diagram)
-    }
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
+    // }
  
     Object.values(data.nodes).forEach(node => {
       node.node_visible = true
@@ -635,7 +638,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
                   <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
                   <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={setDiagram}
+                    onChange={evt=> setDiagram(evt.target.value)}
                     value={diagram}>
                     {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
                   </Form.Select>
@@ -644,15 +647,21 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
                   <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
                   <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+                      set_diagram(evt.target.value)
+                      const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+                      setDiagram(diagram_path)
+                    }}
                     value={diagram}>
                     {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
                   </Form.Select>
                   {is_split ? 
                     (<Form.Select style={{ width: '200px', color:'black' }}
                       onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-                        setDiagram(evt)
                         set_diagram2(evt.target.value)
+                        const diagram_path = diagram+'/'+evt.target.value
+                        setDiagram(diagram_path)
+
                       }}
                       value={diagram2}>
                       {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
