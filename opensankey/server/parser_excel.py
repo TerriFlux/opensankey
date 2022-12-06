@@ -288,6 +288,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     existing_v = existing_v[row_data_tag]
             if 'tags' in existing_v:
                 for i,row_flux_tag in enumerate(row_flux_tags):
+                    if row_flux_tag == 'Donnée calculée' or row_flux_tag == 'Donnée collectée':
+                        continue
                     if row_flux_tag != existing_v['tags'][list(fluxTags.keys())[i]] and existing_v['tags'][list(fluxTags.keys())[i]] != '':
                         is_existing_link = False
                                    
