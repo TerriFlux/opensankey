@@ -90,6 +90,8 @@ interface ConvertSankeyData {
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
   agregated_level?: number
+  show_structure: boolean | string
+  show_data?: boolean
 }
 
 interface ConvertSankeyValue {
@@ -1401,8 +1403,9 @@ export const convert_data = (
   if (data.show_banner == undefined) {
     data.show_banner = true
   }
-  if (data.show_data == undefined) {
-    data.show_data = false
+  delete data.show_data
+  if ((data.show_structure as unknown as  boolean) === false || (data.show_structure as unknown as  boolean) === true ) {
+    data.show_structure = 'reconciled'
   }
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')

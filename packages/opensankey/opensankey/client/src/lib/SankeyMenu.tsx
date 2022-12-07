@@ -2520,7 +2520,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 .method('tspans')
                               d3.select('#ggg_' + d.idNode + ' text')
                                 .call(wrap)
-                              if (!d.x_label || data.show_structure) {
+                              if (!d.x_label || data.show_structure === 'structure') {
                                 d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                                   const width = +d3.select('#' + d.idNode).attr('width')
                       
