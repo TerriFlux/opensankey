@@ -617,6 +617,30 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
     </Popover.Body>
   </Popover>
+
+  const struc_data_reconciled=
+  <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
+    <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <Form.Select 
+            style={{ width: '200px', color: 'black' }}
+            placeholder='all' 
+            value={data.show_structure}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              data.show_structure = evt.target.value 
+              set_data({...data})
+            }}>
+            <option key='structure'  value='structure' >Structure</option>
+            <option key='data'       value='data'      >Données collectées</option>
+            <option key='reconciled' value='reconciled'>Données réconciliées</option>
+            <option key='free'       value='free'      >Données réconciliées+flux indéterminées</option>
+          </Form.Select>
+        </Col>
+      </FormGroup>           
+    </Popover.Body>
+  </Popover>
   
 
   return (
@@ -882,38 +906,32 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 </Button>
               </OverlayTrigger>
 
-
-              <OverlayTrigger
-                key={'tooltip-structur'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
-                }
-              >
-                <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
-                  data.show_structure = !data.show_structure
-                  data.show_data = false
-                  set_data({ ...data })
-                }} >
-                  <FontAwesomeIcon icon={faCodeBranch} />
-                </Button>
-              </OverlayTrigger>
               { url_prefix !== '' ?
                 <OverlayTrigger
                   key={'tooltip-structur'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipData')} </Tooltip>
-                  }
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={struc_data_reconciled}
                 >
-                  <Button variant={(data.show_data?'outline-success':'success')} onClick={() => { 
-                    data.show_data = !data.show_data
-                    data.show_structure = false
-                    set_data({ ...data })
-                  }} >
+                  <Button variant='success'>
                     <FontAwesomeIcon icon={faDiagramProject} />
                   </Button>
-                </OverlayTrigger> : <></>}
+                </OverlayTrigger> : <OverlayTrigger
+                  key={'tooltip-structur'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
+                  }
+                >
+                  <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
+                    data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+                    //data.show_data = false
+                    set_data({ ...data })
+                  }} >
+                    <FontAwesomeIcon icon={faCodeBranch} />
+                  </Button>
+                </OverlayTrigger>}
 
               <OverlayTrigger
                 key={'tooltip-help'}

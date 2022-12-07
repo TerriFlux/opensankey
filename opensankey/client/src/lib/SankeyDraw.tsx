@@ -165,7 +165,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
   const node_color = (n: SankeyNode) => {
     let colorNode
-    if (n.colorParameter === 'groupTag' || data.show_structure) {
+    if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
       //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
       //on controle ici qu'il y a bien un favorite tag
       if (n.colorTag !== undefined && n.colorTag !== '') {
@@ -233,10 +233,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('pointer-events', 'auto')
       .attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
       .attr('stroke-dasharray', d => {
-        if (data.show_structure) {
+        if (data.show_structure === 'structure') {
           return '5, 5'
         }
-        if (data.show_data ) {
+        if (data.show_structure === 'data' ) {
           const link_value = getLinkValue(data, d.idLink)
           if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
             return '5, 5'
@@ -247,10 +247,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return ''
         }
         const display_value = getLinkValue(data, d.idLink).display_value
-        if (display_value.includes('*') && !data.show_structure) {
+        if (display_value.includes('*') && data.show_structure != 'structure' ) {
           return '40, 5'
         }
-        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0
+        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
         if (d.dashed || is_free) {
           return '5, 5'
         } else {
@@ -422,7 +422,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           pos_x_src = nodes[l.idSource].x
           pos_y_src = nodes[l.idSource].y
         }
-        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
+        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
         if (is_free) {
           return 5
         }
@@ -1025,7 +1025,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           } else {
             //retour à la normal
             d3.select('#' + l.idLink).attr('stroke-width', d => {
-              const is_free = getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini !== undefined && +getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini == 0
+              const is_free = getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini !== undefined && +getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
               if (is_free) {
                 return 5
               }
@@ -2455,7 +2455,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(n.node_width), total_offset_width_top, total_offset_width_bottom
     )
     //Hauteur des noeuds
-    if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure) {
+    if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
       // Hauteur des noeuds
       node_size_s_height = inv_scale(n.node_height)
       node_size_s_width = inv_scale(n.node_width)
@@ -2507,11 +2507,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
     )
     // Hauteur des noeuds
-    if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure) {
+    if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure == 'structure') {
       node_size_s_height = inv_scale(source_node.node_height)
       node_size_s_width = inv_scale(source_node.node_width)
     }
-    if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure) {
+    if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure == 'structure') {
       node_size_t_height = inv_scale(target_node.node_height)
       node_size_t_width = inv_scale(target_node.node_width)
     }
@@ -2565,7 +2565,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     let node_size_s_width = inv_scale(source_node.node_width)
     let node_size_t_width = inv_scale(target_node.node_width)
-    if (!data.show_structure) {
+    if (data.show_structure !== 'structure') {
       node_size_s_width = Math.max(
         inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
       )
@@ -2575,7 +2575,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     let node_size_s_height = inv_scale(source_node.node_width)
     let node_size_t_height = inv_scale(target_node.node_width)
-    if (!data.show_structure) {
+    if (data.show_structure !== 'structure') {
       node_size_s_height = Math.max(
         inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
       )
@@ -2792,7 +2792,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     if (link.orientation === 'vh' && !link.recycling) {
-      if (data.show_structure) {
+      if (data.show_structure == 'structure') {
         [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
         if (source_node.x > target_node.x) {
           xt = xt + 30
@@ -2807,7 +2807,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hv' && !link.recycling) {
-      if (data.show_structure) {
+      if (data.show_structure == 'structure') {
         [ys, xt] = [source_node.y + 5, target_node.x + 5]
         if (source_node.y > target_node.y) {
           yt = yt + 30
@@ -2822,7 +2822,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hh' && !link.recycling) {
-      if (data.show_structure) {
+      if (data.show_structure == 'structure') {
         [ys, yt] = [source_node.y + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
         if (source_node.x > target_node.x) {
           xt = xt + target_node.node_width
@@ -2842,7 +2842,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'vv' && !link.recycling) {
-      if (data.show_structure) {
+      if (data.show_structure == 'structure') {
         [xs, xt] = [source_node.x + source_node.node_width / 2, target_node.x + target_node.node_width / 2]
         if (source_node.y > target_node.y) {
           yt = yt + 30
@@ -2864,7 +2864,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       const vert_shift = link.vert_shift ? link.vert_shift : 0
-      if (data.show_structure) {
+      if (data.show_structure == 'structure') {
         [ys, yt] = [source_node.y + 5, target_node.y + 5]
       }
       return SankeyShapes.bezier_link_classic_recycling(
@@ -2872,7 +2872,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         link_value,
         [xs, ys], [xt, yt],
         left_horiz_shift, right_horiz_shift, vert_shift,
-        data.show_structure ? false : link.curved,
+        data.show_structure == 'structure' ? false : link.curved,
         link.orientation === 'vv',
         error_msg, scale
       )
@@ -3470,7 +3470,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('y', n => {
         const height = +d3.select('#' + n.idNode).attr('height')
-        if (n.y_label && !data.show_structure) {
+        if (n.y_label && data.show_structure !== 'structure') {
           return n.y_label
         } else if (n.display_style.label_vert == 'milieu') {
           return height / 2
@@ -3483,7 +3483,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('text-anchor', n => {
-        if (n.x_label && !data.show_structure) {
+        if (n.x_label && data.show_structure !== 'structure') {
           return 'center'
         } else if (n.display_style.label_horiz == 'milieu') {
           return 'middle'
@@ -3514,7 +3514,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
-        if (!d.x_label || data.show_structure) {
+        if (!d.x_label || data.show_structure == 'structure') {
           d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
             const width = +d3.select('#' + d.idNode).attr('width')
 
@@ -3849,7 +3849,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('y', n => {
         const height = +d3.select('#' + n.idNode).attr('height')
-        if (n.y_label && !data_v2.show_structure) {
+        if (n.y_label && data_v2.show_structure !== 'structure') {
           return n.y_label
         } else if (n.display_style.label_vert == 'milieu') {
           return height / 2
@@ -3862,7 +3862,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .attr('text-anchor', n => {
-        if (n.x_label && !data_v2.show_structure) {
+        if (n.x_label && data_v2.show_structure !== 'structure') {
           return 'center'
         } else if (n.display_style.label_horiz == 'milieu') {
           return 'middle'
@@ -3890,7 +3890,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           .method('tspans')
         d3.select('#ggg_' + d.idNode + ' text')
           .call(wrap)
-        if (!d.x_label || data_v2.show_structure) {
+        if (!d.x_label || data_v2.show_structure === 'structure') {
           d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
             const width = +d3.select('#' + d.idNode).attr('width')
 
@@ -4056,10 +4056,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .attr('pointer-events', 'auto')
       .attr('stroke-dasharray', d => {
-        if (data.show_structure) {
+        if (data.show_structure === 'structure') {
           return '5, 5'
         }
-        if (data.show_data ) {
+        if (data.show_structure === 'data' ) {
           const link_value = getLinkValue(data, d.idLink)
           if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
             return '5, 5'
@@ -4070,7 +4070,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return ''
         }
         //const display_value = getLinkValue(data_v2, d.idLink).display_value
-        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0
+        const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
         if (is_free) {
           return '5, 5'
         }
@@ -4189,7 +4189,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           pos_y_src = nodes[l.idSource].y
         }
 
-        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0
+        const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
         if (is_free) {
           return 5
         }

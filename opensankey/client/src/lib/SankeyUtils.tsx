@@ -261,8 +261,8 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-
-      if (v === undefined || v=='') {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_width_top += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
@@ -282,7 +282,8 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_width_bottom += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
@@ -303,7 +304,8 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_height_left += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
@@ -324,7 +326,8 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_height_right += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
@@ -356,10 +359,10 @@ export const link_text = (
   if (str_display !== '' && str_display!=='*') {
     return str_display
   }
-  if (data.show_structure) {
+  if (data.show_structure == 'structure' ) {
     return
   }
-  if (data.show_data ) {
+  if (data.show_structure == 'data' ) {
     const link_value = getLinkValue(data, d.idLink)
     if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
       return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
@@ -373,13 +376,13 @@ export const link_text = (
 
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
-  if (data.show_structure) {
+  if (data.show_structure == 'structure' ) {
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
       .range([0, data.user_scale])
     return inv_scale(5)
   }
-  if (data.show_data ) {
+  if (data.show_structure == 'data' ) {
     const link_value = getLinkValue(data, d.idLink)
     if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
       return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
@@ -540,8 +543,7 @@ export const default_sankey_data = (): SankeyData => {
     v_space: 100,
     legend_position: [0, 10],
 
-    show_structure: false,
-    show_data: false,
+    show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
 
     icon_catalog: {},
@@ -692,7 +694,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
 
 export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   const { dataTags, fluxTags } = data_s
-  if (data_s.show_structure) {
+  if (data_s.show_structure === 'structure') {
     if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
       return false
     }
