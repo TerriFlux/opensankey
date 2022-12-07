@@ -54,7 +54,7 @@ def set_value(
         v['tags'] = v_tags
         v['extension'] = {}        
     else:
-        data_tag = row_data_tags[depth]
+        data_tag = str(row_data_tags[depth])
         if data_tag not in v:
             v[data_tag] = {}
         set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
@@ -804,7 +804,7 @@ def save_excel(
         mfa_output = {}
         if len(tags_sheet) > 0:
             mfa_output[TAG_SHEET] = pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0])
-        if len(nodes) > 0 and (has_dimensions or has_definitions) or len(links) == 1 or save_all:
+        if len(nodes) > 0:
             mfa_output[NODES_SHEET] = pd.DataFrame(nodes[1:],columns=nodes[0])
         if len(links) > 0:
             mfa_output[DATA_SHEET] = pd.DataFrame(links[1:],columns=links[0])

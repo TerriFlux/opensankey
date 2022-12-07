@@ -95,19 +95,41 @@ def save_excel():
             status=401
         )
         return response   
-    try:
-        if io_excel.NODES_SHEET in mfa_output and io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET].columns:
-            verbosity=2
-        else:
-            verbosity=1        
-        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
+    try:     
+        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=2)
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
             response='write_mfa_problem_output_to_excel' + str(excpt),
             status=402
         )
-        return response     
+        return response
+     
+@opensankey.route('/sankey/save_excel_simple', methods=['POST'])
+def save_excel_simple():
+    try:
+        cwd = os.getcwd()
+        excel_file = os.path.join(cwd, "tutu.xlsx")
+        sankey_data =  request.get_data().decode("utf-8")
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data),False)
+    except Exception as excpt:
+        response = Response(
+            response='save_excel : ' + str(excpt),
+            status=401
+        )
+        return response   
+    try:
+        simple_mfa_output = {
+            io_excel.IO_SHEET :  mfa_output[io_excel.IO_SHEET]
+        }    
+        io_excel.write_mfa_problem_output_to_excel(excel_file,[],simple_mfa_output,'w',verbosity=1)
+        return send_file(excel_file, as_attachment=True)
+    except Exception as excpt:
+        response = Response(
+            response='write_mfa_problem_output_to_excel' + str(excpt),
+            status=402
+        )
+        return response  
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
