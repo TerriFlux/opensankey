@@ -205,7 +205,9 @@ const resources = {
         'gras':'Bold',
         'maj':'Uppercase',
         'ita':'Italic',
-        'centre':'Centre'
+        'centre':'Centre',
+        'textAsHTML':' foreignObject label'
+
 
       },
       Banner:{
@@ -426,7 +428,8 @@ const resources = {
         'gras':'Gras',
         'maj':'Majuscule',
         'ita':'Italique',
-        'centre':'Centre'
+        'centre':'Centre',
+        'textAsHTML':'Label foreignObject'
       },
       Banner:{
         'fdf':'Filtrage des flux',

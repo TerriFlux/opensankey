@@ -680,7 +680,14 @@ const Menu: FunctionComponent<MenuTypes> = (
     })
     return (display_size) ? size : -1
   }
+  const allLabelAsHTML = () => {
+    let isHTML = false
 
+    multi_selected_label.current.map((d) => {
+      isHTML = (d.isTextHTML) ? true : isHTML
+    })
+    return isHTML
+  }
   const allLabelTransparent = () => {
     let transparent = false
 
@@ -2951,6 +2958,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                         font_weight: false,
                         font_style: false,
                         font_uppercase: false,
+                        isTextHTML:false,
                         x: 50,
                         y: 50,
                         x_label: 50,
@@ -3019,7 +3027,22 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
                 </Form.Group>
-
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >{t('LL.textAsHTML')}</FormLabel>
+                  </Col>
+                  <Col xs={8}>
+                    <Form.Check
+                      inline
+                      type='switch'
+                      checked={allLabelAsHTML()}
+                      onChange={evt => {
+                        multi_selected_label.current.map(d => d.isTextHTML = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
                     <FormLabel >{t('LL.hl')}</FormLabel>
@@ -3136,10 +3159,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >{t('LL.pvt')}</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.haut')}
                       checked={allNodeLabelVert('vert', 'haut')}
@@ -3158,6 +3182,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
                       checked={allNodeLabelVert('vert', 'milieu')}
@@ -3175,6 +3200,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.Bas')}
 
@@ -3193,10 +3219,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Form.Group><Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >{t('LL.at')}</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.gauche')}
                       checked={allNodeLabelVert('horiz', 'gauche')}
@@ -3213,6 +3240,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('LL.centre')}
                       checked={allNodeLabelVert('horiz', 'centre')}
@@ -3228,6 +3256,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.droite')}
 
@@ -3250,10 +3279,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
+                      disabled={allLabelAsHTML()}
                       min={0}
                       max={100}
                       type={'number'}
@@ -3270,10 +3300,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel >{t('LL.labels')}</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
                       label={t('LL.gras')}
                       checked={allLabelTextBold()}
@@ -3287,6 +3318,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
                       label={t('LL.maj')}
                       checked={allLabelTextUpper()}
@@ -3300,6 +3332,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
                       label={t('LL.ita')}
                       checked={allLabelTextItalic()}
