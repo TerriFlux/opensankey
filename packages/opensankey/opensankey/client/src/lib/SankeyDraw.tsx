@@ -5263,7 +5263,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
 
-      const label_text = gg_label.append('text')
+      // Traite les labels qui sont dans des foreignObject
+      gg_label.filter(()=>{
+        return d.isTextHTML
+      }) .append('foreignObject')
+        .attr('width',d.label_width)
+        .attr('height',d.label_height)
+        .attr('id', d.idLabel + '_text')
+        .append('xhtml:div')
+        .html(d.name)
+
+      // Traite les labels qui sont simplementdu text
+      const label_text = gg_label.filter(()=>{
+        return !d.isTextHTML
+      })
+        .append('text')
         .attr('id', d.idLabel + '_text')
         .attr('x', d.x_label)
         .attr('y', d.y_label)
