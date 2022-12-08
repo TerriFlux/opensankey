@@ -120,8 +120,8 @@ def save_excel_simple():
         return response   
     try:
         simple_mfa_output = {
-            io_excel.IO_SHEET :  mfa_output[io_excel.IO_SHEET]
-        }    
+            io_excel.DATA_SHEET :  mfa_output[io_excel.DATA_SHEET]
+        }
         io_excel.write_mfa_problem_output_to_excel(excel_file,[],simple_mfa_output,'w',verbosity=1)
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
