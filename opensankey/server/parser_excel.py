@@ -367,10 +367,11 @@ def parse_nodes(mfa_input, nodes, nodeTags):
 
         for _,node_tag_name in enumerate(nodeTags.keys()):
             tag_value = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(node_tag_name)]
+            if tag_value == None or tag_value == '':
+                continue
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
-            if tag_value == '':
-                continue
+
             try:
                 tag_value =  float(tag_value)
                 tag_value = str(int(tag_value))
@@ -510,8 +511,10 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     if tag_group_name == NODE_TYPE:
                         banner = 'none'                    
                     if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
-                        banner = 'level'      
-                    activated = j==0       
+                        banner = 'level'
+                    activated = 0
+                    if j==0:    
+                        activated = 1   
                     nodeTags[tag_group_name] = {
                         'group_name'  : tag_group_name,
                         'show_legend' : 0,
