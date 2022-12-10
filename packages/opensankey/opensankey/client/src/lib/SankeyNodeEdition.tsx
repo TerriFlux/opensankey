@@ -77,7 +77,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_nodes.current.map(d => visible = (d.label_visible) ? true : visible)
     return visible
   }
-
+  const isAllNodeColorSustainable = () => {
+    let colorS = true
+    if (multi_selected_nodes.current.length > 0) {
+      multi_selected_nodes.current.map(d => colorS = (!d.colorSustainable) ? false : colorS)
+    } else {
+      colorS = false
+    }
+    return colorS
+  }
   const displayedValueNodeWidth = () => {
     let display_width = true
     let width = 0
@@ -718,6 +726,23 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       onChange={evt => {
                         const color = evt.target.value
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.CouleurPérenne')}</FormLabel>
+                  </Col>
+                  <Col xs={3}>
+                    <Form.Check
+                      type='checkbox'
+                      //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+                      checked={isAllNodeColorSustainable()}
+                      onChange={evt => {
+                        const checked = evt.target.checked
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
                         set_data({ ...data })
                       }}
                     />

@@ -458,6 +458,7 @@ export const default_sankey_data = (): SankeyData => {
 
         color: '#a9a9a9',
         colorParameter: 'local',
+        colorSustainable:false,
         position: 'absolute',
         x: 100,
         y: 100,
@@ -766,6 +767,8 @@ export const default_node = (
 
     color: '#a9a9a9',
     colorParameter: 'local',
+    colorSustainable:false,
+
     position: 'absolute',
     x: 100,
     y: 100,

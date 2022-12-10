@@ -33,7 +33,7 @@ export const SankeyNodePropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
-
+  colorSustainable:PropTypes.bool.isRequired,
   // geometry
   position: PropTypes.oneOf(['absolute', 'relative']).isRequired,
   x: PropTypes.number.isRequired,
