@@ -1,7 +1,8 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, updateLayout, agregation, desagregation } from './SankeyLayout'
+import { agregation, compute_auto_sankey, desagregation, updateLayout } from './SankeyLayout'
+import * as d3 from 'd3'
 
 
 declare const window: Window &
@@ -124,6 +125,7 @@ export const getTotalLinks = (
 }
 
 export const compute_total_offsets = (
+  inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
@@ -259,11 +261,11 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_width_top += +v
+      offset_width_top += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
   let bottom_order = -1
@@ -280,10 +282,11 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_width_bottom += +v
+      offset_width_bottom += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
@@ -301,10 +304,11 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_height_left += +v
+      offset_height_left += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
@@ -322,10 +326,11 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_height_right += +v
+      offset_height_right += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
     }
   )
 
@@ -348,26 +353,45 @@ export const toPrecision = (
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
-  link_value: number
 ) => {
+  let the_link_value = getLinkValue(data, d.idLink).value
   const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== '' && str_display!=='*') {
     return str_display
   }
-  if (data.show_structure) {
+  if (data.show_structure == 'structure' ) {
     return
   }
-  const the_link_value = toPrecision(link_value)
+  if (data.show_structure == 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      return
+    }
+  }
+  the_link_value = toPrecision(the_link_value)
   return the_link_value
 }
 
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
-  if (data.show_structure) {
-    // const inv_scale = d3.scaleLinear()
-    //   .domain([0, 100])
-    //   .range([0, data.user_scale])
-    return 5
+  if (data.show_structure == 'structure' ) {
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, data.user_scale])
+    return inv_scale(5)
+  }
+  if (data.show_structure == 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      const inv_scale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, data.user_scale])
+      return inv_scale(5)
+    }
   }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []
@@ -401,6 +425,9 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   if (val === undefined) {
     return 0
   }
+  if ( data.maximum_flux && ((val as unknown) as SankeyLinkValue).value > data.maximum_flux) {
+    return data.maximum_flux
+  }
   return ((val as unknown) as SankeyLinkValue).value
 }
 
@@ -431,6 +458,7 @@ export const default_sankey_data = (): SankeyData => {
 
         color: '#a9a9a9',
         colorParameter: 'local',
+        colorSustainable:false,
         position: 'absolute',
         x: 100,
         y: 100,
@@ -516,10 +544,8 @@ export const default_sankey_data = (): SankeyData => {
     v_space: 100,
     legend_position: [0, 10],
 
-    show_structure: false,
+    show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
-
-    agregation: {dimension:'Primaire',level:1},
 
     icon_catalog: {},
     labels: {},
@@ -551,21 +577,7 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-
-    nodeTags : {
-      'Dimensions' : {
-        group_name : 'Dimensions',
-        color_map: 'jet',
-        show_legend: false,
-        tags : {
-          Primaire : {
-            name : 'Primaire',
-            selected: true
-          }
-        },
-        banner: 'none'
-      }
-    },
+    nodeTags: {},
     dataTags: {},
     fluxTags: {},
 
@@ -602,6 +614,24 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
           const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
           if (common_tags.length > 0) {
             return data_s.nodeTags[source_node.colorTag].tags[common_tags[0]].color
+          }
+        }
+        if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'échange' && 
+        source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+          selected_tag = source_node.tags[source_node.colorTag][0]
+          if (selected_tag in data_s.nodeTags[source_node.colorTag].tags) {
+            return data_s.nodeTags[source_node.colorTag].tags[selected_tag].color
+          } else {
+            return l.color
+          }
+        }
+        if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'échange' && 
+        target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+          selected_tag = target_node.tags[target_node.colorTag][0]
+          if (selected_tag in data_s.nodeTags[target_node.colorTag].tags) {
+            return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
+          } else {
+            return l.color
           }
         }
         if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && 
@@ -665,7 +695,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
 
 export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   const { dataTags, fluxTags } = data_s
-  if (data_s.show_structure) {
+  if (data_s.show_structure === 'structure') {
     if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
       return false
     }
@@ -720,9 +750,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
-  // console.log('-> Affectation du default_node')
-
-  const defaultNode = {
+  const defaultNode :  SankeyNode = {
     name: '',
     idNode: 'default',
     shape: 'rect',
@@ -739,6 +767,8 @@ export const default_node = (
 
     color: '#a9a9a9',
     colorParameter: 'local',
+    colorSustainable:false,
+
     position: 'absolute',
     x: 100,
     y: 100,
@@ -747,12 +777,7 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: {
-      'Primaire': {
-        level:1,
-        parent_name: undefined
-      } 
-    },
+    dimensions: {},
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
@@ -773,6 +798,9 @@ export const default_node = (
       value_font_size:14,
       label_box_width: 110,
     },
+  }
+  for (const tag_group_key in data.nodeTags) {
+    defaultNode.tags[tag_group_key]  = []
   }
   return defaultNode
 }
@@ -892,13 +920,13 @@ export const setSelectedTags = (
 ) => {
 
   const { nodeTags } = sankey_data
-  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = true
+    node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
-    Object.keys(nodeTags).forEach(tags_group_key => {
+    Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
       if (break_loop) {
         return
       }
@@ -908,7 +936,7 @@ export const setSelectedTags = (
         return
       }
       no_tag = false
-      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
       if (!visible) {
         node.node_visible = false
         break_loop = true
@@ -916,7 +944,7 @@ export const setSelectedTags = (
     })
     // for the labels
     if (no_tag && !node.shape_visible && !node.label_visible) {
-      node.node_visible = true
+      node.node_visible = node.display && true
     }
   })
   if (!sankey_data.show_structure) {
@@ -928,7 +956,7 @@ type layout_type = {
   layout: SankeyData
 }
 
-const downloadExamples = (
+export const downloadExamples = (
   file_name: string,
   the_url_prefix: string,
   filetype: string
@@ -959,15 +987,8 @@ export const processExample = (server_data: SankeyData ) => {
   Object.assign(data, server_data)
   convert_data(data)
 
-  // const nb_agregation_level : {[key:string]: number } =  {}
-  // Object.values(data.agregation).forEach(dim => {
-  //   nb_agregation_level[dim.dimension] = 0
-  //   Object.values(data.nodes).forEach( n => 
-  //     nb_agregation_level[dim.dimension]  = dim.dimension in n.dimensions && n.dimensions[dim.dimension].level as number > nb_agregation_level[dim.dimension] ? 
-  //       n.dimensions[dim.dimension].level as number : nb_agregation_level[dim.dimension]
-  //   )
-  // })
-  set_nodes_level(data,data.nodes,1)
+
+  set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
@@ -984,8 +1005,7 @@ export const uploadExcelImpl = (
   set_data: (data: SankeyData) => void,
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
-  the_url_prefix: string,
-  callback: (data:SankeyData)=>void
+  the_url_prefix: string
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
@@ -1000,23 +1020,7 @@ export const uploadExcelImpl = (
     method: 'POST',
     body: form_data
   }
-  fetch(url, fetchData).then(response => {
-    response.text().then(text => {
-      try {
-        const server_data = JSON.parse(text)
-        const error = server_data['error']
-        if (error && error.length != 0) {
-          alert(error)
-          return
-        }
-        Object.assign(data,processExample(server_data))
-        callback(data)
-        set_data({ ...data })
-      } catch(err) {
-        alert(err)
-      }
-    })
-  })
+  fetch(url, fetchData)
   set_show_excel_dialog(false)
 }
 
@@ -1024,8 +1028,7 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  callback: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void
 ) => {
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
@@ -1047,10 +1050,10 @@ export const uploadExemple = (
         return
       }
       if (file_name.includes('.xlsx')) {
-        Object.assign(data,processExample(server_data))
-        callback(data)
-        set_data({ ...data })
-        downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        // Object.assign(data,processExample(server_data))
+        // callback(data)
+        // set_data({ ...data })
+        //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         Object.assign(data,server_data)
         convert_data(data)
@@ -1061,40 +1064,43 @@ export const uploadExemple = (
 }
 
 export const set_nodes_level = (
-  data: SankeyData,
-  display_nodes: { [key: string]: SankeyNode },
-  level: number,
-  control_display = true
+  sankey_data: SankeyData
 ) => {
-  Object.values(display_nodes).forEach(node => {
-    //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
-      node.display = false   
-      node.node_visible = false
-      return
-    }
-    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
-      if (node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
-        // shows siblings
-        desagregation(data,node.idNode,data.agregation.dimension,control_display)
-        // hide children
-        agregation(data,node.idNode,data.agregation.dimension,control_display)
-        Object.keys(node.dimensions).forEach(dim => {
-          const idParent = node.dimensions[dim].parent_name
-          if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
-            display_nodes[idParent].node_visible = false
-            display_nodes[idParent].display = false
-          }
-        })
-      } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
-        node.node_visible = false
-        node.display = false
-      }
-    } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
-      node.node_visible = false
-      node.display = false
-    }
+
+  const { nodeTags } = sankey_data
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
+
+  const levelTags = Object.keys(nodeTags).filter(key=>nodeTags[key].banner === 'level' && nodeTags[key].activated)
+
+  display_nodes.filter(n=>n.display).forEach(n=>{
+    levelTags.forEach(tags_group_key => {
+      desagregation(sankey_data,n.idNode,tags_group_key,false)
+      agregation(sankey_data,n.idNode,tags_group_key,false)
+    })
   })
+
+  display_nodes.forEach(node => {
+    node.display = true
+    node.node_visible = true
+    let break_loop = false
+    levelTags.forEach(tags_group_key => {
+      if (break_loop) {
+        return
+      }
+      const tags_group = nodeTags[tags_group_key]
+      if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
+        // tags do not apply to node
+        return
+      }
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
+      if (!visible) {
+        node.display = false
+        node.node_visible = false
+        break_loop = true
+      }
+    })
+  })
+  //setSelectedTags(sankey_data)
 }
 
 export const hideNullFluxNodes = (
