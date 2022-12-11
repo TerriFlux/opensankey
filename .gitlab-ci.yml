@@ -63,10 +63,6 @@ test:
         FOLDER: "/home/ubuntu/prod_opensankey"
         ENV: "prod" 
         APP_NAME : "opensankey"
-  only:
-    - test
-    - prod
-    - main
   script:
     - source /home/gitlab-runner/gitlab_$ENV/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
