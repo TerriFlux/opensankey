@@ -6,16 +6,20 @@ import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
 import { Element } from 'domhandler/lib/node'
 import { convert_data } from './SankeyConvert'
-import { set_nodes_level,findMaxLinkValue } from './SankeyUtils'
+import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
+import {useTranslation} from 'react-i18next'
 
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
+  if (tags_group.banner === 'level' ) {
+    set_nodes_level(data)
+  }
   set_data({ ...data })
 }
 
@@ -171,6 +175,7 @@ const SankeyEditionPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
   mode_visualisation:PropTypes.bool.isRequired,
   set_current_filter: PropTypes.func.isRequired,
+  url_prefix: PropTypes.string.isRequired,
 
 }
 type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
@@ -187,10 +192,12 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
+  const {t} =useTranslation()
+
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = findMaxLinkValue(
@@ -201,25 +208,48 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   })
   max_link_value += 1
 
-  let nb_agregation_level = 0
-  Object.values(data.nodes).forEach(n => {
-    if (!n.dimensions) {
-      return
-    }
-    Object.entries(n.dimensions).forEach(dim => {
-      if (!dim[1].level) {
-        return
-      }
-      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-    })
-  })
+  const default_horiz_shift = 50
 
-  const addAllDropDownNode = () => {
-    const banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
+  const min_width_and_height = () => {
+    let height = 0
+    let width = 0
+    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
+      width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
+    })
+
+    Object.values(data.labels).forEach(n => {
+      height = (n.y) ? Math.max(height, n.y) : height
+      width = (n.x ) ? Math.max(width, n.x) : width
+    })
+
+    height = height + 200
+    width = width + 200
+    Object.values(data.links).forEach(l => {
+      if (l.recycling) {
+        height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
+      }
+    })
+
+    Object.values(data.links).forEach(l => {
+      if (l.recycling) {
+        width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
+      }
+    })
+    return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
+  }
+
+
+
+  const addAllDropDownNode = (level:boolean) => {
+    let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
+    if (level) {
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+    }
     const allDD = banner_grouptag.map(([, tags_group]) => {
       const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
 
-      if (tags_group.banner == 'one') {
+      if (tags_group.banner == 'one' ) {
         return (
           <>
             <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel>
@@ -268,6 +298,37 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
                     set_data({ ...data })
 
+                  }}
+                />
+              </Col>
+            </FormGroup>
+          </>)
+      } else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
+        if (Object.keys(tags_group.tags).length < 2) {
+          return <></>
+        }
+        const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
+        const selected = tmp.length > 0 ? tmp[0][0] : ''
+        return (
+          <>
+            {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
+            <FormGroup as={Row}>
+              <Col xs={10}>
+                {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                    return (<option key={i} value={tag_key}>{tag.name}</option>)
+                  })}
+                </Form.Select>}
+              </Col>
+              <Col xs={2}>
+                <FormCheck inline
+                  type='switch'
+                  checked={tags_group.activated}
+                  onChange={evt => {
+                    tags_group.activated = evt.target.checked 
+                    tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
+                    set_nodes_level(data)
+                    set_data({ ...data })
                   }}
                 />
               </Col>
@@ -350,7 +411,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
       // if (tags_group.banner == 'one') {
-      const selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      let selected = ''
+      if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
+        selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      }
       return (
         <>
           <FormLabel>{tags_group.group_name}</FormLabel>
@@ -413,38 +477,28 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
-  const setDiagram = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+  const setDiagram = (the_diagram : string) => {
 
-    const the_diagram = evt.target.value as string
+    //const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
-    const diagram_path = is_split ? diagram+'/'+the_diagram : the_diagram
+
     const new_data = JSON.parse(
       JSON.stringify(
-        window.sankey[sous_filieres[diagram_path]]
+        window.sankey[sous_filieres[the_diagram]]
       )
-    )
+    ) as SankeyData
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
     new_data.static_sankey = true
-    if (!is_split) {
-      set_diagram(the_diagram)
-    }
-
-    Object.values(data.nodes).forEach(n => {
-      if (!n.dimensions) {
-        return
-      }
-      Object.entries(n.dimensions).forEach(dim => {
-        if (!dim[1].level) {
-          return
-        }
-        nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-      })
-    })
-    set_nodes_level(new_data, new_data.nodes, new_data.agregation_level + 1)
-    // if ( data.agregation.level === -1 ) {
-    //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(new_data)))
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
     // }
+ 
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true 
+    })
+    set_nodes_level(data)
     new_data.fit_screen = true
     d3.select('#svg').on('.zoom', null)
     set_data({ ...new_data })
@@ -454,13 +508,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
-  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
   const color = 'black'
   const backgroundColor = 'gainsboro'
 
 
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
-  const node_filter = Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0
+  const level_filter = Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0
+  const node_filter = Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
 
   const setSelectionMode = (val: string) => {
@@ -469,12 +524,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   const link_filter=
   <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">Filtre Flux</Popover.Header>
+    <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
     <Popover.Body >
       <Form style={{width:'600px'}}>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel >Filtre</FormLabel>
+            <FormLabel >{t('Banner.filtre')}</FormLabel>
           </Col>
           <Col>
             <Form.Range
@@ -502,7 +557,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel>Filtre label</FormLabel>
+            <FormLabel>{t('Banner.fl')}</FormLabel>
           </Col>
           <Col >
             <Form.Range
@@ -535,12 +590,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Form.Group>
         <Form.Group as={Row} >
           <Col>
-            <FormLabel >Flux nuls:</FormLabel>
+            <FormLabel >{t('Banner.fn')}:</FormLabel>
           </Col>
           <Col >
             <FormCheck
               type='checkbox'
-              label='Visible'
+              label={t('Banner.visible')}
               onChange={evt => {
                 data.display_style.null_flux = evt.target.checked
                 set_data({ ...data })
@@ -549,6 +604,41 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           </Col>
         </Form.Group>
       </Form>
+    </Popover.Body>
+  </Popover>
+  
+  const detail_level=
+  <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
+    <Popover.Body>
+      {(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
+        {addAllDropDownNode(true)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
+    </Popover.Body>
+  </Popover>
+
+  const struc_data_reconciled=
+  <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
+    <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <Form.Select 
+            style={{ width: '200px', color: 'black' }}
+            placeholder='all' 
+            value={data.show_structure}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              data.show_structure = evt.target.value 
+              set_data({...data})
+            }}>
+            <option key='structure'  value='structure' >Structure</option>
+            <option key='data'       value='data'      >Données collectées</option>
+            <option key='reconciled' value='reconciled'>Données réconciliées</option>
+            <option key='free'       value='free'      >Données réconciliées+flux indéterminées</option>
+          </Form.Select>
+        </Col>
+      </FormGroup>           
     </Popover.Body>
   </Popover>
   
@@ -562,7 +652,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: ((!(banner_grouptag.length > 0 || nb_agregation_level > 1)) && (!( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
+          display: ((!(banner_grouptag.length > 0 )) && (!(level_filter) && !( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
 
         {
@@ -572,7 +662,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
                   <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
                   <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={setDiagram}
+                    onChange={evt=> setDiagram(evt.target.value)}
                     value={diagram}>
                     {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
                   </Form.Select>
@@ -581,15 +671,21 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
                   <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
                   <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_diagram(evt.target.value)}
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+                      set_diagram(evt.target.value)
+                      const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+                      setDiagram(diagram_path)
+                    }}
                     value={diagram}>
                     {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
                   </Form.Select>
                   {is_split ? 
                     (<Form.Select style={{ width: '200px', color:'black' }}
                       onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-                        setDiagram(evt)
                         set_diagram2(evt.target.value)
+                        const diagram_path = diagram+'/'+evt.target.value
+                        setDiagram(diagram_path)
+
                       }}
                       value={diagram2}>
                       {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
@@ -600,62 +696,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 style={{
                   width: '250px',
                   marginLeft: '0px',
-                  display: (banner_grouptag.length > 0 || nb_agregation_level > 1) ? 'block' : 'none'
+                  display: (banner_grouptag.length > 0 || Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? 'block' : 'none'
                 }} lg="auto">
                 {banner_grouptag.length > 0 ? (<>
-                  <FormLabel style={{ justifyContent: 'center' }}><b>Sélection des données</b></FormLabel>
+                  <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.sdd')}</b></FormLabel>
                   {addAllDropDownLinks()}
                 </>)
                   : (<Col></Col>)
                 }
-                { nb_agregation_level > 1 ? (
-                  <><FormLabel><b>Niveau de détail</b></FormLabel>
-                    {Object.keys(data.nodeTags.Dimensions.tags).length > 1 ? (
-                      <Form.Select placeholder='all' 
-                        value={data.agregation.dimension} 
-                        onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-                          data.agregation.dimension = evt.target.value
-                          data.agregation.level = 1
-                          Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = evt.target.value === tag[0])
-                          set_nodes_level(data, data.nodes, 1)
-                          //set_cube_dimension(evt.target.value)
-                          set_data({...data})
-                        }} 
-                      >
-                        {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
-                          return (<option key={i} value={tag_key}>{tag.name}</option>)
-                        })}
-                      </Form.Select>) : (<></>)}
-                    <Form.Select id="selectionNode"
-                      style={{ color: 'black'}}
-                      onChange={
-                        (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          if (evt.target.value === '') {
-                            return
-                          }
-                          // if (evt.target.value === '-1') {
-                          //   const json_data = LZString.decompress(localStorage.getItem('initial_data') as string)
-                          //   if (json_data !== '') {
-                          //     const initial_data = JSON.parse(json_data as string)
-                          //     Object.values(data.nodes).forEach(n => {
-                          //       n.display = initial_data.nodes[n.idNode].display
-                          //       n.node_visible = initial_data.nodes[n.idNode].node_visible
-                          //     })
-                          //     //initial_data.static_sankey = true
-                          //     set_data({ ...data })
-                          //   }
-                          // }
-                          Object.entries(data.nodeTags.Dimensions.tags).forEach(tag => tag[1].selected = data.agregation.dimension === tag[0])
-                          for (let level = 1; level <= +evt.target.value; level++) {
-                            set_nodes_level(data, data.nodes, level)
-                          }
-                          data.agregation.level =+evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                      value={data.agregation.level}
-                    >{[...Array(nb_agregation_level).keys()].map( level => <option key={level+1} value={level+1}  >{'Niveau '+(level+1)}</option>)}
-                    </Form.Select></>) : (<Col></Col>)}
               </Form.Group>
               <Col lg="auto">
                 {additional_selector ? (
@@ -671,11 +719,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 lg="auto"
               >
                 {( node_filter) ? (
-                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>Filtrage des noeuds</b></FormLabel>
-                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>Filtrage des noeuds</FormLabel>)}
+                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>{t('Banner.fdn')}</b></FormLabel>
+                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>{t('Banner.fdn')}</FormLabel>)}
 
                 { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-                  {addAllDropDownNode()}</>
+                  {addAllDropDownNode(false)}</>
                 ) : (<>
                   <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
                 }
@@ -686,19 +734,19 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               <Form.Group as={Col} style={{ width: '250px', marginLeft: '0px', display: ( flux_filter) ? 'block' : 'none' }} lg="auto">
                 { flux_filter ? (
                   <>
-                    <FormLabel style={{ justifyContent: 'center' }}><b>Filtrage des flux</b></FormLabel>
+                    <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.fdf')}</b></FormLabel>
                     {addAllDropDownFlux(data.fluxTags, data, set_data)}
                   </>)
                   : (<>
-                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>Filtrage des flux</FormLabel>
+                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>{t('Banner.fdf')}</FormLabel>
                     <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
                 }
               </Form.Group>
               {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
               {window.sankey && window.sankey.excel ? (
                 <Form.Group as={Col} lg="auto" >
-                  <FormLabel className="text-center" >Téléchargements</FormLabel>
-                  <Button href={window.sankey.excel}>Résultats</Button>
+                  <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
+                  <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
                 </Form.Group>
               ) : (<></>)}
             </Row>
@@ -739,197 +787,170 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </Row>
         }
         
-
-
-
-        
       </div>
-      { data.static_sankey ? (
-        <Row className='sankey-toolbar'>
-          <Col className='text-right'>
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
+      <Row className='sankey-toolbar'>
+        {(mode_visualisation && !data.static_sankey)?<></>:<Col>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
 
-                {//Boutons Sélection classique des éléments 
+              {//Boutons Sélection classique des éléments 
+              }
+              <OverlayTrigger
+                key={'tooltip-selection'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
                 }
-                <OverlayTrigger
-                  key={'tooltip-adjust'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
-                  }
-                >
-                  <Button variant='dark' onClick={() => { 
-                    data.fit_screen = true
-                    d3.select('#svg').on('.zoom', null)
-                    set_data({ ...data })
-                  }} >
-                    <FontAwesomeIcon icon={faMaximize} />
-                  </Button>
-                </OverlayTrigger>
-              </ButtonGroup>
-            </FormGroup>
-          </Col>
-        </Row>) : (<></>)}
-      { data.static_sankey ? (
-        <Row className='sankey-toolbar'>
-          <Col className='text-right'>
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
+              >
+                <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                  <FontAwesomeIcon icon={faArrowPointer} />
+                </Button>
+              </OverlayTrigger>
 
-                {//Boutons Sélection classique des éléments 
+
+              <OverlayTrigger
+                key={'tooltip-ajoutNode'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-ajoutNode'}>{t('Banner.tooltipAjoutNode')} </Tooltip>
                 }
-                <OverlayTrigger
-                  key={'tooltip-structur'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
-                  }
-                >
-                  <Button variant='info' onClick={() => { 
-                    console.log('toto')
-                    // data.fit_screen = true
-                    // d3.select('#svg').on('.zoom', null)
-                    // set_data({ ...data })
-                  }} >
-                    <FontAwesomeIcon icon={faCodeBranch} />
-                    Hello
-                  </Button>
-                </OverlayTrigger>
-              </ButtonGroup>
-            </FormGroup>
-          </Col>
-        </Row>) : (<></>)}
-      { !data.static_sankey ? (
-        <Row className='sankey-toolbar'>
-          {(mode_visualisation)?<></>:<Col>
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
-
-                {//Boutons Sélection classique des éléments 
-                }
-                <OverlayTrigger
-                  key={'tooltip-selection'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-selection'}>Permet de drag les noeuds </Tooltip>
-                  }
-                >
-                  <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                    <FontAwesomeIcon icon={faArrowPointer} />
-                  </Button>
-                </OverlayTrigger>
-
-
-                <OverlayTrigger
-                  key={'tooltip-ajoutNode'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-ajoutNode'}>Ajoute un noeud au click de la souris </Tooltip>
-                  }
-                >
-                  <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
-                    {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
-                    <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
-                      <g>
-                        <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
+              >
+                <Button variant={(!(mode_selection == 'n')) ? 'outline-success' : 'success'} onClick={() => { setSelectionMode('n') }} >
+                  {/* <FontAwesomeIcon icon={faNotesMedical} /> */}
+                  <svg viewBox='0 0 1000 1000' height='20px' width='20px'>
+                    <g>
+                      <path style={{fill:(mode_selection == 'n')?'white':'#56cc9d'}} d='M55.151 1011.14c-20.896-5.476-37.414-21.547-44.976-43.759-1.876-5.51-1.931-18.611-1.931-458.901 0-441.678 0.051-453.374 1.948-458.901 6.973-20.306 19.469-33.862 38.259-41.504l8.247-3.354 750.003-0.53v84.575h-714.436v839.428h841.24v-600.18h84.536l-0.012 312.723c-0.004 212.75-0.353 314.849-1.086 319.373-3.453 21.287-18.978 40.399-39.628 48.782l-8.247
                  3.348-454.125 0.193c-392.517 0.167-454.895-0.012-459.796-1.293zM496.144 814.818c-15.479-4.95-28.028-18.365-32.372-34.606-1.11-4.15-1.381-26.438-1.391-114.17l-0.012-109.014-110.052-0.304c-109.337-0.302-110.094-0.318-116.493-2.509-39.255-13.44-46.541-64.48-12.521-87.712 2.491-1.701 7.313-4.206 10.715-5.565l6.186-2.472 222.13-0.561 0.276-111.093c0.275-110.769 
                  0.282-111.111 2.488-116.938 11.501-30.393 48.064-42.012 74.593-23.704 6.832 4.715 14.378 14.323 17.681 22.511l2.422 6.006 0.552 223.218 222.13 0.561 5.968 2.256c13.383 5.060 24.816 16.207 29.604 28.862 2.74 7.243 3.797 20.512 2.22 27.868-3.593 16.757-16.519 30.98-33.412 36.764-6.4 2.191-7.156 2.207-116.493 2.509l-110.052 0.304-0.012 109.014c-0.012 87.732-0.282 
                  110.020-1.391 114.17-4.393 16.425-16.977 29.757-32.711 34.655-8.243 2.566-21.94 2.544-30.049-0.050z'></path>
-                      </g>
+                    </g>
                   
-                    </svg>
+                  </svg>
 
-                  </Button>
-                </OverlayTrigger>
+                </Button>
+              </OverlayTrigger>
 
-                <OverlayTrigger
-                  key={'tooltip-liaison'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-liason'}>Clické puis relacher entre deux noeuds existant pour les liés avec un flux </Tooltip>
+              <OverlayTrigger
+                key={'tooltip-liaison'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
+                }
+              >
+                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                  {/* Ajout liaison entre noeud */}
+
+                  <FontAwesomeIcon icon={faShareNodes} />
+                </Button>
+              </OverlayTrigger>
+            </ButtonGroup>
+          </FormGroup>
+        </Col>
+        }
+
+        <Col className='text-right'>
+
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
+
+
+              <OverlayTrigger
+                key={'tooltip-details-level'}
+                placement={'left'}
+                trigger={'click'}
+                rootClose
+                overlay={detail_level}
+              >
+                <Button variant='warning' id='button-details-level' >
+                  <FontAwesomeIcon icon={faFolderTree} />
+                </Button>
+              </OverlayTrigger>
+
+              <OverlayTrigger
+                key={'tooltip-link-filter'}
+                placement={'left'}
+                trigger={'click'}
+                rootClose
+                overlay={link_filter}
+              >
+                <Button variant='danger' id='button-filter-link' >
+                  <FontAwesomeIcon icon={faFilter} />
+                </Button>
+              </OverlayTrigger>
+
+
+              <OverlayTrigger
+                key={'tooltip-adjust'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
+                }
+              >
+                <Button variant='dark' onClick={() => { 
+                  data.fit_screen = true
+                  const zoomed=(transform:string)=> {
+                    [data.width, data.height] = min_width_and_height()
+                      
+                    d3.select('#svg').attr('transform', transform)
+                    d3.select('#svg')
+                      .style('border', Math.round(2 ) + 'px solid #78c2ad')
+                      .style('width', data.width + 'px')
                   }
-                >
-                  <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                    {/* Ajout liaison entre noeud */}
+                  const zoom = d3.zoom()
+                    .scaleExtent([1, 40])
+                    .on('zoom', zoomed)
+                  zoom.scaleTo(d3.select('#svg'),1)
+                  set_data({ ...data })
+                }} >
+                  <FontAwesomeIcon icon={faMaximize} />
+                </Button>
+              </OverlayTrigger>
 
-                    <FontAwesomeIcon icon={faShareNodes} />
-                  </Button>
-                </OverlayTrigger>
-              </ButtonGroup>
-            </FormGroup>
-          </Col>
-          }
-
-          <Col className='text-right'>
-
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
-
+              { url_prefix !== '' ?
                 <OverlayTrigger
-                  key={'tooltip-link-filter'}
+                  key={'tooltip-structur'}
                   placement={'left'}
                   trigger={'click'}
-                  overlay={link_filter}
+                  rootClose
+                  overlay={struc_data_reconciled}
                 >
-                  <Button variant='danger' id='button-filter-link' >
-                    <FontAwesomeIcon icon={faFilter} />
+                  <Button variant='success'>
+                    <FontAwesomeIcon icon={faDiagramProject} />
                   </Button>
-                </OverlayTrigger>
-
-
-                <OverlayTrigger
-                  key={'tooltip-adjust'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-adjust'}>Permet de réajuster la zone de dessin à la taille de l'écran </Tooltip>
-                  }
-                >
-                  <Button variant='dark' onClick={() => { 
-                    data.fit_screen = true
-                    d3.select('#svg').on('.zoom', null)
-                    set_data({ ...data })
-                  }} >
-                    <FontAwesomeIcon icon={faMaximize} />
-                  </Button>
-                </OverlayTrigger>
-
-
-                <OverlayTrigger
+                </OverlayTrigger> : <OverlayTrigger
                   key={'tooltip-structur'}
                   placement={'top'}
                   delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>Permet d'afficher la structure du diagramme sans proportion des flux selon leur valeur </Tooltip>
+                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
                   }
                 >
                   <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
-                    data.show_structure = !data.show_structure
+                    data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+                    //data.show_data = false
                     set_data({ ...data })
                   }} >
                     <FontAwesomeIcon icon={faCodeBranch} />
                   </Button>
-                </OverlayTrigger>
+                </OverlayTrigger>}
 
-
-                <OverlayTrigger
-                  key={'tooltip-help'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-help'}>Info supplementaires sur le diagramme</Tooltip>
-                  }
-                >
-                  <Button variant='info' onClick={() => { set_show_readme(true) }} >
+              <OverlayTrigger
+                key={'tooltip-help'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
+                }
+              >
+                <Button variant='info' onClick={() => { set_show_readme(true) }} >
                     ?
-                  </Button>
-                </OverlayTrigger>
+                </Button>
+              </OverlayTrigger>
 
-              </ButtonGroup>
-            </FormGroup>
-          </Col>
+            </ButtonGroup>
+          </FormGroup>
+        </Col>
 
 
-        </Row>
-      ) : (<></>)}
+      </Row>
 
       {window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
         <Modal

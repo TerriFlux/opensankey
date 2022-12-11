@@ -33,7 +33,7 @@ export const SankeyNodePropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
-
+  colorSustainable:PropTypes.bool.isRequired,
   // geometry
   position: PropTypes.oneOf(['absolute', 'relative']).isRequired,
   x: PropTypes.number.isRequired,
@@ -147,6 +147,7 @@ export const SankeyLabelPropTypes = {
   transparent_border:PropTypes.bool.isRequired,
   position_vert:PropTypes.string.isRequired,
   position_horiz:PropTypes.string.isRequired,
+  isTextHTML:PropTypes.bool.isRequired,
 
   font_size:PropTypes.number.isRequired,
   font_weight:PropTypes.bool.isRequired,
@@ -174,7 +175,9 @@ export const TagsGroupPropTypes = {
     color: PropTypes.string,
     selected: PropTypes.bool.isRequired,
   }).isRequired).isRequired,
-  banner: PropTypes.string.isRequired
+  banner: PropTypes.string.isRequired,
+  activated: PropTypes.bool.isRequired,
+  siblings: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
 }
 export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 
@@ -187,12 +190,8 @@ export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   file_name: PropTypes.string,
 
-  agregation: PropTypes.shape({
-    dimension: PropTypes.string.isRequired,
-    level: PropTypes.number.isRequired,
-  }).isRequired,
-
   user_scale: PropTypes.number.isRequired,
+  maximum_flux: PropTypes.number,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -200,7 +199,8 @@ export const SankeyDataPropTypes = {
   // icon_catalog: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)).isRequired,
   icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
-  show_structure: PropTypes.bool.isRequired,
+  show_structure: PropTypes.oneOf(['structure','data','reconciled','free']).isRequired,
+  //show_data: PropTypes.bool.isRequired,
   fit_screen: PropTypes.bool.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,

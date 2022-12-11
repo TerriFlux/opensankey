@@ -54,7 +54,7 @@ def set_value(
         v['tags'] = v_tags
         v['extension'] = {}        
     else:
-        data_tag = row_data_tags[depth]
+        data_tag = str(row_data_tags[depth])
         if data_tag not in v:
             v[data_tag] = {}
         set_value(row_data_tags,row_flux_tags,fluxTags,depth+1,v[data_tag],value,display_value)
@@ -71,13 +71,6 @@ def parse_excel(mfa_input):
     nodes = {node['idNode']:node for node in nodes.values()}
     links = {}
     parse_links(mfa_input, nodes, dataTags, fluxTags, links)
-    dimension = 'Primaire'
-    if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-        dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
-    agregation = {
-        'dimension' : dimension,
-        'level'     : 1
-    }
     return {
         'version'      : '0.8',
         
@@ -87,9 +80,7 @@ def parse_excel(mfa_input):
         
         'nodes'        : nodes,
         'links'        : links,
-        'labels'       : {},
-        
-        'agregation' : agregation
+        'labels'       : {}
     }
 
 def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
@@ -98,7 +89,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     sheet_name = DATA_SHEET
     if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
         sheet_name = RESULTS_SHEET
-
+        
     if not NODES_SHEET in mfa_input:
         node_index = 0
 
@@ -132,8 +123,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     node_index = node_index+1
                     nodes[source_name] = source_node
                 else:
-                    source_node = source_nodes[0]
-                    target_nodes = [node for node in nodes.values() if node['name'] == target_name]
+                   source_node = source_nodes[0] 
+                target_nodes = [node for node in nodes.values() if node['name'] == target_name]
                 if len(target_nodes) == 0:
                     target_node = {
                         'idNode'        : 'node'+str(node_index),
@@ -218,7 +209,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             #         continue
                 
             source_node = source_nodes[0]
-            target_node = target_nodes[0]
+            target_node = target_nodes[0]        
         else:
             source_nodes = [node for node in nodes.values() if node['name'] == source_name]
             if len(source_nodes) == 0:
@@ -273,47 +264,52 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
                 if not fluxTag in columns:
-                    row_flux_tags.append('Donnée collectée')
+                    #row_flux_tags.append('Donnée collectée')
+                    row_flux_tags.append('')
                     continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row,columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name'] == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
         val = mfa_input[sheet_name].iat[row,columns.index(DATA_VALUE)]
         if val == None:
-            continue
-        val = float(val)
+            val = ''
+        else:
+            val = float(val)
         display_val = ''
         is_existing_link = len(existing_links) > 0
         if is_existing_link:
             existing_link = existing_links[0]
             existing_v = existing_link['value']
-            #To be an existing link at least one row_data_tag must differ
-            is_existing_link = False
-            if len(row_data_tags) == 0:
-                is_existing_link = True
+
             for row_data_tag in row_data_tags:                
                 if not row_data_tag in existing_v:
-                    is_existing_link = True
                     break
                 else:
                     existing_v = existing_v[row_data_tag]
-            if is_existing_link == False:
-                for row_flux_tag in row_flux_tags:
-                    if not row_flux_tag in existing_v['tags']:
+            if 'tags' in existing_v:
+                for i,row_flux_tag in enumerate(row_flux_tags):
+                    if row_flux_tag == 'Donnée calculée' or row_flux_tag == 'Donnée collectée':
+                        continue
+                    if row_flux_tag != existing_v['tags'][list(fluxTags.keys())[i]] and existing_v['tags'][list(fluxTags.keys())[i]] != '':
                         is_existing_link = False
                                    
-        if is_existing_link:                     
-            existing_link['dashed'] = 0
+        if is_existing_link:
+            if val != '':              
+                existing_link['dashed'] = 0
             set_value(row_data_tags,row_flux_tags,fluxTags,0,existing_link['value'], val,display_val)
         else:
             value = {}
             set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
+            dashed = 1
+            if val != '':
+                dashed = 0
             new_link = {
                 'idLink'   : 'link'+str(row),  
                 'idSource' : source_node['idNode'],
                 'idTarget' : target_node['idNode'],
                 'value'    : value,
-                'color'    : color
+                'color'    : color,
+                'dashed'   : dashed
             }
             links[new_link['idLink']] = new_link
 
@@ -370,73 +366,95 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node = nodes[name]
 
         for _,node_tag_name in enumerate(nodeTags.keys()):
-            if node_tag_name == 'Dimensions' and not node_tag_name in mfa_input[NODES_SHEET].columns:
-                tag_value = 'Primaire'
-            else:
-                tag_value = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(node_tag_name)]
+            tag_value = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(node_tag_name)]
+            if tag_value == None or tag_value == '':
+                continue
             if type(tag_value) != str and math.isnan(tag_value):
                 continue
-            if tag_value == '':
-                if node_tag_name == 'Dimensions':
-                    new_node['tags']['Dimensions'] = list(nodeTags['Dimensions']['tags'].keys())
-                continue
+
+            try:
+                tag_value =  float(tag_value)
+                tag_value = str(int(tag_value))
+            except:
+                pass
             if not node_tag_name in new_node['tags']:
                 new_node['tags'][node_tag_name] = []
             new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name] + tag_value.split(':')
             new_node['tags'][node_tag_name] = list(set(new_node['tags'][node_tag_name]))
             new_node['tags'][node_tag_name].sort()
-        #new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name]
-            
+
         level = mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)]
-        first_dimension = 'Primaire'
-        # if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-        #     first_dimension = list(nodeTags['Dimensions']['tags'].keys()[0])
-        if 'Dimensions' in nodeTags and 'Primaire' not in nodeTags['Dimensions']['tags']:
-            first_dimension = list(nodeTags['Dimensions']['tags'].keys())[0]
-        node_dimensions = [first_dimension]
-        #if NODES_DIMENSIONS in mfa_input[NODES_SHEET][0]:
-        if 'Dimensions' in mfa_input[NODES_SHEET].columns:
-            node_dimensions = mfa_input[NODES_SHEET].iat[i,nodes_cols.index('Dimensions')]
-            if node_dimensions == '':
-                node_dimensions = nodeTags['Dimensions']['tags']
-            else:
-                node_dimensions = node_dimensions.split(':')               
         if not 'dimensions'  in new_node:
             new_node['dimensions'] = {}
-        # if not 'Dimensions' in new_node['tags']:
-        #     new_node['tags']['Dimensions'] = [first_dimension]
-        #if not dimension  in new_node['dimensions']:
-        for dim in node_dimensions:
-            if not dim in new_node['dimensions']:
-                new_node['dimensions'][dim] = {}             
-            
+        levelTags = [tags for tags in nodeTags.keys() if nodeTags[tags]['banner'] == 'level']
+        if len(levelTags) == 0:       
+            new_node['dimensions']['Primaire'] = {}
+            #new_node['dimensions']['Primaire']['level'] = int(level)
+            new_node['tags']['Primaire'] = [str(int(level))]
+            if i != len(mfa_input[NODES_SHEET])-1 and mfa_input[NODES_SHEET].iat[i+1,nodes_cols.index(NODES_LEVEL)] <= mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)]:
+                new_node['tags']['set_level'] = True
+            elif level == 1 and i == len(mfa_input[NODES_SHEET])-1:
+                new_node['tags']['set_level'] = True            
         if level == 1:
-            for dim in node_dimensions:
-                new_node['dimensions'][dim]['level'] = 1           
-            if not has_sankey_col and first_dimension in node_dimensions:
-                new_node['display'] = 1  
-                new_node['node_visible'] = 1     
+            for dim in levelTags:
+                group_name = dim
+                if mfa_input[NODES_SHEET].iat[i,nodes_cols.index(group_name)] != '' and group_name not in new_node['dimensions']:
+                    new_node['dimensions'][group_name] = {}
         else:
-            if not has_sankey_col:
-                new_node['display'] = 0 
-                new_node['node_visible'] = 0
-            for dim in node_dimensions:
-                new_node['dimensions'][dim]['level'] = int(level)           
-                
-            other_display_node_found = False
             j = i
-            while not other_display_node_found:
+            found = False
+            while not found:
                 j = j-1
                 if  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_LEVEL)] <  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] :
                     parent_name =  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_NODE)].strip()
                     if parent_name in nodes:
-                        for dim in node_dimensions:
-                            new_node['dimensions'][dim]['parent_name'] = nodes[parent_name]['idNode']         
+                        if len(levelTags) == 0:
+                            new_node['dimensions']['Primaire']['parent_name'] = nodes[parent_name]['idNode']
+                        for dim in levelTags:
+                            group_name = dim
+                            node_tags = new_node['tags']
+                            parent_tags = nodes[parent_name]['tags']
+                            if group_name not in parent_tags or group_name not in node_tags:
+                                continue
+                            if int(parent_tags[group_name][0]) == int(node_tags[group_name][0])-1:
+                                if group_name not in new_node['dimensions']:
+                                    new_node['dimensions'][group_name] = {}
+                                new_node['dimensions'][group_name]['parent_name'] = nodes[parent_name]['idNode']
+                                found = True
+                                break
+                if  mfa_input[NODES_SHEET].iat[j,nodes_cols.index(NODES_LEVEL)] == 1:
                     break
-                if  mfa_input[NODES_SHEET].iat[i,nodes_cols.index(NODES_LEVEL)] == 1:
-                    break
-
-
+    if len(levelTags) == 0:
+        max_level = 0
+        for node in nodes.values():
+            if int(node['tags']['Primaire'][0]) > max_level:
+                max_level = int(node['tags']['Primaire'][0])
+        for node in nodes.values():
+            try:
+                if 'set_level' in node['tags'] and node['tags']['set_level']:
+                    node['tags']['Primaire'] = [str(lev) for lev in list(range(int(node['tags']['Primaire'][0]),max_level+1))]
+                    del node['tags']['set_level']
+            except Exception:
+                pass
+        if max_level > 1:
+            nodeTags['Primaire'] = {
+                'group_name' : 'Primaire',
+                'show_legend' : 0,
+                'tags'        : {},
+                'banner'      : 'level',
+                'activated'   : 1                    
+            }
+            for tag in range(1,max_level+1):
+                selected = False
+                if tag == 1:
+                    selected = True
+                nodeTags['Primaire']['tags'][str(tag)] = {
+                    'name' : str(tag),
+                    'selected' : selected,
+                    'color' : ''
+                }
+                
+                     
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
     if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
        for i in range(len(mfa_input[TAG_SHEET])):
@@ -459,33 +477,52 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : 'one'                   
+                    'banner'      : 'one',
+                    'activated'   : 1                      
                 }
-           elif mfa_input[TAG_SHEET].iat[i,1] == 'nodeTags':
-                tmp = mfa_input[TAG_SHEET].iat[i,2].split(':')
-                tmp = [s.strip() for s in tmp]
-                try:
-                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET].iat[i,5].split(':')]
-                    if len(color_tmp) != len(tmp):
+           elif mfa_input[TAG_SHEET].iat[i,1] == 'nodeTags' or mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                if mfa_input[TAG_SHEET].iat[i,0] == 'Dimensions':
+                    continue
+                tag_group_names = mfa_input[TAG_SHEET].iat[i,0].split('/')
+                tag_names = mfa_input[TAG_SHEET].iat[i,2].split('/')
+                colors = mfa_input[TAG_SHEET].iat[i,5].split('/')
+                for j,tag_group_name in enumerate(tag_group_names):
+                    tmp2 = tag_names[j].split(':')
+                    tmp2 = [s.strip() for s in tmp2]
+                    try:
+                        color_tmp = [s.strip() for s in colors[j].split(':')]
+                        if len(color_tmp) != len(tmp2):
+                            color_tmp = ['']
+                    except Exception as excpt:
                         color_tmp = ['']
-                except Exception as excpt:
-                    color_tmp = ['']
-                tags = { s : {'name':s,'selected': 1, 'color' : ''} for i,s in enumerate(tmp)}
-                if color_tmp[0] != '':
-                    for j,tag_key in enumerate(tags.keys()):
-                        color = color_tmp[j]
-                        if not is_hex(color):
-                            color = webcolors.name_to_hex(color)
-                        tags[tag_key]['color'] = color
-                banner = 'multi'
-                if mfa_input[TAG_SHEET].iat[i,0] == NODE_TYPE:
-                    banner = 'none'                    
-                nodeTags[mfa_input[TAG_SHEET].iat[i,0]] = {
-                    'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
-                    'show_legend' : 0,
-                    'tags'        : tags,
-                    'banner'      : banner                   
-                }              
+                    selected = 1
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        selected = 0
+                    tags = { s : {'name':s,'selected': selected, 'color' : ''} for i,s in enumerate(tmp2)}
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        tags['1']['selected'] = 1
+                    if color_tmp[0] != '':
+                        for k,tag_key in enumerate(tags.keys()):
+                            color = color_tmp[k]
+                            if not is_hex(color):
+                                color = webcolors.name_to_hex(color)
+                            tags[tag_key]['color'] = color
+                    banner = 'multi'
+                    if tag_group_name == NODE_TYPE:
+                        banner = 'none'                    
+                    if mfa_input[TAG_SHEET].iat[i,1] == 'levelTags':
+                        banner = 'level'
+                    activated = 0
+                    if j==0:    
+                        activated = 1   
+                    nodeTags[tag_group_name] = {
+                        'group_name'  : tag_group_name,
+                        'show_legend' : 0,
+                        'tags'        : tags,
+                        'banner'      : banner,
+                        'activated'   : activated,
+                        'siblings'    : [n for n in tag_group_names if n != tag_group_name]              
+                    }              
            elif mfa_input[TAG_SHEET].iat[i,1] == 'fluxTags':
                 tmp = mfa_input[TAG_SHEET].iat[i,2].split(':')
                 tmp = [s.strip() for s in tmp]
@@ -511,11 +548,13 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     'group_name'  : mfa_input[TAG_SHEET].iat[i,0],
                     'show_legend' : 0,
                     'tags'        : tags,
-                    'banner'      : banner                   
+                    'banner'      : banner,
+                    'activated'   : 1                   
                 }
 
 def save_excel(
-    sankey_data : dict
+    sankey_data : dict,
+    save_all : bool
 ):
     nodes_cols =  [NODES_LEVEL, NODES_NODE]
     #nodes_cols = mfa_input[NODES_SHEET][0]
@@ -528,125 +567,156 @@ def save_excel(
         tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
         tags_sheet[0] = [TAG_NAME,TAG_TYPE,TAG_TAGS,TAG_IS_PALETTE,TAG_COLORMAP,TAG_COLOR]
 
-    has_column_dimension = len(sankey_data['nodeTags']['Dimensions']['tags']) > 1
-
     row = 1
+    skip = False
+    has_level = False
     for tag_group_type in ['dataTags','nodeTags','fluxTags']:
         tag_key_names = list(sankey_data[tag_group_type])
         tag_group_names = [ tags_group['group_name'] for tags_group in sankey_data[tag_group_type].values()]
         for i in range(len(tag_key_names)):
+            banner = sankey_data[tag_group_type][tag_key_names[i]]['banner']
             tags_colors = (':').join([ tag['color'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values() if 'color' in tag])
-            tags_sheet[row]=[tag_group_names[i],tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
+            the_tag_group_type = tag_group_type
+            if tag_group_names[i] == 'Primaire':
+                skip = True
+                for j,node in enumerate(sankey_data['nodes'].values()):
+                    if 'Primaire' in node['dimensions'] and 'parent_name' in node['dimensions']['Primaire']:
+                        skip = False
+                if skip:
+                    del sankey_data['nodeTags']['Primaire']
+                    continue
+            if banner == 'level':
+                the_tag_group_type = 'levelTags'
+                has_level = True
+            tags_sheet[row]=[tag_group_names[i],the_tag_group_type,(':').join([ tag['name'] for tag in sankey_data[tag_group_type][tag_key_names[i]]['tags'].values()]),'',sankey_data[tag_group_type][tag_key_names[i]]['color_map'],tags_colors]
             row = row+1
             
+    if len(tags_sheet) == 2 and skip:
+        tags_sheet =[]
+    
     #nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ] 
-    nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values() if tags_group['group_name'] != 'Dimensions']
-    if has_column_dimension:
-        nodeTags_group_names = ['Dimensions'] + nodeTags_group_names
+    nodeTags_group_names = [ tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
     nb_cols_nodes = len(nodes_cols) + len(nodeTags_group_names)
     nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
-
-    for dim in sankey_data['nodeTags']['Dimensions']['tags']:
-        dim_nodes = []
-        row = 0
-        for i,node in enumerate(sankey_data['nodes'].values()):
-            level = 1
-            if 'Dimensions' in node['tags'] and not dim in node['tags']['Dimensions'] and node['tags']['Dimensions'] != []:
-                continue
-            if dim in node['dimensions'] and 'level' in node['dimensions'][dim]:
-                level = node['dimensions'][dim]['level']
-            if level > 1:
-                continue
-            dim_nodes.append([""] * nb_cols_nodes)
-            dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
-            dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-            if 'definition' in node and node['definition'] != None:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']
+    
+    has_dimensions = len([node for node in sankey_data['nodes'].values() if len(node['dimensions'].keys())]) > 0 and has_level
+    has_definitions = False
+    for row,node in enumerate(sankey_data['nodes'].values()):
+        if 'tooltip_text' in node and node['tooltip_text'] != None and node['tooltip_text'] != '':
+            nb_cols_nodes = nb_cols_nodes+1
+            nodes[0].append(NODES_DEFINITIONS)
+            has_definitions = True
+            break
+    if not has_dimensions:
+        for row,node in enumerate(sankey_data['nodes'].values()):
+            nodes.append([""] * nb_cols_nodes)
+            nodes[row+1][nodes_cols.index(NODES_LEVEL)] = 1
+            nodes[row+1][nodes_cols.index(NODES_NODE)] = node['name']
+            if 'tooltip_text' in node and node['tooltip_text'] != None and node['tooltip_text'] != '':
+                nodes[row+1][nb_cols_nodes-1] = node['tooltip_text']
             col_num = 0           
             for j,tag_name in enumerate(sankey_data['nodeTags']):
-                if not has_column_dimension and tag_name == 'Dimensions':
-                    continue
                 tags = sankey_data['nodeTags'][tag_name]['tags']
-                if tag_name == 'Dimensions':
-                    dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
-                    continue
-                try:
+                if tag_name in node['tags']:
                     tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                    dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    nodes[row+1][len(nodes_cols)+col_num] = (':').join(tags_names)
+                col_num = col_num+1
+    else:
+        levelTags = [tags for tags in sankey_data['nodeTags'].keys() if sankey_data['nodeTags'][tags]['banner'] == 'level']
+        if len(levelTags) == 0:
+            levelTags = ['Primaire']
+
+        for i in range(len(levelTags)):
+            levelTag = levelTags[i]
+            dim_nodes = []
+            row = 0
+            for i,node in enumerate(sankey_data['nodes'].values()):
+                skip = False
+                for k in range(len(levelTags)):
+                    if levelTags[k] in node['dimensions'] and 'parent_name' in node['dimensions'][levelTags[k]]:
+                        skip = True
+                if skip:
+                    continue
+                dim_nodes.append([""] * nb_cols_nodes)
+                dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+                dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                if 'tooltip_text' in node and node['tooltip_text'] != None:
+                    dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
+                col_num = 0           
+                for j,tag_name in enumerate(sankey_data['nodeTags']):
+                    tags = sankey_data['nodeTags'][tag_name]['tags']
+                    if tag_name in node['tags']:
+                        tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if tag_name in node['tags']]
+                        dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                     col_num = col_num+1
-                except Exception as expt:
-                    pass
-            #dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
-            row = row+1
-        
+                #dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+                row = row+1
+            
+            for i,node in enumerate(sankey_data['nodes'].values()):
+                if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
+                    #level = node['dimensions'][levelTag]['level']
+                    parent_id = node['dimensions'][levelTag]['parent_name']
+                    parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+                else:
+                    continue
+                parent_rows = [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
+                if len(parent_rows) == 0:
+                    continue
+                parent_row = parent_rows[0]
+                if dim_nodes[parent_row][0] != 1:
+                    continue
+                dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+                row = parent_row+1
+                dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = dim_nodes[parent_row][0]+1
+                dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                if 'tooltip_text' in node and node['tooltip_text'] != None:
+                    dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
+                col_num = 0           
+                for j,tag_name in enumerate(sankey_data['nodeTags']):
+                    if tag_name == 'Dimensions':
+                        continue
+                    tags = sankey_data['nodeTags'][tag_name]['tags'] 
+                    if tag_name in node['tags']:
+                        try:
+                            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                            dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                        except Exception:
+                            print('tutu')
+                    col_num = col_num+1 
+            nodes = nodes+dim_nodes  
+           
         for i,node in enumerate(sankey_data['nodes'].values()):
-            if 'Dimensions' in node['tags'] and not dim in node['tags']['Dimensions'] and node['tags']['Dimensions'] != []:
-                continue
-            if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and 'parent_name' in node['dimensions'][dim]:
-                level = node['dimensions'][dim]['level']
-                parent_id = node['dimensions'][dim]['parent_name']
-                parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
-            else:
-                continue
-            if level < 2:
-                continue
-            parent_rows = [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
-            if len(parent_rows) == 0:
-                continue
-            parent_row = parent_rows[0]
-            dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
-            row = parent_row+1
-            dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
-            dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-            if 'definition' in node and node['definition'] != None:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']
-            col_num = 0           
-            for j,tag_name in enumerate(sankey_data['nodeTags']):
-                if not has_column_dimension and tag_name == 'Dimensions':
+            for i in range(len(levelTags)):
+                levelTag = levelTags[i]
+                if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
+                    #level = node['dimensions'][levelTag]['level']
+                    parent_id = node['dimensions'][levelTag]['parent_name']
+                    parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+                else:
                     continue
-                if tag_name == 'Dimensions':
-                    dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
+                parent_rows = [k for k in range(len(nodes)) if nodes[k][nodes_cols.index(NODES_NODE)] == parent_name]
+                if len(parent_rows) == 0:
                     continue
-                tags = sankey_data['nodeTags'][tag_name]['tags'] 
-                tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
-                col_num = col_num+1
-        for i,node in enumerate(sankey_data['nodes'].values()):
-            if 'Dimensions' in node['tags'] and not dim in node['tags']['Dimensions'] and node['tags']['Dimensions'] != []:
-                continue
-            if dim in node['dimensions'] and 'level' in node['dimensions'][dim] and 'parent_name' in node['dimensions'][dim]:
-                level = node['dimensions'][dim]['level']
-                parent_id = node['dimensions'][dim]['parent_name']
-                parent_name = [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
-            else:
-                continue
-            if level != 3:
-                continue
-            parent_rows = [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
-            if len(parent_rows) == 0:
-                continue
-            parent_row = parent_rows[0]
-            dim_nodes.insert(parent_row+1,[""] * nb_cols_nodes)
-            row = parent_row+1
-            dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = level
-            dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
-            if 'definition' in node:
-                dim_nodes[row][nb_cols_nodes-1] = node['definition']
-            col_num = 0           
-            for j,tag_name in enumerate(sankey_data['nodeTags']):
-                if not has_column_dimension and tag_name == 'Dimensions':
+                parent_row = parent_rows[0]
+                if nodes[parent_row][0] != 2:
                     continue
-                if tag_name == 'Dimensions':
-                    dim_nodes[row][len(nodes_cols)+j] = sankey_data['nodeTags']['Dimensions']['tags'][dim]['name']
-                    continue
-                tags = sankey_data['nodeTags'][tag_name]['tags'] 
-                tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
-                dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
-                col_num = col_num+1
-                
-        nodes = nodes+dim_nodes
-
-
+                # if node['tags'][levelTag] == sankey_data['nodes'][parent_id]['tags'][levelTag]:
+                #     continue
+                nodes.insert(parent_row+1,[""] * nb_cols_nodes)
+                row = parent_row+1
+                nodes[row][nodes_cols.index(NODES_LEVEL)] = nodes[parent_row][0]+1
+                nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                if 'definition' in node:
+                    nodes[row][nb_cols_nodes-1] = node['definition']
+                col_num = 0           
+                for j,tag_name in enumerate(sankey_data['nodeTags']):
+                    tags = sankey_data['nodeTags'][tag_name]['tags'] 
+                    tags_names = ['']
+                    if tag_name in node['tags']:
+                        tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                        nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
+                    col_num = col_num+1             
+            
     flux_cols = [
         DATA_ORIGIN, DATA_DESTINATION, DATA_VALUE
     ]
@@ -708,7 +778,6 @@ def save_excel(
                 ter[table_name].iat[row,col] = 1
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
-                
         mfa_output = {
             TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
             NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
@@ -733,13 +802,17 @@ def save_excel(
                 io_table[origin_idx+1][destination_idx+1] = 1
             except Exception as excpt:
                 print('exception 2: '+str(excpt))
-        io_table = np.array(io_table)   
-        mfa_output = {
-            TAG_SHEET   : pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0]),
-            NODES_SHEET : pd.DataFrame(nodes[1:],columns=nodes[0]),
-            DATA_SHEET  : pd.DataFrame(links[1:],columns=links[0]),
-            IO_SHEET    : pd.DataFrame(data=io_table[1:,1:],index=io_table[1:,0],columns=io_table[0,1:])
-        }
+        io_table = np.array(io_table)
+        
+        mfa_output = {}
+        if len(tags_sheet) > 0:
+            mfa_output[TAG_SHEET] = pd.DataFrame(tags_sheet[1:],columns=tags_sheet[0])
+        if len(nodes) > 0:
+            mfa_output[NODES_SHEET] = pd.DataFrame(nodes[1:],columns=nodes[0])
+        if len(links) > 0:
+            mfa_output[DATA_SHEET] = pd.DataFrame(links[1:],columns=links[0])
+        if len(io_table) > 0:
+            mfa_output[IO_SHEET] = pd.DataFrame(data=io_table[1:,1:],index=io_table[1:,0],columns=io_table[0,1:])
 
     return mfa_output,nodes_names
 
@@ -752,7 +825,11 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
             links[row][flux_cols.index(DATA_VALUE)] = float(val['value'])
         for i,flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
-                links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
+                try:
+                    links[row][3+depth+i] = sankey_data['fluxTags'][flux_tag_key]['tags'][val['tags'][flux_tag_key]]['name']
+                except Exception as expt:
+                    print(str(expt))
+                    pass
             else:
                 links[row][3+depth+i] = ''
         return row+1
@@ -760,6 +837,8 @@ def add_links(sankey_data, flux_cols, links, row, link, val,depth):
     data_tags = list(sankey_data['dataTags'][dataTagGroup]['tags'].keys())
     for i,data_tag_key in enumerate(data_tags):
         links[row][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']
+        if not data_tag_key in val:
+            continue
         new_row = add_links(sankey_data, flux_cols, links, row, link, val[data_tag_key],depth+1)
         for i in range(row,new_row):
             links[i][3+depth] = sankey_data['dataTags'][dataTagGroup]['tags'][data_tag_key]['name']

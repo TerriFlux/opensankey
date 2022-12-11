@@ -3,11 +3,10 @@ from flask import request
 from flask import Response
 from flask import send_file
 from flask import render_template
+from flask import session
 
-import pandas as pd
 import cloudconvert
-import numpy as np
-from shutil import copyfile
+import tempfile
 from os import listdir
 
 import os
@@ -15,6 +14,9 @@ import json
 import time
 
 import mfa_problem.io_excel as io_excel
+import mfa_problem.mfa_problem_main as mfa_problem_main
+import mfa_problem.su_trace as trace
+from threading import Thread
 from . import parser_excel
 
 try:
@@ -86,7 +88,30 @@ def save_excel():
         cwd = os.getcwd()
         excel_file = os.path.join(cwd, "tutu.xlsx")
         sankey_data =  request.get_data().decode("utf-8")
-        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data))
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data),False)
+    except Exception as excpt:
+        response = Response(
+            response='save_excel : ' + str(excpt),
+            status=401
+        )
+        return response   
+    try:     
+        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=2)
+        return send_file(excel_file, as_attachment=True)
+    except Exception as excpt:
+        response = Response(
+            response='write_mfa_problem_output_to_excel' + str(excpt),
+            status=402
+        )
+        return response
+     
+@opensankey.route('/sankey/save_excel_simple', methods=['POST'])
+def save_excel_simple():
+    try:
+        cwd = os.getcwd()
+        excel_file = os.path.join(cwd, "tutu.xlsx")
+        sankey_data =  request.get_data().decode("utf-8")
+        mfa_output,_ = parser_excel.save_excel(json.loads(sankey_data),False)
     except Exception as excpt:
         response = Response(
             response='save_excel : ' + str(excpt),
@@ -94,18 +119,17 @@ def save_excel():
         )
         return response   
     try:
-        if io_excel.NODE_TYPE in mfa_output[io_excel.NODES_SHEET].columns:
-            verbosity=2
-        else:
-            verbosity=1        
-        io_excel.write_mfa_problem_output_to_excel(excel_file,[],mfa_output,'w',verbosity=verbosity)
+        simple_mfa_output = {
+            io_excel.DATA_SHEET :  mfa_output[io_excel.DATA_SHEET]
+        }
+        io_excel.write_mfa_problem_output_to_excel(excel_file,[],simple_mfa_output,'w',verbosity=1)
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
             response='write_mfa_problem_output_to_excel' + str(excpt),
             status=402
         )
-        return response     
+        return response  
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
@@ -119,58 +143,86 @@ def clean_excel():
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
-    try:
-        excel_input_file = request.files['file']
-        mfa_input,_ = io_excel.load_mfa_excel(excel_input_file)
-    except Exception as expt:
-        print('load_mfa_excel' + str(expt))
-        response = Response(
-            response=json_data,
-            status=400
+    session['load_started'] = True
+    tmp_dir = tempfile.mkdtemp()
+    logname = tmp_dir + os.path.sep + "rollover.log"
+    session['logname'] = logname
+    trace.logger_init(logname,"w")
+    session['base_filename'] = trace.base_filename()
+    trace.logger.debug(session['base_filename'])
+    excel_input_file = request.files['file']
+    output_directory = tempfile.mkdtemp()
+    input_file_name = os.path.join(output_directory,'tutu.xlsx')
+    excel_input_file.save(input_file_name)
+    session['output_file_name'] = os.path.join(output_directory,'tutu.json')
+    trace.logger.debug(session['output_file_name'])
+    file_stats = os.stat(input_file_name)
+    if file_stats.st_size > 1000000:
+        thread = Thread(
+            target=upload_excel_thread, 
+            args=(
+                input_file_name,
+                session['base_filename'],
+                logname,
+                session['output_file_name'],
+                False
+            )
         )
-    try:
-        sankey_data = parser_excel.parse_excel(mfa_input)
-    except Exception as expt:
-        print('parse_excel' + str(expt))
-        response = Response(
-            response=json_data,
-            status=400
-        )
-    try:
-        json_data = json.dumps(sankey_data)
-        response = Response(
-            response=json_data,
-            status=200,
-            mimetype='application/json'
-        )
-    except Exception as expt:
-        json_data = json.dumps(sankey_data)
-        print('dumps' + str(expt))
-        response = Response(
-            response=json_data,
-            status=400
-        )
+        thread.daemon = True
+        thread.start()
+        trace.logger.debug('thread launched')
+    else:
+        try:
+            upload_excel_thread(
+                input_file_name,
+                session['base_filename'],
+                logname,
+                session['output_file_name'],
+                False
+            )
+        except excpt:
+            trace.logger.debug('upload_excel_thread failed : ' + str(excpt))
+        
+    response = Response(
+        response='{}',
+        status=200,
+        mimetype='application/json'
+    )
 
     return response
 
 
-@opensankey.route('/sankey/upload_examples', methods=['POST'])
-def upload_exemple():
-    data_folder = os.environ.get('MFAData')
-    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
-    exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(data_folder, exemple)
-    exemple_folder = os.path.dirname(exemple_file_path)
-    base_file_name = os.path.basename(exemple_file_path)
-    error=''
-    extension = os.path.splitext(exemple_file_path)[1]
-    if extension == ".xlsx":
+def upload_excel_thread(
+    exemple_file_path,
+    base_file_name,
+    log_name,
+    output_file_name,
+    use_layout
+):
+    mfa_problem_main.su_trace.logger_init(log_name,'a')
+    trace.logger.info('Loading Excel.')
+    trace.logger.debug(exemple_file_path)
+    try:
         mfa_input,_ = io_excel.load_mfa_excel(exemple_file_path)
+        trace.logger.info('Loading Excel Succeeded: ')
+    except Exception as expt:
+        trace.logger.error('Loading Excel Failed: '    + str(expt))
+        trace.logger.error('Construct Diagram Failed: '    + str(expt))
+        trace.logger.error('-- FAILED --')
+        return
+    trace.logger.info('Construct Diagram.')
+    try:            
         sankey_data = parser_excel.parse_excel(mfa_input)
-        if '_reconciled' in base_file_name:
-            layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
-        else:
-            layout_file_name = os.path.splitext(base_file_name)[0] + '_layout.json'
+        trace.logger.info('Construct Diagram Succeeded: ')
+    except Exception as expt:
+        trace.logger.error('Construct Diagram Failed: '    + str(expt))
+        trace.logger.error('-- FAILED --')
+        return
+    if '_reconciled' in base_file_name:
+        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled','_layout')+'.json'
+    else:
+        layout_file_name = os.path.splitext(base_file_name)[0] + '_layout.json'
+    if use_layout:
         sankey_folder = os.path.join(os.path.dirname(exemple_file_path),'sankey')
         layout_file_name = os.path.join(sankey_folder,layout_file_name)
         if os.path.exists(layout_file_name):
@@ -178,20 +230,91 @@ def upload_exemple():
             layout_data = json.load(layout_file) 
             sankey_data['layout'] = layout_data
         sankey_data['file_name'] = layout_file_name
+    try: 
         json_data = json.dumps(sankey_data)
+        with open(output_file_name, "w") as outfile:
+            outfile.write(json_data)
+        trace.logger.info('-- FINISHED --')
+    except Exception as expt:
+        trace.logger.error('Writing JSON failed: '    + str(expt))
+        trace.logger.info('-- FAILED --')
+
+@opensankey.route('/sankey/upload_examples', methods=['POST'])
+def upload_exemple():
+    session['load_started'] = True
+    tmp_dir = tempfile.mkdtemp()
+    logname = tmp_dir + os.path.sep + "rollover.log"
+    session['logname'] = logname
+    trace.logger_init(logname,"w")
+    session['base_filename'] = trace.base_filename()
+        
+    data_folder = os.environ.get('MFAData')
+    #exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    exemple = request.get_data().decode("utf-8")
+    exemple_file_path = os.path.join(data_folder, exemple)
+    #exemple_folder = os.path.dirname(exemple_file_path)
+    base_file_name = os.path.basename(exemple_file_path)
+    #error=''
+    extension = os.path.splitext(exemple_file_path)[1]
+    output_directory = tempfile.mkdtemp()
+    trace.logger.debug(exemple_file_path)
+    session['output_file_name'] = os.path.join(output_directory,'tutu.json')
+    trace.logger.debug(session['output_file_name'])
+    if extension == ".xlsx":
+        file_stats = os.stat(exemple_file_path)
+        if file_stats.st_size > 1000000:
+            thread = Thread(
+                target=upload_excel_thread, 
+                args=(
+                    exemple_file_path,
+                    base_file_name,
+                    logname,
+                    session['output_file_name'],
+                    True
+                )
+            )
+            thread.daemon = True
+            thread.start()
+            trace.logger.debug('thread launched')
+            return Response(
+                response='{}',
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            try:
+                upload_excel_thread(
+                    exemple_file_path,
+                    base_file_name,
+                    logname,
+                    session['output_file_name'],
+                    True
+                )
+                return Response(
+                    response='{}',
+                    status=200,
+                    mimetype='application/json'
+                )
+            except excpt:
+                trace.logger.debug('upload_excel_thread failed : ' + str(excpt))
+                return Response(
+                    response='{}',
+                    status=500,
+                    mimetype='application/json'
+                )
     elif extension == ".json":
         json_file_name = os.path.join(data_folder, exemple)
         json_file = open(json_file_name,encoding="utf-8", mode= "r")
         data = json.load(json_file)
         data['file_name'] = exemple_file_path
         json_data = json.dumps(data)
+        response = Response(
+            response=json_data,
+            status=200,
+            mimetype='application/json'
+        )
+        return response
 
-    response = Response(
-        response=json_data,
-        status=200,
-        mimetype='application/json'
-    )
-    return response
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
 def download_examples():
@@ -209,7 +332,7 @@ def parse_folder(current_dir,menus,key=None):
     exemple_found = False
     # artefact_found = False
     for file_or_folder in folder_content:
-        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder or '.vscode' in file_or_folder:
+        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder  or 'new' in file_or_folder or 'prev' in file_or_folder:
             continue
         if 'artefacts' in file_or_folder:
             file_names = listdir(os.path.join(current_dir, file_or_folder))
@@ -227,9 +350,14 @@ def parse_folder(current_dir,menus,key=None):
         if '.xlsx' in file_or_folder and not 'old.' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
-            if 'Excel' not in menus[key]:
-                menus[key]['Excel'] = []           
-            menus[key]['Excel'].append(file_or_folder)
+            if 'Files' not in menus[key]:
+                menus[key]['Files'] = []
+            reconciled_file = os.path.splitext(file_or_folder)[0]+'_reconciled.xlsx'
+            reconciled_path = os.path.join(current_dir, reconciled_file)
+            if os.path.isfile(reconciled_path):
+                continue
+            menus[key]['Files'].append(file_or_folder)
+            menus[key]['Files'].sort()
             exemple_found = True
             continue
         if os.path.isfile(os.path.join(current_dir,file_or_folder)):
@@ -258,9 +386,10 @@ def parse_folder(current_dir,menus,key=None):
                     continue
                 if key not in menus:
                     menus[key] = {}
-                if 'Sankey' not in menus[key]:
-                    menus[key]['Sankey'] = []   
-                menus[key]['Sankey'].append(file_name)
+                if 'Files' not in menus[key]:
+                    menus[key]['Files'] = []   
+                menus[key]['Files'].append(file_name)
+                menus[key]['Files'].sort()
                 exemple_found = True
     if not exemple_found and key in menus:
         del menus[key]
@@ -316,4 +445,64 @@ def start():
         static_site='false'
     )
 
+@opensankey.route('/loads_retrieves_result', methods=['POST'])
+def load_retrieves_result():
+    session['load_started'] = False
+    try:
+        json_file = open(session['output_file_name'],encoding="utf-8", mode= "r")
+        json_data = json.load(json_file)
+        json_file.close()
+        response = Response(
+            json.dumps(json_data),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception:
+        trace.logger.error('load_retrieves_result failed')
+        response = Response(
+            json.dumps('{}'),
+            status=510,
+            mimetype='application/json'
+        )
+        return response
 
+@opensankey.route('/load_process', methods=['POST'])
+def load_process():
+    if not "load_started" in session or session["load_started"] == False:
+        trace.logger.debug(session['base_filename'])
+        trace.logger.debug('not started')
+        return Response(
+            json.dumps({}),
+            status=200,
+            mimetype='application/json'
+        )        
+    try:
+        #trace.logger.debug(session['base_filename'])
+        #trace.logger.debug('open')
+        if os.path.isfile(session['base_filename']):
+            #trace.logger.debug('is file')
+            f=open(session['base_filename'], "r")
+            #trace.logger.debug('opened')
+            results = f.read()
+            #trace.logger.debug('read')
+            results_dict = { "output" : results }
+            json_data = json.dumps(results_dict)
+            #trace.logger.debug('dumps')
+            return Response(
+                json_data,
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            return Response(
+                json.dumps({'output':'ERROR: load_process: le fichier tmp_log n\'existe pas.'}),
+                status=500,
+                mimetype='application/json'
+            )            
+    except:
+        return Response(
+            json.dumps({'output':'ERROR:load_process: le fichier tmp_log ne peut pas être ouvert.'}),
+            status=500,
+            mimetype='application/json'
+        )
