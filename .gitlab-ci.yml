@@ -84,7 +84,7 @@ dev_opensankey:
   environment:
     name: dev
   only:
-    - master
+    - main
   except:
     - tags
   cache: 
