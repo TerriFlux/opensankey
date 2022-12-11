@@ -94,7 +94,7 @@ dev_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/$ENV_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -102,7 +102,7 @@ dev_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source $ENV_opensankey/bin/activate
+    - source "$ENV"_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 test_opensankey:
@@ -127,7 +127,7 @@ test_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/$ENV_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -135,7 +135,7 @@ test_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source $ENV_opensankey/bin/activate
+    - source "$ENV"_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 prod_opensankey:
@@ -160,7 +160,7 @@ prod_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/$ENV_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -168,5 +168,5 @@ prod_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source $ENV_opensankey/bin/activate
+    - source "$ENV"_opensankey/bin/activate
     - bash update_build_opensankey.sh
