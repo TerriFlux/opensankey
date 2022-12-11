@@ -69,8 +69,6 @@ test:
     - python -m unittest discover opensankey.tests
     - python -m unittest discover opensankey.tests
     - flake8 --exit-zero
-  except:
-    - schedules
   dependencies:
     - build
 
