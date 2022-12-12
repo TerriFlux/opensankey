@@ -2794,8 +2794,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt)
     }
 
+    const theLinkValue = getLinkValue(data, link.idLink)
+    let is_structure = false
+    if (source_node.position !== 'relative' && target_node.position !== 'relative' ) {
+      if (data.show_structure === 'data' ) {
+        if (!(theLinkValue as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+          is_structure = true
+        }
+      } else if ( data.show_structure === 'reconciled' ) {
+          is_structure = theLinkValue.extension!.free_mini !== undefined && +getLinkValue(data, link.idLink).extension!.free_mini == 0 
+      }
+    }
     if (link.orientation === 'vh' && !link.recycling) {
-      if (data.show_structure == 'structure') {
+      if (data.show_structure == 'structure' || is_structure) {
         [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
         if (source_node.x > target_node.x) {
           xt = xt + 30
@@ -2810,7 +2821,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hv' && !link.recycling) {
-      if (data.show_structure == 'structure') {
+      if (data.show_structure == 'structure' || is_structure) {
         [ys, xt] = [source_node.y + 5, target_node.x + 5]
         if (source_node.y > target_node.y) {
           yt = yt + 30
@@ -2825,7 +2836,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'hh' && !link.recycling) {
-      if (data.show_structure == 'structure') {
+      if (data.show_structure == 'structure' || is_structure ) {
         [ys, yt] = [source_node.y + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
         if (source_node.x > target_node.x) {
           xt = xt + target_node.node_width
@@ -2845,7 +2856,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       )
     }
     if (link.orientation === 'vv' && !link.recycling) {
-      if (data.show_structure == 'structure') {
+      if (data.show_structure == 'structure' || is_structure) {
         [xs, xt] = [source_node.x + source_node.node_width / 2, target_node.x + target_node.node_width / 2]
         if (source_node.y > target_node.y) {
           yt = yt + 30
@@ -2867,7 +2878,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
       const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
       const vert_shift = link.vert_shift ? link.vert_shift : 0
-      if (data.show_structure == 'structure') {
+      if (data.show_structure == 'structure' || is_structure) {
         [ys, yt] = [source_node.y + 5, target_node.y + 5]
       }
       return SankeyShapes.bezier_link_classic_recycling(
