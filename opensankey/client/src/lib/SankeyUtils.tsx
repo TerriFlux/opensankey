@@ -265,7 +265,7 @@ export const compute_total_offsets = (
       if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_width_top += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
+      offset_width_top += +v
     }
   )
   let bottom_order = -1
@@ -286,7 +286,7 @@ export const compute_total_offsets = (
       if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_width_bottom += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
+      offset_width_bottom += +v
     }
   )
 
@@ -308,7 +308,7 @@ export const compute_total_offsets = (
       if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_height_left += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
+      offset_height_left += +v
     }
   )
 
@@ -330,7 +330,7 @@ export const compute_total_offsets = (
       if (v === undefined || v=='' || is_free) {
         return
       }
-      offset_height_right += ((+v==0)||+v>inv_scale(2))?+v:(inv_scale(2))
+      offset_height_right += +v
     }
   )
 
