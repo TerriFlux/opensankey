@@ -2802,7 +2802,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           is_structure = true
         }
       } else if ( data.show_structure === 'reconciled' ) {
-          is_structure = theLinkValue.extension!.free_mini !== undefined && +getLinkValue(data, link.idLink).extension!.free_mini == 0 
+        is_structure = theLinkValue.extension!.free_mini !== undefined && +getLinkValue(data, link.idLink).extension!.free_mini == 0 
       }
     }
     if (link.orientation === 'vh' && !link.recycling) {
