@@ -69,7 +69,8 @@ export const SankeyNodePropTypes = {
     label_vert_valeur: PropTypes.string.isRequired,
     label_horiz_valeur: PropTypes.string.isRequired,
     value_font_size:PropTypes.number.isRequired,
-    label_box_width: PropTypes.number.isRequired
+    label_box_width: PropTypes.number.isRequired,
+    label_color:PropTypes.bool.isRequired
   }).isRequired,
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
