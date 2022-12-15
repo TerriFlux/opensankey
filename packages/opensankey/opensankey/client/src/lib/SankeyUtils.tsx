@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { agregation, compute_auto_sankey, desagregation, updateLayout } from './SankeyLayout'
+import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
 import * as d3 from 'd3'
 
 
@@ -18,14 +18,25 @@ export const addDataTags = (
   const dataTag = Object.values(dataTags)[depth]
   const listKey = Object.keys(dataTag.tags)
   for (const i in listKey) {
-    if (depth === dataTags.length - 1) {
+    if (depth === dataTags.length - 1 ) {
+      try {
+        if ( v[listKey[i]] !== undefined) {
+          continue
+        }
+      } catch {
+        return
+      }
+      const the_val = v.value as unknown as number
       v[listKey[i]] = {
-        value: v.value as unknown as number,
-        display_value: v.display_value as unknown as string,
+        value: the_val ? the_val : '',
+        display_value:  the_val ? v.display_value as unknown as string : '',
         tags: {},
         extension: {}
       }
     } else {
+      if ( v[listKey[i]] == undefined ) {
+        (v[listKey[i]] as SankeyLinkValueDict) = {}        
+      }
       addDataTags(dataTags, v[listKey[i]] as unknown as {[key:string] : SankeyLinkValue}, depth + 1)
     }
   }
@@ -612,7 +623,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         let selected_tag = ''
         if (source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
           const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
-          if (common_tags.length > 0) {
+          if (common_tags.length > 0 && common_tags[0] in data_s.nodeTags[source_node.colorTag].tags) {
             return data_s.nodeTags[source_node.colorTag].tags[common_tags[0]].color
           }
         }
@@ -987,15 +998,15 @@ export const processExample = (server_data: SankeyData ) => {
   Object.assign(data, server_data)
   convert_data(data)
 
-
-  set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
     convert_data((data as SankeyData & layout_type).layout)
+    compute_default_input_outputLinksId(data.nodes, data.links)
     updateLayout(data, (data as SankeyData & layout_type).layout)
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
+  set_nodes_level(data)
 
   return data
 }

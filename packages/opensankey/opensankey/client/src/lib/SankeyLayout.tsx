@@ -452,6 +452,7 @@ export const updateLayout = (
     }
 
     node.name = node_layout.name
+    node.position = node_layout.position
     node.node_width = node_layout.node_width
     node.node_height = node_layout.node_height
     if (node_layout.x !== 0 && node_layout.y != 0) { 
@@ -483,11 +484,11 @@ export const updateLayout = (
     node.node_visible = node_layout.node_visible
     node.label_visible = node_layout.label_visible
   }
-  apply_input_outputLinksId(
-    new_layout.nodes,
-    new_layout.links,
-    data
-  )
+  // apply_input_outputLinksId(
+  //   new_layout.nodes,
+  //   new_layout.links,
+  //   data
+  // )
 
 
   for (const link_layout_key in new_layout.links) {
@@ -585,6 +586,9 @@ export const updateLayout = (
 
   if ('width' in new_layout) {
     data.width = new_layout.width
+  }
+  if (new_layout.maximum_flux) {
+    data.maximum_flux = new_layout.maximum_flux
   }
   Object.keys(new_layout.display_style).forEach(
     key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]

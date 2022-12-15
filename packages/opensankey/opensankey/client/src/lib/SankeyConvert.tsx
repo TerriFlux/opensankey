@@ -860,37 +860,41 @@ export const convert_data = (
         if (!n.dimensions) {
           n.dimensions = {}
         }
-        if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
-          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
-          //n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
-          if (!('Echanges' in n.tags)) {
-            n.tags.Echanges = []
-          }
-          // if (!('Echanges' in n.tags.Dimensions)) {
-          //   n.tags.Dimensions.push('Echanges')
-          // }
-          // if (!('Primaire' in n.tags)) {
-          //   n.tags.Primaire = []
-          // }          
-        } else {
-          const names = n.name.split(' - ')
-          names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
-          const parent_name = names.join(' - ')
-          const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
-          n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
-          // if ( 'Primaire' in n.dimensions) {
-          //   delete n.dimensions.Primaire
-          // }
-          if (!('Echanges' in n.tags)) {
-            n.tags.Echanges = []
-          }
-          // if (!('Echanges' in n.tags.Dimensions)) {
-          //   n.tags.Dimensions.push('Echanges')
-          // }
-          // if ( 'Primaire' in n.tags.Dimensions) {
-          //   n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
-          // }
-        }  
+        if (data.trade_sectors) {
+          if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
+            n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
+            //n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
+            if (!('Echanges' in n.tags)) {
+              n.tags.Echanges = []
+            }
+            // if (!('Echanges' in n.tags.Dimensions)) {
+            //   n.tags.Dimensions.push('Echanges')
+            // }
+            // if (!('Primaire' in n.tags)) {
+            //   n.tags.Primaire = []
+            // }          
+          } else {
+            const names = n.name.split(' - ')
+            names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
+            const parent_name = names.join(' - ')
+            const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
+            if (parent_node) {
+              n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
+            }
+            // if ( 'Primaire' in n.dimensions) {
+            //   delete n.dimensions.Primaire
+            // }
+            if (!('Echanges' in n.tags)) {
+              n.tags.Echanges = []
+            }
+            // if (!('Echanges' in n.tags.Dimensions)) {
+            //   n.tags.Dimensions.push('Echanges')
+            // }
+            // if ( 'Primaire' in n.tags.Dimensions) {
+            //   n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
+            // }
+          }  
+        }
       }
       delete n.tags['Exchanges']
       if (!n.position) {

@@ -3055,12 +3055,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             const x = source_node.x + d.x
             const y = source_node.y + d.y
             return 'translate(' + x + ', ' + y + ')'
-          } else {
+          } else if (d.outputLinksId.length > 0) {
             const target_node = display_nodes[display_links[d.outputLinksId[0]].idTarget]
             const x = target_node.x + d.x
             const y = target_node.y + d.y
             return 'translate(' + x + ', ' + y + ')'            
           }
+          return 'translate(' + 10 + ', ' + 10 + ')'
         } else {
           return 'translate(' + d.x + ', ' + d.y + ')'
         }
