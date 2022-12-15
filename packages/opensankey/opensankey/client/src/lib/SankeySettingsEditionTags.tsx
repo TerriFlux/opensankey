@@ -3,10 +3,11 @@ import { Button, Row, FormControl, Form, Col, FormLabel, Table, ButtonGroup } fr
 import PropTypes, { InferProps } from 'prop-types'
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValue, SankeyLinkValueDict, TagsGroup } from './types'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
+import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette } from 'react-icons/fa'
 import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
 import {useTranslation} from 'react-i18next'
+import { range } from 'd3'
 
 
 const SankeySettingsEditionTagsPropTypes = {
@@ -109,6 +110,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
     set_data({ ...data })
   }
+  const getRandomInt=(max:number) =>{
+    return Math.floor(Math.random() * max)
+  }
 
   const handleDelGroupTag = (tags_group_key: string) => {
     const elementTagName = elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
@@ -181,6 +185,25 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
               </option>
           )}
         </Form.Select>
+      </Col>
+      <Col>
+        <Button variant="secondary" value='alea' onClick={()=>{
+          const color=element_tags.map(d=>{
+            return data[elementTagName][tags_group_key].tags[d].color
+          })
+          let size_color=color.length
+          for(const i in range(size_color)){
+            size_color=color.length
+            const color_to_select=getRandomInt(size_color)
+            const c=color.splice(color_to_select,1)
+            if(c!=undefined && c!=null){
+              const v=c[0]
+              data[elementTagName][tags_group_key].tags[element_tags[i]].color=v
+            }
+          }
+          set_data({...data})
+        }
+        }><FaPalette/> </Button>
       </Col>
       <Col>
         <Form.Select onChange={
