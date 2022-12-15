@@ -3097,9 +3097,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         if (multi_selected_nodes.current.includes(d)) {
           multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
           d3.select('#' + d.idNode).attr('stroke-width',0)
+          d3.select('#ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
         } else {
           multi_selected_nodes.current.push(d)
           d3.select('#' + d.idNode).attr('stroke-width',2)
+          d3.select('#ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
         }
         select_node(d)
         if ( accordion_ref && accordion_ref.current) {
@@ -3650,7 +3652,67 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
 
       })
-
+    // ZONE DE DRAGGAGE POUR CHANGER LA LARGEUR DES TEXT DE LABELS
+    ggg_nodes
+      .append('rect')
+      .attr('class','box_width_threshold')
+      .attr('x',n=>{
+        const width = +d3.select('#' + n.idNode).attr('width')
+        if (n.x_label) {
+          return n.x_label
+        } else if (n.display_style.label_horiz == 'milieu') {
+          return width/2-n.display_style.label_box_width/2
+        } else if (n.display_style.label_horiz == 'gauche') {
+          return -n.display_style.label_box_width
+        } else if (n.display_style.label_horiz == 'droite') {
+          return width
+        } else {
+          return 0
+        }
+      })
+      .attr('y', n => {
+        const height = +d3.select('#' + n.idNode).attr('height')
+        if (n.y_label && data.show_structure !== 'structure') {
+          return n.y_label
+        } else if (n.display_style.label_vert == 'milieu') {
+          return 0
+        } else if (n.display_style.label_vert == 'haut') {
+          return -4
+        } else if (n.display_style.label_vert == 'bas') {
+          return height
+        } else {
+          return 0
+        }
+      })
+      .attr('width',n=>n.display_style.label_box_width)
+      .attr('height',n=>{
+        const h=document.getElementById(n.idNode+'_text')?.getBoundingClientRect().height
+        return (h!=undefined)?h:25
+        
+      })
+      .attr('fill','none')
+      .attr('stroke','grey')
+      // .attr('stroke-dasharray',('3,2'))
+      .attr('stroke-width','1px')
+      .attr('cursor','ew-resize')
+      .attr('visibility',d=>(multi_selected_nodes.current.includes(d)?'visible':'hidden'))
+      .call(d3.drag<SVGRectElement, SankeyNode>()
+        .subject(Object).on('drag', function (event, node) {
+          console.log('x : '+event.x)
+          console.log('dx : '+event.dx)
+          if(event.dx<100){
+            let pos_node=d3.select('#ggg_' + node.idNode).attr('transform').replace('translate(','')
+            pos_node=pos_node.split(',')[0]
+            console.log(pos_node)
+            if(event.x<pos_node){
+              data.nodes[node.idNode].display_style.label_box_width-=event.dx
+            }else{
+              data.nodes[node.idNode].display_style.label_box_width+=event.dx
+            }
+            set_data({...data})
+          }
+        })
+      )
 
 
     if (!static_sankey) {
