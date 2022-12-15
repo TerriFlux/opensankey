@@ -100,6 +100,7 @@ const resources = {
         labels:{
           'labels':'Labels',
           'vdb':'Label visibility',
+          'lb':'White label',
           'pv':'Vertical position',
           'haut':'Top',
           'Milieu':'Middle',
@@ -330,6 +331,7 @@ const resources = {
         labels:{
           'labels':'Labels',
           'vdb':'Visibilité du label',
+          'lb':'Label blanc',
           'pv':'Position vertical',
           'haut':'Haut',
           'Milieu':'Milieu',

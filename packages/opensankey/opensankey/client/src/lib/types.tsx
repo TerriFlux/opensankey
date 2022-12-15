@@ -69,7 +69,8 @@ export const SankeyNodePropTypes = {
     label_vert_valeur: PropTypes.string.isRequired,
     label_horiz_valeur: PropTypes.string.isRequired,
     value_font_size:PropTypes.number.isRequired,
-    label_box_width: PropTypes.number.isRequired
+    label_box_width: PropTypes.number.isRequired,
+    label_color:PropTypes.bool.isRequired
   }).isRequired,
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
@@ -189,7 +190,7 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   file_name: PropTypes.string,
-  couleur_fond_blanc:PropTypes.bool.isRequired,
+  couleur_fond_sankey:PropTypes.string.isRequired,
 
   user_scale: PropTypes.number.isRequired,
   maximum_flux: PropTypes.number,
