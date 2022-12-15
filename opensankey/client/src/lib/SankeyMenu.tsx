@@ -870,6 +870,24 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Header>
     <Modal.Body>
       <Form.Group as={Row}>
+        <Col xs={1}>
+          <Form.Label  style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
+        </Col>
+        <Col xs={2}>
+          <Form.Check
+            inline
+            style={{marginTop:'0.5em',marginLeft:'0.em'}}
+            type='switch'
+            checked={i18n.language=='en'}
+            onChange={evt => {
+              i18n.changeLanguage((evt.target.checked)?'en':'fr')
+            }}
+          />
+        </Col>
+      </Form.Group>
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+
+      <Form.Group as={Row}>
         <Col xs={6}>Charger une police d'icones</Col>
         <Col xs={6}><FormControl
           //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
@@ -971,6 +989,19 @@ const Menu: FunctionComponent<MenuTypes> = (
         }} />
 
       </Form>
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      <FormGroup as={Row}>
+        <Col xs={5}>
+          <FormLabel >{t('Menu.BgC')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.couleur_fond_blanc} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.couleur_fond_blanc=evt.target.checked
+            set_data({...data})
+          }}></FormCheck>        
+        </Col>
+      </FormGroup>
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
@@ -2267,17 +2298,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <NavDropdown id='Aide' title={t('Menu.Aide')} >
                 <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
                 <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-              </NavDropdown >
-              
-              <Form.Label style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
-              <Form.Check
-                style={{marginTop:'0.5em',marginLeft:'0.em'}}
-                type='switch'
-                checked={i18n.language=='en'}
-                onChange={evt => {
-                  i18n.changeLanguage((evt.target.checked)?'en':'fr')
-                }}
-              />
+              </NavDropdown >           
 
               {!data.static_sankey && !mode_visualisation ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>

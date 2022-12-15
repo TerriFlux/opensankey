@@ -445,7 +445,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
-
+    couleur_fond_blanc:false,
     nodes: {},
     links: {},
     user_scale: 20,
