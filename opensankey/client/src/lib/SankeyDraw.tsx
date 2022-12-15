@@ -5811,7 +5811,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   useEffect(() => {
     [data.width, data.height] = min_width_and_height()
     removeAnimate()
-    d3.select('body').style('background-color',(data.couleur_fond_blanc)?'white':'#f2f2f2')
+    d3.select('body').style('background-color',data.couleur_fond_sankey)
     // let isDown = false
     // Permet d'affecter une class au svg selon le mode
     if (mode_selection=='s') {
