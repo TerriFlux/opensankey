@@ -5,12 +5,12 @@ import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
 import { Element } from 'domhandler/lib/node'
-// import { convert_data } from './SankeyConvert'
+import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
@@ -192,7 +192,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,  mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -474,43 +474,43 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
     }
   }
-  // const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  // const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
-  // const setDiagram = (the_diagram : string) => {
+  const setDiagram = (the_diagram : string) => {
 
-  //   //const the_diagram = evt.target.value as string
-  //   const sous_filieres = window.sankey.sous_filieres
+    //const the_diagram = evt.target.value as string
+    const sous_filieres = window.sankey.sous_filieres
 
-  //   const new_data = JSON.parse(
-  //     JSON.stringify(
-  //       window.sankey[sous_filieres[the_diagram]]
-  //     )
-  //   ) as SankeyData
-  //   //Object.assign(sankey_data, new_data)
-  //   convert_data(new_data)
-  //   new_data.static_sankey = true
-  //   // if (!is_split) {
-  //   //   set_diagram(the_diagram)
-  //   // }
+    const new_data = JSON.parse(
+      JSON.stringify(
+        window.sankey[sous_filieres[the_diagram]]
+      )
+    ) as SankeyData
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
+    // }
  
-  //   Object.values(data.nodes).forEach(node => {
-  //     node.node_visible = true
-  //     node.display = true 
-  //   })
-  //   set_nodes_level(data)
-  //   new_data.fit_screen = true
-  //   d3.select('#svg').on('.zoom', null)
-  //   set_data({ ...new_data })
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true 
+    })
+    set_nodes_level(data)
+    new_data.fit_screen = true
+    d3.select('#svg').on('.zoom', null)
+    set_data({ ...new_data })
     
-  // }
+  }
 
-  // const diagram_label = 'Diagrammes'
-  // const marginTop = data.static_sankey ? '0px' : '0px'
+  const diagram_label = 'Diagrammes'
+  const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
   // const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
   const color = 'black'
-  // const backgroundColor = 'gainsboro'
+  const backgroundColor = 'gainsboro'
 
 
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
@@ -678,7 +678,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   return (
     <>
-      {/*
+      
       <div className='herowrap'
         style={{
           color: color,
@@ -686,10 +686,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: ((!(banner_grouptag.length > 0 )) && (!(level_filter) && !( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
+          display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
 
-         {
+        {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
               {(data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -726,7 +726,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     </Form.Select>) :(<></>)
                   }
                 </Form.Group></>) : (<></>)}
-              <Form.Group as={Col}
+              {/* <Form.Group as={Col}
                 style={{
                   width: '250px',
                   marginLeft: '0px',
@@ -738,7 +738,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 </>)
                   : (<Col></Col>)
                 }
-              </Form.Group>
+              </Form.Group> */}
               <Col lg="auto">
                 {additional_selector ? (
                   additional_selector
@@ -768,12 +768,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </Row></>)
             :
             <Row>
-              <Col >
+              {/* <Col >
                 {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
                   if (Object.values(el.tags).filter(d=>d.selected).length>0) {
                     return (<Form.Label>{el.group_name} : { Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
                   }})}</>):(<></>)}
-              </Col>
+              </Col> */}
               <Col className='text-right'>
                 <FormGroup as={Col}>
                   <Button variant='outline-success' size='sm'
@@ -791,7 +791,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </Row>
         } 
         
-      </div>*/}
+      </div>
       <Row className='sankey-toolbar'>
         {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
