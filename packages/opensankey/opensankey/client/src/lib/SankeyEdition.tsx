@@ -10,7 +10,7 @@ import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
@@ -508,7 +508,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
-  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
+  // const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
   const color = 'black'
   const backgroundColor = 'gainsboro'
 
@@ -610,11 +610,44 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const detail_level=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
-    <Popover.Body>
+    <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
       {(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
         {addAllDropDownNode(true)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
+    </Popover.Body>
+  </Popover>
+  const filter_color_node=
+  <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
+
+      { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+        {addAllDropDownNode(false)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+      }
+         
+    </Popover.Body>
+  </Popover>
+
+  const filter_color_link=
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
+    <Popover.Body>
+
+      {addAllDropDownFlux(data.fluxTags, data, set_data)}
+        
+    </Popover.Body>
+  </Popover>
+
+  const filter_data=
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
+    <Popover.Body>
+
+      {addAllDropDownLinks()}
+        
     </Popover.Body>
   </Popover>
 
@@ -645,6 +678,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   return (
     <>
+      
       <div className='herowrap'
         style={{
           color: color,
@@ -652,7 +686,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           marginLeft: '0',
           paddingBottom: '3px',
           alignItems: 'baseline',
-          display: ((!(banner_grouptag.length > 0 )) && (!(level_filter) && !( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
+          display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
 
         {
@@ -692,7 +726,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     </Form.Select>) :(<></>)
                   }
                 </Form.Group></>) : (<></>)}
-              <Form.Group as={Col}
+              {/* <Form.Group as={Col}
                 style={{
                   width: '250px',
                   marginLeft: '0px',
@@ -704,44 +738,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 </>)
                   : (<Col></Col>)
                 }
-              </Form.Group>
+              </Form.Group> */}
               <Col lg="auto">
                 {additional_selector ? (
                   additional_selector
                 ) : (<></>)}
               </Col>
 
-              {//----------------------------
-              }
 
-              <Form.Group as={Col}
-                style={{ color: 'black', marginLeft: '5px', width: '250px', display: ( node_filter) ? 'block' : 'none' }}
-                lg="auto"
-              >
-                {( node_filter) ? (
-                  <FormLabel className="text-center" style={{ justifyContent: 'center', color: color }}><b>{t('Banner.fdn')}</b></FormLabel>
-                ) : (<FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: color }}>{t('Banner.fdn')}</FormLabel>)}
-
-                { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-                  {addAllDropDownNode(false)}</>
-                ) : (<>
-                  <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-                }
-              </Form.Group>
-
-              {//----------------------------
-              }
-              <Form.Group as={Col} style={{ width: '250px', marginLeft: '0px', display: ( flux_filter) ? 'block' : 'none' }} lg="auto">
-                { flux_filter ? (
-                  <>
-                    <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.fdf')}</b></FormLabel>
-                    {addAllDropDownFlux(data.fluxTags, data, set_data)}
-                  </>)
-                  : (<>
-                    <FormLabel className="text-center" style={{ justifyContent: 'center', opacity: opacity_advanced, color: '#6c757d' }}>{t('Banner.fdf')}</FormLabel>
-                    <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-                }
-              </Form.Group>
               {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
               {window.sankey && window.sankey.excel ? (
                 <Form.Group as={Col} lg="auto" >
@@ -764,12 +768,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </Row></>)
             :
             <Row>
-              <Col >
+              {/* <Col >
                 {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
                   if (Object.values(el.tags).filter(d=>d.selected).length>0) {
                     return (<Form.Label>{el.group_name} : { Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
                   }})}</>):(<></>)}
-              </Col>
+              </Col> */}
               <Col className='text-right'>
                 <FormGroup as={Col}>
                   <Button variant='outline-success' size='sm'
@@ -785,7 +789,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 
               </Col>
             </Row>
-        }
+        } 
         
       </div>
       <Row className='sankey-toolbar'>
@@ -854,17 +858,73 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             <ButtonGroup >
 
 
-              <OverlayTrigger
-                key={'tooltip-details-level'}
-                placement={'left'}
-                trigger={'click'}
-                rootClose
-                overlay={detail_level}
-              >
-                <Button variant='warning' id='button-details-level' >
-                  <FontAwesomeIcon icon={faFolderTree} />
-                </Button>
-              </OverlayTrigger>
+              {(node_filter)?
+                <OverlayTrigger
+                  key={'tooltip-link-color-filter'}
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={filter_color_node}
+                  
+                >
+                  <Button variant='primary' id='button-link-color-filter' >
+                    Filtre Noeuds
+                  </Button>
+                </OverlayTrigger>
+                :
+                <></>
+              }
+
+              {(flux_filter)?
+                <OverlayTrigger
+                  key={'tooltip-node-color-filter'}
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={filter_color_link}
+                >
+                  <Button variant='secondary' id='button-node-color-filter' >
+                    Filtre Flux
+                  </Button>
+                </OverlayTrigger>
+                :
+                <></>
+              }
+              {(Object.values(data.dataTags).length>0)?
+                <OverlayTrigger
+                  key={'tooltip-data-filter'}
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={filter_data}
+                >
+                  <Button variant='dark' id='button-data-filter' >
+                    {Object.entries(data.dataTags).map(v=>{
+                      return v[0]+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                    }).join('/')}
+                  </Button>
+                </OverlayTrigger>
+                :
+                <></>
+              }
+
+
+              {(level_filter)?
+                <OverlayTrigger
+                  key={'tooltip-details-level'}
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={detail_level}
+                >
+                  <Button variant='warning' id='button-details-level' >
+                    <FontAwesomeIcon icon={faFolderTree} />
+                  </Button>
+                </OverlayTrigger>
+                :
+                <></>
+              }
+              
 
               <OverlayTrigger
                 key={'tooltip-link-filter'}
