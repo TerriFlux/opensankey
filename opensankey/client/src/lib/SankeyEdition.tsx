@@ -766,9 +766,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             <Row>
               <Col >
                 {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
-                  return (<Form.Label>{el.group_name} : {Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
-
-                })}</>):(<></>)}
+                  if (Object.values(el.tags).filter(d=>d.selected).length>0) {
+                    return (<Form.Label>{el.group_name} : { Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
+                  }})}</>):(<></>)}
               </Col>
               <Col className='text-right'>
                 <FormGroup as={Col}>
