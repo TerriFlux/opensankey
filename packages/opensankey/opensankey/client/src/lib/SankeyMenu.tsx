@@ -971,6 +971,19 @@ const Menu: FunctionComponent<MenuTypes> = (
         }} />
 
       </Form>
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      <FormGroup as={Row}>
+        <Col xs={5}>
+          <FormLabel >{t('Menu.BgC')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.couleur_fond_blanc} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.couleur_fond_blanc=evt.target.checked
+            set_data({...data})
+          }}></FormCheck>        
+        </Col>
+      </FormGroup>
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
