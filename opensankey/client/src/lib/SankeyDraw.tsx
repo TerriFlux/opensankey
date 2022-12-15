@@ -3465,6 +3465,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //------------------LABEL------------------------
     const select = ggg_nodes
       .append('text')
+      .attr('fill',n=>(n.display_style.label_color)?'white':'black')
       .classed('node', true)
       .classed('node_text', true)
       .attr('id', n => n.idNode + '_text')
@@ -3569,6 +3570,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     //Affiche valueur Noeud
     ggg_nodes.append('text')
+      .attr('fill',n=>(n.display_style.label_color)?'white':'black')
       .classed('node', true)
       .classed('node_text_value', true)
       .attr('id', n => n.idNode + '_text_value')

@@ -486,6 +486,7 @@ export const default_sankey_data = (): SankeyData => {
           label_horiz_valeur: 'milieu',
           value_font_size:14,
           label_box_width: 110,
+          label_color:false,
         }
       }
 
@@ -797,6 +798,7 @@ export const default_node = (
       label_horiz_valeur: 'milieu',
       value_font_size:14,
       label_box_width: 110,
+      label_color:false
     },
   }
   for (const tag_group_key in data.nodeTags) {

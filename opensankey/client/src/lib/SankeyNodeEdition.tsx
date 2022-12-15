@@ -77,6 +77,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_nodes.current.map(d => visible = (d.label_visible) ? true : visible)
     return visible
   }
+  const isAllLabelWhite = () => {
+    let visible = false
+    multi_selected_nodes.current.map(d => visible = (d.display_style.label_color) ? true : visible)
+    return visible
+  }
   const isAllNodeColorSustainable = () => {
     let colorS = true
     if (multi_selected_nodes.current.length > 0) {
@@ -843,6 +848,20 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       onChange={evt => {
 
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>{t('Noeud.labels.lb')}</Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={isAllLabelWhite()}
+                      onChange={evt => {
+
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
                         set_data({ ...data })
                       }}
                     />

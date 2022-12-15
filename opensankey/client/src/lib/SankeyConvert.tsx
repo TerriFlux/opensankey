@@ -424,6 +424,7 @@ export const convert_data = (
           label_horiz_valeur: 'milieu',
           value_font_size:14,
           label_box_width: 110,
+          label_color:false,
         }
       }
     }
@@ -705,6 +706,7 @@ export const convert_data = (
           label_horiz_valeur: 'milieu',
           value_font_size:14,
           label_box_width:110,
+          label_color:false
         }
       }
       if (n.display_style.label_vert === 'bas' && n.display_style.label_horiz === 'droite') {
