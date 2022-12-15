@@ -995,11 +995,11 @@ const Menu: FunctionComponent<MenuTypes> = (
           <FormLabel >{t('Menu.BgC')}</FormLabel>        
         </Col>
         <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.couleur_fond_blanc} onChange={evt=>{
+          <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
             // const c=evt.target.checkeds
-            data.couleur_fond_blanc=evt.target.checked
+            data.couleur_fond_sankey=evt.target.value
             set_data({...data})
-          }}></FormCheck>        
+          }}/>        
         </Col>
       </FormGroup>
     </Modal.Body>

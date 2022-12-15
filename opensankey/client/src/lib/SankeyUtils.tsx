@@ -445,7 +445,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
-    couleur_fond_blanc:false,
+    couleur_fond_sankey:'#f2f2f2',
     nodes: {},
     links: {},
     user_scale: 20,
@@ -497,6 +497,7 @@ export const default_sankey_data = (): SankeyData => {
           label_horiz_valeur: 'milieu',
           value_font_size:14,
           label_box_width: 110,
+          label_color:false,
         }
       }
 
@@ -808,6 +809,7 @@ export const default_node = (
       label_horiz_valeur: 'milieu',
       value_font_size:14,
       label_box_width: 110,
+      label_color:false
     },
   }
   for (const tag_group_key in data.nodeTags) {
