@@ -43,8 +43,10 @@ const resources = {
         'pdd':'Publish/Update diagram',
         'fmep':'Layout File',
         'ad':'Apply disposition',
-        'ns':'Name style'
-    
+        'ns':'Name style',
+        
+        'BgC':'White background color'
+
       },
       MEP:{
         'Echelle':'Scale',
@@ -276,7 +278,9 @@ const resources = {
         'fmep':'Fichier de mise en page',
         'ad':'Appliquer Disposition',
 
-        'ns':'Nom Style'
+        'ns':'Nom Style',
+
+        'BgC':'Couleur de fond blanc'
       },
       MEP:{
         'Echelle': 'Echelle',
