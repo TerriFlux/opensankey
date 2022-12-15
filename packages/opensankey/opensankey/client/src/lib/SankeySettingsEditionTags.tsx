@@ -458,7 +458,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
   const tagSetting = (<>
     <Form.Group as={Row} >
       <Col xs={2}>
-        <FormLabel >TagGroupe:</FormLabel>
+        <FormLabel >Groupe d'étiquettes:</FormLabel>
       </Col>
       <Col>
         <Form.Select onChange={
