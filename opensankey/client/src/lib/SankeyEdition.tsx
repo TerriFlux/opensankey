@@ -5,12 +5,12 @@ import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
 import { Element } from 'domhandler/lib/node'
-import { convert_data } from './SankeyConvert'
+// import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faAngleDoubleDown,faAngleDoubleUp,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
@@ -192,7 +192,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data,  mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -474,43 +474,43 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
     }
   }
-  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+  // const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  // const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
-  const setDiagram = (the_diagram : string) => {
+  // const setDiagram = (the_diagram : string) => {
 
-    //const the_diagram = evt.target.value as string
-    const sous_filieres = window.sankey.sous_filieres
+  //   //const the_diagram = evt.target.value as string
+  //   const sous_filieres = window.sankey.sous_filieres
 
-    const new_data = JSON.parse(
-      JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
-      )
-    ) as SankeyData
-    //Object.assign(sankey_data, new_data)
-    convert_data(new_data)
-    new_data.static_sankey = true
-    // if (!is_split) {
-    //   set_diagram(the_diagram)
-    // }
+  //   const new_data = JSON.parse(
+  //     JSON.stringify(
+  //       window.sankey[sous_filieres[the_diagram]]
+  //     )
+  //   ) as SankeyData
+  //   //Object.assign(sankey_data, new_data)
+  //   convert_data(new_data)
+  //   new_data.static_sankey = true
+  //   // if (!is_split) {
+  //   //   set_diagram(the_diagram)
+  //   // }
  
-    Object.values(data.nodes).forEach(node => {
-      node.node_visible = true
-      node.display = true 
-    })
-    set_nodes_level(data)
-    new_data.fit_screen = true
-    d3.select('#svg').on('.zoom', null)
-    set_data({ ...new_data })
+  //   Object.values(data.nodes).forEach(node => {
+  //     node.node_visible = true
+  //     node.display = true 
+  //   })
+  //   set_nodes_level(data)
+  //   new_data.fit_screen = true
+  //   d3.select('#svg').on('.zoom', null)
+  //   set_data({ ...new_data })
     
-  }
+  // }
 
-  const diagram_label = 'Diagrammes'
-  const marginTop = data.static_sankey ? '0px' : '0px'
+  // const diagram_label = 'Diagrammes'
+  // const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
-  const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
+  // const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
   const color = 'black'
-  const backgroundColor = 'gainsboro'
+  // const backgroundColor = 'gainsboro'
 
 
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
@@ -641,6 +641,16 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     </Popover.Body>
   </Popover>
 
+  const filter_data=
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
+    <Popover.Body>
+
+      {addAllDropDownLinks()}
+        
+    </Popover.Body>
+  </Popover>
+
   const struc_data_reconciled=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
@@ -668,6 +678,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   return (
     <>
+      {/*
       <div className='herowrap'
         style={{
           color: color,
@@ -678,7 +689,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           display: ((!(banner_grouptag.length > 0 )) && (!(level_filter) && !( node_filter)) && (!( flux_filter)) && (!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
         }}>
 
-        {
+         {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
               {(data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -778,9 +789,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 
               </Col>
             </Row>
-        }
+        } 
         
-      </div>
+      </div>*/}
       <Row className='sankey-toolbar'>
         {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
@@ -874,6 +885,23 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 >
                   <Button variant='secondary' id='button-node-color-filter' >
                     Filtre Flux
+                  </Button>
+                </OverlayTrigger>
+                :
+                <></>
+              }
+              {(Object.values(data.dataTags).length>0)?
+                <OverlayTrigger
+                  key={'tooltip-data-filter'}
+                  placement={'left'}
+                  trigger={'click'}
+                  rootClose
+                  overlay={filter_data}
+                >
+                  <Button variant='dark' id='button-data-filter' >
+                    {Object.entries(data.dataTags).map(v=>{
+                      return v[0]+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                    }).join('/')}
                   </Button>
                 </OverlayTrigger>
                 :
