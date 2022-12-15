@@ -900,7 +900,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 >
                   <Button variant='dark' id='button-data-filter' >
                     {Object.entries(data.dataTags).map(v=>{
-                      return v[0]+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                      return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
                     }).join('/')}
                   </Button>
                 </OverlayTrigger>
