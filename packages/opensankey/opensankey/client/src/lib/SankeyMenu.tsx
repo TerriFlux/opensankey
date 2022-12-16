@@ -524,7 +524,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
@@ -594,7 +594,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(data.nodes[l.idSource].display && data.nodes[l.idTarget].display):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
     if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
       return
@@ -998,6 +998,30 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
             // const c=evt.target.checkeds
             data.couleur_fond_sankey=evt.target.value
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dns')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_node_selector=evt.target.checked
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dls')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_link_selector=evt.target.checked
             set_data({...data})
           }}/>        
         </Col>

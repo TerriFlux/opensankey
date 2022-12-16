@@ -45,7 +45,9 @@ const resources = {
         'ad':'Apply disposition',
         'ns':'Name style',
         
-        'BgC':'White background color'
+        'BgC':'White background color',
+        'dns':'Display only visible nodes in the nodes selector',
+        'dls':'Display only visible links in the links selector',
 
       },
       MEP:{
@@ -281,7 +283,9 @@ const resources = {
 
         'ns':'Nom Style',
 
-        'BgC':'Couleur de fond blanc'
+        'BgC':'Couleur de fond blanc',
+        'dns':'N\'affiche que les noeuds visibles dans le sélecteur de noeuds',
+        'dls':'N\'affiche que les flux visibles dans le sélecteur de flux',
       },
       MEP:{
         'Echelle': 'Echelle',
