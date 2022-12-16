@@ -696,7 +696,10 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
                   <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
                   <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={evt=> setDiagram(evt.target.value)}
+                    onChange={evt=> {
+                      set_diagram(evt.target.value)
+                      setDiagram(evt.target.value)
+                    }}
                     value={diagram}>
                     {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
                   </Form.Select>
