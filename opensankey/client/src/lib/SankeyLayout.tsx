@@ -484,11 +484,11 @@ export const updateLayout = (
     node.node_visible = node_layout.node_visible
     node.label_visible = node_layout.label_visible
   }
-  // apply_input_outputLinksId(
-  //   new_layout.nodes,
-  //   new_layout.links,
-  //   data
-  // )
+  apply_input_outputLinksId(
+    new_layout.nodes,
+    new_layout.links,
+    data
+  )
 
 
   for (const link_layout_key in new_layout.links) {
