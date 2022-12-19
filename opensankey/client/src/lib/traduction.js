@@ -49,6 +49,9 @@ const resources = {
         'dns':'Display only visible nodes in the nodes selector',
         'dls':'Display only visible links in the links selector',
 
+        'SaveJSON':'Save as JSON',
+        'SaveValue':'Save with links values'
+
       },
       MEP:{
         'Echelle':'Scale',
@@ -286,6 +289,9 @@ const resources = {
         'BgC':'Couleur de fond blanc',
         'dns':'N\'affiche que les noeuds visibles dans le sélecteur de noeuds',
         'dls':'N\'affiche que les flux visibles dans le sélecteur de flux',
+
+        'SaveJSON':'Enregistrer JSON',
+        'SaveValue':'Enregistrer avec les valeurs des flux'
       },
       MEP:{
         'Echelle': 'Echelle',
