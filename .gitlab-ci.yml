@@ -68,7 +68,7 @@ test:
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
     - python -m unittest discover opensankey.tests
     - python -m unittest discover opensankey.tests
-    - flake8 --exit-zero
+    - flake8
   dependencies:
     - build
 
