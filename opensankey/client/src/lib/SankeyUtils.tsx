@@ -446,6 +446,8 @@ export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
     couleur_fond_sankey:'#f2f2f2',
+    displayed_node_selector:false,
+    displayed_link_selector:false,
     nodes: {},
     links: {},
     user_scale: 20,
