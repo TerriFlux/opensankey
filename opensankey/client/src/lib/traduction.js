@@ -49,6 +49,13 @@ const resources = {
         'dns':'Display only visible nodes in the nodes selector',
         'dls':'Display only visible links in the links selector',
 
+        'textDisposition':'Apply modification on :',
+        'PosNoeud':'Node position',
+        'attrNode':'Node attributes',
+        'attrFlux':'Link attributes',
+        'tagNode':'Node tags',
+        'tagFlux':'Link tags',
+        'attrGeneral':'General attributes',
       },
       MEP:{
         'Echelle':'Scale',
@@ -286,6 +293,14 @@ const resources = {
         'BgC':'Couleur de fond blanc',
         'dns':'N\'affiche que les noeuds visibles dans le sélecteur de noeuds',
         'dls':'N\'affiche que les flux visibles dans le sélecteur de flux',
+
+        'textDisposition':'Appliquer les modifications sur :',
+        'PosNoeud':'Position Noeuds',
+        'attrNode':'Attributs Noeuds',
+        'attrFlux':'Attributs Flux',
+        'tagNode':'Etiquette Noeuds',
+        'tagFlux':'Etiquette Flux',
+        'attrGeneral':'Attributs générales',
       },
       MEP:{
         'Echelle': 'Echelle',
