@@ -127,7 +127,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         'node_visible': 1,
                         'label_visible': 1,
                         'shape_visible': 1,
-                        'color': color,
                         'tags': {}
                     }
                     node_index = node_index+1
@@ -144,24 +143,12 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         'node_visible': 1,
                         'label_visible': 1,
                         'shape_visible': 1,
-                        'color': color,
                         'tags': {}
                     }
                     node_index = node_index+1
                     nodes[target_name] = target_node
                 else:
                     target_node = target_nodes[0]
-
-            color = source_node['color']
-            if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
-                color = source_node['color']
-            elif 'Type de noeud' in target_node['tags'] and 'produit' in target_node['tags']['Type de noeud']:
-                color = target_node['color']
-            if not is_hex(color):
-                try:
-                    color = webcolors.name_to_hex(color)
-                except Exception:
-                    pass
             row_data_tags = []
 
             combinaison_row = [None] * len(dataTags)
@@ -191,7 +178,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                         'idSource': source_node['idNode'],
                         'idTarget': target_node['idNode'],
                         'value': value,
-                        'color': color,
                         'dashed': 1
                     }
                     nb_links = nb_links+1
