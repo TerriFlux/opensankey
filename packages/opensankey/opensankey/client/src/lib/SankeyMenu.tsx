@@ -3801,10 +3801,11 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   let file_layout: Blob[] | undefined
   const {t} =useTranslation()
+  const [elementToDispose, set_elementToDispose] = useState('')
 
   return (
     <Modal
-      bsSize="large"
+      size="xl"
       show={show_apply_layout}
       onHide={() => set_show_apply_layout(false)}
       style={{
@@ -3843,7 +3844,7 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
                           if (result) {
                             result = String(result).split('<br>').join('\\\\n')
                             const new_layout = JSON.parse(result)
-                            updateLayout(sankey_data, new_layout)
+                            updateLayout(sankey_data, new_layout,elementToDispose)
                             set_sankey_data({ ...sankey_data })
                           }
                         }
@@ -3856,6 +3857,27 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
             </Col>
           </Form.Group>
         </Form>
+        <Form.Label>{t('Menu.textDisposition')}</Form.Label>
+        <FormGroup as={Row}>
+          <Col xs={2}>
+            <Form.Check inline checked={ elementToDispose=='posNode'} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('posNode'):set_elementToDispose('')}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose=='attrNode'} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrNode'):set_elementToDispose('')}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose=='attrFlux'} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrFlux'):set_elementToDispose('')}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose=='tagNode'} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('tagNode'):set_elementToDispose('')}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose=='tagFlux'} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('tagFlux'):set_elementToDispose('')}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose=='attrGeneral'} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrGeneral'):set_elementToDispose('')}/>
+          </Col>
+        </FormGroup>
       </Modal.Body>
     </Modal>
   )
