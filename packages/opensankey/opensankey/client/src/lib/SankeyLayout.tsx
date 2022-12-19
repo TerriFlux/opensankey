@@ -412,7 +412,8 @@ export const reorganize_all_input_outputLinksId = (
 
 export const updateLayout = (
   data: SankeyData,
-  new_layout: SankeyData
+  new_layout: SankeyData,
+  mode:string
 ) => {
   convert_data(new_layout)
 
@@ -450,39 +451,43 @@ export const updateLayout = (
     if (!node) {
       continue
     }
+    if(mode=='posNode'){
 
-    node.name = node_layout.name
-    node.position = node_layout.position
-    node.node_width = node_layout.node_width
-    node.node_height = node_layout.node_height
-    if (node_layout.x !== 0 && node_layout.y != 0) { 
-      node.x = node_layout.x
-      node.y = node_layout.y
+      node.name = node_layout.name
+      node.position = node_layout.position
+      node.node_width = node_layout.node_width
+      node.node_height = node_layout.node_height
+      if (node_layout.x !== 0 && node_layout.y != 0) { 
+        node.x = node_layout.x
+        node.y = node_layout.y
+      }
+      if (node.y + 200 > max_vertical_offset) {
+        max_vertical_offset = node.y + 200
+      }
+      node.x_label = node_layout.x_label
+      node.y_label = node_layout.y_label
+    }else if(mode=='attrNode'){
+      node.display_style = {...node_layout.display_style}
+
+      node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
+      node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
+      node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
+      node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
+  
+      node.colorTag = node_layout.colorTag
+      node.colorParameter = node_layout.colorParameter
+      node.color = node_layout.color
+  
+      // for (const node_tag_key in node_layout.tags) {
+      //   node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+      // }
+      
+      node.shape_visible = node_layout.shape_visible
+      node.node_visible = node_layout.node_visible
+      node.label_visible = node_layout.label_visible
     }
-    if (node.y + 200 > max_vertical_offset) {
-      max_vertical_offset = node.y + 200
-    }
-    node.x_label = node_layout.x_label
-    node.y_label = node_layout.y_label
 
-    node.display_style = {...node_layout.display_style}
-
-    node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
-    node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
-    node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
-    node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
-
-    node.colorTag = node_layout.colorTag
-    node.colorParameter = node_layout.colorParameter
-    node.color = node_layout.color
-
-    // for (const node_tag_key in node_layout.tags) {
-    //   node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-    // }
     
-    node.shape_visible = node_layout.shape_visible
-    node.node_visible = node_layout.node_visible
-    node.label_visible = node_layout.label_visible
   }
   apply_input_outputLinksId(
     new_layout.nodes,
@@ -490,76 +495,84 @@ export const updateLayout = (
     data
   )
 
-
-  for (const link_layout_key in new_layout.links) {
-    const link_layout = new_layout.links[link_layout_key]
-    const links = Object.values(data.links).filter(
-      l=> {
-        return normalize_name(data.nodes[l.idSource].name) === normalize_name(new_layout.nodes[link_layout.idSource].name) && 
-        normalize_name(data.nodes[l.idTarget].name) === normalize_name(new_layout.nodes[link_layout.idTarget].name)
+  if (mode=='attrFlux'){
+    for (const link_layout_key in new_layout.links) {
+      const link_layout = new_layout.links[link_layout_key]
+      const links = Object.values(data.links).filter(
+        l=> {
+          return normalize_name(data.nodes[l.idSource].name) === normalize_name(new_layout.nodes[link_layout.idSource].name) && 
+          normalize_name(data.nodes[l.idTarget].name) === normalize_name(new_layout.nodes[link_layout.idTarget].name)
+        }
+      )
+  
+  
+      if (links.length === 0) {
+        continue
       }
-    )
-
-
-    if (links.length === 0) {
-      continue
-    }
-    const link = links[0]
-
-    const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,gradient } = link_layout
-    link.curvature = curvature
-    link.curved = curved
-    link.arrow = arrow
-    link.text_color = link_layout.text_color
-    link.label_position = label_position
-    link.label_visible = label_visible
-    link.x_label = x_label
-    link.y_label = y_label
-    link.left_horiz_shift = link_layout.left_horiz_shift
-    link.right_horiz_shift = link_layout.right_horiz_shift
-    link.orientation = link_layout.orientation
-    link.recycling = recycling
-    link.orthogonal_label_position = orthogonal_label_position
-    link.gradient = gradient
-
-    link.colorTag = link_layout.colorTag
-    link.colorParameter = link_layout.colorParameter
-
-    if (link_layout.vert_shift) {
+      const link = links[0]
+  
+      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,gradient } = link_layout
+      link.curvature = curvature
+      link.curved = curved
+      link.arrow = arrow
+      link.text_color = link_layout.text_color
+      link.label_position = label_position
+      link.label_visible = label_visible
+      link.x_label = x_label
+      link.y_label = y_label
       link.left_horiz_shift = link_layout.left_horiz_shift
       link.right_horiz_shift = link_layout.right_horiz_shift
-      link.vert_shift = link_layout.vert_shift
+      link.orientation = link_layout.orientation
+      link.recycling = recycling
+      link.orthogonal_label_position = orthogonal_label_position
+      link.gradient = gradient
+  
+      link.colorTag = link_layout.colorTag
+      link.colorParameter = link_layout.colorParameter
+  
+      if (link_layout.vert_shift) {
+        link.left_horiz_shift = link_layout.left_horiz_shift
+        link.right_horiz_shift = link_layout.right_horiz_shift
+        link.vert_shift = link_layout.vert_shift
+      }
     }
+    
   }
 
-  for (const tag_group_key in data.nodeTags) {
-    if (!(tag_group_key in new_layout.nodeTags)) {
-      continue
-    }
-    data.nodeTags[tag_group_key].show_legend = new_layout.nodeTags[tag_group_key].show_legend
-    data.nodeTags[tag_group_key].banner = new_layout.nodeTags[tag_group_key].banner
-    for (const tag in data.nodeTags[tag_group_key].tags) {
-      if (!(tag in new_layout.nodeTags[tag_group_key].tags)) {
+  if(mode=='tagNode'){
+    for (const tag_group_key in data.nodeTags) {
+      if (!(tag_group_key in new_layout.nodeTags)) {
         continue
       }
-      data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
-      data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+      data.nodeTags[tag_group_key].show_legend = new_layout.nodeTags[tag_group_key].show_legend
+      data.nodeTags[tag_group_key].banner = new_layout.nodeTags[tag_group_key].banner
+      for (const tag in data.nodeTags[tag_group_key].tags) {
+        if (!(tag in new_layout.nodeTags[tag_group_key].tags)) {
+          continue
+        }
+        data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
+        data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+      }
     }
   }
-  for (const tag_group_key in data.fluxTags) {
-    if (!(tag_group_key in new_layout.fluxTags)) {
-      continue
-    }
-    data.fluxTags[tag_group_key].show_legend = new_layout.fluxTags[tag_group_key].show_legend
-    data.fluxTags[tag_group_key].banner = new_layout.fluxTags[tag_group_key].banner
-    for (const tag in data.fluxTags[tag_group_key].tags) {
-      if (!(tag in new_layout.fluxTags[tag_group_key].tags)) {
+  
+  if(mode=='tagFlux'){
+    for (const tag_group_key in data.fluxTags) {
+      if (!(tag_group_key in new_layout.fluxTags)) {
         continue
       }
-      data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
-      data.fluxTags[tag_group_key].tags[tag].selected = new_layout.fluxTags[tag_group_key].tags[tag].selected
+      data.fluxTags[tag_group_key].show_legend = new_layout.fluxTags[tag_group_key].show_legend
+      data.fluxTags[tag_group_key].banner = new_layout.fluxTags[tag_group_key].banner
+      for (const tag in data.fluxTags[tag_group_key].tags) {
+        if (!(tag in new_layout.fluxTags[tag_group_key].tags)) {
+          continue
+        }
+        data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
+        data.fluxTags[tag_group_key].tags[tag].selected = new_layout.fluxTags[tag_group_key].tags[tag].selected
+      }
     }
   }
+  
   //data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
   //   // if (tag_group_key in new_layout.nodeTags) {
   //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
@@ -575,30 +588,33 @@ export const updateLayout = (
   // data.agregation.level = new_layout.agregation.level
   // data.agregation.dimension = new_layout.agregation.dimension
 
-  data.icon_catalog = new_layout.icon_catalog
-  Object.assign(data.labels,new_layout.labels)
-  data.colorMap = new_layout.colorMap
-  data.user_scale = new_layout.user_scale
-  data.legend_position = new_layout.legend_position;
-  ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
-
-  data.accordeonToShow = new_layout.accordeonToShow
-
-  if ('width' in new_layout) {
-    data.width = new_layout.width
+  if(mode=='attrGeneral'){
+    data.icon_catalog = new_layout.icon_catalog
+    Object.assign(data.labels,new_layout.labels)
+    data.colorMap = new_layout.colorMap
+    data.user_scale = new_layout.user_scale
+    data.legend_position = new_layout.legend_position;
+    ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
+  
+    data.accordeonToShow = new_layout.accordeonToShow
+  
+    if ('width' in new_layout) {
+      data.width = new_layout.width
+    }
+    if (new_layout.maximum_flux) {
+      data.maximum_flux = new_layout.maximum_flux
+    }
+    Object.keys(new_layout.display_style).forEach(
+      key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
+    )
+    if (data.display_style.filter === undefined) {
+      data.display_style.filter = 0
+    }
+    if (data.display_style.filter_label === undefined) {
+      data.display_style.filter_label = 0
+    }
   }
-  if (new_layout.maximum_flux) {
-    data.maximum_flux = new_layout.maximum_flux
-  }
-  Object.keys(new_layout.display_style).forEach(
-    key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
-  )
-  if (data.display_style.filter === undefined) {
-    data.display_style.filter = 0
-  }
-  if (data.display_style.filter_label === undefined) {
-    data.display_style.filter_label = 0
-  }
+  
 }
 
 export const desagregation = (
