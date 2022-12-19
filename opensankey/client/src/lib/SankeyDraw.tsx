@@ -3993,9 +3993,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               drawGrid()
             })
           }
-          
         })
       )
+      gg_label.append('rect')
+        .attr('id','drag_zone_'+d.idLabel)
+        .attr('width', d.label_width).attr('height', d.label_height)
+        .attr('fill', 'none')
+        .style('fill-opacity', 0)
+        .attr('stroke', d.color_border)
+        .attr('stroke-opacity', 0)
+        .attr('stroke-width', 2)
+        .attr('rx', 5)
+        .attr('cursor','all-scroll')
+        .call(d3.drag<SVGRectElement, unknown>()
+          .subject(Object).on('drag', function (event) {
+            if(event.dx<100 && event.dy<100){
+              data.labels[d.idLabel].label_width+=event.dx
+              data.labels[d.idLabel].label_height+=event.dy
+              set_data({...data})
+            }
+          })
+        )
     })
   }
 

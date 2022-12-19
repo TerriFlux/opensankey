@@ -245,6 +245,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
+  const [show_save_json, set_show_save_json] = useState(false)
   // const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
@@ -2288,7 +2289,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   {open_menu}
                 </NavDropdown>
                 <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
-                  <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
+                  <Dropdown.Item onClick={()=>{
+                    set_show_save_json(true)
+                  }} >JSON</Dropdown.Item>
                   <Dropdown.Item onClick={clickSaveExcelSimple} >Excel Simple</Dropdown.Item>
                   <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
                   {save_menu}
@@ -3699,7 +3702,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
             </Button></Modal.Dialog>) : (<></>)
       }
-
+      <ApplySaveJSONDialog
+        show_save_json={show_save_json}
+        set_show_save_json={set_show_save_json}
+        sankey_data={data}
+        set_sankey_data={set_data}
+        clickSaveDiagram={clickSaveDiagram}
+      />
       {
         (view != 'none') ? (<SankeyDraw
           data={viewOfData()}
@@ -3874,6 +3883,63 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
   )
 }
 
+const ApplySaveJSONPropTypes = {
+  show_save_json : PropTypes.bool.isRequired,
+  set_show_save_json: PropTypes.func.isRequired,
+  sankey_data:SankeyDataPropTypes,
+  set_sankey_data:PropTypes.func.isRequired,
+  clickSaveDiagram:PropTypes.func.isRequired
+}
+
+type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
+
+const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
+  const {t} =useTranslation()
+  const [mode_save,set_mode_save]=useState(true)
+  return (
+    <Modal
+      bsSize="large"
+      show={show_save_json}
+      onHide={() => set_show_save_json(false)}
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <Modal.Header closeButton>
+        <Modal.Title>{t('Menu.SaveJSON')}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form >
+          <Form.Group as={Row} >
+            <Col xs={8}><Form.Check type='switch' inline label={t('Menu.SaveValue')} checked={mode_save}  onChange={(evt)=>set_mode_save(evt.target.checked)}/></Col>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                onClick={
+                  () => {
+                    // Crée une copie pour d'abord enregitrer avec les changements
+                    // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+                    const cpy=JSON.parse(JSON.stringify(sankey_data))
+                    if(!mode_save){
+                      Object.values(sankey_data.links).map(d=>{
+                        (d as SankeyLink).value={}
+                        return d
+                      })
+                    }
+                    set_sankey_data({...sankey_data})
+                    clickSaveDiagram()
+                    set_sankey_data({...cpy})
+                  }
+                }>{t('Menu.SaveJSON')}
+              </Button>
+            </Col>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+    </Modal>
+  )
+}
 const ExcelModalPropTypes = {
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,

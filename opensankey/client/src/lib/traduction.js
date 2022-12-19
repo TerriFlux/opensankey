@@ -56,6 +56,9 @@ const resources = {
         'tagNode':'Node tags',
         'tagFlux':'Link tags',
         'attrGeneral':'General attributes',
+        'SaveJSON':'Save as JSON',
+        'SaveValue':'Save with links values'
+
       },
       MEP:{
         'Echelle':'Scale',
@@ -301,6 +304,8 @@ const resources = {
         'tagNode':'Etiquette Noeuds',
         'tagFlux':'Etiquette Flux',
         'attrGeneral':'Attributs générales',
+        'SaveJSON':'Enregistrer JSON',
+        'SaveValue':'Enregistrer avec les valeurs des flux'
       },
       MEP:{
         'Echelle': 'Echelle',
