@@ -93,6 +93,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
     if not NODES_SHEET in mfa_input:
         node_index = 0
 
+    nb_links = 0
     if FLUX_SHEET in mfa_input:   
         for row in range(len(mfa_input[FLUX_SHEET])):
             source_name = mfa_input[FLUX_SHEET].iat[row,0]
@@ -176,13 +177,14 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     value = {}
                     set_value(row_data_tags,row_flux_tags,fluxTags,0,value, val, display_val)
                     new_link = {
-                        'idLink'   : 'link'+str(row),  
+                        'idLink'   : 'link'+str(nb_links),  
                         'idSource' : source_node['idNode'],
                         'idTarget' : target_node['idNode'],
                         'value'    : value,
                         'color'    : color,
                         'dashed'   : 1
                     }
+                    nb_links = nb_links+1
                     links[new_link['idLink']] = new_link
     if not sheet_name in mfa_input:
         return
@@ -304,13 +306,14 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             if val != '':
                 dashed = 0
             new_link = {
-                'idLink'   : 'link'+str(row),  
+                'idLink'   : 'link'+str(nb_links),  
                 'idSource' : source_node['idNode'],
                 'idTarget' : target_node['idNode'],
                 'value'    : value,
                 'color'    : color,
                 'dashed'   : dashed
             }
+            nb_links = nb_links+1
             links[new_link['idLink']] = new_link
 
 def parse_nodes(mfa_input, nodes, nodeTags):
