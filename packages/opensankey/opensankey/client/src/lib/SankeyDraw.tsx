@@ -10,6 +10,7 @@ import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
   setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,dragNodeRedrawGradient,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink} from './SankeyDrawFunction'
+import {dragLinkEvent,dragLinkTextEvent,dragLinkEvent2,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragNodeEvent,dragNodeTextEventWidthBoxEvent,dragNodeTextEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent} from './SankeyDrag'
 
 window.d3 = d3
 
@@ -212,26 +213,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const paths = gg_links.append('path')
     if (!static_sankey && !mode_visualisation) {
       let error_msg: { text: string | undefined } | undefined
-      paths.call(d3.drag<SVGPathElement, SankeyLink>()
-        .subject(Object)
-        .on('drag', function (event,l) {
-          if(multi_selected_links.current.includes(l)){
-            drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event)
-            Object.values(display_links).forEach(
-              (link: SankeyLink) => {
-                d3.select('#' + link.idLink).attr('d',
-                  () => {
-                    return drawCurve(data,
-                      display_nodes, display_links, display_style,
-                      data.nodeTags, link,
-                      error_msg
-                    )
-                  }
-                )
-              }
-            )
-          }
-        })
+      paths.call(dragLinkEvent(multi_selected_links,data,display_nodes,display_links,error_msg,display_style,drag_link,drawCurve)
       )
 
     }
@@ -283,12 +265,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (!static_sankey && !mode_visualisation) {
       // A voir avec Julien
-      select2.call(d3.drag<SVGTextElement, SankeyLink>()
-        .subject(Object).on('drag', function (event, link) {
-          if (alt_key_pressed) {
-            drag_link_text(link, event)
-          }
-        })
+      select2.call(dragLinkTextEvent(alt_key_pressed,drag_link_text)
       )
         .on('click', (event, d) => {
           const source_node = display_nodes[d.idSource]
@@ -303,19 +280,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     if (!static_sankey) {
       
-      select2.call(d3.drag<SVGTextElement, SankeyLink>()
-        .subject(Object).on('drag', function (event, link) {
-          if (alt_key_pressed) {
-            drag_link_text(link, event)
-          }
-          //Je ne sais pas à quoi ca sert mais cela fait planter le programme quand on essaye de drag le text d'un link sans utiliser alt
-          // else {
-          //   const text_id = d3.select(this).attr('id')
-          //   const link_to_drag = text_id.substring(text_id.length - 5)
-          //   drag_link(display_nodes, display_links, display_style, data.nodeTags, (d3.select(link_to_drag).node() as SVGPathElement), event)
-          // }
-        })
-      )
+      select2.call(dragLinkTextEvent(alt_key_pressed,drag_link_text))
     }
     let error_msg: { text?: string | undefined } | undefined
     paths
@@ -1343,27 +1308,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill-opacity','0')
         .attr('transform',pos_d[0])
         .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
-              drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event)
-              Object.values(display_links).forEach(
-                (link: SankeyLink) => {
-                  d3.select('#' + link.idLink).attr('d',
-                    () => {
-                      return drawCurve(data,
-                        display_nodes, display_links, data.display_style,
-                        data.nodeTags, link,
-                        error_msg
-                      )
-                    }
-                  )
-                }
-              )
-            }            
-          })
-        
+        .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drag_link,drawCurve)
         )
 
       d3.select('#gg_' + link.idLink)
@@ -1379,29 +1324,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill-opacity','0')
         .attr('transform',pos_d[1])
         .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link)){
-              drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event)
-              Object.values(display_links).forEach(
-                (link: SankeyLink) => {
-                  d3.select('#' + link.idLink).attr('d',
-                    () => {
-                      return drawCurve(data,
-                        display_nodes, display_links, data.display_style,
-                        data.nodeTags, link,
-                        error_msg
-                      )
-                    }
-                  )
-                }
-              )
-            }    
-            
-          })
-        
-        )
+        .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drag_link,drawCurve))
 
     }
   }
@@ -1538,15 +1461,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill','black')
         .attr('transform',pos_d[0])
         .attr('cursor',(multi_selected_links.current.includes(link) && (link.orientation=='vv' ||link.orientation=='hh'))?'ew-resize':'pointer')
-        .call(d3.drag<SVGCircleElement, unknown>()
-          .subject(Object)
-          .on('drag', function (event) {
-            if(multi_selected_links.current.includes(link) && (link.orientation=='hh' || link.orientation=='vv')){
-              const shift_handle=d3.selectAll('#gg_'+link.idLink+' .handle').nodes()
-              drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event)
-              drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event)
-            }            
-          })
+        .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,selected_tags,drag_handle)
         )
     }
 
@@ -1569,17 +1484,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
         .attr('cursor',(multi_selected_links.current.includes(link)&& !mode_visualisation)?'ew-resize':'pointer')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object).on('drag', function (event) {
-            if(multi_selected_links.current.includes(link) && !mode_visualisation){
-              drag_handle(
-                link, nodes, links, display_style,
-                selected_tags,
-                this, position, event
-              )
-            }
-            
-          })
+        .call(dragLinkShiftHandleEvent(multi_selected_links,link,mode_visualisation,nodes,links,display_style,selected_tags,position,drag_handle)
         )
     }
 
@@ -2095,17 +2000,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // Gestion du drag 
     //Est activé que lorsque le mode 'sélection' est sélectionné
     if (mode_selection == 's') {
-      ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
-        .subject(Object).on('drag', function (event) {
-          
-          drag_nodes(
-            display_nodes, display_links,
-            display_style,
-            data.nodeTags,this,
-            event
-          )
-           
-        })
+      ggg_nodes.call(dragNodeEvent(data,display_nodes,display_links,display_style,drag_nodes)
       )
     }
 
@@ -2455,44 +2350,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width','1px')
       .attr('cursor','ew-resize')
       .attr('visibility',d=>(multi_selected_nodes.current.includes(d)?'visible':'hidden'))
-      .call(d3.drag<SVGRectElement, SankeyNode>()
-        .subject(Object).on('drag', function (event, node) {
-          console.log('x : '+event.x)
-          console.log('dx : '+event.dx)
-          if(event.dx<100){
-            let pos_node=d3.select('#ggg_' + node.idNode).attr('transform').replace('translate(','')
-            pos_node=pos_node.split(',')[0]
-            console.log(pos_node)
-            if(event.x<pos_node){
-              data.nodes[node.idNode].display_style.label_box_width-=event.dx
-            }else{
-              data.nodes[node.idNode].display_style.label_box_width+=event.dx
-            }
-            set_data({...data})
-          }
-        })
+      .call(dragNodeTextEventWidthBoxEvent(data,set_data)
       )
 
     if (!static_sankey) {
       select
-        .call(d3.drag<SVGTextElement, SankeyNode>()
-          .subject(Object).on('drag', function (event, node) {
-            if (alt_key_pressed === true) {
-              drag_node_text(node, event)
-            }
-            else {
-              const node_to_drag = 'ggg_node' + d3.select(this).attr('id').substring(4, 6)
-              const el = document.getElementById(node_to_drag)
-              if (el) {
-                drag_nodes(
-                  display_nodes, display_links,
-                  display_style,
-                  data.nodeTags,el,
-                  event
-                )
-              }
-            }
-          })
+        .call(dragNodeTextEvent(alt_key_pressed,data,drag_node_text,drag_nodes,display_nodes,display_links,display_style)
         )
     }
   }
@@ -3895,23 +3758,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .text(d.name)
 
 
-      label_text.call(d3.drag<SVGTextElement, unknown>()
-        .subject(Object).on('drag', function (event) {
-          if (alt_key_pressed) {
-            d.position_vert = ''
-            d.position_horiz = ''
-            const new_x=event.x,
-              new_y=event.y
-            d3.select('#' + d.idLabel + '_text').attr('x', new_x)
-            d3.select('#' + d.idLabel + '_text').attr('y', new_y)
-
-            d.x_label = new_x
-            d.y_label = new_y
-
-            d3.select('#' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-          }
-        })
-      )
+      label_text.call(dragLabelEventTextEvent(alt_key_pressed,d))
 
       const wrap = textwrap()
         .bounds({ height: 100, width: d.label_width })
@@ -3970,30 +3817,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
 
 
-      gg_label.call(d3.drag<SVGGElement, unknown>()
-        .subject(Object).on('drag', function (event) {
-          if(multi_selected_label.current.length!=0 && multi_selected_label.current.includes(d)){
-            multi_selected_label.current.map(l=>{
-              const new_pos_x = l.x + event.dx
-              const new_pos_y = l.y + event.dy
-              l.x = new_pos_x
-              l.y = new_pos_y
-              d3.select('#' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
-
-
-              [data.width, data.height] = min_width_and_height()
-              if (data.fit_screen) {
-                const svgSankey = d3.select('#svg')
-                svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-              } else {
-                d3.select('#svg').style('width', data.width + 'px')
-              }
-          
-              d3.select('#svg').style('height', data.height + 'px')
-              drawGrid()
-            })
-          }
-        })
+      gg_label.call(dragLabelEvent(multi_selected_label,d,data,min_width_and_height,drawGrid)
       )
       gg_label.append('rect')
         .attr('id','drag_zone_'+d.idLabel)
@@ -4005,15 +3829,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('stroke-width', 2)
         .attr('rx', 5)
         .attr('cursor','all-scroll')
-        .call(d3.drag<SVGRectElement, unknown>()
-          .subject(Object).on('drag', function (event) {
-            if(event.dx<100 && event.dy<100){
-              data.labels[d.idLabel].label_width+=event.dx
-              data.labels[d.idLabel].label_height+=event.dy
-              set_data({...data})
-            }
-          })
-        )
+        .call(dragLabelWidthHeightEvent(d,data,set_data))
     })
   }
 
