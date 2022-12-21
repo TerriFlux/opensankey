@@ -466,7 +466,8 @@ export const updateLayout = (
       }
       node.x_label = node_layout.x_label
       node.y_label = node_layout.y_label
-    }else if(mode=='attrNode'){
+    }
+    if(mode=='attrNode'){
       node.display_style = {...node_layout.display_style}
 
       node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
@@ -489,13 +490,13 @@ export const updateLayout = (
 
     
   }
-  apply_input_outputLinksId(
-    new_layout.nodes,
-    new_layout.links,
-    data
-  )
 
   if (mode=='attrFlux'){
+    apply_input_outputLinksId(
+      new_layout.nodes,
+      new_layout.links,
+      data
+    )
     for (const link_layout_key in new_layout.links) {
       const link_layout = new_layout.links[link_layout_key]
       const links = Object.values(data.links).filter(
