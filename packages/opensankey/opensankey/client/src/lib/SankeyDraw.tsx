@@ -2556,9 +2556,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               return t>0
             }else if(Object.keys(data.nodeTags).includes(tag_group[0])){
               const t2=Object.values(data.nodes).filter(n=>{
-                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display
+                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
               }).length
-              return t2
+              return t2>0
             }
             return  false
           })
