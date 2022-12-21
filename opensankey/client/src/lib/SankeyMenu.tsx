@@ -3799,7 +3799,7 @@ const ApplyLayoutDialogPropTypes = {
 type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
-  let file_layout: Blob[] | undefined
+  const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   const {t} =useTranslation()
   const [elementToDispose, set_elementToDispose] = useState('')
 
@@ -3825,7 +3825,7 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
             <Col xs={5}>
               <Form.Control
                 type="file"
-                onChange={(evt: React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
+                onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
               />
             </Col>
             <Col xs={4}>

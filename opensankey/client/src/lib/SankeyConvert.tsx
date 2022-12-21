@@ -624,10 +624,10 @@ export const convert_data = (
   }
   if ( data.nodeTags['Type de noeud'] ) {
     data.nodeTags['Type de noeud'].banner = 'none' 
-    if (!data.nodeTags['Type de noeud'].tags.produit.shape) {
+    if (data.nodeTags['Type de noeud'].tags.produit && !data.nodeTags['Type de noeud'].tags.produit.shape) {
       data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
     }
-    if (!data.nodeTags['Type de noeud'].tags.secteur.shape) {
+    if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
     }
     if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
