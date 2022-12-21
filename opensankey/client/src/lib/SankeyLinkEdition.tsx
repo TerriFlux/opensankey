@@ -216,7 +216,17 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-
+  const allNodeLabelFontSize = () => {
+    let display_size = true
+    let size = 11
+    if (multi_selected_links.current.length != 0) {
+      size = multi_selected_links.current[0].label_font_size
+    }
+    multi_selected_links.current.map((d) => {
+      display_size = (d.label_font_size == size) ? display_size : false
+    })
+    return (display_size) ? size : 11
+  }
   const labelPositionVert = (param: string) => {
     let allChecked = true
     if (multi_selected_links.current.length != 0) {
@@ -895,6 +905,24 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   }
                 />
               </Col>
+            </Form.Group>
+            <Form.Group as={Row} >
+              <Col xs={4}>
+                <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
+              </Col>
+              <Col xs={5}>
+                <FormControl
+                  min={11}
+                  type={'number'}
+                  disabled={!labelVisibleChecked()}
+                  value={allNodeLabelFontSize()}
+                  onChange={evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.label_font_size = +evt.target.value)
+                    set_data({ ...data })
+                  }}
+                />
+              </Col>
+              <Col style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>px</Col>
             </Form.Group>
             
             <Form.Group as={Row}>
