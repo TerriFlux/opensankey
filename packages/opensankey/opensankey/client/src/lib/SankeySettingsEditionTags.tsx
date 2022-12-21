@@ -3,11 +3,11 @@ import { Button, Row, FormControl, Form, Col, FormLabel, Table, ButtonGroup } fr
 import PropTypes, { InferProps } from 'prop-types'
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValue, SankeyLinkValueDict, TagsGroup } from './types'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette } from 'react-icons/fa'
+import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
 import {useTranslation} from 'react-i18next'
-import { range } from 'd3'
+import * as d3 from 'd3'
 
 
 const SankeySettingsEditionTagsPropTypes = {
@@ -36,7 +36,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     set_data({ ...data })
   }
   const {t} =useTranslation()
-
+  // Couleur issu de : https://github.com/d3/d3-scale-chromatic
+  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
   let element_tags : string [] = []
   if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
     if (tags_group_key in data[elementTagName]) {
@@ -187,23 +191,37 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         </Form.Select>
       </Col>
       <Col>
-        <Button variant="secondary" value='alea' onClick={()=>{
-          const color=element_tags.map(d=>{
-            return data[elementTagName][tags_group_key].tags[d].color
-          })
-          let size_color=color.length
-          for(const i in range(size_color)){
-            size_color=color.length
-            const color_to_select=getRandomInt(size_color)
-            const c=color.splice(color_to_select,1)
-            if(c!=undefined && c!=null){
-              const v=c[0]
-              data[elementTagName][tags_group_key].tags[element_tags[i]].color=v
+        <ButtonGroup>
+          <Button variant="secondary" value='rand' onClick={()=>{
+            const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+            const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
+            for(const i in d3.range(size_color)){
+              data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
             }
+            set_data({...data})
+
+          }} ><FaPalette/>
+          </Button>
+          <Button variant="dark" value='alea' onClick={()=>{
+            const color=element_tags.map(d=>{
+              return data[elementTagName][tags_group_key].tags[d].color
+            })
+            let size_color=color.length
+            for(const i in d3.range(size_color)){
+              size_color=color.length
+              const color_to_select=getRandomInt(size_color)
+              const c=color.splice(color_to_select,1)
+              if(c!=undefined && c!=null){
+                const v=c[0]
+                data[elementTagName][tags_group_key].tags[element_tags[i]].color=v
+              }
+            }
+            set_data({...data})
           }
-          set_data({...data})
-        }
-        }><FaPalette/> </Button>
+          }><FaRandom/>
+          </Button>
+        </ButtonGroup>
+        
       </Col>
       <Col>
         <Form.Select onChange={
