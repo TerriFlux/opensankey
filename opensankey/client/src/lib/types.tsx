@@ -106,6 +106,7 @@ export const SankeyLinkPropTypes = {
   orthogonal_label_position: PropTypes.string.isRequired,
   label_on_path: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
+  label_font_size:PropTypes.number.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
@@ -222,7 +223,6 @@ export const SankeyDataPropTypes = {
   labels: PropTypes.objectOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
     node_font_size: PropTypes.number.isRequired,
-    link_font_size: PropTypes.number.isRequired,
     sector_uppercase: PropTypes.bool.isRequired,
     sector_bold: PropTypes.bool.isRequired,
     sector_italic: PropTypes.bool.isRequired,

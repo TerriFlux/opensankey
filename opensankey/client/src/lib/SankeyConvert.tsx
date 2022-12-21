@@ -450,6 +450,7 @@ export const convert_data = (
         color: '#a9a9a9',
         colorParameter: '',
         colorTag: '',
+        label_font_size:11,
         // Ajout
         gradient: false,
         dashed:false,
@@ -549,9 +550,6 @@ export const convert_data = (
   }
   if (data.display_style.node_font_size === undefined) {
     data.display_style.node_font_size = data.display_style.font_size 
-  }
-  if (data.display_style.link_font_size === undefined) {
-    data.display_style.link_font_size = data.display_style.font_size
   }
 
   if (data.h_space === undefined) {

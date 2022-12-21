@@ -983,7 +983,7 @@ export const drawArrows = (
   n: SankeyNode,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
-  display_style: { node_font_size: number; link_font_size: number; filter?: number; filter_label?: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
+  display_style: { node_font_size: number;  filter?: number; filter_label?: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
   nodeTags: TagsCatalog,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,

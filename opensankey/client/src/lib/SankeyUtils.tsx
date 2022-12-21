@@ -525,6 +525,7 @@ export const default_sankey_data = (): SankeyData => {
         color: '#a9a9a9',
         colorParameter: '',
         colorTag: '',
+        label_font_size:11,
         // Ajout
         gradient: false,
         dashed:true,
@@ -570,7 +571,6 @@ export const default_sankey_data = (): SankeyData => {
 
     display_style: {
       node_font_size: 14,
-      link_font_size: 14,
       sector_uppercase: true,
       sector_bold: true,
       sector_italic: false,
@@ -873,6 +873,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     curvature: 0.5,
     label_visible: true,
     label_on_path: true,
+    label_font_size:11,
     orientation: 'hh',
     left_horiz_shift: 0,
     right_horiz_shift: 0,
