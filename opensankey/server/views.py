@@ -5,6 +5,7 @@ from flask import send_file
 from flask import render_template
 from flask import session
 
+import openpyxl
 import cloudconvert
 import tempfile
 from os import listdir
@@ -106,6 +107,12 @@ def save_excel():
         return response
     try:
         io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
+        # AJoute le fichier json dans un onglet layout
+        wb = openpyxl.load_workbook(excel_file)
+        layout_sheet=wb.create_sheet()
+        layout_sheet.title='layout'
+        layout_sheet['A1'].value=sankey_data
+        wb.save('tutu.xlsx')
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
