@@ -629,7 +629,7 @@ def save_excel(
             for j, tag_name in enumerate(sankey_data['nodeTags']):
                 tags = sankey_data['nodeTags'][tag_name]['tags']
                 if tag_name in node['tags']:
-                    tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                    tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
                     nodes[row+1][len(nodes_cols)+col_num] = (':').join(tags_names)
                 col_num = col_num+1
     else:
@@ -659,7 +659,7 @@ def save_excel(
                     tags = sankey_data['nodeTags'][tag_name]['tags']
                     if tag_name in node['tags']:
                         tags_names =\
-                            [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if tag_name in node['tags']]
+                            [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
                         dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                     col_num = col_num+1
                 # dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
@@ -692,7 +692,7 @@ def save_excel(
                     tags = sankey_data['nodeTags'][tag_name]['tags']
                     if tag_name in node['tags']:
                         try:
-                            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name]]
+                            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
                             dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                         except Exception:
                             print('tutu')
