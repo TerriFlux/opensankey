@@ -476,7 +476,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   }
   const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
-
+  const [user_scale, set_user_scale] = useState(data.user_scale)
   const setDiagram = (the_diagram : string) => {
 
     //const the_diagram = evt.target.value as string
@@ -527,6 +527,26 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
     <Popover.Body >
       <Form style={{width:'600px'}}>
+      <Form.Group as={Row} >
+          <Col xs={3}>
+            <FormLabel >{t('MEP.Echelle')}</FormLabel>
+          </Col>
+          <Col>
+            <FormControl
+              type="text"
+              value={user_scale}
+              onChange={evt => {
+                set_user_scale(+evt.target.value)
+              }}
+              onBlur={() => {
+                data.user_scale = user_scale
+                set_data({ ...data })
+              }}
+            />
+            <FormControl.Feedback />
+            <Form.Text>    ({t('MEP.vp100')})</Form.Text>
+          </Col>
+        </Form.Group>
         <Form.Group as={Row} >
           <Col>
             <FormLabel >{t('Banner.filtre')}</FormLabel>
