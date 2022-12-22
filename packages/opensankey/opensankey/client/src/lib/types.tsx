@@ -97,7 +97,7 @@ export const SankeyLinkPropTypes = {
   idTarget: PropTypes.string.isRequired,
 
   // type of link
-  recycling: PropTypes.bool,
+  recycling: PropTypes.bool.isRequired,
   orientation: PropTypes.string.isRequired,
   arrow: PropTypes.bool.isRequired,
 
