@@ -758,7 +758,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
               ) : (<></>)}
             </Row>
             <Row>
-              <Col className='text-right'>
+              <Col className='text-end'>
                 <Button variant='success' size='sm'
                   onClick={()=>{
                     data.show_banner=false
@@ -777,7 +777,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                     return (<Form.Label>{el.group_name} : { Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
                   }})}</>):(<></>)}
               </Col> */}
-              <Col className='text-right'>
+              <Col className='text-end'>
                 <FormGroup as={Col}>
                   <Button variant='outline-success' size='sm'
                     onClick={()=>{
@@ -855,7 +855,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         </Col>
         }
 
-        <Col className='text-right'>
+        <Col className='text-end'>
 
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
