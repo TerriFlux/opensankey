@@ -954,17 +954,15 @@ const drag_link = (
     return
   }
   const node = nodes[linked_node.node_id]
-  let id_input_filtered=node.inputLinksId.filter(id=>{
-      
-    return id && data.links[id] && link_visible(data.links[id],data) &&!data.links[id].recycling})
-  let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data)&&!data.links[id].recycling)
+  let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && link_visible(data.links[id],data) })
+  let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data))
   const link_dragged=data.links[idLink]
   let io=''
       
   if (linked_node.type === 'source') {
       
     if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
-      if(data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x){
+      if((!link_dragged.recycling && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(link_dragged.recycling && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
         io='right'
       }else{
         io='left'
@@ -980,9 +978,9 @@ const drag_link = (
     id_output_filtered=id_output_filtered.filter(id=>{
       let good_orientation=false
       if(io=='right'){
-        good_orientation=data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x) || (data.links[id].recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
       }else if(io=='left'){
-        good_orientation=data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)|| (data.links[id].recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
       }else if (io=='top'){
         good_orientation=data.nodes[data.links[id].idTarget].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
       }else if(io=='bottom'){
@@ -1033,7 +1031,7 @@ const drag_link = (
   }
   if (linked_node.type === 'target') {
     if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
-      if(data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x){
+      if((!link_dragged.recycling && data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x) ||(link_dragged.recycling && data.nodes[link_dragged.idSource].x<data.nodes[linked_node.node_id].x)){
         io='right'
       }else{
         io='left'
@@ -1050,9 +1048,9 @@ const drag_link = (
     id_input_filtered=id_input_filtered.filter(id=>{
       let good_orientation=false
       if(io=='right'){
-        good_orientation=data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x) || (data.links[id].recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
       }else if(io=='left'){
-        good_orientation=data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)|| (data.links[id].recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
       }else if (io=='top'){
         good_orientation=data.nodes[data.links[id].idSource].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
       }else if(io=='bottom'){

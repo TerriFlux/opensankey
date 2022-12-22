@@ -229,7 +229,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
 
         //Repositionne le liens avant le liens entrant du même coté
@@ -244,7 +244,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
         })
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -288,7 +288,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
 
         //Repositionne le liens avant le liens sortant du même coté
@@ -303,7 +303,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
+          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -361,7 +361,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
 
         //Repositionne le liens avant le liens entrant du même coté
@@ -371,12 +371,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           const posElemt = n.inputLinksId.indexOf(k_link)
           n.inputLinksId.splice(posElemt, 1)
           n.inputLinksId.splice(posElementPrec,0,k_link)
-        }
+        } 
 
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
         })
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -418,7 +418,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x<n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
+          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
 
         //Repositionne le liens avant le liens sortant du même coté
@@ -433,7 +433,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
+          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
         
         //Repositionne le liens avant le liens sortant du même coté
@@ -449,7 +449,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       }else if(pos=='top'){
         //Recherche tous les liens sortant en haut
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y<n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return  data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -463,7 +463,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       }else if(pos=='bottom'){
         //Recherche tous les liens sortant en bas
         const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y>=n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return  data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -487,12 +487,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         link_io=Object.values(n.inputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
         })
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
@@ -509,12 +509,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         link_io=Object.values(n.outputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
@@ -542,12 +542,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         link_io=Object.values(n.inputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
         })
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
@@ -564,12 +564,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
         link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
         link_io=Object.values(n.outputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
         })
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
@@ -583,7 +583,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         })
       }
     }
+    // console.log(link_io)
+    Object.values(n.outputLinksId).filter(k=>link_visible(data.links[k],data)).map(l=>{
+      console.log(data.nodes[data.links[l].idTarget])
+    })
     
+    // Object.values(link_io).map(l=>{
+    //   console.log(data.nodes[data.links[l].idSource].x+'  ---  '+data.nodes[data.links[l].idTarget].x)
+    // })
     return (
       <>
         <Table striped bordered hover className='node_group_tags_definition'>
