@@ -527,7 +527,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
     <Popover.Body >
       <Form style={{width:'600px'}}>
-      <Form.Group as={Row} >
+        <Form.Group as={Row} >
           <Col xs={3}>
             <FormLabel >{t('MEP.Echelle')}</FormLabel>
           </Col>
