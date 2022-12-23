@@ -9,7 +9,7 @@ import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
-  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink} from './SankeyDrawFunction'
+  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
 import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragNodeEvent,
   dragNodeTextEventWidthBoxEvent,dragNodeTextEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
 
@@ -1022,8 +1022,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('cy', d => d.node_height / 2)
         .attr('rx', d => d.node_width / 2)
         .attr('ry', d => d.node_height / 2)
-       
+        
+      
     }
+
+   
+    const nodes_not_to_scale=ggg_nodes
+      .filter(d=>d.not_to_scale)
+      .append('g')
+    addNodesNotToScale(nodes_not_to_scale,data)
 
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
@@ -1095,9 +1102,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
     Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale))
+    Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
+      d3.select('#' + n.idNode)
+        .attr('fill-opacity',0)
+    })
 
     //----------------ICON-----------------
-
+    
 
     ggg_nodes
       .filter(d => d.iconName != 'none' && d.iconVisible)
