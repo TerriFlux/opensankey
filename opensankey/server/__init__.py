@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import Blueprint
 import os
+from . import views
+views  # silence linter
 
 template_folder = os.path.join(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
@@ -18,7 +20,6 @@ opensankey = Blueprint(
     static_url_path='/static/opensankey'
 )
 
-from . import views
 
 def create_app():
     app = Flask(__name__)
