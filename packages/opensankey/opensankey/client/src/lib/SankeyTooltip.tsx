@@ -258,7 +258,6 @@ export const nodeTooltipsContent = (
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td>' + target_name + '</td>'
           t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
-          Object.keys(data.fluxTags).forEach(tag=> t += tag in link_info.tags ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td>' : '<td></td>')
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value:0)*100/total)
             t += '<td>'+ percent + '%</td>'
