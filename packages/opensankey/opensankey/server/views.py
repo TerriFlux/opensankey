@@ -109,9 +109,9 @@ def save_excel():
         io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
         # AJoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_file)
-        layout_sheet=wb.create_sheet()
-        layout_sheet.title='layout'
-        layout_sheet['A1'].value=sankey_data
+        layout_sheet = wb.create_sheet()
+        layout_sheet.title = 'layout'
+        layout_sheet['A1'].value = sankey_data
         wb.save('tutu.xlsx')
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:

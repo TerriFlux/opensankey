@@ -692,7 +692,8 @@ def save_excel(
                     tags = sankey_data['nodeTags'][tag_name]['tags']
                     if tag_name in node['tags']:
                         try:
-                            tags_names = [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
+                            tags_names = \
+                                [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
                             dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                         except Exception:
                             print('tutu')
