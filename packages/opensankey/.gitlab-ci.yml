@@ -64,7 +64,7 @@ test:
         ENV: "prod" 
         APP_NAME : "opensankey"
   script:
-    - source /home/gitlab-runner/gitlab_$ENV/bin/activate
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
     - python -m unittest discover opensankey.tests
     - python -m unittest discover opensankey.tests
