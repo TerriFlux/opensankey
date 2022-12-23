@@ -106,7 +106,13 @@ const resources = {
           'TML':'Width minimum',
           'TMH':'Height minimum',
 
-          'asn':'Apply style to nodes'
+          'asn':'Apply style to nodes',
+          'toScale':'Node not to scale',
+          'Orientation':'Orientation : ',
+          'toScaleBottom':'to the bottom',
+          'toScaleTop':'to the top',
+          'toScaleLeft':'to the left',
+          'toScaleRight':'to the right',
             
         },
         labels:{
@@ -350,7 +356,13 @@ const resources = {
           'TML':'Taille minimum Largeur',
           'TMH':'Taille minimum Hauteur',
 
-          'asn':'Appliquer le style aux noeuds'
+          'asn':'Appliquer le style aux noeuds',
+          'toScale':'Noeud non à l\'échelle',
+          'Orientation':'Orientation : ',
+          'toScaleBottom':'Vers le bas',
+          'toScaleTop':'Vers le haut',
+          'toScaleLeft':'Vers la gauche',
+          'toScaleRight':'Vers la droite',
         },
         labels:{
           'labels':'Labels',

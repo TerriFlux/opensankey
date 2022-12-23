@@ -41,6 +41,9 @@ export const SankeyNodePropTypes = {
   x_label: PropTypes.number,
   y_label: PropTypes.number,
   show_value: PropTypes.bool.isRequired,
+  
+  not_to_scale:PropTypes.bool.isRequired,
+  not_to_scale_direction:PropTypes.string.isRequired,
 
   tooltip_text: PropTypes.string,
 

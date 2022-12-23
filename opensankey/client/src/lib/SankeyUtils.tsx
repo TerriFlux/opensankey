@@ -468,6 +468,8 @@ export const default_sankey_data = (): SankeyData => {
         iconColor: '#fff',
         iconRatio: 80,
         iconVisible: true,
+        not_to_scale:false,
+        not_to_scale_direction:'right',
 
         color: '#a9a9a9',
         colorParameter: 'local',
@@ -778,6 +780,8 @@ export const default_node = (
     iconColor: '#fff',
     iconRatio: 80,
     iconVisible: true,
+    not_to_scale:false,
+    not_to_scale_direction:'right',
 
     color: '#a9a9a9',
     colorParameter: 'local',

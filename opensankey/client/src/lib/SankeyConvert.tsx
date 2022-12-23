@@ -392,6 +392,8 @@ export const convert_data = (
         iconColor: '#fff',
         iconRatio: 80,
         iconVisible: true,
+        not_to_scale:false,
+        not_to_scale_direction:'right',
 
         shape: 'rect',
         color: '#a9a9a9',
