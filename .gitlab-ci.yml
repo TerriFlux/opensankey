@@ -20,14 +20,14 @@ cache:
 # only cache local items.
 variables:
   PIP_CACHE_DIR : "$CI_PROJECT_DIR/.cache/pip"
-  MFAData       : "/home/ubuntu/test_opensankey/MFAData"
+  MFAData       : "/home/ubuntu/dev_opensankey/MFAData"
 
 build:
   stage: build
   tags:
     - dev, prod, test
   script:
-    - source /home/gitlab-runner/gitlab/bin/activate
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - python setup.py bdist_wheel
@@ -94,7 +94,7 @@ dev_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -102,7 +102,7 @@ dev_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source "$ENV"_opensankey/bin/activate
+    - source dev_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 test_opensankey:
@@ -127,7 +127,7 @@ test_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/test_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -135,7 +135,7 @@ test_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source "$ENV"_opensankey/bin/activate
+    - source test_opensankey/bin/activate
     - bash update_build_opensankey.sh
 
 prod_opensankey:
@@ -160,7 +160,7 @@ prod_opensankey:
     policy: pull
   before_script:
     - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/"$ENV"_opensankey/opensankey
+    - git config --global --add safe.directory /home/ubuntu/prod_opensankey/opensankey
   after_script:
     - echo "$FOLDER"
     - cd "$FOLDER"
@@ -168,5 +168,5 @@ prod_opensankey:
   script:
     - echo "$FOLDER"
     - cd "$FOLDER"
-    - source "$ENV"_opensankey/bin/activate
+    - source prod_opensankey/bin/activate
     - bash update_build_opensankey.sh
