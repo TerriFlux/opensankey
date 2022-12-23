@@ -3,8 +3,10 @@ import numpy as np
 import re
 import webcolors
 import math
+import copy
+from collections import OrderedDict
 from mfa_problem.io_excel import DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
-    DATA_SHEET, DATA_TYPE_LABEL, copy, RESULTS_SHEET,\
+    DATA_SHEET, DATA_TYPE_LABEL, RESULTS_SHEET,\
     NODES_SHEET, FLUX_SHEET, NODES_SANKEY, NODES_COLOR, NODES_NODE, NODES_DEFINITIONS, NODES_LEVEL, NODE_TYPE,\
     TER_SHEET, IO_SHEET, \
     TAG_SHEET, TAG_COLOR, TAG_NAME, TAG_TAGS, TAG_TYPE, TAG_COLORMAP, TAG_IS_PALETTE, OrderedDict
