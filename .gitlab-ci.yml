@@ -63,10 +63,14 @@ test:
         FOLDER: "/home/ubuntu/prod_opensankey"
         ENV: "prod" 
         APP_NAME : "opensankey"
+    - if: $CI_COMMIT_REF_NAME =~ $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_NAME =~ "test" && $CI_COMMIT_REF_NAME =~ "prod"
+      variables:                              
+        FOLDER: /home/ubuntu/dev_opensankey
+        ENV: dev 
+        APP_NAME : dev_opensankey    
   script:
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
-    - python -m unittest discover opensankey.tests
     - python -m unittest discover opensankey.tests
     - flake8
   dependencies:
