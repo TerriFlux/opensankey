@@ -170,8 +170,8 @@ export const nodeTooltipsContent = (
     t += '<table class="table" style="margin-bottom: 5px;">'
     t +=   '<thead><tr>'
     t +=      '<th></th><th>Valeur</th>'
-    Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')
-    t +='<th>Pourcentage</th>'      
+    t +='<th>Pourcentage</th>'
+    Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')  
     t += '</tr></thead>'
     for (let i=0;i<n.inputLinksId.length;i++) {
       const link = display_links[n.inputLinksId[i]]
@@ -237,8 +237,8 @@ export const nodeTooltipsContent = (
       t += '<table class="table" style="margin-bottom: 5px;">'
       t +=   '<thead><tr>'
       t +=      '<th></th><th>Valeur</th>'
-      Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')
-      t +='<th>Pourcentage</th>'  
+      t +='<th>Pourcentage</th>' 
+      Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>') 
       t += '</tr></thead>'    
       for (let i=0;i<n.outputLinksId.length;i++) {
         const link = data.links[n.outputLinksId[i]]
