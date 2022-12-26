@@ -2092,22 +2092,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'ggg_nodes')
       .attr('transform', d =>nodeTransform(d,display_nodes,display_links))
 
-    // Gestion du drag 
-    //Est activé que lorsque le mode 'sélection' est sélectionné
-    if (mode_selection == 's') {
-      ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
-        .subject(Object).on('drag', function (event) {
-          
-          drag_nodes(
-            display_nodes, display_links,
-            display_style,
-            data.nodeTags,this,
-            event
-          )
-           
-        })
-      )
-    }
+
 
     // Gestion du click  
     ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,mode_visualisation,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey))
@@ -2123,6 +2108,32 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
+
+    ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
+      .subject(Object).on('drag', function (event,node) {
+
+        if(mode_selection=='s'){
+          if(event.subject.sourceEvent.path[0].tagName=='tspan' && alt_key_pressed && !static_sankey){
+            drag_node_text(node, event)
+          }else if(event.subject.sourceEvent.path[0].tagName=='tspan' && !alt_key_pressed){
+            drag_nodes(
+              display_nodes, display_links,
+              display_style,
+              data.nodeTags,this,
+              event
+            )
+          }
+          if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
+            drag_nodes(
+              display_nodes, display_links,
+              display_style,
+              data.nodeTags,this,
+              event
+            )
+          }
+        }
+
+      }))
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -2307,7 +2318,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     //------------------LABEL------------------------
-    const select = ggg_nodes
+    ggg_nodes
       .append('text')
       .attr('fill',n=>(n.display_style.label_color)?'white':'black')
       .classed('node', true)
@@ -2473,28 +2484,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
       )
 
-    if (!static_sankey) {
-      select
-        .call(d3.drag<SVGTextElement, SankeyNode>()
-          .subject(Object).on('drag', function (event, node) {
-            if (alt_key_pressed === true) {
-              drag_node_text(node, event)
-            }
-            else {
-              const node_to_drag = 'ggg_node' + d3.select(this).attr('id').substring(4, 6)
-              const el = document.getElementById(node_to_drag)
-              if (el) {
-                drag_nodes(
-                  display_nodes, display_links,
-                  display_style,
-                  data.nodeTags,el,
-                  event
-                )
-              }
-            }
-          })
-        )
-    }
   }
 
   const animate_view_changement = (
