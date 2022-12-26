@@ -235,16 +235,84 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   const [link_io,set_link_io]=useState('output')
   const [link_pos,set_link_pos]=useState('right')
-  const handleUpLinkIOPos=(k_link:string,pos:string,io:string)=>{
+
+  const getIOLink=(pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
-    const input=Object.values(n.inputLinksId)
-    const output=Object.values(n.outputLinksId)
+
+    let link_io=([] as string[])
+
     if(io=='input'){
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
-        const link_io=input.filter(k=>{
-          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_s.x>n.x)
+          return (cond_no_recy || cond_recy)  && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
+      }else if(pos=='right'){
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_s.x<n.x)
+          return  (cond_no_recy ||cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          return n_s.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          return n_s.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }
+    }else if(io=='output'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_t.x>n.x)
+          return (( cond_no_recy|| cond_recy)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='right'){ 
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_t.x<n.x)
+          return  ( cond_no_recy || cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          return n_t.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          return n_t.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }
+    }
+    return link_io
+
+  }
+
+  const handleUpLinkIOPos=(k_link:string,pos:string,io:string)=>{
+    const n=multi_selected_nodes.current[0]
+    const link_io=getIOLink(pos,io)
+    if(io=='input'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        
 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -257,9 +325,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
-        const link_io=input.filter(k=>{
-          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -271,9 +337,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -285,9 +349,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+     
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -301,9 +363,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }else if(io=='output'){
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
-        const link_io=output.filter(k=>{
-          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -316,9 +376,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
-        const link_io=output.filter(k=>{
-          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -332,9 +390,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens sortant en haut
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+ 
         
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -347,9 +403,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens sortant en bas
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -369,14 +423,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   const handleDownLinkIOPos=(k_link:string,pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
-    const input=Object.values(n.inputLinksId)
-    const output=Object.values(n.outputLinksId)
+    const link_io=getIOLink(pos,io)
+
     if(io=='input'){
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
-        const link_io=input.filter(k=>{
-          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+        
 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -389,9 +441,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
-        const link_io=input.filter(k=>{
-          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -402,9 +452,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         }
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y<n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+ 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -415,9 +463,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         }
       }else if(pos=='bottom'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y>=n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -431,9 +477,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }else if(io=='output'){
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
-        const link_io=output.filter(k=>{
-          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -446,9 +490,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
-        const link_io=output.filter(k=>{
-          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
         
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -462,9 +503,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens sortant en haut
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -476,9 +515,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens sortant en bas
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -495,116 +531,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   }
   
   const has_link_come_from=(io:string,pos:string)=>{
-    const n=multi_selected_nodes.current[0]
-    let link_io=([] as string[])
-    if(io=='input'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }
-    }else if(io=='output'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }
-    }
+    const link_io=getIOLink(pos,io)
     return link_io.length==0
   }
 
   const [tab_colored,set_tab_colored]=useState(false)
   const tab_pos_link=(pos:string,io:string)=>{
-
-    const n=multi_selected_nodes.current[0]
-    let link_io=([] as string[])
-
-
-    if(io=='input'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return (data.nodes[data.links[k].idSource].x<n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return  (data.nodes[data.links[k].idSource].x>=n.x || (data.links[k].recycling && data.nodes[data.links[k].idSource].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }
-    }else if(io=='output'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return ((data.nodes[data.links[k].idTarget].x<n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x>n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return  ((data.nodes[data.links[k].idTarget].x>=n.x && !data.links[k].recycling) || (data.links[k].recycling && data.nodes[data.links[k].idTarget].x<n.x)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }
-    }
-    // console.log(link_io)
-    Object.values(n.outputLinksId).filter(k=>link_visible(data.links[k],data)).map(l=>{
-      console.log(data.nodes[data.links[l].idTarget])
-    })
-    
-    // Object.values(link_io).map(l=>{
-    //   console.log(data.nodes[data.links[l].idSource].x+'  ---  '+data.nodes[data.links[l].idTarget].x)
-    // })
+    const link_io=getIOLink(pos,io)
     return (
       <>
         <Table striped bordered hover className='node_group_tags_definition'>
@@ -620,10 +553,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 (k, i) => {
                   const color=link_color(data.links[k],data)
                   const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
+                  const n_s=data.nodes[data.links[k].idSource]
+                  const n_t=data.nodes[data.links[k].idTarget]
+
                   return (
                     <tr key={i.toString()}>
                       
-                      <td style={bc}>{data.nodes[data.links[k].idSource].name+'===>'+data.nodes[data.links[k].idTarget].name}</td>
+                      <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
                       <td style={{ 'width': '10%' }}>
                         <ButtonGroup className="button_position" size="sm">
                           <Button variant="info" onClick={() => handleUpLinkIOPos(k,pos,io)}><FaArrowAltCircleUp /></Button>
