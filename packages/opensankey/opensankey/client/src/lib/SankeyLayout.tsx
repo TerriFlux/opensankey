@@ -413,7 +413,7 @@ export const reorganize_all_input_outputLinksId = (
 export const updateLayout = (
   data: SankeyData,
   new_layout: SankeyData,
-  mode:string
+  mode:string[]
 ) => {
   convert_data(new_layout)
 
@@ -451,7 +451,7 @@ export const updateLayout = (
     if (!node) {
       continue
     }
-    if(mode=='posNode'){
+    if(mode.includes('posNode')){
 
       node.name = node_layout.name
       node.position = node_layout.position
@@ -467,7 +467,7 @@ export const updateLayout = (
       node.x_label = node_layout.x_label
       node.y_label = node_layout.y_label
     }
-    if(mode=='attrNode'){
+    if(mode.includes('attrNode')){
       node.display_style = {...node_layout.display_style}
 
       node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
@@ -491,7 +491,7 @@ export const updateLayout = (
     
   }
 
-  if (mode=='attrFlux'){
+  if (mode.includes('attrFlux')){
     apply_input_outputLinksId(
       new_layout.nodes,
       new_layout.links,
@@ -540,7 +540,7 @@ export const updateLayout = (
     
   }
 
-  if(mode=='tagNode'){
+  if(mode.includes('tagNode')){
     for (const tag_group_key in data.nodeTags) {
       if (!(tag_group_key in new_layout.nodeTags)) {
         continue
@@ -557,7 +557,7 @@ export const updateLayout = (
     }
   }
   
-  if(mode=='tagFlux'){
+  if(mode.includes('tagFlux')){
     for (const tag_group_key in data.fluxTags) {
       if (!(tag_group_key in new_layout.fluxTags)) {
         continue
@@ -589,7 +589,7 @@ export const updateLayout = (
   // data.agregation.level = new_layout.agregation.level
   // data.agregation.dimension = new_layout.agregation.dimension
 
-  if(mode=='attrGeneral'){
+  if(mode.includes('attrGeneral')){
     data.icon_catalog = new_layout.icon_catalog
     Object.assign(data.labels,new_layout.labels)
     data.colorMap = new_layout.colorMap
