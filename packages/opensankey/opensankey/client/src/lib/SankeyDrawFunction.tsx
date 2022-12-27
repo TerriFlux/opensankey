@@ -1358,6 +1358,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.y / data.grid_square_size)
             d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+            const height=+d3.select('#'+d.idNode).attr('height')
+            d.y+=(data.grid_square_size/2)-height/2
           }
           let y_max = 0
           Object.values(data.nodes).map(d => {
@@ -1382,6 +1384,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.y / data.grid_square_size)
             d.y = (n_pos + 1) * data.grid_square_size
+            const height=+d3.select('#'+d.idNode).attr('height')
+            d.y-=(data.grid_square_size/2)+height/2
           }
           //Augumente hauteur svg si le noeud est près du bord
           if (d.y > data.height - 100) {
@@ -1402,6 +1406,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
             d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
+            const width=+d3.select('#'+d.idNode).attr('width')
+            d.x-=(data.grid_square_size/2)+width/2
           }
           //Diminue largeur svg si le noeud est près du bord
           if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
@@ -1422,6 +1428,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
             d.x = (n_pos + 1) * data.grid_square_size
+            const width=+d3.select('#'+d.idNode).attr('width')
+            d.x+=(data.grid_square_size/2)-width/2
           }
           //Augumente largeur svg si le noeud est près du bord
           if (d.x > data.width - 100) {
