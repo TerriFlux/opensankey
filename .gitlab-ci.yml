@@ -63,7 +63,7 @@ test:
         FOLDER: "/home/ubuntu/prod_opensankey"
         ENV: "prod" 
         APP_NAME : "opensankey"
-    - if: $CI_COMMIT_REF_NAME =~ $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_NAME =~ "test" && $CI_COMMIT_REF_NAME =~ "prod"
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_NAME != "test" && $CI_COMMIT_REF_NAME != "prod"
       variables:                              
         FOLDER: /home/ubuntu/dev_opensankey
         ENV: dev 
