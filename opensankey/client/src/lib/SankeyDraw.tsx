@@ -10,8 +10,8 @@ import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
   setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
-import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragNodeEvent,
-  dragNodeTextEventWidthBoxEvent,dragNodeTextEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
+import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,
+  dragNodeTextEventWidthBoxEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone,drag_nodes,drag_node_text} from './SankeyDrag'
 
 window.d3 = d3
 
@@ -2509,7 +2509,38 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
   }
 
-  
+  const hiddeLoneProduct=()=>{
+    const displayed_product=Object.values(data.nodes).filter(n=>{
+      const is_product=Object.keys(n.tags).includes('Type de noeud') && n.tags['Type de noeud'].includes('produit')
+      const is_intermediary_node_s=Object.values(n.inputLinksId).filter(l=>{
+        return link_visible(data.links[l],data) && !data.links[l].recycling
+      }).length==1
+
+      const is_intermediary_node_t=Object.values(n.outputLinksId).filter(l=>{
+        return link_visible(data.links[l],data) && !data.links[l].recycling
+      }).length==1
+      // console.log(n.idNode+' : '+n.node_visible)
+      // console.log(n.idNode+' : '+(n.node_visible && is_product && is_intermediary_node_s && is_intermediary_node_t))
+      return n.display && is_product && is_intermediary_node_s && is_intermediary_node_t
+    })
+    displayed_product.map(n=>{
+      const src=Object.values(n.inputLinksId).filter(l=>link_visible(data.links[l],data))[0]
+      const trgt=Object.values(n.outputLinksId).filter(l=>link_visible(data.links[l],data))[0]
+      const n_l=JSON.parse(JSON.stringify(data.links[src]))
+
+      n_l.idSource=data.links[src].idSource
+      n_l.idTarget=data.links[trgt].idTarget
+      n_l.idLink='link_tmp_'+n.idNode
+      
+      data.nodes[data.links[src].idSource].outputLinksId.push(n_l.idLink)
+      data.nodes[data.links[trgt].idTarget].inputLinksId.push(n_l.idLink)
+      
+      data.links[n_l.idLink] = n_l
+      data.nodes[n.idNode].display=false
+      data.nodes[n.idNode].node_visible=false
+    })
+    // set_data({...data})
+  }
  
   const scale = d3.scaleLinear()
     .domain([0, 100])
@@ -2989,14 +3020,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#svg').selectAll('.defsArrow').remove()
     d3.select('#svg').append('defs').attr('class', 'defsArrow')
-
-
+    
+    hiddeLoneProduct()
+  
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
     add_labels()
-
     drawLegend()
-
     const test = document.getElementsByClassName('navbar')
     let margin_top = 0
     if (test && test.length > 0) {
