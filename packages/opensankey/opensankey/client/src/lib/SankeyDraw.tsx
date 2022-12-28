@@ -1046,13 +1046,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         
       
     }
-
    
-    const nodes_not_to_scale=ggg_nodes
-      .filter(d=>d.not_to_scale)
-      .append('g')
-    addNodesNotToScale(nodes_not_to_scale,data)
-
+    
     d3.selectAll('.node')
       .attr('id', d => (d as SankeyNode).idNode)
       // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
@@ -1123,10 +1118,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
     Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale))
-    Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
-      d3.select('#' + n.idNode)
-        .attr('fill-opacity',0)
-    })
+    
+    const nodes_not_to_scale=ggg_nodes
+      .filter(d=>d.not_to_scale)
+      .append('g')
+    addNodesNotToScale(nodes_not_to_scale,data,scale,inv_scale)
+
 
     //----------------ICON-----------------
     
