@@ -10,8 +10,8 @@ import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
   setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
-import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragNodeEvent,
-  dragNodeTextEventWidthBoxEvent,dragNodeTextEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
+import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragGNodeEvent,
+  dragNodeTextEventWidthBoxEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
 
 window.d3 = d3
 
@@ -975,31 +975,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
 
-    ggg_nodes.call(d3.drag<SVGGElement, SankeyNode>()
-      .subject(Object).on('drag', function (event,node) {
-
-        if(mode_selection=='s'){
-          if(event.subject.sourceEvent.path[0].tagName=='tspan' && alt_key_pressed && !static_sankey){
-            drag_node_text(node, event)
-          }else if(event.subject.sourceEvent.path[0].tagName=='tspan' && !alt_key_pressed){
-            drag_nodes(
-              display_nodes, display_links,
-              display_style,
-              data.nodeTags,this,
-              event
-            )
-          }
-          if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
-            drag_nodes(
-              display_nodes, display_links,
-              display_style,
-              data.nodeTags,this,
-              event
-            )
-          }
-        }
-
-      }))
+    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve,mode_selection,alt_key_pressed,static_sankey))
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -1340,8 +1316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('stroke-width','1px')
       .attr('cursor','ew-resize')
       .attr('visibility',d=>(multi_selected_nodes.current.includes(d)?'visible':'hidden'))
-      .call(dragNodeTextEventWidthBoxEvent(data,set_data)
-      )
+      .call(dragNodeTextEventWidthBoxEvent(data,set_data))
 
   }
 

@@ -148,55 +148,7 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
     })
 }
 
-export const dragNodeEvent=(data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
-  display_style: { node_font_size: number;  filter: number; filter_label: number },
-  multi_selected_nodes:{current: SankeyNode[] },
-  min_width_and_height:()=>number[],
-  drawGrid:()=>void,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  min_thickness:number,
-  drawCurve:(
-      data: SankeyData,
-      nodes: { [node_id: string]: SankeyNode },
-      links: { [link_id: string]: SankeyLink },
-      display_style: { node_font_size: number;  filter: number; filter_label: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
-      nodeTags: TagsCatalog,
-      link: SankeyLink,
-      error_msg: { text?: string } | undefined
-    )=>string
-)=>{
-  return d3.drag<SVGGElement, SankeyNode>()
-    .subject(Object).on('drag', function (event) {
-      drag_nodes(
-        display_nodes, display_links,
-        display_style,
-        data.nodeTags,this,
-        event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
-      ) 
-    })
-}
-
-export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
-  return d3.drag<SVGRectElement, SankeyNode>()
-    .subject(Object).on('drag', function (event, node) {
-      if(event.dx<100){
-        let pos_node=d3.select('#ggg_' + node.idNode).attr('transform').replace('translate(','')
-        pos_node=pos_node.split(',')[0]
-        if(event.x<pos_node){
-          data.nodes[node.idNode].display_style.label_box_width-=event.dx
-        }else{
-          data.nodes[node.idNode].display_style.label_box_width+=event.dx
-        }
-        set_data({...data})
-      }
-    })
-}
-
-export const dragNodeTextEvent=(alt_key_pressed:boolean,
+export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
@@ -216,24 +168,50 @@ export const dragNodeTextEvent=(alt_key_pressed:boolean,
       nodeTags: TagsCatalog,
       link: SankeyLink,
       error_msg: { text?: string } | undefined
-    )=>string
+    )=>string,
+  mode_selection:string,
+  alt_key_pressed:boolean,
+  static_sankey:boolean
 )=>{
-  return d3.drag<SVGTextElement, SankeyNode>()
-    .subject(Object).on('drag', function (event, node) {
-      if (alt_key_pressed === true) {
-        drag_node_text(node, event)
-      }
-      else {
-        const node_to_drag = 'ggg_node' + d3.select(this).attr('id').substring(4, 6)
-        const el = document.getElementById(node_to_drag)
-        if (el) {
+  return d3.drag<SVGGElement, SankeyNode>()
+    .subject(Object).on('drag', function (event,node) {
+      if(mode_selection=='s'){
+        if(event.subject.sourceEvent.path[0].tagName=='tspan' && alt_key_pressed && !static_sankey){
+          drag_node_text(node, event)
+        }else if(event.subject.sourceEvent.path[0].tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
             display_nodes, display_links,
             display_style,
-            data.nodeTags,el,
+            data.nodeTags,this,
             event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
           )
         }
+        if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
+          drag_nodes(
+            display_nodes, display_links,
+            display_style,
+            data.nodeTags,this,
+            event,data,multi_selected_nodes,
+            min_width_and_height,drawGrid,scale,inv_scale,
+            sankeyTooltip,min_thickness,drawCurve
+          )
+        }
+      }
+    })
+}
+
+export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
+  return d3.drag<SVGRectElement, SankeyNode>()
+    .subject(Object).on('drag', function (event, node) {
+      if(event.dx<100){
+        let pos_node=d3.select('#ggg_' + node.idNode).attr('transform').replace('translate(','')
+        pos_node=pos_node.split(',')[0]
+        if(event.x<pos_node){
+          data.nodes[node.idNode].display_style.label_box_width-=event.dx
+        }else{
+          data.nodes[node.idNode].display_style.label_box_width+=event.dx
+        }
+        set_data({...data})
       }
     })
 }
