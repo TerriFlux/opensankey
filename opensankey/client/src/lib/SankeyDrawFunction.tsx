@@ -784,10 +784,10 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
       const width = +d3.select('#' + d.idNode).attr('width')
 
-      if (d.display_style.label_horiz == 'milieu') {
+      if (d.display_style.label_horiz == 'middle') {
         return width / 2
-      } else if (d.display_style.label_horiz == 'droite') {
-        return d.display_style.label_vert == 'milieu' ? width : 0
+      } else if (d.display_style.label_horiz == 'right') {
+        return d.display_style.label_vert == 'middle' ? width : 0
       } else {
         return 0
       }
@@ -798,9 +798,9 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     const width = +d3.select('#' + d.idNode).attr('width')
     if (d.x_label) {
       return d.x_label
-    } else if (d.display_style.label_horiz == 'milieu') {
+    } else if (d.display_style.label_horiz == 'middle') {
       return width / 2
-    } else if (d.display_style.label_horiz == 'droite') {
+    } else if (d.display_style.label_horiz == 'right') {
       return width
     } else {
       return 0
@@ -808,11 +808,11 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   })
   //Nombre de tspan dans la balise text
   const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
-  if (d.display_style.label_vert == 'milieu') {
+  if (d.display_style.label_vert == 'middle') {
     d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
-  } else if (d.display_style.label_vert == 'bas') {
+  } else if (d.display_style.label_vert == 'bottom') {
     d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
-  } else if (d.display_style.label_vert == 'haut') {
+  } else if (d.display_style.label_vert == 'top') {
     d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
 
   }
