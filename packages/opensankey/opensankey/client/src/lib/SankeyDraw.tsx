@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue } from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue,SankeyDrawCurve } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
 import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color } from './SankeyUtils'
@@ -214,7 +214,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     const paths = gg_links.append('path')
     if (!static_sankey && !mode_visualisation) {
       let error_msg: { text: string | undefined } | undefined
-      paths.call(dragLinkEvent(multi_selected_links,data,display_nodes,display_links,error_msg,display_style,drawCurve,scale,inv_scale,min_thickness)
+      paths.call(dragLinkEvent(multi_selected_links,data,display_nodes,display_links,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness)
       )
 
     }
@@ -364,7 +364,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurve)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
         }
       })
     if (error_msg && error_msg.text) {
@@ -454,7 +454,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('fill','black')
         .attr('transform',pos_d[0])
         .attr('cursor',(multi_selected_links.current.includes(link) && (link.orientation=='vv' ||link.orientation=='hh'))?'ew-resize':'pointer')
-        .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurve)
+        .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction)
         )
     }
 
@@ -477,7 +477,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
         .attr('cursor',(multi_selected_links.current.includes(link)&& !mode_visualisation)?'ew-resize':'pointer')
-        .call(dragLinkShiftHandleEvent(multi_selected_links,link,mode_visualisation,nodes,links,display_style,selected_tags,position,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurve)
+        .call(dragLinkShiftHandleEvent(multi_selected_links,link,mode_visualisation,nodes,links,display_style,selected_tags,position,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction)
         )
     }
 
@@ -725,7 +725,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // handles_positions(links, link, xs, ys, xt, yt)
     if(link.orientation=='vv' ||link.orientation=='hh'){
       add_shift_handles(link, nodes, links,display_style, nodeTags, xs, ys, xt, yt)
-      add_drag_link_zone(link,nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurve)
+      add_drag_link_zone(link,nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
     }
     add_center_handle(link,nodeTags)
 
@@ -834,6 +834,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return ''
   }
 
+  const drawCurveFunction:SankeyDrawCurve ={curve:drawCurve}
+  
   // Returns the x/y position of link_center / left/right/vert_shift
   const handles_positions = (
     links: { [link_id: string]: SankeyLink },
@@ -975,7 +977,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
 
-    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve,mode_selection,alt_key_pressed,static_sankey))
+    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
