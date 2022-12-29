@@ -176,9 +176,9 @@ export const dragGNodeEvent=(
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object).on('drag', function (event,node) {
       if(mode_selection=='s'){
-        if(event.subject.sourceEvent.path[0].tagName=='tspan' && alt_key_pressed && !static_sankey){
+        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !static_sankey){
           drag_node_text(node, event)
-        }else if(event.subject.sourceEvent.path[0].tagName=='tspan' && !alt_key_pressed){
+        }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
             display_nodes, display_links,
             display_style,
@@ -186,7 +186,7 @@ export const dragGNodeEvent=(
             event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
           )
         }
-        if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
+        if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(
             display_nodes, display_links,
             display_style,

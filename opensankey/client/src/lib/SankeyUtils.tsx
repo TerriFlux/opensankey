@@ -1013,12 +1013,7 @@ export const processExample = (server_data: SankeyData ) => {
   } else {
     convert_data((data as SankeyData & layout_type).layout)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    updateLayout(data, (data as SankeyData & layout_type).layout,'posNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrFlux')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'tagNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'tagFlux')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrGeneral')
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   set_nodes_level(data)
