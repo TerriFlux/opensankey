@@ -1335,7 +1335,8 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
 export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
   view:string,
   set_view:React.Dispatch<React.SetStateAction<string>>,
@@ -1343,7 +1344,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
   nextView : (data: SankeyData, views: { id: string, view_data: SankeyData, nom: string }[], new_view: string)=>void
 ) => {
   if (current) {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && document.activeElement?.tagName!=='INPUT') {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
+      e.preventDefault()
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
           if (d != undefined) {
