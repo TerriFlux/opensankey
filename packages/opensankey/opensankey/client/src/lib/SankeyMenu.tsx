@@ -791,10 +791,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_vert=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_vert){
-      case 'milieu':
+      case 'middle':
         d.y_label=d.label_height/2
         break
-      case 'bas':
+      case 'bottom':
         d.y_label=d.label_height-3
         break
       default:
@@ -806,10 +806,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_horiz=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_horiz){
-      case 'milieu':
+      case 'middle':
         d.x_label=d.label_width/2
         break
-      case 'droite':
+      case 'right':
         d.x_label=d.label_width-3
         break
       default:
@@ -1450,11 +1450,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       label={t('Noeud.labels.haut')}
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'top' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'haut'
+                        data.style_node[selected_style_node].display_style.label_vert = 'top'
                         set_data({ ...data })
                       }}
 
@@ -1465,11 +1465,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_vert = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1479,11 +1479,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Bas')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bottom' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'bas'
+                        data.style_node[selected_style_node].display_style.label_vert = 'bottom'
                         set_data({ ...data })
                       }}
                     />
@@ -1498,11 +1498,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.gauche')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'left' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'gauche'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'left'
                         set_data({ ...data })
                       }}
                     />
@@ -1512,11 +1512,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1526,11 +1526,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.droite')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'right' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'droite'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'right'
                         set_data({ ...data })
                       }}
                     />
@@ -2608,10 +2608,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                                   const width = +d3.select('#' + d.idNode).attr('width')
                       
-                                  if (d.display_style.label_horiz == 'milieu') {
+                                  if (d.display_style.label_horiz == 'middle') {
                                     return width / 2
-                                  } else if (d.display_style.label_horiz == 'droite') {
-                                    return d.display_style.label_vert == 'milieu' ? width : 0
+                                  } else if (d.display_style.label_horiz == 'right') {
+                                    return d.display_style.label_vert == 'middle' ? width : 0
                                   } else {
                                     return 0
                                   }
@@ -2622,9 +2622,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 const width = +d3.select('#' + d.idNode).attr('width')
                                 if (d.x_label) {
                                   return d.x_label
-                                } else if (d.display_style.label_horiz == 'milieu') {
+                                } else if (d.display_style.label_horiz == 'middle') {
                                   return width / 2
-                                } else if (d.display_style.label_horiz == 'droite') {
+                                } else if (d.display_style.label_horiz == 'right') {
                                   return width
                                 } else {
                                   return 0
@@ -3029,8 +3029,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         color_border: 'black',
                         transparent: false,
                         transparent_border: false,
-                        position_vert: 'milieu',
-                        position_horiz: 'gauche',
+                        position_vert: 'middle',
+                        position_horiz: 'left',
                         font_size: 12,
                         font_weight: false,
                         font_style: false,
@@ -3243,11 +3243,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.haut')}
-                      checked={allNodeLabelVert('vert', 'haut')}
+                      checked={allNodeLabelVert('vert', 'top')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'haut'
+                            d.position_vert = 'top'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.font_size + 3
                           })
@@ -3262,11 +3262,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={allNodeLabelVert('vert', 'milieu')}
+                      checked={allNodeLabelVert('vert', 'middle')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'milieu'
+                            d.position_vert = 'middle'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height / 2
                           })
@@ -3281,11 +3281,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Bas')}
 
-                      checked={allNodeLabelVert('vert', 'bas')}
+                      checked={allNodeLabelVert('vert', 'bottom')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'bas'
+                            d.position_vert = 'bottom'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height - 3
                           })
@@ -3303,11 +3303,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.gauche')}
-                      checked={allNodeLabelVert('horiz', 'gauche')}
+                      checked={allNodeLabelVert('horiz', 'left')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'gauche'
+                            d.position_horiz = 'left'
                           })
 
                           set_data({ ...data })
@@ -3337,11 +3337,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.droite')}
 
-                      checked={allNodeLabelVert('horiz', 'droite')}
+                      checked={allNodeLabelVert('horiz', 'right')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'droite'
+                            d.position_horiz = 'right'
                           })
                           set_data({ ...data })
                         }

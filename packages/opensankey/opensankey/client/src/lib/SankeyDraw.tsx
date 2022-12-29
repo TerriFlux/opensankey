@@ -1178,12 +1178,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         if (n.x_label) {
           return n.x_label
-        } else if (n.display_style.label_horiz == 'milieu') {
+        } else if (n.display_style.label_horiz == 'middle') {
           return width / 2
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return 0
-        } else if (n.display_style.label_horiz == 'droite') {
-          return n.display_style.label_vert == 'milieu' ? width : 0
+        } else if (n.display_style.label_horiz == 'right') {
+          return n.display_style.label_vert == 'middle' ? width : 0
         } else {
           return 0
         }
@@ -1192,11 +1192,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         if (n.y_label && data.show_structure !== 'structure') {
           return n.y_label
-        } else if (n.display_style.label_vert == 'milieu') {
+        } else if (n.display_style.label_vert == 'middle') {
           return height / 2
-        } else if (n.display_style.label_vert == 'haut') {
+        } else if (n.display_style.label_vert == 'top') {
           return -4
-        } else if (n.display_style.label_vert == 'bas') {
+        } else if (n.display_style.label_vert == 'bottom') {
           return height
         } else {
           return 0
@@ -1205,11 +1205,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('text-anchor', n => {
         if (n.x_label && data.show_structure !== 'structure') {
           return 'center'
-        } else if (n.display_style.label_horiz == 'milieu') {
+        } else if (n.display_style.label_horiz == 'middle') {
           return 'middle'
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return 'end'
-        } else if (n.display_style.label_horiz == 'droite') {
+        } else if (n.display_style.label_horiz == 'right') {
           return 'start'
         } else {
           return 'start'
@@ -1239,11 +1239,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         const _text = document.getElementById(n.idNode + '_text')
         const width_text = (_text) ? _text.getBoundingClientRect().width : 0
-        if (n.display_style.label_horiz_valeur == 'milieu') {
+        if (n.display_style.label_horiz_valeur == 'middle') {
           return width / 2
-        } else if (n.display_style.label_horiz_valeur == 'gauche') {
+        } else if (n.display_style.label_horiz_valeur == 'left') {
           return -width / 2
-        } else if (n.display_style.label_horiz_valeur == 'droite') {
+        } else if (n.display_style.label_horiz_valeur == 'right') {
           return width + width_text / 2
         } else {
           return 0
@@ -1253,12 +1253,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         const _text = document.getElementById(n.idNode + '_text')
         const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-        if (n.display_style.label_vert_valeur == 'milieu') {
+        if (n.display_style.label_vert_valeur == 'middle') {
           // return height / 2 + height_text / 2
           return height / 2 + ((node_value_and_text_same_pos(n))?n.display_style.font_size:0)
-        } else if (n.display_style.label_vert_valeur == 'haut') {
+        } else if (n.display_style.label_vert_valeur == 'top') {
           return -n.display_style.font_size+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
-        } else if (n.display_style.label_vert_valeur == 'bas') {
+        } else if (n.display_style.label_vert_valeur == 'bottom') {
           return height+((node_value_and_text_same_pos(n))?height_text*1.8:n.display_style.font_size)
         } else {
           return 0
@@ -1280,11 +1280,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         if (n.x_label) {
           return n.x_label
-        } else if (n.display_style.label_horiz == 'milieu') {
+        } else if (n.display_style.label_horiz == 'middle') {
           return width/2-n.display_style.label_box_width/2
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return -n.display_style.label_box_width
-        } else if (n.display_style.label_horiz == 'droite') {
+        } else if (n.display_style.label_horiz == 'right') {
           return width
         } else {
           return 0
@@ -1294,11 +1294,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         if (n.y_label && data.show_structure !== 'structure') {
           return n.y_label
-        } else if (n.display_style.label_vert == 'milieu') {
+        } else if (n.display_style.label_vert == 'middle') {
           return 0
-        } else if (n.display_style.label_vert == 'haut') {
+        } else if (n.display_style.label_vert == 'top') {
           return -4
-        } else if (n.display_style.label_vert == 'bas') {
+        } else if (n.display_style.label_vert == 'bottom') {
           return height
         } else {
           return 0
@@ -1490,12 +1490,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         if (n.x_label) {
           return n.x_label
-        } else if (n.display_style.label_horiz == 'milieu') {
+        } else if (n.display_style.label_horiz == 'middle') {
           return width / 2
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return 0
-        } else if (n.display_style.label_horiz == 'droite') {
-          return n.display_style.label_vert == 'milieu' ? width : 0
+        } else if (n.display_style.label_horiz == 'right') {
+          return n.display_style.label_vert == 'middle' ? width : 0
         } else {
           return 0
         }
@@ -1504,11 +1504,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         if (n.y_label && data_v2.show_structure !== 'structure') {
           return n.y_label
-        } else if (n.display_style.label_vert == 'milieu') {
+        } else if (n.display_style.label_vert == 'middle') {
           return height / 2
-        } else if (n.display_style.label_vert == 'haut') {
+        } else if (n.display_style.label_vert == 'top') {
           return -4
-        } else if (n.display_style.label_vert == 'bas') {
+        } else if (n.display_style.label_vert == 'bottom') {
           return height
         } else {
           return 0
@@ -1517,11 +1517,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('text-anchor', n => {
         if (n.x_label && data_v2.show_structure !== 'structure') {
           return 'center'
-        } else if (n.display_style.label_horiz == 'milieu') {
+        } else if (n.display_style.label_horiz == 'middle') {
           return 'middle'
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return 'end'
-        } else if (n.display_style.label_horiz == 'droite') {
+        } else if (n.display_style.label_horiz == 'right') {
           return 'start'
         } else {
           return 'start'
@@ -1547,10 +1547,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
             const width = +d3.select('#' + d.idNode).attr('width')
 
-            if (d.display_style.label_horiz == 'milieu') {
+            if (d.display_style.label_horiz == 'middle') {
               return width / 2
-            } else if (d.display_style.label_horiz == 'droite') {
-              return d.display_style.label_vert == 'milieu' ? width : 0
+            } else if (d.display_style.label_horiz == 'right') {
+              return d.display_style.label_vert == 'middle' ? width : 0
             } else {
               return 0
             }
@@ -1561,9 +1561,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const width = +d3.select('#' + d.idNode).attr('width')
           if (d.x_label) {
             return d.x_label
-          } else if (d.display_style.label_horiz == 'milieu') {
+          } else if (d.display_style.label_horiz == 'middle') {
             return width / 2
-          } else if (d.display_style.label_horiz == 'droite') {
+          } else if (d.display_style.label_horiz == 'right') {
             return width
           } else {
             return 0
@@ -1571,11 +1571,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         //Nombre de tspan dans la balise text
         const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
-        if (d.display_style.label_vert == 'milieu') {
+        if (d.display_style.label_vert == 'middle') {
           d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
-        } else if (d.display_style.label_vert == 'bas') {
+        } else if (d.display_style.label_vert == 'bottom') {
           d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
-        } else if (d.display_style.label_vert == 'haut') {
+        } else if (d.display_style.label_vert == 'top') {
           d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
 
         }
@@ -1591,11 +1591,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const width = +d3.select('#' + n.idNode).attr('width')
         const _text = document.getElementById(n.idNode + '_text')
         const width_text = (_text) ? _text.getBoundingClientRect().width : 0
-        if (n.display_style.label_horiz == 'milieu') {
+        if (n.display_style.label_horiz == 'middle') {
           return width / 2
-        } else if (n.display_style.label_horiz == 'gauche') {
+        } else if (n.display_style.label_horiz == 'left') {
           return -width / 2
-        } else if (n.display_style.label_horiz == 'droite') {
+        } else if (n.display_style.label_horiz == 'right') {
           return width + width_text / 2
         } else {
           return 0
@@ -1605,11 +1605,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         const height = +d3.select('#' + n.idNode).attr('height')
         const _text = document.getElementById(n.idNode + '_text')
         const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-        if (n.display_style.label_vert == 'milieu') {
+        if (n.display_style.label_vert == 'middle') {
           return height / 2 + height_text / 2
-        } else if (n.display_style.label_vert == 'haut') {
+        } else if (n.display_style.label_vert == 'top') {
           return '-2em'
-        } else if (n.display_style.label_vert == 'bas') {
+        } else if (n.display_style.label_vert == 'bottom') {
           return height + height_text * 0.8
         } else {
           return 0
@@ -2732,10 +2732,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       d3.select('#' + d.idLabel + ' text').select('tspan')
         .attr('dy',()=>{
-          if((d.position_vert=='bas') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+          if((d.position_vert=='bottom') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
             const tmp=d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
             return -tmp+'em'
-          }else if((d.position_vert=='milieu') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+          }else if((d.position_vert=='middle') && d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
             const tmp=d3.select('#' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
             return -tmp/2+'em'
           }
@@ -2747,29 +2747,29 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           let tmp=0
 
           switch(d.position_horiz){
-          case 'gauche':
+          case 'left':
             tmp= 0
             break
           case 'centre':
             tmp=d.label_width/2
             break
-          case 'droite':
+          case 'right':
             tmp=d.label_width
             break
           }
           return tmp
         })
         .attr('text-anchor',()=>{
-          let tmp='gauche'
+          let tmp='left'
 
           switch(d.position_horiz){
-          case 'gauche':
+          case 'left':
             tmp= 'start'
             break
           case 'centre':
             tmp='middle'
             break
-          case 'droite':
+          case 'right':
             tmp='end'
             break
           }
