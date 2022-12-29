@@ -85,7 +85,7 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      console.log(listKey[i] + ' not in val')
+      //console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
@@ -428,7 +428,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 
   for (const i in listKey) {
     if ( val === undefined) {
-      console.log(listKey[i] + ' not found in val')
+      //console.log(listKey[i] + ' not found in val')
       break
     }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
