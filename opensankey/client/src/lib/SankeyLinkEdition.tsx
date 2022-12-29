@@ -227,6 +227,15 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_size) ? size : 11
   }
+
+  const isAllLinkToPrecision=()=>{
+    let toPrecision = true
+    multi_selected_links.current.map(d => {
+      toPrecision = (d.to_precision) ? toPrecision : false
+    })
+    return toPrecision
+  }
+
   const labelPositionVert = (param: string) => {
     let allChecked = true
     if (multi_selected_links.current.length != 0) {
@@ -515,6 +524,18 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                       }
                     }
                   />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Label>{t('Flux.data.toPrecision')}</Form.Label>
+                </Col>
+                <Col>
+
+                  <FormCheck inline type='switch' checked={isAllLinkToPrecision()} onChange={evt=>{
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
+                    set_data({...data})
+                  }}></FormCheck>
                 </Col>
               </Row>
               <Row >
