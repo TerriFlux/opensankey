@@ -1625,7 +1625,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
-  first_selected_node:Record<string,unknown>
+  first_selected_node:Record<string,unknown>,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
 )=>{
   svgSankey.on('click', ev => {
     if ((!ev.ctrlKey && !ev.metaKey)&& mode_selection == 'n' && current) {
@@ -1669,7 +1670,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           const pos = d3.pointer(event)
           new_node1.x = pos[0]
           new_node1.y = pos[1]
-          first_selected_node={new_node1}
+          set_first_selected_node(new_node1)
           set_data({ ...data })
         }
       }     
@@ -1753,7 +1754,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           new_link.recycling = true
         }    
         data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
-        data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)    
+        data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)  
+        set_first_selected_node({})
         set_data({...data})    
       }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && current && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
         d3.selectAll('#svg #path-flux').remove()
@@ -1784,7 +1786,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         }    
         fsn.outputLinksId.push(n_link.idLink)
         n_node.inputLinksId.push(n_link.idLink)    
-        multi_selected_links.current=[n_link]    
+        multi_selected_links.current=[n_link]
+        set_first_selected_node({})
         set_data({ ...data })
       }
       
@@ -1792,7 +1795,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     })
 }
 
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
+export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
     d3.selectAll('#svg #path-flux').remove()
     const n_link = default_link(data)
@@ -1832,7 +1835,11 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
-
+    if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
+      const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
+      tmp.name='node'+(Object.keys(data.nodes).length-1)
+    }
+    set_first_selected_node({})
     set_data({ ...data })
   }else if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
@@ -1853,6 +1860,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     d.inputLinksId.push(new_link.idLink)
     d3.selectAll('#svg #path-flux').remove()
 
+    set_first_selected_node({})
     set_data({...data})
   }
 }
