@@ -85,7 +85,7 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      console.log(listKey[i] + ' not in val')
+      //console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
@@ -428,7 +428,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 
   for (const i in listKey) {
     if ( val === undefined) {
-      console.log(listKey[i] + ' not found in val')
+      //console.log(listKey[i] + ' not found in val')
       break
     }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
@@ -496,10 +496,10 @@ export const default_sankey_data = (): SankeyData => {
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert: 'bas',
-          label_horiz: 'milieu',
-          label_vert_valeur: 'milieu',
-          label_horiz_valeur: 'milieu',
+          label_vert: 'bottom',
+          label_horiz: 'middle',
+          label_vert_valeur: 'middle',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width: 110,
           label_color:false,
@@ -811,10 +811,10 @@ export const default_node = (
       filter_label: 0,
       global_curvature: 0.5,
       null_flux: false,
-      label_vert: 'bas',
-      label_horiz: 'milieu',
-      label_vert_valeur: 'milieu',
-      label_horiz_valeur: 'milieu',
+      label_vert: 'bottom',
+      label_horiz: 'middle',
+      label_vert_valeur: 'middle',
+      label_horiz_valeur: 'middle',
       value_font_size:14,
       label_box_width: 110,
       label_color:false
