@@ -451,6 +451,7 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
+    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
