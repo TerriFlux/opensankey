@@ -1384,7 +1384,7 @@ export const convert_data = (
     for (const i in listKey) {
       if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
         if ( v === undefined) {
-          console.log(listKey[i] + ' not found in v')
+          //console.log(listKey[i] + ' not found in v')
           break
         }
         flux_max = convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1,flux_max)
