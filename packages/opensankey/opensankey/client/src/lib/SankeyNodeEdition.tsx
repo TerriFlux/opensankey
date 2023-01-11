@@ -1608,7 +1608,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens sortants</Button>
@@ -1623,7 +1623,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens entrants</Button>
