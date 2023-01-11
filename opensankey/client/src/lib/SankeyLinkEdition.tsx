@@ -470,61 +470,71 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
                   }
 
                 })}
-              <Row >
+              <Col>
+                <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Valeur pour ces paramètres</FormLabel>
+              </Col>
+              <Col>
+                <Form.Control
+                  disabled={value_selected_parameter().is_percent}
+                  type='text'
+                  value={test_value(value_selected_parameter().value)}
+                  onChange={
+                    evt => {
+                      if(evt.target.value!=='' && !isNaN(+evt.target.value )){
+                        const was_empty=test_value(value_selected_parameter().value)===''
+                        let val = Object(selected_link.current.value)
+                        multi_selected_links.current.map(d => {
+                          d.dashed=(was_empty)?false:d.dashed
+                          val = d.value
+                          Object.values(tags_selected).forEach(tag => {
+                            if (val[tag] === undefined) {
+                              val[tag] = {}
+                            }
+                            val = val[tag]
+                          })
+                          val.value = +evt.target.value
+
+                        })
+
+                        const scale = d3.scaleLinear()
+                          .domain([0, data.user_scale])
+                          .range([0, 100])
+                        if (scale(+evt.target.value) > 500) {
+                          data.user_scale = +evt.target.value
+                        }
+                      }else{
+
+                        let val = Object(selected_link.current.value)
+                        multi_selected_links.current.map(d => {
+                          val = d.value
+                          d.dashed=true
+                          Object.values(tags_selected).forEach(tag => {
+                            if (val[tag] === undefined) {
+                              val[tag] = {}
+                            }
+                            val = val[tag]
+                          })
+                          val.value = ''
+
+                        })
+                      }
+                      
+    
+                      set_data({ ...data })
+                    }
+                  }
+                />
+              </Col>
+              <Row>
                 <Col>
-                  <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Valeur pour ces paramètres</FormLabel>
+                  <Form.Label>{t('Flux.data.toPrecision')}</Form.Label>
                 </Col>
                 <Col>
-                  <Form.Control
-                    disabled={value_selected_parameter().is_percent}
-                    type='text'
-                    value={test_value(value_selected_parameter().value)}
-                    onChange={
-                      evt => {
-                        if(evt.target.value!=='' && !isNaN(+evt.target.value )){
-                          const was_empty=test_value(value_selected_parameter().value)===''
-                          let val = Object(selected_link.current.value)
-                          multi_selected_links.current.map(d => {
-                            d.dashed=(was_empty)?false:d.dashed
-                            val = d.value
-                            Object.values(tags_selected).forEach(tag => {
-                              if (val[tag] === undefined) {
-                                val[tag] = {}
-                              }
-                              val = val[tag]
-                            })
-                            val.value = +evt.target.value
-  
-                          })
 
-                          const scale = d3.scaleLinear()
-                            .domain([0, data.user_scale])
-                            .range([0, 100])
-                          if (scale(+evt.target.value) > 500) {
-                            data.user_scale = +evt.target.value
-                          }
-                        }else{
-
-                          let val = Object(selected_link.current.value)
-                          multi_selected_links.current.map(d => {
-                            val = d.value
-                            d.dashed=true
-                            Object.values(tags_selected).forEach(tag => {
-                              if (val[tag] === undefined) {
-                                val[tag] = {}
-                              }
-                              val = val[tag]
-                            })
-                            val.value = ''
-  
-                          })
-                        }
-                        
-      
-                        set_data({ ...data })
-                      }
-                    }
-                  />
+                  <FormCheck inline type='switch' checked={isAllLinkToPrecision()} onChange={evt=>{
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
+                    set_data({...data})
+                  }}></FormCheck>
                 </Col>
               </Row>
 
