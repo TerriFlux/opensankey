@@ -381,7 +381,7 @@ export const link_text = (
       return
     }
   }
-  the_link_value = toPrecision(the_link_value)
+  the_link_value = (d.to_precision)?toPrecision(the_link_value):the_link_value
   return the_link_value
 }
 
@@ -531,6 +531,7 @@ export const default_sankey_data = (): SankeyData => {
         // Ajout
         gradient: false,
         dashed:true,
+        to_precision:true,
 
         value: {},
 
@@ -887,7 +888,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    dashed:true
+    dashed:true,
+    to_precision:true,
   }
 }
 

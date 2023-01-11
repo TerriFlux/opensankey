@@ -456,6 +456,7 @@ export const convert_data = (
         // Ajout
         gradient: false,
         dashed:false,
+        to_precision:true,
 
         value: {},
 
