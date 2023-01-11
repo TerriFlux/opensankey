@@ -977,7 +977,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
     if(mode_selection=='s'){
-      ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve,mode_selection,alt_key_pressed,static_sankey))
+      ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
     }
 
     if ( data.nodeTags['Type de noeud'] ) {
