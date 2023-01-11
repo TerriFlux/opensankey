@@ -2815,7 +2815,23 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Inverser Flux</FormLabel>
+                          <FormLabel>{t('Flux.hideLProd')}</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Check
+                            inline
+                            type='switch'
+                            checked={data.hide_lone_product}
+                            onChange={evt => {
+                              data.hide_lone_product=evt.target.checked
+                              set_data({ ...data })
+                            }}
+                          />  
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col>
+                          <FormLabel>{t('Flux.invert_link')}</FormLabel>
                         </Col>
                         <Col >
                           <Button variant='info'

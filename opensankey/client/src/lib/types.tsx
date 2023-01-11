@@ -198,6 +198,7 @@ export const SankeyDataPropTypes = {
   couleur_fond_sankey:PropTypes.string.isRequired,
   displayed_node_selector:PropTypes.bool.isRequired,
   displayed_link_selector:PropTypes.bool.isRequired,
+  hide_lone_product:PropTypes.bool.isRequired,
 
   user_scale: PropTypes.number.isRequired,
   maximum_flux: PropTypes.number,
