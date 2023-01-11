@@ -114,10 +114,11 @@ export const SankeyLinkPropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
+
   // Ajout
   gradient: PropTypes.bool.isRequired,
   dashed:PropTypes.bool.isRequired,
-
+  to_precision:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
@@ -278,3 +279,8 @@ export interface SankeyAppState {
 
   data: SankeyData
 }
+
+export const SankeyDrawCurvePropType={
+  curve:PropTypes.func.isRequired
+}
+export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>

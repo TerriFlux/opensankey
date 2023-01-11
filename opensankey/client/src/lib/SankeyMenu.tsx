@@ -365,7 +365,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const clickSaveSVG = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     const html = ((svg.attr('title', 'test2')
@@ -377,7 +377,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
   }
   const clickSavePDF = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
@@ -552,10 +552,10 @@ const Menu: FunctionComponent<MenuTypes> = (
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             multi_selected_nodes.current = m_s
             Object.values(data.nodes).forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',0)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
             )
             multi_selected_nodes.current.forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',2)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)          
           }}
@@ -621,15 +621,15 @@ const Menu: FunctionComponent<MenuTypes> = (
             multi_selected_links.current = m_s
             Object.values(data.links).forEach( l => {
               
-              d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
 
             } 
             )
             multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll('#gg_' + l.idLink + ' rect')
+              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
               sel.attr('fill-opacity', '1')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
 
               
             })
@@ -2276,7 +2276,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           let margin_top = 0
                           if (test && test.length > 0) {
                             margin_top = test[0].getBoundingClientRect().height
-                            d3.select('#svg-container').style('margin-top',margin_top+'px')
+                            d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
                           }
                         }
                       })()
@@ -2519,7 +2519,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 selected_node.current = default_node(data)
                                 multi_selected_nodes.current = []
                                 // Object.values(data.nodes).forEach( n => 
-                                //   d3.select('#' + n.idNode).attr('stroke-width',0)
+                                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
                                 // )
                                 // setForceUpdate(!forceUpdate)
                                 set_data({ ...data })
@@ -2598,15 +2598,15 @@ const Menu: FunctionComponent<MenuTypes> = (
                               }
                               multi_selected_nodes.current[0].name = evt.target.value
                               const d = multi_selected_nodes.current[0]
-                              d3.select('#' + d.idNode + '_text').text(evt.target.value)            
+                              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)            
                               const wrap = textwrap()
                                 .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
                                 .method('tspans')
-                              d3.select('#ggg_' + d.idNode + ' text')
+                              d3.select(' .opensankey #ggg_' + d.idNode + ' text')
                                 .call(wrap)
                               if (!d.x_label || data.show_structure === 'structure') {
-                                d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                  const width = +d3.select('#' + d.idNode).attr('width')
+                                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                       
                                   if (d.display_style.label_horiz == 'middle') {
                                     return width / 2
@@ -2618,8 +2618,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 })
                               }
                       
-                              d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                const width = +d3.select('#' + d.idNode).attr('width')
+                              d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                                 if (d.x_label) {
                                   return d.x_label
                                 } else if (d.display_style.label_horiz == 'middle') {
@@ -3801,8 +3801,7 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   const {t} =useTranslation()
-  const [elementToDispose, set_elementToDispose] = useState('')
-
+  const [elementToDispose, set_elementToDispose] = useState([''])
   return (
     <Modal
       size="xl"
@@ -3858,24 +3857,71 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
           </Form.Group>
         </Form>
         <Form.Label>{t('Menu.textDisposition')}</Form.Label>
-        <FormGroup as={Row}>
+        <FormGroup as={Row} onClick={()=>{
+          set_sankey_data({...sankey_data})
+        }}>
           <Col xs={2}>
-            <Form.Check inline checked={ elementToDispose=='posNode'} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('posNode'):set_elementToDispose('')}/>
+            <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('posNode')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose=='attrNode'} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrNode'):set_elementToDispose('')}/>
+            <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('attrNode')
+                set_elementToDispose(elementToDispose)
+
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose=='attrFlux'} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrFlux'):set_elementToDispose('')}/>
+            <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{ 
+              if(evt.target.checked){
+                elementToDispose.push('attrFlux')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose=='tagNode'} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('tagNode'):set_elementToDispose('')}/>
+            <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
+              if(evt.target.checked){
+                elementToDispose.push('tagNode')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
+                set_elementToDispose(elementToDispose)
+                
+              }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose=='tagFlux'} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('tagFlux'):set_elementToDispose('')}/>
+            <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('tagFlux')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose=='attrGeneral'} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) => (evt.target.checked)?set_elementToDispose('attrGeneral'):set_elementToDispose('')}/>
+            <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
+              if(evt.target.checked){
+                elementToDispose.push('attrGeneral')
+                set_elementToDispose(elementToDispose)
+                
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
           </Col>
         </FormGroup>
       </Modal.Body>
