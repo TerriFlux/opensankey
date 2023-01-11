@@ -420,10 +420,10 @@ export const convert_data = (
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert: 'bas',
-          label_horiz: 'milieu',
-          label_vert_valeur: 'milieu',
-          label_horiz_valeur: 'milieu',
+          label_vert: 'bottom',
+          label_horiz: 'middle',
+          label_vert_valeur: 'middle',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width: 110,
           label_color:false,
@@ -701,17 +701,17 @@ export const convert_data = (
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert:'bas',
-          label_horiz:'milieu',
-          label_vert_valeur: 'bas',
-          label_horiz_valeur: 'milieu',
+          label_vert:'bottom',
+          label_horiz:'middle',
+          label_vert_valeur: 'bottom',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width:110,
           label_color:false
         }
       }
-      if (n.display_style.label_vert === 'bas' && n.display_style.label_horiz === 'droite') {
-        n.display_style.label_horiz = 'milieu'
+      if (n.display_style.label_vert === 'bottom' && n.display_style.label_horiz === 'right') {
+        n.display_style.label_horiz = 'middle'
       }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Cormorant'
@@ -1384,7 +1384,7 @@ export const convert_data = (
     for (const i in listKey) {
       if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
         if ( v === undefined) {
-          console.log(listKey[i] + ' not found in v')
+          //console.log(listKey[i] + ' not found in v')
           break
         }
         flux_max = convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1,flux_max)

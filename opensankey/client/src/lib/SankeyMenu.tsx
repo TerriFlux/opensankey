@@ -365,7 +365,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const clickSaveSVG = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     const html = ((svg.attr('title', 'test2')
@@ -377,7 +377,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
   }
   const clickSavePDF = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
@@ -552,10 +552,10 @@ const Menu: FunctionComponent<MenuTypes> = (
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             multi_selected_nodes.current = m_s
             Object.values(data.nodes).forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',0)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
             )
             multi_selected_nodes.current.forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',2)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)          
           }}
@@ -621,15 +621,15 @@ const Menu: FunctionComponent<MenuTypes> = (
             multi_selected_links.current = m_s
             Object.values(data.links).forEach( l => {
               
-              d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
 
             } 
             )
             multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll('#gg_' + l.idLink + ' rect')
+              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
               sel.attr('fill-opacity', '1')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
 
               
             })
@@ -791,10 +791,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_vert=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_vert){
-      case 'milieu':
+      case 'middle':
         d.y_label=d.label_height/2
         break
-      case 'bas':
+      case 'bottom':
         d.y_label=d.label_height-3
         break
       default:
@@ -806,10 +806,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_horiz=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_horiz){
-      case 'milieu':
+      case 'middle':
         d.x_label=d.label_width/2
         break
-      case 'droite':
+      case 'right':
         d.x_label=d.label_width-3
         break
       default:
@@ -1450,11 +1450,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       label={t('Noeud.labels.haut')}
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'top' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'haut'
+                        data.style_node[selected_style_node].display_style.label_vert = 'top'
                         set_data({ ...data })
                       }}
 
@@ -1465,11 +1465,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_vert = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1479,11 +1479,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Bas')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bottom' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'bas'
+                        data.style_node[selected_style_node].display_style.label_vert = 'bottom'
                         set_data({ ...data })
                       }}
                     />
@@ -1498,11 +1498,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.gauche')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'left' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'gauche'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'left'
                         set_data({ ...data })
                       }}
                     />
@@ -1512,11 +1512,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1526,11 +1526,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.droite')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'right' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'droite'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'right'
                         set_data({ ...data })
                       }}
                     />
@@ -2276,7 +2276,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                           let margin_top = 0
                           if (test && test.length > 0) {
                             margin_top = test[0].getBoundingClientRect().height
-                            d3.select('#svg-container').style('margin-top',margin_top+'px')
+                            d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
                           }
                         }
                       })()
@@ -2519,7 +2519,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 selected_node.current = default_node(data)
                                 multi_selected_nodes.current = []
                                 // Object.values(data.nodes).forEach( n => 
-                                //   d3.select('#' + n.idNode).attr('stroke-width',0)
+                                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
                                 // )
                                 // setForceUpdate(!forceUpdate)
                                 set_data({ ...data })
@@ -2598,33 +2598,33 @@ const Menu: FunctionComponent<MenuTypes> = (
                               }
                               multi_selected_nodes.current[0].name = evt.target.value
                               const d = multi_selected_nodes.current[0]
-                              d3.select('#' + d.idNode + '_text').text(evt.target.value)            
+                              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)            
                               const wrap = textwrap()
                                 .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
                                 .method('tspans')
-                              d3.select('#ggg_' + d.idNode + ' text')
+                              d3.select(' .opensankey #ggg_' + d.idNode + ' text')
                                 .call(wrap)
                               if (!d.x_label || data.show_structure === 'structure') {
-                                d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                  const width = +d3.select('#' + d.idNode).attr('width')
+                                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                       
-                                  if (d.display_style.label_horiz == 'milieu') {
+                                  if (d.display_style.label_horiz == 'middle') {
                                     return width / 2
-                                  } else if (d.display_style.label_horiz == 'droite') {
-                                    return d.display_style.label_vert == 'milieu' ? width : 0
+                                  } else if (d.display_style.label_horiz == 'right') {
+                                    return d.display_style.label_vert == 'middle' ? width : 0
                                   } else {
                                     return 0
                                   }
                                 })
                               }
                       
-                              d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                const width = +d3.select('#' + d.idNode).attr('width')
+                              d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                                 if (d.x_label) {
                                   return d.x_label
-                                } else if (d.display_style.label_horiz == 'milieu') {
+                                } else if (d.display_style.label_horiz == 'middle') {
                                   return width / 2
-                                } else if (d.display_style.label_horiz == 'droite') {
+                                } else if (d.display_style.label_horiz == 'right') {
                                   return width
                                 } else {
                                   return 0
@@ -3045,8 +3045,8 @@ const Menu: FunctionComponent<MenuTypes> = (
                         color_border: 'black',
                         transparent: false,
                         transparent_border: false,
-                        position_vert: 'milieu',
-                        position_horiz: 'gauche',
+                        position_vert: 'middle',
+                        position_horiz: 'left',
                         font_size: 12,
                         font_weight: false,
                         font_style: false,
@@ -3259,11 +3259,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.haut')}
-                      checked={allNodeLabelVert('vert', 'haut')}
+                      checked={allNodeLabelVert('vert', 'top')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'haut'
+                            d.position_vert = 'top'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.font_size + 3
                           })
@@ -3278,11 +3278,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={allNodeLabelVert('vert', 'milieu')}
+                      checked={allNodeLabelVert('vert', 'middle')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'milieu'
+                            d.position_vert = 'middle'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height / 2
                           })
@@ -3297,11 +3297,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.Bas')}
 
-                      checked={allNodeLabelVert('vert', 'bas')}
+                      checked={allNodeLabelVert('vert', 'bottom')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'bas'
+                            d.position_vert = 'bottom'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height - 3
                           })
@@ -3319,11 +3319,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       disabled={allLabelAsHTML()}
                       type='radio'
                       label={t('Noeud.labels.gauche')}
-                      checked={allNodeLabelVert('horiz', 'gauche')}
+                      checked={allNodeLabelVert('horiz', 'left')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'gauche'
+                            d.position_horiz = 'left'
                           })
 
                           set_data({ ...data })
@@ -3353,11 +3353,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       type='radio'
                       label={t('Noeud.labels.droite')}
 
-                      checked={allNodeLabelVert('horiz', 'droite')}
+                      checked={allNodeLabelVert('horiz', 'right')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'droite'
+                            d.position_horiz = 'right'
                           })
                           set_data({ ...data })
                         }

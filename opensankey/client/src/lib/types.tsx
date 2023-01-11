@@ -280,3 +280,8 @@ export interface SankeyAppState {
 
   data: SankeyData
 }
+
+export const SankeyDrawCurvePropType={
+  curve:PropTypes.func.isRequired
+}
+export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>
