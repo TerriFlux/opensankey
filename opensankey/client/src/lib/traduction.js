@@ -183,7 +183,8 @@ const resources = {
         data:{
           'données':'Data',
           'vpp':'Value for parameter',
-          'affichage':'Display'
+          'affichage':'Display',
+          'toPrecision':'Scientific display of value'
         },
         apparence:{
           'apparence':'Appearence',
@@ -428,7 +429,9 @@ const resources = {
         data:{
           'données':'Données',
           'vpp':'Valeur pour ces paramètres',
-          'affichage':'Affichage'
+          'affichage':'Affichage',
+          'toPrecision':'Valeur scientifique'
+
         },
         apparence:{
           'apparence':'Appearence',

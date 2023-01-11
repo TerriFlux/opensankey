@@ -125,10 +125,10 @@ export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>num
 }
 
 export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<SVGDefsElement,unknown,HTMLElement,unknown>)=>{
-  const width_src = +d3.select('#' + l.idSource).attr('width')
-  const height_src = +d3.select('#' + l.idSource).attr('height')
-  const width_trgt = +d3.select('#' + l.idTarget).attr('width')
-  // const height_trgt = +d3.select('#' + l.idTarget).attr('height')  
+  const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
+  const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
+  const width_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('width')
+  // const height_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('height')  
   const gradient = defGradient.append('defs')
     .append('linearGradient')
     .attr('id', 'gradient-' + l.idSource + '-' + l.idTarget)
@@ -205,9 +205,9 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
     .attr('stop-opacity', 1)  
   const nodes = data.nodes  
   if (l.orientation == 'hh' || l.orientation == 'hv') {
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idSource].x + width_src)
           .attr('y1', '0')
           .attr('x2', nodes[l.idTarget].x)
@@ -226,7 +226,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
           return n.iconColor
         }
       } else {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idTarget].x + width_trgt)
           .attr('y1', '0')
           .attr('x2', nodes[l.idSource].x)
@@ -247,7 +247,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
       }
     }
     )  
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].x > nodes[l.idTarget].x) {
         const n = nodes[l.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -281,9 +281,9 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
     )
   } else if (l.orientation == 'vv' || l.orientation == 'hv') {
     //orientation vert-vert
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].y < nodes[l.idTarget].y) {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', 0)
           .attr('y1', data.nodes[l.idSource].y + height_src)
           .attr('x2', 0)
@@ -302,7 +302,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
           return n.iconColor
         }
       } else {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', 0)
           .attr('y1', data.nodes[l.idTarget].y + height_src)
           .attr('x2', 0)
@@ -323,7 +323,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
       }
     }
     )  
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].y > nodes[l.idTarget].y) {
         const n = nodes[l.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -356,9 +356,9 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
     }
     )
   } else if (l.orientation == 'vh') {  
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idSource].x + width_src - 10)
           .attr('y1', '0')
           .attr('x2', nodes[l.idTarget].x)
@@ -377,7 +377,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
           return n.iconColor
         }
       } else {
-        d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idTarget].x + width_trgt + 10)
           .attr('y1', '0')
           .attr('x2', nodes[l.idSource].x)
@@ -398,7 +398,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
       }
     }
     )  
-    d3.select('#gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].x > nodes[l.idTarget].x) {
         const n = nodes[l.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -444,20 +444,20 @@ export const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyL
     multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
     if (multi_selected_links.current.includes(d)) {
       multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-      d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-      d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-      d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-      d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-      d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-      d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
     } else {
       multi_selected_links.current.push(d)
-      d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
-      d3.selectAll('#gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-      d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
-      d3.selectAll('#gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-      d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-      d3.selectAll('#gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
+      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
     }
     if ( accordion_ref && accordion_ref.current) {
       for ( const child in accordion_ref.current.children) {
@@ -531,10 +531,10 @@ export const compute_end_points = (
   const delta_t_width_top = Math.max(0, (node_size_t_width - t_total_offset_width_top) / 2)
   const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
   const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
-  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select('#' + source_node.idNode).attr('width')
-  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select('#' + source_node.idNode).attr('height')
-  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select('#' + source_node.idNode).attr('width')
-  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select('#' + source_node.idNode).attr('height')
+  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #' + source_node.idNode).attr('width')
+  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #' + source_node.idNode).attr('height')
+  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #' + source_node.idNode).attr('width')
+  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #' + source_node.idNode).attr('height')
   let xs = source_node_x
   let ys = source_node_y
   let xt = target_node_x
@@ -695,12 +695,12 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-      d3.select('#' + d.idNode).attr('stroke-width',0)
-      d3.select('#ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
+      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',0)
+      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
     } else {
       multi_selected_nodes.current.push(d)
-      d3.select('#' + d.idNode).attr('stroke-width',2)
-      d3.select('#ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
+      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
     }
     select_node(d)
     if ( accordion_ref && accordion_ref.current) {
@@ -778,11 +778,11 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   const wrap = textwrap()
     .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
     .method('tspans')
-  d3.select('#ggg_' + d.idNode + ' text')
+  d3.select(' .opensankey #ggg_' + d.idNode + ' text')
     .call(wrap)
   if (!d.x_label || data.show_structure == 'structure') {
-    d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-      const width = +d3.select('#' + d.idNode).attr('width')
+    d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+      const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
 
       if (d.display_style.label_horiz == 'milieu') {
         return width / 2
@@ -794,8 +794,8 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     })
   }
 
-  d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-    const width = +d3.select('#' + d.idNode).attr('width')
+  d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+    const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
     if (d.x_label) {
       return d.x_label
     } else if (d.display_style.label_horiz == 'milieu') {
@@ -807,13 +807,13 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     }
   })
   //Nombre de tspan dans la balise text
-  const nb_tspan = d3.selectAll('#ggg_' + d.idNode + ' text tspan').nodes().length
+  const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   if (d.display_style.label_vert == 'milieu') {
-    d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
   } else if (d.display_style.label_vert == 'bas') {
-    d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
   } else if (d.display_style.label_vert == 'haut') {
-    d3.select('#ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
 
   }
 
@@ -882,13 +882,13 @@ export const setNodeHeight = (
     node_size_s_height = inv_scale(n.node_height)
     node_size_s_width = inv_scale(n.node_width)
   }  
-  d3.select('#' + n.idNode).attr('width', scale(node_size_s_width))  
-  d3.select('#' + n.idNode).attr('height', scale(node_size_s_height))  
+  d3.select(' .opensankey #' + n.idNode).attr('width', scale(node_size_s_width))  
+  d3.select(' .opensankey #' + n.idNode).attr('height', scale(node_size_s_height))  
   if (n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
-    d3.select('#' + n.idNode).attr('rx', scale(node_size_s_width / 2))
-    d3.select('#' + n.idNode).attr('cx', scale(node_size_s_width / 2))
-    d3.select('#' + n.idNode).attr('ry', scale(node_size_s_height / 2))
-    d3.select('#' + n.idNode).attr('cy', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #' + n.idNode).attr('rx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #' + n.idNode).attr('cx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #' + n.idNode).attr('ry', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #' + n.idNode).attr('cy', scale(node_size_s_height / 2))
   }
 }
 
@@ -926,15 +926,15 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
 
 export const removeAnimate = () => {
   // Si il y a des .tmp (notamment issus des animations)
-  if (d3.selectAll('.tmp').nodes().length > 0) {
+  if (d3.selectAll(' .opensankey .tmp').nodes().length > 0) {
     // On remove tous les éléments temporaires
-    d3.selectAll('.tmp').remove()
+    d3.selectAll(' .opensankey .tmp').remove()
     // Et on supprime tous les styles pour retrouver les valeurs par default qui sont dans attr
-    d3.select('#svg').selectAll('.node_shape').style('fill', null)
-    d3.select('#svg').selectAll('.link').style('stroke', null)
-    d3.select('#svg').selectAll('.arrow').style('fill', null)
-    d3.select('#svg').selectAll('.link_value').style('display', null)
-    d3.select('#svg').selectAll('.node_text').style('fill', null)
+    d3.select(' .opensankey #svg').selectAll('.node_shape').style('fill', null)
+    d3.select(' .opensankey #svg').selectAll('.link').style('stroke', null)
+    d3.select(' .opensankey #svg').selectAll('.arrow').style('fill', null)
+    d3.select(' .opensankey #svg').selectAll('.link_value').style('display', null)
+    d3.select(' .opensankey #svg').selectAll('.node_text').style('fill', null)
   }
 }
 
@@ -995,14 +995,14 @@ export const drawArrows = (
 
   Object.values(links).filter(l=>n.inputLinksId.includes(l.idLink)).map(l=>{
   //console.log(l)
-    d3.selectAll('.defsArrow marker#arrow_'+l.idLink).remove()
+    d3.selectAll(' .opensankey .defsArrow marker#arrow_'+l.idLink).remove()
   })
 
 
   const res = compute_total_offsets(inv_scale,n, data, nodeTags, test_link_value)
   // const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
-  const arr = d3.select('#svg .defsArrow')
+  const arr = d3.select(' .opensankey #svg .defsArrow')
   const left_height = res[0] / (data.user_scale / 100)
   const right_height = res[1] / (data.user_scale / 100)
   const top_height = res[2] / (data.user_scale / 100)
@@ -1035,8 +1035,8 @@ export const drawArrows = (
     const source_node = nodes[l.idSource]
     const source_node_x = source_node.position === 'absolute' ? source_node.x : +n.x + +source_node.x
     const source_node_y = source_node.position === 'absolute' ? source_node.y : +n.y + +source_node.y
-    const node_x = n.position === 'absolute' ? n.x : +source_node.x + +n.x + +d3.select('#' + source_node.idNode).attr('width')
-    const node_y = n.position === 'absolute' ? n.y : +source_node.y + +n.y + +d3.select('#' + source_node.idNode).attr('height')
+    const node_x = n.position === 'absolute' ? n.x : +source_node.x + +n.x + +d3.select(' .opensankey #' + source_node.idNode).attr('width')
+    const node_y = n.position === 'absolute' ? n.y : +source_node.y + +n.y + +d3.select(' .opensankey #' + source_node.idNode).attr('height')
     let refX = 0
     let orient = 'auto-start-reverse'
 
@@ -1100,7 +1100,7 @@ export const drawArrows = (
         .attr('stroke-opacity', 0.85)
         .attr('opacity', 0.85)
 
-      d3.select('#' + l.idLink)
+      d3.select(' .opensankey #' + l.idLink)
         .attr('marker-end', () => 'url(#arrow_' + l.idLink + ')')
     }
   }
@@ -1138,16 +1138,16 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
   link:SankeyLink,
   data:SankeyData
 )=>{
-  const width_src = +d3.select('#' + link.idSource).attr('width')
-  const height_src = +d3.select('#' + link.idSource).attr('height')
-  const width_trgt = +d3.select('#' + link.idTarget).attr('width')
-  //const height_trgt = +d3.select('#' + link.idTarget).attr('height')
+  const width_src = +d3.select(' .opensankey #' + link.idSource).attr('width')
+  const height_src = +d3.select(' .opensankey #' + link.idSource).attr('height')
+  const width_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('width')
+  //const height_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('height')
 
 
   if (link.orientation == 'hh' || link.orientation == 'hv') {
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].x < nodes[link.idTarget].x) {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idSource].x + width_src)
           .attr('y1', '0')
           .attr('x2', nodes[link.idTarget].x)
@@ -1166,7 +1166,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
           return n.iconColor
         }
       }else {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt)
           .attr('y1', '0')
           .attr('x2', nodes[link.idSource].x)
@@ -1188,7 +1188,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
     }
     )
 
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].x > nodes[link.idTarget].x) {
         const n = nodes[link.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -1222,9 +1222,9 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
     )
   } else if (link.orientation == 'vv' || link.orientation == 'hv') {
     //orientation vert-vert
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].y < nodes[link.idTarget].y) {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', 0)
           .attr('y1', data.nodes[link.idSource].y + height_src)
           .attr('x2', 0)
@@ -1232,7 +1232,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
   
         return nodes[link.idSource].color
       } else {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', 0)
           .attr('y1', data.nodes[link.idTarget].y + height_src)
           .attr('x2', 0)
@@ -1243,7 +1243,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
     }
     )
   
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].y > nodes[link.idTarget].y) {
         return nodes[link.idSource].color
       } else {
@@ -1253,9 +1253,9 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
     )
   } else if (link.orientation == 'vh') {
 
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].x < nodes[link.idTarget].x) {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idSource].x + width_src - 10)
           .attr('y1', '0')
           .attr('x2', nodes[link.idTarget].x)
@@ -1274,7 +1274,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
           return n.iconColor
         }
       } else {
-        d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
+        d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt + 10)
           .attr('y1', '0')
           .attr('x2', nodes[link.idSource].x)
@@ -1296,7 +1296,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
     }
     )
 
-    d3.select('#gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
+    d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].x > nodes[link.idTarget].x) {
         const n = nodes[link.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -1335,7 +1335,8 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
 export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
   view:string,
   set_view:React.Dispatch<React.SetStateAction<string>>,
@@ -1343,7 +1344,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
   nextView : (data: SankeyData, views: { id: string, view_data: SankeyData, nom: string }[], new_view: string)=>void
 ) => {
   if (current) {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && document.activeElement?.tagName!=='INPUT') {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
+      e.preventDefault()
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
           if (d != undefined) {
@@ -1358,7 +1360,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.y / data.grid_square_size)
             d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-            const height=+d3.select('#'+d.idNode).attr('height')
+            const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
             d.y+=(data.grid_square_size/2)-height/2
           }
           let y_max = 0
@@ -1384,7 +1386,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.y / data.grid_square_size)
             d.y = (n_pos + 1) * data.grid_square_size
-            const height=+d3.select('#'+d.idNode).attr('height')
+            const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
             d.y-=(data.grid_square_size/2)+height/2
           }
           //Augumente hauteur svg si le noeud est près du bord
@@ -1406,7 +1408,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
             d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-            const width=+d3.select('#'+d.idNode).attr('width')
+            const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
             d.x-=(data.grid_square_size/2)+width/2
           }
           //Diminue largeur svg si le noeud est près du bord
@@ -1428,7 +1430,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
             d.x = (n_pos + 1) * data.grid_square_size
-            const width=+d3.select('#'+d.idNode).attr('width')
+            const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
             d.x+=(data.grid_square_size/2)-width/2
           }
           //Augumente largeur svg si le noeud est près du bord
@@ -1623,7 +1625,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
-  first_selected_node:Record<string,unknown>
+  first_selected_node:Record<string,unknown>,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
 )=>{
   svgSankey.on('click', ev => {
     if ((!ev.ctrlKey && !ev.metaKey)&& mode_selection == 'n' && current) {
@@ -1667,7 +1670,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           const pos = d3.pointer(event)
           new_node1.x = pos[0]
           new_node1.y = pos[1]
-          first_selected_node={new_node1}
+          set_first_selected_node(new_node1)
           set_data({ ...data })
         }
       }     
@@ -1680,8 +1683,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
-        if (d3.selectAll('#svg #path-flux').nodes().length == 0) {
-          d3.select('#svg').append('line').attr('id', 'path-flux')
+        if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+          d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', last_node.x + last_node.node_width / 2)
             .attr('y1', last_node.y + last_node.node_height / 2)
             .attr('x2', pos[0])
@@ -1689,7 +1692,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
             .style('stroke', '#d9af58')
             .style('stroke-width', '2px')
         } else {
-          d3.selectAll('#svg #path-flux')
+          d3.selectAll(' .opensankey #svg #path-flux')
             .attr('x2', pos[0])
             .attr('y2', pos[1])
         }    
@@ -1697,8 +1700,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       if (Object.keys(first_selected_node).length != 0) {
         const pos = d3.pointer(event)
         const fsn = (first_selected_node as SankeyNode)    
-        if (d3.selectAll('#svg #path-flux').nodes().length == 0) {
-          d3.select('#svg').append('line').attr('id', 'path-flux')
+        if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+          d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', fsn.x + fsn.node_width / 2)
             .attr('y1', fsn.y + fsn.node_height / 2)
             .attr('x2', pos[0])
@@ -1706,7 +1709,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
             .style('stroke', 'red')
             .style('stroke-width', '2px')
         } else {
-          d3.selectAll('#svg #path-flux')
+          d3.selectAll(' .opensankey #svg #path-flux')
             .attr('x2', pos[0])
             .attr('y2', pos[1] - 5)
         }
@@ -1718,7 +1721,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       //et crée un lien entre le premier noeud crée lors du click et ce dernier     
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && current && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
         // isDown = false
-        d3.selectAll('#svg #path-flux').remove()
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
         //Création second noeud
         const new_node1 = default_node(data)
@@ -1751,10 +1754,11 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           new_link.recycling = true
         }    
         data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
-        data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)    
+        data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)  
+        set_first_selected_node({})
         set_data({...data})    
       }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && current && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
-        d3.selectAll('#svg #path-flux').remove()
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
         const n_link = default_link(data)
         const n_node = default_node(data)
         const listIdN: number[] = []
@@ -1782,7 +1786,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         }    
         fsn.outputLinksId.push(n_link.idLink)
         n_node.inputLinksId.push(n_link.idLink)    
-        multi_selected_links.current=[n_link]    
+        multi_selected_links.current=[n_link]
+        set_first_selected_node({})
         set_data({ ...data })
       }
       
@@ -1790,9 +1795,9 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     })
 }
 
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
+export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
-    d3.selectAll('#svg #path-flux').remove()
+    d3.selectAll(' .opensankey #svg #path-flux').remove()
     const n_link = default_link(data)
     const { links } = data
     const fsn = (first_selected_node as SankeyNode)
@@ -1830,7 +1835,11 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
-
+    if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
+      const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
+      tmp.name='node'+(Object.keys(data.nodes).length-1)
+    }
+    set_first_selected_node({})
     set_data({ ...data })
   }else if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
@@ -1849,8 +1858,9 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     tmp.name='node_'+Object.keys(data.nodes).length
     tmp.outputLinksId.push(new_link.idLink)
     d.inputLinksId.push(new_link.idLink)
-    d3.selectAll('#svg #path-flux').remove()
+    d3.selectAll(' .opensankey #svg #path-flux').remove()
 
+    set_first_selected_node({})
     set_data({...data})
   }
 }
@@ -1864,7 +1874,7 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
   const display_links=data.links
   Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
     setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale)
-    d3.select('#' + n.idNode)
+    d3.select(' .opensankey #' + n.idNode)
       .attr('fill-opacity',0)
   })
   // 1
@@ -1874,35 +1884,35 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('x',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('height')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       return (n.not_to_scale_direction=='left')?width_node-(width_node/50):0
     })
     .attr('y',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       return (n.not_to_scale_direction=='top')?(height_node-height_node/50):0})
     .attr('width',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
       return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/50})
     .attr('height',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/50:height_node})
@@ -1915,9 +1925,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('x',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
       if(n.not_to_scale_direction=='right'){
@@ -1931,9 +1941,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('y',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
       if(n.not_to_scale_direction=='bottom'){
@@ -1947,18 +1957,18 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('height',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/20:height_node})
     .attr('width',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/20})
@@ -1971,9 +1981,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('x',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
       if(n.not_to_scale_direction=='right'){
@@ -1987,9 +1997,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('y',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
       if(n.not_to_scale_direction=='bottom'){
@@ -2003,18 +2013,18 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('height',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/9:height_node})
     .attr('width',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/9})
@@ -2027,9 +2037,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('x',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
       if(n.not_to_scale_direction=='right'){
@@ -2043,9 +2053,9 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('y',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
       if(n.not_to_scale_direction=='bottom'){
@@ -2059,18 +2069,18 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('width',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/4.5})
     .attr('height',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/4.5:height_node})
@@ -2083,36 +2093,36 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .attr('x',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       
       return (n.not_to_scale_direction=='right')?(width_node/2):0})
     .attr('y',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
       return (n.not_to_scale_direction=='bottom')?(height_node/2):0})
     .attr('width',n=>{
       let width_node=0
       if(n.shape=='rect'){
-        width_node=+d3.select('#' + n.idNode).attr('width')
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
-        width_node=+d3.select('#' + n.idNode).attr('rx')*2
+        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/2})
     .attr('height',n=>{
       let height_node=0
       if(n.shape=='rect'){
-        height_node=+d3.select('#' + n.idNode).attr('height')
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
-        height_node=+d3.select('#' + n.idNode).attr('ry')*2
+        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
       
       return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/2:height_node})
