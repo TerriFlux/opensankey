@@ -6,14 +6,13 @@ import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './Sa
 import { default_link, link_visible,link_color } from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
+import {useTranslation} from 'react-i18next'
 
 
 const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   radio_selected: PropTypes.string.isRequired,
-  // set_multi_selected_nodes: PropTypes.func.isRequired,
-  // multi_selected_nodes: PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired
 }
@@ -26,7 +25,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const tags_visible = Object.keys(nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(nodeTags)[0] : '')
   const [parent_visible,set_parent_visible] = useState(false)
-  const [cube_dimension,set_cube_dimension] = useState(('Primaire' in nodeTags.Dimensions.tags || !tags_visible) ? 'Primaire' : Object.keys(nodeTags.Dimensions.tags)[0] )
+  const [cube_dimension,set_cube_dimension] = useState(
+    Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.entries(nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0] : 'Primaire' 
+  )
+  const {t} =useTranslation()
+
+  if (Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0 && cube_dimension == 'Primaire') {
+    if (Object.values(nodeTags).filter(tag=>tag.banner == 'level' && tag.group_name == 'Primaire').length == 0) {
+      set_cube_dimension(Object.entries(nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0])
+    }
+  }
 
   const display_nodes = data.nodes
   const display_links = data.links
@@ -38,8 +46,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   //Creation des fonctions qui check si les noeuds selectionnés ont tous la même valeurs de leurs attributs
   const isAllNodeVisible = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.shape_visible) ? true : visible)
+    multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
     return visible
+  }
+  const isAllNodeToScale = () => {
+    let toScale = false
+    multi_selected_nodes.current.map(d => toScale = (d.not_to_scale) ? true : toScale)
+    return toScale
   }
   const isAllNodeTotal = () => {
     let show_value = false
@@ -55,6 +68,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }
     return rect
   }
+  const isAllNodeNotToScaleOrientation = (orientation:string) => {
+    let same_orientation = true
+    if (multi_selected_nodes.current.length > 0) {
+      multi_selected_nodes.current.map(d => same_orientation = (d.not_to_scale_direction !== orientation) ? false : same_orientation)
+    } else {
+      same_orientation = false
+    }
+    return same_orientation
+  }
   const isAllNodeCircle = () => {
     let circle = true
     if (multi_selected_nodes.current.length > 0) {
@@ -69,7 +91,20 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_nodes.current.map(d => visible = (d.label_visible) ? true : visible)
     return visible
   }
-
+  const isAllLabelWhite = () => {
+    let visible = false
+    multi_selected_nodes.current.map(d => visible = (d.display_style.label_color) ? true : visible)
+    return visible
+  }
+  const isAllNodeColorSustainable = () => {
+    let colorS = true
+    if (multi_selected_nodes.current.length > 0) {
+      multi_selected_nodes.current.map(d => colorS = (!d.colorSustainable) ? false : colorS)
+    } else {
+      colorS = false
+    }
+    return colorS
+  }
   const displayedValueNodeWidth = () => {
     let display_width = true
     let width = 0
@@ -200,16 +235,84 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   const [link_io,set_link_io]=useState('output')
   const [link_pos,set_link_pos]=useState('right')
-  const handleUpLinkIOPos=(k_link:string,pos:string,io:string)=>{
+
+  const getIOLink=(pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
-    const input=Object.values(n.inputLinksId)
-    const output=Object.values(n.outputLinksId)
+
+    let link_io=([] as string[])
+
     if(io=='input'){
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_s.x>n.x)
+          return (cond_no_recy || cond_recy)  && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
         })
+      }else if(pos=='right'){
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_s.x<n.x)
+          return  (cond_no_recy ||cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          return n_s.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.inputLinksId).filter(k=>{
+          const n_s=data.nodes[data.links[k].idSource]
+          return n_s.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }
+    }else if(io=='output'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_t.x>n.x)
+          return (( cond_no_recy|| cond_recy)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='right'){ 
+        //Recherche tous les liens entrant a droite
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !data.links[k].recycling)
+          const cond_recy=(data.links[k].recycling && n_t.x<n.x)
+          return  ( cond_no_recy || cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='top'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          return n_t.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }else if(pos=='bottom'){
+        //Recherche tous les liens entrant en haut
+        link_io=Object.values(n.outputLinksId).filter(k=>{
+          const n_t=data.nodes[data.links[k].idTarget]
+          return n_t.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
+        })
+      }
+    }
+    return link_io
+
+  }
+
+  const handleUpLinkIOPos=(k_link:string,pos:string,io:string)=>{
+    const n=multi_selected_nodes.current[0]
+    const link_io=getIOLink(pos,io)
+    if(io=='input'){
+      if(pos=='left'){
+        //Recherche tous les liens entrant a gauche
+        
 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -222,9 +325,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -236,9 +337,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -250,9 +349,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
+     
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -266,9 +363,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }else if(io=='output'){
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -281,9 +376,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -297,9 +390,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens sortant en haut
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+ 
         
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -312,9 +403,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens sortant en bas
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -334,14 +423,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
   const handleDownLinkIOPos=(k_link:string,pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
-    const input=Object.values(n.inputLinksId)
-    const output=Object.values(n.outputLinksId)
+    const link_io=getIOLink(pos,io)
+
     if(io=='input'){
       if(pos=='left'){
         //Recherche tous les liens entrant a gauche
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+        
 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -350,13 +437,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
           const posElemt = n.inputLinksId.indexOf(k_link)
           n.inputLinksId.splice(posElemt, 1)
           n.inputLinksId.splice(posElementPrec,0,k_link)
-        }
+        } 
 
       }else if(pos=='right'){
         //Recherche tous les liens entrant a droite
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+        
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -367,9 +452,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         }
       }else if(pos=='top'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y<n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+ 
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -380,9 +463,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         }
       }else if(pos=='bottom'){
         //Recherche tous les liens entrant en haut
-        const link_io=input.filter(k=>{
-          return  data.nodes[data.links[k].idSource].y>=n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens entrant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -396,9 +477,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }else if(io=='output'){
       if(pos=='left'){
         //Recherche tous les liens sortant a gauche
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x<n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
+
 
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -411,9 +490,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='right'){
         //Recherche tous les liens sortant a droite
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x&& (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv') && link_visible(data.links[k],data)
-        })
         
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -427,9 +503,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='top'){
         //Recherche tous les liens sortant en haut
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y<n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
+
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -441,9 +515,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
       }else if(pos=='bottom'){
         //Recherche tous les liens sortant en bas
-        const link_io=output.filter(k=>{
-          return  data.nodes[data.links[k].idTarget].y>=n.y&& (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
         //Repositionne le liens avant le liens sortant du même coté
         if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
           const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -458,68 +529,22 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     
     set_data({...data})
   }
-
+  
+  const has_link_come_from=(io:string,pos:string)=>{
+    const link_io=getIOLink(pos,io)
+    return link_io.length==0
+  }
 
   const [tab_colored,set_tab_colored]=useState(false)
   const tab_pos_link=(pos:string,io:string)=>{
-
-    const n=multi_selected_nodes.current[0]
-    let link_io=([] as string[])
-
-
-    if(io=='input'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idSource].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.inputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idSource].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }
-    }else if(io=='output'){
-      if(pos=='left'){
-        //Recherche tous les liens entrant a gauche
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].x<n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='right'){
-        //Recherche tous les liens entrant a droite
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return  data.nodes[data.links[k].idTarget].x>=n.x && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='top'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }else if(pos=='bottom'){
-        //Recherche tous les liens entrant en haut
-        link_io=Object.values(n.outputLinksId).filter(k=>{
-          return data.nodes[data.links[k].idTarget].y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
-        })
-      }
-    }
-    
+    const link_io=getIOLink(pos,io)
     return (
       <>
         <Table striped bordered hover className='node_group_tags_definition'>
           <thead>
             <tr>
-              <th>Flux</th>
-              <th>Position</th>
+              <th>{t('Menu.flux')}</th>
+              <th>{t('Tags.Position')}</th>
             </tr>
           </thead>
           <tbody>
@@ -528,10 +553,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 (k, i) => {
                   const color=link_color(data.links[k],data)
                   const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
+                  const n_s=data.nodes[data.links[k].idSource]
+                  const n_t=data.nodes[data.links[k].idTarget]
+
                   return (
                     <tr key={i.toString()}>
                       
-                      <td style={bc}>{data.nodes[data.links[k].idSource].name+'===>'+data.nodes[data.links[k].idTarget].name}</td>
+                      <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
                       <td style={{ 'width': '10%' }}>
                         <ButtonGroup className="button_position" size="sm">
                           <Button variant="info" onClick={() => handleUpLinkIOPos(k,pos,io)}><FaArrowAltCircleUp /></Button>
@@ -550,11 +578,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   }
   //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
   const node_tag = (
-    <Tab eventKey="tags" title="Étiquettes"
+    <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
       <Form.Group as={Row} >
         <Col xs={2}>
-          <FormLabel >Groupe d'étiquettes:</FormLabel>
+          <FormLabel >{t('Tags.GE')}</FormLabel>
         </Col>
         <Col xs={6}>
           <Form.Select
@@ -577,8 +605,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       <Table striped bordered hover className='node_tags_affiliation' >
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Appartenance</th>
+            <th>{t('Noeud.Nom')}</th>
+            <th>{t('Noeud.tags_node.Appartenance')}</th>
           </tr>
         </thead>
         <tbody>
@@ -629,12 +657,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
         <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
 
           {(multi_selected_nodes.current.length !== 0) ? (
-            <Tab eventKey="nodes_desc" title="Apparence"
+            <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}
               disabled={/*!(node.colorParameter == 'local')*/false}>
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Visibilité</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -650,7 +678,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>Couleur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Couleur')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -665,15 +693,32 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                 </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.CouleurPérenne')}</FormLabel>
+                  </Col>
+                  <Col xs={3}>
+                    <Form.Check
+                      type='checkbox'
+                      //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+                      checked={isAllNodeColorSustainable()}
+                      onChange={evt => {
+                        const checked = evt.target.checked
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>Forme</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Forme')}</FormLabel>
                   </Col>
                   <Col xs={2}>
                     <FormCheck
                       value="ellipse"
                       type='radio'
-                      label='Cercle'
+                      label={t('Noeud.apparence.Cercle')}
                       disabled={!isAllNodeVisible()}
                       checked={isAllNodeCircle()}
                       onChange={evt => {
@@ -687,13 +732,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       value="rect"
                       type='radio'
-                      label='Rectangle'
+                      label={t('Noeud.apparence.Rectangle')}
                       disabled={!isAllNodeVisible()}
                       checked={isAllNodeRect()}
                       onChange={evt => {
                         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
                         set_data({ ...data })
-
                       }}
                     />
                   </Col>
@@ -702,7 +746,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >Taille minimum Largeur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.TML')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -723,7 +767,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >Taille minimum Hauteur</FormLabel>
+                    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.TMH')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -741,18 +785,92 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
                 </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>
+                    <FormLabel >{t('Noeud.apparence.toScale')}</FormLabel>
+                  </Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={isAllNodeToScale()}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
 
+                </Form.Group>
+                <Col xs={5}>
+                  <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
+                </Col>
+                <Form.Group as={Row} >
+                  
+                  <Col xs={3}>
+                    <FormCheck
+                      value="left"
+                      type='radio'
+                      label={t('Noeud.apparence.toScaleLeft')}
+                      disabled={!isAllNodeToScale()}
+                      checked={isAllNodeNotToScaleOrientation('left')}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+
+                  <Col xs={3}>
+                    <FormCheck
+                      value="right"
+                      type='radio'
+                      label={t('Noeud.apparence.toScaleRight')}
+                      disabled={!isAllNodeToScale()}
+                      checked={isAllNodeNotToScaleOrientation('right')}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col xs={3}>
+                    <FormCheck
+                      value="top"
+                      type='radio'
+                      label={t('Noeud.apparence.toScaleTop')}
+                      disabled={!isAllNodeToScale()}
+                      checked={isAllNodeNotToScaleOrientation('top')}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                  <Col xs={3}>
+                    <FormCheck
+                      value="bottom"
+                      type='radio'
+                      label={t('Noeud.apparence.toScaleBottom')}
+                      disabled={!isAllNodeToScale()}
+                      checked={isAllNodeNotToScaleOrientation('bottom')}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
 
               </Form>
             </Tab>) : (<></>)}
           {(multi_selected_nodes.current.length !== 0) ? (
-            <Tab eventKey="label_desc" title="Labels">
+            <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
               <Form>
 
 
 
                 <Form.Group as={Row} >
-                  <Col xs={4}>Visibilité du label</Col>
+                  <Col xs={4}>{t('Noeud.labels.vdb')}</Col>
                   <Col xs={1}>
                     <FormCheck inline
                       type='switch'
@@ -765,19 +883,33 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
                 </Form.Group>
+                <Form.Group as={Row} >
+                  <Col xs={4}>{t('Noeud.labels.lb')}</Col>
+                  <Col xs={1}>
+                    <FormCheck inline
+                      type='switch'
+                      checked={isAllLabelWhite()}
+                      onChange={evt => {
+
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Position vertical</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Haut'
-                      checked={isAllNodeLabelVert('vert', 'haut')}
+                      label={t('Noeud.labels.haut')}
+                      checked={isAllNodeLabelVert('vert', 'top')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'haut'
+                            d.display_style.label_vert = 'top'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -789,12 +921,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Milieu'
-                      checked={isAllNodeLabelVert('vert', 'milieu')}
+                      label={t('Noeud.labels.Milieu')}
+                      checked={isAllNodeLabelVert('vert', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'milieu'
+                            d.display_style.label_vert = 'middle'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -806,13 +938,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
 
-                      checked={isAllNodeLabelVert('vert', 'bas')}
+                      checked={isAllNodeLabelVert('vert', 'bottom')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'bas'
+                            d.display_style.label_vert = 'bottom'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -824,17 +956,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Position horizontal</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Gauche'
-                      checked={isAllNodeLabelVert('horiz', 'gauche')}
+                      label={t('Noeud.labels.gauche')}
+                      checked={isAllNodeLabelVert('horiz', 'left')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'gauche'
+                            d.display_style.label_horiz = 'left'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -846,12 +978,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Milieu'
-                      checked={isAllNodeLabelVert('horiz', 'milieu')}
+                      label={t('Noeud.labels.Milieu')}
+                      checked={isAllNodeLabelVert('horiz', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'milieu'
+                            d.display_style.label_horiz = 'middle'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -863,12 +995,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
-                      label='Droite'
-                      checked={isAllNodeLabelVert('horiz', 'droite')}
+                      label={t('Noeud.labels.droite')}
+                      checked={isAllNodeLabelVert('horiz', 'right')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'droite'
+                            d.display_style.label_horiz = 'right'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -881,7 +1013,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Taille police</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -899,12 +1031,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >Police</FormLabel>
+                    <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.police')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Gras'
+                      label={t('Noeud.labels.gras')}
                       checked={isAllNodeBold()}
                       disabled={!isAllLabelVisible()}
                       onChange={
@@ -918,7 +1050,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Majuscule'
+                      label={t('Noeud.labels.maj')}
                       disabled={!isAllLabelVisible()}
                       checked={isAllNodeUpper()}
                       onChange={
@@ -932,7 +1064,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Italique'
+                      label={t('Noeud.labels.ita')}
                       checked={isAllNodeItalic()}
                       disabled={!isAllLabelVisible()}
                       onChange={
@@ -975,7 +1107,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Visibilité de la valeur </FormLabel>
+                    <FormLabel >{t('Noeud.labels.vdv')} </FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -994,18 +1126,18 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Position vertical</FormLabel>
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       disabled={!isAllNodeTotal()}
                       type='radio'
-                      label='Haut'
-                      checked={isAllNodeLabelValueVert('vert', 'haut')}
+                      label={t('Noeud.labels.haut')}
+                      checked={isAllNodeLabelValueVert('vert', 'top')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'haut'
+                            d.display_style.label_vert_valeur = 'top'
                           })
                           set_data({ ...data })
                         }
@@ -1016,12 +1148,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       disabled={!isAllNodeTotal()}
                       type='radio'
-                      label='Milieu'
-                      checked={isAllNodeLabelValueVert('vert', 'milieu')}
+                      label={t('Noeud.labels.Milieu')}
+                      checked={isAllNodeLabelValueVert('vert', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'milieu'
+                            d.display_style.label_vert_valeur = 'middle'
 
                           })
                           set_data({ ...data })
@@ -1032,13 +1164,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
                       disabled={!isAllNodeTotal()}
-                      checked={isAllNodeLabelValueVert('vert', 'bas')}
+                      checked={isAllNodeLabelValueVert('vert', 'bottom')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'bas'
+                            d.display_style.label_vert_valeur = 'bottom'
 
                           })
                           set_data({ ...data })
@@ -1049,17 +1181,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Position horizontal</FormLabel>
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
-                      label='Gauche'
-                      checked={isAllNodeLabelValueVert('horiz', 'gauche')}
+                      label={t('Noeud.labels.gauche')}
+                      checked={isAllNodeLabelValueVert('horiz', 'left')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'gauche'
+                            d.display_style.label_horiz_valeur = 'left'
 
                           })
                           set_data({ ...data })
@@ -1070,12 +1202,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
-                      label='Milieu'
-                      checked={isAllNodeLabelValueVert('horiz', 'milieu')}
+                      label={t('Noeud.labels.Milieu')}
+                      checked={isAllNodeLabelValueVert('horiz', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'milieu'
+                            d.display_style.label_horiz_valeur = 'middle'
 
                           })
                           set_data({ ...data })
@@ -1086,12 +1218,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   <Col>
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
-                      label='Droite'
-                      checked={isAllNodeLabelValueVert('horiz', 'droite')}
+                      label={t('Noeud.labels.droite')}
+                      checked={isAllNodeLabelValueVert('horiz', 'right')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'droite'
+                            d.display_style.label_horiz_valeur = 'right'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -1104,7 +1236,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 <Form.Group as={Row} >
                   <Col xs={4}>
 
-                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >Taille police
+                    <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}
                     </FormLabel>
                   </Col>
                   <Col xs={5}>
@@ -1124,11 +1256,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
               </Form>
             </Tab>) : (<></>)}
           {(multi_selected_nodes.current.length !== 0) ? (
-            <Tab eventKey="node_icon" title="Icon">
+            <Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>
               <Form >
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Visibilité</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormCheck inline
@@ -1146,7 +1278,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}}>Sélection Icon</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <Form.Select
@@ -1158,7 +1290,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         set_data({ ...data })
                       }}
                     >
-                      <option key={0} value={'none'} selected={isAllIconSame('none')}>{'Aucun'}</option>
+                      <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
 
                       {Object.keys(data.icon_catalog).map((n, i) => {
                         return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
@@ -1168,7 +1300,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >Couleur</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -1185,7 +1317,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >Ratio ICON/NOEUD</FormLabel>
+                    <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -1209,10 +1341,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
             </Tab>) : (<></>)}
           {Object.keys(nodeTags).length > 0 && multi_selected_nodes.current.length !== 0 && data.accordeonToShow.includes('EN') ? node_tag : (<></>)}
           {(multi_selected_nodes.current.length !== 0) ? (
-            <Tab eventKey="node_tooltip" title="Info-bulle">
+            <Tab eventKey="node_tooltip" title={t('Noeud.IB')}>
               <Form >
                 <Row>
-                  <FormLabel column sm={1}>Info-bulle:</FormLabel>
+                  <FormLabel column sm={1}>{t('Noeud.IB')}:</FormLabel>
                   <Col sm={11}>
                     <Form.Control
                       as="textarea"
@@ -1229,14 +1361,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Row>
               </Form>
             </Tab>): (<></>)}
-          {(multi_selected_nodes.current.length !== 0 && 'Dimensions' in nodeTags) ? (
-            <Tab eventKey="agregation" title="Agrégations">
+
+          {(multi_selected_nodes.current.length !== 0 && Object.values(nodeTags).filter(tag=>tag.banner == 'level').length > 0) ? (
+            <Tab eventKey="agregation" title={t('Noeud.agre.Agré')}>
               <Form >
                 <Form.Group as={Row} >
-                  <FormLabel column>Dimension du cube</FormLabel>
+                  <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>
                   <Col><Form.Select placeholder='all' value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
-                    {Object.entries(nodeTags['Dimensions'].tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    {Object.entries(nodeTags).filter(tag=>tag[1].banner == 'level').map((tag,i) => {
+                      return (<option key={i} value={tag[0]}>{tag[1].group_name}</option>)
                     })}
                   </Form.Select></Col>
                 </Form.Group>
@@ -1245,7 +1378,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       disabled={multi_selected_nodes.current.length == 0}
                       type='checkbox'
-                      label='Parent'
+                      label={t('Noeud.agre.Parent')}
                       checked={multi_selected_nodes.current.length != 0 && parent_visible}
                       onChange={
                         evt => set_parent_visible(evt.target.checked)
@@ -1258,25 +1391,19 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         onChange={(changeEvent: React.ChangeEvent<HTMLSelectElement>)=>{
                           if ( changeEvent.target.value == 'none' ) {
                             multi_selected_nodes.current.forEach(n=> {
-                              if (cube_dimension in n.dimensions) {
-                                n.dimensions[cube_dimension].parent_name = undefined
-                                n.dimensions[cube_dimension].level = 1
-                              } else {
-                                console.log(cube_dimension +' not in ' +n.name)
+                              if (!(cube_dimension in n.dimensions)) {
+                                n.dimensions[cube_dimension] = {}
                               }
+                              n.dimensions[cube_dimension].parent_name = undefined
+
                             })
                           } else {
                             multi_selected_nodes.current.forEach(n=> {
-                              if (cube_dimension in n.dimensions) {
-                                n.dimensions[cube_dimension].parent_name = changeEvent.target.value
-                                if (data.nodes[changeEvent.target.value].dimensions[cube_dimension].parent_name !== undefined) {
-                                  n.dimensions[cube_dimension].level = 3
-                                } else {
-                                  n.dimensions[cube_dimension].level = 2
-                                }
-                              } else {
-                                console.log(cube_dimension +' not in ' +n.name)
+
+                              if (!(cube_dimension in n.dimensions)) {
+                                n.dimensions[cube_dimension] = {}
                               }
+                              n.dimensions[cube_dimension].parent_name = changeEvent.target.value
                             })
                           }
                         }}>
@@ -1332,27 +1459,28 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                         })
                       }
                     }
-                  >Copier liens enfants</Button>
+                  >{t('Noeud.agre.CLE')}</Button>
                 </Col>
               </Form>
             </Tab>
           ): (<></>)}
           {(multi_selected_nodes.current.length == 1) ? (
             
-            <Tab eventKey="node_link_io" title="Position flux e/s">
+            <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
               <Form>
                 <Form.Group as={Row}>
                   <Col xs={6}>
-                    <FormLabel >Flux Entrant ou sortant</FormLabel>
+                    <FormLabel >{t('Noeud.PF.FES')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <FormCheck
                       value="output"
                       type='radio'
-                      label='Sortant'
+                      label={t('Noeud.PF.sort')}
                       checked={link_io=='output'}
                       onChange={() => {
                         set_link_io('output')
+                        set_link_pos('')
                       }}
                     />
                   </Col>
@@ -1360,10 +1488,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck
                       value="input"
                       type='radio'
-                      label='Entrant'
+                      label={t('Noeud.PF.ent')}
                       checked={link_io=='input'}
                       onChange={() => {
                         set_link_io('input')
+                        set_link_pos('')
                       }}
                     />
                   </Col>
@@ -1372,13 +1501,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
 
                 <Form.Group as={Row}>
                   <Col xs={2}>
-                    <FormLabel >Flux par rapport au noeud</FormLabel>
+                    <FormLabel >{t('Noeud.PF.FRN')}</FormLabel>
                   </Col>
                   <Col xs={2}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'left')}
                       value="left"
                       type='radio'
-                      label='Gauche'
+                      label={t('Noeud.labels.gauche')}
                       checked={link_pos=='left'}
                       onChange={() => {
                         set_link_pos('left')
@@ -1387,9 +1517,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={2}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'right')}
                       value="right"
                       type='radio'
-                      label='Droite'
+                      label={t('Noeud.labels.droite')}
                       checked={link_pos=='right'}
                       onChange={() => {
                         set_link_pos('right')
@@ -1398,9 +1529,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={3}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'top')}
                       value="top"
                       type='radio'
-                      label='Au-dessus'
+                      label={t('Noeud.PF.ades')}
                       checked={link_pos=='top'}
                       onChange={() => {
                         set_link_pos('top')
@@ -1409,9 +1541,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                   </Col>
                   <Col xs={3}>
                     <FormCheck
+                      disabled={has_link_come_from(link_io,'bottom')}
                       value="bottom"
                       type='radio'
-                      label='En-Dessous'
+                      label={t('Noeud.PF.edes')}
                       checked={link_pos=='bottom'}
                       onChange={() => {
                         set_link_pos('bottom')
@@ -1423,14 +1556,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={8}>
-                    <FormLabel >Ligne tableau coloré pour identification</FormLabel>
+                    <FormLabel >{t('Noeud.PF.lti')}</FormLabel>
                   </Col>
                   
                   <Col xs={3}>
                     <FormCheck
                       value="bottom"
                       type='checkbox'
-                      label='Coloré'
+                      label={t('Noeud.PF.col')}
                       checked={tab_colored}
                       onChange={() => {
                         console.log(tab_colored)
@@ -1475,7 +1608,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens sortants</Button>
@@ -1490,7 +1623,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens entrants</Button>

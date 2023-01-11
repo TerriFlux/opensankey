@@ -3,6 +3,7 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, Tabs } from 
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyDataPropTypes } from './types'
+import {useTranslation} from 'react-i18next'
 
 const SankeySettingsEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -16,33 +17,55 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
   children
 }) => {
   const [user_scale, set_user_scale] = useState(data.user_scale)
+  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
+  const {t} =useTranslation()
 
   return (
     <>
       <Form>
         <Form.Group as={Row} >
           <Col xs={3}>
-            <FormLabel >Echelle</FormLabel>
+            <FormLabel >{t('MEP.Echelle')}</FormLabel>
           </Col>
           <Col>
             <FormControl
               type="text"
               value={user_scale}
-              onChange={evt => set_user_scale(+evt.target.value)}
+              onChange={evt => {
+                set_user_scale(+evt.target.value)
+              }}
               onBlur={() => {
                 data.user_scale = user_scale
                 set_data({ ...data })
               }}
             />
             <FormControl.Feedback />
-            <Form.Text>    (valeur pour 100px)</Form.Text>
+            <Form.Text>    ({t('MEP.vp100')})</Form.Text>
           </Col>
         </Form.Group>
         <Form.Group as={Row} >
           <Col xs={3}>
-            <FormLabel >Taille Carré Grille</FormLabel>
+            <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
+          </Col>
+          <Col>
+            <FormControl
+              type="text"
+              value={maximum_flux == null ? undefined : maximum_flux}
+              onChange={evt => {
+                set_maximum_flux(+evt.target.value)
+              }}
+              onBlur={() => {
+                data.maximum_flux = maximum_flux
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row} >
+          <Col xs={3}>
+            <FormLabel >{t('MEP.TCG')}</FormLabel>
           </Col>
           <Col xs={4}>
             <FormControl
@@ -63,7 +86,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
               inline
               type='switch'
               checked={data.grid_visible}
-              label='Grille visible'
+              label={t('MEP.GV')}
               onChange={() => {
                 data.grid_visible = !data.grid_visible
                 set_data({ ...data })
@@ -79,15 +102,15 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 arrangeNodes(data)
                 set_data({ ...data })
               }}
-            >Arranger noeuds</Button>
+            >{t('MEP.AN')}</Button>
           </Col>
         </Form.Group>
         <Form.Group as={Row} >
           <Col xs={3}>
-            <FormLabel>Ecart entre noeuds</FormLabel>
+            <FormLabel>{t('MEP.EEN')}</FormLabel>
           </Col>
           <Col xs={2}>
-            <FormLabel>Horizontal</FormLabel>
+            <FormLabel>{t('MEP.Horizontal')}</FormLabel>
           </Col>
           <Col xs={2}>
             <FormControl
@@ -100,7 +123,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
             />
           </Col>
           <Col xs={2}>
-            <FormLabel>Vertical</FormLabel>
+            <FormLabel>{t('MEP.Vertical')}</FormLabel>
           </Col>
           <Col xs={2}>
             <FormControl
@@ -121,7 +144,7 @@ const SankeySettingsEdition: FunctionComponent<SankeyEditionTypes> = ({
                 compute_auto_sankey(data, node_hspace)
                 set_data({ ...data })
               }}
-            > Positionnement automatique</Button>
+            > {t('MEP.PA')}</Button>
           </Col>
         </Form.Group>
       </Form>
