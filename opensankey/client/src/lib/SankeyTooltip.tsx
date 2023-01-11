@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData } from './types'
-import { getLinkValue, toPrecision } from './SankeyUtils'
+import { getLinkValue, toPrecision,link_visible } from './SankeyUtils'
 
 function write_children_table(
   desagregate_source_nodes : SankeyNode[], 
@@ -66,13 +66,13 @@ export const  linkTooltipsContent = (
   t += '<table class="table" style="margin-bottom: 5px;">'
   t += '<tbody><tr><th>Valeur</th>'
   let the_value = link_info.value
-
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
   t += '<td>' + toPrecision((the_value)?the_value:0) +'</td>'
   t += '</td>'
   t += '</tr>'
+  Object.entries(link_info.tags).forEach(([tag_group,tag])=> t+='<tr><th>'+data.fluxTags[tag_group].group_name+'</th><td>'+data.fluxTags[tag_group].tags[tag].name+'</td><tr>')
   t += '</tbody></table>'
 
   const source_node = data.nodes[l.idSource]
@@ -151,6 +151,9 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
+      if (!link_visible(link,data)) {
+        continue
+      }
       const link_info = getLinkValue(data,link.idLink)
       let the_value = link_info.value
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
@@ -163,10 +166,12 @@ export const nodeTooltipsContent = (
   }
   //t += '<br>'
   if ( n.inputLinksId.length > 0 ) {
-    t += '<ul><li><p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p></li></ul>' 
+    t += '<p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p>' 
     t += '<table class="table" style="margin-bottom: 5px;">'
     t +=   '<thead><tr>'
-    t +=      '<th></th><th>Valeur</th><th>Pourcentage</th>'      
+    t +=      '<th></th><th>Valeur</th>'
+    t +='<th>Pourcentage</th>'
+    Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')  
     t += '</tr></thead>'
     for (let i=0;i<n.inputLinksId.length;i++) {
       const link = display_links[n.inputLinksId[i]]
@@ -176,22 +181,32 @@ export const nodeTooltipsContent = (
       }
       const link_info = getLinkValue(data,link.idLink)
       let the_value = link_info.value
+      if (link_info.display_value == 'missing') {
+        continue
+      }
+      if (!link_visible(link,data)) {
+        continue
+      }
+      
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td>' + source_name + '</td>'
-        t +=  '<td>' + toPrecision( (the_value)?the_value:0)
+        t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
         if (n.inputLinksId.length>1) {
           const percent = Math.round(((the_value)?the_value:0)*100/total)
-          t += '</td><td>'+ percent + '%</td></tr>'
+          t += '<td>'+ percent + '%</td>'
+          Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
         } else {
-          t += '</td></tr>'          
+          t += '<td></td></tr>'          
         }
       }
     }
-    t += '<tr><th>Total</th><td>' + toPrecision(total) +'</td><td></td></tr></tbody></table>'
+    t += '<tr><th>Total</th><td>' + toPrecision(total) +'</td>'
+    Object.keys(data.fluxTags).forEach(()=> t +='<td></td>')
+    t += '<td></td></tr></tbody></table>'
   }
   total=0
   if ( n.outputLinksId.length > 0 ) {
@@ -201,7 +216,13 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
+      if (!link_visible(link,data)) {
+        continue
+      }
       const link_info = getLinkValue(data,link.idLink)
+      if (link_info.display_value == 'missing') {
+        continue
+      }
       let the_value = link_info.value
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
@@ -212,10 +233,12 @@ export const nodeTooltipsContent = (
       }
     }
     if ( n.outputLinksId.length > 0 ) {
-      t += '<ul><li><p class="tab-title" style="margin-bottom: 5px;">Sorties</p></li></ul>'        
+      t += '<p class="tab-title" style="margin-bottom: 5px;">Sorties</p>'        
       t += '<table class="table" style="margin-bottom: 5px;">'
       t +=   '<thead><tr>'
-      t +=      '<th></th><th>Valeur</th><th>Pourcentage</th>'  
+      t +=      '<th></th><th>Valeur</th>'
+      t +='<th>Pourcentage</th>' 
+      Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>') 
       t += '</tr></thead>'    
       for (let i=0;i<n.outputLinksId.length;i++) {
         const link = data.links[n.outputLinksId[i]]
@@ -224,6 +247,9 @@ export const nodeTooltipsContent = (
           return ''
         }
         const link_info = getLinkValue(data,link.idLink)
+        if (!link_visible(link,data)) {
+          continue
+        }
         let the_value = link_info.value
         if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
           the_value = Number(String(link_info.display_value).replace('*',''))
@@ -231,17 +257,20 @@ export const nodeTooltipsContent = (
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td>' + target_name + '</td>'
-          t +=  '<td>' + toPrecision( (the_value)?the_value:0)
+          t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value:0)*100/total)
-            t += '</td><td>'+ percent + '%</td></tr>'
+            t += '<td>'+ percent + '%</td>'
+            Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
           } else {
-            t += '</td></tr>'          
+            t += '<td></td></tr>'          
           }
         }
       }
     }
-    t += '<tr><th>Total</th><td>' + toPrecision(total) +'</td><td></td></tr></tbody></table>'
+    t += '<tr><th>Total</th><td>' + toPrecision(total) +'</td>'
+    Object.keys(data.fluxTags).forEach(()=> t +='<td></td>')
+    t += '<td></td></tr></tbody></table>'
   }
   if (!n.dimensions) {
     return t

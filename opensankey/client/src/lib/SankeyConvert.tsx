@@ -90,6 +90,8 @@ interface ConvertSankeyData {
   periods?: boolean
   nodeTags: { group_name: string, show_legend: boolean, tags: string[], selected_tags: string[] }[]
   agregated_level?: number
+  show_structure: boolean | string
+  show_data?: boolean
 }
 
 interface ConvertSankeyValue {
@@ -159,6 +161,10 @@ export const convert_data = (
   Object.values(data_to_convert.nodeTags).forEach(
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+      if (tags_group.activated == undefined) {
+        tags_group.activated = true
+      }
+      tags_group.activated = Boolean(tags_group.activated)
       if(tags_group.show_legend === undefined) { tags_group.show_legend=false}
       if(tags_group.color_map === undefined) { tags_group.color_map='jet'}
       if(Object.values(tags_group.tags).filter(tag=>tag.color !== '').length === 0) {
@@ -232,7 +238,9 @@ export const convert_data = (
         initial_data  : { name : 'Données collectées' , selected: true, color : 'cyan' },
         computed_data : { name : 'Données calculées'  , selected: true, color : 'blue' },
       },
-      banner : 'multi'
+      banner : 'multi',
+      activated: true,
+      siblings: []
     }
     delete data_to_convert.nodeTags['flux_types']
   }
@@ -309,7 +317,9 @@ export const convert_data = (
         color_map: 'jet',
         show_legend: false,
         tags: Object.assign({}, ...data.region_names.map((region_name) => ({ [region_name]: { name: region_name, color: '', selected: region_name === data.region_name } }))),
-        banner: 'one'
+        banner: 'one',
+        activated: true,
+        siblings: []
       }
     }
     if (key_names.length > 1 && data.periods) {
@@ -318,7 +328,9 @@ export const convert_data = (
         color_map: 'jet',
         show_legend: false,
         tags: Object.assign({}, ...key_names.map((key_name) => ({ [key_name]: { name: key_name, color: '', selected: key_names[0] } }))),
-        banner: 'one'
+        banner: 'one',
+        activated: true,
+        siblings: []
       }
     }
     delete data.periods
@@ -362,18 +374,6 @@ export const convert_data = (
   if (!data_to_convert.icon_catalog) {
     data_to_convert.icon_catalog = {}
   }
-  if (!data_to_convert.agregation) {
-    data_to_convert.agregation = {
-      dimension:'Primaire',
-      level:1
-    }
-  }
-  if (data_to_convert.agregation.level === 0) {
-    data_to_convert.agregation.level = 1
-  }
-  if (!data_to_convert.agregation.dimension) {
-    data_to_convert.agregation.dimension = 'Primaire'
-  }
   if (data.agregated_level) {
     delete data.agregated_level
   } 
@@ -392,10 +392,13 @@ export const convert_data = (
         iconColor: '#fff',
         iconRatio: 80,
         iconVisible: true,
+        not_to_scale:false,
+        not_to_scale_direction:'right',
 
         shape: 'rect',
         color: '#a9a9a9',
         colorParameter: 'local',
+        colorSustainable:false,
         position: 'absolute',
         x: 100,
         y: 100,
@@ -417,12 +420,13 @@ export const convert_data = (
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert: 'bas',
-          label_horiz: 'milieu',
-          label_vert_valeur: 'milieu',
-          label_horiz_valeur: 'milieu',
+          label_vert: 'bottom',
+          label_horiz: 'middle',
+          label_vert_valeur: 'middle',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width: 110,
+          label_color:false,
         }
       }
     }
@@ -448,9 +452,11 @@ export const convert_data = (
         color: '#a9a9a9',
         colorParameter: '',
         colorTag: '',
+        label_font_size:11,
         // Ajout
         gradient: false,
         dashed:false,
+        to_precision:true,
 
         value: {},
 
@@ -469,22 +475,6 @@ export const convert_data = (
       }
     }
   }
-  if (!data.nodeTags.Dimensions) {
-    data.nodeTags.Dimensions = {
-      group_name : 'Dimensions',
-      color_map: 'jet',
-      show_legend: false,
-      tags : {
-        Primaire : {
-          name : 'Primaire',
-          selected: true
-        }
-      },
-      banner: 'none'
-    }
-  }
-  data.nodeTags.Dimensions.banner = 'none'
-
   Object.values(data.nodes).forEach( n => {
     if (((n as unknown) as ConvertSankeyNode).input_links) {
       n.inputLinksId = []
@@ -564,9 +554,6 @@ export const convert_data = (
   if (data.display_style.node_font_size === undefined) {
     data.display_style.node_font_size = data.display_style.font_size 
   }
-  if (data.display_style.link_font_size === undefined) {
-    data.display_style.link_font_size = data.display_style.font_size
-  }
 
   if (data.h_space === undefined) {
     data.h_space = 200
@@ -630,16 +617,18 @@ export const convert_data = (
         },
         color_map : '',
         show_legend : false,
-        banner: 'none'
+        banner: 'none',
+        activated: true,
+        siblings: []
       }
     }
   }
   if ( data.nodeTags['Type de noeud'] ) {
     data.nodeTags['Type de noeud'].banner = 'none' 
-    if (!data.nodeTags['Type de noeud'].tags.produit.shape) {
+    if (data.nodeTags['Type de noeud'].tags.produit && !data.nodeTags['Type de noeud'].tags.produit.shape) {
       data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
     }
-    if (!data.nodeTags['Type de noeud'].tags.secteur.shape) {
+    if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
     }
     if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
@@ -647,7 +636,52 @@ export const convert_data = (
     }
   }
 
-  let import_export = false
+  if (data.nodeTags.Dimensions) {
+    Object.keys(data.nodeTags.Dimensions.tags).forEach(tag=>{
+      data.nodeTags[tag] = {
+        group_name : data.nodeTags.Dimensions.tags[tag].name,
+        color_map: 'jet',
+        show_legend: false,
+        banner: 'level',
+        tags: {},
+        activated: true,
+        siblings: []
+      }
+      Object.values(nodes).forEach(n=>{
+        if (n.dimensions[tag]) {
+          n.tags[tag] = [String(n.dimensions[tag].level!)]
+        }
+        if ('Dimensions' in n.tags) {
+          delete n.tags.Dimensions
+        }
+      })
+
+      let max_level = 1
+      Object.values(nodes).forEach(n=>{
+        if (n.dimensions[tag] && n.dimensions[tag].level! > max_level) {
+          max_level = n.dimensions[tag].level!
+        }
+      })
+      Object.values(nodes).forEach(n=>{
+        if (n.dimensions[tag]) {
+          const dim_desagregate_nodes = Object.values(data.nodes).filter( n2=> n2.dimensions[tag] && n2.dimensions[tag].parent_name === n.idNode )
+          if (dim_desagregate_nodes.length == 0) {
+            for (let level = 2; level<=max_level;level++) { 
+              n.tags[tag].push(String(level))
+            }
+          }
+        }
+      })
+      for (let level = 1; level<=max_level;level++) {
+        data.nodeTags[tag]['tags'][String(level)] = {
+          name : String(level),
+          selected : level == 1
+        }
+      }
+    })
+    delete data.nodeTags.Dimensions
+  }
+
   const subchains: string[] = []
   Object.values(nodes).forEach(
     n => {
@@ -667,16 +701,17 @@ export const convert_data = (
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert:'bas',
-          label_horiz:'milieu',
-          label_vert_valeur: 'bas',
-          label_horiz_valeur: 'milieu',
+          label_vert:'bottom',
+          label_horiz:'middle',
+          label_vert_valeur: 'bottom',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width:110,
+          label_color:false
         }
       }
-      if (n.display_style.label_vert === 'bas' && n.display_style.label_horiz === 'droite') {
-        n.display_style.label_horiz = 'milieu'
+      if (n.display_style.label_vert === 'bottom' && n.display_style.label_horiz === 'right') {
+        n.display_style.label_horiz = 'middle'
       }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Cormorant'
@@ -806,72 +841,70 @@ export const convert_data = (
           delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
         }
       }
-      if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'][0] == 'échange' ) {
-        import_export = true
-      }
+
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
-        import_export = true
         n.node_visible = true        
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
-        import_export = true
         n.node_visible = true       
         if (data.display_style.trade_close !== undefined) {
           n_convert.trade_close = data.display_style.trade_close
         }
       }
       if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
-        import_export = true
         n.position = 'relative'
         n.x = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_hspace as number) : data.trade_close_hspace as number
         n.y = n.tags['Exchanges'][0].includes('import') ? -(data.trade_close_vspace as number) : data.trade_close_vspace as number      
       }
       if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
-        import_export = true
         n.tags['Type de noeud'] = ['échange']
         if (!n.dimensions) {
           n.dimensions = {}
         }
-        if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
-          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
-          n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
-          if (!('Dimensions' in n.tags)) {
-            n.tags.Dimensions = []
-          }
-          if (!('Echanges' in n.tags.Dimensions)) {
-            n.tags.Dimensions.push('Echanges')
-          }
-          if (!('Primaire' in n.tags.Dimensions)) {
-            n.tags.Dimensions.push('Primaire')
-          }          
-        } else {
-          const names = n.name.split(' - ')
-          names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
-          const parent_name = names.join(' - ')
-          const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
-          n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
-          if ( 'Primaire' in n.dimensions) {
-            delete n.dimensions.Primaire
-          }
-          if (!('Dimensions' in n.tags)) {
-            n.tags.Dimensions = []
-          }
-          if (!('Echanges' in n.tags.Dimensions)) {
-            n.tags.Dimensions.push('Echanges')
-          }
-          if ( 'Primaire' in n.tags.Dimensions) {
-            n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
-          }
-        }  
+        if (data.trade_sectors) {
+          if (n.tags['Exchanges'][0].includes((data.trade_sectors as string[])[0].split(' - ')[0])) {
+            n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
+            //n.dimensions = { 'Primaire' : { level : 1, parent_name: undefined } } 
+            if (!('Echanges' in n.tags)) {
+              n.tags.Echanges = []
+            }
+            // if (!('Echanges' in n.tags.Dimensions)) {
+            //   n.tags.Dimensions.push('Echanges')
+            // }
+            // if (!('Primaire' in n.tags)) {
+            //   n.tags.Primaire = []
+            // }          
+          } else {
+            const names = n.name.split(' - ')
+            names[1] = (data.trade_sectors as string[])[0].split(' - ')[0]
+            const parent_name = names.join(' - ')
+            const parent_node = Object.values(nodes).filter( n => n.name === parent_name)[0]
+            if (parent_node) {
+              n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
+            }
+            // if ( 'Primaire' in n.dimensions) {
+            //   delete n.dimensions.Primaire
+            // }
+            if (!('Echanges' in n.tags)) {
+              n.tags.Echanges = []
+            }
+            // if (!('Echanges' in n.tags.Dimensions)) {
+            //   n.tags.Dimensions.push('Echanges')
+            // }
+            // if ( 'Primaire' in n.tags.Dimensions) {
+            //   n.tags.Dimensions = n.tags.Dimensions.filter(dim=>dim!=='Primaire')
+            // }
+          }  
+        }
       }
       delete n.tags['Exchanges']
       if (!n.position) {
         n.position = 'absolute'        
       }
       if (!n.dimensions) {
-        n.dimensions = { 'Primaire': { level : 1, parent_name: undefined } }      
+        n.dimensions = { }      
       }
       // if (!n.dimensions.Primaire) {
       //   n.dimensions.Primaire = { level : 1, parent_name: undefined }  
@@ -885,26 +918,15 @@ export const convert_data = (
     }
   )
 
-  if (import_export) {
-    Object.values(data_to_convert.nodes).forEach(n=>{
-      if (!('Dimensions' in n.tags)) {
-        n.tags.Dimensions = ['Primaire']
-      }
-      if (!('Echanges' in n.tags.Dimensions)) {
-        n.tags.Dimensions.push('Echanges')
-      }      
-    })
-  }
-
   if (data_to_convert.nodeTags['Exchanges']) {
     //data_to_convert.nodeTags['Exchanges'].group_name = 'Echanges'
     delete data_to_convert.nodeTags['Exchanges']
-    if (!('Echanges' in data.nodeTags.Dimensions.tags)) {
-      data.nodeTags.Dimensions.tags['Echanges'] = {
-        name : 'Echanges',
-        selected: false
-      }
-    }
+    // if (!('Echanges' in data.nodeTags)) {
+    //   data.nodeTags.Dimensions.tags['Echanges'] = {
+    //     name : 'Echanges',
+    //     selected: false
+    //   }
+    // }
   }
 
   if ('trade_close' in data.display_style) {
@@ -920,7 +942,9 @@ export const convert_data = (
         color_map: 'jet',
         show_legend: false,
         tags: tags_dict,
-        banner: 'multi'
+        banner: 'multi',
+        activated: true,
+        siblings: []
       }
       delete data.subchains
     }
@@ -932,7 +956,9 @@ export const convert_data = (
         show_legend: false,
         color_map: 'jet',
         tags: tags_dict,
-        banner: 'multi'
+        banner: 'multi',
+        activated: true,
+        siblings: []
       }
     }
   }
@@ -947,7 +973,9 @@ export const convert_data = (
           'initial_data' : { name: 'Données collectées', selected: true, color:'#696969' },
           'computed_data': { name: 'Données calculées' , selected: true, color:'#D3D3D3' },
         },
-        banner: 'multi'
+        banner: 'multi',
+        activated: true,
+        siblings: []
       }
       delete data.flux_types
       delete data.use_flux_types
@@ -1356,7 +1384,7 @@ export const convert_data = (
     for (const i in listKey) {
       if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
         if ( v === undefined) {
-          console.log(listKey[i] + ' not found in v')
+          //console.log(listKey[i] + ' not found in v')
           break
         }
         flux_max = convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1,flux_max)
@@ -1377,14 +1405,16 @@ export const convert_data = (
     delete (data as ConvertSankeyData).sankey_type
   }
 
-  if ( data.agregation.level === -1 ) {
-    data.agregation.level = 1
-  }
-
   if (display_style.filter_label === undefined) {
     display_style.filter_label = flux_max / 10
   }
-
+  if (data.show_banner == undefined) {
+    data.show_banner = true
+  }
+  delete data.show_data
+  if ((data.show_structure as unknown as  boolean) === false || (data.show_structure as unknown as  boolean) === true ) {
+    data.show_structure = 'reconciled'
+  }
   if (data.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
@@ -1400,4 +1430,17 @@ export const convert_data = (
   }
 
   data.version = '0.8'
+
+  if(Object.keys(data.nodeTags).length>0 && !data.accordeonToShow.includes('EN')){
+    data.accordeonToShow.push('EN')
+  }
+  if(Object.keys(data.fluxTags).length>0 && !data.accordeonToShow.includes('EF')){
+    data.accordeonToShow.push('EF')
+  }
+  if(Object.keys(data.dataTags).length>0 && !data.accordeonToShow.includes('ED')){
+    data.accordeonToShow.push('ED')
+  }
+  if(Object.keys(data.labels).length>0 && !data.accordeonToShow.includes('LL')){
+    data.accordeonToShow.push('LL')
+  }
 }

@@ -33,7 +33,7 @@ export const SankeyNodePropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
-
+  colorSustainable:PropTypes.bool.isRequired,
   // geometry
   position: PropTypes.oneOf(['absolute', 'relative']).isRequired,
   x: PropTypes.number.isRequired,
@@ -41,6 +41,9 @@ export const SankeyNodePropTypes = {
   x_label: PropTypes.number,
   y_label: PropTypes.number,
   show_value: PropTypes.bool.isRequired,
+  
+  not_to_scale:PropTypes.bool.isRequired,
+  not_to_scale_direction:PropTypes.string.isRequired,
 
   tooltip_text: PropTypes.string,
 
@@ -69,7 +72,8 @@ export const SankeyNodePropTypes = {
     label_vert_valeur: PropTypes.string.isRequired,
     label_horiz_valeur: PropTypes.string.isRequired,
     value_font_size:PropTypes.number.isRequired,
-    label_box_width: PropTypes.number.isRequired
+    label_box_width: PropTypes.number.isRequired,
+    label_color:PropTypes.bool.isRequired
   }).isRequired,
 }
 export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
@@ -98,7 +102,7 @@ export const SankeyLinkPropTypes = {
   idTarget: PropTypes.string.isRequired,
 
   // type of link
-  recycling: PropTypes.bool,
+  recycling: PropTypes.bool.isRequired,
   orientation: PropTypes.string.isRequired,
   arrow: PropTypes.bool.isRequired,
 
@@ -107,14 +111,16 @@ export const SankeyLinkPropTypes = {
   orthogonal_label_position: PropTypes.string.isRequired,
   label_on_path: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
+  label_font_size:PropTypes.number.isRequired,
   text_color: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
+
   // Ajout
   gradient: PropTypes.bool.isRequired,
   dashed:PropTypes.bool.isRequired,
-
+  to_precision:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
@@ -149,6 +155,7 @@ export const SankeyLabelPropTypes = {
   transparent_border:PropTypes.bool.isRequired,
   position_vert:PropTypes.string.isRequired,
   position_horiz:PropTypes.string.isRequired,
+  isTextHTML:PropTypes.bool.isRequired,
 
   font_size:PropTypes.number.isRequired,
   font_weight:PropTypes.bool.isRequired,
@@ -176,7 +183,9 @@ export const TagsGroupPropTypes = {
     color: PropTypes.string,
     selected: PropTypes.bool.isRequired,
   }).isRequired).isRequired,
-  banner: PropTypes.string.isRequired
+  banner: PropTypes.string.isRequired,
+  activated: PropTypes.bool.isRequired,
+  siblings: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired
 }
 export type TagsGroup = InferProps<typeof TagsGroupPropTypes>
 
@@ -188,13 +197,13 @@ export type TagsCatalog = InferProps<typeof TagsCatalogPropTypes>
 export const SankeyDataPropTypes = {
   version: PropTypes.string.isRequired,
   file_name: PropTypes.string,
-
-  agregation: PropTypes.shape({
-    dimension: PropTypes.string.isRequired,
-    level: PropTypes.number.isRequired,
-  }).isRequired,
+  couleur_fond_sankey:PropTypes.string.isRequired,
+  displayed_node_selector:PropTypes.bool.isRequired,
+  displayed_link_selector:PropTypes.bool.isRequired,
+  hide_lone_product:PropTypes.bool.isRequired,
 
   user_scale: PropTypes.number.isRequired,
+  maximum_flux: PropTypes.number,
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
@@ -202,7 +211,8 @@ export const SankeyDataPropTypes = {
   // icon_catalog: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)).isRequired,
   icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
-  show_structure: PropTypes.bool.isRequired,
+  show_structure: PropTypes.oneOf(['structure','data','reconciled','free']).isRequired,
+  //show_data: PropTypes.bool.isRequired,
   fit_screen: PropTypes.bool.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,
@@ -220,7 +230,6 @@ export const SankeyDataPropTypes = {
   labels: PropTypes.objectOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
     node_font_size: PropTypes.number.isRequired,
-    link_font_size: PropTypes.number.isRequired,
     sector_uppercase: PropTypes.bool.isRequired,
     sector_bold: PropTypes.bool.isRequired,
     sector_italic: PropTypes.bool.isRequired,
@@ -273,3 +282,8 @@ export interface SankeyAppState {
 
   data: SankeyData
 }
+
+export const SankeyDrawCurvePropType={
+  curve:PropTypes.func.isRequired
+}
+export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>

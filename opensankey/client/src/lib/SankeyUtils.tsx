@@ -1,8 +1,9 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
-import { agregation, desagregation } from './SankeyLayout'
+import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
 import * as d3 from 'd3'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -17,7 +18,15 @@ export const addDataTags = (
   const dataTag = Object.values(dataTags)[depth]
   const listKey = Object.keys(dataTag.tags)
   for (const i in listKey) {
-    if (depth === dataTags.length - 1) {
+    if (depth === dataTags.length - 1 ) {
+      try {
+        if ( v[listKey[i]] !== undefined) {
+          continue
+        }
+      } catch {
+        return
+      }
+      const the_val = v.value as unknown as number
       v[listKey[i]] = {
         value: v.value as unknown as number,
         display_value: v.display_value as unknown as string,
@@ -27,6 +36,9 @@ export const addDataTags = (
         extension: {}
       }
     } else {
+      if ( v[listKey[i]] == undefined ) {
+        (v[listKey[i]] as SankeyLinkValueDict) = {}        
+      }
       addDataTags(dataTags, v[listKey[i]] as unknown as {[key:string] : SankeyLinkValue}, depth + 1)
     }
   }
@@ -79,7 +91,7 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      console.log(listKey[i] + ' not in val')
+      //console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
@@ -145,6 +157,7 @@ export const getTotalLinks = (
 }
 
 export const compute_total_offsets = (
+  inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
@@ -280,8 +293,8 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_width_top += +v
@@ -301,7 +314,8 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_width_bottom += +v
@@ -322,7 +336,8 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_height_left += +v
@@ -343,7 +358,8 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      if (v === undefined) {
+      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      if (v === undefined || v=='' || is_free) {
         return
       }
       offset_height_right += +v
@@ -369,26 +385,45 @@ export const toPrecision = (
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
-  link_value: number
 ) => {
+  let the_link_value = getLinkValue(data, d.idLink).value
   const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== '' && str_display!=='*') {
     return str_display
   }
-  if (data.show_structure) {
+  if (data.show_structure == 'structure' ) {
     return
   }
-  const the_link_value = toPrecision(link_value)
+  if (data.show_structure == 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      return
+    }
+  }
+  the_link_value = (d.to_precision)?toPrecision(the_link_value):the_link_value
   return the_link_value
 }
 
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
-  if (data.show_structure) {
+  if (data.show_structure == 'structure' ) {
     const inv_scale = d3.scaleLinear()
       .domain([0, 100])
       .range([0, data.user_scale])
-    return inv_scale(Object.values(nodes)[0].node_height / 4)
+    return inv_scale(5)
+  }
+  if (data.show_structure == 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value 
+    } else {
+      const inv_scale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, data.user_scale])
+      return inv_scale(5)
+    }
   }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []
@@ -414,7 +449,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 
   for (const i in listKey) {
     if ( val === undefined) {
-      console.log(listKey[i] + ' not found in val')
+      //console.log(listKey[i] + ' not found in val')
       break
     }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
@@ -422,16 +457,22 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   if (val === undefined) {
     return 0
   }
+  if ( data.maximum_flux && ((val as unknown) as SankeyLinkValue).value > data.maximum_flux) {
+    return data.maximum_flux
+  }
   return ((val as unknown) as SankeyLinkValue).value
 }
 
 export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
-
+    couleur_fond_sankey:'#f2f2f2',
+    displayed_node_selector:false,
+    displayed_link_selector:false,
     nodes: {},
     links: {},
     user_scale: 20,
+    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
@@ -449,9 +490,12 @@ export const default_sankey_data = (): SankeyData => {
         iconColor: '#fff',
         iconRatio: 80,
         iconVisible: true,
+        not_to_scale:false,
+        not_to_scale_direction:'right',
 
         color: '#a9a9a9',
         colorParameter: 'local',
+        colorSustainable:false,
         position: 'absolute',
         x: 100,
         y: 100,
@@ -473,12 +517,13 @@ export const default_sankey_data = (): SankeyData => {
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert: 'bas',
-          label_horiz: 'milieu',
-          label_vert_valeur: 'milieu',
-          label_horiz_valeur: 'milieu',
+          label_vert: 'bottom',
+          label_horiz: 'middle',
+          label_vert_valeur: 'middle',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width: 110,
+          label_color:false,
         }
       }
 
@@ -504,9 +549,11 @@ export const default_sankey_data = (): SankeyData => {
         color: '#a9a9a9',
         colorParameter: '',
         colorTag: '',
+        label_font_size:11,
         // Ajout
         gradient: false,
         dashed:true,
+        to_precision:true,
 
         value: {},
 
@@ -537,10 +584,8 @@ export const default_sankey_data = (): SankeyData => {
     v_space: 100,
     legend_position: [0, 10],
 
-    show_structure: false,
+    show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
-
-    agregation: {dimension:'Primaire',level:1},
 
     icon_catalog: {},
     labels: {},
@@ -551,7 +596,6 @@ export const default_sankey_data = (): SankeyData => {
 
     display_style: {
       node_font_size: 14,
-      link_font_size: 14,
       sector_uppercase: true,
       sector_bold: true,
       sector_italic: false,
@@ -572,21 +616,7 @@ export const default_sankey_data = (): SankeyData => {
 
     static_sankey: false,
 
-
-    nodeTags : {
-      'Dimensions' : {
-        group_name : 'Dimensions',
-        color_map: 'jet',
-        show_legend: false,
-        tags : {
-          Primaire : {
-            name : 'Primaire',
-            selected: true
-          }
-        },
-        banner: 'none'
-      }
-    },
+    nodeTags: {},
     dataTags: {},
     fluxTags: {},
 
@@ -621,10 +651,28 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         let selected_tag = ''
         if (source_node.colorParameter !== 'local' && target_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && target_node.colorTag in target_node.tags) {
           const common_tags = source_node.tags[source_node.colorTag].filter(value => target_node.tags[target_node.colorTag].includes(value))
-          if (common_tags.length > 0) {
+          if (common_tags.length > 0 && common_tags[0] in data_s.nodeTags[source_node.colorTag].tags) {
             return data_s.nodeTags[source_node.colorTag].tags[common_tags[0]].color
           }
         }
+        // if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'échange' && 
+        // source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags ) {
+        //   selected_tag = source_node.tags[source_node.colorTag][0]
+        //   if (selected_tag in data_s.nodeTags[source_node.colorTag].tags) {
+        //     return data_s.nodeTags[source_node.colorTag].tags[selected_tag].color
+        //   } else {
+        //     return l.color
+        //   }
+        // }
+        // if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'échange' && 
+        // target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags ) {
+        //   selected_tag = target_node.tags[target_node.colorTag][0]
+        //   if (selected_tag in data_s.nodeTags[target_node.colorTag].tags) {
+        //     return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
+        //   } else {
+        //     return l.color
+        //   }
+        // }
         if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && 
           target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit' &&
           target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
@@ -686,7 +734,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
 
 export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   const { dataTags, fluxTags } = data_s
-  if (data_s.show_structure) {
+  if (data_s.show_structure === 'structure') {
     if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
       return false
     }
@@ -741,9 +789,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
-  // console.log('-> Affectation du default_node')
-
-  const defaultNode = {
+  const defaultNode :  SankeyNode = {
     name: '',
     idNode: 'default',
     shape: 'rect',
@@ -757,9 +803,13 @@ export const default_node = (
     iconColor: '#fff',
     iconRatio: 80,
     iconVisible: true,
+    not_to_scale:false,
+    not_to_scale_direction:'right',
 
     color: '#a9a9a9',
     colorParameter: 'local',
+    colorSustainable:false,
+
     position: 'absolute',
     x: 100,
     y: 100,
@@ -768,12 +818,7 @@ export const default_node = (
     show_value: false,
     tags: {},
     colorTag: '',
-    dimensions: {
-      'Primaire': {
-        level:1,
-        parent_name: undefined
-      } 
-    },
+    dimensions: {},
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
@@ -787,13 +832,17 @@ export const default_node = (
       filter_label: 0,
       global_curvature: 0.5,
       null_flux: false,
-      label_vert: 'bas',
-      label_horiz: 'milieu',
-      label_vert_valeur: 'milieu',
-      label_horiz_valeur: 'milieu',
+      label_vert: 'bottom',
+      label_horiz: 'middle',
+      label_vert_valeur: 'middle',
+      label_horiz_valeur: 'middle',
       value_font_size:14,
       label_box_width: 110,
+      label_color:false
     },
+  }
+  for (const tag_group_key in data.nodeTags) {
+    defaultNode.tags[tag_group_key]  = []
   }
   return defaultNode
 }
@@ -842,6 +891,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     idLink: 'link0',
     value: nObjet,
     color: '#a9a9a9',
+    recycling:false,
     gradient: false,
     curved: false,
     arrow: true,
@@ -851,6 +901,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     curvature: 0.5,
     label_visible: true,
     label_on_path: true,
+    label_font_size:11,
     orientation: 'hh',
     left_horiz_shift: 0,
     right_horiz_shift: 0,
@@ -859,7 +910,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    dashed:true
+    dashed:true,
+    to_precision:true,
   }
 }
 
@@ -913,13 +965,13 @@ export const setSelectedTags = (
 ) => {
 
   const { nodeTags } = sankey_data
-  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes).filter(n => n.display)
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = true
+    node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
-    Object.keys(nodeTags).forEach(tags_group_key => {
+    Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
       if (break_loop) {
         return
       }
@@ -929,7 +981,7 @@ export const setSelectedTags = (
         return
       }
       no_tag = false
-      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(tag_key)).length > 0
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
       if (!visible) {
         node.node_visible = false
         break_loop = true
@@ -937,7 +989,7 @@ export const setSelectedTags = (
     })
     // for the labels
     if (no_tag && !node.shape_visible && !node.label_visible) {
-      node.node_visible = true
+      node.node_visible = node.display && true
     }
   })
   if (!sankey_data.show_structure) {
@@ -945,7 +997,11 @@ export const setSelectedTags = (
   }
 }
 
-const downloadExamples = (
+type layout_type = {
+  layout: SankeyData
+}
+
+export const downloadExamples = (
   file_name: string,
   the_url_prefix: string,
   filetype: string
@@ -971,14 +1027,54 @@ const downloadExamples = (
     })
 }
 
+export const processExample = (server_data: SankeyData ) => {
+  const data = default_sankey_data()
+  Object.assign(data, server_data)
+  convert_data(data)
+
+  if ( (data as SankeyData & layout_type).layout === undefined) {
+    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+  } else {
+    convert_data((data as SankeyData & layout_type).layout)
+    compute_default_input_outputLinksId(data.nodes, data.links)
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
+    delete (data as SankeyData & { layout?: SankeyData }).layout
+  }
+  set_nodes_level(data)
+
+  return data
+}
+
+export const uploadExcelImpl = (
+  data: SankeyData,
+  set_data: (data: SankeyData) => void,
+  set_show_excel_dialog: (b: boolean) => void,
+  input_file: Blob,
+  the_url_prefix: string
+) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
+  }
+  const url = root + 'sankey/upload_excel'
+  const form_data = new FormData()
+  form_data.append(
+    'file', input_file
+  )
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+  fetch(url, fetchData)
+  set_show_excel_dialog(false)
+}
+
 export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  example_callback: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void
 ) => {
-
   let root = window.location.href
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
@@ -988,76 +1084,68 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  const file_type = file_name.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain'
-  set_data({ ...default_sankey_data() })
+  //set_data({ ...default_sankey_data() })
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-
       const server_data = JSON.parse(text)
-      data = default_sankey_data()
-      Object.assign(data, server_data)
-      convert_data(data)
-      type layout_type = {
-        layout?: SankeyData
+      const error = server_data['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
       }
-      example_callback(data)
-      delete (data as unknown as layout_type).layout
-
-      // if (data.agregation.level === -1) {
-      //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(data)))
-      // } else {
-      set_nodes_level(data,data.nodes,data.agregation.level,true)
-      //}
-      set_data({ ...data })
       if (file_name.includes('.xlsx')) {
-        downloadExamples(file_name, the_url_prefix, file_type)
-      }
-      const test = document.getElementsByClassName('navbar')
-      let margin_top = 0
-      if (test && test.length > 0) {
-        margin_top = test[0].getBoundingClientRect().height
-        d3.select('#svg-container').style('margin-top',margin_top+'px')
+        // Object.assign(data,processExample(server_data))
+        // callback(data)
+        // set_data({ ...data })
+        //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      } else {
+        Object.assign(data,server_data)
+        convert_data(data)
+        set_data({ ...data})
       }
     })
   })
 }
 
 export const set_nodes_level = (
-  data: SankeyData,
-  display_nodes: { [key: string]: SankeyNode },
-  level: number,
-  control_display = true
+  sankey_data: SankeyData
 ) => {
-  Object.values(display_nodes).forEach(node => {
-    //if ( control_display && (!node.dimensions['Primaire'] || !node.dimensions['Primaire'].level)) {
-    if ( control_display && node.tags['Dimensions'] && node.tags['Dimensions'].length > 0 && !node.tags['Dimensions'].includes(data.agregation.dimension)) {
-      node.display = false
-      node.node_visible = false
-      return
-    }
-    if ((!node.tags['Dimensions'] || node.tags['Dimensions'].length === 0 || node.tags['Dimensions'].includes(data.agregation.dimension)) ) {
-      if (node.dimensions[data.agregation.dimension] &&  node.dimensions[data.agregation.dimension].level === level) {
-        // shows siblings
-        desagregation(data,node.idNode,data.agregation.dimension,control_display)
-        // hide children
-        agregation(data,node.idNode,data.agregation.dimension,control_display)
-        Object.keys(node.dimensions).forEach(dim => {
-          const idParent = node.dimensions[dim].parent_name
-          if (control_display && idParent !== null && idParent !== undefined && display_nodes[idParent]) {
-            display_nodes[idParent].node_visible = false
-            display_nodes[idParent].display = false
-          }
-        })
-      } else if (control_display && node.dimensions[data.agregation.dimension] && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
-        node.node_visible = false
-        node.display = false
-      }
-    } else if (control_display && node.dimensions[data.agregation.dimension].level  && node.dimensions[data.agregation.dimension].level as number > level) {
-      node.node_visible = false
-      node.display = false
-    }
+
+  const { nodeTags } = sankey_data
+  const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
+
+  const levelTags = Object.keys(nodeTags).filter(key=>nodeTags[key].banner === 'level' && nodeTags[key].activated)
+
+  display_nodes.filter(n=>n.display).forEach(n=>{
+    levelTags.forEach(tags_group_key => {
+      desagregation(sankey_data,n.idNode,tags_group_key,false)
+      agregation(sankey_data,n.idNode,tags_group_key,false)
+    })
   })
+
+  display_nodes.forEach(node => {
+    node.display = true
+    node.node_visible = true
+    let break_loop = false
+    levelTags.forEach(tags_group_key => {
+      if (break_loop) {
+        return
+      }
+      const tags_group = nodeTags[tags_group_key]
+      if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
+        // tags do not apply to node
+        return
+      }
+      const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
+      if (!visible) {
+        node.display = false
+        node.node_visible = false
+        break_loop = true
+      }
+    })
+  })
+  //setSelectedTags(sankey_data)
 }
 
 export const hideNullFluxNodes = (

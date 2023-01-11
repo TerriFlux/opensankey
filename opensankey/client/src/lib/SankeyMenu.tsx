@@ -1,4 +1,4 @@
-﻿/* eslint @typescript-eslint/no-var-requires: "off" */
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
@@ -6,18 +6,21 @@ import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey, reorganize_inputLinksId, updateLayout } from './SankeyLayout'
+import { reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
 import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
 import SankeyDraw from './SankeyDraw'
+import {downloadExamples} from './SankeyUtils'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
-
+import {useTranslation} from 'react-i18next'
+import i18n from 'i18next'
+import SankeyLoad from './SankeyLoad'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -28,67 +31,6 @@ declare const window: Window &
   }
 
 export type selected_type = {'label':string;'value':string}
-
-export const uploadExcelImpl = (
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  set_show_excel_dialog: (b: boolean) => void,
-  input_file: Blob,
-  sheet: string,
-  post_callback: (data:SankeyData)=>void
-) => {
-  const form_data = new FormData()
-  form_data.append(
-    'file', input_file
-  )
-  // form_data.append(
-  //   'sheet', sheet
-  // )
-  const path = window.location.href
-
-  const url = path + 'sankey/upload_excel'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-  const callback = (server_data: SankeyData & { error: string }) => {
-    const error = server_data['error']
-    if (error && error.length != 0) {
-      alert(error)
-      return
-    }
-    Object.assign(data, server_data)
-    convert_data(data)
-    //compute_auto_sankey(data, 200)
-    let nb_agregation_level = 0
-    Object.values(data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  
-    set_nodes_level(data,data.nodes,nb_agregation_level)
-    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-    for (let i=nb_agregation_level ; i>0 ; i--) {
-      set_nodes_level(data,data.nodes,i,false)
-    }
-    post_callback(data)
-    set_data({ ...data })
-  }
-  fetch(url, fetchData).then(response => {
-    response.text().then(text => {
-      // try {
-      const json_data = JSON.parse(text)
-      callback(json_data)
-      const test = document.getElementsByClassName('navbar')
-      let margin_top = 0
-      if (test && test.length > 0) {
-        margin_top = test[0].getBoundingClientRect().height
-        d3.select('#svg-container').style('margin-top',margin_top+'px')
-      }
-      // } catch(err) {
-      //   alert(err)
-      // }
-    })
-  })
-  set_show_excel_dialog(false)
-}
 
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -139,97 +81,24 @@ const MenuPropTypes = {
   set_style_to_apply: PropTypes.func.isRequired,
 
   mode_visualisation:PropTypes.bool.isRequired,
-  set_mode_visualisation:PropTypes.func.isRequired
+  set_mode_visualisation:PropTypes.func.isRequired,
+
+  callback:PropTypes.func.isRequired,
+
+  show_load: PropTypes.bool.isRequired,
+  set_show_load: PropTypes.func.isRequired,
+  processing : PropTypes.bool.isRequired,
+  setProcessing : PropTypes.func.isRequired,
+  failure : PropTypes.bool.isRequired,
+  setFailure : PropTypes.func.isRequired,
+  not_started : PropTypes.bool.isRequired,
+  setNotStarted : PropTypes.func.isRequired,
+  path: PropTypes.string.isRequired,
+  launch: PropTypes.func.isRequired
 }
 
 
 type MenuTypes = InferProps<typeof MenuPropTypes>
-
-// const ArtefactsItemPropTypes = {
-//   artefacts_menu : PropTypes.oneOf([PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,PropTypes.arrayOf(PropTypes.element.isRequired).isRequired]).isRequired,
-//   current_path : PropTypes.string.isRequired
-// }
-
-// export type ArtefactsItemTypes = InferProps<typeof ArtefactsItemPropTypes>
-
-// export const ArtefactsItem = ({ artefacts_menu , current_path }: ArtefactsItemTypes) => {
-//   return (
-//     <>
-//       { Array.isArray(artefacts_menu)
-//         ? artefacts_menu.map((item, index) => {
-//           let url = window.location.origin + '/fm/userfiles/' + current_path + '/artefacts/' + item
-//           if (!item.includes('zip')) {
-//             url = url + '/index.html'
-//           }
-//           return (
-//             <Dropdown.Item key={index} href={url} target="_blank">{item}</Dropdown.Item>
-//           )
-//         }
-//         ) : Object.keys(artefacts_menu).map(
-//           (key, index) => {
-//             return (
-//               <>
-//                 <NavDropdown key={index} title={key} id={key} >
-//                   <ArtefactsItem
-//                     artefacts_menu={(artefacts_menu as unknown as {[key:string]:ArtefactsItemTypes})[key] as unknown as Validator<ReactElementLike[]> | Validator<{ [x: string]: ReactElementLike[]; }>}
-//                     current_path={current_path !== '' ? current_path + '/' + key : key}
-//                   />
-//                 </NavDropdown>
-//               </>
-//             )
-//           }
-//         )
-//       }
-//     </>
-//   )
-// }
-
-type layout_type = {
-  layout: SankeyData
-}
-
-export const processExample = (server_data: SankeyData & layout_type ) => {
-  // if (path.includes('v1/filiere_foret_bois_savoie_reconciled.xlsx')) {
-  //   server_data.links['link324'].idSource = 'node63'
-  //   delete server_data.links['link325']
-  // }
-  let nb_agregation_level = 0
-  Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-  set_nodes_level(server_data,server_data.nodes,nb_agregation_level)
-  compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  for (let i=nb_agregation_level ; i>0 ; i--) {
-    set_nodes_level(server_data,server_data.nodes,i,false)
-  }
-
-  if (server_data.layout !== undefined) {
-    convert_data(server_data.layout)
-    // let nb_agregation_level = 0
-    // Object.values(server_data.nodes).forEach( n => Object.entries(n.dimensions).forEach( dim => nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level))
-    for (let i=1 ; i<=nb_agregation_level ; i++) {
-      set_nodes_level(server_data.layout,server_data.layout.nodes,i,false)
-    }
-    updateLayout(server_data, server_data.layout)
-    // if (server_data.agregation.level === -1) {
-    //   localStorage.setItem('initial_data',LZString.compress(JSON.stringify(server_data)))
-    // } else {
-    set_nodes_level(server_data,server_data.nodes,server_data.agregation.level,true)
-    //}
-    // for (let i=1 ; i<=nb_agregation_level ; i++) {
-    //   set_nodes_level(server_data,server_data.nodes,i)
-    //   updateLayout(server_data, (server_data as SankeyData & { layout: SankeyData }).layout)
-    // }
-    // delete (server_data as SankeyData & { layout?: SankeyData }).layout
-    // Object.assign(server_data,JSON.parse(localStorage.getItem('initial_data') as string))           
-  // } else {
-  //   set_nodes_level(server_data,server_data.nodes,2)
-  //   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  //   set_nodes_level(server_data,server_data.nodes,1)
-  //   compute_auto_sankey(server_data, server_data.h_space ? server_data.h_space : 200)
-  //   return 0             
-  // }
-  }
-  return 0
-}
 
 const ExempleMenuDictTypes = PropTypes.objectOf(PropTypes.element.isRequired).isRequired
 type ExempleMenuTypes = InferProps<typeof ExempleMenuDictTypes>
@@ -243,17 +112,18 @@ const ExempleItemPropTypes = {
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  callback: PropTypes.func.isRequired
+  //callback: PropTypes.func.isRequired,
+  launch: PropTypes.func.isRequired
 }
 
 type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
 
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,callback}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
   return (
     <>
-      { Array.isArray(exemple_menu) 
-        ? exemple_menu.map( (item,index)=> {
-          let the_callback = ()=> 0
+      { ('Files' in exemple_menu) 
+        ? (exemple_menu['Files'] as string[]).map( (item,index)=> {
+          //let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
             let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
@@ -267,7 +137,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             )
           }
           if (item.includes('.xlsx')) {
-            the_callback = callback
+            //the_callback = callback
             path = current_path+'/'+item
           }
           return (
@@ -277,12 +147,15 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 multi_selected_nodes.current = []
                 multi_selected_links.current = []
                 multi_selected_label.current = []
+                if (path.includes('xlsx')) {
+                  launch(path, url_prefix)
+                } 
                 uploadExemple(
-                  path, url_prefix, data, set_data,the_callback
+                  path, url_prefix, data, set_data
                 )} 
               }
-            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' sortie') : item.split('.x')[0].replace(/_/g, ' ') + ' entrée'
-                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json','') : item.replace('afmsankey_0.9.0.','')
+            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
+                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
               }</Dropdown.Item>
           )
         }
@@ -292,11 +165,14 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             if (title === 'artefacts') {
               title = 'Page Web et Zip' 
             }
+            if (key == 'Tests') {
+              return <></>
+            }
             let the_current_path = current_path
             if (!key.includes('OpenSankey')) {
               the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
             } else {
-              the_current_path = current_path + '/' + key
+              the_current_path = current_path !== '' ? current_path + '/' + key : key
             }
             return (
               <>
@@ -310,7 +186,8 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
-                    callback={callback}
+                    //callback={callback}
+                    launch={launch}
                   />
                 </NavDropdown>
               </>
@@ -351,13 +228,24 @@ const Menu: FunctionComponent<MenuTypes> = (
     , style_to_apply,
     set_style_to_apply,
     mode_visualisation,
-    set_mode_visualisation
+    set_mode_visualisation,
+    callback,
+    show_load,
+    set_show_load,
+    processing,setProcessing,
+    failure,setFailure,
+    not_started,setNotStarted,
+    path,
+    launch
   }
 ) => {
+
+
   const set_show_link = useState(true)[1]
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
+  const [show_save_json, set_show_save_json] = useState(false)
   // const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
@@ -366,6 +254,9 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [radio_selected] = useState<string>('local')
   
   const [forceUpdate, setForceUpdate] = useState(false)
+  const {t} =useTranslation()
+
+
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -377,18 +268,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  let nb_agregation_level = 1
-  Object.values(data.nodes).forEach(n => {
-    if (!n.dimensions) {
-      return
-    }
-    Object.entries(n.dimensions).forEach(dim => {
-      if (!dim[1].level) {
-        return
-      }
-      nb_agregation_level = dim[1].level as number > nb_agregation_level ? dim[1].level as number : nb_agregation_level
-    })
-  })
   //Ajoute un nouveau noeud puis le selectionne
   const add_new_node = () => {
     const { nodes } = data
@@ -420,7 +299,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const _load_json = useRef<HTMLInputElement>(null)
 
-  const [processing] = useState(false)
+  //const [processing] = useState(false)
 
   const clickSaveDiagram = () => {
     const data_to_save = { ...data }
@@ -457,8 +336,36 @@ const Menu: FunctionComponent<MenuTypes> = (
       .then(showFile).then(cleanFile)
   }
 
+  const clickSaveExcelSimple = () => {
+    let root = window.location.href
+    if (root.includes('sankey-diagrams') && url_prefix !== '') {
+      root = root.replace('sankey-diagrams/', '')
+    }
+    let url = root + url_prefix + 'sankey/save_excel_simple'
+    const fetchData = {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }
+    const showFile = (blob: BlobPart) => {
+      const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      FileSaver.saveAs(newBlob, 'sankey.xlsx')
+    }
+    const cleanFile = () => {
+      const fetchData = {
+        method: 'POST'
+      }
+      url = root + url_prefix + 'sankey/clean_excel'
+      fetch(url, fetchData)
+    }
+
+    fetch(url, fetchData).then(
+      r => r.blob()
+    )
+      .then(showFile).then(cleanFile)
+  }
+
   const clickSaveSVG = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     const html = ((svg.attr('title', 'test2')
@@ -470,7 +377,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
   }
   const clickSavePDF = () => {
-    const svg = window.d3.select('#svg-container svg')
+    const svg = window.d3.select(' .opensankey #svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
     svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
@@ -618,7 +525,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
   }
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
@@ -629,7 +536,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Renvoie le menue déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
-    console.log(multi_selected_nodes.current)
     const DD = (
       <div id='DD_multi_node'>
         <MultiSelect
@@ -646,10 +552,10 @@ const Menu: FunctionComponent<MenuTypes> = (
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             multi_selected_nodes.current = m_s
             Object.values(data.nodes).forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',0)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
             )
             multi_selected_nodes.current.forEach( n => 
-              d3.select('#' + n.idNode).attr('stroke-width',2)
+              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)          
           }}
@@ -689,7 +595,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(data.nodes[l.idSource].display && data.nodes[l.idTarget].display):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
     if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
       return
@@ -715,15 +621,15 @@ const Menu: FunctionComponent<MenuTypes> = (
             multi_selected_links.current = m_s
             Object.values(data.links).forEach( l => {
               
-              d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
 
             } 
             )
             multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll('#gg_' + l.idLink + ' rect')
+              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
               sel.attr('fill-opacity', '1')
-              d3.selectAll('#gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
 
               
             })
@@ -736,7 +642,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const menuButton = () => {
     if (show_nav) {
-      return 'Configuration Sankey'
+      return t('Menu.confSankey')
     } else {
       return <FaAngleDoubleLeft />
     }
@@ -803,7 +709,14 @@ const Menu: FunctionComponent<MenuTypes> = (
     })
     return (display_size) ? size : -1
   }
+  const allLabelAsHTML = () => {
+    let isHTML = false
 
+    multi_selected_label.current.map((d) => {
+      isHTML = (d.isTextHTML) ? true : isHTML
+    })
+    return isHTML
+  }
   const allLabelTransparent = () => {
     let transparent = false
 
@@ -878,10 +791,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_vert=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_vert){
-      case 'milieu':
+      case 'middle':
         d.y_label=d.label_height/2
         break
-      case 'bas':
+      case 'bottom':
         d.y_label=d.label_height-3
         break
       default:
@@ -893,10 +806,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const label_libre_align_horiz=()=>{
     multi_selected_label.current.map(d=>{
       switch(d.position_horiz){
-      case 'milieu':
+      case 'middle':
         d.x_label=d.label_width/2
         break
-      case 'droite':
+      case 'right':
         d.x_label=d.label_width-3
         break
       default:
@@ -957,6 +870,24 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Modal.Title>Édition Préferences</Modal.Title>
     </Modal.Header>
     <Modal.Body>
+      <Form.Group as={Row}>
+        <Col xs={1}>
+          <Form.Label  style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
+        </Col>
+        <Col xs={2}>
+          <Form.Check
+            inline
+            style={{marginTop:'0.5em',marginLeft:'0.em'}}
+            type='switch'
+            checked={i18n.language=='en'}
+            onChange={evt => {
+              i18n.changeLanguage((evt.target.checked)?'en':'fr')
+            }}
+          />
+        </Col>
+      </Form.Group>
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+
       <Form.Group as={Row}>
         <Col xs={6}>Charger une police d'icones</Col>
         <Col xs={6}><FormControl
@@ -1027,25 +958,25 @@ const Menu: FunctionComponent<MenuTypes> = (
         >Expert</Button>
       </ButtonGroup>
       <Form>
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label="Mise en page" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
           preferenceCheck('MEP')
           set_data({ ...data })
         }} />
-        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Noeuds" />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label="Étiquettes Noeuds" onChange={() => {Form.Check
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label={t('Menu.Noeuds')} />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
           preferenceCheck('EN')
           set_data({ ...data })
         }} />
-        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label="Flux" />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label="Étiquettes Flux" onChange={() => {
+        <Form.Check checked={!mode_visualisation} disabled type="checkbox" label={t('Menu.flux')} />
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
           preferenceCheck('EF')
           set_data({ ...data })
         }} />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label="Étiquettes Données" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
           preferenceCheck('ED')
           set_data({ ...data })
         }} />
-        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label="Label Libres" onChange={() => {
+        <Form.Check disabled={mode_visualisation} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
           preferenceCheck('LL')
           set_data({ ...data })
         }} />
@@ -1059,6 +990,43 @@ const Menu: FunctionComponent<MenuTypes> = (
         }} />
 
       </Form>
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
+      <FormGroup as={Row}>
+        <Col xs={5}>
+          <FormLabel >{t('Menu.BgC')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.couleur_fond_sankey=evt.target.value
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dns')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_node_selector=evt.target.checked
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dls')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_link_selector=evt.target.checked
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
@@ -1170,13 +1138,13 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
 
           <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToNodes}>Appliquer le style aux noeuds</Button>
+            <Button variant="warning" onClick={applyStyleToNodes}>{t('Noeud.apparence.asn')}</Button>
           </Col>
         </Row>
 
         <Form.Group as={Row} >
           <Col xs={2} >
-            <FormLabel >Nom Style</FormLabel>
+            <FormLabel >{t('Menu.ns')}</FormLabel>
           </Col>
           <Col xs={10} >
 
@@ -1197,11 +1165,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         <Col md={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            <Tab eventKey="nodes_desc" title="Apparence">
+            <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Visibilité</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -1220,7 +1188,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.Couleur')}</FormLabel>
                   </Col>
                   <Col xs={3}>
                     <Form.Control
@@ -1238,13 +1206,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel>Forme</FormLabel>
+                    <FormLabel>{t('Noeud.apparence.Forme')}</FormLabel>
                   </Col>
                   <Col xs={2}>
                     <FormCheck
                       value="ellipse"
                       type='radio'
-                      label='Cercle'
+                      label={t('Noeud.apparence.Cercle')}
 
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
@@ -1261,7 +1229,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value="rect"
                       type='radio'
-                      label='Rectangle'
+                      label={t('Noeud.apparence.Rectangle')}
 
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
@@ -1278,7 +1246,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Form >
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Largeur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -1298,7 +1266,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille minimum Hauteur</FormLabel>
+                    <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -1322,11 +1290,11 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Form>
             </Tab>
 
-            <Tab eventKey="label_desc" title="Labels">
+            <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
               <Form>
 
                 <Row>
-                  <Col xs={6}>Police des labels</Col>
+                  <Col xs={6}>{t('Flux.pdl')}</Col>
                   <Col xs={6}><Form.Select
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1347,7 +1315,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Row>
 
                 <Form.Group as={Row} >
-                  <Col xs={4}>Visibilité</Col>
+                  <Col xs={4}>{t('Noeud.apparence.Visibilité')}</Col>
                   <Col xs={1}>
                     <FormCheck inline
                       type='switch'
@@ -1364,7 +1332,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Afficher la valeur du noeud</FormLabel>
+                    <FormLabel >{t('Noeud.labels.vdv')}</FormLabel>
                   </Col>
                   <Col xs={1}>
                     <FormCheck inline
@@ -1383,7 +1351,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Taille police</FormLabel>
+                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -1403,12 +1371,12 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel >Police</FormLabel>
+                    <FormLabel >{t('Noeud.labels.police')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Gras'
+                      label={t('LL.gras')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.bold : false
                       }
@@ -1422,7 +1390,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Majuscule'
+                      label={t('LL.maj')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.uppercase : false
                       }
@@ -1436,7 +1404,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='checkbox'
-                      label='Italique'
+                      label={t('LL.ita')}
                       checked={
                         (selected_style_node != '') ? data.style_node[selected_style_node].display_style.italic : false
                       }
@@ -1450,7 +1418,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel>Coupure des labels</FormLabel>
+                    <FormLabel>{t('Noeud.labels.cl')}</FormLabel>
                   </Col>
                   <Col xs={5}>
                     <FormControl
@@ -1474,19 +1442,19 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical</FormLabel>
+                    <FormLabel >{t('Noeud.labels.pv')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Haut'
+                      label={t('Noeud.labels.haut')}
 
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'haut' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'top' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'haut'
+                        data.style_node[selected_style_node].display_style.label_vert = 'top'
                         set_data({ ...data })
                       }}
 
@@ -1495,13 +1463,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_vert = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1509,13 +1477,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bas' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bottom' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'bas'
+                        data.style_node[selected_style_node].display_style.label_vert = 'bottom'
                         set_data({ ...data })
                       }}
                     />
@@ -1523,18 +1491,18 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={4}>
-                    <FormLabel >Position horizontal</FormLabel>
+                    <FormLabel >{t('Noeud.labels.ph')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Gauche'
+                      label={t('Noeud.labels.gauche')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'gauche' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'left' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'gauche'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'left'
                         set_data({ ...data })
                       }}
                     />
@@ -1542,13 +1510,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'milieu' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'middle' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'milieu'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'middle'
                         set_data({ ...data })
                       }}
                     />
@@ -1556,13 +1524,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   <Col>
                     <FormCheck
                       type='radio'
-                      label='Droite'
+                      label={t('Noeud.labels.droite')}
                       checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'droite' : false
+                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'right' : false
                       }
 
                       onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'droite'
+                        data.style_node[selected_style_node].display_style.label_horiz = 'right'
                         set_data({ ...data })
                       }}
                     />
@@ -1689,6 +1657,36 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
 
+  if (not_started == false && processing == false) {
+    const path = window.location.href
+    const url = path + 'loads_retrieves_result'
+    const form_data = new FormData()
+    const fetchData = {
+      method: 'POST',
+      body: form_data
+    }
+    fetch(url, fetchData).then(response => {
+      response.text().then(text => {
+        try {
+          const server_data = JSON.parse(text)
+          if ((data as SankeyData & { layout?: SankeyData }).layout ) {
+            server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+          }
+          Object.assign(data,processExample(server_data))
+          callback(data)
+          delete (data as SankeyData & { layout?: SankeyData }).layout
+          set_data({ ...data })
+          //set_show_load(false)
+        } catch(err) {
+          alert(err)
+        }
+      })
+    })
+    setProcessing(false)
+    setFailure(false)
+    setNotStarted(true)
+  }     
+
   const modalStyleLink = (
     <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
       <Modal.Header closeButton>
@@ -1740,13 +1738,13 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
 
           <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToLinks}>Appliquer le style aux flux</Button>
+            <Button variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
           </Col>
         </Row>
 
         <Form.Group as={Row} >
           <Col xs={2} >
-            <FormLabel >Nom Style</FormLabel>
+            <FormLabel >{t('Menu.ns')}</FormLabel>
           </Col>
           <Col xs={10} >
 
@@ -1768,12 +1766,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Row>
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
-              <Tab eventKey="flux_attributes" title="Apparence">
+              <Tab eventKey="flux_attributes" title={t('Noeud.apparence.apparence')}>
                 <Form >
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Couleur:</FormLabel>
+                      <FormLabel >{t('Noeud.apparence.Visibilité')}:</FormLabel>
                     </Col>
                     <Col>
                       <Form.Control
@@ -1794,7 +1792,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Gradient:</FormLabel>
+                      <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
                     </Col>
                     <Col>
                       <Form.Check
@@ -1816,12 +1814,12 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel>Type:</FormLabel>
+                      <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
                     </Col>
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Courbe'
+                        label={t('Flux.apparence.courbe')}
                         checked={data.style_link[selected_style_link].curved}
                         onChange={
                           evt => {
@@ -1834,7 +1832,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Flèche'
+                        label={t('Flux.apparence.fleche')}
                         checked={data.style_link[selected_style_link].arrow}
                         onChange={
                           evt => {
@@ -1847,7 +1845,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Col>
                       <FormCheck
                         type='checkbox'
-                        label='Recyclage'
+                        label={t('Flux.apparence.recy')}
                         checked={(data.style_link[selected_style_link].recycling) ? true : false}
                         onChange={
                           evt => {
@@ -1860,7 +1858,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Form.Group>
                   <Form.Group as={Row} >
                     <Col>
-                      <FormLabel >Courbure</FormLabel>
+                      <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
                     </Col>
 
                     <Col>
@@ -1941,13 +1939,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Form.Group>
                 </Form>
               </Tab>
-              <Tab eventKey="label" title="Label">
+              <Tab eventKey="label" title={t('Flux.label.label')}>
                 <Form.Group as={Row} >
                   <Col>
                     <FormCheck
                       value='black'
                       type='radio'
-                      label='Label en noir'
+                      label={t('Flux.label.len')}
                       checked={data.style_link[selected_style_link].text_color == 'black'}
                       onChange={
                         () => {
@@ -1961,7 +1959,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value='white'
                       type='radio'
-                      label='Label blanc'
+                      label={t('Flux.label.lb')}
                       checked={data.style_link[selected_style_link].text_color == 'white'}
                       onChange={
                         (evt) => {
@@ -1975,7 +1973,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <FormCheck
                       value='same_color'
                       type='radio'
-                      label='Label en couleur'
+                      label={t('Flux.label.lec')}
                       checked={data.style_link[selected_style_link].text_color == 'color'}
                       onChange={
                         () => {
@@ -1989,7 +1987,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Form.Group >
                   <FormCheck
                     type='checkbox'
-                    label='Label visible'
+                    label='Visibilité du label'
                     checked={data.style_link[selected_style_link].label_visible}
                     onChange={
                       evt => {
@@ -2001,13 +1999,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel>Position laterale:</FormLabel>
+                    <FormLabel>{t('Flux.label.pl')}:</FormLabel>
                   </Col>
                   <Col>
                     <Form.Check
                       value='beginning'
                       type='radio'
-                      label='Début'
+                      label={t('Flux.label.deb')}
                       checked={data.style_link[selected_style_link].label_position == 'beginning'}
                       onChange={
                         evt => {
@@ -2021,7 +2019,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='middle'
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={data.style_link[selected_style_link].label_position == 'middle'}
                       onChange={
                         evt => {
@@ -2035,7 +2033,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='end'
                       type='radio'
-                      label='Fin'
+                      label={t('Flux.label.fin')}
                       checked={data.style_link[selected_style_link].label_position == 'end'}
                       onChange={
                         evt => {
@@ -2049,7 +2047,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Form.Group>
                   <FormCheck
                     type='checkbox'
-                    label='Attaché au flux'
+                    label={t('Flux.label.acf')}
                     disabled={selected_link.current.label_position === 'frozen'}
                     checked={data.style_link[selected_style_link].label_on_path}
                     onChange={
@@ -2062,13 +2060,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel>Position orthogonale:</FormLabel>
+                    <FormLabel>{t('Flux.label.po')}:</FormLabel>
                   </Col>
                   <Col>
                     <Form.Check
                       value='below'
                       type='radio'
-                      label='Dessous'
+                      label={t('Flux.label.dessous')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'below'}
 
                       onChange={
@@ -2083,7 +2081,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='middle'
                       type='radio'
-                      label='Milieu'
+                      label={t('Noeud.labels.Milieu')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'middle'}
                       onChange={
                         evt => {
@@ -2097,7 +2095,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     <Form.Check
                       value='above'
                       type='radio'
-                      label='Dessus'
+                      label={t('Flux.label.dessus')}
                       checked={data.style_link[selected_style_link].orthogonal_label_position == 'above'}
 
                       onChange={
@@ -2173,7 +2171,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const modalShortcut = (
     <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
       <Modal.Header closeButton>
-        <Modal.Title>Raccourci Clavier</Modal.Title>
+        <Modal.Title>{t('Menu.rc')}</Modal.Title>
       </Modal.Header>
       <Modal.Body >
         <p>Fonctionnement des clics :</p>
@@ -2245,8 +2243,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
-              <NavDropdown  title="Fichiers" id="files" >
-                <NavDropdown drop='start' id='ouvrir' title="Ouvrir"  >
+              <NavDropdown  title={t('Menu.Fichiers')} id="files" >
+                <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
                   <Dropdown.Item 
                     onClick={() => {
                       if (_load_json.current) {
@@ -2272,17 +2270,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                             (new_data.version as unknown as undefined) = undefined
                           }
                           convert_data(new_data)
-                          set_nodes_level(new_data,new_data.nodes,new_data.agregation.level,true)
+                          set_nodes_level(data)
                           set_data(new_data)
                           const test = document.getElementsByClassName('navbar')
                           let margin_top = 0
                           if (test && test.length > 0) {
                             margin_top = test[0].getBoundingClientRect().height
-                            d3.select('#svg-container').style('margin-top',margin_top+'px')
+                            d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
                           }
-                          // if ( data.agregation.level === -1 ) {
-                          //   localStorage.setItem('initial_data', LZString.compress((JSON.stringify(new_data))))
-                          // }
                         }
                       })()
                       reader.readAsText(files[0])
@@ -2293,44 +2288,46 @@ const Menu: FunctionComponent<MenuTypes> = (
                   >Excel</Dropdown.Item>
                   {open_menu}
                 </NavDropdown>
-                <NavDropdown  drop='start' id='enregistrer' title="Enregistrer" >
-                  <Dropdown.Item onClick={clickSaveDiagram} >JSON</Dropdown.Item>
+                <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
+                  <Dropdown.Item onClick={()=>{
+                    set_show_save_json(true)
+                  }} >JSON</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSaveExcelSimple} >Excel Simple</Dropdown.Item>
                   <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
                   {save_menu}
                 </NavDropdown>
-                <NavDropdown drop='start' id='exporter' title="Exporter" >
-                  <Dropdown.Item onClick={clickSaveSVG} >Exporter SVG</Dropdown.Item>
-                  <Dropdown.Item onClick={clickSavePDF} >Exporter PDF</Dropdown.Item>
+                <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
+                  <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
+                  <Dropdown.Item onClick={clickSavePDF} >{t('Menu.exporter')} PDF</Dropdown.Item>
                 </NavDropdown>
-                <Dropdown.Item onClick={() => { setShowPreference(true) }}>Préférences</Dropdown.Item>
+                <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
               </NavDropdown>
-              <NavDropdown id='edition' title="Edition" >
-                <Dropdown.Item onClick={reinitialization} >Réinitialiser</Dropdown.Item>
-                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >Publier</Dropdown.Item>    
-                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>Appliquer mise en page</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEdition}>Edition Style Noeud</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEditionLink}>Edition Style Flux</Dropdown.Item>
+              <NavDropdown id='edition' title={t('Menu.Edition')} >
+                <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
+                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>    
+                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
+                <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
+                <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
               </NavDropdown >
               {edition_menu}
               { formations_menu ? (
-                <NavDropdown title="Formations" id="formation" >
+                <NavDropdown title={t('Menu.Formations')} id="formation" >
                   {formations_menu}
                 </NavDropdown > ) :(<></>)
               }
-              <NavDropdown title="Exemples" id="exemples" >
+              <NavDropdown title={t('Menu.Exemples')} id="exemples" >
                 {example_menu}
               </NavDropdown >
               {/* <NavDropdown title="Portfolio" id="portfolio" >
                 {portfolio_menu}
               </NavDropdown > */}
 
-              <NavDropdown id='Aide' title="Aide" >
-                <Dropdown.Item onClick={() => setshowShortcut(true)} >Raccourci Clavier</Dropdown.Item>
-                <Dropdown.Item onClick={() => setshowHelp(true)}>Aide Supplémentaire</Dropdown.Item>
-              </NavDropdown >
+              <NavDropdown id='Aide' title={t('Menu.Aide')} >
+                <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
+                <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
+              </NavDropdown >           
 
-
-              {!data.static_sankey ? (
+              {!data.static_sankey && !mode_visualisation ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
                     ref={button_ref as Ref<HTMLLabelElement>}
@@ -2362,6 +2359,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
           mode_visualisation={mode_visualisation}
           set_current_filter={set_current_filter}
+          url_prefix={url_prefix}
         /> : <><Row>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
@@ -2405,7 +2403,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         /> */}
       </Navbar>
 
-      {(show_nav) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+      {(show_nav && !mode_visualisation) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
             {//MENU AIDE 
@@ -2427,18 +2425,18 @@ const Menu: FunctionComponent<MenuTypes> = (
               {
                 //MENU PARAMETRE GENERAUX
               }
-              <Accordion.Header>Mise en page</Accordion.Header>
+              <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
               <Accordion.Body>
                 {settings_edition}
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               eventKey="2"
               id="Nodes"
               onClick={
                 evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === 'Noeuds' && nav_item_active === '2') {
+                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && nav_item_active === '2') {
                     set_nav_item_active('')
                   } else {
                     set_nav_item_active('2')
@@ -2447,7 +2445,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               }
             >
 
-              <Accordion.Header>Noeuds</Accordion.Header>
+              <Accordion.Header>{t('Menu.Noeuds')}</Accordion.Header>
               <Accordion.Body style={{ padding: '0px' }}>
 
                 <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
@@ -2470,7 +2468,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     }
                   >
                     <Accordion.Header style={{ marginLeft: '25px'/*,padding:'10px' */ }} >
-                      Étiquettes Noeuds
+                      {t('Menu.EN')}
                     </Accordion.Header>
                     <Accordion.Body>
                       {settings_edition_node_tags}
@@ -2493,7 +2491,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }
                   >
-                    <Accordion.Header className='level2' >Edition Noeuds</Accordion.Header>
+                    <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
                     <Accordion.Body>
                       <Row >
                         <Col xs={1}>
@@ -2521,7 +2519,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 selected_node.current = default_node(data)
                                 multi_selected_nodes.current = []
                                 // Object.values(data.nodes).forEach( n => 
-                                //   d3.select('#' + n.idNode).attr('stroke-width',0)
+                                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
                                 // )
                                 // setForceUpdate(!forceUpdate)
                                 set_data({ ...data })
@@ -2577,7 +2575,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 apply_style_to_nodes()
                               }
                             }
-                          >Appliquer Style</Button>
+                          >{t('Flux.as')}</Button>
 
                         </Col>
                       </Row>
@@ -2600,33 +2598,33 @@ const Menu: FunctionComponent<MenuTypes> = (
                               }
                               multi_selected_nodes.current[0].name = evt.target.value
                               const d = multi_selected_nodes.current[0]
-                              d3.select('#' + d.idNode + '_text').text(evt.target.value)            
+                              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)            
                               const wrap = textwrap()
                                 .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
                                 .method('tspans')
-                              d3.select('#ggg_' + d.idNode + ' text')
+                              d3.select(' .opensankey #ggg_' + d.idNode + ' text')
                                 .call(wrap)
-                              if (!d.x_label || data.show_structure) {
-                                d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                  const width = +d3.select('#' + d.idNode).attr('width')
+                              if (!d.x_label || data.show_structure === 'structure') {
+                                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                       
-                                  if (d.display_style.label_horiz == 'milieu') {
+                                  if (d.display_style.label_horiz == 'middle') {
                                     return width / 2
-                                  } else if (d.display_style.label_horiz == 'droite') {
-                                    return d.display_style.label_vert == 'milieu' ? width : 0
+                                  } else if (d.display_style.label_horiz == 'right') {
+                                    return d.display_style.label_vert == 'middle' ? width : 0
                                   } else {
                                     return 0
                                   }
                                 })
                               }
                       
-                              d3.selectAll('#ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                const width = +d3.select('#' + d.idNode).attr('width')
+                              d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                                const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                                 if (d.x_label) {
                                   return d.x_label
-                                } else if (d.display_style.label_horiz == 'milieu') {
+                                } else if (d.display_style.label_horiz == 'middle') {
                                   return width / 2
-                                } else if (d.display_style.label_horiz == 'droite') {
+                                } else if (d.display_style.label_horiz == 'right') {
                                   return width
                                 } else {
                                   return 0
@@ -2686,7 +2684,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Accordion.Item>
 
             <Accordion.Item
-              style={{ 'display': (view == 'none' && !mode_visualisation) ? 'block' : 'none' }}
+              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
               id='Flux'
               eventKey="3"
               onClick={evt => {
@@ -2697,7 +2695,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header >Flux</Accordion.Header>
+              <Accordion.Header >{t('Menu.flux')}</Accordion.Header>
               <Accordion.Body  style={{ padding: '0px' }}>
 
                 <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
@@ -2716,7 +2714,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       }
                     }}
                   >
-                    <Accordion.Header className='level2' >Étiquettes Flux</Accordion.Header>
+                    <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
                     <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
                   </Accordion.Item>
 
@@ -2742,7 +2740,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <Form.Group>
                         <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
                         <Row>
-                          <Col xs={6}>Police des labels</Col>
+                          <Col xs={6}>{t('Flux.pdl')}</Col>
                           <Col xs={6}><Form.Select
                             onChange={
                               (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -2797,7 +2795,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Source</FormLabel>
+                          <FormLabel>{t('Flux.src')}</FormLabel>
                         </Col>
                         <Col>
                           <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
@@ -2807,7 +2805,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Cible</FormLabel>
+                          <FormLabel>{t('Flux.trgt')}</FormLabel>
                         </Col>
                         <Col>
                           <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
@@ -2817,7 +2815,23 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </Row>
                       <Row>
                         <Col>
-                          <FormLabel>Inverser Flux</FormLabel>
+                          <FormLabel>{t('Flux.hideLProd')}</FormLabel>
+                        </Col>
+                        <Col>
+                          <Form.Check
+                            inline
+                            type='switch'
+                            checked={data.hide_lone_product}
+                            onChange={evt => {
+                              data.hide_lone_product=evt.target.checked
+                              set_data({ ...data })
+                            }}
+                          />  
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col>
+                          <FormLabel>{t('Flux.invert_link')}</FormLabel>
                         </Col>
                         <Col >
                           <Button variant='info'
@@ -2850,7 +2864,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       <Row>
                         <Col>
-                          <FormLabel>Déplacement z-index flux</FormLabel>
+                          <FormLabel>{t('Flux.dzf')}</FormLabel>
                         </Col>
                         <Col >
                           {//Boutton pour monter le lien sélctionné
@@ -2925,7 +2939,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                       <Row >
                         <Col xs={1}>
-                          <FormLabel>Style:</FormLabel>
+                          <FormLabel>{t('Flux.style')}:</FormLabel>
                         </Col>
 
                         <Col xs={6}>
@@ -2966,7 +2980,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                                 set_data({ ...data })
                               }
                             }
-                          >Appliquer Style</Button>
+                          >{t('Flux.as')}</Button>
 
                         </Col>
                       </Row>
@@ -3002,7 +3016,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Étiquettes Données</Accordion.Header>
+              <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
               <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
@@ -3017,7 +3031,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 }
               }}
             >
-              <Accordion.Header>Labels Libres</Accordion.Header>
+              <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row}>
                   <Col xs={1}>
@@ -3031,12 +3045,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                         color_border: 'black',
                         transparent: false,
                         transparent_border: false,
-                        position_vert: 'milieu',
-                        position_horiz: 'gauche',
+                        position_vert: 'middle',
+                        position_horiz: 'left',
                         font_size: 12,
                         font_weight: false,
                         font_style: false,
                         font_uppercase: false,
+                        isTextHTML:false,
                         x: 50,
                         y: 50,
                         x_label: 50,
@@ -3105,10 +3120,25 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
                 </Form.Group>
-
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Hauteur Label</FormLabel>
+                    <FormLabel >{t('LL.textAsHTML')}</FormLabel>
+                  </Col>
+                  <Col xs={8}>
+                    <Form.Check
+                      inline
+                      type='switch'
+                      checked={allLabelAsHTML()}
+                      onChange={evt => {
+                        multi_selected_label.current.map(d => d.isTextHTML = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={4}>
+                    <FormLabel >{t('LL.hl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3126,7 +3156,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Largeur Label</FormLabel>
+                    <FormLabel >{t('LL.ll')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3145,7 +3175,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Fond transparent</FormLabel>
+                    <FormLabel >{t('LL.ft')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <Form.Check
@@ -3163,7 +3193,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur Fond Label</FormLabel>
+                    <FormLabel >{t('LL.cfl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3184,7 +3214,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Bordure transparent</FormLabel>
+                    <FormLabel >{t('LL.bt')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <Form.Check
@@ -3202,7 +3232,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Couleur Bordure Label</FormLabel>
+                    <FormLabel >{t('LL.cbl')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
@@ -3222,17 +3252,18 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Position vertical texte</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Haut'
-                      checked={allNodeLabelVert('vert', 'haut')}
+                      label={t('Noeud.labels.haut')}
+                      checked={allNodeLabelVert('vert', 'top')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'haut'
+                            d.position_vert = 'top'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.font_size + 3
                           })
@@ -3244,13 +3275,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Milieu'
-                      checked={allNodeLabelVert('vert', 'milieu')}
+                      label={t('Noeud.labels.Milieu')}
+                      checked={allNodeLabelVert('vert', 'middle')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'milieu'
+                            d.position_vert = 'middle'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height / 2
                           })
@@ -3261,14 +3293,15 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Bas'
+                      label={t('Noeud.labels.Bas')}
 
-                      checked={allNodeLabelVert('vert', 'bas')}
+                      checked={allNodeLabelVert('vert', 'bottom')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_vert = 'bas'
+                            d.position_vert = 'bottom'
                             // d.x_label = d.label_width / 2
                             d.y_label = d.label_height - 3
                           })
@@ -3279,17 +3312,18 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                 </Form.Group><Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Alignement texte</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Gauche'
-                      checked={allNodeLabelVert('horiz', 'gauche')}
+                      label={t('Noeud.labels.gauche')}
+                      checked={allNodeLabelVert('horiz', 'left')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'gauche'
+                            d.position_horiz = 'left'
                           })
 
                           set_data({ ...data })
@@ -3299,8 +3333,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Centre'
+                      label={t('LL.centre')}
                       checked={allNodeLabelVert('horiz', 'centre')}
                       onChange={
                         () => {
@@ -3314,14 +3349,15 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='radio'
-                      label='Droite'
+                      label={t('Noeud.labels.droite')}
 
-                      checked={allNodeLabelVert('horiz', 'droite')}
+                      checked={allNodeLabelVert('horiz', 'right')}
                       onChange={
                         () => {
                           multi_selected_label.current.map(d => {
-                            d.position_horiz = 'droite'
+                            d.position_horiz = 'right'
                           })
                           set_data({ ...data })
                         }
@@ -3336,10 +3372,11 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row}>
                   <Col xs={4}>
-                    <FormLabel >Taille Police</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
                   </Col>
                   <Col xs={8}>
                     <FormControl size='sm'
+                      disabled={allLabelAsHTML()}
                       min={0}
                       max={100}
                       type={'number'}
@@ -3356,12 +3393,13 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row} >
                   <Col>
-                    <FormLabel >Labels</FormLabel>
+                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
-                      label='Gras'
+                      label={t('LL.gras')}
                       checked={allLabelTextBold()}
                       onChange={
                         evt => {
@@ -3373,8 +3411,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
-                      label='Majuscule'
+                      label={t('LL.maj')}
                       checked={allLabelTextUpper()}
                       onChange={
                         evt => {
@@ -3386,8 +3425,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </Col>
                   <Col>
                     <FormCheck
+                      disabled={allLabelAsHTML()}
                       type='checkbox'
-                      label='Italique'
+                      label={t('LL.ita')}
                       checked={allLabelTextItalic()}
                       onChange={
                         evt => {
@@ -3606,11 +3646,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 }
               }>
-              <Accordion.Header>Légendes</Accordion.Header>
+              <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
               <Accordion.Body>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel >Légende X</FormLabel>
+                    <FormLabel >{t('Menu.LegX')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3626,7 +3666,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 </Form.Group>
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel>Légende Y</FormLabel>
+                    <FormLabel>{t('Menu.LegY')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3643,7 +3683,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Form.Group as={Row} >
                   <Col xs={3}>
-                    <FormLabel>Largeur Légende</FormLabel>
+                    <FormLabel>{t('Menu.LegWidth')}</FormLabel>
                   </Col>
                   <Col>
                     <FormControl
@@ -3678,7 +3718,13 @@ const Menu: FunctionComponent<MenuTypes> = (
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
             </Button></Modal.Dialog>) : (<></>)
       }
-
+      <ApplySaveJSONDialog
+        show_save_json={show_save_json}
+        set_show_save_json={set_show_save_json}
+        sankey_data={data}
+        set_sankey_data={set_data}
+        clickSaveDiagram={clickSaveDiagram}
+      />
       {
         (view != 'none') ? (<SankeyDraw
           data={viewOfData()}
@@ -3721,19 +3767,37 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
       {show_excel_dialog ? (
         <ExcelModal
+          launch={launch}
           handleCloseDialog={() => set_show_excel_dialog(false)}
           uploadExcelImpl={uploadExcelImpl}
           set_data={set_data}
           data={data}
-          set_show_excel_dialog={set_show_excel_dialog} />
+          set_show_excel_dialog={set_show_excel_dialog}
+          url_prefix={url_prefix}
+          callback={callback} />
       ) :
         (<div />)
       }
       { show_publish_dialog ?  (
         <PublishModal 
           set_show_publish_dialog={set_show_publish_dialog} 
-          publishImpl = {publishImpl} 
+          publishImpl = {publishImpl}
           file_path_initial = {data.file_name as string}/>
+      ) :
+        (<div/>)
+      }
+      { show_load ?  (
+        <SankeyLoad
+          url_prefix={url_prefix}
+          successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+          show_dialog={show_load}
+          set_show_dialog={set_show_load}
+          processing={processing}
+          setProcessing={setProcessing}
+          failure={failure}
+          setFailure={setFailure}
+          setNotStarted={setNotStarted}  
+        />
       ) :
         (<div/>)
       }
@@ -3751,10 +3815,12 @@ const ApplyLayoutDialogPropTypes = {
 type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
-  let file_layout: Blob[] | undefined
+  const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
+  const {t} =useTranslation()
+  const [elementToDispose, set_elementToDispose] = useState([''])
   return (
     <Modal
-      bsSize="large"
+      size="xl"
       show={show_apply_layout}
       onHide={() => set_show_apply_layout(false)}
       style={{
@@ -3763,18 +3829,18 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
         alignItems: 'center'
       }}>
       <Modal.Header closeButton>
-        <Modal.Title>Appliquer mise en page</Modal.Title>
+        <Modal.Title>{t('Menu.amp')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form >
           <Form.Group as={Row} >
             <Col xs={3}>
-              <FormLabel>Fichier de mise en page</FormLabel>
+              <FormLabel>{t('Menu.fmep')}</FormLabel>
             </Col>
             <Col xs={5}>
               <Form.Control
                 type="file"
-                onChange={(evt: React.ChangeEvent) => file_layout = (evt.target as HTMLFormElement).files}
+                onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
               />
             </Col>
             <Col xs={4}>
@@ -3793,7 +3859,7 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
                           if (result) {
                             result = String(result).split('<br>').join('\\\\n')
                             const new_layout = JSON.parse(result)
-                            updateLayout(sankey_data, new_layout)
+                            updateLayout(sankey_data, new_layout,elementToDispose)
                             set_sankey_data({ ...sankey_data })
                           }
                         }
@@ -3801,7 +3867,133 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
                     })()
                     reader.readAsText(file_layout[0])
                   }
-                }>Appliquer Disposition
+                }>{t('Menu.ad')}
+              </Button>
+            </Col>
+          </Form.Group>
+        </Form>
+        <Form.Label>{t('Menu.textDisposition')}</Form.Label>
+        <FormGroup as={Row} onClick={()=>{
+          set_sankey_data({...sankey_data})
+        }}>
+          <Col xs={2}>
+            <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('posNode')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('attrNode')
+                set_elementToDispose(elementToDispose)
+
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{ 
+              if(evt.target.checked){
+                elementToDispose.push('attrFlux')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
+              if(evt.target.checked){
+                elementToDispose.push('tagNode')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
+                set_elementToDispose(elementToDispose)
+                
+              }}}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
+              if(evt.target.checked){
+                elementToDispose.push('tagFlux')
+                set_elementToDispose(elementToDispose)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
+          </Col>
+          <Col xs={2}>
+            <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
+              if(evt.target.checked){
+                elementToDispose.push('attrGeneral')
+                set_elementToDispose(elementToDispose)
+                
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
+                set_elementToDispose(elementToDispose)
+              }}}/>
+          </Col>
+        </FormGroup>
+      </Modal.Body>
+    </Modal>
+  )
+}
+
+const ApplySaveJSONPropTypes = {
+  show_save_json : PropTypes.bool.isRequired,
+  set_show_save_json: PropTypes.func.isRequired,
+  sankey_data:SankeyDataPropTypes,
+  set_sankey_data:PropTypes.func.isRequired,
+  clickSaveDiagram:PropTypes.func.isRequired
+}
+
+type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
+
+const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
+  const {t} =useTranslation()
+  const [mode_save,set_mode_save]=useState(true)
+  return (
+    <Modal
+      bsSize="large"
+      show={show_save_json}
+      onHide={() => set_show_save_json(false)}
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <Modal.Header closeButton>
+        <Modal.Title>{t('Menu.SaveJSON')}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form >
+          <Form.Group as={Row} >
+            <Col xs={8}><Form.Check type='switch' inline label={t('Menu.SaveValue')} checked={mode_save}  onChange={(evt)=>set_mode_save(evt.target.checked)}/></Col>
+            <Col xs={4}>
+              <Button
+                size="sm"
+                onClick={
+                  () => {
+                    // Crée une copie pour d'abord enregitrer avec les changements
+                    // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+                    const cpy=JSON.parse(JSON.stringify(sankey_data))
+                    if(!mode_save){
+                      Object.values(sankey_data.links).map(d=>{
+                        (d as SankeyLink).value={}
+                        return d
+                      })
+                    }
+                    set_sankey_data({...sankey_data})
+                    clickSaveDiagram()
+                    set_sankey_data({...cpy})
+                  }
+                }>{t('Menu.SaveJSON')}
               </Button>
             </Col>
           </Form.Group>
@@ -3810,20 +4002,22 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
     </Modal>
   )
 }
-
 const ExcelModalPropTypes = {
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
   set_data: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired
+  set_show_excel_dialog: PropTypes.func.isRequired,
+  url_prefix: PropTypes.string.isRequired,
+  callback: PropTypes.func.isRequired,
+  launch: PropTypes.func.isRequired
 }
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog }) => {
+const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
-  const [sheet] = useState('results')
+  const {t} =useTranslation()
 
   return (
     <Modal
@@ -3845,7 +4039,7 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
             />
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.Label>Layout</Form.Label>
+            <Form.Label>Diagramme de mise en page</Form.Label>
             <Form.Control
               type="file"
               //ref={layout_file_}
@@ -3861,16 +4055,8 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
         <Button
           variant="secondary"
           onClick={
-            () => uploadExcelImpl(
-              data,
-              set_data,
-              set_show_excel_dialog,
-              input_file_name,
-              sheet,
-              (sankey_data: SankeyData) => {
-                if (layout_file === undefined) {
-                  return
-                }
+            () => {
+              if (layout_file !== undefined) {
                 const reader = new FileReader()
                 reader.onload = (() => {
                   return (
@@ -3878,26 +4064,41 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
                       let result = (e.target as FileReader).result
                       if (result) {
                         result = String(result).split('<br>').join('\\\\n')
-                        const data: SankeyData = JSON.parse(result)
-                        updateLayout(sankey_data, data)
-                        set_data({ ...sankey_data })
-                        // if (data.agregation.level === -1) {
-                        //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(sankey_data)))
-                        // }
+                        const layout : SankeyData = JSON.parse(result);
+                        (data as SankeyData & { layout?: SankeyData }).layout = layout
+                        launch('')
+                        uploadExcelImpl(
+                          data,
+                          set_data,
+                          set_show_excel_dialog,
+                          input_file_name,
+                          url_prefix,
+                          callback
+                        )
                       }
                     }
                   )
-                }
-                )()
+                })()
                 reader.readAsText(layout_file)
+              } else {
+                launch('')
+                uploadExcelImpl(
+                  data,
+                  set_data,
+                  set_show_excel_dialog,
+                  input_file_name,
+                  url_prefix,
+                  callback
+                )
               }
-            )
+
+            }
           }
         >Ouvrir</Button>
         <Button
           variant="secondary"
           onClick={handleCloseDialog}
-        >Annuler</Button>
+        >{t('Menu.ca')}</Button>
       </Modal.Footer>
     </Modal>)
 }
@@ -3913,16 +4114,17 @@ type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
 
 const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
   const [file_path,set_file_path] = useState(file_path_initial)
+  const {t} =useTranslation()
 
   return (
     <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >
       <Modal.Header closeButton>
-        <Modal.Title>Publication/Mise à jour du diagramme</Modal.Title>
+        <Modal.Title>{t('Menu.pdd')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
           <Form.Group as={Row}>
-            <Form.Label>Chemin d'accés</Form.Label>
+            <Form.Label>{t('Menu.ca')}</Form.Label>
             <Col>    
               <Form.Control
                 type='text'
@@ -3934,8 +4136,8 @@ const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_sh
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>Publier</Button>
-        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>Annuler</Button>
+        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>{t('Menu.pub')}</Button>
+        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>{t('Menu.ca')}</Button>
       </Modal.Footer>
     </Modal>
   )
@@ -3945,5 +4147,4 @@ PublishModal.propTypes = PublishModalPropTypes
 Menu.propTypes = MenuPropTypes
 
 export default Menu
-
 

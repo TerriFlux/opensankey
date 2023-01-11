@@ -3,9 +3,12 @@ import { Button, Row, FormControl, Form, Col, FormLabel, Table, ButtonGroup } fr
 import PropTypes, { InferProps } from 'prop-types'
 import { findMaxLinkValue } from './SankeyUtils'
 import { SankeyDataPropTypes, SankeyLinkValue, SankeyLinkValueDict, TagsGroup } from './types'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus } from 'react-icons/fa'
+import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import { addDataTags } from './SankeyUtils'
 import colormap from 'colormap'
+import {useTranslation} from 'react-i18next'
+import * as d3 from 'd3'
+
 
 const SankeySettingsEditionTagsPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -32,7 +35,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     data[elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'][tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
-
+  const {t} =useTranslation()
+  // Couleur issu de : https://github.com/d3/d3-scale-chromatic
+  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
   let element_tags : string [] = []
   if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
     if (tags_group_key in data[elementTagName]) {
@@ -64,9 +72,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     Object.keys(data[elementTagName][tags_group_key].tags).forEach(
       (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
     )
-    if (elementTagName === 'nodeTags' && tags_group_key === 'Dimensions') {
-      Object.values(data.nodes).forEach(node=>node.dimensions['element' + idElement] = {parent_name : undefined, level : 1})
-    }
+    // if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
+    //   Object.values(data.nodes).forEach(node=>node.dimensions[tags_group_key] = {parent_name : undefined})
+    // }
 
     set_data({ ...data })
   }
@@ -83,10 +91,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       show_legend: false,
       color_map: 'jet',
       tags: {},
-      banner: 'multi'
+      banner: 'multi',
+      activated: true,
+      siblings: []
     }
     if (elementName === 'nodes' ) {
-      Object.values(data[elementName]).forEach(n => n.tags['tag_group_' + idGroup] = [])
+      Object.values(data[elementName]).forEach(n => n.tags[k] = [])
     }
     if (Object.keys(data[elementTagName]).length === 1) {
       Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
@@ -103,6 +113,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     //Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
 
     set_data({ ...data })
+  }
+  const getRandomInt=(max:number) =>{
+    return Math.floor(Math.random() * max)
   }
 
   const handleDelGroupTag = (tags_group_key: string) => {
@@ -158,7 +171,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   const tagSetting = (<>
     <Form.Group as={Row} >
       <Col>
-        <FormLabel >Groupe d'étiquettes:</FormLabel>
+        <FormLabel >{t('Tags.GE')}:</FormLabel>
       </Col>
       <Col>
         <Form.Select onChange={
@@ -176,6 +189,39 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
               </option>
           )}
         </Form.Select>
+      </Col>
+      <Col>
+        <ButtonGroup>
+          <Button variant="secondary" value='rand' onClick={()=>{
+            const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+            const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
+            for(const i in d3.range(size_color)){
+              data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+            }
+            set_data({...data})
+
+          }} ><FaPalette/>
+          </Button>
+          <Button variant="dark" value='alea' onClick={()=>{
+            const color=element_tags.map(d=>{
+              return data[elementTagName][tags_group_key].tags[d].color
+            })
+            let size_color=color.length
+            for(const i in d3.range(size_color)){
+              size_color=color.length
+              const color_to_select=getRandomInt(size_color)
+              const c=color.splice(color_to_select,1)
+              if(c!=undefined && c!=null){
+                const v=c[0]
+                data[elementTagName][tags_group_key].tags[element_tags[i]].color=v
+              }
+            }
+            set_data({...data})
+          }
+          }><FaRandom/>
+          </Button>
+        </ButtonGroup>
+        
       </Col>
       <Col>
         <Form.Select onChange={
@@ -218,10 +264,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         <tr>
 
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button> </th>
-          <th>Nom</th>
-          <th>Visible</th>
-          <th>Couleur</th>
-          { elementNameProp === 'nodes' ? (<th>Forme</th>) : (<></>)}
+          <th>{t('Tags.Nom')}</th>
+          <th>{t('Tags.Visible')}</th>
+          <th>{t('Tags.Couleur')}</th>
+          { elementNameProp === 'nodes' ? (<th>{t('Tags.Forme')}</th>) : (<></>)}
         </tr>
       </thead>
       <tbody>
@@ -296,16 +342,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
         <thead>
           <tr>
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
-            <th>Nom</th>
-            <th>Légende</th>
-            <th>Étiquette</th>
-            <th>Bannière</th>
-            <th>Position</th>
+            <th>{t('Tags.Nom')}</th>
+            <th>{t('Tags.Leg')}</th>
+            <th>{t('Tags.tags')}</th>
+            <th>{t('Tags.Bannière')}</th>
+            <th>{t('Tags.Position')}</th>
           </tr>
         </thead>
         <tbody>
           {
-            Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').map(
+            Object.keys(data[elementTagName]).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -344,9 +390,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     </td>
                     <td>{Object.keys(data[elementTagName][tags_group_key].tags).length}</td>
                     <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                      <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>Aucun</option>
-                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>Unique</option>
-                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>Multiple</option>
+                      <option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>{t('Tags.Aucun')}</option>
+                      <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>{t('Tags.Unique')}</option>
+                      <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>{t('Tags.Multiple')}</option>
+                      <option key={'level' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>{t('Tags.Niveau')}</option>
                     </Form.Select>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
@@ -361,7 +408,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           }
         </tbody>
       </Table>
-      {Object.keys(data[elementTagName]).filter(key=>data[elementTagName][key].group_name !== 'Dimensions').length > 0 ? tagSetting : <></>}
+      {Object.keys(data[elementTagName]).length > 0 ? tagSetting : <></>}
     </>
   )
 }
@@ -376,6 +423,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
   const [data_tags_group_key, set_data_tags_group_key] = useState(Object.keys(data.dataTags).length > 0 ? Object.keys(data.dataTags)[0] : '')
 
   const { links, dataTags } = data
+  const {t} =useTranslation()
 
   let max_link_value = 0
   Object.values(links).forEach(link => {
@@ -422,7 +470,9 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       show_legend: false,
       color_map: 'jet',
       tags: {},
-      banner: 'multi'
+      banner: 'multi',
+      activated: true,
+      siblings: []
     }
 
     set_data_tags_group_key('tag_group_' + idGroup)
@@ -449,7 +499,7 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
   const tagSetting = (<>
     <Form.Group as={Row} >
       <Col xs={2}>
-        <FormLabel >TagGroupe:</FormLabel>
+        <FormLabel >Groupe d'étiquettes:</FormLabel>
       </Col>
       <Col>
         <Form.Select onChange={
@@ -474,8 +524,8 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
       <thead>
         <tr>
           <th><Button variant="success" value='+' onClick={handleAddTagButton}><FaPlus /></Button></th>
-          <th>Nom</th>
-          <th>Sélectionné</th>
+          <th>{t('Tags.Nom')}</th>
+          <th>{t('Tags.selct')}</th>
         </tr>
       </thead>
       <tbody>
@@ -538,8 +588,8 @@ const SankeySettingsEditionDataTags: FunctionComponent<SankeySettingsEditionData
         <thead>
           <tr>
             <th><Button variant="success" onClick={handleAddTagGrpButton}><FaPlus /></Button></th>
-            <th>Nom</th>
-            <th>Étiquette</th>
+            <th>{t('Tags.Nom')}</th>
+            <th>{t('Tags.tags')}</th>
           </tr>
         </thead>
         <tbody>
