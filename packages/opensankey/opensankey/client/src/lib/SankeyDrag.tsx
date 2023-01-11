@@ -1359,7 +1359,7 @@ export const add_drag_link_zone=(
   }
 }
 
-const drag_node_text = (
+export const drag_node_text = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>
 ) => {

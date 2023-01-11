@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link } from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
@@ -986,7 +986,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               display_nodes, display_links,
               display_style,
               data.nodeTags,this,
-              event
+              event,
+              data,
+              multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
             )
           }
           if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
@@ -994,7 +996,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               display_nodes, display_links,
               display_style,
               data.nodeTags,this,
-              event
+              event,
+              data,
+              multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
             )
           }
         }
@@ -2541,7 +2545,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
     // set_data({...data})
   }
- 
+
+
+  const searchAndRestoreLoneProduct=()=>{
+    const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('link_tmp_'))
+    const to_restore=link_tmp.map(d=> d.idLink.slice(9,d.idLink.length))
+
+    to_restore.forEach(n=>{
+      data.nodes[n].display=true
+      data.nodes[n].node_visible=true
+    })
+    link_tmp.forEach(l=>{
+      delete_link(data,l)
+    })
+    
+  }
+
   const scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, 100])
@@ -3020,8 +3039,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select('#svg').selectAll('.defsArrow').remove()
     d3.select('#svg').append('defs').attr('class', 'defsArrow')
-    
-    hiddeLoneProduct()
+    if(data.hide_lone_product){
+      hiddeLoneProduct()
+    }else{
+      searchAndRestoreLoneProduct()
+    }
   
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
