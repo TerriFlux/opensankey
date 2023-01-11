@@ -5,11 +5,11 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color } from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
-  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
+  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnMouseUpAddNodesAndLink,addNodesNotToScale,eventOnSankeyZone} from './SankeyDrawFunction'
 import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragGNodeEvent,
   dragNodeTextEventWidthBoxEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
 
@@ -123,7 +123,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   const display_nodes = data.nodes
   const display_links = data.links
-  let first_selected_node = {}
+  const [first_selected_node,set_first_selected_node] = useState({})
   // const diff=require('deep-diff')
 
   // Il faut détruire les tooltips à chaque passage dans le draw
@@ -966,16 +966,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (mode_selection == 'ln') {
       ggg_nodes.on('mousedown', function (event, d) {
         if (!event.ctrlKey && !event.metaKey) {
-          first_selected_node = d
+          set_first_selected_node(d)
         }
       })
-        .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
+        .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
 
     }
 
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-
-    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve,mode_selection,alt_key_pressed,static_sankey))
+    if(mode_selection=='s'){
+      ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve,mode_selection,alt_key_pressed,static_sankey))
+    }
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -2944,7 +2945,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })).on('dblclick.zoom', null)
 
     //Ajout des events sur les l'ajout des noeuds aux click 
-    eventOnSankeyZone(svgSankey,mode_selection,current,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node)
+    eventOnSankeyZone(svgSankey,mode_selection,current,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node)
 
     drawGrid()
     //Event listener sur les touche du clavier
