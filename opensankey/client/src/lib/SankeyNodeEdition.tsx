@@ -905,11 +905,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label={t('Noeud.labels.haut')}
-                      checked={isAllNodeLabelVert('vert', 'haut')}
+                      checked={isAllNodeLabelVert('vert', 'top')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'haut'
+                            d.display_style.label_vert = 'top'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -922,11 +922,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={isAllNodeLabelVert('vert', 'milieu')}
+                      checked={isAllNodeLabelVert('vert', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'milieu'
+                            d.display_style.label_vert = 'middle'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -940,11 +940,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='radio'
                       label={t('Noeud.labels.Bas')}
 
-                      checked={isAllNodeLabelVert('vert', 'bas')}
+                      checked={isAllNodeLabelVert('vert', 'bottom')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert = 'bas'
+                            d.display_style.label_vert = 'bottom'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -962,11 +962,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label={t('Noeud.labels.gauche')}
-                      checked={isAllNodeLabelVert('horiz', 'gauche')}
+                      checked={isAllNodeLabelVert('horiz', 'left')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'gauche'
+                            d.display_style.label_horiz = 'left'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -979,11 +979,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={isAllNodeLabelVert('horiz', 'milieu')}
+                      checked={isAllNodeLabelVert('horiz', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'milieu'
+                            d.display_style.label_horiz = 'middle'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -996,11 +996,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllLabelVisible()}
                       type='radio'
                       label={t('Noeud.labels.droite')}
-                      checked={isAllNodeLabelVert('horiz', 'droite')}
+                      checked={isAllNodeLabelVert('horiz', 'right')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz = 'droite'
+                            d.display_style.label_horiz = 'right'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -1133,11 +1133,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       disabled={!isAllNodeTotal()}
                       type='radio'
                       label={t('Noeud.labels.haut')}
-                      checked={isAllNodeLabelValueVert('vert', 'haut')}
+                      checked={isAllNodeLabelValueVert('vert', 'top')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'haut'
+                            d.display_style.label_vert_valeur = 'top'
                           })
                           set_data({ ...data })
                         }
@@ -1149,11 +1149,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       disabled={!isAllNodeTotal()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={isAllNodeLabelValueVert('vert', 'milieu')}
+                      checked={isAllNodeLabelValueVert('vert', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'milieu'
+                            d.display_style.label_vert_valeur = 'middle'
 
                           })
                           set_data({ ...data })
@@ -1166,11 +1166,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                       type='radio'
                       label={t('Noeud.labels.Bas')}
                       disabled={!isAllNodeTotal()}
-                      checked={isAllNodeLabelValueVert('vert', 'bas')}
+                      checked={isAllNodeLabelValueVert('vert', 'bottom')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_vert_valeur = 'bas'
+                            d.display_style.label_vert_valeur = 'bottom'
 
                           })
                           set_data({ ...data })
@@ -1187,11 +1187,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
                       label={t('Noeud.labels.gauche')}
-                      checked={isAllNodeLabelValueVert('horiz', 'gauche')}
+                      checked={isAllNodeLabelValueVert('horiz', 'left')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'gauche'
+                            d.display_style.label_horiz_valeur = 'left'
 
                           })
                           set_data({ ...data })
@@ -1203,11 +1203,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
                       label={t('Noeud.labels.Milieu')}
-                      checked={isAllNodeLabelValueVert('horiz', 'milieu')}
+                      checked={isAllNodeLabelValueVert('horiz', 'middle')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'milieu'
+                            d.display_style.label_horiz_valeur = 'middle'
 
                           })
                           set_data({ ...data })
@@ -1219,11 +1219,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     <FormCheck disabled={!isAllNodeTotal()}
                       type='radio'
                       label={t('Noeud.labels.droite')}
-                      checked={isAllNodeLabelValueVert('horiz', 'droite')}
+                      checked={isAllNodeLabelValueVert('horiz', 'right')}
                       onChange={
                         () => {
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            d.display_style.label_horiz_valeur = 'droite'
+                            d.display_style.label_horiz_valeur = 'right'
                             delete d.x_label
                             delete d.y_label
                           })
@@ -1608,7 +1608,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens sortants</Button>
@@ -1623,7 +1623,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
                     })
-                    multi_selected_links.current.forEach(l=>d3.selectAll('#gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
               >Sélectionner tous les liens entrants</Button>
