@@ -52,7 +52,12 @@ export const getLinkValue = (
   const { links, dataTags } = data
   const idDt=idLink.split('_')
   idDt.splice(0,1)
-  const index_dataTag=(idDt.length==0)?[0]:idDt.map(d=>Number(d))
+  const defaultInd=Object.values(data.dataTags)
+    .map(d=>{
+      return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
+    })
+  
+  const index_dataTag=(idDt.length==0)?defaultInd:idDt.map(d=>Number(d))
   
   if (!(idLink in links)) {
 
@@ -412,7 +417,12 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   const listKey: string[] = []
   const idDt=d.idLink.split('_')
   idDt.splice(0,1)
-  const index_dataTag=(idDt.length==0)?[0]:idDt.map(dd=>Number(dd))
+  const defaultInd=Object.values(data.dataTags)
+    .map(d=>{
+      return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
+    })
+  
+  const index_dataTag=(idDt.length==0)?defaultInd:idDt.map(d=>Number(d))
   let missing_key = false
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
@@ -730,7 +740,12 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   let missing_key = false
   const idDt=l.idLink.split('_')
   idDt.splice(0,1)
-  const index_dataTag=(idDt.length==0)?[0]:idDt.map(d=>Number(d))
+  const defaultInd=Object.values(data_s.dataTags)
+    .map(d=>{
+      return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
+    })
+  
+  const index_dataTag=(idDt.length==0)?defaultInd:idDt.map(d=>Number(d))
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {

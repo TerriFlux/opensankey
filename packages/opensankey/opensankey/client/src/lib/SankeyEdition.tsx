@@ -466,7 +466,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
                 Object.values(pureLinks).forEach(l=>{
                   const suffix=''
-                  recusrsionDataTag(data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                  recursionDataTag(data.dataTags,0,suffix,(l as SankeyLink),new_links)
                 })
                 data.links=new_links
                 set_data({...data})
@@ -479,7 +479,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     })
     return allDD
   }
-  const recusrsionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
+  const recursionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
     const DT_l=Object.values(DT).length
     Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
       .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
@@ -504,7 +504,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
 
         }else{
-          recusrsionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
+          recursionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
         }
         
       })
