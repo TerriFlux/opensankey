@@ -50,6 +50,10 @@ export const getLinkValue = (
   up = false
 ) => {
   const { links, dataTags } = data
+  const idDt=idLink.split('_')
+  idDt.splice(0,1)
+  const index_dataTag=(idDt.length==0)?[0]:idDt.map(d=>Number(d))
+  
   if (!(idLink in links)) {
 
     return {
@@ -62,13 +66,13 @@ export const getLinkValue = (
   let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
       return
     }
-    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[index_dataTag[i]][0])
   })
   if (missing_key) {
     return {
@@ -406,15 +410,17 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   }
   let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey: string[] = []
-
+  const idDt=d.idLink.split('_')
+  idDt.splice(0,1)
+  const index_dataTag=(idDt.length==0)?[0]:idDt.map(dd=>Number(dd))
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
       return
     }
-    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[index_dataTag[i]][0])
   })
   if (missing_key) {
     return {
@@ -722,13 +728,16 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).map(dataTag => {
+  const idDt=l.idLink.split('_')
+  idDt.splice(0,1)
+  const index_dataTag=(idDt.length==0)?[0]:idDt.map(d=>Number(d))
+  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
       return
     }
-    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[0][0])
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[index_dataTag[i]][0])
   })
   if (missing_key) {
     return false
