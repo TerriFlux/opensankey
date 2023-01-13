@@ -557,7 +557,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     })
     set_nodes_level(data)
     new_data.fit_screen = true
-    d3.select('#svg').on('.zoom', null)
+    d3.select(' .opensankey #svg').on('.zoom', null)
     set_data({ ...new_data })
     
   }
@@ -1035,15 +1035,15 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   const zoomed=(transform:string)=> {
                     [data.width, data.height] = min_width_and_height()
                       
-                    d3.select('#svg').attr('transform', transform)
-                    d3.select('#svg')
+                    d3.select(' .opensankey #svg').attr('transform', transform)
+                    d3.select(' .opensankey #svg')
                       .style('border', Math.round(2 ) + 'px solid #78c2ad')
                       .style('width', data.width + 'px')
                   }
                   const zoom = d3.zoom()
                     .scaleExtent([1, 40])
                     .on('zoom', zoomed)
-                  zoom.scaleTo(d3.select('#svg'),1)
+                  zoom.scaleTo(d3.select(' .opensankey #svg'),1)
                   set_data({ ...data })
                 }} >
                   <FontAwesomeIcon icon={faMaximize} />
