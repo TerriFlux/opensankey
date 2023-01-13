@@ -10,8 +10,8 @@ import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
   setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
-import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,dragNodeEvent,
-  dragNodeTextEventWidthBoxEvent,dragNodeTextEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
+import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,drag_nodes,drag_node_text,
+  dragNodeTextEventWidthBoxEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone} from './SankeyDrag'
 
 window.d3 = d3
 
@@ -986,7 +986,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               display_nodes, display_links,
               display_style,
               data.nodeTags,this,
-              event
+              event,
+              data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
             )
           }
           if(event.subject.sourceEvent.path[0].tagName=='rect' || event.subject.sourceEvent.path[0].tagName=='ellipse'){
@@ -994,7 +995,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               display_nodes, display_links,
               display_style,
               data.nodeTags,this,
-              event
+              event,
+              data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurve
+
             )
           }
         }
@@ -2996,7 +2999,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_labels()
 
     drawLegend()
-
     const test = document.getElementsByClassName('navbar')
     let margin_top = 0
     if (test && test.length > 0) {
