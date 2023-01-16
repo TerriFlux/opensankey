@@ -622,7 +622,7 @@ export const default_sankey_data = (): SankeyData => {
 }
 
 export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
-  let colorNode
+  let colorLink
   if (l.colorParameter === 'groupTag') {
     //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
     //on controle ici qu'il y a bien un favorite tag
@@ -634,11 +634,12 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
           return l.color
         }
         if (tagGroup in data_s.fluxTags && v.tags[tagGroup] in data_s.fluxTags[tagGroup].tags) {
-          colorNode = data_s.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
+          colorLink = data_s.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
         } else {
-          colorNode = 'grey'
+          colorLink = 'grey'
         }
-      } else {
+      } else if(Object.keys(data_s.nodeTags).includes(data_s.colorMap)){
+
         const source_node = data_s.nodes[l.idSource]
         const target_node = data_s.nodes[l.idTarget]
         let selected_tag = ''
@@ -711,17 +712,29 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         } else {
           return l.color
         }
+        
+      } else if(Object.keys(data_s.dataTags).map(d=>'dataTags_'+d).includes(data_s.colorMap)){
+        const idDt=l.idLink.split('_')
+        const colorMapFilterd=data_s.colorMap.slice(9,data_s.colorMap.length)
+        const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
+
+        const ind=Number(ind_str)
+        // Sélectionne les tags du dataTag le plus imbirqué (Le dernier de la liste des dataTags)
+        const tagsOfDT=data_s.dataTags[colorMapFilterd].tags
+        colorLink=Object.values(tagsOfDT).filter(d=>d.selected)[ind].color
+      
       }
+
     } else {
-      colorNode = l.color
+      colorLink = l.color
     }
   }
   if (l.colorParameter === 'local') {
     // Le couleur est définie dans les parametres locaux du noeud
-    colorNode = l.color
+    colorLink = l.color
   }
 
-  return colorNode
+  return colorLink
 }
 
 
