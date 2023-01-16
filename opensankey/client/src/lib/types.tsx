@@ -114,10 +114,11 @@ export const SankeyLinkPropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
+
   // Ajout
   gradient: PropTypes.bool.isRequired,
   dashed:PropTypes.bool.isRequired,
-
+  to_precision:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 
@@ -197,6 +198,7 @@ export const SankeyDataPropTypes = {
   couleur_fond_sankey:PropTypes.string.isRequired,
   displayed_node_selector:PropTypes.bool.isRequired,
   displayed_link_selector:PropTypes.bool.isRequired,
+  hide_lone_product:PropTypes.bool.isRequired,
 
   user_scale: PropTypes.number.isRequired,
   maximum_flux: PropTypes.number,
@@ -278,3 +280,8 @@ export interface SankeyAppState {
 
   data: SankeyData
 }
+
+export const SankeyDrawCurvePropType={
+  curve:PropTypes.func.isRequired
+}
+export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>
