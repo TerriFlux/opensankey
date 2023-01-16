@@ -94,7 +94,7 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      console.log(listKey[i] + ' not in val')
+      //console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
@@ -390,7 +390,7 @@ export const link_text = (
       return
     }
   }
-  the_link_value = toPrecision(the_link_value)
+  the_link_value = (d.to_precision)?toPrecision(the_link_value):the_link_value
   return the_link_value
 }
 
@@ -444,7 +444,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
 
   for (const i in listKey) {
     if ( val === undefined) {
-      console.log(listKey[i] + ' not found in val')
+      //console.log(listKey[i] + ' not found in val')
       break
     }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
@@ -467,6 +467,7 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
+    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
@@ -511,10 +512,10 @@ export const default_sankey_data = (): SankeyData => {
           filter_label: 0,
           global_curvature: 0.5,
           null_flux: false,
-          label_vert: 'bas',
-          label_horiz: 'milieu',
-          label_vert_valeur: 'milieu',
-          label_horiz_valeur: 'milieu',
+          label_vert: 'bottom',
+          label_horiz: 'middle',
+          label_vert_valeur: 'middle',
+          label_horiz_valeur: 'middle',
           value_font_size:14,
           label_box_width: 110,
           label_color:false,
@@ -547,6 +548,7 @@ export const default_sankey_data = (): SankeyData => {
         // Ajout
         gradient: false,
         dashed:true,
+        to_precision:true,
 
         value: {},
 
@@ -846,10 +848,10 @@ export const default_node = (
       filter_label: 0,
       global_curvature: 0.5,
       null_flux: false,
-      label_vert: 'bas',
-      label_horiz: 'milieu',
-      label_vert_valeur: 'milieu',
-      label_horiz_valeur: 'milieu',
+      label_vert: 'bottom',
+      label_horiz: 'middle',
+      label_vert_valeur: 'middle',
+      label_horiz_valeur: 'middle',
       value_font_size:14,
       label_box_width: 110,
       label_color:false
@@ -924,7 +926,8 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    dashed:true
+    dashed:true,
+    to_precision:true,
   }
 }
 
@@ -1050,12 +1053,7 @@ export const processExample = (server_data: SankeyData ) => {
   } else {
     convert_data((data as SankeyData & layout_type).layout)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    updateLayout(data, (data as SankeyData & layout_type).layout,'posNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrFlux')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'tagNode')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'tagFlux')
-    updateLayout(data, (data as SankeyData & layout_type).layout,'attrGeneral')
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   set_nodes_level(data)
