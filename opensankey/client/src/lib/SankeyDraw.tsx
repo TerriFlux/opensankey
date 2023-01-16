@@ -2556,7 +2556,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
+    const all_tags = Object.assign({},data.nodeTags,data.fluxTags,data.dataTags)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
       
       // Ajout du tagGroup.name  
@@ -2575,17 +2575,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
         .data(Object.entries(tag_group[1].tags)
           .filter(tag=>{
-            if(Object.keys(data.fluxTags).includes(tag_group[0])){
+            if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
                 const tmp=getLinkValue(data,l.idLink)
                 return link_visible(l,data) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
               }).length
               return t>0
-            }else if(Object.keys(data.nodeTags).includes(tag_group[0])){
+            }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
               const t2=Object.values(data.nodes).filter(n=>{
                 return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
               }).length
               return t2>0
+            }else if(data.colorMap.includes('dataTags_')){
+              return true
             }
             return  false
           })
