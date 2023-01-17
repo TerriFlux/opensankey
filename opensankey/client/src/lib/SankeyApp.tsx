@@ -3,7 +3,7 @@ import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import { SankeySettingsEdition } from './SankeySettingsEdition'
-import { SankeySettingsEditionElementTags, SankeySettingsEditionDataTags } from './SankeySettingsEditionTags'
+import { SankeySettingsEditionElementTags } from './SankeySettingsEditionTags'
 // import SankeyNodeEdition from './SankeyNodeEdition'
 // import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem } from './SankeyMenu'
@@ -162,9 +162,11 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           />
         }
         settings_edition_data_tags={
-          <SankeySettingsEditionDataTags
+          <SankeySettingsEditionElementTags
             data={data}
             set_data={set_data}
+            elementTagNameProp='dataTags'
+            elementNameProp='links'
           />
         }
         view={view}
