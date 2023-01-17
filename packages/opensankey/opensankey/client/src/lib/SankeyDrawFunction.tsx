@@ -1357,9 +1357,9 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           if (e.shiftKey) {
             d.y = d.y - data.grid_square_size
           } else {
-            const n_pos = Math.trunc(d.y / data.grid_square_size)
-            d.y = (n_pos * data.grid_square_size == d.y) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
             const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
+            const n_pos = Math.trunc((d.y+height/2)/ data.grid_square_size)
+            d.y =  (n_pos - 1) * data.grid_square_size 
             d.y+=(data.grid_square_size/2)-height/2
           }
           let y_max = 0
@@ -1383,9 +1383,9 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           if (e.shiftKey) {
             d.y = d.y + data.grid_square_size
           } else {
-            const n_pos = Math.trunc(d.y / data.grid_square_size)
-            d.y = (n_pos + 1) * data.grid_square_size
             const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
+            const n_pos = Math.trunc((d.y+height/2) / data.grid_square_size)
+            d.y = (n_pos + 2) * data.grid_square_size
             d.y-=(data.grid_square_size/2)+height/2
           }
           //Augumente hauteur svg si le noeud est près du bord
