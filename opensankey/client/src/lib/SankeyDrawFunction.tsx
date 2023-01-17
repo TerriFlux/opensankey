@@ -1561,11 +1561,11 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
     } else if(e.key=='Delete'){
       if(document.activeElement?.tagName!=='INPUT')
       {   
-        multi_selected_nodes.current.forEach(el=>{
-          delete_node(data,el)
-        })
         multi_selected_links.current.forEach(el=>{
           delete_link(data,el)
+        })
+        multi_selected_nodes.current.forEach(el=>{
+          delete_node(data,el)
         })
         multi_selected_nodes.current=[]
         multi_selected_links.current=[]
