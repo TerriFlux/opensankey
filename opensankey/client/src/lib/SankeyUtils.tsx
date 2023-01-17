@@ -26,7 +26,7 @@ export const addDataTags = (
       } catch {
         return
       }
-      const the_val = v.value as unknown as number
+      // const the_val = v.value as unknown as number
       v[listKey[i]] = {
         value: v.value as unknown as number,
         display_value: v.display_value as unknown as string,
