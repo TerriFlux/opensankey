@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue,SankeyDrawCurve } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link} from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link,getTotalInputLink} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
@@ -710,7 +710,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data, nodes, link)
+    // const link_value = test_link_value(data, nodes, link)
+    let link_value = test_link_value(data, nodes, link)
+    const val=getLinkValue(data,link.idLink)
+    if(val.is_percent){
+      const total=getTotalInputLink(data,data.nodes[link.idSource])
+      link_value=total*(val.percent/100)
+    }
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
