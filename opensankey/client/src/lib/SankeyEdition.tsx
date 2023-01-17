@@ -831,8 +831,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       </FormGroup>           
     </Popover.Body>
   </Popover>
-  const elementNavBar=document.getElementsByClassName('bg-dark')[0]
-  const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
+  
+
   return (
     <>
       
@@ -952,7 +952,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         } 
         
       </div>
-      <Row className='sankey-toolbar' style={{'marginTop':height_navbar}}>
+      <Row className='sankey-toolbar'>
         {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
