@@ -2333,7 +2333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     ref={button_ref as Ref<HTMLLabelElement>}
                     id="toggle-check"
                     type="checkbox"
-                    variant="dark"
+                    variant="outline-primary"
                     checked={show_nav}
                     onChange={(e) => { setChecked(e.currentTarget.checked) }}
                     onClick={toggleShow}

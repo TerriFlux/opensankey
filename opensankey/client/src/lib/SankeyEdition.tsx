@@ -696,7 +696,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   </Popover>
   const elementNavBar=document.getElementsByClassName('bg-dark')[0]
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  console.log(elementNavBar)
   return (
     <>
       
