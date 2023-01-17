@@ -612,7 +612,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       <div id='DD_multi_links'>
         <MultiSelect
           valueRenderer={ (selected :selected_type[]) => {
-            return selected.length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
+            return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
