@@ -365,9 +365,11 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const clickSaveSVG = () => {
-    const svg = window.d3.select(' .opensankey #svg-container svg')
+    const svg = window.d3.select(' .opensankey#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
+    svg.style('border','0px')
+    svg.select('#grid').style('opacity','0')
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -375,6 +377,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const blob = new Blob([html], { type: 'image/svg+xml' })
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
+    svg.style('border','2px solid #78c2ad')
+    svg.select('#grid').style('opacity','1')
   }
   const clickSavePDF = () => {
     const svg = window.d3.select(' .opensankey #svg-container svg')
