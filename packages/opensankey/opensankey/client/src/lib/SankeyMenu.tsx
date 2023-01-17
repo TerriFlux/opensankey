@@ -2242,7 +2242,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         modalHelp
       ): (<></>)}
 
-      <Navbar className='bg-dark' fixed='top' style={{ 'display': 'block' }} >
+      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
@@ -2355,7 +2355,48 @@ const Menu: FunctionComponent<MenuTypes> = (
         {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
           //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
         }
-        
+        {(view == 'none') ? <SankeyEdition
+          data={data}
+          set_data={set_data}
+          additional_selector={additional_selector}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+          mode_visualisation={mode_visualisation}
+          set_current_filter={set_current_filter}
+          url_prefix={url_prefix}
+        /> : <><Row>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
+              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'p' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaPlay />
+              </Button>
+              <Button variant={'outline-success'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowUp' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaBackward />
+              </Button>
+              <Button variant={'outline-warning'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowDown' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaForward />
+              </Button>
+            </ButtonGroup>
+          </FormGroup>
+        </Row>{/* {set_data({ ...data })} */}</>}
 
         {/* <SankeyEdition
           data={data}
@@ -2365,48 +2406,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
         /> */}
       </Navbar>
-      {(view == 'none') ? <SankeyEdition
-        data={data}
-        set_data={set_data}
-        additional_selector={additional_selector}
-        mode_selection={mode_selection}
-        set_mode_selection={set_mode_selection}
-        mode_visualisation={mode_visualisation}
-        set_current_filter={set_current_filter}
-        url_prefix={url_prefix}
-      /> : <><Row>
-        <FormGroup as={Col} lg='auto'>
-          <ButtonGroup >
-            <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'p' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaPlay />
-            </Button>
-            <Button variant={'outline-success'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowUp' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaBackward />
-            </Button>
-            <Button variant={'outline-warning'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowDown' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaForward />
-            </Button>
-          </ButtonGroup>
-        </FormGroup>
-      </Row>{/* {set_data({ ...data })} */}</>}
 
       {(show_nav && !mode_visualisation) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>

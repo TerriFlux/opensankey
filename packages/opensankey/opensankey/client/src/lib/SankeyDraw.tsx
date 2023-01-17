@@ -316,7 +316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .style('opacity', 1)
-          .style('top', Math.max(50, event.pageY - 10) + 'px')
+          .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
           .style('left', (event.pageX + 30) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -2884,13 +2884,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const position = data.static_sankey ? 'relative' : 'absolute'
-  // const node_font = data.display_style.node_font_family_selected
+  //const node_font = data.display_style.node_font_family_selected
   const link_font = data.display_style.link_font_family_selected
-  // const test = document.getElementsByClassName('navbar')
-  // let margin_top = 0
-  // if (test && test.length > 0) {
-  //   margin_top = test[0].getBoundingClientRect().height -20
-  // }
+  const test = document.getElementsByClassName('navbar')
+  let margin_top = 0
+  if (test && test.length > 0) {
+    margin_top = test[0].getBoundingClientRect().height -20
+  }
 
   // Reformat la fonction pour qu'elle puisse être envoyé à document.onkeydown qui n'accepte les fonction que si elles ont pour paramètres
   //  event de type KeyBoardEvent
@@ -3030,12 +3030,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_links(data.static_sankey, true)
     add_labels()
     drawLegend()
-    // const test = document.getElementsByClassName('navbar')
-    // let margin_top = 0
-    // if (test && test.length > 0) {
-    //   margin_top = test[0].getBoundingClientRect().height
-    //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-    // }
+    const test = document.getElementsByClassName('navbar')
+    let margin_top = 0
+    if (test && test.length > 0) {
+      margin_top = test[0].getBoundingClientRect().height
+      d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+    }
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
     //   if (current) {
@@ -3060,7 +3060,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-        <div id="svg-container" className='opensankey' style={{ 'position': position}}>
+        <div id="svg-container" className='opensankey' style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
@@ -3082,8 +3082,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             <g className='g_label' id='g_label'></g>
 
             <g className='g_legend' id='g_legend'></g>
-            <g className='g_links' id='g_links' style={{ 'position': position,  'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, /*'fontFamily': node_font */ }} ></g>
+            <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */ }} ></g>
 
           </svg>
         </div>
