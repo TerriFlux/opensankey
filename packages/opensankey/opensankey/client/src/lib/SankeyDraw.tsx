@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue,SankeyDrawCurve } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link} from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link,getTotalInputLink} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
@@ -316,7 +316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .style('opacity', 1)
-          .style('top', Math.max(50, event.pageY - 10) + 'px')
+          .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
           .style('left', (event.pageX + 30) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -710,7 +710,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data, nodes, link)
+    // const link_value = test_link_value(data, nodes, link)
+    let link_value = test_link_value(data, nodes, link)
+    const val=getLinkValue(data,link.idLink)
+    if(val.is_percent){
+      const total=getTotalInputLink(data,data.nodes[link.idSource])
+      link_value=total*(val.percent/100)
+    }
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -2576,7 +2582,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
+    const all_tags = Object.assign({},data.nodeTags,data.fluxTags,data.dataTags)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
       
       // Ajout du tagGroup.name  
@@ -2595,17 +2601,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
         .data(Object.entries(tag_group[1].tags)
           .filter(tag=>{
-            if(Object.keys(data.fluxTags).includes(tag_group[0])){
+            if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
                 const tmp=getLinkValue(data,l.idLink)
                 return link_visible(l,data) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
               }).length
               return t>0
-            }else if(Object.keys(data.nodeTags).includes(tag_group[0])){
+            }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
               const t2=Object.values(data.nodes).filter(n=>{
                 return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
               }).length
               return t2>0
+            }else if(data.colorMap.includes('dataTags_')){
+              return true
             }
             return  false
           })
@@ -2876,13 +2884,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
   const position = data.static_sankey ? 'relative' : 'absolute'
-  // const node_font = data.display_style.node_font_family_selected
+  //const node_font = data.display_style.node_font_family_selected
   const link_font = data.display_style.link_font_family_selected
-  // const test = document.getElementsByClassName('navbar')
-  // let margin_top = 0
-  // if (test && test.length > 0) {
-  //   margin_top = test[0].getBoundingClientRect().height -20
-  // }
+  const test = document.getElementsByClassName('navbar')
+  let margin_top = 0
+  if (test && test.length > 0) {
+    margin_top = test[0].getBoundingClientRect().height -20
+  }
 
   // Reformat la fonction pour qu'elle puisse être envoyé à document.onkeydown qui n'accepte les fonction que si elles ont pour paramètres
   //  event de type KeyBoardEvent
@@ -3022,12 +3030,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     add_links(data.static_sankey, true)
     add_labels()
     drawLegend()
-    // const test = document.getElementsByClassName('navbar')
-    // let margin_top = 0
-    // if (test && test.length > 0) {
-    //   margin_top = test[0].getBoundingClientRect().height
-    //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-    // }
+    const test = document.getElementsByClassName('navbar')
+    let margin_top = 0
+    if (test && test.length > 0) {
+      margin_top = test[0].getBoundingClientRect().height
+      d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+    }
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
     //   if (current) {
@@ -3052,7 +3060,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-        <div id="svg-container" className='opensankey' style={{ 'position': position}}>
+        <div id="svg-container" className='opensankey' style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
@@ -3074,8 +3082,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             <g className='g_label' id='g_label'></g>
 
             <g className='g_legend' id='g_legend'></g>
-            <g className='g_links' id='g_links' style={{ 'position': position,  'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, /*'fontFamily': node_font */ }} ></g>
+            <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */ }} ></g>
 
           </svg>
         </div>

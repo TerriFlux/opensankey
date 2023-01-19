@@ -96,18 +96,13 @@ dev_opensankey:
     paths:
       - $FOLDER/opensankey/opensankey/client/node_modules/
     policy: pull
-  before_script:
-    - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
-  after_script:
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - bash restart_site.sh
   script:
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
     - echo "$FOLDER"
     - cd "$FOLDER"
     - source dev_opensankey/bin/activate
     - bash update_build_opensankey.sh
+    - bash restart_site.sh
 
 test_opensankey:
   stage: deploy

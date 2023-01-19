@@ -365,9 +365,11 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const clickSaveSVG = () => {
-    const svg = window.d3.select(' .opensankey #svg-container svg')
+    const svg = window.d3.select(' .opensankey#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
     svg.selectAll('text[visibility=hidden]').remove()
+    svg.style('border','0px')
+    svg.select('#grid').style('opacity','0')
     const html = ((svg.attr('title', 'test2')
       .attr('version', 1.1)
       .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -375,6 +377,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     const blob = new Blob([html], { type: 'image/svg+xml' })
     FileSaver.saveAs(blob, 'sankey_diagram.svg')
+    svg.style('border','2px solid #78c2ad')
+    svg.select('#grid').style('opacity','1')
   }
   const clickSavePDF = () => {
     const svg = window.d3.select(' .opensankey #svg-container svg')
@@ -608,7 +612,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       <div id='DD_multi_links'>
         <MultiSelect
           valueRenderer={ (selected :selected_type[]) => {
-            return selected.length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
+            return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
           }}
           options={INITIAL_OPTIONS_LINKS}
           value={selected_links}
@@ -2351,7 +2355,48 @@ const Menu: FunctionComponent<MenuTypes> = (
         {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
           //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
         }
-        
+        {(view == 'none') ? <SankeyEdition
+          data={data}
+          set_data={set_data}
+          additional_selector={additional_selector}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+          mode_visualisation={mode_visualisation}
+          set_current_filter={set_current_filter}
+          url_prefix={url_prefix}
+        /> : <><Row>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
+              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'p' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaPlay />
+              </Button>
+              <Button variant={'outline-success'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowUp' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaBackward />
+              </Button>
+              <Button variant={'outline-warning'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowDown' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaForward />
+              </Button>
+            </ButtonGroup>
+          </FormGroup>
+        </Row>{/* {set_data({ ...data })} */}</>}
 
         {/* <SankeyEdition
           data={data}
@@ -2361,48 +2406,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           set_mode_selection={set_mode_selection}
         /> */}
       </Navbar>
-      {(view == 'none') ? <SankeyEdition
-        data={data}
-        set_data={set_data}
-        additional_selector={additional_selector}
-        mode_selection={mode_selection}
-        set_mode_selection={set_mode_selection}
-        mode_visualisation={mode_visualisation}
-        set_current_filter={set_current_filter}
-        url_prefix={url_prefix}
-      /> : <><Row>
-        <FormGroup as={Col} lg='auto'>
-          <ButtonGroup >
-            <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'p' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaPlay />
-            </Button>
-            <Button variant={'outline-success'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowUp' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaBackward />
-            </Button>
-            <Button variant={'outline-warning'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowDown' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaForward />
-            </Button>
-          </ButtonGroup>
-        </FormGroup>
-      </Row>{/* {set_data({ ...data })} */}</>}
 
       {(show_nav && !mode_visualisation) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>

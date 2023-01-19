@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip,FormCheck,Popover, FormControl } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog } from './types'
+import { SankeyDataPropTypes, SankeyData, TagsGroup, TagsCatalog,SankeyLink } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
@@ -28,6 +28,10 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
     return d.value
   })
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
+  // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur  
+  if(tab_sel.length==0 && Object.values(data.dataTags).map(dt=>dt.group_name).includes(tags_group.group_name)){
+    Object.entries(tags_group.tags)[0][1].selected=true
+  }
   set_data({ ...data })
 }
 
@@ -56,6 +60,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                 onChange={evt => {
                   Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
                   Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
 
                   
                   Object.values(data.nodes).forEach(el => {
@@ -123,6 +128,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
 
                   Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
                   Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
 
     
 
@@ -268,6 +274,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   onChange={evt => {
                     Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
                     Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
 
                     
                     Object.values(data.nodes).forEach(el => {
@@ -366,7 +373,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   onChange={evt => {
                     Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
                     Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
                     
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'local'
@@ -410,47 +417,132 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const addAllDropDownLinks = () => {
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
-      // if (tags_group.banner == 'one') {
-      let selected = ''
-      if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
-        selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
-      }
-      return (
-        <>
-          <FormLabel>{tags_group.group_name}</FormLabel>
-          <FormGroup as={Row}>
-            <Col xs={10}>
-              {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group,data,set_data) }}>{
-                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                  return (<option key={i} value={tag_key} >{tag.name}</option>)
-                })}
-              </Form.Select>}
-            </Col>
-          </FormGroup>
-        </>)
-      // } else if (tags_group.banner == 'multi') {
-      //   const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      //   const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      //   return (
-      //     <>
-      //       <FormLabel>{tags_group.group_name}</FormLabel>
-      //       <MultiSelect
-      //         style={{ color: 'black' }}
-      //         labelledBy={'hello'}
-      //         overrideStrings={{
-      //           'selectAll': 'Tout sélectionner',
-      //         }}
-      //         value={selected}
-      //         options={options}
-      //         onChange={(selected: [{ label: string, value: string }]) => {
-      //           handleMultiDropdown(selected, tags_group, data, set_data)
-      //         }} />
-      //     </>)
-      // }
+      if (tags_group.banner == 'one') {
+        let selected = ''
+        if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
+          selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+        }
+        return (
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            <FormGroup as={Row}>
+              <Col xs={10}>
+                {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+                  const pl=Object.entries(data.links).map(l=>{
+                    const suffixeStart= l[0].indexOf('_')
+                    if(suffixeStart>=0){
+                      l[0]=l[0].slice(0,suffixeStart)
+                      l[1].idLink=l[0]
+                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      
+                      //Ajoute dans les noeuds source/target les id de liens 
+                      const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+                      if(ind_in_src==-1){
+                        data.nodes[l[1].idSource].outputLinksId.push(l[0])
+                      }
+                      const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+                      if(ind_in_trgt==-1){
+                        data.nodes[l[1].idTarget].inputLinksId.push(l[0])
+                      }
 
+                    }
+
+                    return l
+                  })
+                  // Reforme les liens originel (sans suffixe) et supprime les doublons par la méme occasions
+                  const pureLinks=Object.fromEntries(pl)
+                  data.links=pureLinks
+                  handleSimpleDropdown(evt, tags_group,data,set_data) 
+                }}>
+                  {
+                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key} >{tag.name}</option>)
+                    })}
+                </Form.Select>}
+              </Col>
+            </FormGroup>
+          </>)
+      } else if (tags_group.banner == 'multi') {
+        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name ,'disabled':((selected.length<2 && tag[1].name==selected[0].label))} })
+        return (
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            <MultiSelect
+              style={{ color: 'black' }}
+              labelledBy={'hello'}
+              overrideStrings={{
+                'selectAll': 'Tout sélectionner',
+              }}
+              value={selected}
+              options={options}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                handleMultiDropdown(selected, tags_group, data, set_data)
+
+                //Multiplie les liens par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
+                if(Object.keys(data.dataTags).length>0){
+
+                  const pl=Object.entries(data.links).map(l=>{
+                    const suffixeStart= l[0].indexOf('_')
+                    if(suffixeStart>=0){
+                      l[0]=l[0].slice(0,suffixeStart)
+                      l[1].idLink=l[0]
+                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                    }
+                    return l
+                  })
+                  // Reforme les liens originel (sans suffixe) et supprime les doublons par la méme occasions
+                  const pureLinks=Object.fromEntries(pl)
+
+                  const new_links={} as { [link_id: string]: SankeyLink }
+
+                  Object.values(pureLinks).forEach(l=>{
+                    const suffix=''
+                    recursionDataTag(data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                  })
+                  data.links=new_links
+                  set_data({...data})
+                }
+                
+              }} />
+              
+          </>)
+      }
 
     })
     return allDD
+  }
+  const recursionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
+    const DT_l=Object.values(DT).length
+    Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
+      .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
+        const n_suffix= suffix+'_'+i
+        if(ind==DT_l-1){
+          const n_l=JSON.parse(JSON.stringify(link_to_copy))
+          n_l.idLink=n_l.idLink+n_suffix
+          new_links[n_l.idLink]=n_l
+
+          //Ajoute dans les noeuds source/target les id de liens 
+          const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
+          if(ind_in_src>=0){
+            data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)
+          }
+          const ind_in_trgt=data.nodes[link_to_copy.idTarget].inputLinksId.indexOf(link_to_copy.idLink)
+          if(ind_in_trgt>=0){
+            data.nodes[link_to_copy.idTarget].inputLinksId.splice(ind_in_trgt,1)
+          }
+          data.nodes[link_to_copy.idSource].outputLinksId.push(n_l.idLink)
+          data.nodes[link_to_copy.idTarget].inputLinksId.push(n_l.idLink)
+
+
+
+        }else{
+          recursionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
+        }
+        
+      })
   }
 
   let sous_filieres = undefined
@@ -660,13 +752,58 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         
     </Popover.Body>
   </Popover>
-
+  const DT_length=Object.keys(data.dataTags).length
   const filter_data=
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          {addAllDropDownLinks()}
+        </Col>
+        <Col xs={2}>
+          <FormCheck type='switch'
+            checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
+            onChange={evt=> {
+              //Déselecitonne tous les type de tag
+              
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
 
-      {addAllDropDownLinks()}
+              
+              Object.values(data.nodes).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              Object.values(data.links).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              data.colorMap = 'no_colormap'
+                      
+              //Met le dernier dataTag en tant que couleur a suivre pour les flux
+              if(evt.target.checked){
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                Object.values(data.links).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
+                Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
+
+              }
+
+              set_data({...data})
+            }}
+          />
+        </Col>
+      </FormGroup>
         
     </Popover.Body>
   </Popover>
@@ -929,7 +1066,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                 >
                   <Button variant='dark' id='button-data-filter' >
                     {Object.entries(data.dataTags).map(v=>{
-                      return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                      if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
+                        return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                      }else{
+                        return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
+                      }
                     }).join('/')}
                   </Button>
                 </OverlayTrigger>
