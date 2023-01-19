@@ -2238,7 +2238,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         modalHelp
       ): (<></>)}
 
-      <Navbar className='bg-dark' fixed='top' style={{ 'display': 'block' }} >
+      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
