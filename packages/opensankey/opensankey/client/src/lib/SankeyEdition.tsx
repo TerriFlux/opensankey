@@ -831,8 +831,13 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       </FormGroup>           
     </Popover.Body>
   </Popover>
-  
+  const elementNavBar=document.getElementsByClassName('bg-light')[0]
+  const elementHerowrap=document.getElementsByClassName('herowrap')[0]
 
+  const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
+
+  const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
+  const height_navbarAndHerowrap=(elementNavBar)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
   return (
     <>
       
@@ -841,6 +846,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
           color: color,
           backgroundColor: backgroundColor,
           marginLeft: '0',
+          marginTop: height_navbar,
           paddingBottom: '3px',
           alignItems: 'baseline',
           display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
@@ -952,7 +958,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         } 
         
       </div>
-      <Row className='sankey-toolbar'>
+      <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
         {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
