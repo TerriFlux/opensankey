@@ -384,6 +384,7 @@ export const convert_data = (
         idNode: 'default',
         display: true,
         node_visible: true,
+        hide_lone_node:false,
         shape_visible: true,
         label_visible: true,
         node_width: 40,
