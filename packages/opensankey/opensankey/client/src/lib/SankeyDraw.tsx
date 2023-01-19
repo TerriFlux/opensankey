@@ -2612,7 +2612,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
               }).length
               return t2>0
-            }else if(data.colorMap.includes('dataTags_')){
+            }else if(data.colorMap && data.colorMap.includes('dataTags_')){
               return true
             }
             return  false
