@@ -1461,4 +1461,24 @@ export const convert_data = (
   if(Object.keys(data.labels).length>0 && !data.accordeonToShow.includes('LL')){
     data.accordeonToShow.push('LL')
   }
+  Object.values(data.labels).forEach(l=>{
+    if (l.position_horiz === 'centre') {
+      l.position_horiz = 'centre'
+    }
+    if (l.position_horiz === 'gauche') {
+      l.position_horiz = 'left'
+    }
+    if (l.position_horiz === 'droite') {
+      l.position_horiz = 'right'
+    }
+    if (l.position_vert === 'haut') {
+      l.position_vert = 'top'
+    }
+    if (l.position_vert === 'bas') {
+      l.position_vert = 'bottom'
+    }
+    if (l.position_vert === 'milieu') {
+      l.position_vert = 'middle'
+    }
+  })
 }
