@@ -661,8 +661,17 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         } else {
           colorLink = 'grey'
         }
-      } else if(Object.keys(data_s.nodeTags).includes(data_s.colorMap)){
+      } else if(Object.keys(data_s.dataTags).map(d=>'dataTags_'+d).includes(data_s.colorMap)){
+        const idDt=l.idLink.split('_')
+        const colorMapFilterd=data_s.colorMap.slice(9,data_s.colorMap.length)
+        const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
 
+        const ind=Number(ind_str)
+        // Sélectionne les tags du dataTag le plus imbirqué (Le dernier de la liste des dataTags)
+        const tagsOfDT=data_s.dataTags[colorMapFilterd].tags
+        colorLink=Object.values(tagsOfDT).filter(d=>d.selected)[ind].color
+      
+      } else {
         const source_node = data_s.nodes[l.idSource]
         const target_node = data_s.nodes[l.idTarget]
         let selected_tag = ''
@@ -735,19 +744,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         } else {
           return l.color
         }
-        
-      } else if(Object.keys(data_s.dataTags).map(d=>'dataTags_'+d).includes(data_s.colorMap)){
-        const idDt=l.idLink.split('_')
-        const colorMapFilterd=data_s.colorMap.slice(9,data_s.colorMap.length)
-        const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
-
-        const ind=Number(ind_str)
-        // Sélectionne les tags du dataTag le plus imbirqué (Le dernier de la liste des dataTags)
-        const tagsOfDT=data_s.dataTags[colorMapFilterd].tags
-        colorLink=Object.values(tagsOfDT).filter(d=>d.selected)[ind].color
-      
       }
-
     } else {
       colorLink = l.color
     }
