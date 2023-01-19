@@ -713,6 +713,24 @@ export const convert_data = (
       if (n.display_style.label_vert === 'bottom' && n.display_style.label_horiz === 'right') {
         n.display_style.label_horiz = 'middle'
       }
+      if (n.display_style.label_vert === 'haut' ) {
+        n.display_style.label_vert = 'top'
+      }
+      if (n.display_style.label_vert === 'milieu' ) {
+        n.display_style.label_vert = 'middle'
+      }
+      if (n.display_style.label_vert === 'bas' ) {
+        n.display_style.label_vert = 'bottom'
+      }
+      if (n.display_style.label_horiz === 'droite' ) {
+        n.display_style.label_horiz = 'right'
+      }
+      if (n.display_style.label_horiz === 'milieu' ) {
+        n.display_style.label_horiz = 'middle'
+      }
+      if (n.display_style.label_horiz === 'gauche' ) {
+        n.display_style.label_horiz = 'left'
+      }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Cormorant'
       }
