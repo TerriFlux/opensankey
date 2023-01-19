@@ -488,6 +488,7 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
+    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
@@ -499,7 +500,6 @@ export const default_sankey_data = (): SankeyData => {
         node_visible: true,
         shape_visible: true,
         label_visible: true,
-        hide_lone_node:false,
         node_width: 40,
         node_height: 40,
         iconName: 'none',
@@ -831,7 +831,6 @@ export const default_node = (
     idNode: 'default',
     shape: 'rect',
     display: true,
-    hide_lone_node:false,
     node_visible: true,
     shape_visible: true,
     label_visible: true,
