@@ -97,7 +97,6 @@ dev_opensankey:
       - $FOLDER/opensankey/opensankey/client/node_modules/
     policy: pull
   script:
-    - sudo systemctl stop $APP_NAME || true
     - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
     - echo "$FOLDER"
     - cd "$FOLDER"
