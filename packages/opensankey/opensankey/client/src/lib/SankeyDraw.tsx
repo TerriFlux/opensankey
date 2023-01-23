@@ -2520,19 +2520,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       data.nodes[data.links[trgt].idTarget].inputLinksId.splice(ind_in_trgt,0,n_l.idLink)
       
       data.links[n_l.idLink] = n_l
-      data.nodes[n.idNode].display=false
       data.nodes[n.idNode].node_visible=false
     })
-    // set_data({...data})
   }
 
 
   const searchAndRestoreLoneNodes=()=>{
     const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
 
-    Object.values(data.nodes).filter(n=>!n.hide_lone_node).forEach(n=>{
+    Object.values(data.nodes).filter(n=>!n.hide_lone_node && n.display).forEach(n=>{
       link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
-      data.nodes[n.idNode].display=true
       data.nodes[n.idNode].node_visible=true
     })
         
