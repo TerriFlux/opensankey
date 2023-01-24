@@ -126,7 +126,7 @@ const resources = {
           'Bas':'Bottom',
           'ph':'Horizontal position',
           'gauche':'Left',
-          'droite':'rigth',
+          'droite':'Right',
           'tp':'Police size',
           'police':'Police',
           'gras':'Bole',
