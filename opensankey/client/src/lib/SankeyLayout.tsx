@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue } from './SankeyUtils'
+import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -612,6 +612,7 @@ export const updateLayout = (
       data.display_style.filter_label = 0
     }
   }
+  set_nodes_level(data)
   
 }
 
