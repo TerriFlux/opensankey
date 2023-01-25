@@ -76,6 +76,8 @@ def parse_excel(mfa_input):
     nodeTags = {}
     fluxTags = {}
     parse_tags(mfa_input, dataTags, nodeTags, fluxTags)
+    if NODE_TYPE in nodeTags and 'échange' in nodeTags[NODE_TYPE]['tags']:
+        nodeTags[NODE_TYPE]['tags']['échange']['selected'] = 0
     nodes = {}
     parse_nodes(mfa_input, nodes, nodeTags)
     nodes = {node['idNode']: node for node in nodes.values()}
