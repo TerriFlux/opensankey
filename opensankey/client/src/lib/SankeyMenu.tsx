@@ -2352,6 +2352,16 @@ const Menu: FunctionComponent<MenuTypes> = (
             <br /></>)}
         </Container>
 
+        
+
+        {/* <SankeyEdition
+          data={data}
+          set_data={set_data}
+          additional_selector={additional_selector}
+          mode_selection={mode_selection}
+          set_mode_selection={set_mode_selection}
+        /> */}
+      </Navbar>
         {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
           //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
         }
@@ -2397,16 +2407,6 @@ const Menu: FunctionComponent<MenuTypes> = (
             </ButtonGroup>
           </FormGroup>
         </Row>{/* {set_data({ ...data })} */}</>}
-
-        {/* <SankeyEdition
-          data={data}
-          set_data={set_data}
-          additional_selector={additional_selector}
-          mode_selection={mode_selection}
-          set_mode_selection={set_mode_selection}
-        /> */}
-      </Navbar>
-
       {(show_nav && !mode_visualisation) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
