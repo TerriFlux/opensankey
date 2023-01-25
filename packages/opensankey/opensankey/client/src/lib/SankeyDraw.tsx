@@ -44,9 +44,7 @@ const SankeyDrawPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
 
   view: PropTypes.string.isRequired,
-  set_view: PropTypes.func.isRequired,
-
-  mode_visualisation:PropTypes.bool.isRequired,
+  set_view: PropTypes.func.isRequired
 }
 
 export const SankeyDrawDefaultProps = {
@@ -78,9 +76,7 @@ export const SankeyDrawDefaultProps = {
   set_mode_selection: () => null,
 
   view: '',
-  set_view: () => null,
-
-  mode_visualisation:false,
+  set_view: () => null
 
 }
 
@@ -107,9 +103,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_show_toast,
   current,
   mode_selection,
-  view, set_view,
-  mode_visualisation
-
+  view, set_view
 }) => {
 
   const [show_agregation, set_show_agregation] = useState(false)
@@ -212,7 +206,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     const paths = gg_links.append('path')
-    if (!static_sankey && !mode_visualisation) {
+    if (!static_sankey ) {
       let error_msg: { text: string | undefined } | undefined
       paths.call(dragLinkEvent(multi_selected_links,data,display_nodes,display_links,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness)
       )
@@ -264,7 +258,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return  link_visible(d, data) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
       })
 
-    if (!static_sankey && !mode_visualisation) {
+    if (!static_sankey ) {
       // A voir avec Julien
       select2.call(dragLinkTextEvent(alt_key_pressed)
       )
@@ -330,7 +324,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,mode_visualisation,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link))
+    paths.on('click', (event, d) =>eventLinkClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link))
     const arrowVisible=(l :SankeyLink)=>{
       return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 
@@ -364,7 +358,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
         }
       })
     if (error_msg && error_msg.text) {
@@ -447,7 +441,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .append('circle')
         .attr('id', 'center_handle_' + link.idLink)
         .attr('class','center_handle')
-        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
+        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
         .attr('r','5')
         .attr('stroke','black')
         .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
@@ -473,11 +467,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .append('rect')
         .attr('id', shift_name + link.idLink)
         .attr('class','handle')
-        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
+        .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
         .attr('width', default_handle_size)
         .attr('height', default_handle_size)
-        .attr('cursor',(multi_selected_links.current.includes(link)&& !mode_visualisation)?'ew-resize':'pointer')
-        .call(dragLinkShiftHandleEvent(multi_selected_links,link,mode_visualisation,nodes,links,display_style,selected_tags,position,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction)
+        .attr('cursor',(multi_selected_links.current.includes(link)&& !data.static_sankey)?'ew-resize':'pointer')
+        .call(dragLinkShiftHandleEvent(multi_selected_links,link,data.static_sankey,nodes,links,display_style,selected_tags,position,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction)
         )
     }
 
@@ -731,7 +725,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     // handles_positions(links, link, xs, ys, xt, yt)
     if(link.orientation=='vv' ||link.orientation=='hh'){
       add_shift_handles(link, nodes, links,display_style, nodeTags, xs, ys, xt, yt)
-      add_drag_link_zone(link,nodes,data,multi_selected_links,mode_visualisation,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
+      add_drag_link_zone(link,nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction)
     }
     add_center_handle(link,nodeTags)
 
@@ -966,31 +960,27 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('class', 'ggg_nodes')
       .attr('transform', d =>nodeTransform(d,display_nodes,display_links))
 
+    if (!data.static_sankey) {
+      // Gestion du click  
+      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey))
 
+      if (mode_selection == 'ln') {
+        ggg_nodes.on('mousedown', function (event, d) {
+          if (!event.ctrlKey && !event.metaKey) {
+            set_first_selected_node(d)
+          }
+        })
+          .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
 
-    // Gestion du click  
-    ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,mode_visualisation,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey))
+      }
 
-    if (mode_selection == 'ln') {
-      ggg_nodes.on('mousedown', function (event, d) {
-        if (!event.ctrlKey && !event.metaKey) {
-          set_first_selected_node(d)
-        }
-      })
-        .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
+      ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
+      // if(mode_selection=='s'){
+      //   ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
+      // }
 
-    }
-
-    ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-    if(mode_selection=='s'){
       ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
     }
-
-    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
-
-        
-
-
 
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -2745,7 +2735,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data,mode_visualisation,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data))
 
       // Traite les labels qui sont dans des foreignObject
       gg_label.filter(()=>{
@@ -2852,7 +2842,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const drawGrid = () => {
 
     d3.select(' .opensankey #svg #grid').selectAll('.line').remove()
-    if (data.grid_visible && !data.static_sankey && !mode_visualisation) {
+    if (data.grid_visible && !data.static_sankey ) {
       const numberLineH = data.height / data.grid_square_size
       for (let row = 0; row < numberLineH; row++) {
         d3.select(' .opensankey #svg #grid').append('line')

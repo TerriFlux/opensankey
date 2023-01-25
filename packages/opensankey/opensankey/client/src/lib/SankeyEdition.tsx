@@ -179,7 +179,6 @@ const SankeyEditionPropTypes = {
   additional_selector: PropTypes.element,
   mode_selection: PropTypes.string.isRequired,
   set_mode_selection: PropTypes.func.isRequired,
-  mode_visualisation:PropTypes.bool.isRequired,
   set_current_filter: PropTypes.func.isRequired,
   url_prefix: PropTypes.string.isRequired,
 
@@ -198,7 +197,7 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -959,7 +958,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         
       </div>
       <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
-        {(mode_visualisation && !data.static_sankey)?<></>:<Col>
+        {(data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
 
