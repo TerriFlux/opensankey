@@ -310,7 +310,7 @@ const resources = {
         'attrFlux':'Attributs Flux',
         'tagNode':'Etiquette Noeuds',
         'tagFlux':'Etiquette Flux',
-        'attrGeneral':'Attributs générales',
+        'attrGeneral':'Attributs généraux',
         'SaveJSON':'Enregistrer JSON',
         'SaveValue':'Enregistrer avec les valeurs des flux'
       },

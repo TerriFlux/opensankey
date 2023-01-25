@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue } from './SankeyUtils'
+import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -542,6 +542,9 @@ export const updateLayout = (
 
   if(mode.includes('tagNode')){
     for (const tag_group_key in new_layout.nodeTags) {
+      if (tag_group_key in data.nodeTags) {
+        continue
+      }
       data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
     }
     for (const tag_group_key in data.nodeTags) {
@@ -555,7 +558,9 @@ export const updateLayout = (
           continue
         }
         data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
-        data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+        if (tag !== 'échange') {
+          data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+        }
       }
     }
   }
@@ -612,6 +617,7 @@ export const updateLayout = (
       data.display_style.filter_label = 0
     }
   }
+  set_nodes_level(data)
   
 }
 
