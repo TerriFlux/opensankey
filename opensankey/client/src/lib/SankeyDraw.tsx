@@ -2528,7 +2528,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const searchAndRestoreLoneNodes=()=>{
     const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
 
-    Object.values(data.nodes).filter(n=>!n.hide_lone_node && n.display).forEach(n=>{
+    Object.values(data.nodes).filter(n=>n.display).forEach(n=>{
       link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
       data.nodes[n.idNode].node_visible=true
     })
@@ -3016,8 +3016,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
-    hiddeLoneNodes()
     searchAndRestoreLoneNodes()
+
+    hiddeLoneNodes()
   
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
