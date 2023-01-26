@@ -1,6 +1,6 @@
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
-
+import Spinner  from 'react-bootstrap/Spinner'
 interface SankeyLoadProdTypes {
   url_prefix: string,
   successAction: () => void,
@@ -101,7 +101,7 @@ const SankeyLoad = ({
                 result={result}
                 setResult={setResult} 
               />
-            ) : (
+            ) : (<>
               <Row >
                 <Col sm={12} >
                   {infos.map(
@@ -117,6 +117,11 @@ const SankeyLoad = ({
                   }
                 </Col>
               </Row>
+              <Row className='loading_auto_compute'>
+                <Spinner animation="border" />
+              </Row>
+
+            </>
             )}
           </FormGroup>
         </Form>
