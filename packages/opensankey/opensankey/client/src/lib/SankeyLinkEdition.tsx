@@ -227,7 +227,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return (display_size) ? size : 11
   }
-
   const isAllLinkToPrecision=()=>{
     let toPrecision = true
     multi_selected_links.current.map(d => {
@@ -235,7 +234,6 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
     })
     return toPrecision
   }
-
   const labelPositionVert = (param: string) => {
     let allChecked = true
     if (multi_selected_links.current.length != 0) {
@@ -261,13 +259,7 @@ const SankeyLinkEdition: FunctionComponent<SankeyLinkEditionTypes> = (
       return false
     }
   }
-  // const labelSticktoLink = () => {
-  //   let labelSticktoLink = true
-  //   multi_selected_links.current.map(d => {
-  //     labelSticktoLink = (d.label_on_path && d.label_position !== 'frozen') ? labelSticktoLink : false
-  //   })
-  //   return labelSticktoLink
-  // }
+
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
     multi_selected_links.current.map(d => {

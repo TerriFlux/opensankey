@@ -3,6 +3,7 @@ import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyLabel,SankeyDra
 import {removeAnimate,drawArrows,dragNodeRedrawGradient,compute_end_points} from './SankeyDrawFunction'
 import {  getLinkValue,  link_visible,test_link_value } from './SankeyUtils'
 
+// Function that allow us to change link position in target or source nodes
 export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -35,7 +36,7 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
       }
     })
 }
-
+// Function to freely move the link label if the alt key is pressed
 export const dragLinkTextEvent=(alt_key_pressed:boolean,
 )=>{
   return d3.drag<SVGTextElement, SankeyLink>()
@@ -79,7 +80,8 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
       }            
     })
 }
-
+// Function to drag the circle element at the middle of selected links
+// Dragging it shift the shift_handles
 export const dragLinkCenterHandleEvent=(
   multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
@@ -102,7 +104,7 @@ export const dragLinkCenterHandleEvent=(
       }            
     })
 }
-
+// Function to drag a shift handle on selected links 
 export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   mode_visualisation:boolean,
@@ -132,6 +134,10 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
     })
 }
 
+// Function to drag GNode element
+// It have different behavior :
+// -it drag the shape and the text if the 'alt' key isn't pressed
+// - drag the node label if the mouse is on the node label element and the 'alt' key is pressed
 export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -175,7 +181,9 @@ export const dragGNodeEvent=(
       }
     })
 }
-
+// Function to modify the label length threshold
+// The label length threshold is the max width a node label can have, if the label is wider then a line break
+// To change the label threshold on the sankey draw zone, select a node and a rectangle should appear around the label then drag the left or right face of this rectangle
 export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
@@ -192,6 +200,8 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Di
     })
 }
 
+// Function used to drag the text of free label
+// The 'alt' key need to be pressed and the text of the free label dragged
 export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyLabel)=>{
   return d3.drag<SVGTextElement, unknown>()
     .subject(Object).on('drag', function (event) {
@@ -207,6 +217,8 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyLabel)=>{
       }
     })
 }
+// Function used to drag the free label
+// To be dragged you need to select the free label
 export const dragLabelEvent=(multi_selected_label:{current:SankeyLabel[]},
   d:SankeyLabel,
   data:SankeyData,
@@ -236,7 +248,8 @@ export const dragLabelEvent=(multi_selected_label:{current:SankeyLabel[]},
       }
     })
 }
-
+// Function to change the width and height of free label
+// To do that select a free label then dragg the border of it (the visual clue is the multi-direction pointer when hovering the border)
 export const dragLabelWidthHeightEvent=(d:SankeyLabel,
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>
@@ -251,6 +264,7 @@ export const dragLabelWidthHeightEvent=(d:SankeyLabel,
     })
 }
 
+// Function that shift the node when dragged (function called by dragGnodeEvent)
 export  const drag_nodes = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -843,6 +857,7 @@ export  const drag_nodes = (
 
 }
 
+// Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
 const identify_node = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -879,6 +894,7 @@ const swap = (array: string[], x: number, y: number) => {
   array[x] = array[y]
   array[y] = temp
 }
+// Function that change link position in target's inputLinksId or source's outputLinksId
 const drag_link = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -1047,6 +1063,7 @@ const drag_link = (
   }
 }
 
+// Function taht shift the handle of links (called by dragLinkShiftHandleEvent)
 export const drag_handle = (
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
@@ -1163,7 +1180,7 @@ const  drag_link_text = (
   link.y_label = new_y
   link.label_position = 'frozen'
 }
-
+// Function that return the position of rectangle element on selected links that represent the zone to drag to trigger dragLink
 const drag_zone_position=(link:SankeyLink,
   xs: number,
   ys: number,
@@ -1231,7 +1248,7 @@ const drag_zone_position=(link:SankeyLink,
   }
   return ['']
 }
-
+// Funcrtion that draw rect element on selected links to visualy represent where to drag to trigger dragLink (these rectangle differ from shift_handle rect by being empty rectangle)
 export const add_drag_link_zone=(
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
@@ -1288,7 +1305,7 @@ export const add_drag_link_zone=(
       .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness))  
   }
 }
-
+// Function that shift node text when triggered
 export const drag_node_text = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>

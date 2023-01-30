@@ -8,6 +8,7 @@ import { compute_total_offsets, getLinkValue,test_link_value,link_color,delete_n
 import { desagregation, agregation } from './SankeyLayout'
 import LZString from 'lz-string'
 import { BaseType } from 'd3'
+// Function that create the dashed pattern on links
 export const strokeDasharray =(d:SankeyLink,data:SankeyData)=>{
   if (data.show_structure === 'structure') {
     return '5, 5'
@@ -33,6 +34,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData)=>{
     return ''
   }
 }
+// Function that return the Y position of link label
 export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number)=>{
   if (l.orthogonal_label_position === 'middle') {
     return '0.3em'
@@ -47,7 +49,7 @@ export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>numbe
   }
   return '0.3em'
 }
-
+// Function that return the side of link label
 export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
   if (link.recycling) {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
@@ -65,7 +67,7 @@ export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
     return 'left'
   }
 }
-
+// Function that compute the link width
 export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number,min_thickness:number,display_nodes:{ [node_id: string]: SankeyNode })=>{
 
 
@@ -123,7 +125,8 @@ export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>num
     return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))  
   }
 }
-
+// Function that return the link color
+// the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags), if it's a gradient between the source node color and it's target node color
 export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<SVGDefsElement,unknown,HTMLElement,unknown>)=>{
   const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
@@ -434,7 +437,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
   
   return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data) as string
 }   
-
+// Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
 export const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_links:{current: SankeyLink[] },links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_link:(n: SankeyLink) => void)=>{
   if ((event.ctrlKey || event.metaKey) && !mode_visualisation) {
     sankeyTooltip.style('opacity', 0)
@@ -474,7 +477,7 @@ export const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyL
     select_link(d)
   }
 } 
-
+// Function that compute th position of the begining of the link and the position of where it end 
 export const compute_end_points = (
   source_node: SankeyNode,
   target_node: SankeyNode,
@@ -666,7 +669,7 @@ export const compute_end_points = (
   }
   return [xs, ys, xt, yt]
 }
-
+// Function to place the node on the draw zone
 export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyNode},display_links:{[ink_id:string]:SankeyLink})=>{
   if (d.position === 'relative') {
     if (d.inputLinksId.length > 0) {
@@ -685,7 +688,8 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
     return 'translate(' + d.x + ', ' + d.y + ')'
   }
 }
-
+// Function triggerd on click on nodes
+// Add or delete visual element to show that the node is selected like a thickker border 
 export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_nodes:{current: SankeyNode[] },nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_node:(n: SankeyNode) => void,static_sankey:boolean)=>{
   if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
     sankeyTooltip.style('opacity', 0)
@@ -772,7 +776,7 @@ export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
   set_data({ ...data })
 
 }
-
+// Function that wrap node text when the length of the label exceed the limit
 export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     
   const wrap = textwrap()
@@ -817,7 +821,8 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   }
 
 }
-
+// Function compute the value of the node
+// It value is defined by the maximum between the sum of values from input links and the sum of values from the output links
 export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id:string]:SankeyLink},display_nodes:{[nodes_id:string]:SankeyNode})=>{
   let total = 0
       
@@ -857,7 +862,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
     return ''
   }
 }
-
+// Function that compute the height and width of the node
+// if the sum of input/output links values is inferior to the min_height/min_width of the node then it return the min_width/height
+// if the sum of input/output links values is supperior to the min_height/min_width of the node then it return the maximum between the outputs and inputs link values scaled to the graph
 export const setNodeHeight = (
   n: SankeyNode,
   nodes: { [node_id: string]: SankeyNode },
@@ -891,7 +898,8 @@ export const setNodeHeight = (
   }
 }
 
-
+// Function that return the color that the node has to display
+// It depend of if a tags is selected, if the persistent variable is at true and the color we gived to the node
 export const node_color = (n: SankeyNode,data:SankeyData) => {
   let colorNode
   if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
@@ -922,7 +930,7 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
   }  
   return colorNode
 }
-
+// Function that remove animation (shift+click on node)
 export const removeAnimate = () => {
   // Si il y a des .tmp (notamment issus des animations)
   if (d3.selectAll(' .opensankey .tmp').nodes().length > 0) {
@@ -936,7 +944,7 @@ export const removeAnimate = () => {
     d3.select(' .opensankey #svg').selectAll('.node_text').style('fill', null)
   }
 }
-
+// Function used for the clipping of link arrow when there is multiple link incoming to a node
 const intersection = function (cp1: number[], cp2: number[], e: number[], s: number[]) {
   const dc = [cp1[0] - cp2[0], cp1[1] - cp2[1]],
     dp = [s[0] - e[0], s[1] - e[1]],
@@ -976,7 +984,8 @@ const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
   }
   return outputList2
 }
-  
+
+// Function that add marker at the end of links, those marker are arrow
 export const drawArrows = (
   data: SankeyData,
   n: SankeyNode,
@@ -1104,7 +1113,7 @@ export const drawArrows = (
     }
   }
 }
-
+// Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLabel,data:SankeyData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
   if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
     sankeyTooltip.style('opacity', 0)
@@ -1132,7 +1141,7 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
     }
   }
 }
-
+// Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
 export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
   link:SankeyLink,
   data:SankeyData
@@ -1330,7 +1339,11 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
 
   }
 }
-
+// Function used to handle event when some key are pressed
+// If the keyboard arrows are pressed it shift the selected nodes according to the arrow direction and the grid square
+// Escape key open and close configuration sankey menu
+// ctrl + s save a view of the data
+// Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
@@ -1616,7 +1629,10 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
     }
   }
 }
-
+// Function that is triggered when some event occure on the sankey zone like :
+// - a simple click on the sankey zone (not on link or node) deselect all elements
+// - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
+// until the mouse is released wich add a second node and add a link between these 2 nodes
 export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
   mode_selection:string,
   current:boolean,
@@ -1794,6 +1810,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     })
 }
 
+// Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes, 
+// or creating a nodes at first click then linking it to a already existing one or the opposite
 export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
     d3.selectAll(' .opensankey #svg #path-flux').remove()
@@ -1863,7 +1881,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     set_data({...data})
   }
 }
-
+// Function to draw nodes with a particular shape
 export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,SankeyNode,BaseType,unknown>,
   data:SankeyData,
   scale:(t:number)=>number,
