@@ -414,6 +414,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     })
     return allDD
   }
+  // Function that return a simple or multiple dropdown of groupTag of data and links
+  // This allow us to choose wich grouptag to select and wich tag of these group to display
   const addAllDropDownLinks = () => {
     const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
     const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -514,11 +516,14 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     })
     return allDD
   }
+  // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
   const recursionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
     const DT_l=Object.values(DT).length
     Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
       .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
         const n_suffix= suffix+'_'+i
+        // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in getLinkValue
+        // (Deepest= last group_dataTag )
         if(ind==DT_l-1){
           const n_l=JSON.parse(JSON.stringify(link_to_copy))
           n_l.idLink=n_l.idLink+n_suffix
@@ -613,6 +618,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const setSelectionMode = (val: string) => {
     set_mode_selection(val)
   }
+
+  // Create the differents popover of tag filter  and link value filter
 
   const link_filter=
   <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>

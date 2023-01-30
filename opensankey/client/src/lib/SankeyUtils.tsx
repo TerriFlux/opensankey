@@ -9,7 +9,6 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
   }
-
 export const addDataTags = (
   dataTags: TagsGroup[],
   v: {[key:string] : SankeyLinkValue},
@@ -44,14 +43,18 @@ export const addDataTags = (
   }
 }
 
-// Getter pour récupérer la valeur du link
-// utile pour pouvoir ensuite gérer les dataTag
+// Return the value of the link
+// Sometime the link can be duplicate when we choose to select multiple dataTag 
+// therefore to access the right value of the link we search in the id the right value
 export const getLinkValue = (
   data: SankeyData,
   idLink: string,
   up = false
 ) => {
   const { links, dataTags } = data
+  // Split the id and search for value after the original link id
+  //  each value represent wich dataTag to choose among those where selected is at true in link.value 
+  // If there no dataTag (or no multiple dataTag selected then it take the first selected)
   const idDt=idLink.split('_')
   idDt.splice(0,1)
   const defaultInd=Object.values(data.dataTags)
@@ -135,6 +138,7 @@ export const findMaxLinkValue = (
   }
   return new_max_node_value
 }
+// Compute the sum of all incoming link value to a node
 export const getTotalInputLink=(data:SankeyData,
   node:SankeyNode)=>{
   let total = 0
@@ -148,7 +152,7 @@ export const getTotalInputLink=(data:SankeyData,
   })
   return total
 }
-
+// Compute the sum of all link visible
 export const getTotalLinks = (
   data: SankeyData,
   Links: string[],
@@ -377,7 +381,7 @@ export const compute_total_offsets = (
 
   return [offset_height_left, offset_height_right, offset_width_top, offset_width_bottom]
 }
-
+// Transform the value with scientific display
 export const toPrecision = (
   v: number
 ) => {
@@ -390,7 +394,7 @@ export const toPrecision = (
   }
   return new_v
 }
-
+// Return the value of the link if the display value is empty either way it return display_value
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
@@ -478,7 +482,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   }
   return ((val as unknown) as SankeyLinkValue).value
 }
-
+// return a default sankey_data, use at the initialisation or re-initialisation of the application
 export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
@@ -643,7 +647,7 @@ export const default_sankey_data = (): SankeyData => {
     view: []
   }
 }
-
+// Return the color of the link wich depend of the groupTag selected and the color attribued to the link
 export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
   let colorLink
   if (l.colorParameter === 'groupTag') {
@@ -757,7 +761,10 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
   return colorLink
 }
 
-
+// Test if the link is visible
+// it do so by testing the value of the link with parameter selected for the sankey (exemple if the link doesn't have a tag displayed by the sanke, it return false)
+// if one of the source or target node is a not visible, it return false
+// if it value is inferior to the link threshold then it return false
 export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   const { dataTags, fluxTags } = data_s
   if (data_s.show_structure === 'structure') {
@@ -819,7 +826,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   }
   return true
 }
-
+// Return a default_node, used at the creation of a new node
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
@@ -904,6 +911,7 @@ const create_object = (data: SankeyData, l: string[]) => {
     }
   }
 }
+// Return a default link, used at the creation of a new link
 export const default_link = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
@@ -948,7 +956,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     to_precision:true,
   }
 }
-
+// Delete a link and trace of the said link in the source and target nodes
 export const delete_link = (
   data: SankeyData,
   link: SankeyLink
@@ -963,7 +971,7 @@ export const delete_link = (
 
   delete data.links[link.idLink]
 }
-
+// Delete node and all links linked to it
 export const delete_node = (
   data: SankeyData,
   node: SankeyNode
@@ -1034,7 +1042,7 @@ export const setSelectedTags = (
 type layout_type = {
   layout: SankeyData
 }
-
+// Download example from server
 export const downloadExamples = (
   file_name: string,
   the_url_prefix: string,

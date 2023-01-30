@@ -268,7 +268,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  //Ajoute un nouveau noeud puis le selectionne
+  //Add a new node then selection it
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node(data)
@@ -307,7 +307,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
     FileSaver.saveAs(blob, 'sankey_diagram.json')
   }
-
   const clickSaveExcel = () => {
     let root = window.location.href
     if (root.includes('sankey-diagrams') && url_prefix !== '') {
@@ -335,7 +334,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     )
       .then(showFile).then(cleanFile)
   }
-
   const clickSaveExcelSimple = () => {
     let root = window.location.href
     if (root.includes('sankey-diagrams') && url_prefix !== '') {
@@ -363,7 +361,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     )
       .then(showFile).then(cleanFile)
   }
-
   const clickSaveSVG = () => {
     const svg = window.d3.select(' .opensankey#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
@@ -433,7 +430,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_view('none')
     set_data({ ...data })
   }
-  //Modifie la variable qui permet d'afficher le menu accordéon
+  //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if (button_ref && button_ref.current ) {
@@ -443,7 +440,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const setChecked = useState(false)[1]
 
 
-  //Ajoute un nouveau flux et le sélectionne
+  //Add new link and selection it
   const add_new_link = () => {
     const { nodes, links } = data
 
@@ -477,7 +474,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   if (node === undefined) {
     node = default_node(data)
   }
-  //Change la source du flux sélectionné
+  //Change the source of selected link
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = multi_selected_links.current[0]
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
@@ -510,7 +507,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  //Change la cible du flux sélectionné
+  //Change the target of selected link
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
     const link = multi_selected_links.current[0]
@@ -1076,6 +1073,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
 
   }
+  // Function to cut the name of the style to prevent some button to be too big
   const cut_name = (t: string, n: number) => {
     return (t.length > n) ? t.slice(0, n) + '...' : t
   }
