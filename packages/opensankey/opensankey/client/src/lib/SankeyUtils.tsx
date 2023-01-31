@@ -1075,6 +1075,8 @@ export const processExample = (server_data: SankeyData ) => {
     updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
+  set_nodes_level(data)
+  d3.select('.loading_auto_compute').remove()
 
   return data
 }
