@@ -8,8 +8,8 @@ import os
 app = create_app()
 try:
     from .doc import doc as doc_blueprint
-except:
-    from doc import doc as doc_blueprint    
+except Exception:
+    from doc import doc as doc_blueprint
 app.register_blueprint(doc_blueprint, url_prefix='/doc')
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
