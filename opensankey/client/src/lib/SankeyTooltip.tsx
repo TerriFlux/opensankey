@@ -1,6 +1,17 @@
 import { SankeyNode, SankeyLink, SankeyData } from './types'
 import { getLinkValue, toPrecision,link_visible } from './SankeyUtils'
 
+
+/**
+ * Description placeholder
+ *
+ * @param {SankeyNode[]} desagregate_source_nodes
+ * @param {SankeyNode[]} desagregate_target_nodes
+ * @param {SankeyData} data
+ * @param {string} t
+ * @param {SankeyLink} l
+ * @returns {string}
+ */
 function write_children_table(
   desagregate_source_nodes : SankeyNode[], 
   desagregate_target_nodes : SankeyNode[], 
@@ -46,6 +57,14 @@ function write_children_table(
   return t
 }
 
+/**
+ * Function used to fill the tooltip of link
+ * The tooltip is visible when we hover a link and press the key shift
+ *
+ * @param {SankeyData} data
+ * @param {(SankeyLink | SankeyNode)} d
+ * @returns {string}
+ */
 export const  linkTooltipsContent = (
   data : SankeyData,
   d : SankeyLink | SankeyNode
@@ -125,6 +144,14 @@ export const  linkTooltipsContent = (
   return t
 }
 
+/**
+ * Function used to fill the tooltip of node
+ * The tooltip is visible when we hover a node and press the key shift
+ *
+ * @param {SankeyData} data
+ * @param {SankeyNode} d
+ * @returns {string}
+ */
 export const nodeTooltipsContent = (
   data : SankeyData,
   d : SankeyNode

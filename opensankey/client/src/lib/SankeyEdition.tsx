@@ -14,6 +14,15 @@ import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderT
 import { selected_type } from './SankeyMenu'
 import {useTranslation} from 'react-i18next'
 
+/**
+ * 
+ *
+ * @param {React.ChangeEvent<HTMLSelectElement>} evt
+ * @param {TagsGroup} tags_group
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => void}
+ */
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
@@ -23,6 +32,15 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
   set_data({ ...data })
 }
 
+/**
+ * 
+ *
+ * @param {[{ label: string, value: string }]} selected
+ * @param {TagsGroup} tags_group
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => void}
+ */
 const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const tab_sel = selected.map((d) => {
     return d.value
@@ -35,6 +53,14 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
   set_data({ ...data })
 }
 
+/**
+ * Function that generate dropdown for each groupTag of linkTags
+ *
+ * @param {TagsCatalog} fluxTags
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => any}
+ */
 export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
@@ -173,6 +199,11 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
   return allDD
 }
 
+/**
+ * Define SankeyEdition element
+ *
+ * @type {{ data: any; set_data: any; additional_selector: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }}
+ */
 const SankeyEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
@@ -198,6 +229,12 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
+/**
+ * Variable containing the edition row that handle filter and the mouse behavior on the sankey draw zone
+ *
+ * @param {{ data: any; set_data: any; additional_selector: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
+ * @returns
+ */
 const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
@@ -216,6 +253,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   const default_horiz_shift = 50
 
+  /**
+   * Search the lowest visual element of the sankey to reajust the draw zone
+   *
+   * @returns {number[]}
+   */
   const min_width_and_height = () => {
     let height = 0
     let width = 0
@@ -615,12 +657,21 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const node_filter = Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
 
+  /**
+   * Change the mouse behavior
+   *
+   * @param {string} val
+   */
   const setSelectionMode = (val: string) => {
     set_mode_selection(val)
   }
 
   // Create the differents popover of tag filter  and link value filter
-
+  //Popover element to handle filter on links, it contians :
+  // - scale of link
+  // - filter on link (if value of link is inferior to filter then the link is not displayed)
+  // - filter on link label
+  // - filter on null link (if link value is null (0), we can display it or not) 
   const link_filter=
   <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
@@ -725,7 +776,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       </Form>
     </Popover.Body>
   </Popover>
-  
+
+  //Popover element to handle node levels (aggregation)
   const detail_level=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
@@ -736,6 +788,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
     </Popover.Body>
   </Popover>
+
+  //Popover element to handle node tags
+  // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
@@ -749,7 +804,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
          
     </Popover.Body>
   </Popover>
-
+  //Popover element to handle the display of link tags 
   const filter_color_link=
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
@@ -760,8 +815,9 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
     </Popover.Body>
   </Popover>
   const DT_length=Object.keys(data.dataTags).length
+  //Popover element to handle the display of data tags 
   const filter_data=
-  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+  <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>
       <FormGroup as={Row}>
@@ -838,6 +894,8 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       </FormGroup>           
     </Popover.Body>
   </Popover>
+
+  // Compute height of edition element to shift the sankey draw zone below
   const elementNavBar=document.getElementsByClassName('bg-light')[0]
   const elementHerowrap=document.getElementsByClassName('herowrap')[0]
 
@@ -847,7 +905,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const height_navbarAndHerowrap=(elementNavBar && !data.static_sankey)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
   return (
     <>
-      
+      {/* This div contain a dropdown for selecting a diagram */}
       <div className='herowrap'
         style={{
           color: color,
@@ -965,6 +1023,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         } 
         
       </div>
+      {/* This contains different tool to modify visualy or structuraly the sankey
+      - Buttons to modify the behavior of mouse clicks
+      - Button to filter element of the sankey like nodes, links or their color 
+
+      The different logo in the buttons come from https://fontawesome.com/icons
+      */}
       <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
         {(mode_visualisation && !data.static_sankey)?<></>:<Col>
           <FormGroup as={Col} lg='auto'>
