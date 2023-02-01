@@ -69,4 +69,3 @@ language = u'fr'
 
 # -- Options for HTML output -------------------------------------------------
 
-
