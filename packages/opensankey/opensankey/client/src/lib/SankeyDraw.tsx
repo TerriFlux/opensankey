@@ -167,7 +167,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
   }
 
-  // Function that draw the links, links label and add the eventListener
+  /**
+   * Function that draw the links, links label and add the eventListener
+   *
+   * @param {boolean} static_sankey
+   * @param {boolean} [remove_previous_links=false]
+   */
   const add_links = (
     static_sankey: boolean,
     remove_previous_links = false
@@ -1059,6 +1064,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
+        // Triggered when the mouse move over the node
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
           let pos_tooltip_y= event.clientY

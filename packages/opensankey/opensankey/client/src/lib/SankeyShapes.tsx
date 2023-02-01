@@ -1,6 +1,17 @@
 const arrow_length = 10
 const default_horiz_shift = 50
 
+/**
+ * Function that return the path used t draw arrow with d3
+ *
+ * @param {number} w
+ * @param {number[]} p5
+ * @param {number} v
+ * @param {number} cum
+ * @param {boolean} vertical
+ * @param {boolean} revert
+ * @returns {string}
+ */
 export const draw_arrow = (
   w: number,
   p5: number[],
@@ -54,6 +65,14 @@ export const draw_arrow = (
   return d
 }
 
+/**
+ *
+ * @param {string} source_name
+ * @param {string} target_name
+ * @param {number[]} x_list
+ * @param {number[]} y_list
+ * @param {({ text?: string } | undefined)} error_msg
+ */
 export const check_errors = (
   source_name: string,
   target_name: string,
@@ -89,6 +108,21 @@ export const check_errors = (
 }
 
 
+/**
+ * Function to draw particular form of link curve of type vertical-vertical
+ *
+ * @param {string} source_name
+ * @param {string} target_name
+ * @param {number[]} origin
+ * @param {number[]} destination
+ * @param {number} first_cp_pos
+ * @param {number} second_cp_pos
+ * @param {number} curvature
+ * @param {boolean} horizontal
+ * @param {boolean} curved
+ * @param {({ text?: string } | undefined)} error_msg
+ * @returns {string}
+ */
 export const bezier_link_classic_vv = (
   source_name: string,
   target_name: string,
@@ -153,6 +187,18 @@ export const bezier_link_classic_vv = (
   }
 }
 
+/**
+ * Function to draw particular form of link curve of type horizontal-vertical
+ *
+ * @param {string} source_name
+ * @param {string} target_name
+ * @param {number[]} origin
+ * @param {number[]} destination
+ * @param {number} curvature
+ * @param {boolean} curved
+ * @param {({ text?: string } | undefined)} error_msg
+ * @returns {string}
+ */
 export const bezier_link_classic_hv = (
   source_name: string,
   target_name: string,
@@ -194,6 +240,18 @@ export const bezier_link_classic_hv = (
   }
 }
 
+/**
+* Function to draw particular form of link curve of type vertical-horizontal
+ *
+ * @param {string} source_name
+ * @param {string} target_name
+ * @param {number[]} origin
+ * @param {number[]} destination
+ * @param {number} curvature
+ * @param {boolean} curved
+ * @param {({ text?: string } | undefined)} error_msg
+ * @returns {string}
+ */
 export const bezier_link_classic_vh = (
   source_name: string,
   target_name: string,
@@ -238,6 +296,24 @@ export const bezier_link_classic_vh = (
   }
 }
 
+/**
+ * * Function to draw particular form of link curve of type horizontal-horizontal
+
+ *
+ * @param {string} source_name
+ * @param {string} target_name
+ * @param {number} link_value
+ * @param {number[]} origin
+ * @param {number[]} destination
+ * @param {number} left_horiz_shift
+ * @param {number} right_horiz_shift
+ * @param {number} vert_shift
+ * @param {boolean} curved
+ * @param {boolean} horizontal
+ * @param {({ text?: string } | undefined)} error_msg
+ * @param {(arg0: number) => number} scale
+ * @returns {number) => string}
+ */
 export const bezier_link_classic_recycling = (
   source_name: string,
   target_name: string,
