@@ -68,4 +68,3 @@ html_static_path = ['_static']
 language = u'fr'
 
 # -- Options for HTML output -------------------------------------------------
-
