@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue } from './SankeyUtils'
+import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -478,17 +478,17 @@ export const updateLayout = (
       node.colorTag = node_layout.colorTag
       node.colorParameter = node_layout.colorParameter
       node.color = node_layout.color
-  
-      // for (const node_tag_key in node_layout.tags) {
-      //   node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-      // }
+
       
       node.shape_visible = node_layout.shape_visible
       node.node_visible = node_layout.node_visible
       node.label_visible = node_layout.label_visible
     }
-
-    
+    if(mode.includes('tagNode')){
+      for (const node_tag_key in node_layout.tags) {
+        node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+      }
+    }    
   }
 
   if (mode.includes('attrFlux')){
@@ -541,6 +541,12 @@ export const updateLayout = (
   }
 
   if(mode.includes('tagNode')){
+    for (const tag_group_key in new_layout.nodeTags) {
+      if (tag_group_key in data.nodeTags) {
+        continue
+      }
+      data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
+    }
     for (const tag_group_key in data.nodeTags) {
       if (!(tag_group_key in new_layout.nodeTags)) {
         continue
@@ -552,12 +558,17 @@ export const updateLayout = (
           continue
         }
         data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
-        data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+        if (tag !== 'échange') {
+          data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
+        }
       }
     }
   }
   
   if(mode.includes('tagFlux')){
+    for (const tag_group_key in new_layout.fluxTags) {
+      data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
+    }
     for (const tag_group_key in data.fluxTags) {
       if (!(tag_group_key in new_layout.fluxTags)) {
         continue
@@ -574,17 +585,8 @@ export const updateLayout = (
     }
   }
   
-  //data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
-  //   // if (tag_group_key in new_layout.nodeTags) {
-  //   //   data.nodeTags[tag_group_key].color_map = new_layout.nodeTags[tag_group_key].color_map
-  //   //   for ( const tag_key in data.nodeTags[tag_group_key].tags) {
-  //   //     data.nodeTags[tag_group_key].tags[tag_key].color = new_layout.nodeTags[tag_group_key].tags[tag_key].color
-  //   //   }
-  //   // }
-  // }
-  // for (const tag_group_key in new_layout.fluxTags) {
-  //   data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
-  // }
+
+
 
   // data.agregation.level = new_layout.agregation.level
   // data.agregation.dimension = new_layout.agregation.dimension
@@ -615,6 +617,7 @@ export const updateLayout = (
       data.display_style.filter_label = 0
     }
   }
+  set_nodes_level(data)
   
 }
 

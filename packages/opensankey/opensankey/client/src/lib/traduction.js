@@ -105,6 +105,7 @@ const resources = {
           'Rectangle':'Rectangle',
           'TML':'Width minimum',
           'TMH':'Height minimum',
+          'HideAlone':'Hide intermediary nodes',
 
           'asn':'Apply style to nodes',
           'toScale':'Node not to scale',
@@ -125,7 +126,7 @@ const resources = {
           'Bas':'Bottom',
           'ph':'Horizontal position',
           'gauche':'Left',
-          'droite':'rigth',
+          'droite':'Right',
           'tp':'Police size',
           'police':'Police',
           'gras':'Bole',
@@ -310,7 +311,7 @@ const resources = {
         'attrFlux':'Attributs Flux',
         'tagNode':'Etiquette Noeuds',
         'tagFlux':'Etiquette Flux',
-        'attrGeneral':'Attributs générales',
+        'attrGeneral':'Attributs généraux',
         'SaveJSON':'Enregistrer JSON',
         'SaveValue':'Enregistrer avec les valeurs des flux'
       },

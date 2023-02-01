@@ -5,7 +5,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes, TagsCatalog, SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLinkValue,SankeyDrawCurve } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import * as SankeyShapes from './SankeyShapes'
-import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link} from './SankeyUtils'
+import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test_link_value,link_color, delete_link,getTotalInputLink} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
@@ -316,7 +316,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
         sankeyTooltip
           .style('opacity', 1)
-          .style('top', Math.max(margin_top + 50, event.pageY - 10) + 'px')
+          .style('top', Math.max(50, event.pageY - 10) + 'px')
           .style('left', (event.pageX + 30) + 'px')
       })
       .on('mouseout', function (event, d) {
@@ -710,7 +710,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (!link_visible(link, data)) {
       return ''
     }
-    const link_value = test_link_value(data, nodes, link)
+    // const link_value = test_link_value(data, nodes, link)
+    let link_value = test_link_value(data, nodes, link)
+    const val=getLinkValue(data,link.idLink)
+    if(val.is_percent){
+      const total=getTotalInputLink(data,data.nodes[link.idSource])
+      link_value=total*(val.percent/100)
+    }
 
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
@@ -980,7 +986,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
     }
 
-    ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
+    if(mode_selection=='s'){
+      ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
+    }
 
         
 
@@ -2486,9 +2494,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
   }
 
-  const hiddeLoneProduct=()=>{
+  const hiddeLoneNodes=()=>{
     const displayed_product=Object.values(data.nodes).filter(n=>{
-      const is_product=Object.keys(n.tags).includes('Type de noeud') && n.tags['Type de noeud'].includes('produit')
+      const is_to_hide=n.hide_lone_node
       const is_intermediary_node_s=Object.values(n.inputLinksId).filter(l=>{
         return link_visible(data.links[l],data) && !data.links[l].recycling
       }).length==1
@@ -2496,9 +2504,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       const is_intermediary_node_t=Object.values(n.outputLinksId).filter(l=>{
         return link_visible(data.links[l],data) && !data.links[l].recycling
       }).length==1
-      // console.log(n.idNode+' : '+n.node_visible)
-      // console.log(n.idNode+' : '+(n.node_visible && is_product && is_intermediary_node_s && is_intermediary_node_t))
-      return n.display && is_product && is_intermediary_node_s && is_intermediary_node_t
+      return n.display && is_to_hide && is_intermediary_node_s && is_intermediary_node_t
     })
     displayed_product.map(n=>{
       const src=Object.values(n.inputLinksId).filter(l=>link_visible(data.links[l],data))[0]
@@ -2507,29 +2513,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       n_l.idSource=data.links[src].idSource
       n_l.idTarget=data.links[trgt].idTarget
-      n_l.idLink='link_tmp_'+n.idNode
+      n_l.idLink='linkTmp'+n.idNode+'-'
       
-      data.nodes[data.links[src].idSource].outputLinksId.push(n_l.idLink)
-      data.nodes[data.links[trgt].idTarget].inputLinksId.push(n_l.idLink)
+      const ind_in_src=data.nodes[data.links[src].idSource].outputLinksId.indexOf(src)
+      const ind_in_trgt=data.nodes[data.links[trgt].idTarget].inputLinksId.indexOf(trgt)
+
+      data.nodes[data.links[src].idSource].outputLinksId.splice(ind_in_src,0,n_l.idLink)
+      data.nodes[data.links[trgt].idTarget].inputLinksId.splice(ind_in_trgt,0,n_l.idLink)
       
       data.links[n_l.idLink] = n_l
-      data.nodes[n.idNode].display=false
       data.nodes[n.idNode].node_visible=false
     })
-    // set_data({...data})
   }
 
 
-  const searchAndRestoreLoneProduct=()=>{
-    const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('link_tmp_'))
-    const to_restore=link_tmp.map(d=> d.idLink.slice(9,d.idLink.length))
+  const searchAndRestoreLoneNodes=()=>{
+    const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
 
-    to_restore.forEach(n=>{
-      data.nodes[n].display=true
-      data.nodes[n].node_visible=true
-    })
-    link_tmp.forEach(l=>{
-      delete_link(data,l)
+    Object.values(data.nodes).filter(n=>n.display).forEach(n=>{
+      link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
+      data.nodes[n.idNode].node_visible=true
     })
     
   }
@@ -2606,7 +2609,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
                 return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
               }).length
               return t2>0
-            }else if(data.colorMap.includes('dataTags_')){
+            }else if(data.colorMap && data.colorMap.includes('dataTags_')){
               return true
             }
             return  false
@@ -2880,11 +2883,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const position = data.static_sankey ? 'relative' : 'absolute'
   //const node_font = data.display_style.node_font_family_selected
   const link_font = data.display_style.link_font_family_selected
-  const test = document.getElementsByClassName('navbar')
-  let margin_top = 0
-  if (test && test.length > 0) {
-    margin_top = test[0].getBoundingClientRect().height -20
-  }
+  // const test = document.getElementsByClassName('navbar')
+  // let margin_top = 0
+  // if (test && test.length > 0) {
+  //   margin_top = test[0].getBoundingClientRect().height -20
+  // }
 
   // Reformat la fonction pour qu'elle puisse être envoyé à document.onkeydown qui n'accepte les fonction que si elles ont pour paramètres
   //  event de type KeyBoardEvent
@@ -3014,22 +3017,21 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
-    if(data.hide_lone_product){
-      hiddeLoneProduct()
-    }else{
-      searchAndRestoreLoneProduct()
-    }
+
+    searchAndRestoreLoneNodes()
+
+    hiddeLoneNodes()
   
     add_nodes(data.static_sankey, true)
     add_links(data.static_sankey, true)
     add_labels()
     drawLegend()
-    const test = document.getElementsByClassName('navbar')
-    let margin_top = 0
-    if (test && test.length > 0) {
-      margin_top = test[0].getBoundingClientRect().height
-      d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-    }
+    // const test = document.getElementsByClassName('navbar')
+    // let margin_top = 0
+    // if (test && test.length > 0) {
+    //   margin_top = test[0].getBoundingClientRect().height
+    //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+    // }
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
     //   if (current) {
@@ -3054,7 +3056,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id={(current) ? 'visualization_div' : 'view_div'} >
-        <div id="svg-container" className='opensankey' style={{ 'position': position, 'marginTop': margin_top + 'px' }}>
+        <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
@@ -3076,8 +3078,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             <g className='g_label' id='g_label'></g>
 
             <g className='g_legend' id='g_legend'></g>
-            <g className='g_links' id='g_links' style={{ 'position': position, 'marginTop': margin_top + 'px', 'fontFamily': link_font }} ></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position, 'marginTop': margin_top + 'px', /*'fontFamily': node_font */ }} ></g>
+            <g className='g_links' id='g_links' style={{ 'position': position,  'fontFamily': link_font }} ></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
 
           </svg>
         </div>

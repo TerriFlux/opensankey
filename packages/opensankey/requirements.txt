@@ -2,3 +2,5 @@ cloudconvert==1.0.0
 wheel
 flaskfilemanager
 webcolors
+sphinx
+sphinx_rtd_theme

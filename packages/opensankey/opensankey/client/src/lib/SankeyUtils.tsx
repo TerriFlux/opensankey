@@ -26,10 +26,12 @@ export const addDataTags = (
       } catch {
         return
       }
-      const the_val = v.value as unknown as number
+      // const the_val = v.value as unknown as number
       v[listKey[i]] = {
-        value: the_val ? the_val : '',
-        display_value:  the_val ? v.display_value as unknown as string : '',
+        value: v.value as unknown as number,
+        display_value: v.display_value as unknown as string,
+        is_percent:false as unknown as boolean,
+        percent:0 as unknown as number,
         tags: {},
         extension: {}
       }
@@ -64,6 +66,8 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: '',
+      is_percent:false,
+      percent:0,
       tags: {},
       extension: {}
     }
@@ -84,6 +88,8 @@ export const getLinkValue = (
       value: 0,
       display_value: '',
       tags: {},
+      is_percent:false,
+      percent:0,
       extension: {}
     }
   }
@@ -99,6 +105,8 @@ export const getLinkValue = (
         value: 0,
         display_value: '',
         tags: {},
+        is_percent:false,
+        percent:0,
         extension: {}
       }      
     }
@@ -126,6 +134,19 @@ export const findMaxLinkValue = (
     
   }
   return new_max_node_value
+}
+export const getTotalInputLink=(data:SankeyData,
+  node:SankeyNode)=>{
+  let total = 0
+  node.inputLinksId.forEach(element => {
+    // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
+    if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
+      const tmp = getLinkValue(data, element).value
+      
+      total += (tmp)?tmp:0
+    }
+  })
+  return total
 }
 
 export const getTotalLinks = (
@@ -467,7 +488,6 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
-    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
@@ -479,6 +499,7 @@ export const default_sankey_data = (): SankeyData => {
         node_visible: true,
         shape_visible: true,
         label_visible: true,
+        hide_lone_node:false,
         node_width: 40,
         node_height: 40,
         iconName: 'none',
@@ -640,8 +661,17 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         } else {
           colorLink = 'grey'
         }
-      } else if(Object.keys(data_s.nodeTags).includes(data_s.colorMap)){
+      } else if(Object.keys(data_s.dataTags).map(d=>'dataTags_'+d).includes(data_s.colorMap)){
+        const idDt=l.idLink.split('_')
+        const colorMapFilterd=data_s.colorMap.slice(9,data_s.colorMap.length)
+        const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
 
+        const ind=Number(ind_str)
+        // Sélectionne les tags du dataTag le plus imbirqué (Le dernier de la liste des dataTags)
+        const tagsOfDT=data_s.dataTags[colorMapFilterd].tags
+        colorLink=Object.values(tagsOfDT).filter(d=>d.selected)[ind].color
+      
+      } else {
         const source_node = data_s.nodes[l.idSource]
         const target_node = data_s.nodes[l.idTarget]
         let selected_tag = ''
@@ -714,19 +744,7 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
         } else {
           return l.color
         }
-        
-      } else if(Object.keys(data_s.dataTags).map(d=>'dataTags_'+d).includes(data_s.colorMap)){
-        const idDt=l.idLink.split('_')
-        const colorMapFilterd=data_s.colorMap.slice(9,data_s.colorMap.length)
-        const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
-
-        const ind=Number(ind_str)
-        // Sélectionne les tags du dataTag le plus imbirqué (Le dernier de la liste des dataTags)
-        const tagsOfDT=data_s.dataTags[colorMapFilterd].tags
-        colorLink=Object.values(tagsOfDT).filter(d=>d.selected)[ind].color
-      
       }
-
     } else {
       colorLink = l.color
     }
@@ -810,6 +828,7 @@ export const default_node = (
     idNode: 'default',
     shape: 'rect',
     display: true,
+    hide_lone_node:false,
     node_visible: true,
     shape_visible: true,
     label_visible: true,
@@ -984,7 +1003,7 @@ export const setSelectedTags = (
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = node.display && true
+    node.node_visible = node.hide_lone_node?node.node_visible:(node.display && true)
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
@@ -1047,7 +1066,7 @@ export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
   convert_data(data)
-
+  set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
@@ -1057,6 +1076,7 @@ export const processExample = (server_data: SankeyData ) => {
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   set_nodes_level(data)
+  d3.select('.loading_auto_compute').remove()
 
   return data
 }
