@@ -88,7 +88,7 @@ setup(name='OpenSankey',
                   'doc/build/html/_sources/*',
                   'doc/build/html/_static/css/*',
                   'doc/build/html/_static/js/*',  
-                  'doc/build/html/*                
+                  'doc/build/html/*'                
             ]
       },
       cmdclass={
