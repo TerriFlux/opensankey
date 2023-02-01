@@ -83,7 +83,12 @@ setup(name='OpenSankey',
                   'client/build/*.*',
                   'client/build/static/css/*.css',
                   'client/build/static/js/*.js',
-                  'client/build/static/media/*.*'
+                  'client/build/static/media/*.*',
+                  'doc/build/html/_images/*',
+                  'doc/build/html/_sources/*',
+                  'doc/build/html/_static/css/*',
+                  'doc/build/html/_static/js/*',  
+                  'doc/build/html/*                
             ]
       },
       cmdclass={
