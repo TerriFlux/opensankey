@@ -488,7 +488,6 @@ export const default_sankey_data = (): SankeyData => {
     nodes: {},
     links: {},
     user_scale: 20,
-    hide_lone_product:false,
 
     accordeonToShow: ['MEP'],
     style_node: {
@@ -500,6 +499,7 @@ export const default_sankey_data = (): SankeyData => {
         node_visible: true,
         shape_visible: true,
         label_visible: true,
+        hide_lone_node:false,
         node_width: 40,
         node_height: 40,
         iconName: 'none',
@@ -828,6 +828,7 @@ export const default_node = (
     idNode: 'default',
     shape: 'rect',
     display: true,
+    hide_lone_node:false,
     node_visible: true,
     shape_visible: true,
     label_visible: true,
@@ -1002,7 +1003,7 @@ export const setSelectedTags = (
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = node.display && true
+    node.node_visible = node.hide_lone_node?node.node_visible:(node.display && true)
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
@@ -1074,6 +1075,8 @@ export const processExample = (server_data: SankeyData ) => {
     updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
+  set_nodes_level(data)
+  d3.select('.loading_auto_compute').remove()
 
   return data
 }

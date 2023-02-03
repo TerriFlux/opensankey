@@ -76,13 +76,21 @@ setup(name='OpenSankey',
                   'opensankey.ini',
                   'wsgi.py',
                   'server/*.*',
+                  'doc/*.*',
                   'tests/donnees/*.*',
                   'tests/output_references/*.*',
                   'server/exemples/*.*',
                   'client/build/*.*',
                   'client/build/static/css/*.css',
                   'client/build/static/js/*.js',
-                  'client/build/static/media/*.*'
+                  'client/build/static/media/*.*',
+                  'doc/build/html/_images/*',
+                  'doc/build/html/_sources/*',
+                  'doc/build/html/_static/*',
+                  'doc/build/html/_static/css/*',
+                  'doc/build/html/_static/css/fonts/*',
+                  'doc/build/html/_static/js/*',  
+                  'doc/build/html/*'                
             ]
       },
       cmdclass={

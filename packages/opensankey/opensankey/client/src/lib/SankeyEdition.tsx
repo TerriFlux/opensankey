@@ -836,7 +836,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  const height_navbarAndHerowrap=(elementNavBar)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  const height_navbarAndHerowrap=(elementNavBar && !data.static_sankey)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
   return (
     <>
       
