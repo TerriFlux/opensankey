@@ -31,6 +31,7 @@ build:
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - python setup.py bdist_wheel
+    - flake8
   artifacts:
     paths:
       - dist/*.whl
@@ -72,7 +73,6 @@ test:
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - pip install dist/OpenSankey-0.1-py3-none-any.whl
     - python -m unittest discover opensankey.tests
-    - flake8
   dependencies:
     - build
 
