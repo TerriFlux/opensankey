@@ -4,7 +4,7 @@ import os
 from os import listdir
 import json
 from parameterized import parameterized
-import mfa_problem.io_excel as io_excel
+import SankeyExcelParser.io_excel as io_excel
 from opensankey.server import parser_excel
 
 sys.path.insert(0, os.getcwd())
