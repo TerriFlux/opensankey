@@ -13,9 +13,8 @@ from os import listdir
 import os
 import json
 
-import mfa_problem.io_excel as io_excel
-import mfa_problem.mfa_problem_main as mfa_problem_main
-import mfa_problem.su_trace as trace
+import SankeyExcelParser.io_excel as io_excel
+import SankeyExcelParser.su_trace as trace
 from threading import Thread
 from . import parser_excel
 
@@ -106,7 +105,7 @@ def save_excel():
         )
         return response
     try:
-        io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
+        io_excel.write_SankeyExcelParser_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
         # AJoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_file)
         layout_sheet = wb.create_sheet()
@@ -116,7 +115,7 @@ def save_excel():
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_mfa_problem_output_to_excel' + str(excpt),
+            response='write_SankeyExcelParser_output_to_excel' + str(excpt),
             status=402
         )
         return response
@@ -139,11 +138,11 @@ def save_excel_simple():
         simple_mfa_output = {
             io_excel.DATA_SHEET:  mfa_output[io_excel.DATA_SHEET]
         }
-        io_excel.write_mfa_problem_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
+        io_excel.write_SankeyExcelParser_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_mfa_problem_output_to_excel' + str(excpt),
+            response='write_SankeyExcelParser_output_to_excel' + str(excpt),
             status=402
         )
         return response
@@ -217,7 +216,7 @@ def upload_excel_thread(
     output_file_name,
     use_layout
 ):
-    mfa_problem_main.su_trace.logger_init(log_name,  'a')
+    trace.logger_init(log_name,  'a')
     trace.logger.info('Loading Excel.')
     trace.logger.debug(exemple_file_path)
     try:
