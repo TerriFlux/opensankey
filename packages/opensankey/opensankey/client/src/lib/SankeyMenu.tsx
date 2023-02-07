@@ -3,19 +3,17 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Toast, Tabs, Tab, FormCheck, FormGroup } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Tabs, Tab, FormCheck, FormGroup, Table } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
 import { convert_data } from './SankeyConvert'
 import { reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, link_text, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
+import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
 import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaSave, FaArrowsAltH, FaPlay, FaForward, FaBackward, } from 'react-icons/fa'
+import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaArrowsAltH, FaPlay, FaForward, FaBackward, FaArrowDown, FaArrowUp, } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import SankeyEdition from './SankeyEdition'
-import SankeyDraw from './SankeyDraw'
 import {downloadExamples} from './SankeyUtils'
-import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import SankeyNodeEdition from './SankeyNodeEdition'
 import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
@@ -35,6 +33,7 @@ export type selected_type = {'label':string;'value':string}
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
+  show_menu: PropTypes.bool,
   open_menu: PropTypes.element,
   save_menu: PropTypes.element,
   edition_menu: PropTypes.element,
@@ -48,8 +47,6 @@ const MenuPropTypes = {
   logo: PropTypes.string.isRequired,
   logo_width: PropTypes.number.isRequired,
   app_name: PropTypes.string.isRequired,
-  set_show_toast: PropTypes.func.isRequired,
-  show_toast: PropTypes.bool.isRequired,  
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
@@ -65,17 +62,17 @@ const MenuPropTypes = {
   example_menu: PropTypes.element,
   // portfolio_menu: PropTypes.element,
   formations_menu: PropTypes.element,
+  views_item: PropTypes.bool.isRequired,
   url_prefix: PropTypes.string.isRequired,
-
-  view: PropTypes.string.isRequired,
-  set_view: PropTypes.func.isRequired,
 
   additional_selector: PropTypes.element,
   set_current_filter: PropTypes.func.isRequired,
 
+  nav_item_active: PropTypes.string.isRequired,
+  set_nav_item_active: PropTypes.func.isRequired,
+
   mode_selection: PropTypes.string.isRequired,
   set_mode_selection: PropTypes.func.isRequired,
-
 
   style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
@@ -198,31 +195,29 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
 
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
+    show_menu,
     open_menu, save_menu, edition_menu, right_menu,
+    nav_item_active,set_nav_item_active,
     settings_edition,
     settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
     node_edition, link_edition,
     logo, logo_width,app_name,
-
     button_ref,
     accordion_ref,
     nodes_accordion_ref,
     links_accordion_ref,
-
     selected_node,
     multi_selected_nodes,
     multi_selected_links,
     selected_link,
     example_menu, formations_menu,url_prefix,
-    show_toast,
-    set_show_toast,
-    view, set_view,
-    multi_selected_label,// set_multi_selected_label,
+    views_item,
+    multi_selected_label,
     set_current_filter,
     additional_selector,
     mode_selection,
-    set_mode_selection
-    , style_to_apply,
+    set_mode_selection,
+    style_to_apply,
     set_style_to_apply,
     callback,
     show_load,
@@ -234,17 +229,13 @@ const Menu: FunctionComponent<MenuTypes> = (
     launch
   }
 ) => {
-
-
   const set_show_link = useState(true)[1]
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [legend_position, set_legend_position] = useState(data.legend_position)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
   const [show_save_json, set_show_save_json] = useState(false)
-  // const { filter } = data.display_style
 
   const [show_nav,set_show_nav] = useState(false)
-  const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   const [radio_selected] = useState<string>('local')
   
@@ -426,7 +417,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     localStorage.removeItem('initial_data')
     set_selected_style_node('default')
     set_selected_style_link('default')
-    set_view('none')
     set_data({ ...data })
   }
   //Modifie la variable qui permet d'afficher le menu accordéon
@@ -870,9 +860,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Header>
     <Modal.Body>
       <Form.Group as={Row}>
-        <Col xs={1}>
+        {/* <Col xs={1}>
           <Form.Label  style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
-        </Col>
+        </Col> */}
         <Col xs={2}>
           <Form.Check
             inline
@@ -1076,17 +1066,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     return (t.length > n) ? t.slice(0, n) + '...' : t
   }
 
-  const viewOfData = () => {
-
-    const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id == view)[0].view_data)) as SankeyData
-    d.view = JSON.parse(JSON.stringify(data.view))
-    return d as SankeyData
-
-  }
-
-
   const [selected_style_node, set_selected_style_node] = useState('default')
-  // const [style_to_apply, set_style_to_apply] = useState('default')
 
   const modalStyleNode = (
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
@@ -2345,21 +2325,11 @@ const Menu: FunctionComponent<MenuTypes> = (
             <h2>{window.sankey.header}</h2>
             <br /></>)}
         </Container>
-
-        
-
-        {/* <SankeyEdition
-          data={data}
-          set_data={set_data}
-          additional_selector={additional_selector}
-          mode_selection={mode_selection}
-          set_mode_selection={set_mode_selection}
-        /> */}
       </Navbar>
       {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
-      {(view == 'none') ? <SankeyEdition
+      {(show_menu) ? <SankeyEdition
         data={data}
         set_data={set_data}
         additional_selector={additional_selector}
@@ -2408,7 +2378,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
             <Accordion.Item
               id='MEP'
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
+              style={{ 'display': (show_menu && data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
               eventKey="1"
               onClick={
                 evt => {
@@ -2428,7 +2398,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Accordion.Body>
             </Accordion.Item>
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (show_menu) ? 'block' : 'none' }}
               eventKey="2"
               id="Nodes"
               onClick={
@@ -2447,7 +2417,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                 <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
                   <Accordion.Item
-                    style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
+                    style={{ 'display': (show_menu && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
                     eventKey="EtiquetteNoeud"
                     onClick={
                       evt => {
@@ -2642,46 +2612,13 @@ const Menu: FunctionComponent<MenuTypes> = (
                         multi_selected_nodes={multi_selected_nodes}
                         multi_selected_links={multi_selected_links}
                       >{node_edition}</SankeyNodeEdition>
-
-
-                      {/* <Form.Group as={Row}>
-                        <Col xs={6}>Charger une police d'icones</Col>
-                        <Col xs={6}><FormControl
-                          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
-                          type='file'
-                          onChange={(evt: ChangeEvent) => {
-                            const files = (evt.target as HTMLFormElement).files
-                            const reader = new FileReader()
-                            reader.onload = (() => {
-                              return (e: ProgressEvent<FileReader>) => {
-                                const result = String((e.target as FileReader).result)
-                                const js = JSON.parse(result)
-                                js.icons.map((d: any) => {
-                                  const name = d.properties.name as string
-                                  data.icon_catalog[name] = d.icon.paths[0]
-                                })
-                              }
-                            })()
-                            reader.readAsText(files[0])
-                            set_data(data)
-                          }}
-                        >
-                        </FormControl>
-                        </Col>
-                      </Form.Group> */}
-
-
-
                     </Accordion.Body>
                   </Accordion.Item>
                 </Accordion>
-
-
               </Accordion.Body>
             </Accordion.Item>
-
             <Accordion.Item
-              style={{ 'display': (view == 'none') ? 'block' : 'none' }}
+              style={{ 'display': (show_menu) ? 'block' : 'none' }}
               id='Flux'
               eventKey="3"
               onClick={evt => {
@@ -2698,7 +2635,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
                   <Accordion.Item
                     eventKey="8"
-                    style={{ 'display': (view == 'none' && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
+                    style={{ 'display': (show_menu && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
                     onClick={evt => {
                       if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                         set_sub_nav_item_active('')
@@ -2966,7 +2903,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                         </Col>
                       </Row>
-
                       { (multi_selected_links.current.length !== 0) ? (
                         <SankeyLinkEdition
                           show={true}
@@ -2975,21 +2911,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                           selected_link={selected_link}
                           multi_selected_links={multi_selected_links}
                         >{link_edition}</SankeyLinkEdition>) : (<></>)}
-
-
                     </Accordion.Body>
-
                   </Accordion.Item>
-
                 </Accordion>
-
-
               </Accordion.Body>
             </Accordion.Item>
-
             <Accordion.Item
               eventKey="dimension"
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
+              style={{ 'display': (show_menu && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'dimension') {
                   set_nav_item_active('')
@@ -3004,7 +2933,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Accordion.Item
               eventKey="7"
               id="LL"
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
+              style={{ 'display': (show_menu && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
               onClick={evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
                   set_nav_item_active('')
@@ -3420,18 +3349,10 @@ const Menu: FunctionComponent<MenuTypes> = (
                     />
                   </Col>
                 </Form.Group>
-
-
-
-
-
-
-
-
-
               </Accordion.Body>
             </Accordion.Item>
-            {/* <Accordion.Item
+            {views_item ? 
+            <Accordion.Item
               eventKey="Visualisation"
               style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
               onClick={
@@ -3462,14 +3383,14 @@ const Menu: FunctionComponent<MenuTypes> = (
                               multi_selected_nodes.current = []
                               multi_selected_links.current = []
                               multi_selected_label.current = []
-                              set_view(evt.target.value)
+                              //et_view(evt.target.value)
                             }
                           }
                         >
-                          <option selected={view == 'none'} value={'none'}>Données actuelles</option>
-                          {data.view.map(d => {
-                            return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                          })}
+                          <option selected={true} value={'none'}>Données actuelles</option>
+                          {/* {data.view.map(d => {
+                    return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+                  })} */}
                         </Form.Select>
                       </Col>
                     </Row>
@@ -3485,7 +3406,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                       <tbody>
                         {Object.values(data.view).map(d => {
                           return (
-                            <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
+                            <tr style={{ 'border': '2px solid red' }}>
                               <td><FormControl size='sm'
                                 value={d.nom}
                                 onChange={evt => {
@@ -3540,7 +3461,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                                       ind = (v.id == d.id) ? i : ind
                                     })
                                     data.view.splice(ind, 1)
-                                    set_view('none')
                                     set_data({ ...data })
                                   }
                                 }
@@ -3551,73 +3471,11 @@ const Menu: FunctionComponent<MenuTypes> = (
                       </tbody>
                     </Table>
                   </Tab>
-                  <Tab eventKey="flux" title="Filtres Flux">
-                    <Form >
-                      <Form.Group as={Row} >
-                        <Col >
-                          <FormCheck
-                            type='checkbox'
-                            label='Mode structure'
-                            checked={data.show_structure}
-                            onChange={evt => {
-                              data.show_structure = evt.target.checked
-                              set_data({ ...data })
-                            }}
-                          />
-                        </Col>
-                      </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col>
-                          <FormLabel >Filtre</FormLabel>
-                        </Col>
-                        <Col>
-                          <Form.Range
-                            min="0"
-                            max={max_link_value}
-                            value={filter}
-                            onChange={evt => set_current_filter(Number(evt.target.value))} />
-                        </Col>
-                        <Col>{filter}</Col>
-                      </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col>
-                          <FormLabel>Filtre label</FormLabel>
-                        </Col>
-                        <Col >
-                          <Form.Range
-                            min="0"
-                            max={max_link_value}
-                            value={data.display_style.filter_label}
-                            onChange={evt => {
-                              data.display_style.filter_label = +evt.target.value
-                              set_data({ ...data })
-                            }}
-                          />
-                        </Col>
-                        <Col>{data.display_style.filter_label}</Col>
-                      </Form.Group>
-                      <Form.Group as={Row} >
-                        <Col>
-                          <FormLabel >Flux nuls:</FormLabel>
-                        </Col>
-                        <Col >
-                          <FormCheck
-                            type='checkbox'
-                            label='Visible'
-                            onChange={evt => {
-                              data.display_style.null_flux = evt.target.checked
-                              set_data({ ...data })
-                            }}
-                          />
-                        </Col>
-                      </Form.Group>
-                    </Form>
-                  </Tab>
                 </Tabs>
               </Accordion.Body>
-            </Accordion.Item> */}
+            </Accordion.Item> : (<></>)}
             <Accordion.Item
-              style={{ 'display': (view == 'none' && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
+              style={{ 'display': (show_menu && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
               eventKey="legend"
               onClick={
                 evt => {
@@ -3688,11 +3546,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Offcanvas>
         : <></>}
 
-      <Toast bg='success' className='toastView' show={show_toast} style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
-        <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
-        <Toast.Body>Vue sauvegardée</Toast.Body>
-      </Toast>
-
       {
         processing ? (
           <Modal.Dialog >
@@ -3707,38 +3560,6 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_sankey_data={set_data}
         clickSaveDiagram={clickSaveDiagram}
       />
-      {
-        (view != 'none') ? (<SankeyDraw
-          data={viewOfData()}
-          set_data={() => null}
-          //set_multi_selected_nodes={() => null}
-          multi_selected_nodes={multi_selected_nodes}
-          //set_multi_selected_links={() => null}
-          multi_selected_links={multi_selected_links}
-          //set_multi_selected_label={set_multi_selected_label}
-          multi_selected_label={multi_selected_label}
-
-          select_node={() => null}
-          node_arrow_visible={
-            (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!viewOfData().links[n.inputLinksId[0]].arrow) ? false : true
-          }
-          select_link={() => null}
-
-          link_text={link_text}
-          // test_link_value={test_link_value}
-          // set_show_nav={set_show_nav}
-          // set_nav_item_active={set_nav_item_active}
-          // set_sub_nav_item_active={set_sub_nav_item_active}
-          nodeTooltipsContent={nodeTooltipsContent}
-          linkTooltipsContent={linkTooltipsContent}
-          set_show_toast={set_show_toast}
-          current={false}
-          mode_selection={mode_selection}
-          set_mode_selection={set_mode_selection}
-          view={view}
-          set_view={set_view}
-        />) : (<></>)
-      }
       <ApplyLayoutDialog
         show_apply_layout={show_apply_layout}
         set_show_apply_layout={set_show_apply_layout}

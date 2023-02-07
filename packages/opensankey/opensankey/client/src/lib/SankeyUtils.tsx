@@ -170,7 +170,7 @@ export const compute_total_offsets = (
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
+  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink) => string,
   ref_link: SankeyLink | undefined = undefined
 ) => {
   const { nodes, links} = data
@@ -301,7 +301,7 @@ export const compute_total_offsets = (
       if (top_order !== -1) {
         the_id = top_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id])
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -322,7 +322,7 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id])
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -344,7 +344,7 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id])
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -366,7 +366,7 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id])
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
