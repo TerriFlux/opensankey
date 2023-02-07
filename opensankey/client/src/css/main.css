@@ -67,15 +67,15 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 }
 
 .mode_add_node {
-	cursor : url(/public/cursor_n.svg) 10 3, auto;
+	cursor : url(cursor_n.svg) 10 3, auto;
 }
 
 .mode_add_flux {
-	cursor : url(/public/cursor_ln.svg) 10 3, auto;
+	cursor : url(cursor_ln.svg) 10 3, auto;
 }
 
 .mode_add_node_flux {
-	cursor : url(/public/cursor_nl.svg) 10 3, auto;
+	cursor : url(cursor_nl.svg) 10 3, auto;
 }
 
 /* ------------------------------------------------
