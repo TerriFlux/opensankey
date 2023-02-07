@@ -4,8 +4,6 @@ import SankeyDraw from './SankeyDraw'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
 import { SankeySettingsEdition } from './SankeySettingsEdition'
 import { SankeySettingsEditionElementTags } from './SankeySettingsEditionTags'
-// import SankeyNodeEdition from './SankeyNodeEdition'
-// import SankeyLinkEdition from './SankeyLinkEdition'
 import Menu, { ExempleItem } from './SankeyMenu'
 import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
 import * as SankeyUtils from './SankeyUtils'
@@ -59,7 +57,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [view, set_view] = useState('none')
   const [style_to_apply, set_style_to_apply] = useState('default')
   const display_links = data.links
-  const [mode_visualisation, set_mode_visualisation] = useState(false)
   const [show_load,set_show_load] = useState(false)
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)
@@ -177,8 +174,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
         set_mode_selection={set_mode_selection}
         style_to_apply={style_to_apply}
         set_style_to_apply={set_style_to_apply}
-        mode_visualisation={mode_visualisation}
-        set_mode_visualisation={set_mode_visualisation}
         show_load={show_load}
         set_show_load={set_show_load}
         processing={processing}
@@ -229,7 +224,6 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
           set_mode_selection={set_mode_selection}
           view={view}
           set_view={set_view}
-          mode_visualisation={mode_visualisation}
         />) : (<></>)
       }
 

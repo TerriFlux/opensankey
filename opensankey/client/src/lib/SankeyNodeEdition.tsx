@@ -49,6 +49,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
     return visible
   }
+  const isAllHideIfAlone = () => {
+    let hide = false
+    multi_selected_nodes.current.map(d => hide = (d.hide_lone_node) ? true : hide)
+    return hide
+  }
   const isAllNodeToScale = () => {
     let toScale = false
     multi_selected_nodes.current.map(d => toScale = (d.not_to_scale) ? true : toScale)
@@ -703,6 +708,22 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
                     />
                   </Col>
 
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Col xs={7}>
+                    <FormLabel>{t('Noeud.apparence.HideAlone')}</FormLabel>
+                  </Col>
+                  <Col xs={1}>
+                    <Form.Check
+                      inline
+                      type='switch'
+                      checked={isAllHideIfAlone()}
+                      onChange={evt => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.hide_lone_node = evt.target.checked)
+                        set_data({ ...data })
+                      }}
+                    />  
+                  </Col>
                 </Form.Group>
                 <Form.Group as={Row}>
                   <Col xs={4}>
