@@ -5,13 +5,13 @@ import webcolors
 import math
 import copy
 from collections import OrderedDict
-from mfa_problem.io_excel import DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
+from SankeyExcelParser.io_excel import DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
     DATA_SHEET, DATA_TYPE_LABEL, RESULTS_SHEET,\
     NODES_SHEET, FLUX_SHEET, NODES_SANKEY, NODES_COLOR, NODES_NODE, NODES_DEFINITIONS, NODES_LEVEL, NODE_TYPE,\
     TER_SHEET, IO_SHEET, \
     TAG_SHEET, TAG_COLOR, TAG_NAME, TAG_TAGS, TAG_TYPE, TAG_COLORMAP, TAG_IS_PALETTE
 
-from mfa_problem import mfa_problem_format_io
+from SankeyExcelParser import format_io
 
 
 def is_hex(s):
@@ -773,7 +773,7 @@ def save_excel(
         mfa_output = {
             'nodes': pd.DataFrame(nodes[1:], columns=nodes[0])
         }
-        ter, sectors_names, products_names = mfa_problem_format_io.create_empty_ter(mfa_output)
+        ter, sectors_names, products_names = format_io.create_empty_ter(mfa_output)
         s_names2s_idx = {e: i for i, e in enumerate(sectors_names)}
         p_names2p_idx = {e: i for i, e in enumerate(products_names)}
         for row in range(1, len(links)):
