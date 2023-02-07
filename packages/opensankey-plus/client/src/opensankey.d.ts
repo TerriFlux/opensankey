@@ -1,0 +1,17 @@
+declare module 'open-sankey/dist/SankeyConvert';
+declare module 'open-sankey/dist/SankeyEdition';
+declare module 'open-sankey/dist/SankeyNodeEdition';
+declare module 'open-sankey/dist/SankeyLinkEdition';
+declare module 'open-sankey/dist/SankeyLinkContextMenu';
+declare module 'open-sankey/dist/SankeyNodeContextMenu';
+declare module 'open-sankey/dist/SankeySettingsEdition';
+declare module 'open-sankey/dist/SankeySettingsEditionTags';
+declare module 'open-sankey/dist/SankeyDraw';
+declare module 'open-sankey/dist/SankeyUtils';
+declare module 'open-sankey/dist/SankeyLayout';
+declare module 'open-sankey/dist/SankeyMenu';
+declare module 'open-sankey/dist/traduction';
+declare module 'react-multiselect-dropdown-bootstrap';
+declare module 'react-beforeunload';
+declare module 'lz-string';
+declare module 'd3-textwrap';
