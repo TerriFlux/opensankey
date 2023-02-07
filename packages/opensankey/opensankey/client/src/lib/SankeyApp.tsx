@@ -45,6 +45,12 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const default_node = SankeyUtils.default_node(sankey_data)
   const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
 
+  // Declaration of  react's hook, variable used by different developped component
+  // They're constitued of a variable (exemple: show_toast) 
+  // wich are typed by the type of value used in useState (exemple : false so it's boolean) 
+  // and a function to modify this value wich generaly have the name of the variable preceded by 'set_'
+
+  //These hooks are used to pass data between component
   const selected_link = useRef(start_link)
   const [data, set_data] = useState<SankeyData>(sankey_data)
   const selected_node = useRef(default_node)
@@ -60,9 +66,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [show_draw, set_show_draw] = useState(false)
   const [mode_selection, set_mode_selection] = useState('s')
   const [style_to_apply, set_style_to_apply] = useState('default')
-
   const display_links = data.links
-
   const [show_load,set_show_load] = useState(false)
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)

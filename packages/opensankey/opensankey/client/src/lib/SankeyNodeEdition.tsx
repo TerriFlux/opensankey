@@ -43,7 +43,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   }
 
 
-  //Creation des fonctions qui check si les noeuds selectionnés ont tous la même valeurs de leurs attributs
+  //Function that check if all selected nodes have the same value for some parameter
   const isAllNodeVisible = () => {
     let visible = false
     multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
@@ -132,7 +132,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     })
     return (display_height) ? width : 0
   }
-
   const allNodeLabelFontSize = () => {
     let display_size = true
     let size = 11
@@ -155,7 +154,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     })
     return (display_size) ? size : 11
   }
-
   const isAllNodeBold = () => {
     let visible = true
     multi_selected_nodes.current.map(d => visible = (!d.display_style.bold) ? false : visible)
@@ -171,7 +169,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     multi_selected_nodes.current.map(d => visible = (!d.display_style.italic) ? false : visible)
     return (multi_selected_nodes.current.length > 0) ? visible : false
   }
-
   const isAllNodeLabelVert = (arg: string, pos: string) => {
     let all_same = true
     if (multi_selected_nodes.current.length > 0) {
@@ -198,7 +195,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     }
     return all_same
   }
-
   const valueAllNodeLabelBox = () => {
     let display_size = true
     let size = 110
@@ -219,7 +215,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     })
     return icon
   }
-
   const valueAllIconRatio = () => {
     let display_ratio = true
     let ratio = 100
@@ -241,6 +236,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
   const [link_io,set_link_io]=useState('output')
   const [link_pos,set_link_pos]=useState('right')
 
+  // Search links coming from/going to(io) from a face of it (pos) and return them
   const getIOLink=(pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
 
@@ -310,7 +306,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     return link_io
 
   }
-
+  /**
+   * Switch the link with the one on top of him (similar to drag link)
+   *
+   * @param {string} k_link
+   * @param {string} pos
+   * @param {string} io
+   */
   const handleUpLinkIOPos=(k_link:string,pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
     const link_io=getIOLink(pos,io)
@@ -425,7 +427,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     set_data({...data})
   }
 
-
+  /**
+   * Switch the link with the one below him (similar to drag link)
+   *
+   * @param {string} k_link
+   * @param {string} pos
+   * @param {string} io
+   */
   const handleDownLinkIOPos=(k_link:string,pos:string,io:string)=>{
     const n=multi_selected_nodes.current[0]
     const link_io=getIOLink(pos,io)
@@ -534,13 +542,26 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
     
     set_data({...data})
   }
-  
+  /**
+   * Check if the selected node has links coming from/going to(io) from a face of it (pos)
+   *
+   * @param {string} io
+   * @param {string} pos
+   * @returns {boolean}
+   */
   const has_link_come_from=(io:string,pos:string)=>{
     const link_io=getIOLink(pos,io)
     return link_io.length==0
   }
 
   const [tab_colored,set_tab_colored]=useState(false)
+  /**
+   * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from 
+   *
+   * @param {string} pos
+   * @param {string} io
+   * @returns {*}
+   */
   const tab_pos_link=(pos:string,io:string)=>{
     const link_io=getIOLink(pos,io)
     return (
@@ -581,7 +602,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_da
       </>
     )
   }
-  //Onglet Tags du menu noeud pour selectionner un tag favorie si présent
+  
+  /**
+   * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
+   * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple 
+   * then in the nodes filter button, select the groupTag you want to apply and in the dropdown select the node/nodes you want to see
+   *
+   * @type {*}
+   */
   const node_tag = (
     <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
       disabled={/*node.colorParameter !== 'groupTag'*/false} >
