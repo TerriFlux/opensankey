@@ -106,7 +106,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   let alt_key_pressed = false
 
   setSelectedTags(data)
-
+  // Function that compute the size of the snakey zone,it has minimum height and width but can grow if the node or free labels are too close of the border
   const min_width_and_height = () => {
     let height = 0
     let width = 0
@@ -136,7 +136,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
   }
 
-
+  /**
+   * Function that draw the links, links label and add the eventListener
+   *
+   * @param {boolean} static_sankey
+   * @param {boolean} [remove_previous_links=false]
+   */
   const add_links = (
     static_sankey: boolean,
     remove_previous_links = false
@@ -249,7 +254,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     if (!static_sankey) {
-      
       select2.call(dragLinkTextEvent(alt_key_pressed))
     }
     let error_msg: { text?: string | undefined } | undefined
@@ -342,25 +346,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   }
 
 
-
+  // Function that change the scale of the graph
   const update_scale = (user_scale: number) => {
     scale.domain([0, user_scale])
     inv_scale.range([0, user_scale])
   }
 
- 
-
   
-
-  
-
-
-
-  
-
-
-  
-
+  // Compute the position of the center handle of links
   const center_handle_position=(link:SankeyLink,
     xs: number,
     ys: number,
@@ -400,7 +393,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     
     return ['']
   }
-
+  // Draw the center handle of each selected links
   const add_center_handle=(link:SankeyLink,
     selected_tags: { [tag_group: string]: string[] },
   )=>{
@@ -428,6 +421,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
   }
+  // Draw the shift handle of each selected links
   const add_shift_handle = (
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
@@ -451,7 +445,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
   }
-
+  // Function that call add_shift_handle for the shift handle of each side of the links
   const add_shift_handles = (
     link: SankeyLink,
     nodes: { [node_id: string]: SankeyNode },
@@ -907,11 +901,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
  
   
-
+  // Function that draw nodes, nodes label and add eventListener
   const add_nodes = (
     static_sankey: boolean,
     remove_previous_nodes = false
   ) => {
+    // The majority of data used to design the node are located in data['nodes']
+    // Or if you want information about the type of these variable, you can find them in file types.tsx
     const { display_style } = data
     if (remove_previous_nodes) {
       d3.selectAll(' .opensankey .gg_nodes').remove()
@@ -936,7 +932,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .attr('transform', d =>nodeTransform(d,display_nodes,display_links))
 
     if (!data.static_sankey) {
-      // Gestion du click  
+    // Add event listener to click 
+    // When we Ctrl + click a node, it select it and open a menu 
       ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey))
 
       if (mode_selection == 'ln') {
@@ -946,18 +943,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           }
         })
           .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
-
       }
-
       ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
       // if(mode_selection=='s'){
       //   ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
       // }
 
+    // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection=='s'){
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
       }
     }
+    // if node have a unique groupTag then it control the shape of the node
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
         ggg_nodes
@@ -1004,7 +1001,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       
     }
    
-    
+    // Apply node's parameters to each node
     d3.selectAll(' .opensankey .node')
       .attr('id', d => (d as SankeyNode).idNode)
       // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
@@ -1030,6 +1027,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('mousemove', function (event, d) {
+        // Triggered when the mouse move over the node
         if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
           const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
           let pos_tooltip_y= event.clientY
@@ -1052,7 +1050,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
       .on('click', (event, d) => {
-
+        // Apply some style change to element before starting the animation
         if (!data.static_sankey && event.shiftKey || data.static_sankey) {
           event.preventDefault()
           // Animation des flux du Sankey
@@ -1081,7 +1079,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     //----------------ICON-----------------
     
-
+    // Add icon to node (if there is one associated to it)
+    // then apply selected parameter
     ggg_nodes
       .filter(d => d.iconName != 'none' && d.iconVisible)
       .append('svg')
@@ -1145,6 +1144,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
 
     //------------------LABEL------------------------
+    // Add node label and apply parameter
     ggg_nodes
       .append('text')
       .attr('fill',n=>(n.display_style.label_color)?'white':'black')
@@ -1206,7 +1206,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       })
       .each(d => textNodeWrap(d,data))
 
-    //Affiche valueur Noeud
+    // Display value of nodes
+    // Value of nodes are the maximum between the sum of input links and the sum of output links
     ggg_nodes.append('text')
       .attr('fill',n=>(n.display_style.label_color)?'white':'black')
       .classed('node', true)
@@ -1249,7 +1250,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .style('font-size', d => d.display_style.value_font_size + 'px')
       // .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
       .text(d => textNodeValue(d,data,display_links,display_nodes))
-    // ZONE DE DRAGGAGE POUR CHANGER LA LARGEUR DES TEXT DE LABELS
+
+    
+    // Drag zone for changing label box width
+    // (if the label length exceed a certian length the text is wrapped, the box visually represent the length to not exceed)
     ggg_nodes
       .append('rect')
       .attr('class','box_width_threshold')
@@ -1385,7 +1389,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         }
       })
   }
-
+  // Function that search and hide node that hvae 1 input link, 1 output link and have hideLoneNode at true
+  // To do so a link is created and start from the source of the input link to the target of the output link 
+  // finally we hide the node by putting it visibility to false
   const hiddeLoneNodes=()=>{
     const displayed_product=Object.values(data.nodes).filter(n=>{
       const is_to_hide=n.hide_lone_node
@@ -1418,10 +1424,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
   }
 
-
+  // Function to restore hidden node when we deselect the hideLonNode property
   const searchAndRestoreLoneNodes=()=>{
     const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
-
     Object.values(data.nodes).filter(n=>n.display).forEach(n=>{
       link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
       data.nodes[n.idNode].node_visible=true
@@ -1454,6 +1459,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
   })
 
+  // Function that add legend of tags
+  // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
   const drawLegend = () => {
     // Dans le menu tags, les éléments affichés dans la légende sont :
     // les tagGroup pour lesquelles Legend est à true 
@@ -1738,6 +1745,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     })
   }
 
+  // Function that draw the grid in the background of the sankey zone
+  // The grid help to align sankey elements and the step of nodes shift when we press arrow  on the keyboard
   const drawGrid = () => {
 
     d3.select(' .opensankey #svg #grid').selectAll('.line').remove()

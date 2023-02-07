@@ -50,7 +50,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     }
   }
   // --------------------------------------------
-  //ajoute un étiquette au groupe selectionné 
+  //add a tags to the selected groupTag
   const handleAddTagButton = () => {
     const elementTagName = type_tag_name
     // Méthode pour incrementer idElement
@@ -78,7 +78,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
     set_data({ ...data })
   }
-  //Ajoute un groupTag
+  //add a groupTag
   const handleAddTagGrpButton = () => {
     const elementTagName = type_tag_name
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
@@ -104,7 +104,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     set_tags_group_key(k)
     set_data({ ...data })
   }
-
+  // Delete a tag
   const handleDelTag = (n: string) => {
     const elementTagName = type_tag_name
     //const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
@@ -117,7 +117,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   const getRandomInt=(max:number) =>{
     return Math.floor(Math.random() * max)
   }
-
+  // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
     const elementTagName = type_tag_name
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
@@ -137,7 +137,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     }
     set_data({ ...data })
   }
-
+  // Switch the position of the groupTag with the one before him on the list of grouptag
   const handleUpGrpTag = (i: string) => {
     const elementTagName = type_tag_name
     const listElmt = Object.keys(data[elementTagName])
@@ -153,6 +153,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     set_data({ ...data })
   }
 
+  // Switch the position of the groupTag with the one after him on the list of grouptag
   const handleDownGrpTag = (i: string) => {
     const elementTagName = type_tag_name
     const listElmt = Object.keys(data[elementTagName])

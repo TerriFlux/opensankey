@@ -39,29 +39,30 @@ window.SankeyToolsStatic = window.SankeyToolsStatic === undefined ? false : wind
 if (!window.sankey) {
   window.sankey = {}
 }
-
+// Create a default sankey
 const data = default_sankey_data()
 
 if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
     window.sankey = {}
   }
+  // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
   // const json_data = localStorage.getItem('data')
 
+  // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data!='null') {
-
     const new_data = JSON.parse(json_data)
     convert_data(new_data)
     data.nodeTags = {}
     Object.assign(data, new_data)
   }
   data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
-
+  
   const fetchData = {
     method: 'POST'
   }
-
+  // Search if can find example located on a server
   let exemple_menu = {}
   let formations_menu = {}
   const path = window.location.origin

@@ -3,6 +3,21 @@ import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyLabel,SankeyDra
 import {removeAnimate,drawArrows,dragNodeRedrawGradient,compute_end_points} from './SankeyDrawFunction'
 import {  getLinkValue,  link_visible,test_link_value } from './SankeyUtils'
 
+/**
+ *  Function that allow us to change link position in target or source nodes
+ *
+ * @param {{current: SankeyLink[]}} multi_selected_links
+ * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} display_nodes
+ * @param {{ [link_id: string]: SankeyLink }} display_links
+ * @param {({ text: string | undefined } | undefined)} error_msg
+ * @param {{node_font_size: number,sector_uppercase: boolean,sector_bold: boolean,sector_italic: boolean,product_uppercase: boolean,product_bold: boolean,product_italic: boolean,unit: boolean,filter: number,filter_label: number,global_curvature: number,null_flux: boolean,font_family: string[],node_font_family_selected: string,link_font_family_selected: string}} display_style
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {number} min_thickness
+ * @returns
+ */
 export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -35,7 +50,12 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
       }
     })
 }
-
+/**
+ *  Function to freely move the link label if the alt key is pressed
+ *
+ * @param {boolean} alt_key_pressed
+ * @returns {*}
+ */
 export const dragLinkTextEvent=(alt_key_pressed:boolean,
 )=>{
   return d3.drag<SVGTextElement, SankeyLink>()
@@ -46,6 +66,20 @@ export const dragLinkTextEvent=(alt_key_pressed:boolean,
     })
 }
 
+/**
+ *
+ * @param {{current: SankeyLink[]}} multi_selected_links
+ * @param {SankeyLink} link
+ * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} display_nodes
+ * @param {{ [link_id: string]: SankeyLink }} display_links
+ * @param {({ text: string | undefined } | undefined)} error_msg
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {number} min_thickness
+ * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => any}
+ */
 export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
@@ -80,6 +114,22 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
     })
 }
 
+/**
+ * Function to drag the circle element at the middle of selected links
+ * Dragging it shift the shift_handles
+ *
+ * @param {{current: SankeyLink[]}} multi_selected_links
+ * @param {SankeyLink} link
+ * @param {SankeyData} data
+ * @param {{[tag_group:string]:string[]}} selected_tags
+ * @param {()=>number[]} min_width_and_height
+ * @param {number} default_horiz_shift
+ * @param {()=>void} drawGrid
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @returns {{}, default_horiz_shift: number, drawGrid: () => void, scale: (t: number) => number, inv_scale: (t: number) => number, drawCurveFunction: any) => any}
+ */
 export const dragLinkCenterHandleEvent=(
   multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
@@ -102,7 +152,26 @@ export const dragLinkCenterHandleEvent=(
       }            
     })
 }
-
+/**
+ * Function to drag a shift handle on selected links 
+ *
+ * @param {{current: SankeyLink[]}} multi_selected_links
+ * @param {SankeyLink} link
+ * @param {boolean} mode_visualisation
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {{ [link_id: string]: SankeyLink }} links
+ * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
+ * @param {{ [tag_group: string]: string[] }} selected_tags
+ * @param {string} position
+ * @param {SankeyData} data
+ * @param {()=>number[]} min_width_and_height
+ * @param {number} default_horiz_shift
+ * @param {()=>void} drawGrid
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @returns {...}
+ */
 export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   mode_visualisation:boolean,
@@ -132,6 +201,30 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
     })
 }
 
+
+/**
+ * Function to drag GNode element
+ * It have different behavior :
+ * -it drag the shape and the text if the 'alt' key isn't pressed
+ * - drag the node label if the mouse is on the node label element and the 'alt' key is pressed
+ *
+ * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} display_nodes
+ * @param {{ [link_id: string]: SankeyLink }} display_links
+ * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
+ * @param {{current: SankeyNode[] }} multi_selected_nodes
+ * @param {()=>number[]} min_width_and_height
+ * @param {()=>void} drawGrid
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>} sankeyTooltip
+ * @param {number} min_thickness
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @param {string} mode_selection
+ * @param {boolean} alt_key_pressed
+ * @param {boolean} static_sankey
+ * @returns {{}, drawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
+ */
 export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -175,7 +268,15 @@ export const dragGNodeEvent=(
       }
     })
 }
-
+/**
+ *  Function to modify the label length threshold
+ *The label length threshold is the max width a node label can have, if the label is wider then a line break
+ * To change the label threshold on the sankey draw zone, select a node and a rectangle should appear around the label then drag the left or right face of this rectangle
+ *
+ * @param {SankeyData} data
+ * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
+ * @returns {*}
+ */
 export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
@@ -192,6 +293,14 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Di
     })
 }
 
+/**
+ * Function used to drag the text of free label
+ * The 'alt' key need to be pressed and the text of the free label dragged
+ *
+ * @param {boolean} alt_key_pressed
+ * @param {SankeyLabel} d
+ * @returns {*}
+ */
 export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyLabel)=>{
   return d3.drag<SVGTextElement, unknown>()
     .subject(Object).on('drag', function (event) {
@@ -207,6 +316,19 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyLabel)=>{
       }
     })
 }
+// Function used to drag the free label
+// To be dragged you need to select the free label
+/**
+ * Function used to drag the free label
+ * To be dragged you need to select the free label
+ *
+ * @param {{current:SankeyLabel[]}} multi_selected_label
+ * @param {SankeyLabel} d
+ * @param {SankeyData} data
+ * @param {()=>number[]} min_width_and_height
+ * @param {()=>void} drawGrid
+ * @returns {{}, drawGrid: () => void) => any}
+ */
 export const dragLabelEvent=(multi_selected_label:{current:SankeyLabel[]},
   d:SankeyLabel,
   data:SankeyData,
@@ -236,7 +358,15 @@ export const dragLabelEvent=(multi_selected_label:{current:SankeyLabel[]},
       }
     })
 }
-
+/**
+ * Function to change the width and height of free label
+ * To do that select a free label then dragg the border of it (the visual clue is the multi-direction pointer when hovering the border)
+ *
+ * @param {SankeyLabel} d
+ * @param {SankeyData} data
+ * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
+ * @returns {*}
+ */
 export const dragLabelWidthHeightEvent=(d:SankeyLabel,
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>
@@ -251,6 +381,26 @@ export const dragLabelWidthHeightEvent=(d:SankeyLabel,
     })
 }
 
+/**
+ * Function that shift the node when dragged (function called by dragGnodeEvent)
+ *
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {{ [link_id: string]: SankeyLink }} links
+ * @param {{ italic?: boolean; bold?: boolean; node_font_size: number;  uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number }} display_style
+ * @param {TagsCatalog} nodeTags
+ * @param {Element} dragged
+ * @param {{ dx: number; dy: number }} event
+ * @param {SankeyData} data
+ * @param {{current: SankeyNode[] }} multi_selected_nodes
+ * @param {()=>number[]} min_width_and_height
+ * @param {()=>void} drawGrid
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>} sankeyTooltip
+ * @param {number} min_thickness
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @returns
+ */
 export  const drag_nodes = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -843,6 +993,15 @@ export  const drag_nodes = (
 
 }
 
+/**
+ * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
+ *
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {{ [link_id: string]: SankeyLink }} links
+ * @param {SankeyLink} link
+ * @param {number[]} mouse_coord
+ * @returns {{ node_id: any; type: string; origin: any; }}
+ */
 const identify_node = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -874,11 +1033,33 @@ const identify_node = (
   }
 }
 
+/**
+ * Description placeholder
+ *
+ * @param {string[]} array
+ * @param {number} x
+ * @param {number} y
+ */
 const swap = (array: string[], x: number, y: number) => {
   const temp = array[x]
   array[x] = array[y]
   array[y] = temp
 }
+/**
+ * Function that change link position in target's inputLinksId or source's outputLinksId
+ *
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {{ [link_id: string]: SankeyLink }} links
+ * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
+ * @param {TagsCatalog} nodeTags
+ * @param {(SVGPathElement | null)} dragged
+ * @param {d3.D3DragEvent<Element, SankeyLink, unknown>} event
+ * @param {SankeyData} data
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {number} min_thickness
+ * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => void}
+ */
 const drag_link = (
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -1047,6 +1228,26 @@ const drag_link = (
   }
 }
 
+/**
+ * Function taht shift the handle of links (called by dragLinkShiftHandleEvent)
+ *
+ * @param {SankeyLink} link
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {{ [link_id: string]: SankeyLink }} links
+ * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
+ * @param {{ [tag_group: string]: string[] }} selected_tags
+ * @param {Element} dragged
+ * @param {string} handle_type
+ * @param {d3.D3DragEvent<Element, unknown, unknown>} the_event
+ * @param {SankeyData} data
+ * @param {()=>number[]} min_width_and_height
+ * @param {number} default_horiz_shift
+ * @param {()=>void} drawGrid
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @returns {{}, default_hori...}
+ */
 export const drag_handle = (
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
@@ -1149,6 +1350,11 @@ export const drag_handle = (
   })
 }
 
+/**
+ *
+ * @param {SankeyLink} link
+ * @param {d3.D3DragEvent<Element, unknown, unknown>} event
+ */
 const  drag_link_text = (
   link: SankeyLink,
   event: d3.D3DragEvent<Element, unknown, unknown>
@@ -1163,7 +1369,21 @@ const  drag_link_text = (
   link.y_label = new_y
   link.label_position = 'frozen'
 }
-
+/**
+ * Function that return the position of rectangle element on selected links that represent the zone to drag to trigger dragLink
+ *
+ * @param {SankeyLink} link
+ * @param {number} xs
+ * @param {number} ys
+ * @param {number} xt
+ * @param {number} yt
+ * @param {SankeyData} data
+ * @param {{[nide_id:string]:SankeyNode}} display_nodes
+ * @param {number} default_handle_size
+ * @param {number} default_horiz_shift
+ * @param {(t:number)=>number} scale
+ * @returns {number) => {}}
+ */
 const drag_zone_position=(link:SankeyLink,
   xs: number,
   ys: number,
@@ -1231,7 +1451,24 @@ const drag_zone_position=(link:SankeyLink,
   }
   return ['']
 }
-
+/**
+ * Funcrtion that draw rect element on selected links to visualy represent where to drag to trigger dragLink (these rectangle differ from shift_handle rect by being empty rectangle)
+ *
+ * @param {SankeyLink} link
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {SankeyData} data
+ * @param {{current:SankeyLink[]}} multi_selected_links
+ * @param {boolean} mode_visualisation
+ * @param {{[node_id:string]:SankeyNode}} display_nodes
+ * @param {{[link_id:string]:SankeyLink}} display_links
+ * @param {number} default_handle_size
+ * @param {number} default_horiz_shift
+ * @param {(t:number)=>number} scale
+ * @param {(t:number)=>number} inv_scale
+ * @param {number} min_thickness
+ * @param {SankeyDrawCurve} drawCurveFunction
+ * @returns {number, inv_scale: (t...)}
+ */
 export const add_drag_link_zone=(
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
@@ -1288,7 +1525,12 @@ export const add_drag_link_zone=(
       .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness))  
   }
 }
-
+/**
+ * Function that shift node text when triggered
+ *
+ * @param {SankeyNode} node
+ * @param {d3.D3DragEvent<Element, unknown, unknown>} event
+ */
 export const drag_node_text = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>

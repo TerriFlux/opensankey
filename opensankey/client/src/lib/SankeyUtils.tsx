@@ -5,11 +5,17 @@ import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_de
 import * as d3 from 'd3'
 
 
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
   }
-
+/**
+ *
+ * @param {TagsGroup[]} dataTags
+ * @param {{[key:string] : SankeyLinkValue}} v
+ * @param {number} depth
+ */
 export const addDataTags = (
   dataTags: TagsGroup[],
   v: {[key:string] : SankeyLinkValue},
@@ -44,14 +50,24 @@ export const addDataTags = (
   }
 }
 
-// Getter pour récupérer la valeur du link
-// utile pour pouvoir ensuite gérer les dataTag
+/**
+ * Return link value, determined by selected dataTag (if there is)
+ * Sometime the link can be duplicate when we choose to select multiple dataTag 
+ * therefore to access the right value of the link we search in the id the right value
+ * @param {SankeyData} data
+ * @param {string} idLink
+ * @param {boolean} [up=false]
+ * @returns {*}
+ */
 export const getLinkValue = (
   data: SankeyData,
   idLink: string,
   up = false
 ) => {
   const { links, dataTags } = data
+  // Split the id and search for value after the original link id
+  //  each value represent wich dataTag to choose among those where selected is at true in link.value 
+  // If there no dataTag (or no multiple dataTag selected then it take the first selected)
   const idDt=idLink.split('_')
   idDt.splice(0,1)
   const defaultInd=Object.values(data.dataTags)
@@ -114,6 +130,12 @@ export const getLinkValue = (
   return (val as unknown) as SankeyLinkValue
 }
 
+/**
+ * 
+ * @param {number} max_node_value
+ * @param {SankeyLinkValueDict} value_dict
+ * @returns {number}
+ */
 export const findMaxLinkValue = (
   max_node_value: number,
   value_dict: SankeyLinkValueDict
@@ -135,6 +157,14 @@ export const findMaxLinkValue = (
   }
   return new_max_node_value
 }
+
+/**
+ * Return the sum of links value visible incoming to the node
+ *
+ * @param {SankeyData} data
+ * @param {SankeyNode} node
+ * @returns {number}
+ */
 export const getTotalInputLink=(data:SankeyData,
   node:SankeyNode)=>{
   let total = 0
@@ -149,6 +179,13 @@ export const getTotalInputLink=(data:SankeyData,
   return total
 }
 
+/**
+ *  Compute the sum of all link visible
+ *
+ * @param {SankeyData} data
+ * @param {string[]} Links
+ * @returns {number}
+ */
 export const getTotalLinks = (
   data: SankeyData,
   Links: string[],
@@ -165,6 +202,16 @@ export const getTotalLinks = (
   return total
 }
 
+/**
+ *
+ * @param {(t:number)=>number} inv_scale
+ * @param {SankeyNode} node
+ * @param {SankeyData} data
+ * @param {{ [tag_group: string]: string[] }} selected_tags
+ * @param {(data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string} test_link_value
+ * @param {(SankeyLink | undefined)} [ref_link=undefined]
+ * @returns {number[]}
+ */
 export const compute_total_offsets = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
@@ -377,7 +424,12 @@ export const compute_total_offsets = (
 
   return [offset_height_left, offset_height_right, offset_width_top, offset_width_bottom]
 }
-
+/**
+ * Transform the value with scientific display
+ *
+ * @param {number} v
+ * @returns {*}
+ */
 export const toPrecision = (
   v: number
 ) => {
@@ -390,7 +442,13 @@ export const toPrecision = (
   }
   return new_v
 }
-
+/**
+ * Return the value of the link if the display value is empty either way it return display_value
+ *
+ * @param {SankeyData} data
+ * @param {SankeyLink} d
+ * @returns {*}
+ */
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
@@ -415,6 +473,13 @@ export const link_text = (
   return the_link_value
 }
 
+/**
+ *
+ * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} nodes
+ * @param {SankeyLink} d
+ * @returns {*}
+ */
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
   const { dataTags } = data
   if (data.show_structure == 'structure' ) {
@@ -478,7 +543,11 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   }
   return ((val as unknown) as SankeyLinkValue).value
 }
-
+/**
+ * return a default sankey_data, use at the initialisation or re-initialisation of the application
+ *
+ * @returns {SankeyData}
+ */
 export const default_sankey_data = (): SankeyData => {
   return {
     version: '0.8',
@@ -643,7 +712,13 @@ export const default_sankey_data = (): SankeyData => {
     view: []
   }
 }
-
+/**
+ * Return the color of the link wich depend of the groupTag selected and the color attribued to the link
+ *
+ * @param {SankeyLink} l
+ * @param {SankeyData} data_s
+ * @returns {*}
+ */
 export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
   let colorLink
   if (l.colorParameter === 'groupTag') {
@@ -758,6 +833,16 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
 }
 
 
+/**
+ * Test if the link is visible
+ * it do so by testing the value of the link with parameter selected for the sankey (exemple if the link doesn't have a tag displayed by the sanke, it return false)
+ * if one of the source or target node is a not visible, it return false
+ * if it value is inferior to the link threshold then it return false
+ *
+ * @param {SankeyLink} l
+ * @param {SankeyData} data_s
+ * @returns {boolean}
+ */
 export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   const { dataTags, fluxTags } = data_s
   if (data_s.show_structure === 'structure') {
@@ -820,6 +905,12 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   return true
 }
 
+/**
+ * Return a default_node, used at the creation of a new node
+ *
+ * @param {SankeyData} data
+ * @returns {SankeyNode}
+ */
 export const default_node = (
   data: SankeyData
 ): SankeyNode => {
@@ -881,6 +972,12 @@ export const default_node = (
   }
   return defaultNode
 }
+/**
+ *
+ * @param {SankeyData} data
+ * @param {string[]} l
+ * @returns {*}
+ */
 const create_object = (data: SankeyData, l: string[]) => {
   const { dataTags } = data
   if (l.length == 0) {
@@ -905,6 +1002,12 @@ const create_object = (data: SankeyData, l: string[]) => {
     }
   }
 }
+/**
+ * Return a default link, used at the creation of a new link
+ *
+ * @param {SankeyData} data
+ * @returns {SankeyLink}
+ */
 export const default_link = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
@@ -949,7 +1052,12 @@ export const default_link = (data: SankeyData): SankeyLink => {
     to_precision:true,
   }
 }
-
+/**
+ * Delete a link and trace of the said link in the source and target nodes
+ *
+ * @param {SankeyData} data
+ * @param {SankeyLink} link
+ */
 export const delete_link = (
   data: SankeyData,
   link: SankeyLink
@@ -964,7 +1072,12 @@ export const delete_link = (
 
   delete data.links[link.idLink]
 }
-
+/**
+ * Delete node and all links linked to it
+ *
+ * @param {SankeyData} data
+ * @param {SankeyNode} node
+ */
 export const delete_node = (
   data: SankeyData,
   node: SankeyNode
@@ -995,6 +1108,10 @@ export const delete_node = (
   delete data.nodes[node.idNode]
 }
 
+/**
+ *
+ * @param {SankeyData} sankey_data
+ */
 export const setSelectedTags = (
   sankey_data: SankeyData
 ) => {
@@ -1032,10 +1149,20 @@ export const setSelectedTags = (
   }
 }
 
+/**
+ *
+ * @typedef {layout_type}
+ */
 type layout_type = {
   layout: SankeyData
 }
-
+// Download example from server
+/**
+ *
+ * @param {string} file_name
+ * @param {string} the_url_prefix
+ * @param {string} filetype
+ */
 export const downloadExamples = (
   file_name: string,
   the_url_prefix: string,
@@ -1062,6 +1189,11 @@ export const downloadExamples = (
     })
 }
 
+/**
+ *
+ * @param {SankeyData} server_data
+ * @returns {*}
+ */
 export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
@@ -1081,6 +1213,15 @@ export const processExample = (server_data: SankeyData ) => {
   return data
 }
 
+/**
+ *
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @param {(b: boolean) => void} set_show_excel_dialog
+ * @param {Blob} input_file
+ * @param {string} the_url_prefix
+ * @returns {void, set_show_excel_dialog: (b: boolean) => void, input_file: any, the_url_prefix: string) => void}
+ */
 export const uploadExcelImpl = (
   data: SankeyData,
   set_data: (data: SankeyData) => void,
@@ -1105,6 +1246,14 @@ export const uploadExcelImpl = (
   set_show_excel_dialog(false)
 }
 
+/**
+ *
+ * @param {string} file_name
+ * @param {string} the_url_prefix
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {void) => void}
+ */
 export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
@@ -1144,6 +1293,10 @@ export const uploadExemple = (
   })
 }
 
+/**
+ *
+ * @param {SankeyData} sankey_data
+ */
 export const set_nodes_level = (
   sankey_data: SankeyData
 ) => {
@@ -1184,6 +1337,11 @@ export const set_nodes_level = (
   //setSelectedTags(sankey_data)
 }
 
+/**
+ * Hide link that have for value 0 (if the option is selected)
+ *
+ * @param {SankeyData} sankey_data
+ */
 export const hideNullFluxNodes = (
   sankey_data: SankeyData
 ) => {

@@ -19,6 +19,7 @@ import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
 import i18n from 'i18next'
 import SankeyLoad from './SankeyLoad'
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -28,8 +29,19 @@ declare const window: Window &
     }
   }
 
+/**
+ * Description placeholder
+ *
+ * @export
+ * @typedef {selected_type}
+ */
 export type selected_type = {'label':string;'value':string}
 
+/**
+ * Variable that define the Menu element, it's variable and function
+ *
+ * @type {{ data: any; set_data: any; open_menu: any; save_menu: any; edition_menu: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
+ */
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
@@ -92,11 +104,31 @@ const MenuPropTypes = {
 }
 
 
+/**
+ * Description placeholder
+ *
+ * @typedef {MenuTypes}
+ */
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
+/**
+ * Description placeholder
+ *
+ * @type {*}
+ */
 const ExempleMenuDictTypes = PropTypes.objectOf(PropTypes.element.isRequired).isRequired
+/**
+ * Description placeholder
+ *
+ * @typedef {ExempleMenuTypes}
+ */
 type ExempleMenuTypes = InferProps<typeof ExempleMenuDictTypes>
 
+/**
+ * Description placeholder
+ *
+ * @type {{ exemple_menu: any; url_prefix: any; data: any; set_data: any; current_path: any; multi_selected_nodes: any; multi_selected_links: any; multi_selected_label: any; launch: any; }}
+ */
 const ExempleItemPropTypes = {
   exemple_menu : PropTypes.oneOf([PropTypes.element.isRequired,ExempleMenuDictTypes]).isRequired, 
   url_prefix : PropTypes.string.isRequired, 
@@ -110,8 +142,19 @@ const ExempleItemPropTypes = {
   launch: PropTypes.func.isRequired
 }
 
+/**
+ * Description placeholder
+ *
+ * @typedef {ExempleItemTypes}
+ */
 type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
 
+/**
+ * Description placeholder
+ *
+ * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
+ * @returns {*}
+ */
 export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
   return (
     <>
@@ -193,6 +236,13 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
   )
 }
 
+/**
+ * Description placeholder
+ *
+ * @param {{ data: any; set_data: any; open_menu: any; save_menu: any; edition_menu: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }} 
+ *
+ * @returns
+ */
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     show_menu,
@@ -255,7 +305,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  //Ajoute un nouveau noeud puis le selectionne
+  //Add a new node then selection it
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node(data)
@@ -294,7 +344,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
     FileSaver.saveAs(blob, 'sankey_diagram.json')
   }
-
   const clickSaveExcel = () => {
     let root = window.location.href
     if (root.includes('sankey-diagrams') && url_prefix !== '') {
@@ -322,7 +371,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     )
       .then(showFile).then(cleanFile)
   }
-
   const clickSaveExcelSimple = () => {
     let root = window.location.href
     if (root.includes('sankey-diagrams') && url_prefix !== '') {
@@ -350,7 +398,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     )
       .then(showFile).then(cleanFile)
   }
-
   const clickSaveSVG = () => {
     const svg = window.d3.select(' .opensankey#svg-container svg')
     svg.selectAll('.sankey-tooltip').remove()
@@ -419,7 +466,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_selected_style_link('default')
     set_data({ ...data })
   }
-  //Modifie la variable qui permet d'afficher le menu accordéon
+  //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if (button_ref && button_ref.current ) {
@@ -429,7 +476,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const setChecked = useState(false)[1]
 
 
-  //Ajoute un nouveau flux et le sélectionne
+  //Add new link and selection it
   const add_new_link = () => {
     const { nodes, links } = data
 
@@ -463,7 +510,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   if (node === undefined) {
     node = default_node(data)
   }
-  //Change la source du flux sélectionné
+  //Change the source of selected link
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const link = multi_selected_links.current[0]
     //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
@@ -496,7 +543,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  //Change la cible du flux sélectionné
+  //Change the target of selected link
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     const { nodes } = data
     const link = multi_selected_links.current[0]
@@ -1062,6 +1109,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({ ...data })
 
   }
+  // Function to cut the name of the style to prevent some button to be too big
   const cut_name = (t: string, n: number) => {
     return (t.length > n) ? t.slice(0, n) + '...' : t
   }
@@ -2146,7 +2194,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   }
 
-  //Modal pour les raccourcis clavier
+  //Modal for shortcut
   const [showShortcut, setshowShortcut] = useState(false)
   const modalShortcut = (
     <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
@@ -2179,6 +2227,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
   const [showHelp, setshowHelp] = useState(false)
+  // Modal designed to show additional help
   const modalHelp = (
     <Modal size={'lg'} show={showHelp} onHide={() => setshowHelp(false)}>
       <Modal.Header closeButton>
@@ -3606,6 +3655,11 @@ const Menu: FunctionComponent<MenuTypes> = (
   )
 }
 
+/**
+ * Define ApplyLayoutDialog
+ *
+ * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
+ */
 const ApplyLayoutDialogPropTypes = {
   show_apply_layout : PropTypes.bool.isRequired,
   set_show_apply_layout: PropTypes.func.isRequired, 
@@ -3613,8 +3667,18 @@ const ApplyLayoutDialogPropTypes = {
   set_sankey_data : PropTypes.func.isRequired
 }
 
+/**
+ * 
+ *
+ * @typedef {ApplyLayoutDialogTypes}
+ */
 type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 
+/**
+ *
+ * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
+ * @returns {*}
+ */
 const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   const {t} =useTranslation()
@@ -3746,6 +3810,10 @@ const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_da
   )
 }
 
+/**
+ *
+ * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; clickSaveDiagram: any; }}
+ */
 const ApplySaveJSONPropTypes = {
   show_save_json : PropTypes.bool.isRequired,
   set_show_save_json: PropTypes.func.isRequired,
@@ -3754,8 +3822,14 @@ const ApplySaveJSONPropTypes = {
   clickSaveDiagram:PropTypes.func.isRequired
 }
 
+
 type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
 
+/**
+ *
+ * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
+ * @returns {*}
+ */
 const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
   const {t} =useTranslation()
   const [mode_save,set_mode_save]=useState(true)
@@ -3803,6 +3877,7 @@ const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,se
     </Modal>
   )
 }
+
 const ExcelModalPropTypes = {
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
@@ -3813,8 +3888,15 @@ const ExcelModalPropTypes = {
   callback: PropTypes.func.isRequired,
   launch: PropTypes.func.isRequired
 }
+
 type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
+/**
+ * Return the modal when we try to open an excel file
+ *
+ * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
+ * @returns
+ */
 const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
@@ -3906,13 +3988,29 @@ const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handl
 
 ExcelModal.propTypes = ExcelModalPropTypes
 
+/**
+ * Description placeholder
+ *
+ * @type {{ publishImpl: any; set_show_publish_dialog: any; file_path_initial: any; }}
+ */
 const PublishModalPropTypes = {
   publishImpl: PropTypes.func.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
   file_path_initial: PropTypes.string.isRequired
 }
+/**
+ * Description placeholder
+ *
+ * @typedef {PublishModalTypes}
+ */
 type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
 
+/**
+ * Description placeholder
+ *
+ * @param {PublishModalTypes} { publishImpl,set_show_publish_dialog,file_path_initial }
+ * @returns
+ */
 const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
   const [file_path,set_file_path] = useState(file_path_initial)
   const {t} =useTranslation()
