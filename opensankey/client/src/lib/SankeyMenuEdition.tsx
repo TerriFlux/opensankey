@@ -167,13 +167,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                     el.colorParameter = 'local'
                     el.colorTag = 'no_colormap'
                   })
-
                   data.colorMap = 'no_colormap'
-                    
-
-
-
-
                   if(evt.target.checked){
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'groupTag'
@@ -187,8 +181,6 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                     data['fluxTags'][tags_selected[0]].show_legend = true
                   }
                   set_data({ ...data })
-
-
                 }}
               />
             </Col>
@@ -228,13 +220,118 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
+export const SankeyBannerRows = (
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void
+) => { 
+  const {t} =useTranslation()
+  let sous_filieres = undefined
+  if (window.sankey && window.sankey.sous_filieres) {
+    sous_filieres = window.sankey.sous_filieres
+  }
+  let is_split = false
+  const diagrams : { [keys :string] : string[] } = {}
+  if ( sous_filieres ) {
+    is_split = Object.keys(sous_filieres)[0].includes('/')
+    if (is_split ) {
+      Object.keys(sous_filieres).forEach(s=> {
+        const path = s.split('/')
+        if ( !(path[0] in diagrams)) {
+          diagrams[path[0]] = [path[1]]
+        } else {
+          diagrams[path[0]].push(path[1])     
+        }
+      })
+    } else {
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+    }
+  }
+  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+  const diagram_label = 'Diagrammes'
+  const setDiagram = (the_diagram : string) => {
+
+    //const the_diagram = evt.target.value as string
+    const sous_filieres = window.sankey.sous_filieres
+
+    const new_data = JSON.parse(
+      JSON.stringify(
+        window.sankey[sous_filieres[the_diagram]]
+      )
+    ) as SankeyData
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
+    // }
+ 
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true 
+    })
+    set_nodes_level(data)
+    new_data.fit_screen = true
+    d3.select(' .opensankey #svg').on('.zoom', null)
+    set_data({ ...new_data })
+    
+  }
+  return [
+    (data.static_sankey && sous_filieres && !is_split) ? (<>
+      <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+        <Form.Select style={{ width: '200px', color:'black' }}
+          onChange={evt=> {
+            set_diagram(evt.target.value)
+            setDiagram(evt.target.value)
+          }}
+          value={diagram}>
+          {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Form.Select>
+      </Form.Group></>) : (<></>)
+    ,
+    (data.static_sankey && sous_filieres && is_split) ? (<>
+      <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+        <Form.Select style={{ width: '200px', color:'black' }}
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+            set_diagram(evt.target.value)
+            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            setDiagram(diagram_path)
+          }}
+          value={diagram}>
+          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Form.Select>
+        {is_split ? 
+          (<Form.Select style={{ width: '200px', color:'black' }}
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+              set_diagram2(evt.target.value)
+              const diagram_path = diagram+'/'+evt.target.value
+              setDiagram(diagram_path)
+
+            }}
+            value={diagram2}>
+            {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
+          </Form.Select>) :(<></>)
+        }
+      </Form.Group></>) : (<></>),
+    //data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>),
+    window.sankey && window.sankey.excel ? (
+      <Form.Group as={Col} lg="auto" >
+        <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
+        <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
+      </Form.Group>) : (<></>)
+  ]
+}
+
+
 /**
  * Variable containing the edition row that handle filter and the mouse behavior on the sankey draw zone
  *
- * @param {{ data: any; set_data: any; additional_selector: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
+ * @param {{ data: any; set_data: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
  * @returns
  */
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, additional_selector, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
+const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -591,65 +688,12 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
       })
   }
 
-  let sous_filieres = undefined
-  if (window.sankey && window.sankey.sous_filieres) {
-    sous_filieres = window.sankey.sous_filieres
-  }
-  let is_split = false
-  const diagrams : { [keys :string] : string[] } = {}
-  if ( sous_filieres ) {
-    is_split = Object.keys(sous_filieres)[0].includes('/')
-    if (is_split ) {
-      Object.keys(sous_filieres).forEach(s=> {
-        const path = s.split('/')
-        if ( !(path[0] in diagrams)) {
-          diagrams[path[0]] = [path[1]]
-        } else {
-          diagrams[path[0]].push(path[1])     
-        }
-      })
-    } else {
-      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
-    }
-  }
-  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
   const [user_scale, set_user_scale] = useState(data.user_scale)
-  const setDiagram = (the_diagram : string) => {
-
-    //const the_diagram = evt.target.value as string
-    const sous_filieres = window.sankey.sous_filieres
-
-    const new_data = JSON.parse(
-      JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
-      )
-    ) as SankeyData
-    //Object.assign(sankey_data, new_data)
-    convert_data(new_data)
-    new_data.static_sankey = true
-    // if (!is_split) {
-    //   set_diagram(the_diagram)
-    // }
- 
-    Object.values(data.nodes).forEach(node => {
-      node.node_visible = true
-      node.display = true 
-    })
-    set_nodes_level(data)
-    new_data.fit_screen = true
-    d3.select(' .opensankey #svg').on('.zoom', null)
-    set_data({ ...new_data })
-    
-  }
-
-  const diagram_label = 'Diagrammes'
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
   // const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
   const color = 'black'
   const backgroundColor = 'gainsboro'
-
 
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0
@@ -902,6 +946,11 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
 
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
   const height_navbarAndHerowrap=(elementNavBar && !data.static_sankey)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+
+  let sous_filieres = undefined
+  if (window.sankey && window.sankey.sous_filieres) {
+    sous_filieres = window.sankey.sous_filieres
+  }
   return (
     <>
       {/* This div contain a dropdown for selecting a diagram */}
@@ -919,70 +968,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-              {(data.static_sankey && sous_filieres && !is_split) ? (<>
-                <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
-                  <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-                  <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={evt=> {
-                      set_diagram(evt.target.value)
-                      setDiagram(evt.target.value)
-                    }}
-                    value={diagram}>
-                    {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-                  </Form.Select>
-                </Form.Group></>) : (<></>)}
-              {(data.static_sankey && sous_filieres && is_split) ? (<>
-                <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
-                  <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-                  <Form.Select style={{ width: '200px', color:'black' }}
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-                      set_diagram(evt.target.value)
-                      const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-                      setDiagram(diagram_path)
-                    }}
-                    value={diagram}>
-                    {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
-                  </Form.Select>
-                  {is_split ? 
-                    (<Form.Select style={{ width: '200px', color:'black' }}
-                      onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-                        set_diagram2(evt.target.value)
-                        const diagram_path = diagram+'/'+evt.target.value
-                        setDiagram(diagram_path)
-
-                      }}
-                      value={diagram2}>
-                      {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
-                    </Form.Select>) :(<></>)
-                  }
-                </Form.Group></>) : (<></>)}
-              {/* <Form.Group as={Col}
-                style={{
-                  width: '250px',
-                  marginLeft: '0px',
-                  display: (banner_grouptag.length > 0 || Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? 'block' : 'none'
-                }} lg="auto">
-                {banner_grouptag.length > 0 ? (<>
-                  <FormLabel style={{ justifyContent: 'center' }}><b>{t('Banner.sdd')}</b></FormLabel>
-                  {addAllDropDownLinks()}
-                </>)
-                  : (<Col></Col>)
-                }
-              </Form.Group> */}
-              <Col lg="auto">
-                {additional_selector ? (
-                  additional_selector
-                ) : (<></>)}
-              </Col>
-
-
-              {data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>)}
-              {window.sankey && window.sankey.excel ? (
-                <Form.Group as={Col} lg="auto" >
-                  <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
-                  <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
-                </Form.Group>
-              ) : (<></>)}
+              {SankeyBannerRows(data,set_data).map((c:JSX.Element)=>c)}
             </Row>
             <Row>
               <Col className='text-end'>
@@ -998,12 +984,6 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
             </Row></>)
             :
             <Row>
-              {/* <Col >
-                {(Object.values(data.dataTags).length>0)?(<>{Object.values(data.dataTags).filter(d=>Object.values(d.tags).length>0).map(el=>{
-                  if (Object.values(el.tags).filter(d=>d.selected).length>0) {
-                    return (<Form.Label>{el.group_name} : { Object.values(el.tags).filter(d=>d.selected)[0].name}</Form.Label>)
-                  }})}</>):(<></>)}
-              </Col> */}
               <Col className='text-end'>
                 <FormGroup as={Col}>
                   <Button variant='outline-success' size='sm'
@@ -1014,9 +994,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
                   >
                     <FontAwesomeIcon icon={faAngleDoubleDown} />
                   </Button>
-
                 </FormGroup>
-                
               </Col>
             </Row>
         } 
