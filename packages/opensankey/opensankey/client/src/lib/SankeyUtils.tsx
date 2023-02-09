@@ -1293,6 +1293,42 @@ export const uploadExemple = (
   })
 }
 
+//Add a new node then selection it
+export const add_new_node = (
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+) => {
+  const { nodes } = data
+  const node: SankeyNode = default_node(data)
+
+  // Méthode pour incrementer idNode
+  const listId: number[] = []
+  Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+  const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+  node.idNode = 'node' + idNode
+  node.name = node.idNode
+  if (Object.keys(nodes).length < 5) {
+    node.x = Object.keys(nodes).length * 200 + 200
+  } else {
+    node.x = 200
+  }
+  nodes[node.idNode] = node
+  for (const tag_group_key in data.nodeTags) {
+    node.tags[tag_group_key] = []
+  }
+  //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
+  //set_multi_selected_nodes([node])
+  multi_selected_nodes.current = [node]
+  set_data({...data})
+
+}
+
+// Function to cut the name of the style to prevent some button to be too big
+export const cut_name = (t: string, n: number) => {
+  return (t.length > n) ? t.slice(0, n) + '...' : t
+}
+
 /**
  *
  * @param {SankeyData} sankey_data

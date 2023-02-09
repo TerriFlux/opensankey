@@ -949,7 +949,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       //   ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
       // }
 
-    // When the mouse is in mode selection, it allow nodes to be dragged
+      // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection=='s'){
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey))
       }

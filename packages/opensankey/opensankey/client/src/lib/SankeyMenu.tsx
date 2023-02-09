@@ -1,34 +1,30 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import { textwrap } from 'd3-textwrap'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Validator, Ref } from 'react'
-import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, Tabs, Tab, FormCheck, FormGroup, Table } from 'react-bootstrap'
-import { SankeyData, SankeyNode, SankeyDataPropTypes, SankeyLink, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabel, SankeyLabelPropTypes } from './types'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
+import PropTypes, { InferProps } from 'prop-types'
+import { Form, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, FormGroup } from 'react-bootstrap'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
-import { reorganize_inputLinksId, updateLayout } from './SankeyLayout'
 import FileSaver from 'file-saver'
-import { default_sankey_data, delete_node, default_node, delete_link, default_link, uploadExemple, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
-import Accordion from 'react-bootstrap/Accordion'
-import { FaPlus, FaMinus, FaAngleDoubleLeft, FaAngleUp, FaAngleDoubleUp, FaAngleDown, FaAngleDoubleDown, FaArrowsAltH, FaPlay, FaForward, FaBackward, FaArrowDown, FaArrowUp, } from 'react-icons/fa'
-import { MultiSelect } from 'react-multi-select-component'
-import SankeyEdition from './SankeyEdition'
+import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
+import { FaAngleDoubleLeft, FaPlay, FaForward, FaBackward} from 'react-icons/fa'
+import SankeyEdition from './SankeyMenuEdition'
 import {downloadExamples} from './SankeyUtils'
-import SankeyNodeEdition from './SankeyNodeEdition'
-import SankeyLinkEdition from './SankeyLinkEdition'
 import {useTranslation} from 'react-i18next'
-import i18n from 'i18next'
 import SankeyLoad from './SankeyLoad'
+import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
+import ModalPreference from './SankeyMenuPreferences'
+import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
+import { PublishModal,ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
+import { TFunction } from 'i18next'
 
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      header?: string,
-      advanced?: boolean
+      header?: string
     }
   }
-
 /**
  * Description placeholder
  *
@@ -40,30 +36,25 @@ export type selected_type = {'label':string;'value':string}
 /**
  * Variable that define the Menu element, it's variable and function
  *
- * @type {{ data: any; set_data: any; open_menu: any; save_menu: any; edition_menu: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
+ * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  show_menu: PropTypes.bool,
-  open_menu: PropTypes.element,
-  save_menu: PropTypes.element,
-  edition_menu: PropTypes.element,
+  show_menu: PropTypes.bool.isRequired,
   right_menu: PropTypes.element,
-  settings_edition: PropTypes.element,
-  settings_edition_node_tags: PropTypes.element,
-  settings_edition_link_tags: PropTypes.element,
-  settings_edition_data_tags: PropTypes.element,
-  node_edition: PropTypes.element,
-  link_edition: PropTypes.element,
+  settings_edition: PropTypes.element.isRequired,
+  settings_edition_node_tags: PropTypes.element.isRequired,
+  settings_edition_link_tags: PropTypes.element.isRequired,
+  settings_edition_data_tags: PropTypes.element.isRequired,
   logo: PropTypes.string.isRequired,
   logo_width: PropTypes.number.isRequired,
   app_name: PropTypes.string.isRequired,
 
-  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
-  nodes_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
-  links_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement).isRequired}).isRequired,
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
+  nodes_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
+  links_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
 
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
@@ -74,7 +65,6 @@ const MenuPropTypes = {
   example_menu: PropTypes.element,
   // portfolio_menu: PropTypes.element,
   formations_menu: PropTypes.element,
-  views_item: PropTypes.bool.isRequired,
   url_prefix: PropTypes.string.isRequired,
 
   additional_selector: PropTypes.element,
@@ -100,9 +90,237 @@ const MenuPropTypes = {
   not_started : PropTypes.bool.isRequired,
   setNotStarted : PropTypes.func.isRequired,
   path: PropTypes.string.isRequired,
-  launch: PropTypes.func.isRequired
+  launch: PropTypes.func.isRequired,
+  configurations_menus: PropTypes.func.isRequired,
+
+  show_excel_dialog: PropTypes.bool.isRequired,
+  set_show_excel_dialog: PropTypes.func.isRequired,
+  show_apply_layout: PropTypes.bool.isRequired,
+  set_show_apply_layout: PropTypes.func.isRequired,
+  show_save_json: PropTypes.bool.isRequired,
+  set_show_save_json: PropTypes.func.isRequired,
+  showPreference: PropTypes.bool.isRequired,
+  setShowPreference: PropTypes.func.isRequired,
+  selected_style_link: PropTypes.string.isRequired,
+  set_selected_style_link: PropTypes.func.isRequired,
+  selected_style_node: PropTypes.string.isRequired,
+  set_selected_style_node: PropTypes.func.isRequired,
+  show_publish_dialog:PropTypes.bool.isRequired,
+  set_show_publish_dialog: PropTypes.func.isRequired,
+  showStyleNode:PropTypes.bool.isRequired,
+  setShowStyleNode: PropTypes.func.isRequired,
+  showStyleLink:PropTypes.bool.isRequired,
+  setShowStyleLink: PropTypes.func.isRequired,
+  showShortcut:PropTypes.bool.isRequired,
+  setshowShortcut: PropTypes.func.isRequired,
+  showHelp:PropTypes.bool.isRequired,
+  setshowHelp: PropTypes.func.isRequired,
+
+  menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
 }
 
+const clickSaveDiagram = (data:SankeyData) => {
+  const data_to_save = { ...data }
+  const str_data = JSON.stringify(data_to_save, null, 2)
+  const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
+  FileSaver.saveAs(blob, 'sankey_diagram.json')
+}
+const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
+  }
+  let url = root + url_prefix + 'sankey/save_excel'
+  const fetchData = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+  }
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = root + url_prefix + 'sankey/clean_excel'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
+  let root = window.location.href
+  if (root.includes('sankey-diagrams') && url_prefix !== '') {
+    root = root.replace('sankey-diagrams/', '')
+  }
+  let url = root + url_prefix + 'sankey/save_excel_simple'
+  const fetchData = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+  }
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = root + url_prefix + 'sankey/clean_excel'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+const clickSaveSVG = () => {
+  const svg = window.d3.select(' .opensankey#svg-container svg')
+  svg.selectAll('.sankey-tooltip').remove()
+  svg.selectAll('text[visibility=hidden]').remove()
+  svg.style('border','0px')
+  svg.select('#grid').style('opacity','0')
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  FileSaver.saveAs(blob, 'sankey_diagram.svg')
+  svg.style('border','2px solid #78c2ad')
+  svg.select('#grid').style('opacity','1')
+}
+const clickSavePDF = (data:SankeyData) => {
+  const svg = window.d3.select(' .opensankey #svg-container svg')
+  svg.selectAll('.sankey-tooltip').remove()
+  svg.selectAll('text[visibility=hidden]').remove()
+  svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('svg', blob)
+
+  const path = window.location.href
+  let url = path + 'sankey/save_pdf'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/pdf' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
+  }
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + 'sankey/clean_pdf'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
+export const OpenSankeyMenus = (
+  t:TFunction,
+  setShowPreference:(b:boolean)=>void,
+  reinitialization:()=>void,
+  set_show_publish_dialog:(b:boolean)=>void,
+  set_show_apply_layout:(b:boolean)=>void,
+  set_show_excel_dialog:(b:boolean)=>void,
+  set_show_save_json:(b:boolean)=>void,
+  showStyleEdition:()=>void,
+  showStyleEditionLink:()=>void,
+  setshowShortcut:(b:boolean)=>void,
+  setshowHelp:(b:boolean)=>void,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  url_prefix:string
+) => {
+  const _load_json = useRef<HTMLInputElement>(null)
+  return [
+    <NavDropdown  title={t('Menu.Fichiers')} id="files" >
+      <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
+        <Dropdown.Item 
+          onClick={() => {
+            if (_load_json.current) {
+              _load_json.current.name = ''
+              _load_json.current.click()
+            }
+          }} >JSON</Dropdown.Item>
+        <Form.Control
+          type="file"
+          ref={_load_json}
+          style={{ display: 'none' }}
+          onChange={(evt: ChangeEvent) => {
+            const files = (evt.target as HTMLFormElement).files
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (e: ProgressEvent<FileReader>) => {
+                let result = String((e.target as FileReader).result)
+                const new_data = default_sankey_data()
+                result = result.split('<br>').join('\\\\n')
+                const result_data = JSON.parse(result)
+                Object.assign(new_data, result_data)
+                if (result_data.version === undefined) {
+                  (new_data.version as unknown as undefined) = undefined
+                }
+                convert_data(new_data)
+                set_nodes_level(data)
+                set_data(new_data)
+                const test = document.getElementsByClassName('navbar')
+                let margin_top = 0
+                if (test && test.length > 0) {
+                  margin_top = test[0].getBoundingClientRect().height
+                  d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+                }
+              }
+            })()
+            reader.readAsText(files[0])
+          }}
+        />
+        <Dropdown.Item
+          onClick={() => set_show_excel_dialog(true)}
+        >Excel</Dropdown.Item>
+      </NavDropdown>
+      <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
+        <Dropdown.Item onClick={()=>{
+          set_show_save_json(true)
+        }} >JSON</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSaveExcel(url_prefix,data)} >Excel</Dropdown.Item>
+      </NavDropdown>
+      <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
+        <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+      </NavDropdown>
+      <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
+    </NavDropdown>,
+    <NavDropdown id='edition' title={t('Menu.Edition')} >
+      <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
+      <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>    
+      <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
+      <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
+      <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
+    </NavDropdown >,
+    <NavDropdown id='Aide' title={t('Menu.Aide')} >
+      <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
+      <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
+    </NavDropdown >
+  ]}
 
 /**
  * Description placeholder
@@ -111,146 +329,21 @@ const MenuPropTypes = {
  */
 type MenuTypes = InferProps<typeof MenuPropTypes>
 
-/**
- * Description placeholder
- *
- * @type {*}
- */
-const ExempleMenuDictTypes = PropTypes.objectOf(PropTypes.element.isRequired).isRequired
-/**
- * Description placeholder
- *
- * @typedef {ExempleMenuTypes}
- */
-type ExempleMenuTypes = InferProps<typeof ExempleMenuDictTypes>
 
 /**
  * Description placeholder
  *
- * @type {{ exemple_menu: any; url_prefix: any; data: any; set_data: any; current_path: any; multi_selected_nodes: any; multi_selected_links: any; multi_selected_label: any; launch: any; }}
- */
-const ExempleItemPropTypes = {
-  exemple_menu : PropTypes.oneOf([PropTypes.element.isRequired,ExempleMenuDictTypes]).isRequired, 
-  url_prefix : PropTypes.string.isRequired, 
-  data : PropTypes.shape(SankeyDataPropTypes).isRequired, 
-  set_data : PropTypes.func.isRequired, 
-  current_path : PropTypes.string.isRequired, 
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  //callback: PropTypes.func.isRequired,
-  launch: PropTypes.func.isRequired
-}
-
-/**
- * Description placeholder
- *
- * @typedef {ExempleItemTypes}
- */
-type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
-
-/**
- * Description placeholder
- *
- * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
- * @returns {*}
- */
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
-  return (
-    <>
-      { ('Files' in exemple_menu) 
-        ? (exemple_menu['Files'] as string[]).map( (item,index)=> {
-          //let the_callback = ()=> 0
-          let path = current_path+'/sankey/'+item
-          if (!item.includes('.xlsx') && !item.includes('.json')) {
-            let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
-            let suffix = 'ZIP'
-            if (!item.includes('zip')) {
-              url = url + '/index.html'
-              suffix = 'HTML'
-            }
-            return (
-              <Dropdown.Item key={index} href={url} target="_blank">{current_path.split('/').slice(0, -1).pop() + ' ' + suffix}</Dropdown.Item>
-            )
-          }
-          if (item.includes('.xlsx')) {
-            //the_callback = callback
-            path = current_path+'/'+item
-          }
-          return (
-            <Dropdown.Item
-              key={index}
-              onClick={() => {
-                multi_selected_nodes.current = []
-                multi_selected_links.current = []
-                multi_selected_label.current = []
-                if (path.includes('xlsx')) {
-                  launch(path, url_prefix)
-                } 
-                uploadExemple(
-                  path, url_prefix, data, set_data
-                )} 
-              }
-            >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
-                : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
-              }</Dropdown.Item>
-          )
-        }
-        ) : Object.keys(exemple_menu).map(
-          (key, index) => {
-            let title = key
-            if (title === 'artefacts') {
-              title = 'Page Web et Zip' 
-            }
-            if (key == 'Tests') {
-              return <></>
-            }
-            let the_current_path = current_path
-            if (!key.includes('OpenSankey')) {
-              the_current_path = current_path !== '' ? current_path + '/' + key.replace('Sankey', '').replace('Excel', '') : key.replace('Sankey', '').replace('Excel', '')
-            } else {
-              the_current_path = current_path !== '' ? current_path + '/' + key : key
-            }
-            return (
-              <>
-                <NavDropdown drop='start' key={index} title={title} id={key} >
-                  <ExempleItem
-                    exemple_menu={(exemple_menu as unknown as {[key:string]:ExempleMenuTypes})[key] as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
-                    url_prefix={url_prefix}
-                    data={data}
-                    set_data={set_data}
-                    current_path={the_current_path}
-                    multi_selected_links={multi_selected_links}
-                    multi_selected_nodes={multi_selected_nodes}
-                    multi_selected_label={multi_selected_label}
-                    //callback={callback}
-                    launch={launch}
-                  />
-                </NavDropdown>
-              </>
-            )
-          }
-        )
-      }
-    </>
-  )
-}
-
-/**
- * Description placeholder
- *
- * @param {{ data: any; set_data: any; open_menu: any; save_menu: any; edition_menu: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }} 
+ * @param {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }} 
  *
  * @returns
  */
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
     show_menu,
-    open_menu, save_menu, edition_menu, right_menu,
+    right_menu,
     nav_item_active,set_nav_item_active,
     settings_edition,
     settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
-    node_edition, link_edition,
     logo, logo_width,app_name,
     button_ref,
     accordion_ref,
@@ -260,8 +353,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     multi_selected_nodes,
     multi_selected_links,
     selected_link,
-    example_menu, formations_menu,url_prefix,
-    views_item,
+    url_prefix,
     multi_selected_label,
     set_current_filter,
     additional_selector,
@@ -276,24 +368,24 @@ const Menu: FunctionComponent<MenuTypes> = (
     failure,setFailure,
     not_started,setNotStarted,
     path,
-    launch
+    launch,
+    configurations_menus,
+    show_excel_dialog, set_show_excel_dialog,
+    show_apply_layout, set_show_apply_layout,
+    show_save_json, set_show_save_json,
+    showPreference, setShowPreference,
+    selected_style_link, set_selected_style_link,
+    selected_style_node, set_selected_style_node,
+    show_publish_dialog,set_show_publish_dialog,
+    showStyleNode, setShowStyleNode,
+    showStyleLink, setShowStyleLink,
+    showShortcut, setshowShortcut,
+    showHelp, setshowHelp,
+    menus
   }
 ) => {
-  const set_show_link = useState(true)[1]
-  const [show_excel_dialog, set_show_excel_dialog] = useState(false)
-  const [legend_position, set_legend_position] = useState(data.legend_position)
-  const [show_apply_layout, set_show_apply_layout] = useState(false)
-  const [show_save_json, set_show_save_json] = useState(false)
-
   const [show_nav,set_show_nav] = useState(false)
-  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
-  const [radio_selected] = useState<string>('local')
-  
-  const [forceUpdate, setForceUpdate] = useState(false)
-  const [showPreference, setShowPreference] = useState(false)
   const {t} =useTranslation()
-
-
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -305,1385 +397,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  //Add a new node then selection it
-  const add_new_node = () => {
-    const { nodes } = data
-    const node: SankeyNode = default_node(data)
-
-    // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    node.idNode = 'node' + idNode
-    node.name = node.idNode
-    if (Object.keys(nodes).length < 5) {
-      node.x = Object.keys(nodes).length * 200 + 200
-    } else {
-      node.x = 200
-    }
-    nodes[node.idNode] = node
-    for (const tag_group_key in data.nodeTags) {
-      node.tags[tag_group_key] = []
-    }
-    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
-    //set_multi_selected_nodes([node])
-    multi_selected_nodes.current = [node]
-    style_to_apply = 'default'
-    apply_style_to_nodes()
-    set_data({...data})
-
-  }
-
-  const _load_json = useRef<HTMLInputElement>(null)
-
-  //const [processing] = useState(false)
-
-  const clickSaveDiagram = () => {
-    const data_to_save = { ...data }
-    const str_data = JSON.stringify(data_to_save, null, 2)
-    const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-    FileSaver.saveAs(blob, 'sankey_diagram.json')
-  }
-  const clickSaveExcel = () => {
-    let root = window.location.href
-    if (root.includes('sankey-diagrams') && url_prefix !== '') {
-      root = root.replace('sankey-diagrams/', '')
-    }
-    let url = root + url_prefix + 'sankey/save_excel'
-    const fetchData = {
-      method: 'POST',
-      body: JSON.stringify(data)
-    }
-    const showFile = (blob: BlobPart) => {
-      const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-      FileSaver.saveAs(newBlob, 'sankey.xlsx')
-    }
-    const cleanFile = () => {
-      const fetchData = {
-        method: 'POST'
-      }
-      url = root + url_prefix + 'sankey/clean_excel'
-      fetch(url, fetchData)
-    }
-
-    fetch(url, fetchData).then(
-      r => r.blob()
-    )
-      .then(showFile).then(cleanFile)
-  }
-  const clickSaveExcelSimple = () => {
-    let root = window.location.href
-    if (root.includes('sankey-diagrams') && url_prefix !== '') {
-      root = root.replace('sankey-diagrams/', '')
-    }
-    let url = root + url_prefix + 'sankey/save_excel_simple'
-    const fetchData = {
-      method: 'POST',
-      body: JSON.stringify(data)
-    }
-    const showFile = (blob: BlobPart) => {
-      const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-      FileSaver.saveAs(newBlob, 'sankey.xlsx')
-    }
-    const cleanFile = () => {
-      const fetchData = {
-        method: 'POST'
-      }
-      url = root + url_prefix + 'sankey/clean_excel'
-      fetch(url, fetchData)
-    }
-
-    fetch(url, fetchData).then(
-      r => r.blob()
-    )
-      .then(showFile).then(cleanFile)
-  }
-  const clickSaveSVG = () => {
-    const svg = window.d3.select(' .opensankey#svg-container svg')
-    svg.selectAll('.sankey-tooltip').remove()
-    svg.selectAll('text[visibility=hidden]').remove()
-    svg.style('border','0px')
-    svg.select('#grid').style('opacity','0')
-    const html = ((svg.attr('title', 'test2')
-      .attr('version', 1.1)
-      .attr('xmlns', 'http://www.w3.org/2000/svg')
-      .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-    const blob = new Blob([html], { type: 'image/svg+xml' })
-    FileSaver.saveAs(blob, 'sankey_diagram.svg')
-    svg.style('border','2px solid #78c2ad')
-    svg.select('#grid').style('opacity','1')
-  }
-  const clickSavePDF = () => {
-    const svg = window.d3.select(' .opensankey #svg-container svg')
-    svg.selectAll('.sankey-tooltip').remove()
-    svg.selectAll('text[visibility=hidden]').remove()
-    svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-    const html = ((svg.attr('title', 'test2')
-      .attr('version', 1.1)
-      .attr('xmlns', 'http://www.w3.org/2000/svg')
-      .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-    const blob = new Blob([html], { type: 'image/svg+xml' })
-    const form_data = new FormData()
-    form_data.append('svg', blob)
-
-    const path = window.location.href
-    let url = path + 'sankey/save_pdf'
-    const fetchData = {
-      method: 'POST',
-      body: form_data
-    }
-
-    const showFile = (blob: BlobPart) => {
-      const newBlob = new Blob([blob], { type: 'application/pdf' })
-      FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
-    }
-    const cleanFile = () => {
-      const fetchData = {
-        method: 'POST'
-      }
-      url = path + 'sankey/clean_pdf'
-      fetch(url, fetchData)
-    }
-
-    fetch(url, fetchData).then(
-      r => r.blob()
-    )
-      .then(showFile).then(cleanFile)
-  }
-
-  //Réinitialise data et vide les noeud/liens sélectionnés 
-  const reinitialization = () => {
-    const data = default_sankey_data()
-    multi_selected_nodes.current = []
-    multi_selected_links.current = []
-    multi_selected_label.current = []
-    localStorage.removeItem('diff')
-    localStorage.removeItem('data')
-    localStorage.removeItem('initial_data')
-    set_selected_style_node('default')
-    set_selected_style_link('default')
-    set_data({ ...data })
-  }
-  //Switch the variable value that handle opening and closing the configuration menu
-  const toggleShow = () => {
-    set_show_nav(!show_nav)
-    if (button_ref && button_ref.current ) {
-      button_ref.current.click()
-    }
-  }
-  const setChecked = useState(false)[1]
-
-
-  //Add new link and selection it
-  const add_new_link = () => {
-    const { nodes, links } = data
-
-    if (Object.keys(nodes).length < 2) {
-      return
-    }
-    const link: SankeyLink = default_link(data)
-    // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    link.idLink = 'link' + idLink
-    links[link.idLink] = link
-    const node_keys = Object.keys(nodes)
-    link.idSource = nodes[node_keys[0]].idNode
-    link.idTarget = nodes[node_keys[1]].idNode
-    if (link.idSource === link.idTarget) {
-      link.recycling = true
-    }
-
-    nodes[node_keys[0]].outputLinksId.push(link.idLink)
-    nodes[node_keys[1]].inputLinksId.push(link.idLink)
-
-    selected_link.current = link
-    multi_selected_links.current = [link]
-    set_data({ ...data })
-    set_show_link(true)
-  }
-
-  let node = data.nodes[selected_node.current.idNode]
-  if (node === undefined) {
-    node = default_node(data)
-  }
-  //Change the source of selected link
-  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const link = multi_selected_links.current[0]
-    //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-    const previous_node = data.nodes[link.idSource]
-    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-
-    const source_node = data.nodes[changeEvent.target.value]
-    link.idSource = source_node.idNode
-    if (link.idSource === link.idTarget) {
-      link.recycling = true
-    }
-    source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
-
-
-    set_data({ ...data })
-  }
-
-  const addDropSource = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links.current[0].idSource === n.idNode} >{n.name}</option>)
-      )
-    }
-  }
-  const addDropCible = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links.current[0].idTarget === n.idNode} >{n.name}</option>)
-      )
-    }
-  }
-
-  //Change the target of selected link
-  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes } = data
-    const link = multi_selected_links.current[0]
-    const previous_node = nodes[link.idTarget]
-    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-
-    const target_node = nodes[changeEvent.target.value]
-    link.idTarget = target_node.idNode
-    if (link.idSource === link.idTarget) {
-      link.recycling = true
-    }
-
-
-    target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-
-    set_data({ ...data })
-  }
-  const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
-  // const INITIAL_OPTIONS = Object.values(data.nodes).map(d => d.name).sort().map((d) => { return { 'label': d, 'value': d } })
-
-  const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
-  const props = {
-    scroll: true,
-    backdrop: false,
-  }
-
-  //Renvoie le menue déroulant pour la sélection des noeuds
-  const dropdownMultiNode = () => {
-    const DD = (
-      <div id='DD_multi_node'>
-        <MultiSelect
-          valueRenderer={(selected: selected_type[]) => {
-            return selected.length ? selected.map(({ label })=> label + ', ') : 'Aucun noeud sélectionné'
-          }}
-          options={INITIAL_OPTIONS}
-          value={selected}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner',
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
-            multi_selected_nodes.current = m_s
-            Object.values(data.nodes).forEach( n => 
-              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
-            )
-            multi_selected_nodes.current.forEach( n => 
-              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
-            )
-            setForceUpdate(!forceUpdate)          
-          }}
-          labelledBy={'hello'}
-        />
-      </div>)
-    return DD
-  }
-  const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
-  const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
-  //Renvoie le menue déroulant pour la sélection des labels libres
-  const dropdownMultiLabel = () => {
-    const DD = (
-      <div id='DD_multi_label'>
-
-
-        <MultiSelect
-          valueRenderer={(selected: selected_type[]) => {
-            return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
-          }}
-          options={INITIAL_OPTIONS_label}
-          value={selected_label}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner',
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
-            multi_selected_label.current = m_s
-            setForceUpdate(!forceUpdate) 
-          }}
-          labelledBy={'hello'}
-        />
-      </div>)
-    return DD
-  }
-
-
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(data.nodes[l.idSource].display && data.nodes[l.idTarget].display):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
-  const selected_links = multi_selected_links.current.map((d) => {
-    if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
-      return
-    }
-    return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink }
-  })
-  //Renvoie le menue déroulant pour la sélection des flux
-  const dropdownMultiLinks = () => {
-    const DD = (
-      <div id='DD_multi_links'>
-        <MultiSelect
-          valueRenderer={ (selected :selected_type[]) => {
-            return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
-          }}
-          options={INITIAL_OPTIONS_LINKS}
-          value={selected_links}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner',
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
-            multi_selected_links.current = m_s
-            Object.values(data.links).forEach( l => {
-              
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-
-            } 
-            )
-            multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
-              sel.attr('fill-opacity', '1')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-
-              
-            })
-            setForceUpdate(!forceUpdate) 
-          }}
-          labelledBy={'hello'}
-        />
-      </div>)
-    return DD
-  }
-  const menuButton = () => {
-    if (show_nav) {
-      return t('Menu.confSankey')
-    } else {
-      return <FaAngleDoubleLeft />
-    }
-
-  }
-
-
-  //Dépalce la place des liens sélectionnés vers le début dans le tableau de liens de data
-  //Permet donc de les déssiner avant 
-  const handleUpLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
-
-  //Dépalce la place des liens sélectionnés vers la fin dans le tableau de liens de data
-  //Permet donc de les déssiner après 
-  const handleDownLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
-
-
-  //=================FONCTION POUR TEST VALEUR MULTI SELECT LABEL===========================
-  const allLabelHeight = () => {
-    let display_size = true
-    let size = 25
-    if (multi_selected_label.current.length != 0) {
-      size = multi_selected_label.current[0].label_height
-    }
-    multi_selected_label.current.map((d) => {
-      display_size = (d.label_height == size) ? display_size : false
-    })
-    return (display_size) ? size : -1
-  }
-
-  const allLabelWidth = () => {
-    let display_size = true
-    let size = 25
-    if (multi_selected_label.current.length != 0) {
-      size = multi_selected_label.current[0].label_width
-    }
-    multi_selected_label.current.map((d) => {
-      display_size = (d.label_width == size) ? display_size : false
-    })
-    return (display_size) ? size : -1
-  }
-  const allLabelAsHTML = () => {
-    let isHTML = false
-
-    multi_selected_label.current.map((d) => {
-      isHTML = (d.isTextHTML) ? true : isHTML
-    })
-    return isHTML
-  }
-  const allLabelTransparent = () => {
-    let transparent = false
-
-    multi_selected_label.current.map((d) => {
-      transparent = (d.transparent) ? true : transparent
-    })
-    return transparent
-  }
-  const allLabelBorderTransparent = () => {
-    let transparent = false
-
-    multi_selected_label.current.map((d) => {
-      transparent = (d.transparent_border) ? true : transparent
-    })
-    return transparent
-  }
-
-  const allNodeLabelVert = (arg: string, pos: string) => {
-    let all_same = true
-    if (multi_selected_label.current.length > 0) {
-      if (arg == 'vert') {
-        multi_selected_label.current.map(d => all_same = (d.position_vert !== pos) ? false : all_same)
-      } else if (arg == 'horiz') {
-        multi_selected_label.current.map(d => all_same = (d.position_horiz !== pos) ? false : all_same)
-      }
-    } else {
-      all_same = false
-    }
-    return all_same
-  }
-
-
-  const allLabelFontSize = () => {
-    let display_size = true
-    let size = 1
-    if (multi_selected_label.current.length != 0) {
-      size = multi_selected_label.current[0].font_size
-    }
-    multi_selected_label.current.map((d) => {
-      display_size = (d.font_size == size) ? display_size : false
-    })
-    return (display_size) ? size : -1
-  }
-
-  const allLabelTextBold = () => {
-    let bold = false
-
-    multi_selected_label.current.map((d) => {
-      bold = (d.font_weight) ? true : bold
-    })
-    return bold
-  }
-
-  const allLabelTextItalic = () => {
-    let italic = false
-
-    multi_selected_label.current.map((d) => {
-      italic = (d.font_style) ? true : italic
-    })
-    return italic
-  }
-
-  const allLabelTextUpper = () => {
-    let up = false
-
-    multi_selected_label.current.map((d) => {
-      up = (d.font_uppercase) ? true : up
-    })
-    return up
-  }
-
-  const label_libre_align_vert=()=>{
-    multi_selected_label.current.map(d=>{
-      switch(d.position_vert){
-      case 'middle':
-        d.y_label=d.label_height/2
-        break
-      case 'bottom':
-        d.y_label=d.label_height-3
-        break
-      default:
-        d.y_label=d.label_height-3
-        break
-      }
-    })
-  }
-  const label_libre_align_horiz=()=>{
-    multi_selected_label.current.map(d=>{
-      switch(d.position_horiz){
-      case 'middle':
-        d.x_label=d.label_width/2
-        break
-      case 'right':
-        d.x_label=d.label_width-3
-        break
-      default:
-        d.x_label=d.label_width-3
-        break
-      }
-    })
-  }
-
-
-  //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
-  //Permet donc de les déssiner après 
-  const handleUplabel = (i: string) => {
-    const { labels } = data
-    const listElmt = Object.keys(labels)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: SankeyLabel } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = labels[elt]
-    })
-    for (const member in labels) delete labels[member]
-    Object.assign(labels, new_cat)
-    set_data({ ...data })
-  }
-
-
-  //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de liens de data
-  //Permet donc de les déssiner après 
-  const handleDownlabel = (i: string) => {
-    const { labels } = data
-    const listElmt = Object.keys(labels)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: SankeyLabel } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = labels[elt]
-    })
-    for (const member in labels) delete labels[member]
-    Object.assign(labels, new_cat)
-    set_data({ ...data })
-  }
-
-  const preferenceCheck = (str: string) => {
-    if (!data.accordeonToShow.includes(str)) {
-      data.accordeonToShow.push(str)
-    } else {
-      const posElemt = data.accordeonToShow.indexOf(str)
-      data.accordeonToShow.splice(posElemt, 1)
-    }
-
-  }
-  const modalPreference = (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
-    <Modal.Header closeButton>
-      <Modal.Title>Édition Préferences</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      <Form.Group as={Row}>
-        {/* <Col xs={1}>
-          <Form.Label  style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
-        </Col> */}
-        <Col xs={2}>
-          <Form.Check
-            inline
-            style={{marginTop:'0.5em',marginLeft:'0.em'}}
-            type='switch'
-            checked={i18n.language=='en'}
-            onChange={evt => {
-              i18n.changeLanguage((evt.target.checked)?'en':'fr')
-            }}
-          />
-        </Col>
-      </Form.Group>
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
-
-      <Form.Group as={Row}>
-        <Col xs={6}>Charger une police d'icones</Col>
-        <Col xs={6}><FormControl
-          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
-          type='file'
-          onChange={(evt: ChangeEvent) => {
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                const result = String((e.target as FileReader).result)
-                const js = JSON.parse(result)
-                type name_type = {name:string}   
-                type icon_type = {paths:string[]}   
-                type type1 = {
-                  properties: name_type
-                  icon: icon_type
-                }
-                js.icons.map((d : type1) => {
-                  const name = d.properties.name as string
-                  data.icon_catalog[name] = d.icon.paths[0]
-                })
-              }
-            })()
-            reader.readAsText(files[0])
-            set_data(data)
-          }}
-        >
-        </FormControl>
-        </Col>
-      </Form.Group>
-
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
-      <ButtonGroup>
-        <Button variant={(data.static_sankey)?'success':'outline-success'}
-          onClick={() => {
-            data.accordeonToShow = ['Vis','Leg']
-            set_mode_selection('s')
-            data.static_sankey = true
-            set_data({ ...data })
-
-          }}
-        >Visualisation</Button>
-        <Button variant={(data.static_sankey)?'outline-warning':'warning'}
-          onClick={() => {
-            data.static_sankey = false
-            set_data({ ...data })
-          }}
-        >Construction</Button>
-      </ButtonGroup>
-
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
-      
-      <ButtonGroup>
-        <Button variant='info'
-          disabled={data.static_sankey}
-          onClick={() => {
-            data.accordeonToShow = ['MEP']
-            set_data({ ...data })
-
-          }}
-        >Simple</Button>
-        <Button variant='dark'
-          disabled={data.static_sankey}
-          onClick={() => {
-            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
-            set_data({ ...data })
-          }}
-        >Expert</Button>
-      </ButtonGroup>
-      <Form>
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
-          preferenceCheck('MEP')
-          set_data({ ...data })
-        }} />
-        <Form.Check checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.Noeuds')} />
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
-          preferenceCheck('EN')
-          set_data({ ...data })
-        }} />
-        <Form.Check checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.flux')} />
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
-          preferenceCheck('EF')
-          set_data({ ...data })
-        }} />
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
-          preferenceCheck('ED')
-          set_data({ ...data })
-        }} />
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
-          preferenceCheck('LL')
-          set_data({ ...data })
-        }} />
-        {/* <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
-          preferenceCheck('Vis')
-          set_data({ ...data })
-        }} /> */}
-        <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
-          preferenceCheck('Leg')
-          set_data({ ...data })
-        }} />
-
-      </Form>
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
-      <FormGroup as={Row}>
-        <Col xs={5}>
-          <FormLabel >{t('Menu.BgC')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.couleur_fond_sankey=evt.target.value
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dns')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_node_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dls')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_link_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
-    </Modal.Body>
-    <Modal.Footer>
-      <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
-        Close
-      </Button>
-    </Modal.Footer>
-  </Modal>)
-
-  //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const [showStyle, setShowStyle] = useState(false)
-  const showStyleEdition = () => {
-    setShowStyle(true)
-  }
-  const closeStyleEdition = () => {
-    setShowStyle(false)
-  }
-  const applyStyleToNodes = () => {
-    const style = data.style_node[selected_style_node]
-    Object.values(data.nodes).filter(d => d.style != '' && d.style == selected_style_node).map(d => {
-      //Style Noeud
-      d.shape_visible = style.shape_visible
-      d.color = style.color
-      d.shape = style.shape
-
-
-      d.node_width = style.node_width
-      d.node_height = style.node_height
-
-      //Syle label
-      d.label_visible = style.label_visible
-      d.show_value = style.show_value
-      d.display_style.font_size = style.display_style.font_size
-      d.display_style.bold = style.display_style.bold
-      d.display_style.uppercase = style.display_style.uppercase
-      d.display_style.italic = style.display_style.italic
-      d.display_style.label_box_width = style.display_style.label_box_width
-      d.display_style.label_vert = style.display_style.label_vert
-      d.display_style.label_horiz = style.display_style.label_horiz
-      d.display_style.font_family = style.display_style.font_family
-
-    })
-
-    set_data({ ...data })
-
-  }
-  // Function to cut the name of the style to prevent some button to be too big
-  const cut_name = (t: string, n: number) => {
-    return (t.length > n) ? t.slice(0, n) + '...' : t
-  }
-
-  const [selected_style_node, set_selected_style_node] = useState('default')
-
-  const modalStyleNode = (
-    <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
-      <Modal.Header closeButton>
-        <Modal.Title>Édition Style</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-
-        <Row >
-          <Col xs={1}>
-            <Button size="sm" onClick={() => {
-              const new_style = default_node(data)
-              new_style.name = 'New Style'
-              const new_id = 'style_node_' + String(new Date().getTime())
-              data.style_node[new_id] = new_style
-              set_data({ ...data })
-
-            }}><FaPlus /></Button>
-          </Col>
-
-          <Col xs={5}>
-            <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
-
-              <Dropdown.Menu>
-                {Object.keys(data.style_node).map((d,i) => {
-                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
-
-                })}
-
-
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
-
-          <Col xs={1}>
-            <Button
-              size="sm"
-              variant='danger'
-              disabled={selected_style_node == 'default'}
-              onClick={
-                () => {
-                  delete data.style_node[selected_style_node]
-                  set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
-                }
-              }
-            ><FaMinus /></Button>
-
-          </Col>
-
-          <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToNodes}>{t('Noeud.apparence.asn')}</Button>
-          </Col>
-        </Row>
-
-        <Form.Group as={Row} >
-          <Col xs={2} >
-            <FormLabel >{t('Menu.ns')}</FormLabel>
-          </Col>
-          <Col xs={10} >
-
-            <FormControl
-              value={
-                (selected_style_node != '') ? data.style_node[selected_style_node].name : ''
-              }
-
-              onChange={evt => {
-                data.style_node[selected_style_node].name = evt.target.value
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-
-        </Form.Group>
-
-
-        <Col md={12}>
-          <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
-              <Form >
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
-                  </Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape_visible : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape_visible = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.Couleur')}</FormLabel>
-                  </Col>
-                  <Col xs={3}>
-                    <Form.Control
-                      type='color'
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].color : '#ffffff'
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].color = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel>{t('Noeud.apparence.Forme')}</FormLabel>
-                  </Col>
-                  <Col xs={2}>
-                    <FormCheck
-                      value="ellipse"
-                      type='radio'
-                      label={t('Noeud.apparence.Cercle')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                  <Col xs={2}>
-                    <FormCheck
-                      value="rect"
-                      type='radio'
-                      label={t('Noeud.apparence.Rectangle')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-              </Form>
-              <Form >
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      min={0} max={100}
-                      type={'number'}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].node_width : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].node_width = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      min={0} max={100}
-                      type={'number'}
-
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].node_height : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].node_height = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-
-
-              </Form>
-            </Tab>
-
-            <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
-              <Form>
-
-                <Row>
-                  <Col xs={6}>{t('Flux.pdl')}</Col>
-                  <Col xs={6}><Form.Select
-                    onChange={
-                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                        data.style_node[selected_style_node].display_style.font_family = evt.target.value
-                        set_data({ ...data })
-                      }
-                    }
-                  >
-                    {data.display_style.font_family.map((d) => {
-                      return <option
-                        key={'ff-' + d}
-                        value={d}
-                        selected={d == data.style_node[selected_style_node].display_style.font_family}
-                      >{d}</option>
-
-                    })}
-                  </Form.Select></Col>
-                </Row>
-
-                <Form.Group as={Row} >
-                  <Col xs={4}>{t('Noeud.apparence.Visibilité')}</Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].label_visible : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].label_visible = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.vdv')}</FormLabel>
-                  </Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].show_value : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].show_value = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      min={11} max={20}
-                      type={'number'}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.font_size : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.font_size = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel >{t('Noeud.labels.police')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.gras')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.bold : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.bold = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.maj')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.uppercase : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.uppercase = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.ita')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.italic : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.italic = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel>{t('Noeud.labels.cl')}</FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      type={'number'}
-                      placeholder={'110'}
-                      min={0}
-                      max={500}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_box_width : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.label_box_width = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.pv')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.haut')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'top' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'top'
-                        set_data({ ...data })
-                      }}
-
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'middle' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'middle'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Bas')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bottom' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'bottom'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.ph')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.gauche')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'left' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'left'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'middle' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'middle'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.droite')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'right' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'right'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-              </Form>
-            </Tab>
-          </Tabs>
-        </Col>
-        <Row>Noeuds affectés au style :{Object.values(data.nodes).filter(d => d.style == selected_style_node).map(d => d.name).join('/')}</Row>
-
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={closeStyleEdition}>Close</Button>
-      </Modal.Footer>
-    </Modal>)
-
-  const apply_style_to_nodes = () => {
-    const style = data.style_node[style_to_apply]
-    multi_selected_nodes.current.map(d => {
-      //Style Noeud
-      d.shape_visible = style.shape_visible
-      d.color = style.color
-      d.shape = style.shape
-      d.node_width = style.node_width
-      d.node_height = style.node_height
-
-      //Syle label
-      d.label_visible = style.label_visible
-      d.show_value = style.show_value
-      d.display_style.font_size = style.display_style.font_size
-      d.display_style.bold = style.display_style.bold
-      d.display_style.uppercase = style.display_style.uppercase
-      d.display_style.italic = style.display_style.italic
-      d.display_style.label_box_width = style.display_style.label_box_width
-      d.display_style.label_vert = style.display_style.label_vert
-      d.display_style.label_horiz = style.display_style.label_horiz
-      d.display_style.font_family = style.display_style.font_family
-
-
-    })
-    set_data({ ...data })
-
-
-  }
-
-  const style_of_selected_nodes = () => {
-    let style_to_display = 'Aucun'
-    if (multi_selected_nodes.current.length != 0) {
-      style_to_display = multi_selected_nodes.current[0].style
-      let inchangee = true
-      multi_selected_nodes.current.map(d => {
-        inchangee = (d.style == style_to_display) ? inchangee : false
-      })
-      if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 20) : 'Multiple style parmi les noeuds sélectionnés'
-
-      } else {
-        return 'Aucun'
-      }
-    } else {
-      return style_to_display
-    }
-  }
-
-
-
-  //Modal et fonctions pour l'edition et affectation des style de flux
-  const [showStyleLink, setShowStyleLink] = useState(false)
-  const showStyleEditionLink = () => {
-    setShowStyleLink(true)
-  }
-  const closeStyleEditionLink = () => {
-    setShowStyleLink(false)
-  }
-  const applyStyleToLinks = () => {
-    const style = data.style_link[selected_style_link]
-    Object.values(data.links).filter(d => d.style != '' && d.style == selected_style_link).map(d => {
-      d.recycling = style.recycling
-      d.orientation = style.orientation
-      d.arrow = style.arrow
-
-      // display_attribute
-      d.label_position = style.label_position
-      d.orthogonal_label_position = style.orthogonal_label_position
-      d.label_on_path = style.label_on_path
-      d.label_visible = style.label_visible
-      d.text_color = style.text_color
-      d.color = style.color
-
-      d.gradient = style.gradient
-
-      d.curvature = style.curvature
-      d.curved = style.curved
-    })
-
-    set_data({ ...data })
-
-  }
-  const apply_style_to_selected_links = () => {
-    const style = data.style_link[style_to_apply_to_link]
-
-    multi_selected_links.current.map(d => {
-
-      // type of link
-      d.recycling = style.recycling
-      d.orientation = style.orientation
-      d.arrow = style.arrow
-
-      // display_attribute
-      d.label_position = style.label_position
-      d.orthogonal_label_position = style.orthogonal_label_position
-      d.label_on_path = style.label_on_path
-      d.label_visible = style.label_visible
-      d.text_color = style.text_color
-      d.color = style.color
-
-      d.gradient = style.gradient
-
-      d.curvature = style.curvature
-      d.curved = style.curved
-    })
-  }
-  const [selected_style_link, set_selected_style_link] = useState('default')
-  const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
 
   if (not_started == false && processing == false) {
     const path = window.location.href
@@ -1713,441 +426,35 @@ const Menu: FunctionComponent<MenuTypes> = (
     setProcessing(false)
     setFailure(false)
     setNotStarted(true)
-  }     
+  }  
+  
+  //Switch the variable value that handle opening and closing the configuration menu
+  const toggleShow = () => {
+    set_show_nav(!show_nav)
+    if (button_ref && button_ref.current ) {
+      button_ref.current.click()
+    }
+  }
+  const setChecked = useState(false)[1]
 
-  const modalStyleLink = (
-    <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
-      <Modal.Header closeButton>
-        <Modal.Title>Édition Style</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
+  let node = data.nodes[selected_node.current.idNode]
+  if (node === undefined) {
+    node = default_node(data)
+  }
+  
+  const props = {
+    scroll: true,
+    backdrop: false,
+  }
 
-        <Row >
-          <Col xs={1}>
-            <Button size="sm" onClick={() => {
-              const new_style = default_link(data)
-              new_style.idLink = 'New Style'
-              const new_id = 'style_link_' + String(new Date().getTime())
-              data.style_link[new_id] = new_style
-              set_data({ ...data })
+  const menuButton = () => {
+    if (show_nav) {
+      return t('Menu.confSankey')
+    } else {
+      return <FaAngleDoubleLeft />
+    }
 
-            }}><FaPlus /></Button>
-          </Col>
-
-          <Col xs={5}>
-            <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
-
-              <Dropdown.Menu>
-                {Object.keys(data.style_link).map((d,i) => {
-
-                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
-
-                })}
-
-
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
-
-          <Col xs={1}>
-            <Button
-              size="sm"
-              variant='danger'
-              disabled={selected_style_link == 'default'}
-              onClick={
-                () => {
-                  delete data.style_link[selected_style_link]
-                  set_selected_style_link((Object.keys(data.style_link).length > 0) ? Object.keys(data.style_link)[0] : '')
-                }
-              }
-            ><FaMinus /></Button>
-
-          </Col>
-
-          <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
-          </Col>
-        </Row>
-
-        <Form.Group as={Row} >
-          <Col xs={2} >
-            <FormLabel >{t('Menu.ns')}</FormLabel>
-          </Col>
-          <Col xs={10} >
-
-            <FormControl
-              value={
-                (selected_style_link != '') ? data.style_link[selected_style_link].idLink : ''
-              }
-
-              onChange={evt => {
-                data.style_link[selected_style_link].idLink = evt.target.value
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-
-        </Form.Group>
-
-
-        <Row>
-          <Col md={12}>
-            <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
-              <Tab eventKey="flux_attributes" title={t('Noeud.apparence.apparence')}>
-                <Form >
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Noeud.apparence.Visibilité')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <Form.Control
-                        type="color"
-                        value={data.style_link[selected_style_link].color}
-                        onChange={
-                          evt => {
-                            // selected_link.current.color = evt.target.value
-                            const color = evt.target.value
-                            data.style_link[selected_style_link].color = color
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <Form.Check
-                        inline
-                        type="checkbox"
-                        checked={data.style_link[selected_style_link].gradient}
-                        onChange={
-                          evt => {
-                            // selected_link.current.color = evt.target.value
-                            data.style_link[selected_style_link].gradient = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-
-
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.courbe')}
-                        checked={data.style_link[selected_style_link].curved}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].curved = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.fleche')}
-                        checked={data.style_link[selected_style_link].arrow}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].arrow = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.recy')}
-                        checked={(data.style_link[selected_style_link].recycling) ? true : false}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].recycling = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
-                    </Col>
-
-                    <Col>
-                      <FormControl
-
-                        min={0} max={1} step={0.01}
-                        type={'number'}
-                        value={data.style_link[selected_style_link].curvature}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].curvature = +evt.target.value
-
-                            set_data({ ...data })
-                          }
-                        } />
-                    </Col>
-                    <Col sm={2}>{selected_link.current.curvature}</Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <Col sm={12}>
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Horiz-Horiz'
-                        value='hh'
-                        checked={data.style_link[selected_style_link].orientation == 'hh'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'hh'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Vert-Vert'
-                        value='vv'
-                        checked={data.style_link[selected_style_link].orientation == 'vv'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation == 'vv'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Vert-Horiz'
-                        value='vh'
-                        checked={data.style_link[selected_style_link].orientation == 'vh'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'vh'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Horiz-Vert'
-                        value='hv'
-                        checked={data.style_link[selected_style_link].orientation == 'hv'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'hv'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-                </Form>
-              </Tab>
-              <Tab eventKey="label" title={t('Flux.label.label')}>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormCheck
-                      value='black'
-                      type='radio'
-                      label={t('Flux.label.len')}
-                      checked={data.style_link[selected_style_link].text_color == 'black'}
-                      onChange={
-                        () => {
-                          data.style_link[selected_style_link].text_color = 'black'
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      value='white'
-                      type='radio'
-                      label={t('Flux.label.lb')}
-                      checked={data.style_link[selected_style_link].text_color == 'white'}
-                      onChange={
-                        (evt) => {
-                          data.style_link[selected_style_link].text_color = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      value='same_color'
-                      type='radio'
-                      label={t('Flux.label.lec')}
-                      checked={data.style_link[selected_style_link].text_color == 'color'}
-                      onChange={
-                        () => {
-                          data.style_link[selected_style_link].text_color = data.style_link[selected_style_link].color
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group >
-                  <FormCheck
-                    type='checkbox'
-                    label='Visibilité du label'
-                    checked={data.style_link[selected_style_link].label_visible}
-                    onChange={
-                      evt => {
-                        data.style_link[selected_style_link].label_visible = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel>{t('Flux.label.pl')}:</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='beginning'
-                      type='radio'
-                      label={t('Flux.label.deb')}
-                      checked={data.style_link[selected_style_link].label_position == 'beginning'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='middle'
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={data.style_link[selected_style_link].label_position == 'middle'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='end'
-                      type='radio'
-                      label={t('Flux.label.fin')}
-                      checked={data.style_link[selected_style_link].label_position == 'end'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group>
-                  <FormCheck
-                    type='checkbox'
-                    label={t('Flux.label.acf')}
-                    disabled={selected_link.current.label_position === 'frozen'}
-                    checked={data.style_link[selected_style_link].label_on_path}
-                    onChange={
-                      evt => {
-                        data.style_link[selected_style_link].label_on_path = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel>{t('Flux.label.po')}:</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='below'
-                      type='radio'
-                      label={t('Flux.label.dessous')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'below'}
-
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='middle'
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'middle'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='above'
-                      type='radio'
-                      label={t('Flux.label.dessus')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'above'}
-
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-              </Tab>
-            </Tabs>
-          </Col>
-        </Row>
-        <Row>Noeuds affectés au style :{Object.values(data.links).filter(d => d.style == selected_style_link).map(d => d.idSource + '-->' + d.idTarget).join('/')}</Row>
-
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={closeStyleEditionLink}>Close</Button>
-      </Modal.Footer>
-    </Modal>)
-
-  const [show_publish_dialog,set_show_publish_dialog] = useState(false)
+  }
 
   const publishImpl = (file_path:string) =>{
     // const form_data = new FormData()
@@ -2173,29 +480,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_publish_dialog(false)
   }
 
-
-  //Change le style des flux sélectionnés
-  const style_of_selected_links = () => {
-    let style_to_display = 'Aucun'
-    if (multi_selected_links.current.length != 0) {
-      style_to_display = multi_selected_links.current[0].style
-      let inchangee = true
-      multi_selected_links.current.map(d => {
-        inchangee = (d.style == style_to_display) ? inchangee : false
-      })
-      if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
-
-      } else {
-        return 'Aucun'
-      }
-    } else {
-      return style_to_display
-    }
-  }
-
   //Modal for shortcut
-  const [showShortcut, setshowShortcut] = useState(false)
   const modalShortcut = (
     <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
       <Modal.Header closeButton>
@@ -2223,10 +508,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal>
 
   )
-
-
-
-  const [showHelp, setshowHelp] = useState(false)
   // Modal designed to show additional help
   const modalHelp = (
     <Modal size={'lg'} show={showHelp} onHide={() => setshowHelp(false)}>
@@ -2241,10 +522,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Button>
       </Modal.Footer>
     </Modal>
-
   )
-
-
 
   return (
     <>
@@ -2252,11 +530,32 @@ const Menu: FunctionComponent<MenuTypes> = (
       
       } 
       { !data.static_sankey ? (
-        modalStyleNode
+        <ModalStyleNode
+          data={data}
+          set_data={set_data}
+          showStyle={showStyleNode}
+          setShowStyle={setShowStyleNode}
+          selected_style_node={selected_style_node}
+          set_selected_style_node={set_selected_style_node}
+        />
       ): (<></>)}
-      {modalPreference}
+      { <ModalPreference
+        data={data}
+        set_data={set_data}
+        showPreference={showPreference}
+        setShowPreference={setShowPreference}
+        set_mode_selection={set_mode_selection}
+      />}
       { !data.static_sankey ? (
-        modalStyleLink
+        <ModalStyleLink
+          data={data}
+          set_data={set_data}
+          showStyleLink={showStyleLink}
+          setShowStyleLink={setShowStyleLink}
+          selected_style_link={selected_style_link}
+          set_selected_style_link={set_selected_style_link}
+          selected_link={selected_link}
+        />
       ): (<></>)}
       { !data.static_sankey ? (
         modalShortcut
@@ -2270,90 +569,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
-              <NavDropdown  title={t('Menu.Fichiers')} id="files" >
-                <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
-                  <Dropdown.Item 
-                    onClick={() => {
-                      if (_load_json.current) {
-                        _load_json.current.name = ''
-                        _load_json.current.click()
-                      }
-                    }} >JSON</Dropdown.Item>
-                  <Form.Control
-                    type="file"
-                    ref={_load_json}
-                    style={{ display: 'none' }}
-                    onChange={(evt: ChangeEvent) => {
-                      const files = (evt.target as HTMLFormElement).files
-                      const reader = new FileReader()
-                      reader.onload = (() => {
-                        return (e: ProgressEvent<FileReader>) => {
-                          let result = String((e.target as FileReader).result)
-                          const new_data = default_sankey_data()
-                          result = result.split('<br>').join('\\\\n')
-                          const result_data = JSON.parse(result)
-                          Object.assign(new_data, result_data)
-                          if (result_data.version === undefined) {
-                            (new_data.version as unknown as undefined) = undefined
-                          }
-                          convert_data(new_data)
-                          set_nodes_level(data)
-                          set_data(new_data)
-                          const test = document.getElementsByClassName('navbar')
-                          let margin_top = 0
-                          if (test && test.length > 0) {
-                            margin_top = test[0].getBoundingClientRect().height
-                            d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-                          }
-                        }
-                      })()
-                      reader.readAsText(files[0])
-                    }}
-                  />
-                  <Dropdown.Item
-                    onClick={() => set_show_excel_dialog(true)}
-                  >Excel</Dropdown.Item>
-                  {open_menu}
-                </NavDropdown>
-                <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
-                  <Dropdown.Item onClick={()=>{
-                    set_show_save_json(true)
-                  }} >JSON</Dropdown.Item>
-                  <Dropdown.Item onClick={clickSaveExcelSimple} >Excel Simple</Dropdown.Item>
-                  <Dropdown.Item onClick={clickSaveExcel} >Excel</Dropdown.Item>
-                  {save_menu}
-                </NavDropdown>
-                <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
-                  <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-                  <Dropdown.Item onClick={clickSavePDF} >{t('Menu.exporter')} PDF</Dropdown.Item>
-                </NavDropdown>
-                <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
-              </NavDropdown>
-              <NavDropdown id='edition' title={t('Menu.Edition')} >
-                <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
-                <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>    
-                <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
-                <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
-              </NavDropdown >
-              {edition_menu}
-              { formations_menu ? (
-                <NavDropdown title={t('Menu.Formations')} id="formation" >
-                  {formations_menu}
-                </NavDropdown > ) :(<></>)
-              }
-              <NavDropdown title={t('Menu.Exemples')} id="exemples" >
-                {example_menu}
-              </NavDropdown >
-              {/* <NavDropdown title="Portfolio" id="portfolio" >
-                {portfolio_menu}
-              </NavDropdown > */}
-
-              <NavDropdown id='Aide' title={t('Menu.Aide')} >
-                <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
-                <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-              </NavDropdown >           
-
+              {menus}
               {!data.static_sankey ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
@@ -2419,1180 +635,33 @@ const Menu: FunctionComponent<MenuTypes> = (
           </ButtonGroup>
         </FormGroup>
       </Row>{/* {set_data({ ...data })} */}</>}
-      {(show_nav && !data.static_sankey) ? <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
-        <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
-          <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
-            {//MENU AIDE 
-            }
-
-            <Accordion.Item
-              id='MEP'
-              style={{ 'display': (show_menu && data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
-              eventKey="1"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '1') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('1')
-                  }
-                }
-              }>
-              {
-                //MENU PARAMETRE GENERAUX
-              }
-              <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
-              <Accordion.Body>
-                {settings_edition}
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (show_menu) ? 'block' : 'none' }}
-              eventKey="2"
-              id="Nodes"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && nav_item_active === '2') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('2')
-                  }
-                }
-              }
-            >
-
-              <Accordion.Header>{t('Menu.Noeuds')}</Accordion.Header>
-              <Accordion.Body style={{ padding: '0px' }}>
-
-                <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
-                  <Accordion.Item
-                    style={{ 'display': (show_menu && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
-                    eventKey="EtiquetteNoeud"
-                    onClick={
-                      evt => {
-                        if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                          set_sub_nav_item_active('')
-                          set_nav_item_active('2')
-                          set_show_nav(true)
-                        } else {
-                          set_sub_nav_item_active('EtiquetteNoeud')
-                          set_nav_item_active('2')
-                          set_show_nav(true)
-
-                        }
-                      }
-                    }
-                  >
-                    <Accordion.Header style={{ marginLeft: '25px'/*,padding:'10px' */ }} >
-                      {t('Menu.EN')}
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      {settings_edition_node_tags}
-                    </Accordion.Body>
-                  </Accordion.Item>
-
-                  <Accordion.Item eventKey='editionNoeud'
-                    onClick={
-                      evt => {
-                        if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                          set_sub_nav_item_active('')
-                          set_nav_item_active('2')
-                          set_show_nav(true)
-                        } else {
-                          set_sub_nav_item_active('editionNoeud')
-                          set_nav_item_active('2')
-                          set_show_nav(true)
-
-                        }
-                      }
-                    }
-                  >
-                    <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
-                    <Accordion.Body>
-                      <Row >
-                        <Col xs={1}>
-                          <Button size="sm" onClick={() => {
-                            set_style_to_apply('default')
-
-                            add_new_node()
-
-                          }}><FaPlus /></Button>
-                        </Col>
-
-                        <Col xs={10}>
-                          {dropdownMultiNode()}
-                        </Col>
-
-                        <Col xs={1}>
-                          <Button
-                            size="sm"
-                            variant='danger'
-                            disabled={multi_selected_nodes.current.length == 0}
-                            onClick={
-                              () => {
-                                //Boutton pour supprimer le noeud selectionné
-                                multi_selected_nodes.current.map(d => delete_node(data, d))
-                                selected_node.current = default_node(data)
-                                multi_selected_nodes.current = []
-                                // Object.values(data.nodes).forEach( n => 
-                                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
-                                // )
-                                // setForceUpdate(!forceUpdate)
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaMinus /></Button>
-
-                        </Col>
-                      </Row>
-
-                      <Row >
-                        <Col xs={1}>
-                          <FormLabel>Style:</FormLabel>
-                        </Col>
-
-                        <Col xs={6}>
-                          <Dropdown>
-                            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
-
-                            <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => {
-                                set_style_to_apply('')
-                                multi_selected_nodes.current.map(n => {
-                                  n.style = ''
-                                })
-                                set_data({ ...data })
-                              }}>{'Aucun'}</Dropdown.Item>
-                              {Object.keys(data.style_node).map((d,i) => {
-                                return (<Dropdown.Item 
-                                  key={i}
-                                  onClick={() => {
-                                    set_style_to_apply(d)
-                                    multi_selected_nodes.current.map(n => {
-                                      n.style = d
-                                    })
-                                    set_data({ ...data })
-                                  }}
-                                >{data.style_node[d].name}</Dropdown.Item>)
-
-                              })}
-
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
-
-                        <Col xs={5}>
-                          <Button
-                            size="sm"
-                            variant='info'
-
-                            onClick={
-                              () => {
-                                apply_style_to_nodes()
-                              }
-                            }
-                          >{t('Flux.as')}</Button>
-
-                        </Col>
-                      </Row>
-
-
-                      <Form.Group as={Row} >
-                        <Col xs={1} >
-                          <FormLabel >Nom</FormLabel>
-                        </Col>
-                        <Col xs={10} >
-
-                          <FormControl
-                            value={
-                              (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
-                            }
-
-                            onChange={evt => {
-                              if (multi_selected_nodes.current.length != 1) {
-                                return
-                              }
-                              multi_selected_nodes.current[0].name = evt.target.value
-                              const d = multi_selected_nodes.current[0]
-                              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)            
-                              const wrap = textwrap()
-                                .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
-                                .method('tspans')
-                              d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-                                .call(wrap)
-                              if (!d.x_label || data.show_structure === 'structure') {
-                                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-                      
-                                  if (d.display_style.label_horiz == 'middle') {
-                                    return width / 2
-                                  } else if (d.display_style.label_horiz == 'right') {
-                                    return d.display_style.label_vert == 'middle' ? width : 0
-                                  } else {
-                                    return 0
-                                  }
-                                })
-                              }
-                      
-                              d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                                const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-                                if (d.x_label) {
-                                  return d.x_label
-                                } else if (d.display_style.label_horiz == 'middle') {
-                                  return width / 2
-                                } else if (d.display_style.label_horiz == 'right') {
-                                  return width
-                                } else {
-                                  return 0
-                                }
-                              })
-                              setForceUpdate(!forceUpdate)
-                            }}
-                            disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
-                        </Col>
-                        <Col xs={3}>
-                        </Col>
-                      </Form.Group>
-
-                      <SankeyNodeEdition
-                        data={data}
-                        set_data={set_data}
-                        radio_selected={radio_selected}
-                        multi_selected_nodes={multi_selected_nodes}
-                        multi_selected_links={multi_selected_links}
-                      >{node_edition}</SankeyNodeEdition>
-                    </Accordion.Body>
-                  </Accordion.Item>
-                </Accordion>
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              style={{ 'display': (show_menu) ? 'block' : 'none' }}
-              id='Flux'
-              eventKey="3"
-              onClick={evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '3') {
-                  set_nav_item_active('')
-                } else {
-                  set_nav_item_active('3')
-                }
-              }}
-            >
-              <Accordion.Header >{t('Menu.flux')}</Accordion.Header>
-              <Accordion.Body  style={{ padding: '0px' }}>
-
-                <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
-                  <Accordion.Item
-                    eventKey="8"
-                    style={{ 'display': (show_menu && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
-                    onClick={evt => {
-                      if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                        set_sub_nav_item_active('')
-                        set_nav_item_active('3')
-                        set_show_nav(true)
-                      } else {
-                        set_sub_nav_item_active('8')
-                        set_nav_item_active('3')
-                        set_show_nav(true)
-                      }
-                    }}
-                  >
-                    <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
-                    <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
-                  </Accordion.Item>
-
-
-                  <Accordion.Item  
-                    eventKey='editionFlux'
-                    onClick={
-                      evt => {
-                        if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                          set_sub_nav_item_active('')
-                          set_nav_item_active('3')
-                          set_show_nav(true)
-                        } else {
-                          set_sub_nav_item_active('editionFlux')
-                          set_nav_item_active('3')
-                          set_show_nav(true)
-
-                        }
-                      }
-                    }>
-                    <Accordion.Header className='level2'>Edition Flux</Accordion.Header>
-                    <Accordion.Body>
-                      <Form.Group>
-                        <FormLabel style={{ justifyContent: 'center' }} ><b>Paramétres généraux</b></FormLabel>
-                        <Row>
-                          <Col xs={6}>{t('Flux.pdl')}</Col>
-                          <Col xs={6}><Form.Select
-                            onChange={
-                              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                                data.display_style.link_font_family_selected = evt.target.value
-                                set_data({ ...data })
-                              }
-                            }
-                          >
-                            {data.display_style.font_family.map((d) => {
-                              return <option
-                                key={'ff-' + d}
-                                value={d}
-                                selected={d == data.display_style.link_font_family_selected}
-                              >{d}</option>
-
-                            })}
-                          </Form.Select></Col>
-                        </Row>
-                      </Form.Group>
-                      <Row>
-                        <Col xs={1}>
-
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={
-                              () => {
-                                add_new_link()
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaPlus /></Button>
-
-                        </Col>
-                        <Col xs={10}>
-                          {dropdownMultiLinks()}
-                        </Col>
-
-                        <Col xs={1}>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={
-                              () => {
-                                multi_selected_links.current.forEach(l => delete_link(data, l))
-                                multi_selected_links.current = []
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaMinus /></Button>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col>
-                          <FormLabel>{t('Flux.src')}</FormLabel>
-                        </Col>
-                        <Col>
-                          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
-                            {addDropSource()}
-                          </Form.Select>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col>
-                          <FormLabel>{t('Flux.trgt')}</FormLabel>
-                        </Col>
-                        <Col>
-                          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
-                            {addDropCible()}
-                          </Form.Select>
-                        </Col>
-                      </Row>
-                      
-                      <Row>
-                        <Col>
-                          <FormLabel>{t('Flux.if')}</FormLabel>
-                        </Col>
-                        <Col >
-                          <Button variant='info'
-                            onClick={() => {
-                              const nodes_to_reorganize: SankeyNode[] = []
-                              multi_selected_links.current.forEach(l => {
-                                const tmp = l.idSource
-
-                                const previous_node_s = data.nodes[l.idSource]
-                                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                                const source_node = data.nodes[l.idTarget]
-                                l.idSource = source_node.idNode
-                                source_node.outputLinksId.push(l.idLink)
-                                nodes_to_reorganize.push(source_node)
-
-                                const previous_node_t = data.nodes[l.idTarget]
-                                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                                const target_node = data.nodes[tmp]
-                                l.idTarget = target_node.idNode
-                                target_node.inputLinksId.push(l.idLink)
-                                nodes_to_reorganize.push(target_node)
-                              })
-                              nodes_to_reorganize.forEach(n => {
-                                reorganize_inputLinksId(n, true, true, data.nodes, data.links)
-                              })
-                              set_data({ ...data })
-                            }}><FaArrowsAltH /></Button>
-                        </Col>
-                      </Row>
-
-                      <Row>
-                        <Col>
-                          <FormLabel>{t('Flux.dzf')}</FormLabel>
-                        </Col>
-                        <Col >
-                          {//Boutton pour monter le lien sélctionné
-                          }
-                          <ButtonGroup>
-                            <Button variant='info' disabled={multi_selected_links.current.length != 1}
-                              onClick={() => {
-                                multi_selected_links.current.map(l => {
-                                  handleDownLink(l.idLink)
-                                })
-
-
-                              }}><FaAngleUp /></Button>
-
-                            <Button variant='info' disabled={multi_selected_links.current.length != 1}
-                              onClick={() => {
-                                multi_selected_links.current.map(l => {
-                                  const i = l.idLink
-                                  const { links } = data
-                                  const listElmt = Object.keys(links)
-                                  const posElemt = listElmt.indexOf(i)
-                                  listElmt.splice(posElemt, 1)
-                                  listElmt.splice(listElmt.length, 0, i)
-                                  const new_cat: { [key: string]: SankeyLink } = {}
-                                  listElmt.forEach(elt => {
-                                    new_cat[elt] = links[elt]
-                                  })
-                                  for (const member in links) delete links[member]
-                                  Object.assign(links, new_cat)
-
-                                })
-                                set_data({ ...data })
-
-
-                              }}><FaAngleDoubleUp /></Button>
-
-
-                            <Button variant='warning' disabled={multi_selected_links.current.length != 1}
-                              onClick={() => {
-                                multi_selected_links.current.map(l => {
-                                  handleUpLink(l.idLink)
-                                })
-
-
-                              }}><FaAngleDown /></Button>
-                            {//Boutton pour baisser le lien sélctionné
-                            }
-                            <Button variant='warning' disabled={multi_selected_links.current.length != 1}
-                              onClick={() => {
-                                multi_selected_links.current.map(l => {
-                                  const i = l.idLink
-                                  const { links } = data
-                                  const listElmt = Object.keys(links)
-                                  const posElemt = listElmt.indexOf(i)
-                                  listElmt.splice(posElemt, 1)
-                                  listElmt.splice(0, 0, i)
-                                  const new_cat: { [key: string]: SankeyLink } = {}
-                                  listElmt.forEach(elt => {
-                                    new_cat[elt] = links[elt]
-                                  })
-                                  for (const member in links) delete links[member]
-                                  Object.assign(links, new_cat)
-
-                                })
-                                set_data({ ...data })
-
-
-                              }}><FaAngleDoubleDown /></Button>
-                          </ButtonGroup>
-                        </Col>
-                      </Row>
-
-                      <Row >
-                        <Col xs={1}>
-                          <FormLabel>{t('Flux.style')}:</FormLabel>
-                        </Col>
-
-                        <Col xs={6}>
-                          <Dropdown>
-                            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
-
-                            <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => {
-                                set_style_to_apply_to_link('')
-                                multi_selected_links.current.map(n => {
-                                  n.style = ''
-                                })
-                                set_data({ ...data })
-                              }}>{'Aucun'}</Dropdown.Item>
-                              {Object.keys(data.style_link).map((d,i) => {
-                                return (<Dropdown.Item key={i} onClick={() => {
-                                  set_style_to_apply_to_link(d)
-                                  multi_selected_links.current.map(n => {
-                                    n.style = d
-                                  })
-                                  set_data({ ...data })
-                                }}>{data.style_link[d].idLink}</Dropdown.Item>)
-
-                              })}
-
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </Col>
-
-                        <Col xs={5}>
-                          <Button
-                            size="sm"
-                            variant='info'
-
-                            onClick={
-                              () => {
-                                apply_style_to_selected_links()
-                                set_data({ ...data })
-                              }
-                            }
-                          >{t('Flux.as')}</Button>
-
-                        </Col>
-                      </Row>
-                      { (multi_selected_links.current.length !== 0) ? (
-                        <SankeyLinkEdition
-                          show={true}
-                          data={data}
-                          set_data={set_data}
-                          selected_link={selected_link}
-                          multi_selected_links={multi_selected_links}
-                        >{link_edition}</SankeyLinkEdition>) : (<></>)}
-                    </Accordion.Body>
-                  </Accordion.Item>
-                </Accordion>
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              eventKey="dimension"
-              style={{ 'display': (show_menu && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
-              onClick={evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'dimension') {
-                  set_nav_item_active('')
-                } else {
-                  set_nav_item_active('dimension')
-                }
-              }}
-            >
-              <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
-              <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item
-              eventKey="7"
-              id="LL"
-              style={{ 'display': (show_menu && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
-              onClick={evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
-                  set_nav_item_active('')
-                } else {
-                  set_nav_item_active('7')
-                }
-              }}
-            >
-              <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
-              <Accordion.Body>
-                <Form.Group as={Row}>
-                  <Col xs={1}>
-                    <Button size="sm" onClick={() => {
-                      const new_label = {
-                        idLabel: 'label_' + String(new Date().getTime()),
-                        name: 'Text Label ...',
-                        label_width: 100,
-                        label_height: 25,
-                        color: 'white',
-                        color_border: 'black',
-                        transparent: false,
-                        transparent_border: false,
-                        position_vert: 'middle',
-                        position_horiz: 'left',
-                        font_size: 12,
-                        font_weight: false,
-                        font_style: false,
-                        font_uppercase: false,
-                        isTextHTML:false,
-                        x: 50,
-                        y: 50,
-                        x_label: 50,
-                        y_label: 12,
-                      }
-                      data.labels[new_label.idLabel] = new_label
-                      multi_selected_label.current = [new_label]
-                      set_data({ ...data })
-                    }
-                    }><FaPlus /></Button>
-                  </Col>
-                  <Col xs={7}>{dropdownMultiLabel()}</Col>
-                  <Col xs={1}>
-                    <Button size="sm" variant='danger' onClick={() => {
-                      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-                      multi_selected_label.current = []
-                      set_data({ ...data })
-                    }
-                    }><FaMinus /></Button>
-                  </Col>
-
-                  <Col xs={2}>
-                    {//Boutton pour monter le label sélctionné
-                    }
-                    <ButtonGroup>
-                      <Button variant='info' disabled={multi_selected_label.current.length != 1}
-                        onClick={() => {
-                          multi_selected_label.current.map(l => {
-                            handleDownlabel(l.idLabel)
-                          })
-
-
-                        }}><FaAngleUp /></Button>
-
-                      <Button variant='warning' disabled={multi_selected_label.current.length != 1}
-                        onClick={() => {
-                          multi_selected_label.current.map(l => {
-                            handleUplabel(l.idLabel)
-                          })
-
-
-                        }}><FaAngleDown /></Button>
-                    </ButtonGroup>
-                  </Col>
-                </Form.Group>
-
-
-                <Form.Group as={Row}>
-                  <Row>
-                    <FormLabel column sm={1}>Text:</FormLabel>
-                    <Col sm={11}>
-                      <Form.Control
-                        as="textarea"
-                        rows={5}
-                        disabled={multi_selected_label.current.length != 1}
-                        value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
-                        onChange={
-                          (evt) => {
-                            multi_selected_label.current.map(label => label.name = evt.target.value)
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Row>
-
-
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.textAsHTML')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <Form.Check
-                      inline
-                      type='switch'
-                      checked={allLabelAsHTML()}
-                      onChange={evt => {
-                        multi_selected_label.current.map(d => d.isTextHTML = evt.target.checked)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.hl')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <FormControl size='sm'
-                      min={0}
-                      max={1000}
-                      type={'number'}
-                      value={allLabelHeight()}
-                      onChange={evt => {
-                        multi_selected_label.current.map(d => d.label_height = +evt.target.value)
-                        label_libre_align_vert()
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.ll')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <FormControl size='sm'
-                      min={0}
-                      max={1000}
-                      type={'number'}
-                      value={allLabelWidth()}
-                      onChange={evt => {
-                        multi_selected_label.current.map(d => d.label_width = +evt.target.value)
-                        label_libre_align_horiz()
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.ft')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <Form.Check
-                      inline
-                      type='switch'
-                      checked={allLabelTransparent()}
-                      onChange={evt => {
-                        multi_selected_label.current.map(d => d.transparent = evt.target.checked)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.cfl')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <FormControl size='sm'
-                      type='color'
-                      value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color : '#ffffff'}
-                      onChange={evt => {
-                        const val = evt.target.value
-                        multi_selected_label.current.map(d => d.color = val)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-
-
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.bt')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <Form.Check
-                      inline
-                      type='switch'
-                      checked={allLabelBorderTransparent()}
-                      onChange={evt => {
-                        multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('LL.cbl')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <FormControl size='sm'
-                      type='color'
-                      value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
-                      onChange={evt => {
-                        const val = evt.target.value
-                        multi_selected_label.current.map(d => d.color_border = val)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('Noeud.labels.haut')}
-                      checked={allNodeLabelVert('vert', 'top')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_vert = 'top'
-                            // d.x_label = d.label_width / 2
-                            d.y_label = d.font_size + 3
-                          })
-
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={allNodeLabelVert('vert', 'middle')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_vert = 'middle'
-                            // d.x_label = d.label_width / 2
-                            d.y_label = d.label_height / 2
-                          })
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('Noeud.labels.Bas')}
-
-                      checked={allNodeLabelVert('vert', 'bottom')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_vert = 'bottom'
-                            // d.x_label = d.label_width / 2
-                            d.y_label = d.label_height - 3
-                          })
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group><Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('Noeud.labels.gauche')}
-                      checked={allNodeLabelVert('horiz', 'left')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_horiz = 'left'
-                          })
-
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('LL.centre')}
-                      checked={allNodeLabelVert('horiz', 'centre')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_horiz = 'centre'
-                          })
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='radio'
-                      label={t('Noeud.labels.droite')}
-
-                      checked={allNodeLabelVert('horiz', 'right')}
-                      onChange={
-                        () => {
-                          multi_selected_label.current.map(d => {
-                            d.position_horiz = 'right'
-                          })
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-
-
-
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
-                  </Col>
-                  <Col xs={8}>
-                    <FormControl size='sm'
-                      disabled={allLabelAsHTML()}
-                      min={0}
-                      max={100}
-                      type={'number'}
-                      value={allLabelFontSize()}
-                      onChange={evt => {
-                        let val = +evt.target.value
-                        val = (val <= 0) ? 1 : val
-                        multi_selected_label.current.map(d => d.font_size = val)
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='checkbox'
-                      label={t('LL.gras')}
-                      checked={allLabelTextBold()}
-                      onChange={
-                        evt => {
-                          multi_selected_label.current.map(d => d.font_weight = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='checkbox'
-                      label={t('LL.maj')}
-                      checked={allLabelTextUpper()}
-                      onChange={
-                        evt => {
-                          multi_selected_label.current.map(d => d.font_uppercase = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      disabled={allLabelAsHTML()}
-                      type='checkbox'
-                      label={t('LL.ita')}
-                      checked={allLabelTextItalic()}
-                      onChange={
-                        evt => {
-                          multi_selected_label.current.map(d => d.font_style = evt.target.checked)
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-              </Accordion.Body>
-            </Accordion.Item>
-            {views_item ? 
-            <Accordion.Item
-              eventKey="Visualisation"
-              style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('Visualisation')
-                  }
-                }
-              }>
-              <Accordion.Header>Storytelling</Accordion.Header>
-              <Accordion.Body>
-                <Tabs defaultActiveKey="vue" id="visualisation">
-
-                  <Tab eventKey="vue" title="Vue">
-                    <Row>
-                      <Col xs={3}>
-                        <FormLabel>Sélection Vue</FormLabel>
-                      </Col>
-                      <Col xs={9}>
-                        <Form.Select id="selectionNode"
-                          onChange={
-                            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                              if (evt.target.value === '') {
-                                return
-                              }
-                              multi_selected_nodes.current = []
-                              multi_selected_links.current = []
-                              multi_selected_label.current = []
-                              //et_view(evt.target.value)
-                            }
-                          }
-                        >
-                          <option selected={true} value={'none'}>Données actuelles</option>
-                          {/* {data.view.map(d => {
-                    return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                  })} */}
-                        </Form.Select>
-                      </Col>
-                    </Row>
-
-                    <Table bordered size='sm'>
-                      <thead>
-                        <tr>
-                          <th>Nom</th>
-                          <th>Position</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.values(data.view).map(d => {
-                          return (
-                            <tr style={{ 'border': '2px solid red' }}>
-                              <td><FormControl size='sm'
-                                value={d.nom}
-                                onChange={evt => {
-                                  data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
-                                  set_data({ ...data })
-                                }}
-                              /></td>
-                              <td>
-                                <ButtonGroup className="button_position" size="sm">
-                                  <Button
-                                    size="sm"
-                                    variant="success"
-                                    onClick={
-                                      () => {
-                                        let ind = -1
-                                        data.view.map((v, i) => {
-                                          ind = (v.id == d.id) ? i : ind
-                                        })
-                                        const toShift = data.view[ind]
-                                        data.view.splice(ind, 1)
-                                        data.view.splice(ind - 1, 0, toShift)
-                                        set_data({ ...data })
-
-                                      }
-                                    }
-                                  ><FaArrowUp /></Button><Button
-                                    size="sm"
-                                    variant="success"
-                                    onClick={
-                                      () => {
-                                        let ind = -1
-                                        data.view.map((v, i) => {
-                                          ind = (v.id == d.id) ? i : ind
-                                        })
-                                        const toShift = data.view[ind]
-                                        data.view.splice(ind, 1)
-                                        data.view.splice(ind + 1, 0, toShift)
-                                        set_data({ ...data })
-                                      }
-                                    }
-                                  ><FaArrowDown /></Button>
-                                </ButtonGroup>
-
-                              </td>
-                              <td><Button
-                                size="sm"
-                                variant='danger'
-                                onClick={
-                                  () => {
-                                    let ind = -1
-                                    data.view.map((v, i) => {
-                                      ind = (v.id == d.id) ? i : ind
-                                    })
-                                    data.view.splice(ind, 1)
-                                    set_data({ ...data })
-                                  }
-                                }
-                              ><FaMinus /></Button></td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </Table>
-                  </Tab>
-                </Tabs>
-              </Accordion.Body>
-            </Accordion.Item> : (<></>)}
-            <Accordion.Item
-              style={{ 'display': (show_menu && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
-              eventKey="legend"
-              onClick={
-                evt => {
-                  if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
-                    set_nav_item_active('')
-                  } else {
-                    set_nav_item_active('legend')
-                  }
-                }
-              }>
-              <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
-              <Accordion.Body>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel >{t('Menu.LegX')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      type="text"
-                      value={legend_position[0]}
-                      onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
-                      onBlur={() => {
-                        data.legend_position = legend_position
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel>{t('Menu.LegY')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      type="text"
-                      value={legend_position[1]}
-                      onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
-                      onBlur={() => {
-                        data.legend_position = legend_position
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel>{t('Menu.LegWidth')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      type="number"
-                      step={1}
-                      value={data.legend_width}
-                      onChange={evt =>{
-                        data.legend_width=+evt.target.value
-                        set_data({ ...data })
-                      }}
-                     
-                    />
-                  </Col>
-                </Form.Group>
-              </Accordion.Body>
-            </Accordion.Item>
-
-          </Accordion>
-        </Offcanvas.Body>
-      </Offcanvas>
+      {(show_nav && !data.static_sankey) ? 
+        <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+          <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
+            <SankeyConfigurationMenu 
+              data={data}
+              set_data={set_data}
+              show_menu={show_menu}
+              nav_item_active={nav_item_active}
+              set_nav_item_active={set_nav_item_active}
+              settings_edition={settings_edition}
+              settings_edition_node_tags={settings_edition_node_tags}
+              settings_edition_link_tags={settings_edition_link_tags}
+              settings_edition_data_tags={settings_edition_data_tags}
+              accordion_ref={accordion_ref}
+              nodes_accordion_ref={nodes_accordion_ref}
+              links_accordion_ref={links_accordion_ref}
+              selected_node={selected_node}
+              multi_selected_nodes={multi_selected_nodes}
+              multi_selected_links={multi_selected_links}
+              selected_link={selected_link}
+              multi_selected_label={multi_selected_label}
+              style_to_apply={style_to_apply}
+              set_style_to_apply={set_style_to_apply}
+              set_show_nav={set_show_nav}
+              configuration_menus={configurations_menus} />
+          </Offcanvas.Body>
+        </Offcanvas>
         : <></>}
 
       {
@@ -3654,394 +723,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </>
   )
 }
-
-/**
- * Define ApplyLayoutDialog
- *
- * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
- */
-const ApplyLayoutDialogPropTypes = {
-  show_apply_layout : PropTypes.bool.isRequired,
-  set_show_apply_layout: PropTypes.func.isRequired, 
-  sankey_data : SankeyDataPropTypes,
-  set_sankey_data : PropTypes.func.isRequired
-}
-
-/**
- * 
- *
- * @typedef {ApplyLayoutDialogTypes}
- */
-type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
-
-/**
- *
- * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
- * @returns {*}
- */
-const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
-  const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
-  const {t} =useTranslation()
-  const [elementToDispose, set_elementToDispose] = useState([''])
-  return (
-    <Modal
-      size="xl"
-      show={show_apply_layout}
-      onHide={() => set_show_apply_layout(false)}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.amp')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form >
-          <Form.Group as={Row} >
-            <Col xs={3}>
-              <FormLabel>{t('Menu.fmep')}</FormLabel>
-            </Col>
-            <Col xs={5}>
-              <Form.Control
-                type="file"
-                onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
-              />
-            </Col>
-            <Col xs={4}>
-              <Button
-                size="sm"
-                onClick={
-                  () => {
-                    if (file_layout === undefined) {
-                      return
-                    }
-                    const reader = new FileReader()
-                    reader.onload = (() => {
-                      return (
-                        (e: ProgressEvent<FileReader>) => {
-                          let result = (e.target as FileReader).result
-                          if (result) {
-                            result = String(result).split('<br>').join('\\\\n')
-                            const new_layout = JSON.parse(result)
-                            updateLayout(sankey_data, new_layout,elementToDispose)
-                            set_sankey_data({ ...sankey_data })
-                          }
-                        }
-                      )
-                    })()
-                    reader.readAsText(file_layout[0])
-                  }
-                }>{t('Menu.ad')}
-              </Button>
-            </Col>
-          </Form.Group>
-        </Form>
-        <Form.Label>{t('Menu.textDisposition')}</Form.Label>
-        <FormGroup as={Row} onClick={()=>{
-          set_sankey_data({...sankey_data})
-        }}>
-          <Col xs={2}>
-            <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
-              if(evt.target.checked){
-                elementToDispose.push('posNode')
-                set_elementToDispose(elementToDispose)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
-                set_elementToDispose(elementToDispose)
-              }}}/>
-          </Col>
-          <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
-              if(evt.target.checked){
-                elementToDispose.push('attrNode')
-                set_elementToDispose(elementToDispose)
-
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
-                set_elementToDispose(elementToDispose)
-              }}}/>
-          </Col>
-          <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{ 
-              if(evt.target.checked){
-                elementToDispose.push('attrFlux')
-                set_elementToDispose(elementToDispose)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
-                set_elementToDispose(elementToDispose)
-              }}}/>
-          </Col>
-          <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
-              if(evt.target.checked){
-                elementToDispose.push('tagNode')
-                set_elementToDispose(elementToDispose)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
-                set_elementToDispose(elementToDispose)
-                
-              }}}/>
-          </Col>
-          <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
-              if(evt.target.checked){
-                elementToDispose.push('tagFlux')
-                set_elementToDispose(elementToDispose)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
-                set_elementToDispose(elementToDispose)
-              }}}/>
-          </Col>
-          <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
-              if(evt.target.checked){
-                elementToDispose.push('attrGeneral')
-                set_elementToDispose(elementToDispose)
-                
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
-                set_elementToDispose(elementToDispose)
-              }}}/>
-          </Col>
-        </FormGroup>
-      </Modal.Body>
-    </Modal>
-  )
-}
-
-/**
- *
- * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; clickSaveDiagram: any; }}
- */
-const ApplySaveJSONPropTypes = {
-  show_save_json : PropTypes.bool.isRequired,
-  set_show_save_json: PropTypes.func.isRequired,
-  sankey_data:SankeyDataPropTypes,
-  set_sankey_data:PropTypes.func.isRequired,
-  clickSaveDiagram:PropTypes.func.isRequired
-}
-
-
-type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
-
-/**
- *
- * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
- * @returns {*}
- */
-const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
-  const {t} =useTranslation()
-  const [mode_save,set_mode_save]=useState(true)
-  return (
-    <Modal
-      bsSize="large"
-      show={show_save_json}
-      onHide={() => set_show_save_json(false)}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.SaveJSON')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form >
-          <Form.Group as={Row} >
-            <Col xs={8}><Form.Check type='switch' inline label={t('Menu.SaveValue')} checked={mode_save}  onChange={(evt)=>set_mode_save(evt.target.checked)}/></Col>
-            <Col xs={4}>
-              <Button
-                size="sm"
-                onClick={
-                  () => {
-                    // Crée une copie pour d'abord enregitrer avec les changements
-                    // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-                    const cpy=JSON.parse(JSON.stringify(sankey_data))
-                    if(!mode_save){
-                      Object.values(sankey_data.links).map(d=>{
-                        (d as SankeyLink).value={}
-                        return d
-                      })
-                    }
-                    set_sankey_data({...sankey_data})
-                    clickSaveDiagram()
-                    set_sankey_data({...cpy})
-                  }
-                }>{t('Menu.SaveJSON')}
-              </Button>
-            </Col>
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-    </Modal>
-  )
-}
-
-const ExcelModalPropTypes = {
-  uploadExcelImpl: PropTypes.func.isRequired,
-  handleCloseDialog: PropTypes.func.isRequired,
-  set_data: PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired,
-  url_prefix: PropTypes.string.isRequired,
-  callback: PropTypes.func.isRequired,
-  launch: PropTypes.func.isRequired
-}
-
-type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
-
-/**
- * Return the modal when we try to open an excel file
- *
- * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
- * @returns
- */
-const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
-  const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-  const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
-  const {t} =useTranslation()
-
-  return (
-    <Modal
-      show={true}
-      onHide={handleCloseDialog}
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>Ouvrir Fichier Excel</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group as={Row}>
-            <Form.Label>Fichier d&apos;entrée excel</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={(evt: ChangeEvent) => {
-                set_input_file_name((evt.target as HTMLFormElement).files[0])
-              }}
-            />
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label>Diagramme de mise en page</Form.Label>
-            <Form.Control
-              type="file"
-              //ref={layout_file_}
-              name=""
-              onChange={(evt: ChangeEvent) => {
-                set_layout_file((evt.target as HTMLFormElement).files[0])
-              }}
-            />
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={
-            () => {
-              if (layout_file !== undefined) {
-                const reader = new FileReader()
-                reader.onload = (() => {
-                  return (
-                    (e: ProgressEvent<FileReader>) => {
-                      let result = (e.target as FileReader).result
-                      if (result) {
-                        result = String(result).split('<br>').join('\\\\n')
-                        const layout : SankeyData = JSON.parse(result);
-                        (data as SankeyData & { layout?: SankeyData }).layout = layout
-                        launch('')
-                        uploadExcelImpl(
-                          data,
-                          set_data,
-                          set_show_excel_dialog,
-                          input_file_name,
-                          url_prefix,
-                          callback
-                        )
-                      }
-                    }
-                  )
-                })()
-                reader.readAsText(layout_file)
-              } else {
-                launch('')
-                uploadExcelImpl(
-                  data,
-                  set_data,
-                  set_show_excel_dialog,
-                  input_file_name,
-                  url_prefix,
-                  callback
-                )
-              }
-
-            }
-          }
-        >Ouvrir</Button>
-        <Button
-          variant="secondary"
-          onClick={handleCloseDialog}
-        >{t('Menu.ca')}</Button>
-      </Modal.Footer>
-    </Modal>)
-}
-
-ExcelModal.propTypes = ExcelModalPropTypes
-
-/**
- * Description placeholder
- *
- * @type {{ publishImpl: any; set_show_publish_dialog: any; file_path_initial: any; }}
- */
-const PublishModalPropTypes = {
-  publishImpl: PropTypes.func.isRequired,
-  set_show_publish_dialog: PropTypes.func.isRequired,
-  file_path_initial: PropTypes.string.isRequired
-}
-/**
- * Description placeholder
- *
- * @typedef {PublishModalTypes}
- */
-type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
-
-/**
- * Description placeholder
- *
- * @param {PublishModalTypes} { publishImpl,set_show_publish_dialog,file_path_initial }
- * @returns
- */
-const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
-  const [file_path,set_file_path] = useState(file_path_initial)
-  const {t} =useTranslation()
-
-  return (
-    <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.pdd')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group as={Row}>
-            <Form.Label>{t('Menu.ca')}</Form.Label>
-            <Col>    
-              <Form.Control
-                type='text'
-                placeholder={file_path_initial}
-                onChange={(evt)=>set_file_path(evt.target.value)}
-              />
-            </Col>     
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={()=>publishImpl(file_path)}>{t('Menu.pub')}</Button>
-        <Button variant="secondary" onClick={()=>set_show_publish_dialog(false)}>{t('Menu.ca')}</Button>
-      </Modal.Footer>
-    </Modal>
-  )
-}
-PublishModal.propTypes = PublishModalPropTypes
 
 Menu.propTypes = MenuPropTypes
 
