@@ -1472,6 +1472,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
 export const viewsAccordion = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
+  show_menu: boolean,
   nav_item_active: string,
   set_nav_item_active: (s:string)=>void,
   view:string,
@@ -1480,137 +1481,123 @@ export const viewsAccordion = (
   multi_selected_links:{current:SankeyLink[]},
   multi_selected_label:{current:SankeyLabel[]},
 ) => {
-  return ((the_data:SankeyData,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null) => {
-    return <Accordion.Item
-      eventKey="Visualisation"
-      style={{ 'display': (the_data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
-      onClick={
-        evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
-            set_nav_item_active('')
-          } else {
-            set_nav_item_active('Visualisation')
-            if ( accordion_ref && accordion_ref.current) {
-              for ( const child in accordion_ref.current.children) {
-                if (accordion_ref.current.children[child].id === 'Visualisation') {
-                  (accordion_ref.current.children[0] as HTMLLabelElement).click();
-                  (accordion_ref.current.children[child] as HTMLLabelElement).click()
+  return <Accordion.Item
+    id='Visualisation'
+    eventKey="Visualisation"
+    style={{ 'display': show_menu ? 'block' : 'none'}}
+    onClick={
+      evt => {
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
+          set_nav_item_active('')
+        } else {
+          set_nav_item_active('Visualisation')
+        }
+      }
+    }>
+    <Accordion.Header>Storytelling</Accordion.Header>
+    <Accordion.Body>
+      <Row>
+        <Col xs={3}>
+          <FormLabel>Sélection Vue</FormLabel>
+        </Col>
+        <Col xs={9}>
+          <Form.Select id="selectionNode"
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                if (evt.target.value === '') {
+                  return
                 }
+                multi_selected_nodes.current = []
+                multi_selected_links.current = []
+                multi_selected_label.current = []
+                set_view(evt.target.value)
               }
             }
-          }
-        }
-      }>
-      <Accordion.Header>Storytelling</Accordion.Header>
-      <Accordion.Body>
-        <Tabs defaultActiveKey="vue" id="visualisation">
+          >
+            <option selected={view == 'none'} value={'none'}>Données actuelles</option>
+            {data.view.map(d => {
+              return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+            })}
+          </Form.Select>
+        </Col>
+      </Row>
 
-          <Tab eventKey="vue" title="Vue">
-            <Row>
-              <Col xs={3}>
-                <FormLabel>Sélection Vue</FormLabel>
-              </Col>
-              <Col xs={9}>
-                <Form.Select id="selectionNode"
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      if (evt.target.value === '') {
-                        return
+      <Table bordered size='sm'>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Position</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.values(data.view).map(d => {
+            return (
+              <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
+                <td><FormControl size='sm'
+                  value={d.nom}
+                  onChange={evt => {
+                    data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                    set_data({ ...data })
+                  }}
+                /></td>
+                <td>
+                  <ButtonGroup className="button_position" size="sm">
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={
+                        () => {
+                          let ind = -1
+                          data.view.map((v, i) => {
+                            ind = (v.id == d.id) ? i : ind
+                          })
+                          const toShift = data.view[ind]
+                          data.view.splice(ind, 1)
+                          data.view.splice(ind - 1, 0, toShift)
+                          set_data({ ...data })
+
+                        }
                       }
-                      multi_selected_nodes.current = []
-                      multi_selected_links.current = []
-                      multi_selected_label.current = []
-                      set_view(evt.target.value)
+                    ><FaArrowUp /></Button><Button
+                      size="sm"
+                      variant="success"
+                      onClick={
+                        () => {
+                          let ind = -1
+                          data.view.map((v, i) => {
+                            ind = (v.id == d.id) ? i : ind
+                          })
+                          const toShift = data.view[ind]
+                          data.view.splice(ind, 1)
+                          data.view.splice(ind + 1, 0, toShift)
+                          set_data({ ...data })
+                        }
+                      }
+                    ><FaArrowDown /></Button>
+                  </ButtonGroup>
+
+                </td>
+                <td><Button
+                  size="sm"
+                  variant='danger'
+                  onClick={
+                    () => {
+                      let ind = -1
+                      data.view.map((v, i) => {
+                        ind = (v.id == d.id) ? i : ind
+                      })
+                      data.view.splice(ind, 1)
+                      set_view('none')
+                      set_data({ ...data })
                     }
                   }
-                >
-                  <option selected={view == 'none'} value={'none'}>Données actuelles</option>
-                  {data.view.map(d => {
-                    return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                  })}
-                </Form.Select>
-              </Col>
-            </Row>
-
-            <Table bordered size='sm'>
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Position</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.values(data.view).map(d => {
-                  return (
-                    <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
-                      <td><FormControl size='sm'
-                        value={d.nom}
-                        onChange={evt => {
-                          data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
-                          set_data({ ...data })
-                        }}
-                      /></td>
-                      <td>
-                        <ButtonGroup className="button_position" size="sm">
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={
-                              () => {
-                                let ind = -1
-                                data.view.map((v, i) => {
-                                  ind = (v.id == d.id) ? i : ind
-                                })
-                                const toShift = data.view[ind]
-                                data.view.splice(ind, 1)
-                                data.view.splice(ind - 1, 0, toShift)
-                                set_data({ ...data })
-
-                              }
-                            }
-                          ><FaArrowUp /></Button><Button
-                            size="sm"
-                            variant="success"
-                            onClick={
-                              () => {
-                                let ind = -1
-                                data.view.map((v, i) => {
-                                  ind = (v.id == d.id) ? i : ind
-                                })
-                                const toShift = data.view[ind]
-                                data.view.splice(ind, 1)
-                                data.view.splice(ind + 1, 0, toShift)
-                                set_data({ ...data })
-                              }
-                            }
-                          ><FaArrowDown /></Button>
-                        </ButtonGroup>
-
-                      </td>
-                      <td><Button
-                        size="sm"
-                        variant='danger'
-                        onClick={
-                          () => {
-                            let ind = -1
-                            data.view.map((v, i) => {
-                              ind = (v.id == d.id) ? i : ind
-                            })
-                            data.view.splice(ind, 1)
-                            set_view('none')
-                            set_data({ ...data })
-                          }
-                        }
-                      ><FaMinus /></Button></td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </Table>
-          </Tab>
-        </Tabs>
-      </Accordion.Body>
-    </Accordion.Item>
-  })
+                ><FaMinus /></Button></td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </Table>
+    </Accordion.Body>
+  </Accordion.Item>
 }
