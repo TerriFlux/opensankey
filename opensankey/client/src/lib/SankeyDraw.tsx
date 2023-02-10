@@ -43,7 +43,7 @@ const SankeyDrawPropTypes = {
 export const SankeyDrawDefaultProps = {
   set_data: () => null,
   select_node: () => null,
-  node_arrow_visible: () => true,
+  node_arrow_visible: (d:SankeyData,n:SankeyNode) => true,
   select_link: () => null,
   button_ref: null,
   accordion_ref: null,
@@ -309,7 +309,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
     //Creation des Arrows associés au link
     d3.selectAll(' .opensankey .ggg_nodes')
-      .filter(n => node_arrow_visible(n))      
+      .filter(n => node_arrow_visible(data,n))      
     //   .each(function (n) {
     //     drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags)
     //   })
