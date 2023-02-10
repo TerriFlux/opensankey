@@ -1,14 +1,14 @@
+import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, FormLabel, Col, Tab } from 'react-bootstrap'
 import { SankeyData, SankeyNode} from './types'
-import {useTranslation} from 'react-i18next'
 
 export const SankeyMenuConfigurationNodesTooltip = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 ) => {
-  const {t} = useTranslation()
   return (
     <Tab eventKey="node_tooltip" title={t('Noeud.IB')}>
       <Form >

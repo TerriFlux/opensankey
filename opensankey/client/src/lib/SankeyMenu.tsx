@@ -10,7 +10,6 @@ import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,up
 import { FaAngleDoubleLeft, FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 import SankeyMenuBanner from './SankeyMenuBanner'
 import {downloadExamples} from './SankeyUtils'
-import {useTranslation} from 'react-i18next'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 import ModalPreference from './SankeyMenuPreferences'
@@ -40,6 +39,7 @@ export type selected_type = {'label':string;'value':string}
  */
 
 const MenuPropTypes = {
+  t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   logo: PropTypes.string.isRequired,
@@ -327,7 +327,7 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
  * @returns
  */
 const Menu: FunctionComponent<MenuTypes> = (
-  { data, set_data,
+  { t,data, set_data,
     nav_item_active,
     show_nav,
     set_show_nav,
@@ -363,9 +363,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     menus
   }
 ) => {
-
-  const {t} =useTranslation()
-
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = findMaxLinkValue(
@@ -510,6 +507,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       } 
       { !data.static_sankey ? (
         <ModalStyleNode
+          t={t}
           data={data}
           set_data={set_data}
           showStyle={showStyleNode}
@@ -519,6 +517,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         />
       ): (<></>)}
       { <ModalPreference
+        t={t}
         data={data}
         set_data={set_data}
         showPreference={showPreference}
@@ -527,6 +526,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       />}
       { !data.static_sankey ? (
         <ModalStyleLink
+          t={t}
           data={data}
           set_data={set_data}
           showStyleLink={showStyleLink}
@@ -573,6 +573,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
       <SankeyMenuBanner
+        t={t}
         data={data}
         set_data={set_data}
         mode_selection={mode_selection}
@@ -631,6 +632,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Button></Modal.Dialog>) : (<></>)
       }
       <ApplySaveJSONDialog
+        t={t}
         show_save_json={show_save_json}
         set_show_save_json={set_show_save_json}
         sankey_data={data}
@@ -638,6 +640,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         clickSaveDiagram={clickSaveDiagram}
       />
       <ApplyLayoutDialog
+        t={t}
         show_apply_layout={show_apply_layout}
         set_show_apply_layout={set_show_apply_layout}
         sankey_data={data}
@@ -645,6 +648,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
       {show_excel_dialog ? (
         <ExcelModal
+          t={t}
           launch={launch}
           handleCloseDialog={() => set_show_excel_dialog(false)}
           uploadExcelImpl={uploadExcelImpl}
@@ -657,7 +661,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         (<div />)
       }
       { show_publish_dialog ?  (
-        <PublishModal 
+        <PublishModal
+          t={t}
           set_show_publish_dialog={set_show_publish_dialog} 
           publishImpl = {publishImpl}
           file_path_initial = {data.file_name as string}/>

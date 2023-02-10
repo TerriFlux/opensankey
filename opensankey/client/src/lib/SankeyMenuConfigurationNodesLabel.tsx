@@ -1,16 +1,14 @@
+import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tab, } from 'react-bootstrap'
 import { SankeyData, SankeyNode, } from './types'
 
-import {useTranslation} from 'react-i18next'
-
-
 export const SankeyMenuConfigurationNodesLabel = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 )=> {
-  const {t} =useTranslation()
   const isAllLabelVisible = () => {
     let visible = false
     multi_selected_nodes.current.map(d => visible = (d.label_visible) ? true : visible)

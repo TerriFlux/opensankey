@@ -125,25 +125,28 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
-  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(data,set_data)
+  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data)
   //- 1.2 Builds Configuration Menus Node 
   //- 1.2.1 Builds Configuration Menus Node Attributes 
-  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(data,set_data,multi_selected_nodes)
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes)
+  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes)
   //- 1.2.1 Builds Configuration Menus Node Tags 
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
+    t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='nodeTags'
     elementNameProp='nodes' />
   //- 1.3 Builds Configuration Menus Links 
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
+    t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='fluxTags'
     elementNameProp='links' />
   //- 1.4 Builds Configuration Menus DataTags 
   const  menu_configuration_data_tags=<SankeySettingsEditionElementTags
+    t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='dataTags'
@@ -151,6 +154,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_nav,set_show_nav] = useState(false)
   //- End of 1.
   const configurations_menus =  OpenSankeyConfigurationsMenus(
+    t,
     data, set_data,
     nav_item_active,set_nav_item_active,
     nodes_accordion_ref,links_accordion_ref,
@@ -214,6 +218,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
         <Menu 
+          t={t}
           data={data} 
           set_data={set_data}
           show_nav={show_nav}

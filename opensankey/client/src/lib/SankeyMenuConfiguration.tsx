@@ -2,13 +2,14 @@ import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
 import React, { FunctionComponent, useState, Ref } from 'react'
-import {useTranslation} from 'react-i18next'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import SankeyMenuConfigurationLegend from './SankeyMenuConfigurationLegend'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
+import { TFunction } from 'i18next'
 
 export const OpenSankeyConfigurationsMenus = (
+  t:TFunction,
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   nav_item_active:string,
@@ -32,7 +33,6 @@ export const OpenSankeyConfigurationsMenus = (
   }
 ) => {
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
-  const {t} =useTranslation()
   return [
     <Accordion.Item
       id='MEP'
@@ -117,6 +117,7 @@ export const OpenSankeyConfigurationsMenus = (
             <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
             <Accordion.Body>
               <SankeyNodeEdition
+                t={t}
                 data={data}
                 set_data={set_data}
                 style_to_apply={style_to_apply}
@@ -183,6 +184,7 @@ export const OpenSankeyConfigurationsMenus = (
             <Accordion.Header className='level2'>Edition Flux</Accordion.Header>
             <Accordion.Body>
               <SankeyMenuConfigurationLinks
+                t={t}
                 data={data}
                 set_data={set_data}
                 selected_link={selected_link}
@@ -223,6 +225,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
       <Accordion.Body>
         <SankeyLabelEdition
+          t={t}
           data={data}
           set_data={set_data}
           multi_selected_label={multi_selected_label}
@@ -245,6 +248,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
       <Accordion.Body>
         <SankeyMenuConfigurationLegend
+          t={t}
           data={data}
           set_data={set_data}
         />

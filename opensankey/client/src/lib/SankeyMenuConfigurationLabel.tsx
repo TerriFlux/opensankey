@@ -5,10 +5,9 @@ import { SankeyDataPropTypes, SankeyLabel, SankeyLabelPropTypes} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import { selected_type } from './SankeyMenu'
-import { useTranslation } from 'react-i18next'
-
 
 const SankeyLabelEditionPropTypes = {
+  t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
@@ -16,11 +15,10 @@ const SankeyLabelEditionPropTypes = {
 
 type SankeyLabelEditionTypes = InferProps<typeof SankeyLabelEditionPropTypes>
 
-const SankeyLabelEdition: FunctionComponent<SankeyLabelEditionTypes> = (
-  { data, set_data, multi_selected_label}
+const SankeyLabelEdition: FunctionComponent<SankeyLabelEditionTypes > = (
+  { t,data, set_data, multi_selected_label}
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
-  const {t} = useTranslation()
 
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })

@@ -4,13 +4,13 @@ import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyLinkValue, SankeyNode } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { cut_name, default_link, delete_link } from './SankeyUtils'
-import {useTranslation} from 'react-i18next'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus } from 'react-icons/fa'
 
 const SankeyMenuConfigurationLinksPropTypes = {
+  t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
@@ -20,14 +20,12 @@ const SankeyMenuConfigurationLinksPropTypes = {
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { data, set_data, selected_link, multi_selected_links, children }
+  { t,data, set_data, selected_link, multi_selected_links, children }
 ) => {
   const { fluxTags,dataTags } = data
   const [forceUpdate, setForceUpdate] = useState(false)
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
   const set_show_link = useState(true)[1]
-  
-  const {t} =useTranslation()
 
   const tags_visible = Object.keys(fluxTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(fluxTags)[0] : '')
