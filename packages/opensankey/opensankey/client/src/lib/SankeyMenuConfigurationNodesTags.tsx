@@ -1,6 +1,6 @@
+import { TFunction } from 'i18next'
 import React, { useState } from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Table } from 'react-bootstrap'
-import { useTranslation } from 'react-i18next'
 import { SankeyData,SankeyNode } from './types'
 
 /**
@@ -11,11 +11,11 @@ import { SankeyData,SankeyNode } from './types'
    * @type {*}
    */
 export const SankeyMenuConfigurationNodesTags = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 )=> {
-  const {t} = useTranslation()
   const tags_visible = Object.keys(data.nodeTags).length > 0
   const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(data.nodeTags)[0] : '')
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {

@@ -12,7 +12,7 @@ import * as d3 from 'd3'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
-import {useTranslation} from 'react-i18next'
+import { TFunction } from 'i18next'
 
 /**
  * 
@@ -192,11 +192,12 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
 }
 
 /**
- * Define SankeyEdition element
+ * Define SankeyMenuBanner element
  *
  * @type {{ data: any; set_data: any; additional_selector: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }}
  */
-const SankeyEditionPropTypes = {
+const SankeyMenuBannerPropTypes = {
+  t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   additional_selector: PropTypes.element,
@@ -206,7 +207,7 @@ const SankeyEditionPropTypes = {
   url_prefix: PropTypes.string.isRequired,
 
 }
-type SankeyEditionTypes = InferProps<typeof SankeyEditionPropTypes>
+type SankeyMenuBannerTypes = InferProps<typeof SankeyMenuBannerPropTypes>
 
 declare const window: Window &
   typeof globalThis & {
@@ -221,10 +222,10 @@ declare const window: Window &
   }
 
 export const SankeyBannerRows = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void
 ) => { 
-  const {t} =useTranslation()
   let sous_filieres = undefined
   if (window.sankey && window.sankey.sous_filieres) {
     sous_filieres = window.sankey.sous_filieres
@@ -331,11 +332,10 @@ export const SankeyBannerRows = (
  * @param {{ data: any; set_data: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
  * @returns
  */
-const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
+const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
-  const {t} =useTranslation()
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -968,7 +968,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
         {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-              {SankeyBannerRows(data,set_data).map((c:JSX.Element)=>c)}
+              {SankeyBannerRows(t,data,set_data).map((c:JSX.Element)=>c)}
             </Row>
             <Row>
               <Col className='text-end'>
@@ -1313,7 +1313,7 @@ const SankeyEdition: FunctionComponent<SankeyEditionTypes> = ({ data, set_data, 
   )
 }
 
-SankeyEdition.propTypes = SankeyEditionPropTypes
+SankeyMenuBanner.propTypes = SankeyMenuBannerPropTypes
 
-export default SankeyEdition
+export default SankeyMenuBanner
 

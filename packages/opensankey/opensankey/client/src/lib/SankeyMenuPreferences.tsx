@@ -3,10 +3,10 @@ import React, { ChangeEvent, FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, ButtonGroup, FormCheck, FormGroup } from 'react-bootstrap'
 import { SankeyDataPropTypes } from './types'
-import {useTranslation} from 'react-i18next'
 import i18n from 'i18next'
 
 const modalPreferencePropTypes = {
+  t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   showPreference: PropTypes.bool.isRequired,
@@ -15,8 +15,7 @@ const modalPreferencePropTypes = {
 }
 type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
-const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({data,set_data,showPreference,setShowPreference,set_mode_selection})=>{
-  const {t} =useTranslation()
+const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({t,data,set_data,showPreference,setShowPreference,set_mode_selection})=>{
   const preferenceCheck = (str: string) => {
     if (!data.accordeonToShow.includes(str)) {
       data.accordeonToShow.push(str)

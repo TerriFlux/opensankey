@@ -43,7 +43,7 @@ const SankeyDrawPropTypes = {
 export const SankeyDrawDefaultProps = {
   set_data: () => null,
   select_node: () => null,
-  node_arrow_visible: (d:SankeyData,n:SankeyNode) => true,
+  node_arrow_visible: () => true,
   select_link: () => null,
   button_ref: null,
   accordion_ref: null,

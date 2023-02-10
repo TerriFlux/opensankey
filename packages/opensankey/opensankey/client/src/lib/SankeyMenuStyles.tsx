@@ -6,7 +6,6 @@ import { SankeyDataPropTypes, SankeyLinkPropTypes } from './types'
 
 import { default_node, default_link,cut_name } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
-import {useTranslation} from 'react-i18next'
 
 
 /**
@@ -15,6 +14,7 @@ import {useTranslation} from 'react-i18next'
  * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 const MenuStyleNodePropTypes = {
+  t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   setShowStyle:PropTypes.func.isRequired,
@@ -31,8 +31,7 @@ const MenuStyleNodePropTypes = {
  */
 type MenuStyleNodeTypes = InferProps<typeof MenuStyleNodePropTypes>
 
-export const ModalStyleNode : FunctionComponent<MenuStyleNodeTypes> = ({data,set_data,showStyle,setShowStyle,selected_style_node, set_selected_style_node}) => { 
-  const {t} =useTranslation()
+export const ModalStyleNode : FunctionComponent<MenuStyleNodeTypes> = ({t,data,set_data,showStyle,setShowStyle,selected_style_node, set_selected_style_node}) => { 
   const closeStyleEdition = () => {
     setShowStyle(false)
   }
@@ -527,6 +526,7 @@ export const ModalStyleNode : FunctionComponent<MenuStyleNodeTypes> = ({data,set
 }
 
 const MenuStyleLinkPropTypes = {
+  t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   setShowStyleLink:PropTypes.func.isRequired,
@@ -544,8 +544,7 @@ const MenuStyleLinkPropTypes = {
  */
 type MenuStyleLinkTypes = InferProps <typeof MenuStyleLinkPropTypes>
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const ModalStyleLink : FunctionComponent<MenuStyleLinkTypes> = ({data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link, set_selected_style_link}) => { 
-  const {t} =useTranslation()
+export const ModalStyleLink : FunctionComponent<MenuStyleLinkTypes> = ({t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link, set_selected_style_link}) => { 
   const closeStyleEditionLink = () => {
     setShowStyleLink(false)
   }

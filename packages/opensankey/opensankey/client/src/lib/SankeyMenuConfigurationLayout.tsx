@@ -3,9 +3,10 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck } from 'react
 import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
-import {useTranslation} from 'react-i18next'
+import { TFunction } from 'i18next'
 
 export const OpenSankeyMenuConfigurationLayout = (
+  t:TFunction,
   data: SankeyData,
   set_data:(d:SankeyData)=>void
 ) => { 
@@ -13,7 +14,6 @@ export const OpenSankeyMenuConfigurationLayout = (
   const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
-  const {t} =useTranslation()  
   return [
     <Form.Group as={Row} >
       <Col xs={3}>

@@ -1,14 +1,14 @@
+import { TFunction } from 'i18next'
 import React, { useState } from 'react'
 import { Row, Form,FormLabel, Col, FormCheck, Tab } from 'react-bootstrap'
 import { SankeyData,  SankeyNode } from './types'
-import { useTranslation } from 'react-i18next'
 
 export const SankeyMenuConfigurationNodesIcon = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 )=> {
-  const {t} =useTranslation()
   const [radio_selected] = useState<string>('local')
   const isAllIconSame = (param: string) => {
     let icon = true

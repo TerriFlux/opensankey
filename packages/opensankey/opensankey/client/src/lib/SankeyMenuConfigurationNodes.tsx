@@ -6,7 +6,6 @@ import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './Sa
 import { cut_name,default_node,add_new_node,delete_node } from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus} from 'react-icons/fa'
-import {useTranslation} from 'react-i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
@@ -17,8 +16,10 @@ import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTa
 import {SankeyMenuConfigurationNodesAgregation} from './SankeyMenuConfigurationNodesAgregation'
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
 import { textwrap } from 'd3-textwrap'
+import { TFunction } from 'i18next'
 
 const SankeyNodeEditionPropTypes = {
+  t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
@@ -32,34 +33,34 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 export const OpenSankeyMenuConfigurationNodes = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes_attributes:JSX.Element[]
 ) => {
   const ui : {[s:string] : JSX.Element}= {
-    'Attributes'      : SankeyMenuConfigurationNodesAttributes(menu_configuration_nodes_attributes),
-    'Labels'          : SankeyMenuConfigurationNodesLabel(data,set_data,multi_selected_nodes),
-    'Icon'            : SankeyMenuConfigurationNodesIcon(data,set_data,multi_selected_nodes),
-    'Tooltip'         : SankeyMenuConfigurationNodesTooltip(data,set_data,multi_selected_nodes),
+    'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
+    'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
+    'Icon'            : SankeyMenuConfigurationNodesIcon(t,data,set_data,multi_selected_nodes),
+    'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
   }
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
-    ui['Tags'] = SankeyMenuConfigurationNodesTags(data,set_data,multi_selected_nodes)
+    ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes)
   }
   if (Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0) {
-    ui['Agrégation'] = SankeyMenuConfigurationNodesAgregation(data,set_data,multi_selected_nodes)
+    ui['Agrégation'] = SankeyMenuConfigurationNodesAgregation(t,data,set_data,multi_selected_nodes)
   }
   if (multi_selected_nodes.current.length == 1) {
-    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(data,set_data,multi_selected_nodes)
+    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes)
   }
   return ui
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  { data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes }
+  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
-  const {t} =useTranslation()
 
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })

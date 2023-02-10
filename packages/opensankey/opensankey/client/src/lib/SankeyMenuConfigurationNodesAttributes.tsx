@@ -1,14 +1,14 @@
+import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tab } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
-import { useTranslation } from 'react-i18next'
 
 export const OpenSankeyConfigurationNodesAttributes = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 ) => {
-  const {t} =useTranslation()
   const isAllNodeVisible = () => {
     let visible = false
     multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
@@ -19,12 +19,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
     multi_selected_nodes.current.map(d => hide = (d.hide_lone_node) ? true : hide)
     return hide
   }
-  const isAllNodeToScale = () => {
-    let toScale = false
-    multi_selected_nodes.current.map(d => toScale = (d.not_to_scale) ? true : toScale)
-    return toScale
-  }
-
   const isAllNodeRect = () => {
     let rect = true
     if (multi_selected_nodes.current.length > 0) {
@@ -77,21 +71,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
     return (display_height) ? width : 0
   }  
   return [
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
-      </Col>
-      <Col xs={1}>
-        <FormCheck inline
-          type='switch'
-          checked={isAllNodeVisible()}
-          onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>,
     <Form.Group as={Row} >
       <Col xs={4}>
         <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
@@ -234,9 +213,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
 }
 
 export const SankeyMenuConfigurationNodesAttributes = (
+  t:TFunction,
   menu_configuration_nodes_attributes:JSX.Element[]
 ) => {
-  const {t} =useTranslation()
   //Function that check if all selected nodes have the same value for some parameter
 
   return <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}

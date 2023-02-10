@@ -3,15 +3,15 @@ import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstr
 import { SankeyData, SankeyNode } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { default_link } from './SankeyUtils'
-import {useTranslation} from 'react-i18next'
+import { TFunction } from 'i18next'
 
 
 export const SankeyMenuConfigurationNodesAgregation = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 ) => {
-  const {t} =useTranslation()
   const [parent_visible,set_parent_visible] = useState(false)
   const [cube_dimension,set_cube_dimension] = useState(
     Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.entries(data.nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0] : 'Primaire' 

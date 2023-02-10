@@ -4,8 +4,6 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { updateLayout } from './SankeyLayout'
-import {useTranslation} from 'react-i18next'
-
 
 /**
  * Define ApplyLayoutDialog
@@ -13,6 +11,7 @@ import {useTranslation} from 'react-i18next'
  * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 const ApplyLayoutDialogPropTypes = {
+  t:PropTypes.func.isRequired, 
   show_apply_layout : PropTypes.bool.isRequired,
   set_show_apply_layout: PropTypes.func.isRequired, 
   sankey_data : SankeyDataPropTypes,
@@ -30,9 +29,8 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
  * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
+export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
-  const {t} =useTranslation()
   const [elementToDispose, set_elementToDispose] = useState([''])
   return (
     <Modal
@@ -166,6 +164,7 @@ export const ApplyLayoutDialog = ({ show_apply_layout, set_show_apply_layout, sa
  * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; clickSaveDiagram: any; }}
  */
 const ApplySaveJSONPropTypes = {
+  t:PropTypes.func.isRequired, 
   show_save_json : PropTypes.bool.isRequired,
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data:SankeyDataPropTypes,
@@ -181,8 +180,7 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
  * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
-  const {t} =useTranslation()
+export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
   return (
     <Modal
@@ -230,6 +228,7 @@ export const ApplySaveJSONDialog = ({ show_save_json, set_show_save_json,sankey_
 }
 
 const ExcelModalPropTypes = {
+  t:PropTypes.func.isRequired, 
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
   set_data: PropTypes.func.isRequired,
@@ -248,10 +247,9 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
-  const {t} =useTranslation()
 
   return (
     <Modal
@@ -345,6 +343,7 @@ ExcelModal.propTypes = ExcelModalPropTypes
  * @type {{ publishImpl: any; set_show_publish_dialog: any; file_path_initial: any; }}
  */
 const PublishModalPropTypes = {
+  t:PropTypes.func.isRequired, 
   publishImpl: PropTypes.func.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
   file_path_initial: PropTypes.string.isRequired
@@ -362,9 +361,8 @@ type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
  * @param {PublishModalTypes} { publishImpl,set_show_publish_dialog,file_path_initial }
  * @returns
  */
-export const PublishModal: FunctionComponent<PublishModalTypes> = ({ publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
+export const PublishModal: FunctionComponent<PublishModalTypes> = ({ t,publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
   const [file_path,set_file_path] = useState(file_path_initial)
-  const {t} =useTranslation()
 
   return (
     <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >

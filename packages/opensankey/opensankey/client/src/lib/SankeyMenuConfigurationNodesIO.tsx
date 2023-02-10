@@ -3,7 +3,7 @@ import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup} f
 import { SankeyData, SankeyNode } from './types'
 import { link_visible,link_color} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
-import {useTranslation} from 'react-i18next'
+import { TFunction } from 'i18next'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -357,12 +357,12 @@ const has_link_come_from=(
    * @returns {*}
    */
 const tab_pos_link=(
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,io:string,tab_colored:boolean
 )=>{
-  const {t} =useTranslation()
   const link_io=getIOLink(data,multi_selected_nodes,pos,io)
   return (
     <>
@@ -404,11 +404,11 @@ const tab_pos_link=(
 }
          
 export const SankeyMenuConfigurationNodesIO = (
+  t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}
 ) => {
-  const {t} =useTranslation()
   const [link_io,set_link_io]=useState('output')
   const [link_pos,set_link_pos]=useState('right')
   const [tab_colored,set_tab_colored]=useState(false)
@@ -509,14 +509,14 @@ export const SankeyMenuConfigurationNodesIO = (
             label={t('Noeud.PF.col')}
             checked={tab_colored}
             onChange={() => {
-              console.log(tab_colored)
+              //console.log(tab_colored)
               set_tab_colored(!tab_colored)
             }}
           />
         </Col>
       </Form.Group>
     </Form>
-    {tab_pos_link(data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored)}
+    {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored)}
   </Tab>
 }
 

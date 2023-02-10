@@ -2,7 +2,6 @@ import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes, } from './types'
 import { Form, FormControl, FormLabel, Row, Col} from 'react-bootstrap'
 import React, { FunctionComponent, useState } from 'react'
-import {useTranslation} from 'react-i18next'
 
 /**
  * Variable that define the Menu element, it's variable and function
@@ -10,6 +9,7 @@ import {useTranslation} from 'react-i18next'
  * @type {{ data: any; set_data: any; }}
  */
 const MenuConfigurationLegendPropTypes = {
+  t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired
 }
@@ -21,10 +21,9 @@ const MenuConfigurationLegendPropTypes = {
 type MenuConfigurationLegendTypes = InferProps<typeof MenuConfigurationLegendPropTypes>
 
 const SankeyMenuConfigurationLegend: FunctionComponent<MenuConfigurationLegendTypes> = (
-  { data, set_data}
+  { t,data, set_data}
 ) => {
   const [legend_position, set_legend_position] = useState(data.legend_position)
-  const {t} =useTranslation()
 
   return (
     <>

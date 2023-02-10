@@ -4,11 +4,11 @@ import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
-import {useTranslation} from 'react-i18next'
 import * as d3 from 'd3'
 
 
 const SankeySettingsEditionTagsPropTypes = {
+  t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   elementTagNameProp: PropTypes.oneOf(['nodeTags','fluxTags','dataTags']).isRequired,
@@ -16,7 +16,7 @@ const SankeySettingsEditionTagsPropTypes = {
 }
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ data, set_data,elementTagNameProp,elementNameProp }) => {
+const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ t,data, set_data,elementTagNameProp,elementNameProp }) => {
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
@@ -35,7 +35,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     data[type_tag_name][tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
-  const {t} =useTranslation()
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
