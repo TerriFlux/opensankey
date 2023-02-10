@@ -3,12 +3,12 @@ import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, FormGroup } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyData } from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
 import { FaAngleDoubleLeft, FaPlay, FaForward, FaBackward} from 'react-icons/fa'
-import SankeyEdition from './SankeyMenuEdition'
+import SankeyMenuBanner from './SankeyMenuBanner'
 import {downloadExamples} from './SankeyUtils'
 import {useTranslation} from 'react-i18next'
 import SankeyLoad from './SankeyLoad'
@@ -38,27 +38,16 @@ export type selected_type = {'label':string;'value':string}
  *
  * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
+
 const MenuPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  show_menu: PropTypes.bool.isRequired,
-  right_menu: PropTypes.element,
-  settings_edition: PropTypes.element.isRequired,
-  settings_edition_node_tags: PropTypes.element.isRequired,
-  settings_edition_link_tags: PropTypes.element.isRequired,
-  settings_edition_data_tags: PropTypes.element.isRequired,
   logo: PropTypes.string.isRequired,
-  logo_width: PropTypes.number.isRequired,
+  logo_width: PropTypes.number,
   app_name: PropTypes.string.isRequired,
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement).isRequired}).isRequired,
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-  nodes_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-  links_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
   selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
@@ -67,11 +56,9 @@ const MenuPropTypes = {
   formations_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
-  additional_selector: PropTypes.element,
   set_current_filter: PropTypes.func.isRequired,
 
   nav_item_active: PropTypes.string.isRequired,
-  set_nav_item_active: PropTypes.func.isRequired,
 
   mode_selection: PropTypes.string.isRequired,
   set_mode_selection: PropTypes.func.isRequired,
@@ -91,8 +78,10 @@ const MenuPropTypes = {
   setNotStarted : PropTypes.func.isRequired,
   path: PropTypes.string.isRequired,
   launch: PropTypes.func.isRequired,
-  configurations_menus: PropTypes.func.isRequired,
+  configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
+  show_nav: PropTypes.bool.isRequired,
+  set_show_nav: PropTypes.func.isRequired,
   show_excel_dialog: PropTypes.bool.isRequired,
   set_show_excel_dialog: PropTypes.func.isRequired,
   show_apply_layout: PropTypes.bool.isRequired,
@@ -339,28 +328,18 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
  */
 const Menu: FunctionComponent<MenuTypes> = (
   { data, set_data,
-    show_menu,
-    right_menu,
-    nav_item_active,set_nav_item_active,
-    settings_edition,
-    settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
+    nav_item_active,
+    show_nav,
+    set_show_nav,
     logo, logo_width,app_name,
     button_ref,
     accordion_ref,
-    nodes_accordion_ref,
-    links_accordion_ref,
     selected_node,
-    multi_selected_nodes,
-    multi_selected_links,
     selected_link,
     url_prefix,
-    multi_selected_label,
     set_current_filter,
-    additional_selector,
     mode_selection,
     set_mode_selection,
-    style_to_apply,
-    set_style_to_apply,
     callback,
     show_load,
     set_show_load,
@@ -384,7 +363,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     menus
   }
 ) => {
-  const [show_nav,set_show_nav] = useState(false)
+
   const {t} =useTranslation()
 
   let max_link_value = 0
@@ -566,7 +545,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
-          <Navbar.Brand href="#"><img src={logo} width={logo_width} /> {app_name} </Navbar.Brand>
+          <Navbar.Brand href="#"><img src={logo} width={logo_width ? logo_width : 200} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
               {menus}
@@ -584,7 +563,6 @@ const Menu: FunctionComponent<MenuTypes> = (
                   </ToggleButton>
                 </ButtonGroup>) : (<></>)
               }
-              {right_menu}
             </Nav></>
           ) : (<><br />
             <h2>{window.sankey.header}</h2>
@@ -594,10 +572,9 @@ const Menu: FunctionComponent<MenuTypes> = (
       {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
-      {(show_menu) ? <SankeyEdition
+      <SankeyMenuBanner
         data={data}
         set_data={set_data}
-        additional_selector={additional_selector}
         mode_selection={mode_selection}
         set_mode_selection={set_mode_selection}
         set_current_filter={set_current_filter}
@@ -634,31 +611,13 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Button>
           </ButtonGroup>
         </FormGroup>
-      </Row>{/* {set_data({ ...data })} */}</>}
+      </Row>{/* {set_data({ ...data })} */}</>
       {(show_nav && !data.static_sankey) ? 
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
             <SankeyConfigurationMenu 
-              data={data}
-              set_data={set_data}
-              show_menu={show_menu}
               nav_item_active={nav_item_active}
-              set_nav_item_active={set_nav_item_active}
-              settings_edition={settings_edition}
-              settings_edition_node_tags={settings_edition_node_tags}
-              settings_edition_link_tags={settings_edition_link_tags}
-              settings_edition_data_tags={settings_edition_data_tags}
-              accordion_ref={accordion_ref}
-              nodes_accordion_ref={nodes_accordion_ref}
-              links_accordion_ref={links_accordion_ref}
-              selected_node={selected_node}
-              multi_selected_nodes={multi_selected_nodes}
-              multi_selected_links={multi_selected_links}
-              selected_link={selected_link}
-              multi_selected_label={multi_selected_label}
-              style_to_apply={style_to_apply}
-              set_style_to_apply={set_style_to_apply}
-              set_show_nav={set_show_nav}
+              accordion_ref={accordion_ref!}
               configuration_menus={configurations_menus} />
           </Offcanvas.Body>
         </Offcanvas>

@@ -33,7 +33,6 @@ const ExempleItemPropTypes = {
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  //callback: PropTypes.func.isRequired,
   launch: PropTypes.func.isRequired
 }
 
@@ -55,7 +54,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
     <>
       { ('Files' in exemple_menu) 
         ? (exemple_menu['Files'] as string[]).map( (item,index)=> {
-          //let the_callback = ()=> 0
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
             let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
@@ -69,7 +67,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
             )
           }
           if (item.includes('.xlsx')) {
-            //the_callback = callback
             path = current_path+'/'+item
           }
           return (
@@ -118,7 +115,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     multi_selected_label={multi_selected_label}
-                    //callback={callback}
                     launch={launch}
                   />
                 </NavDropdown>

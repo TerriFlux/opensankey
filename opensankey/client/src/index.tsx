@@ -76,7 +76,7 @@ if (!window.SankeyToolsStatic) {
       render(
         <>
           <SankeyApp
-            sankey_data={data}
+            initial_sankey_data={data}
             exemple_menu={exemple_menu}
             formations_menu={formations_menu}
             logo={logo}
@@ -88,7 +88,7 @@ if (!window.SankeyToolsStatic) {
       render(
         <>
           <SankeyApp
-            sankey_data={data}
+            initial_sankey_data={data}
             exemple_menu={{}}
             formations_menu={{}}
             logo={logo}
@@ -118,7 +118,7 @@ if (!window.SankeyToolsStatic) {
   render(
     <>
       <SankeyApp
-        sankey_data={data}
+        initial_sankey_data={data}
         exemple_menu={{}}
         formations_menu={{}}
         logo={logo}
