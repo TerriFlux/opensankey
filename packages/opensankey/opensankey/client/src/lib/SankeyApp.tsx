@@ -1,64 +1,63 @@
-import React, { FunctionComponent, useState, useRef, useEffect, Validator } from 'react'
-import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
-import SankeyDraw from './SankeyDraw'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, SankeyNode } from './types'
-import { SankeySettingsEdition,OpenSankeySettingsEdition } from './SankeyMenuConfigurationLayout'
-import { OpenSankeyConfigurationsMenus } from './SankeyMenuConfiguration'
-import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
-import Menu, { OpenSankeyMenus } from './SankeyMenu'
-import { ExempleItem } from './SankeyMenuExamples'
-import { nodeTooltipsContent, linkTooltipsContent } from './SankeyTooltip'
-import * as SankeyUtils from './SankeyUtils'
-import GoogleFontLoader from 'react-google-font-loader'
+import React, { useState, useEffect, useRef, Validator } from 'react'
+import { ReactElementLike } from 'prop-types'
+import { Modal,Button, NavDropdown} from 'react-bootstrap'
+import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
-import { keyHandler } from './SankeyDrawFunction'
+
+import SankeyDraw from './SankeyDraw'
+import Menu, { OpenSankeyMenus } from './SankeyMenu'
+import { ExempleItem } from './SankeyMenuExamples'
+import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
+import * as SankeyUtils from './SankeyUtils'
+import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
+import {OpenSankeyConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
+import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
+
+import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
+
 import { useTranslation } from 'react-i18next'
-import { NavDropdown } from 'react-bootstrap'
+import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { default_link, default_node, link_text } from './SankeyUtils'
+import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
+import { keyHandler } from './SankeyDrawFunction'
+
+type SankeyAppTypes = {
+  initial_sankey_data : SankeyData
+  exemple_menu        : object
+  formations_menu      : object
+  logo: string
+}
 
 declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-    sankey: {
-      advanced?: boolean
-      logo?: string,
-      logo_width: number
-    }
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    sankey_data_file:RequestInfo
+    sous_filieres : { [ key : string ] : string }
+    units: string[]
+    flask_logo? : string
+    flask_header? : string
+    logo_width? : number
+    legend_average : string
+    legend_uncert : string
+    help_text : string
+    welcome_text: string
+    excel : string
+    logo: string,
+    advanced: boolean
   }
-
-const SankeyAppPropTypes = {
-  sankey_data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  exemple_menu: PropTypes.object.isRequired,
-  formations_menu: PropTypes.object.isRequired,
-  logo: PropTypes.string.isRequired,
 }
 
-export const settings_edition = (
-  data:SankeyData,
-  set_data :(data:SankeyData)=>void,
-) => {
-  return <SankeySettingsEdition 
-    data={data} 
-    set_data={set_data}
-    components={OpenSankeySettingsEdition}
-  />
-}
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo} : SankeyAppTypes) => {
 
-type SankeyAppTypes = InferProps<typeof SankeyAppPropTypes>
 
-const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_menu,formations_menu,logo }) => {
-  const default_node = SankeyUtils.default_node(sankey_data)
-  const start_link = (Object.keys(sankey_data.links).length == 0) ? SankeyUtils.default_link(sankey_data) : sankey_data.links[Object.keys(sankey_data.links)[0]]
-
-  // Declaration of  react's hook, variable used by different developped component
-  // They're constitued of a variable (exemple: show_toast) 
-  // wich are typed by the type of value used in useState (exemple : false so it's boolean) 
-  // and a function to modify this value wich generaly have the name of the variable preceded by 'set_'
-
-  //These hooks are used to pass data between component
-  const selected_link = useRef(start_link)
-  const [data, set_data] = useState<SankeyData>(sankey_data)
-  const selected_node = useRef(default_node)
+  //- All
+  const [nav_item_active, set_nav_item_active] = useState<string>('')
+  const [style_to_apply, set_style_to_apply] = useState('default')
+  const [mode_selection, set_mode_selection] = useState('s')
+  const selected_link = useRef(default_link(initial_sankey_data))
+  const selected_node = useRef(default_node(initial_sankey_data))
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
   const multi_selected_label = useRef([])
@@ -66,18 +65,22 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const accordion_ref = useRef<HTMLDivElement>(null)
   const links_accordion_ref = useRef<HTMLDivElement>(null)
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
-  const [nav_item_active, set_nav_item_active] = useState<string>('')
+  const [data,set_data] = useState<SankeyData>(initial_sankey_data)
 
-  const [show_draw, set_show_draw] = useState(false)
-  const [mode_selection, set_mode_selection] = useState('s')
-  const [style_to_apply, set_style_to_apply] = useState('default')
-  const display_links = data.links
-  const [show_load,set_show_load] = useState(false)
+  //- Processess
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)
   const [not_started,setNotStarted] = useState(true)
   const [path,setPath] = useState('')
-  
+
+  //- Styles
+  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [selected_style_node, set_selected_style_node] = useState('default')
+
+  //- Modals and Dialogs
+  const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : '')
+  const [show_draw, set_show_draw] = useState(false)
+  const [show_load,set_show_load] = useState(false)
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
   const [show_save_json, set_show_save_json] = useState(false)
@@ -95,9 +98,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   const [showShortcut, setshowShortcut] = useState(false)
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [showHelp, setshowHelp] = useState(false)
-  const [selected_style_link, set_selected_style_link] = useState('default')
-  const [selected_style_node, set_selected_style_node] = useState('default')
-
+  
   const {t} =useTranslation()
 
   //Réinitialise data et vide les noeud/liens sélectionnés 
@@ -113,6 +114,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
     set_selected_style_link('default')
     set_data({ ...data })
   }
+
   const launch = (path:string) => {
     setPath(path)
     set_show_load(true)
@@ -121,12 +123,50 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
     setNotStarted(false)
   }
 
-  const open_sankey_menus = OpenSankeyMenus(
+  //- 1. Builds Configuration Menus
+  //- 1.1 Builds Configuration Menus Layout
+  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(data,set_data)
+  //- 1.2 Builds Configuration Menus Node 
+  //- 1.2.1 Builds Configuration Menus Node Attributes 
+  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(data,set_data,multi_selected_nodes)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes)
+  //- 1.2.1 Builds Configuration Menus Node Tags 
+  const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
+    data={data}
+    set_data={set_data}
+    elementTagNameProp='nodeTags'
+    elementNameProp='nodes' />
+  //- 1.3 Builds Configuration Menus Links 
+  const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
+    data={data}
+    set_data={set_data}
+    elementTagNameProp='fluxTags'
+    elementNameProp='links' />
+  //- 1.4 Builds Configuration Menus DataTags 
+  const  menu_configuration_data_tags=<SankeySettingsEditionElementTags
+    data={data}
+    set_data={set_data}
+    elementTagNameProp='dataTags'
+    elementNameProp='links' />
+  const [show_nav,set_show_nav] = useState(false)
+  //- End of 1.
+  const configurations_menus =  OpenSankeyConfigurationsMenus(
+    data, set_data,
+    nav_item_active,set_nav_item_active,
+    nodes_accordion_ref,links_accordion_ref,
+    selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
+    style_to_apply,set_style_to_apply,set_show_nav,
+    menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
+    menu_configuration_nodes
+  )
+
+  //- 2. Build Menus
+  const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     setshowShortcut,setshowHelp,data,set_data,''
   )
-  open_sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
+  sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem 
       exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
       data={data}
@@ -139,7 +179,7 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       launch={launch}
     /></NavDropdown >
   )
-  open_sankey_menus.splice(3,0,<NavDropdown title={t('Menu.Exemples')} id="exemples" >
+  sankey_menus.splice(3,0,<NavDropdown title={t('Menu.Exemples')} id="exemples" >
     <ExempleItem
       exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
       url_prefix=''
@@ -152,11 +192,13 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
       launch={launch}
     /></NavDropdown >
   )
-  
-  const menus = open_sankey_menus.map((c:JSX.Element)=>c)
 
-  // Reformat la fonction pour qu'elle puisse être envoyé à document.onkeydown qui n'accepte les fonction que si elles ont pour paramètres
-  //  event de type KeyBoardEvent
+  //- 3. Sankey Draws
+  useBeforeunload((event : BeforeUnloadEvent) => {
+    event.preventDefault()
+    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+  })
+
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref)
   }
@@ -165,145 +207,137 @@ const SankeyApp: FunctionComponent<SankeyAppTypes> = ({ sankey_data, exemple_men
   //-Flêches qui déplace les noeuds sélectionnés
   //-Echape qui ferme la navbar
   //-Ctrl+S qui sauvegarde une vue 
+  //document.onkeydown = formatKeyHandler
   document.onkeydown = formatKeyHandler
 
-  useBeforeunload((event : BeforeUnloadEvent) => {
-    event.preventDefault()
-    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-  })
-
   return (
-
-    <div style={{ 'backgroundColor': 'WhiteSmoke' }}>
-      <GoogleFontLoader
-        fonts={data.display_style.font_family.map((d) => {
-          return { 'font': d }
-        })}
-      />
-      <Menu
-        menus={menus}
-        data={data}
-        set_data={set_data}
-        show_menu={true}
-        app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
-        set_current_filter={(
-          new_current_filter: number
-        ) => {
-          const { display_style } = data
-          display_style.filter = +new_current_filter
-          set_data({ ...data })
-        } }
-        callback={() => 0}
-        launch={launch}
-        nav_item_active={nav_item_active}
-        set_nav_item_active={set_nav_item_active}
-        logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
-        logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
-        selected_node={selected_node}
-        multi_selected_nodes={multi_selected_nodes}
-        multi_selected_links={multi_selected_links}
-        multi_selected_label={multi_selected_label}
-        accordion_ref={accordion_ref as { current: HTMLDivElement} }
-        nodes_accordion_ref={nodes_accordion_ref as { current: HTMLDivElement} }
-        links_accordion_ref={links_accordion_ref as { current: HTMLDivElement} }
-        button_ref={button_ref as { current: HTMLLabelElement} }
-        selected_link={selected_link}
-        url_prefix=''
-        path={path}
-        settings_edition={settings_edition(data, set_data)}
-        settings_edition_node_tags={<SankeySettingsEditionElementTags
-          data={data}
+    <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
+      <>
+        <Menu 
+          data={data} 
           set_data={set_data}
-          elementTagNameProp='nodeTags'
-          elementNameProp='nodes' />}
-        settings_edition_link_tags={<SankeySettingsEditionElementTags
-          data={data}
-          set_data={set_data}
-          elementTagNameProp='fluxTags'
-          elementNameProp='links' />}
-        settings_edition_data_tags={<SankeySettingsEditionElementTags
-          data={data}
-          set_data={set_data}
-          elementTagNameProp='dataTags'
-          elementNameProp='links' />}
-        mode_selection={mode_selection}
-        set_mode_selection={set_mode_selection}
-        style_to_apply={style_to_apply}
-        set_style_to_apply={set_style_to_apply}
-        show_load={show_load}
-        set_show_load={set_show_load}
-        processing={processing}
-        setProcessing={setProcessing}
-        failure={failure}
-        setFailure={setFailure}
-        not_started={not_started}
-        setNotStarted={setNotStarted}
-        configurations_menus={OpenSankeyConfigurationsMenus} 
-        show_excel_dialog={show_excel_dialog}
-        show_apply_layout={show_apply_layout}
-        show_save_json={show_save_json}
-        showPreference={showPreference}
-        showStyleNode={showStyle}
-        show_publish_dialog={show_publish_dialog}
-        showHelp={showHelp}
-        setshowHelp={setshowHelp}
-        selected_style_node={selected_style_node}
-        selected_style_link={selected_style_link}
-        showStyleLink={showStyleLink}
-        showShortcut={showShortcut}
-        setshowShortcut={setshowShortcut}
-        set_show_excel_dialog={set_show_excel_dialog}
-        set_show_apply_layout={set_show_apply_layout}
-        set_show_save_json={set_show_save_json}
-        setShowPreference={setShowPreference}
-        set_selected_style_link={set_selected_style_link}
-        set_selected_style_node={set_selected_style_node}
-        set_show_publish_dialog={set_show_publish_dialog}
-        setShowStyleNode={setShowStyle}
-        setShowStyleLink={setShowStyleLink}
-      />
-      {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
-      }
-      {useEffect(() => {
-
-        const timer = setTimeout(() => {
-          set_show_draw(true)
-        }, 100)
-        return () => clearTimeout(timer)
-      }, [])}
-      {
-        (show_draw) ? (<SankeyDraw
-          data={data}
-          set_data={set_data}
-
-          multi_selected_nodes={multi_selected_nodes}
-          multi_selected_label={multi_selected_label}
-          multi_selected_links={multi_selected_links}
-
-          select_node={(n: SankeyNode) => {
-            selected_node.current = n
-          }}
-          node_arrow_visible={
-            (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!display_links[n.inputLinksId[0]].arrow) ? false : true
-          }
-          select_link={(l: SankeyLink) => {
-            selected_link.current = l
-          }}
-          link_text={SankeyUtils.link_text}
-          nodeTooltipsContent={nodeTooltipsContent}
-          linkTooltipsContent={linkTooltipsContent}
-          button_ref={button_ref}
-          accordion_ref={accordion_ref}
-          nodes_accordion_ref={nodes_accordion_ref}
-          links_accordion_ref={links_accordion_ref}
+          show_nav={show_nav}
+          set_show_nav={set_show_nav}
+          nav_item_active={nav_item_active}
+          callback={()=>null}
+          path={path}
+          launch={launch}
+          url_prefix={ ''}
+          logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
+          logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}       
+          app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
-        />) : (<></>)
-      }
-    </div >
+          style_to_apply={style_to_apply}
+          set_style_to_apply={set_style_to_apply}
+          set_current_filter={(
+            new_current_filter: number
+          ) => {
+            const { display_style } = data
+            display_style.filter = +new_current_filter
+            set_data({ ...data })
+          }}
+          selected_node={selected_node}
+          accordion_ref={accordion_ref as {current : HTMLDivElement}}
+          button_ref={button_ref as {current : HTMLLabelElement}}   
+          selected_link={selected_link}
+          show_load={show_load}
+          set_show_load={set_show_load}
+          processing={processing}
+          setProcessing={setProcessing}
+          failure={failure}
+          setFailure={setFailure}
+          not_started={not_started}
+          setNotStarted={setNotStarted}
+          configurations_menus={configurations_menus}
+          menus={sankey_menus}
+          show_excel_dialog={show_excel_dialog}
+          show_apply_layout={show_apply_layout}
+          show_save_json={show_save_json}
+          showPreference={showPreference}
+          showStyleNode={showStyle}
+          show_publish_dialog={show_publish_dialog}
+          showHelp={showHelp}
+          setshowHelp={setshowHelp}
+          selected_style_node={selected_style_node}
+          selected_style_link={selected_style_link}
+          showStyleLink={showStyleLink}
+          showShortcut={showShortcut}
+          setshowShortcut={setshowShortcut}
+          set_show_excel_dialog={set_show_excel_dialog}
+          set_show_apply_layout={set_show_apply_layout}
+          set_show_save_json={set_show_save_json}
+          setShowPreference={setShowPreference}
+          set_selected_style_link={set_selected_style_link}
+          set_selected_style_node={set_selected_style_node}
+          set_show_publish_dialog={set_show_publish_dialog}
+          setShowStyleNode={setShowStyle}
+          setShowStyleLink={setShowStyleLink}
+        />
+        {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
+        }
+        {useEffect(() => {
+          const timer = setTimeout(() => {
+            set_show_draw(true)
+          }, 100)
+          return () => clearTimeout(timer)
+        }, [])}
+        {
+          (show_draw ) ? (<SankeyDraw
+            data={data}
+            set_data={set_data}
+            multi_selected_nodes={multi_selected_nodes}
+            multi_selected_label={multi_selected_label}
+            multi_selected_links={multi_selected_links}
+            accordion_ref={accordion_ref}
+            nodes_accordion_ref={nodes_accordion_ref}
+            links_accordion_ref={links_accordion_ref}
+            button_ref={button_ref}   
+            select_node={(n: SankeyNode) => {
+              selected_node.current = n
+            }}
+            node_arrow_visible={
+              (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+            }
+
+            select_link={(l: SankeyLink) => {
+              selected_link.current = l
+            }}
+            link_text = { link_text }
+            nodeTooltipsContent={nodeTooltipsContent }
+            linkTooltipsContent={linkTooltipsContent }
+            mode_selection={mode_selection}
+            set_mode_selection={set_mode_selection}
+          />) : (<></>)}
+        <Modal 
+          bsSize="large" 
+          show={welcome_text !== undefined && welcome_text !== ''} 
+          onHide={()=>{
+            set_welcome_text('')
+          }}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+          <Modal.Header closeButton>
+            <Modal.Title>Lisez Moi</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {welcome_text ? parse(welcome_text) : ''}
+            <Button 
+              onClick={()=>{
+                set_welcome_text('')
+              }}
+            >J&apos;ai lu</Button>
+          </Modal.Body>
+        </Modal>
+      </>
+    </div>
   )
 }
 
-SankeyApp.propTypes = SankeyAppPropTypes
-
 export default SankeyApp
+
+
+

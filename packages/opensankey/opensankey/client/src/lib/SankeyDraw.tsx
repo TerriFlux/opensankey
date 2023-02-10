@@ -23,7 +23,6 @@ const SankeyDrawPropTypes = {
 
   select_link: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
-  // test_link_value: PropTypes.func.isRequired,
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),

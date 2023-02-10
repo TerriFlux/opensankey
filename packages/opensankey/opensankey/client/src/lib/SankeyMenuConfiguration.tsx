@@ -1,6 +1,6 @@
 import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes, SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
 import React, { FunctionComponent, useState, Ref } from 'react'
 import {useTranslation} from 'react-i18next'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
@@ -11,13 +11,8 @@ import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 export const OpenSankeyConfigurationsMenus = (
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
-  show_menu:boolean,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
-  settings_edition: JSX.Element,
-  settings_edition_node_tags:JSX.Element, 
-  settings_edition_link_tags:JSX.Element, 
-  settings_edition_data_tags:JSX.Element,
   nodes_accordion_ref:Ref<HTMLDivElement>,
   links_accordion_ref:Ref<HTMLDivElement>,
   selected_node:{current:SankeyNode},
@@ -27,15 +22,21 @@ export const OpenSankeyConfigurationsMenus = (
   multi_selected_label:{current: SankeyLabel[] },
   style_to_apply:string,
   set_style_to_apply:(s:string)=>void,
-  set_show_nav:(d:boolean)=>void
+  set_show_nav:(d:boolean)=>void,
+  menu_configuration_layout: JSX.Element[],
+  menu_configuration_node_tags:JSX.Element, 
+  menu_configuration_link_tags:JSX.Element, 
+  menu_configuration_data_tags:JSX.Element,
+  menu_configuration_nodes:{
+    [s: string]: JSX.Element;
+  }
 ) => {
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   const {t} =useTranslation()
-
   return [
     <Accordion.Item
       id='MEP'
-      style={{ 'display': (show_menu && data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
+      style={{ 'display': (data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
       eventKey="1"
       onClick={
         evt => {
@@ -51,11 +52,11 @@ export const OpenSankeyConfigurationsMenus = (
       }
       <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
       <Accordion.Body>
-        {settings_edition}
+        {menu_configuration_layout}
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
-      style={{ 'display': (show_menu) ? 'block' : 'none' }}
+      style={{ 'display': 'block'  }}
       eventKey="2"
       id="Nodes"
       onClick={
@@ -72,7 +73,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Body style={{ padding: '0px' }}>
         <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
           <Accordion.Item
-            style={{ 'display': (show_menu && data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
+            style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
             eventKey="EtiquetteNoeud"
             onClick={
               evt => {
@@ -93,7 +94,7 @@ export const OpenSankeyConfigurationsMenus = (
               {t('Menu.EN')}
             </Accordion.Header>
             <Accordion.Body>
-              {settings_edition_node_tags}
+              {menu_configuration_node_tags}
             </Accordion.Body>
           </Accordion.Item>
 
@@ -123,6 +124,7 @@ export const OpenSankeyConfigurationsMenus = (
                 selected_node={selected_node}
                 multi_selected_nodes={multi_selected_nodes}
                 multi_selected_links={multi_selected_links}
+                menu_configuration_nodes={Object.values(menu_configuration_nodes)}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -130,7 +132,7 @@ export const OpenSankeyConfigurationsMenus = (
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
-      style={{ 'display': (show_menu) ? 'block' : 'none' }}
+      style={{ 'display': 'block' }}
       id='Flux'
       eventKey="3"
       onClick={evt => {
@@ -146,7 +148,7 @@ export const OpenSankeyConfigurationsMenus = (
         <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
           <Accordion.Item
             eventKey="8"
-            style={{ 'display': (show_menu && data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
+            style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
             onClick={evt => {
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                 set_sub_nav_item_active('')
@@ -160,7 +162,7 @@ export const OpenSankeyConfigurationsMenus = (
             }}
           >
             <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
-            <Accordion.Body>{settings_edition_link_tags}</Accordion.Body>
+            <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
           </Accordion.Item>
           <Accordion.Item  
             eventKey='editionFlux'
@@ -194,7 +196,7 @@ export const OpenSankeyConfigurationsMenus = (
     <Accordion.Item
       id="dataTags"
       eventKey="dimension"
-      style={{ 'display': (show_menu && data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
+      style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
       onClick={evt => {
         if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'dimension') {
           set_nav_item_active('')
@@ -204,12 +206,12 @@ export const OpenSankeyConfigurationsMenus = (
       }}
     >
       <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
-      <Accordion.Body>{settings_edition_data_tags}</Accordion.Body>
+      <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
       id="LL"
       eventKey="7"
-      style={{ 'display': (show_menu && data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
+      style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
       onClick={evt => {
         if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
           set_nav_item_active('')
@@ -229,7 +231,7 @@ export const OpenSankeyConfigurationsMenus = (
     </Accordion.Item>,
     <Accordion.Item
       id="Legend"
-      style={{ 'display': (show_menu && data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
+      style={{ 'display': (data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
       eventKey="legend"
       onClick={
         evt => {
@@ -257,31 +259,9 @@ export const OpenSankeyConfigurationsMenus = (
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 const ConfigurationMenuPropTypes = {
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  show_menu: PropTypes.bool.isRequired,
-  settings_edition: PropTypes.element.isRequired,
-  settings_edition_node_tags: PropTypes.element.isRequired,
-  settings_edition_link_tags: PropTypes.element.isRequired,
-  settings_edition_data_tags: PropTypes.element.isRequired,
-
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-  nodes_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-  links_accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-  selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
-  selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
-
   nav_item_active: PropTypes.string.isRequired,
-  set_nav_item_active: PropTypes.func.isRequired,
-  set_show_nav: PropTypes.func.isRequired,
-  style_to_apply: PropTypes.string.isRequired,
-  set_style_to_apply: PropTypes.func.isRequired,
-
-  configuration_menus: PropTypes.func.isRequired
+  configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
 }
 /**
  * Description placeholder
@@ -291,34 +271,15 @@ const ConfigurationMenuPropTypes = {
 type ConfigurationMenuTypes = InferProps<typeof ConfigurationMenuPropTypes>
 
 export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
-  { data, set_data,
-    show_menu,
-    nav_item_active,set_nav_item_active,
-    settings_edition,
-    settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
+  { 
+    nav_item_active,
     accordion_ref,
-    nodes_accordion_ref,
-    links_accordion_ref,
-    selected_node,
-    multi_selected_nodes,
-    multi_selected_links,
-    selected_link,
-    multi_selected_label,
-    style_to_apply,
-    set_style_to_apply,
-    set_show_nav,
     configuration_menus
   }
 ) => {
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
-      {configuration_menus(
-        data, set_data,show_menu,nav_item_active,set_nav_item_active,
-        settings_edition,settings_edition_node_tags, settings_edition_link_tags, settings_edition_data_tags,
-        nodes_accordion_ref,links_accordion_ref,
-        selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
-        style_to_apply,set_style_to_apply,set_show_nav
-      ).map((c:JSX.Element)=>c)}
+      {configuration_menus.map((c:JSX.Element)=>c)}
     </Accordion>
   )
 }
