@@ -1472,7 +1472,6 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
 export const viewsAccordion = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  show_menu: boolean,
   nav_item_active: string,
   set_nav_item_active: (s:string)=>void,
   view:string,
@@ -1484,7 +1483,7 @@ export const viewsAccordion = (
   return <Accordion.Item
     id='Visualisation'
     eventKey="Visualisation"
-    style={{ 'display': show_menu ? 'block' : 'none'}}
+    style={{ 'display': 'block' }}
     onClick={
       evt => {
         if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
