@@ -96,7 +96,7 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link)){
         
-        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event,data,scale,inv_scale,min_thickness)
+        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this as unknown as SVGPathElement, event,data,scale,inv_scale,min_thickness)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',
