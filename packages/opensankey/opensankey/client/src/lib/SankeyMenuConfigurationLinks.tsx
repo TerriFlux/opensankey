@@ -20,7 +20,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links, children }
+  { t,data, set_data, selected_link, multi_selected_links }
 ) => {
   const { fluxTags,dataTags } = data
   const [forceUpdate, setForceUpdate] = useState(false)
@@ -1638,7 +1638,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 </Row>
               </Form>
             </Tab>
-            {children}
           </Tabs>
         </Col>
       </Row>
