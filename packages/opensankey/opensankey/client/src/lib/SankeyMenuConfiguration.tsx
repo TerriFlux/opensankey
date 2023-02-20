@@ -3,8 +3,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
 import React, { FunctionComponent, useState, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
-import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
-import SankeyMenuConfigurationLegend from './SankeyMenuConfigurationLegend'
+// import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { TFunction } from 'i18next'
 
@@ -30,7 +29,13 @@ export const OpenSankeyConfigurationsMenus = (
   menu_configuration_data_tags:JSX.Element,
   menu_configuration_nodes:{
     [s: string]: JSX.Element;
-  }
+  },
+  menu_configuration_links:{
+    [s: string]: JSX.Element;
+  },
+  menu_configuration_free_labels:JSX.Element[],
+  menu_configuration_legends:JSX.Element[]
+
 ) => {
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   return [
@@ -189,6 +194,7 @@ export const OpenSankeyConfigurationsMenus = (
                 set_data={set_data}
                 selected_link={selected_link}
                 multi_selected_links={multi_selected_links}
+                menu_configuration_links={Object.values(menu_configuration_links)}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -224,12 +230,13 @@ export const OpenSankeyConfigurationsMenus = (
     >
       <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
       <Accordion.Body>
-        <SankeyLabelEdition
+        {/* <SankeyLabelEdition
           t={t}
           data={data}
           set_data={set_data}
           multi_selected_label={multi_selected_label}
-        />
+        /> */}
+        {menu_configuration_free_labels}
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
@@ -247,11 +254,7 @@ export const OpenSankeyConfigurationsMenus = (
       }>
       <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
       <Accordion.Body>
-        <SankeyMenuConfigurationLegend
-          t={t}
-          data={data}
-          set_data={set_data}
-        />
+        {menu_configuration_legends}
       </Accordion.Body>
     </Accordion.Item>
   ]
@@ -283,7 +286,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 ) => {
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
-      {configuration_menus.map((c:JSX.Element)=>c)}
+      {configuration_menus}
     </Accordion>
   )
 }

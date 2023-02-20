@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
+import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
 /**
  * 
@@ -945,7 +946,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
   const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  const height_navbarAndHerowrap=(elementNavBar && !data.static_sankey)?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  const height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
 
   let sous_filieres = undefined
   if (window.sankey && window.sankey.sous_filieres) {
@@ -968,7 +969,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
         {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-              {SankeyBannerRows(t,data,set_data).map((c:JSX.Element)=>c)}
+              {SankeyBannerRows(t,data,set_data)}
             </Row>
             <Row>
               <Col className='text-end'>
@@ -1007,7 +1008,39 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
       The different logo in the buttons come from https://fontawesome.com/icons
       */}
       <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
-        {(data.static_sankey)?<></>:<Col>
+        {(data.static_sankey)? <Col>
+          <FormGroup as={Col} lg='auto'>
+            <ButtonGroup >
+              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'p' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaPlay />
+              </Button>
+              <Button variant={'outline-success'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowUp' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaBackward />
+              </Button>
+              <Button variant={'outline-warning'} onClick={() => {
+                const ev = document
+                const tmp = { key: 'ArrowDown' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+              }}>
+                <FaForward />
+              </Button>
+            </ButtonGroup>
+          </FormGroup>
+        </Col>:<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
 

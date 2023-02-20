@@ -39,6 +39,9 @@ export const OpenSankeyMenuConfigurationNodes = (
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes_attributes:JSX.Element[]
 ) => {
+  const [link_io,set_link_io]=useState<string>('output')
+  const [link_pos,set_link_pos]=useState<string>('right')
+  const [tab_colored,set_tab_colored]=useState<boolean>(false)
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
     'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
@@ -52,7 +55,7 @@ export const OpenSankeyMenuConfigurationNodes = (
     ui['Agrégation'] = SankeyMenuConfigurationNodesAgregation(t,data,set_data,multi_selected_nodes)
   }
   if (multi_selected_nodes.current.length == 1) {
-    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes)
+    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored)
   }
   return ui
 }
@@ -89,7 +92,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             multi_selected_nodes.current.forEach( n => 
               d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
             )
-            setForceUpdate(!forceUpdate)          
+            setForceUpdate(!forceUpdate)
+            set_data({...data})         
           }}
           labelledBy={'hello'}
         />
@@ -282,7 +286,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       <Row>
         <Col sm={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            {menu_configuration_nodes.map((c:JSX.Element)=>c)}
+            {menu_configuration_nodes.map((c:JSX.Element)=>{
+              console.log(c)
+              return c})}
           </Tabs>
           <ButtonGroup as={Row}>
             <Col>

@@ -1,23 +1,21 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, {useState } from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck,Button, ButtonGroup } from 'react-bootstrap'
-import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes, SankeyLabel, SankeyLabelPropTypes} from './types'
+import {  SankeyLabel,SankeyData} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import { selected_type } from './SankeyMenu'
+import { TFunction } from 'i18next'
 
-const SankeyLabelEditionPropTypes = {
-  t: PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
-}
 
-type SankeyLabelEditionTypes = InferProps<typeof SankeyLabelEditionPropTypes>
 
-const SankeyLabelEdition: FunctionComponent<SankeyLabelEditionTypes > = (
-  { t,data, set_data, multi_selected_label}
+export const OpenSankeyMenuConfigurationFreeLabels = (
+  data:SankeyData,
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  multi_selected_label:{current:SankeyLabel[]},
+  t: TFunction
+
 ) => {
+
   const [forceUpdate, setForceUpdate] = useState(false)
 
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
@@ -219,390 +217,388 @@ const SankeyLabelEdition: FunctionComponent<SankeyLabelEditionTypes > = (
       }
     })
   }
-  return (<>
-    <Form.Group as={Row}>
-      <Col xs={1}>
-        <Button size="sm" onClick={() => {
-          const new_label = {
-            idLabel: 'label_' + String(new Date().getTime()),
-            name: 'Text Label ...',
-            label_width: 100,
-            label_height: 25,
-            color: 'white',
-            color_border: 'black',
-            transparent: false,
-            transparent_border: false,
-            position_vert: 'middle',
-            position_horiz: 'left',
-            font_size: 12,
-            font_weight: false,
-            font_style: false,
-            font_uppercase: false,
-            isTextHTML:false,
-            x: 50,
-            y: 50,
-            x_label: 50,
-            y_label: 12,
+    
+   
+  return [<Form.Group as={Row}>
+    <Col xs={1}>
+      <Button size="sm" onClick={() => {
+        const new_label = {
+          idLabel: 'label_' + String(new Date().getTime()),
+          name: 'Text Label ...',
+          label_width: 100,
+          label_height: 25,
+          color: 'white',
+          color_border: 'black',
+          transparent: false,
+          transparent_border: false,
+          position_vert: 'middle',
+          position_horiz: 'left',
+          font_size: 12,
+          font_weight: false,
+          font_style: false,
+          font_uppercase: false,
+          isTextHTML:false,
+          x: 50,
+          y: 50,
+          x_label: 50,
+          y_label: 12,
+        }
+        data.labels[new_label.idLabel] = new_label
+        multi_selected_label.current = [new_label]
+        set_data({ ...data })
+      }
+      }><FaPlus /></Button>
+    </Col>
+    <Col xs={7}>{dropdownMultiLabel()}</Col>
+    <Col xs={1}>
+      <Button size="sm" variant='danger' onClick={() => {
+        data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
+        multi_selected_label.current = []
+        set_data({ ...data })
+      }
+      }><FaMinus /></Button>
+    </Col>
+    <Col xs={2}>
+      {//Boutton pour monter le label sélctionné
+      }
+      <ButtonGroup>
+        <Button variant='info' disabled={multi_selected_label.current.length != 1}
+          onClick={() => {
+            multi_selected_label.current.map(l => {
+              handleDownlabel(l.idLabel)
+            })
+
+
+          }}><FaAngleUp /></Button>
+
+        <Button variant='warning' disabled={multi_selected_label.current.length != 1}
+          onClick={() => {
+            multi_selected_label.current.map(l => {
+              handleUplabel(l.idLabel)
+            })
+
+
+          }}><FaAngleDown /></Button>
+      </ButtonGroup>
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Row>
+      <FormLabel column sm={1}>Text:</FormLabel>
+      <Col sm={11}>
+        <Form.Control
+          as="textarea"
+          rows={5}
+          disabled={multi_selected_label.current.length != 1}
+          value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
+          onChange={
+            (evt) => {
+              multi_selected_label.current.map(label => label.name = evt.target.value)
+              set_data({ ...data })
+            }
           }
-          data.labels[new_label.idLabel] = new_label
-          multi_selected_label.current = [new_label]
+        />
+      </Col>
+    </Row>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.textAsHTML')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <Form.Check
+        inline
+        type='switch'
+        checked={allLabelAsHTML()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.isTextHTML = evt.target.checked)
           set_data({ ...data })
-        }
-        }><FaPlus /></Button>
-      </Col>
-      <Col xs={7}>{dropdownMultiLabel()}</Col>
-      <Col xs={1}>
-        <Button size="sm" variant='danger' onClick={() => {
-          data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-          multi_selected_label.current = []
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.hl')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <FormControl size='sm'
+        min={0}
+        max={1000}
+        type={'number'}
+        value={allLabelHeight()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.label_height = +evt.target.value)
+          label_libre_align_vert()
           set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.ll')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <FormControl size='sm'
+        min={0}
+        max={1000}
+        type={'number'}
+        value={allLabelWidth()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.label_width = +evt.target.value)
+          label_libre_align_horiz()
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.ft')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <Form.Check
+        inline
+        type='switch'
+        checked={allLabelTransparent()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.transparent = evt.target.checked)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.cfl')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <FormControl size='sm'
+        type='color'
+        value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color : '#ffffff'}
+        onChange={evt => {
+          const val = evt.target.value
+          multi_selected_label.current.map(d => d.color = val)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.bt')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <Form.Check
+        inline
+        type='switch'
+        checked={allLabelBorderTransparent()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel >{t('LL.cbl')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <FormControl size='sm'
+        type='color'
+        value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
+        onChange={evt => {
+          const val = evt.target.value
+          multi_selected_label.current.map(d => d.color_border = val)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('Noeud.labels.haut')}
+        checked={allNodeLabelVert('vert', 'top')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_vert = 'top'
+              // d.x_label = d.label_width / 2
+              d.y_label = d.font_size + 3
+            })
+
+            set_data({ ...data })
+          }
         }
-        }><FaMinus /></Button>
-      </Col>
-      <Col xs={2}>
-        {//Boutton pour monter le label sélctionné
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('Noeud.labels.Milieu')}
+        checked={allNodeLabelVert('vert', 'middle')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_vert = 'middle'
+              // d.x_label = d.label_width / 2
+              d.y_label = d.label_height / 2
+            })
+            set_data({ ...data })
+          }
         }
-        <ButtonGroup>
-          <Button variant='info' disabled={multi_selected_label.current.length != 1}
-            onClick={() => {
-              multi_selected_label.current.map(l => {
-                handleDownlabel(l.idLabel)
-              })
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('Noeud.labels.Bas')}
 
-
-            }}><FaAngleUp /></Button>
-
-          <Button variant='warning' disabled={multi_selected_label.current.length != 1}
-            onClick={() => {
-              multi_selected_label.current.map(l => {
-                handleUplabel(l.idLabel)
-              })
-
-
-            }}><FaAngleDown /></Button>
-        </ButtonGroup>
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Row>
-        <FormLabel column sm={1}>Text:</FormLabel>
-        <Col sm={11}>
-          <Form.Control
-            as="textarea"
-            rows={5}
-            disabled={multi_selected_label.current.length != 1}
-            value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
-            onChange={
-              (evt) => {
-                multi_selected_label.current.map(label => label.name = evt.target.value)
-                set_data({ ...data })
-              }
-            }
-          />
-        </Col>
-      </Row>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.textAsHTML')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Check
-          inline
-          type='switch'
-          checked={allLabelAsHTML()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.isTextHTML = evt.target.checked)
+        checked={allNodeLabelVert('vert', 'bottom')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_vert = 'bottom'
+              // d.x_label = d.label_width / 2
+              d.y_label = d.label_height - 3
+            })
             set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.hl')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <FormControl size='sm'
-          min={0}
-          max={1000}
-          type={'number'}
-          value={allLabelHeight()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.label_height = +evt.target.value)
-            label_libre_align_vert()
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.ll')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <FormControl size='sm'
-          min={0}
-          max={1000}
-          type={'number'}
-          value={allLabelWidth()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.label_width = +evt.target.value)
-            label_libre_align_horiz()
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.ft')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Check
-          inline
-          type='switch'
-          checked={allLabelTransparent()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.transparent = evt.target.checked)
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.cfl')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <FormControl size='sm'
-          type='color'
-          value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            multi_selected_label.current.map(d => d.color = val)
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.bt')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Check
-          inline
-          type='switch'
-          checked={allLabelBorderTransparent()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel >{t('LL.cbl')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <FormControl size='sm'
-          type='color'
-          value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            multi_selected_label.current.map(d => d.color_border = val)
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('Noeud.labels.haut')}
-          checked={allNodeLabelVert('vert', 'top')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_vert = 'top'
-                // d.x_label = d.label_width / 2
-                d.y_label = d.font_size + 3
-              })
+          }
+        }
+      />
+    </Col>
+  </Form.Group>,<Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('Noeud.labels.gauche')}
+        checked={allNodeLabelVert('horiz', 'left')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_horiz = 'left'
+            })
 
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('Noeud.labels.Milieu')}
-          checked={allNodeLabelVert('vert', 'middle')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_vert = 'middle'
-                // d.x_label = d.label_width / 2
-                d.y_label = d.label_height / 2
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('Noeud.labels.Bas')}
-
-          checked={allNodeLabelVert('vert', 'bottom')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_vert = 'bottom'
-                // d.x_label = d.label_width / 2
-                d.y_label = d.label_height - 3
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-    </Form.Group><Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('Noeud.labels.gauche')}
-          checked={allNodeLabelVert('horiz', 'left')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_horiz = 'left'
-              })
-
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('LL.centre')}
-          checked={allNodeLabelVert('horiz', 'centre')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_horiz = 'centre'
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='radio'
-          label={t('Noeud.labels.droite')}
-
-          checked={allNodeLabelVert('horiz', 'right')}
-          onChange={
-            () => {
-              multi_selected_label.current.map(d => {
-                d.position_horiz = 'right'
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <Col xs={4}>
-        <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <FormControl size='sm'
-          disabled={allLabelAsHTML()}
-          min={0}
-          max={100}
-          type={'number'}
-          value={allLabelFontSize()}
-          onChange={evt => {
-            let val = +evt.target.value
-            val = (val <= 0) ? 1 : val
-            multi_selected_label.current.map(d => d.font_size = val)
             set_data({ ...data })
-          }}
-        />
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row} >
-      <Col>
-        <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='checkbox'
-          label={t('LL.gras')}
-          checked={allLabelTextBold()}
-          onChange={
-            evt => {
-              multi_selected_label.current.map(d => d.font_weight = evt.target.checked)
-              set_data({ ...data })
-            }
           }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='checkbox'
-          label={t('LL.maj')}
-          checked={allLabelTextUpper()}
-          onChange={
-            evt => {
-              multi_selected_label.current.map(d => d.font_uppercase = evt.target.checked)
-              set_data({ ...data })
-            }
+        }
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('LL.centre')}
+        checked={allNodeLabelVert('horiz', 'centre')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_horiz = 'centre'
+            })
+            set_data({ ...data })
           }
-        />
-      </Col>
-      <Col>
-        <FormCheck
-          disabled={allLabelAsHTML()}
-          type='checkbox'
-          label={t('LL.ita')}
-          checked={allLabelTextItalic()}
-          onChange={
-            evt => {
-              multi_selected_label.current.map(d => d.font_style = evt.target.checked)
-              set_data({ ...data })
-            }
+        }
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='radio'
+        label={t('Noeud.labels.droite')}
+
+        checked={allNodeLabelVert('horiz', 'right')}
+        onChange={
+          () => {
+            multi_selected_label.current.map(d => {
+              d.position_horiz = 'right'
+            })
+            set_data({ ...data })
           }
-        />
-      </Col>
-    </Form.Group></>
-  )
+        }
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row}>
+    <Col xs={4}>
+      <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
+    </Col>
+    <Col xs={8}>
+      <FormControl size='sm'
+        disabled={allLabelAsHTML()}
+        min={0}
+        max={100}
+        type={'number'}
+        value={allLabelFontSize()}
+        onChange={evt => {
+          let val = +evt.target.value
+          val = (val <= 0) ? 1 : val
+          multi_selected_label.current.map(d => d.font_size = val)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+  <Form.Group as={Row} >
+    <Col>
+      <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='checkbox'
+        label={t('LL.gras')}
+        checked={allLabelTextBold()}
+        onChange={
+          evt => {
+            multi_selected_label.current.map(d => d.font_weight = evt.target.checked)
+            set_data({ ...data })
+          }
+        }
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='checkbox'
+        label={t('LL.maj')}
+        checked={allLabelTextUpper()}
+        onChange={
+          evt => {
+            multi_selected_label.current.map(d => d.font_uppercase = evt.target.checked)
+            set_data({ ...data })
+          }
+        }
+      />
+    </Col>
+    <Col>
+      <FormCheck
+        disabled={allLabelAsHTML()}
+        type='checkbox'
+        label={t('LL.ita')}
+        checked={allLabelTextItalic()}
+        onChange={
+          evt => {
+            multi_selected_label.current.map(d => d.font_style = evt.target.checked)
+            set_data({ ...data })
+          }
+        }
+      />
+    </Col>
+  </Form.Group>]
+      
 }
-
-SankeyLabelEdition.propTypes = SankeyLabelEditionPropTypes
-
-export default SankeyLabelEdition
+  

@@ -2,12 +2,12 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Row, Col, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton, FormGroup } from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
-import { FaAngleDoubleLeft, FaPlay, FaForward, FaBackward} from 'react-icons/fa'
+import { FaAngleDoubleLeft} from 'react-icons/fa'
 import SankeyMenuBanner from './SankeyMenuBanner'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -580,39 +580,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_mode_selection={set_mode_selection}
         set_current_filter={set_current_filter}
         url_prefix={url_prefix}
-      /> : <><Row>
-        <FormGroup as={Col} lg='auto'>
-          <ButtonGroup >
-            <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'p' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaPlay />
-            </Button>
-            <Button variant={'outline-success'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowUp' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaBackward />
-            </Button>
-            <Button variant={'outline-warning'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'ArrowDown' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaForward />
-            </Button>
-          </ButtonGroup>
-        </FormGroup>
-      </Row>{/* {set_data({ ...data })} */}</>
+      /> 
       {(show_nav && !data.static_sankey) ? 
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
