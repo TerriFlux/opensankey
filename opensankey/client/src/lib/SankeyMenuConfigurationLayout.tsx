@@ -1,6 +1,5 @@
-import React, { useState, FunctionComponent } from 'react'
+import React, { useState } from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck } from 'react-bootstrap'
-import PropTypes, { InferProps } from 'prop-types'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
@@ -140,25 +139,3 @@ export const OpenSankeyMenuConfigurationLayout = (
   ]
 }
 
-const SankeyMenuConfigurationLayoutPropTypes = {
-  menu_configuration_layout: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-}
-type SankeyMenuConfigurationLayoutTypes = InferProps<typeof SankeyMenuConfigurationLayoutPropTypes>
-
-export const SankeyMenuConfigurationLayout: FunctionComponent<SankeyMenuConfigurationLayoutTypes> = ({
-  menu_configuration_layout,
-  //children
-}) => {
-  return (
-    <>
-      <Form>
-        {menu_configuration_layout.map((c:JSX.Element)=>c)}
-      </Form>
-      {/* <Tabs id="settings-layout">
-        {children}
-      </Tabs> */}
-    </>
-  )
-}
-
-SankeyMenuConfigurationLayout.propTypes = SankeyMenuConfigurationLayoutPropTypes

@@ -13,7 +13,9 @@ import * as SankeyUtils from './SankeyUtils'
 import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
 import {OpenSankeyConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
-
+import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
+import {OpenSankeyMenuConfigurationFreeLabels} from './SankeyMenuConfigurationLabel'
+import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend'
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
 
 import { useTranslation } from 'react-i18next'
@@ -137,7 +139,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_data={set_data}
     elementTagNameProp='nodeTags'
     elementNameProp='nodes' />
+ 
   //- 1.3 Builds Configuration Menus Links 
+  //- 1.3.1 Builds Configuration Menus Link Attributes 
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t)
+  //- 1.3.2 Builds Configuration Menus Link tags 
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
@@ -152,6 +158,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     elementTagNameProp='dataTags'
     elementNameProp='links' />
   const [show_nav,set_show_nav] = useState(false)
+  //- 1.5 Builds Configuration Menus FreeLabel 
+  const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t)
+  //- 1.6 Builds Configuration Menus Legend 
+  const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t)
   //- End of 1.
   const configurations_menus =  OpenSankeyConfigurationsMenus(
     t,
@@ -161,7 +171,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
-    menu_configuration_nodes
+    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends
   )
 
   //- 2. Build Menus

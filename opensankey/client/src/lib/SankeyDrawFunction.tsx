@@ -705,16 +705,21 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
       d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
     }
-    select_node(d)
+    // select_node(d)
+
     if ( accordion_ref && accordion_ref.current) {
+
       for ( const child in accordion_ref.current.children) {
         if (accordion_ref.current.children[child].id === 'Nodes') {
-          (accordion_ref.current.children[0] as HTMLLabelElement).click();
-          (accordion_ref.current.children[child] as HTMLLabelElement).click()
+          console.log((accordion_ref.current.children[child] as HTMLLabelElement))
+
+          // (accordion_ref.current.children[0] as HTMLLabelElement).click()
+          // (accordion_ref.current.children[child] as HTMLLabelElement).click()
         }
       }
     }
     if ( nodes_accordion_ref && nodes_accordion_ref.current) {
+      console.log('-------------');
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }

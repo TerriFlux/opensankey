@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup} from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
 import { link_visible,link_color} from './SankeyUtils'
@@ -407,11 +407,17 @@ export const SankeyMenuConfigurationNodesIO = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  multi_selected_nodes:{current:SankeyNode[]},
+  link_io:string,
+  set_link_io:React.Dispatch<React.SetStateAction<string>>,
+  link_pos:string,
+  set_link_pos:React.Dispatch<React.SetStateAction<string>>,
+  tab_colored:boolean,
+  set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
-  const [link_io,set_link_io]=useState('output')
-  const [link_pos,set_link_pos]=useState('right')
-  const [tab_colored,set_tab_colored]=useState(false)
+  // const [link_io,set_link_io]=useState<string>('output')
+  // const [link_pos,set_link_pos]=useState<string>('right')
+  // const [tab_colored,set_tab_colored]=useState<boolean>(false)
   return <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
     <Form>
       <Form.Group as={Row}>
