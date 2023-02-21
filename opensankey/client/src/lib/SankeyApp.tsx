@@ -17,18 +17,19 @@ import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
 import {OpenSankeyMenuConfigurationFreeLabels} from './SankeyMenuConfigurationLabel'
 import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend'
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
-
 import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import { default_link, default_node, link_text } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
 import { keyHandler } from './SankeyDrawFunction'
-
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
   exemple_menu        : object
   formations_menu      : object
-  logo: string
+  logo: string,
+  token:boolean,
+  set_token:(b:boolean)=>void,
+  useNavigate:()=>any
 }
 
 declare const window: Window &
@@ -51,7 +52,7 @@ typeof globalThis & {
   }
 }
 
-export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo} : SankeyAppTypes) => {
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,token,set_token,useNavigate} : SankeyAppTypes) => {
 
 
   //- All
@@ -68,6 +69,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const links_accordion_ref = useRef<HTMLDivElement>(null)
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
   const [data,set_data] = useState<SankeyData>(initial_sankey_data)
+
+
 
   //- Processess
   const [processing,setProcessing] = useState(false)
@@ -179,7 +182,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    setshowShortcut,setshowHelp,data,set_data,'',set_show_modalTemplate
+    setshowShortcut,setshowHelp,data,set_data,'',set_show_modalTemplate,token,set_token
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem 
@@ -272,7 +275,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         </Col>
       )})} */}
   </>
-  return (
+  const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
         <Menu 
@@ -339,6 +342,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           cardsTemplate={cardsTemplate}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}
+          token={true}
+          useNavigate={()=>''}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
@@ -400,6 +405,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         </Modal>
       </>
     </div>
+  )
+
+
+  return (
+    d
+  
   )
 }
 

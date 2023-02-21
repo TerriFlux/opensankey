@@ -7,7 +7,7 @@ import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyDa
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
-import { FaAngleDoubleLeft} from 'react-icons/fa'
+import { FaAngleDoubleLeft,FaPowerOff,FaUser} from 'react-icons/fa'
 import SankeyMenuBanner from './SankeyMenuBanner'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -108,7 +108,9 @@ const MenuPropTypes = {
   menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
   set_show_modalTemplate:PropTypes.func.isRequired,
-  cardsTemplate:PropTypes.element.isRequired
+  cardsTemplate:PropTypes.element.isRequired,
+  token:PropTypes.bool.isRequired,
+  useNavigate:PropTypes.func.isRequired
 
 }
 
@@ -281,9 +283,15 @@ export const OpenSankeyMenus = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   url_prefix:string,
-  set_show_modalTemplate:(b:boolean)=>void
+  set_show_modalTemplate:(b:boolean)=>void,
+  token:boolean,
+  set_token:(b:boolean)=>void,
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
+  const loginOut=()=>{
+    set_token(false)
+  }
+  
   return [
     <NavDropdown  title={t('Menu.Fichiers')} id="files" >
       <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
@@ -354,7 +362,9 @@ export const OpenSankeyMenus = (
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-    </NavDropdown >
+      {(token)?<Dropdown.Item><Button variant='danger' onClick={()=>loginOut()}><FaPowerOff/></Button></Dropdown.Item>:<></>}
+    </NavDropdown >,
+    
   ]}
 
 /**
@@ -409,7 +419,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     menus,
     show_modalTemplate,
     set_show_modalTemplate,
-    cardsTemplate
+    cardsTemplate,
+    token,
+    useNavigate
   }
 ) => {
   let max_link_value = 0
@@ -548,18 +560,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Modal.Footer>
     </Modal>
   )
-  
-
-  // const modalTemplate=
-  // <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
-  //   <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
-  //   <Modal.Body>
-  //     <Row md={4}>
-  //       {cardsTemplate}
-  //     </Row>
-  //   </Modal.Body>
-  // </Modal>
-  console.log(typeof(set_show_modalTemplate))
+  const navigate=useNavigate()
   return (
     <>
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
@@ -609,6 +610,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           {!window.SankeyToolsStatic ? (<>
             <Nav>
               {menus}
+              <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
               {!data.static_sankey ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton

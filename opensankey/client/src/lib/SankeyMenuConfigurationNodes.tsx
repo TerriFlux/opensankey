@@ -314,7 +314,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <Col sm={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
             {menu_configuration_nodes.map((c:JSX.Element)=>{
-              console.log(c)
               return c})}
           </Tabs>
           <ButtonGroup as={Row}>

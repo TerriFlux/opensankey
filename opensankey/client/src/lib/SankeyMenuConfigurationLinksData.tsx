@@ -100,7 +100,7 @@ export const SankeyMenuConfigurationLinksData = (
 
         })}
       <Col>
-        <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Valeur pour ces paramètres</FormLabel>
+        <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>{t('Flux.data.vpp')}</FormLabel>
       </Col>
       <Col>
         <Form.Control
@@ -172,7 +172,7 @@ export const SankeyMenuConfigurationLinksData = (
           <FormCheck
             type='checkbox'
             checked={value_selected_parameter().is_percent}
-            label='Valeur proportinnel à la valeur du noeuds source'
+            label='Valeur proportionnel à la valeur du noeuds source'
             onChange={evt=>{
               let val = Object(selected_link.current.value)
               multi_selected_links.current.map(d => {
