@@ -1,11 +1,6 @@
 stages:
     - build
     - test
-    - deploy
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -19,22 +14,20 @@ cache:
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
-  PIP_CACHE_DIR : "$CI_PROJECT_DIR/.cache/pip"
-  MFAData       : "/home/ubuntu/dev_opensankey/MFAData"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  MFAData: /home/ubuntu/dev_opensankey/sankeysuitemanager/MFAData
+  EIGEN_INCLUDE: /home/ubuntu/dev_opensankey/sankeysuitemanager/eigen
 
 build:
   stage: build
   tags:
     - dev, prod, test
   script:
-    - source /home/gitlab-runner/gitlab_dev/bin/activate
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
-    - python setup.py bdist_wheel
-    - flake8
-  artifacts:
-    paths:
-      - dist/*.whl
+    - echo $MFAData
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    - bash build.sh
   except:
     - schedules
 
@@ -42,130 +35,11 @@ test:
   stage: test
   tags:
     - dev, prod, test
-  variables:
-    GIT_STRATEGY: none
-    NODE_ENV: "production"
-    FOLDER: /home/ubuntu/dev_opensankey
-    ENV   : dev
-    APP_NAME : dev_opensankey
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      variables:                              
-        FOLDER: /home/ubuntu/dev_opensankey
-        ENV: dev 
-        APP_NAME : dev_opensankey
-    - if: $CI_COMMIT_REF_NAME == "test"
-      variables:
-        FOLDER: "/home/ubuntu/test_opensankey"
-        ENV: "test"
-        APP_NAME : "test_opensankey"
-    - if: $CI_COMMIT_REF_NAME == "prod"
-      variables:
-        FOLDER: "/home/ubuntu/prod_opensankey"
-        ENV: "prod" 
-        APP_NAME : "opensankey"
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_NAME != "test" && $CI_COMMIT_REF_NAME != "prod"
-      variables:                              
-        FOLDER: /home/ubuntu/dev_opensankey
-        ENV: dev 
-        APP_NAME : dev_opensankey    
   script:
+    - echo $CI_PROJECT_DIR
+    - echo $EIGEN_INCLUDE
+    - echo $MFAData
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - pip install dist/OpenSankey-0.1-py3-none-any.whl
-    - python -m unittest discover opensankey.tests
+    - bash test.sh
   dependencies:
     - build
-
-dev_opensankey:
-  stage: deploy
-  variables:
-    NODE_ENV: "production"
-    FOLDER: /home/ubuntu/dev_opensankey
-    ENV   : dev
-    APP_NAME : dev_opensankey
-  tags:
-    - test
-  environment:
-    name: dev
-  only:
-    - main
-  except:
-    - tags
-  cache: 
-    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-    paths:
-      - $FOLDER/opensankey/opensankey/client/node_modules/
-    policy: pull
-  script:
-    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/opensankey
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - source dev_opensankey/bin/activate
-    - bash update_build_opensankey.sh
-    - bash restart_site.sh
-
-test_opensankey:
-  stage: deploy
-  variables:
-    NODE_ENV: "production"
-    FOLDER: /home/ubuntu/test_opensankey
-    ENV   : test
-    APP_NAME : test_opensankey
-  tags:
-    - test
-  environment:
-    name: test
-  only:
-    - test
-  except:
-    - tags
-  cache: 
-    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-    paths:
-      - $FOLDER/opensankey/opensankey/client/node_modules/
-    policy: pull
-  before_script:
-    - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/test_opensankey/opensankey
-  after_script:
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - bash restart_site.sh
-  script:
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - source test_opensankey/bin/activate
-    - bash update_build_opensankey.sh
-
-prod_opensankey:
-  stage: deploy
-  variables:
-    NODE_ENV: "production"
-    FOLDER: /home/ubuntu/prod_opensankey
-    ENV   : prod
-    APP_NAME : prod_opensankey
-  tags:
-    - prod
-  environment:
-    name: prod
-  only:
-    - prod
-  except:
-    - tags
-  cache: 
-    key: $CI_COMMIT_REF_SLUG-$CI_PROJECT_DIR
-    paths:
-      - $FOLDER/opensankey/opensankey/client/node_modules/
-    policy: pull
-  before_script:
-    - sudo systemctl stop $APP_NAME || true
-    - git config --global --add safe.directory /home/ubuntu/prod_opensankey/opensankey
-  after_script:
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - bash restart_site.sh
-  script:
-    - echo "$FOLDER"
-    - cd "$FOLDER"
-    - source prod_opensankey/bin/activate
-    - bash update_build_opensankey.sh
