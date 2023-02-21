@@ -45,15 +45,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
     return (display_shift) ? center : 0
   }
   const shift = () => {
-    let display_shift = true
-    let shift = 0.5
-    if (multi_selected_links.current.length != 0) {
-      shift = multi_selected_links.current[0].shift_gap
+    if (multi_selected_links.current.length == 0) {
+      return 0.1
     }
-    multi_selected_links.current.map((d) => {
-      display_shift = (d.shift_gap == shift) ? display_shift : false
-    })
-    return (display_shift) ? shift : 0
+    const idx = multi_selected_links.current.length-1
+    const current_link = multi_selected_links.current[idx]
+    const the_shift = (current_link.right_horiz_shift - current_link.left_horiz_shift)/2
+    return parseFloat(the_shift.toPrecision(2))
   }
   const linkOrientation = (param: string) => {
     let allChecked = true
@@ -278,28 +276,29 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Col>
       
           <FormControl
-            min={0} max={1} step={0.01}
+            min={0} max={100}
             type={'number'}
-            value={shiftCenter()}
+            value={shiftCenter()*100}
             disabled={(linkOrientation('hv')||linkOrientation('vh'))}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  if (+evt.target.value - d.shift_gap < 0) {
-                    return
+                const center = +evt.target.value/100
+                multi_selected_links.current.forEach(d => {
+                  let shift_gap = (d.right_horiz_shift - d.left_horiz_shift)/2
+                  if (center - shift_gap < 0) {
+                    shift_gap = center
+                  } 
+                  if (center + shift_gap > 1) {
+                    shift_gap = 1-center
                   }
-                  if (+evt.target.value + d.shift_gap > 1) {
-                    return
-                  }
-                  d.left_horiz_shift = +evt.target.value - d.shift_gap
-                  d.right_horiz_shift = +evt.target.value + d.shift_gap
+                  d.left_horiz_shift = center - shift_gap
+                  d.right_horiz_shift = center + shift_gap
                 })
-
                 set_data({ ...data })
               }
             } />
         </Col>
-        <Col sm={2}>{selected_link.current.shift_gap}</Col>
+        <Col sm={2}>{shiftCenter()}</Col>
       </Form.Group>
       <Form.Group as={Row} >
         <Col>
@@ -309,29 +308,32 @@ export const SankeyMenuConfigurationLinksAppearence = (
         
 
           <FormControl
-            min={0} max={0.5} step={0.01}
+            min={0} max={5} 
             type={'number'}
-            value={shift()}
+            value={shift()*100}
             disabled={(linkOrientation('hv')||linkOrientation('vh'))}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  if (center - +evt.target.value < 0) {
-                    return
+                const shift_gap = +evt.target.value/100
+                if (shift_gap > 0.5 ) {
+                  return
+                }
+                multi_selected_links.current.forEach(d => {
+                  let new_center_position = shiftCenter()
+                  if (new_center_position - shift_gap < 0) {
+                    new_center_position = shift_gap
                   }
-                  if (center + +evt.target.value > 1) {
-                    return
+                  if (new_center_position + shift_gap > 1) {
+                    new_center_position = 1-shift_gap
                   }
-                  d.shift_gap = +evt.target.value
-                  d.left_horiz_shift = center - d.shift_gap
-                  d.right_horiz_shift = center + d.shift_gap
+                  d.left_horiz_shift = new_center_position - shift_gap
+                  d.right_horiz_shift = new_center_position + shift_gap
                 })
-
                 set_data({ ...data })
               }
             } />
         </Col>
-        <Col sm={2}>{selected_link.current.shift_gap}</Col>
+        <Col sm={2}>{shift()}</Col>
       </Form.Group>
       <Form.Group as={Row} >
         <Col>
@@ -374,8 +376,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.recycling = evt.target.checked
-                  delete d.left_horiz_shift
-                  delete d.right_horiz_shift
+                  d.left_horiz_shift = 0
+                  d.right_horiz_shift = 0
                 })
 
 

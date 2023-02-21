@@ -27,3 +27,4 @@ opensankey/client/.eslintcache
 tests/output_references/.gitkeep.json
 opensankey/client/coverage/*
 opensankey/client/.vscode/launch.json
+opensankey/client/src/images/*

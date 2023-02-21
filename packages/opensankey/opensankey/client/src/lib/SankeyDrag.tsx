@@ -96,7 +96,7 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link)){
         
-        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this as unknown as SVGPathElement, event,data,scale,inv_scale,min_thickness)
+        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, this, event,data,scale,inv_scale,min_thickness)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',
@@ -1101,7 +1101,7 @@ const drag_link = (
         io='bottom'
       }
     }
-    //Filtre les liens qui arrivent du même coté que le liens dragged
+    //Filtre les flux qui arrivent du même coté que le flux dragged
     id_output_filtered=id_output_filtered.filter(id=>{
       let good_orientation=false
       if(io=='right'){
@@ -1170,7 +1170,7 @@ const drag_link = (
         io='bottom'
       }
     }
-    //Filtre les liens qui arrivent du même coté que le liens dragged
+    //Filtre les flux qui arrivent du même coté que le flux dragged
       
     id_input_filtered=id_input_filtered.filter(id=>{
       let good_orientation=false
@@ -1198,7 +1198,7 @@ const drag_link = (
     }
     const number_of_links = id_input_filtered.length
     const value = getLinkValue(data, idLink).value
-    //Recheche la les liens suivant et précédent qui sont du même coté pour pour ensuite les swap
+    //Recheche la les flux suivant et précédent qui sont du même coté pour pour ensuite les swap
     let next_link_index=-1
     let prec_link_index=-1
     if(target_order>0){

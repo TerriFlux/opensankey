@@ -9,7 +9,7 @@ import { compute_total_offsets, getLinkValue, setSelectedTags, link_visible,test
 import { AgregationModal } from './SankeyLayout'
 import {strokeDasharray,textLinkPosDY,textLinkSide,linkStrokeWidth,linkStroke,eventLinkClick,
   compute_end_points,nodeTransform,eventNodeClick,eventNodeContextMenu,textNodeWrap,textNodeValue,
-  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
+  setNodeHeight,node_color,removeAnimate,drawArrows,eventLabelClick,keyHandler,eventOnSankeyZone,eventOnMouseUpAddNodesAndLink,addNodesNotToScale} from './SankeyDrawFunction'
 import {dragLinkEvent,dragLinkTextEvent,dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,
   dragNodeTextEventWidthBoxEvent,dragLabelEventTextEvent,dragLabelEvent,dragLabelWidthHeightEvent,add_drag_link_zone,dragGNodeEvent} from './SankeyDrag'
 
@@ -23,6 +23,7 @@ const SankeyDrawPropTypes = {
 
   select_link: PropTypes.func.isRequired,
   link_text: PropTypes.func.isRequired,
+  // test_link_value: PropTypes.func.isRequired,
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}),
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}),
@@ -44,13 +45,16 @@ export const SankeyDrawDefaultProps = {
   set_data: () => null,
   select_node: () => null,
   node_arrow_visible: () => true,
+
   select_link: () => null,
   button_ref: null,
   accordion_ref: null,
   nodes_accordion_ref: null,
   links_accordion_ref: null,
+
   nodeTooltipsContent: () => null,
   linkTooltipsContent: () => null,
+
   multi_selected_nodes: {current : []},
   multi_selected_links: {current : []},
   multi_selected_label: {current : []},
@@ -63,6 +67,7 @@ type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   link_text,
+  // test_link_value,
   set_data = SankeyDrawDefaultProps.set_data,
   select_node = SankeyDrawDefaultProps.select_node,
   node_arrow_visible = SankeyDrawDefaultProps.node_arrow_visible,
@@ -95,7 +100,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   // const diff=require('deep-diff')
 
   // Il faut détruire les tooltips à chaque passage dans le draw
-  d3.selectAll(' .opensankey .sankey-tooltip').remove()
+  d3.selectAll('.sankey-tooltip').remove()
 
   const sankeyTooltip = d3.select('body')
     .append('div')
@@ -1303,7 +1308,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const direct_son_as_distant_sibling=(n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
     //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
     //exemple : n0 -> n1  et n0 -> n2 -> n1
-    //fonction utilisé pour que le noeud qui recoit le liens direct attend les chemin indirect avant de lancer les animations suivantes
+    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
     // console.log(target)
     const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
     let max=0
@@ -1426,7 +1431,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   // Function to restore hidden node when we deselect the hideLonNode property
   const searchAndRestoreLoneNodes=()=>{
     const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
-    Object.values(data.nodes).filter(n=>n.display).forEach(n=>{
+
+    Object.values(data.nodes).filter(n=>n.display && n.node_visible).forEach(n=>{
       link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
       data.nodes[n.idNode].node_visible=true
     })
@@ -1554,7 +1560,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           const tmp2=(tmp.length>0)?tmp[0][0]:''
 
           if(tmp.length>0){
-            //Récupère les liens entrant/sortant  des noeuds dont on survole l'étiquette
+            //Récupère les flux entrant/sortant  des noeuds dont on survole l'étiquette
             Object.values(data.nodes).filter(n=>{
               return (n.tags[tmp2] && n.tags[tmp2].includes(d[0]))
             }).forEach(el=>{
@@ -1832,9 +1838,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (mode_selection=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
     }
-    if (mode_selection=='n') {
-      d3.select(' .opensankey #svg').attr('class','mode_add_node')
-    }
     
     if (mode_selection=='ln') {
       d3.select(' .opensankey #svg').attr('class','mode_add_flux')
@@ -1920,7 +1923,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
   let border = '0px'
   if (!data.static_sankey) {
-    border = '2px solid #78c2ad'
+    border = '2px solid red'
   }
 
   return (

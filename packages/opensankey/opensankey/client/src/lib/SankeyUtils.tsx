@@ -5,7 +5,6 @@ import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_de
 import * as d3 from 'd3'
 
 
-
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -49,6 +48,12 @@ export const addDataTags = (
     }
   }
 }
+
+
+export const cut_name = (t: string, n: number) => {
+  return (t.length > n) ? t.slice(0, n) + '...' : t
+}
+
 
 /**
  * Return link value, determined by selected dataTag (if there is)
@@ -217,7 +222,7 @@ export const compute_total_offsets = (
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink) => string,
+  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
   ref_link: SankeyLink | undefined = undefined
 ) => {
   const { nodes, links} = data
@@ -348,7 +353,7 @@ export const compute_total_offsets = (
       if (top_order !== -1) {
         the_id = top_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id])
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -369,7 +374,7 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id])
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -391,7 +396,7 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id])
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -413,7 +418,7 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id])
+      const v = test_link_value(data, nodes, links[the_id], selected_tags)
       const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
@@ -648,11 +653,11 @@ export const default_sankey_data = (): SankeyData => {
         x_label: 0,
         y_label: 0,
 
-        // left_horiz_shift: 0,
-        // right_horiz_shift: 0,
+        left_horiz_shift: 1/3,
+        right_horiz_shift: 2/3,
         // vert_shift: 0,
         vert_shift: 0,
-        shift_gap: 0.1,
+    
 
         curvature: 0.5,
         curved: false,
@@ -1041,10 +1046,9 @@ export const default_link = (data: SankeyData): SankeyLink => {
     label_on_path: true,
     label_font_size:11,
     orientation: 'hh',
-    left_horiz_shift: 0,
-    right_horiz_shift: 0,
+    left_horiz_shift: 1/3,
+    right_horiz_shift: 2/3,
     vert_shift: 0,
-    shift_gap: 0.1,
     colorTag: '',
     colorParameter: 'local',
     style:'default',
@@ -1264,6 +1268,9 @@ export const uploadExemple = (
   if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
     root = root.replace('sankey-diagrams/', '')
   }
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
   const url = root + 'sankey/upload_examples'
   const fetchData = {
     method: 'POST',
@@ -1291,42 +1298,6 @@ export const uploadExemple = (
       }
     })
   })
-}
-
-//Add a new node then selection it
-export const add_new_node = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
-) => {
-  const { nodes } = data
-  const node: SankeyNode = default_node(data)
-
-  // Méthode pour incrementer idNode
-  const listId: number[] = []
-  Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-  const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-  node.idNode = 'node' + idNode
-  node.name = node.idNode
-  if (Object.keys(nodes).length < 5) {
-    node.x = Object.keys(nodes).length * 200 + 200
-  } else {
-    node.x = 200
-  }
-  nodes[node.idNode] = node
-  for (const tag_group_key in data.nodeTags) {
-    node.tags[tag_group_key] = []
-  }
-  //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
-  //set_multi_selected_nodes([node])
-  multi_selected_nodes.current = [node]
-  set_data({...data})
-
-}
-
-// Function to cut the name of the style to prevent some button to be too big
-export const cut_name = (t: string, n: number) => {
-  return (t.length > n) ? t.slice(0, n) + '...' : t
 }
 
 /**
@@ -1426,7 +1397,7 @@ export const hideNullFluxNodes = (
     }
     
 
-    //Ne cache plus les noeuds qui ont des liens entrant/sortant à 0 
+    //Ne cache plus les noeuds qui ont des flux entrant/sortant à 0 
     //Voir avec julien 
     if ((node.inputLinksId.length > 0 || node.outputLinksId.length > 0) && total_input === 0 && total_output === 0 && !sankey_data.display_style.null_flux) {
       nodes[node.idNode].node_visible = false
