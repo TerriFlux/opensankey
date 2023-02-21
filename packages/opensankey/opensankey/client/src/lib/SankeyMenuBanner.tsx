@@ -577,7 +577,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
                       data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
                       data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
                       
-                      //Ajoute dans les noeuds source/target les id de liens 
+                      //Ajoute dans les noeuds source/target les id de flux 
                       const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
                       if(ind_in_src==-1){
                         data.nodes[l[1].idSource].outputLinksId.push(l[0])
@@ -591,7 +591,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
 
                     return l
                   })
-                  // Reforme les liens originel (sans suffixe) et supprime les doublons par la méme occasions
+                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
                   const pureLinks=Object.fromEntries(pl)
                   data.links=pureLinks
                   handleSimpleDropdown(evt, tags_group,data,set_data) 
@@ -621,7 +621,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               onChange={(selected: [{ label: string, value: string }]) => {
                 handleMultiDropdown(selected, tags_group, data, set_data)
 
-                //Multiplie les liens par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
+                //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
                 if(Object.keys(data.dataTags).length>0){
 
                   const pl=Object.entries(data.links).map(l=>{
@@ -634,7 +634,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
                     }
                     return l
                   })
-                  // Reforme les liens originel (sans suffixe) et supprime les doublons par la méme occasions
+                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
                   const pureLinks=Object.fromEntries(pl)
 
                   const new_links={} as { [link_id: string]: SankeyLink }
@@ -668,7 +668,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
           n_l.idLink=n_l.idLink+n_suffix
           new_links[n_l.idLink]=n_l
 
-          //Ajoute dans les noeuds source/target les id de liens 
+          //Ajoute dans les noeuds source/target les id de flux 
           const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
           if(ind_in_src>=0){
             data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)

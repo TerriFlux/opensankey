@@ -144,7 +144,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     return DD
   }
 
-  //Dépalce la place des liens sélectionnés vers le début dans le tableau de liens de data
+  //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
   //Permet donc de les déssiner avant 
   const handleUpLink = (i: string) => {
     const { links } = data
@@ -161,7 +161,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_data({ ...data })
   }
 
-  //Dépalce la place des liens sélectionnés vers la fin dans le tableau de liens de data
+  //Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après 
   const handleDownLink = (i: string) => {
     const { links } = data

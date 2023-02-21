@@ -18,7 +18,7 @@ const getIOLink=(
 
   if(io=='input'){
     if(pos=='left'){
-      //Recherche tous les liens entrant a gauche
+      //Recherche tous les flux entrant a gauche
       link_io=Object.values(n.inputLinksId).filter(k=>{
         const n_s=data.nodes[data.links[k].idSource]
         const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !data.links[k].recycling)
@@ -26,7 +26,7 @@ const getIOLink=(
         return (cond_no_recy || cond_recy)  && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh') && link_visible(data.links[k],data)
       })
     }else if(pos=='right'){
-      //Recherche tous les liens entrant a droite
+      //Recherche tous les flux entrant a droite
       link_io=Object.values(n.inputLinksId).filter(k=>{
         const n_s=data.nodes[data.links[k].idSource]
         const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !data.links[k].recycling)
@@ -34,13 +34,13 @@ const getIOLink=(
         return  (cond_no_recy ||cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
       })
     }else if(pos=='top'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
       link_io=Object.values(n.inputLinksId).filter(k=>{
         const n_s=data.nodes[data.links[k].idSource]
         return n_s.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
       })
     }else if(pos=='bottom'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
       link_io=Object.values(n.inputLinksId).filter(k=>{
         const n_s=data.nodes[data.links[k].idSource]
         return n_s.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
@@ -48,7 +48,7 @@ const getIOLink=(
     }
   }else if(io=='output'){
     if(pos=='left'){
-      //Recherche tous les liens entrant a gauche
+      //Recherche tous les flux entrant a gauche
       link_io=Object.values(n.outputLinksId).filter(k=>{
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !data.links[k].recycling)
@@ -56,7 +56,7 @@ const getIOLink=(
         return (( cond_no_recy|| cond_recy)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
       })
     }else if(pos=='right'){ 
-      //Recherche tous les liens entrant a droite
+      //Recherche tous les flux entrant a droite
       link_io=Object.values(n.outputLinksId).filter(k=>{
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !data.links[k].recycling)
@@ -64,13 +64,13 @@ const getIOLink=(
         return  ( cond_no_recy || cond_recy) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data)
       })
     }else if(pos=='top'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
       link_io=Object.values(n.outputLinksId).filter(k=>{
         const n_t=data.nodes[data.links[k].idTarget]
         return n_t.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
       })
     }else if(pos=='bottom'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
       link_io=Object.values(n.outputLinksId).filter(k=>{
         const n_t=data.nodes[data.links[k].idTarget]
         return n_t.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data)
@@ -99,10 +99,10 @@ const handleUpLinkIOPos=(
   const link_io=getIOLink(data,multi_selected_nodes,pos,io)
   if(io=='input'){
     if(pos=='left'){
-      //Recherche tous les liens entrant a gauche
+      //Recherche tous les flux entrant a gauche
         
 
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -112,9 +112,9 @@ const handleUpLinkIOPos=(
       } 
 
     }else if(pos=='right'){
-      //Recherche tous les liens entrant a droite
+      //Recherche tous les flux entrant a droite
         
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -124,9 +124,9 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='top'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
         
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -136,9 +136,9 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
      
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -150,10 +150,10 @@ const handleUpLinkIOPos=(
     }
   }else if(io=='output'){
     if(pos=='left'){
-      //Recherche tous les liens sortant a gauche
+      //Recherche tous les flux sortant a gauche
 
 
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -163,9 +163,9 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les liens sortant a droite
+      //Recherche tous les flux sortant a droite
 
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -177,10 +177,10 @@ const handleUpLinkIOPos=(
 
 
     }else if(pos=='top'){
-      //Recherche tous les liens sortant en haut
+      //Recherche tous les flux sortant en haut
  
         
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -190,10 +190,10 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les liens sortant en bas
+      //Recherche tous les flux sortant en bas
 
 
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -228,10 +228,10 @@ const handleDownLinkIOPos=(
 
   if(io=='input'){
     if(pos=='left'){
-      //Recherche tous les liens entrant a gauche
+      //Recherche tous les flux entrant a gauche
         
 
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -241,9 +241,9 @@ const handleDownLinkIOPos=(
       } 
 
     }else if(pos=='right'){
-      //Recherche tous les liens entrant a droite
+      //Recherche tous les flux entrant a droite
         
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -252,9 +252,9 @@ const handleDownLinkIOPos=(
         n.inputLinksId.splice(posElementPrec,0,k_link)
       }
     }else if(pos=='top'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
  
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -263,9 +263,9 @@ const handleDownLinkIOPos=(
         n.inputLinksId.splice(posElementPrec,0,k_link)
       }
     }else if(pos=='bottom'){
-      //Recherche tous les liens entrant en haut
+      //Recherche tous les flux entrant en haut
 
-      //Repositionne le liens avant le liens entrant du même coté
+      //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.inputLinksId.indexOf(ElementPrecInFilter)
@@ -277,10 +277,10 @@ const handleDownLinkIOPos=(
     }
   }else if(io=='output'){
     if(pos=='left'){
-      //Recherche tous les liens sortant a gauche
+      //Recherche tous les flux sortant a gauche
 
 
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -290,9 +290,9 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les liens sortant a droite
+      //Recherche tous les flux sortant a droite
         
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
 
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -303,9 +303,9 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='top'){
-      //Recherche tous les liens sortant en haut
+      //Recherche tous les flux sortant en haut
 
-      //Repositionne le liens avant le liens sortant du même coté
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)
@@ -315,8 +315,8 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les liens sortant en bas
-      //Repositionne le liens avant le liens sortant du même coté
+      //Recherche tous les flux sortant en bas
+      //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
         const posElementPrec = n.outputLinksId.indexOf(ElementPrecInFilter)

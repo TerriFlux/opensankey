@@ -33,16 +33,12 @@ export const SankeyMenuConfigurationLinksAppearence = (
   }
 
   const shiftCenter = () => {
-    let display_shift = true
-    let center = 0.5
-    if (multi_selected_links.current.length != 0) {
-      center = multi_selected_links.current[0].left_horiz_shift && multi_selected_links.current[0].right_horiz_shift ? (multi_selected_links.current[0].left_horiz_shift + multi_selected_links.current[0].right_horiz_shift) / 2 : 0.5
+    if (multi_selected_links.current.length == 0) {
+      return 0.5
     }
-    multi_selected_links.current.map((d) => {
-      const tmp = d.left_horiz_shift && d.right_horiz_shift ? (d.left_horiz_shift + d.right_horiz_shift) / 2 : 0.5
-      display_shift = (tmp == center) ? display_shift : false
-    })
-    return (display_shift) ? center : 0
+    const idx = multi_selected_links.current.length-1
+    const current_link = multi_selected_links.current[idx]
+    return parseFloat(((current_link.left_horiz_shift + current_link.right_horiz_shift) / 2).toPrecision(2))
   }
   const shift = () => {
     if (multi_selected_links.current.length == 0) {
