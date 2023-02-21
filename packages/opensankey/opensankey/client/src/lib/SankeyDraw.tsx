@@ -1923,7 +1923,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
   let border = '0px'
   if (!data.static_sankey) {
-    border = '2px solid red'
+    border = '2px solid #78c2ad'
   }
 
   return (
