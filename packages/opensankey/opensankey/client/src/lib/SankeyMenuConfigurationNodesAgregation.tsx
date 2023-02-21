@@ -81,8 +81,8 @@ export const SankeyMenuConfigurationNodesAgregation = (
               const listId: number[] = []
               Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
               let idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                const child_nodes = Object.values(data.nodes).filter(n=>n.dimensions['Primaire'].parent_name === d.idNode)
+              multi_selected_nodes.current.forEach(d => {
+                const child_nodes = Object.values(data.nodes).filter(n=>cube_dimension in n.dimensions && n.dimensions[cube_dimension].parent_name === d.idNode)
                 const new_input_nodes : string[] = []
                 child_nodes.forEach(n1=> {
                   const input_links = n1.inputLinksId.filter(idLink => new_input_nodes.includes(data.links[idLink].idSource) === false)
