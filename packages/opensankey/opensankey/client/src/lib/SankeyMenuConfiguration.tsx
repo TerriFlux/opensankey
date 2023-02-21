@@ -95,7 +95,7 @@ export const OpenSankeyConfigurationsMenus = (
               }
             }
           >
-            <Accordion.Header style={{ marginLeft: '25px'/*,padding:'10px' */ }} >
+            <Accordion.Header className='level2' >
               {t('Menu.EN')}
             </Accordion.Header>
             <Accordion.Body>
