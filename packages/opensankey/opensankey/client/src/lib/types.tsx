@@ -286,3 +286,24 @@ export const SankeyDrawCurvePropType={
   curve:PropTypes.func.isRequired
 }
 export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>
+export type drawCurveType = (
+  data: SankeyData,
+  nodes: { [node_id: string]: SankeyNode },
+  links: { [link_id: string]: SankeyLink },
+  display_style: { node_font_size: number;  filter: number; filter_label: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
+  nodeTags: TagsCatalog,
+  link: SankeyLink,
+  error_msg: { text?: string } | undefined
+) => string
+
+export type drawArrowsType = (
+  data: SankeyData,
+  n: SankeyNode,
+  nodes: { [node_id: string]: SankeyNode },
+  links: { [link_id: string]: SankeyLink },
+  display_style: { node_font_size: number;  filter?: number; filter_label?: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
+  nodeTags: TagsCatalog,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  min_thickness:number
+) => void
