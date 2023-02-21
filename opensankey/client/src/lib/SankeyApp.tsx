@@ -104,7 +104,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   
   const {t} =useTranslation()
 
-  //Réinitialise data et vide les noeud/liens sélectionnés 
+  //Réinitialise data et vide les noeud/flux sélectionnés 
   const reinitialization = () => {
     const data = SankeyUtils.default_sankey_data()
     multi_selected_nodes.current = []

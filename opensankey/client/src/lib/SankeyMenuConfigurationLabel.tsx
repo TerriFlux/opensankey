@@ -22,7 +22,7 @@ export const OpenSankeyMenuConfigurationFreeLabels = (
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   
-  //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de liens de data
+  //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après 
   const handleUplabel = (i: string) => {
     const { labels } = data
@@ -40,7 +40,7 @@ export const OpenSankeyMenuConfigurationFreeLabels = (
   }
 
 
-  //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de liens de data
+  //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après 
   const handleDownlabel = (i: string) => {
     const { labels } = data

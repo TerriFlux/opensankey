@@ -1602,7 +1602,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     //  else { ev.preventDefault() }
   })
     .on('mousedown', evt => {
-      //si le mode de souris est noeud+liens alors crée le premier noeuds 
+      //si le mode de souris est noeud+flux alors crée le premier noeuds 
       if(d3.select(evt.target).attr('class')!='node node_shape'){    
         if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' ) {
           // isDown = true    

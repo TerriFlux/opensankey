@@ -346,7 +346,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
-              >Sélectionner tous les liens sortants</Button>
+              >Sélectionner tous les flux sortants</Button>
             </Col>
             <Col>
               <Button
@@ -361,7 +361,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }
                 }
-              >Sélectionner tous les liens entrants</Button>
+              >Sélectionner tous les flux entrants</Button>
             </Col>
           </ButtonGroup>
         </Col>

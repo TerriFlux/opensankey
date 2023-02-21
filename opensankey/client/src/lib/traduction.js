@@ -404,7 +404,7 @@ const resources = {
           'Agré':'Agrégations',
           'DC':'Dimension du cube',
           'Parent':'Parent',
-          'CLE':'Copier liens enfants'
+          'CLE':'Copier flux enfants'
         },
         PF:{
           'PF':'Position flux e/s',
