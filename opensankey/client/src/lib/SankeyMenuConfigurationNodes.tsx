@@ -3,7 +3,7 @@ import { Row, Form, FormControl, FormLabel, Col, Tabs, Button, ButtonGroup, Drop
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { cut_name,default_node,add_new_node,delete_node } from './SankeyUtils'
+import { cut_name,default_node,delete_node } from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -100,6 +100,33 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </div>)
     return DD
   }
+  const add_new_node = () => {
+    const { nodes } = data
+    const node: SankeyNode = default_node(data)
+  
+    // Méthode pour incrementer idNode
+    const listId: number[] = []
+    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    node.idNode = 'node' + idNode
+    node.name = node.idNode
+    if (Object.keys(nodes).length < 5) {
+      node.x = Object.keys(nodes).length * 200 + 200
+    } else {
+      node.x = 200
+    }
+    nodes[node.idNode] = node
+    for (const tag_group_key in data.nodeTags) {
+      node.tags[tag_group_key] = []
+    }
+    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
+    //set_multi_selected_nodes([node])
+    multi_selected_nodes.current = [node]
+    style_to_apply = 'default'
+    apply_style_to_nodes()
+    set_data({...data})
+  
+  }
 
   const apply_style_to_nodes = () => {
     const style = data.style_node[style_to_apply]
@@ -151,7 +178,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       <Col xs={1}>
         <Button size="sm" onClick={() => {
           set_style_to_apply('default')
-          add_new_node(data,set_data,multi_selected_nodes)
+          add_new_node()
           style_to_apply = 'default'
           apply_style_to_nodes()
         }}><FaPlus /></Button>

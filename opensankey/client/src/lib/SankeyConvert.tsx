@@ -468,7 +468,8 @@ export const convert_data = (
         y_label: 0,
 
         vert_shift: 0,
-        shift_gap: 0.1,
+        left_horiz_shift:1/3,
+        right_horiz_shift:2/3,
 
         curvature: 0.5,
         curved: false,
@@ -1061,13 +1062,6 @@ export const convert_data = (
       }
       if (l.color === undefined) {
         l.color = source_node.color
-      }
-      if (l.shift_gap === undefined) {
-        if (l.left_horiz_shift && l.right_horiz_shift && !l.recycling) {
-          l.shift_gap = (l.right_horiz_shift - l.left_horiz_shift)/2
-        } else {
-          l.shift_gap = 0.1
-        }
       }
       if (l_convert.subchain && l_convert.subchain !== '' ) {
         l_convert.subchain.split(',').forEach(s => {

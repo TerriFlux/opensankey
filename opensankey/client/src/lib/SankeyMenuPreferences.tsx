@@ -152,18 +152,7 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({t,data,set_da
 
       </Form>
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
-      <FormGroup as={Row}>
-        <Col xs={5}>
-          <FormLabel >{t('Menu.BgC')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.couleur_fond_sankey=evt.target.value
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
+      
       <FormGroup as={Row}>
         <Col xs={10}>
           <FormLabel >{t('Menu.dns')}</FormLabel>        

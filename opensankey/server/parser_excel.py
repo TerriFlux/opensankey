@@ -347,7 +347,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             color = 'grey'
             if NODES_SANKEY in nodes_cols:
                 color = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_COLOR)]
-                if type(color) != str and math.isnan(color) or color == '':
+                if color is None or type(color) != str and math.isnan(color) or color == '':
                     color = 'grey'
                 if not is_hex(color):
                     try:

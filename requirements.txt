@@ -1,4 +1,4 @@
-cloudconvert==1.0.0
+cloudconvert==2.1.0
 wheel
 flaskfilemanager
 webcolors

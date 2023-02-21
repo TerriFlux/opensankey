@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown} from 'react-bootstrap'
+import { Modal,Button, NavDropdown,Row,Col,Card} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
@@ -100,6 +100,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [showShortcut, setshowShortcut] = useState(false)
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [showHelp, setshowHelp] = useState(false)
+  const [show_modalTemplate, set_show_modalTemplate] = useState(false)
   
   const {t} =useTranslation()
 
@@ -178,7 +179,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    setshowShortcut,setshowHelp,data,set_data,''
+    setshowShortcut,setshowHelp,data,set_data,'',set_show_modalTemplate
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem 
@@ -223,7 +224,54 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //-Ctrl+S qui sauvegarde une vue 
   //document.onkeydown = formatKeyHandler
   document.onkeydown = formatKeyHandler
+  let list_template_image=[] as string[]
 
+  const tmp=JSON.parse(JSON.stringify(exemple_menu))
+  let list_template_data=[] as string[]
+
+  if(Object.keys(tmp).length!=0 && Object.keys(tmp).includes('OpenSankey') ){
+    list_template_image=tmp['OpenSankey']['Image']
+    list_template_data=tmp['OpenSankey']['Files'].filter((f:string)=>!f.includes('.xlsx'))
+  }
+  const cardsTemplate=
+  <>
+    {/* {list_template_image.map((_,idx) => 
+    {
+      // let tmp_template=''
+      // try { 
+      //   tmp_template=require('../images/'+list_template_image[idx])
+      // } catch (expt) {
+      //   console.log('images '+list_template_image[idx]+' for template not found')
+      // }
+      const title=_.split('_')
+      title.splice(-1,1)
+      return(
+        <Col>
+          <Card>
+            <Card.Img className='img-card' variant="top" src={'/fm/userfiles/OpenSankey/image_preview/'+list_template_image[idx]} style={{'objectFit':'contain','minHeight':'350px','maxHeight':'500px'}} />
+            <Card.Body>
+              <Card.Title>{title.join(' ')}</Card.Title>
+              <Card.Text>
+                
+              </Card.Text>
+              <Button variant='primary'
+                onClick={() => {
+                  multi_selected_nodes.current = []
+                  multi_selected_links.current = []
+                  multi_selected_label.current = []
+                  SankeyUtils.uploadExemple(
+                    'OpenSankey/sankey/'+list_template_data[idx], '', data, set_data
+                  )
+                  set_data({...data})
+                }
+
+                }
+              >Use this template</Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      )})} */}
+  </>
   return (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
@@ -288,6 +336,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           set_show_publish_dialog={set_show_publish_dialog}
           setShowStyleNode={setShowStyle}
           setShowStyleLink={setShowStyleLink}
+          cardsTemplate={cardsTemplate}
+          show_modalTemplate={show_modalTemplate}
+          set_show_modalTemplate={set_show_modalTemplate}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
@@ -312,7 +363,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
               selected_node.current = n
             }}
             node_arrow_visible={
-              (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+              (data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
             }
 
             select_link={(l: SankeyLink) => {

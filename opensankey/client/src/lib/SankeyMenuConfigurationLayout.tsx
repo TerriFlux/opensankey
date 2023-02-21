@@ -14,6 +14,18 @@ export const OpenSankeyMenuConfigurationLayout = (
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
   return [
+  <Form.Group as={Row}>
+      <Col xs={5}>
+        <FormLabel >{t('Menu.BgC')}</FormLabel>        
+      </Col>
+      <Col xs={2}>
+        <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
+          // const c=evt.target.checkeds
+          data.couleur_fond_sankey=evt.target.value
+          set_data({...data})
+        }}/>        
+      </Col>
+    </Form.Group>,
     <Form.Group as={Row} >
       <Col xs={3}>
         <FormLabel >{t('MEP.Echelle')}</FormLabel>

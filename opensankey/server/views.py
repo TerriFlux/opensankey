@@ -1,10 +1,15 @@
-#  coding: utf-8
+# coding: utf-8
+
+# Flask imports
+from flask import Blueprint
 from flask import request
 from flask import Response
 from flask import send_file
 from flask import render_template
 from flask import session
+from flask_login import login_required
 
+# System imports
 import openpyxl
 import cloudconvert
 import tempfile
@@ -18,10 +23,10 @@ import SankeyExcelParser.su_trace as trace
 from threading import Thread
 from . import parser_excel
 
-try:
-    from . import opensankey
-except Exception:
-    import opensankey
+# try:
+#     from . import opensankey
+# except Exception:
+#     import opensankey
 
 try:
     import pythoncom
@@ -30,22 +35,106 @@ except Exception:
     pass
 
 
+# Create opensankey app blueprint
+template_folder = os.path.join(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
+    'build'
+)
+static_folder = os.path.join(
+    os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'), 'build'),
+    'static'
+)
+opensankey = Blueprint(
+    'opensankey',
+    __name__,
+    static_folder=static_folder,
+    template_folder=template_folder,
+    static_url_path='/static/opensankey'
+)
+image_template_folder = os.path.join(
+    os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
+                 'src'), 'images'
+)
+
+
+@opensankey.route('/sankey/save_png', methods=['POST'])
+def save_png():
+    cwd = os.getcwd()
+    data_content = request.files['svg'].read().decode('UTF-8')
+    # data_file.save("tutu.svg")
+    # New api key because last one seem to been deactivated
+    # The api key come from a  free account of cloudconvert that is limited by 25 convert a day
+    cloudconvert.configure(api_key='eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIj\
+        oiZTgwYzcwNDI0N2Q0YzQ2OTcyZGIyNjgzZjE2MWQxYjliNTViMGQ0N2MyOWMwOThiZDU0N2Y1ZDBiM2IyOWRiM\
+        zgyM2ZkMWNjNDlkN2MwYjUiLCJpYXQiOjE2NzY0NTA0NTAuNTMyNjUxLCJuYmYiOjE2NzY0NTA0NTAuNTMyNjUy\
+        LCJleHAiOjQ4MzIxMjQwNTAuNTI1ODEyLCJzdWIiOiI2MjAyNzYzMSIsInNjb3BlcyI6WyJ1c2VyLnJlYWQiLCJ\
+        1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSJdfQ.Hpavt-GIo9-x-p-T2teAiy7pRTYAqB4RMsw\
+        u19cwfTUIsE1dFb6R91aNnDYDquAMztvX2KvK4RT7Q39T84dHzvWRkSzucZT43L7idpKf49TbUuiDJxlJsjeX5n\
+        js7b40VeS-KGSY2SjiSnYXUdAft5kfFX9Efe7fQH4c9A3xXDWyFox3g0SnSO7W40hjtEfPBDa7vQrUAiIfULzh9\
+        jH3FzEH7TAA2ReaXKJdlX_B-6eyTu2TFqS-FKs9yB2ZhzL8-XiLjTKjryOKgYl6VQgsYZsSuwSf9QDmTsoRPQyz\
+        _VkhmIanX0qulqMYQ3zeNHjudq_v7eJDgnwTPL2HPGvZD5eoiOCgMRWTD3ljnC3jNWIBmCmxQ5wPkE4doymx07M\
+        JIowlTRn8GoHo_VxMQXt5N5fVPq1j6fv3vEIXIDyR3FWgcPufMw0q-vgGAFWPuYRgQrLl4JwvA-_tbtAAoMlKSb\
+        0OCVppfx6MLx3QY-Qkqj4olrx8oimIm01YNtbc7JclaCb8AFPqgaTKrq4NVbWBOWK9B7bY6m-iMIpZimZFaz5DC\
+        SNqnIZ-OJKb8HTs8SUXJkxDicA_qaeT1poST_l2qAfANvoUwM5g9EVZAgzNqmoxeabI1EP2C29DlqZ8R0od2_8n\
+        bN7IWE1tlBA96m_BEVYuqLqmz5s1Itxw_iiQKIA', sandbox=False)
+
+    tutu = cloudconvert.Job.create(payload={
+        "tasks": {
+            "import-2": {
+                "operation": "import/raw",
+                "file": data_content,
+                "filename": "tutu.svg"
+            },
+            "task-1": {
+                "operation": "convert",
+                "input_format": "svg",
+                "output_format": "png",
+                "engine": "inkscape",
+                "input": [
+                    "import-2"
+                ],
+                "text_to_path": False,
+                "engine_version": "1.1.2"
+            },
+            "export-1": {
+                "operation": "export/url",
+                "input": [
+                    "task-1"
+                ]
+            }
+        }
+    })
+    exported_url_task_id = tutu['tasks'][2]['id']
+    res = cloudconvert.Task.wait(id=exported_url_task_id)
+    file = res.get("result").get("files")[0]
+    res = cloudconvert.download(filename=file['filename'], url=file['url'])
+    # os.remove("tutu.svg")
+    filename = "tutu.png"
+    return send_file(os.path.join(cwd, filename), as_attachment=True)
+
+
+# Create opensanker app routes
 @opensankey.route('/sankey/save_pdf', methods=['POST'])
+@login_required
 def save_pdf():
     cwd = os.getcwd()
     data_content = request.files['svg'].read().decode('UTF-8')
     # data_file.save("tutu.svg")
-    cloudconvert.configure(api_key='eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiZWUwZDA\
-        5Mjg2NmY0OGZhZTQ5NTk1Y2M1YzViZDg2YmIwZWU3ZjE0MGRiMGFmZjY2NDAxYTI5MzU3MzBkOTUyNDRhNjMxNjI3MzRmZGRhYTI\
-            iLCJpYXQiOjE2NDQ4MTUzNjYuNjIxODYyLCJuYmYiOjE2NDQ4MTUzNjYuNjIxODY0LCJleHAiOjQ4MDA0ODg5NjYuNjE3NzYyLCJz\
-                dWIiOiIzNjYwMDY0NCIsInNjb3BlcyI6WyJ1c2VyLnJlYWQiLCJ1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSIsIndlYmhvb2sucmVh\
-                    ZCIsIndlYmhvb2sud3JpdGUiLCJwcmVzZXQucmVhZCIsInByZXNldC53cml0ZSJdfQ.RtQx3edfk3Zu74rn71Soi5H-dNEpNjaVoSgrxHkuqq1K082v3n\
-                        ncIpe_0qo9KXJc-KrdsWWD5V_OLZsFdS1kU_Y9VzAtqg-ozTZzywXaNPZ6TlZA5AdYa33Jg24cUQSc1c5tcBl2TqcWlTO87Nj53pLO7pKpU5VsNvYqA0POXExUd\
-                            geBfruOcjjnMS-_M0ovY1kxV3hsm302bF2By4QdaYiH5ixz5vCBKPvYOvcqo1WhpgVQlcYWHyj-XBnLwTJ1X7gbrnHY3KKsnuZXhkNc9CRtL97yz1yIhWztcwNyMNUs\
-                                20NJ1f2XDvEAmeLoB-pB0WodLrseihyo1uJUicjIch7No3G6xt3BlzSnzleuMIMBEv2MLBCLRo7QQXCxwrVreQQZZrjYrGLL8ZP-iGJ9eOmfgmNYKWYn37_h69CDC1cvz2L\
-                                    n4A7k6N-HvDHGHRTqHDc9-fUC-GL7vZUFRHQLgZd8btFZyBvfj4RjDlYcgWMDqJ_5a4Q3-FLnnUwgWAy2EJHI68MwbQ9NTfEIfj2l7bi3En9EQv0_iU5Vn-9srL0zJ6u2nCL52wn8\
-                                        F6ZaO203EQcjymjQ1PhjXeE556HQtdJ9EF_dSHom8ox-lFfBVZHmFtqfH-gFvlb0P5d9ueqR3woeKCFj\
-                                            7onf2OuCsdx-m4EvRN51P1Rit8m51431gIo')
+    # New api key because last one seem to been deactivated
+    # The api key come from a  free account of cloudconvert that is limited by 25 convert a day
+    cloudconvert.configure(api_key='eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpI\
+        joiZTgwYzcwNDI0N2Q0YzQ2OTcyZGIyNjgzZjE2MWQxYjliNTViMGQ0N2MyOWMwOThiZDU0N2Y1ZDBiM2IyOWR\
+        iMzgyM2ZkMWNjNDlkN2MwYjUiLCJpYXQiOjE2NzY0NTA0NTAuNTMyNjUxLCJuYmYiOjE2NzY0NTA0NTAuNTMyN\
+        jUyLCJleHAiOjQ4MzIxMjQwNTAuNTI1ODEyLCJzdWIiOiI2MjAyNzYzMSIsInNjb3BlcyI6WyJ1c2VyLnJlYWQ\
+        iLCJ1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSJdfQ.Hpavt-GIo9-x-p-T2teAiy7pRTYAqB\
+        4RMswu19cwfTUIsE1dFb6R91aNnDYDquAMztvX2KvK4RT7Q39T84dHzvWRkSzucZT43L7idpKf49TbUuiDJxlJ\
+        sjeX5njs7b40VeS-KGSY2SjiSnYXUdAft5kfFX9Efe7fQH4c9A3xXDWyFox3g0SnSO7W40hjtEfPBDa7vQrUAi\
+        IfULzh9jH3FzEH7TAA2ReaXKJdlX_B-6eyTu2TFqS-FKs9yB2ZhzL8-XiLjTKjryOKgYl6VQgsYZsSuwSf9QDm\
+        TsoRPQyz_VkhmIanX0qulqMYQ3zeNHjudq_v7eJDgnwTPL2HPGvZD5eoiOCgMRWTD3ljnC3jNWIBmCmxQ5wPkE\
+        4doymx07MJIowlTRn8GoHo_VxMQXt5N5fVPq1j6fv3vEIXIDyR3FWgcPufMw0q-vgGAFWPuYRgQrLl4JwvA-_t\
+        btAAoMlKSb0OCVppfx6MLx3QY-Qkqj4olrx8oimIm01YNtbc7JclaCb8AFPqgaTKrq4NVbWBOWK9B7bY6m-iMI\
+        pZimZFaz5DCSNqnIZ-OJKb8HTs8SUXJkxDicA_qaeT1poST_l2qAfANvoUwM5g9EVZAgzNqmoxeabI1EP2C29D\
+        lqZ8R0od2_8nbN7IWE1tlBA96m_BEVYuqLqmz5s1Itxw_iiQKIA', sandbox=False)
 
     tutu = cloudconvert.Job.create(payload={
         "tasks": {
@@ -63,7 +152,7 @@ def save_pdf():
                     "import-2"
                 ],
                 "text_to_path": False,
-                "engine_version": "1.1.1"
+                "engine_version": "1.1.2"
             },
             "export-1": {
                 "operation": "export/url",
@@ -82,7 +171,17 @@ def save_pdf():
     return send_file(os.path.join(cwd, filename), as_attachment=True)
 
 
+@opensankey.route('/sankey/clean_png', methods=['POST'])
+def clean_png():
+    os.remove("tutu.png")
+    response = Response(
+        status=200
+    )
+    return response
+
+
 @opensankey.route('/sankey/clean_pdf', methods=['POST'])
+@login_required
 def clean_pdf():
     os.remove("tutu.pdf")
     response = Response(
@@ -92,6 +191,7 @@ def clean_pdf():
 
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])
+@login_required
 def save_excel():
     try:
         cwd = os.getcwd()
@@ -122,6 +222,7 @@ def save_excel():
 
 
 @opensankey.route('/sankey/save_excel_simple', methods=['POST'])
+@login_required
 def save_excel_simple():
     try:
         cwd = os.getcwd()
@@ -149,6 +250,7 @@ def save_excel_simple():
 
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
+@login_required
 def clean_excel():
     cwd = os.getcwd()
     excel_file = os.path.join(cwd, "tutu.xlsx")
@@ -160,6 +262,7 @@ def clean_excel():
 
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
+@login_required
 def upload_excel():
     session['load_started'] = True
     tmp_dir = tempfile.mkdtemp()
@@ -258,6 +361,7 @@ def upload_excel_thread(
 
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
+@login_required
 def upload_exemple():
     session['load_started'] = True
     tmp_dir = tempfile.mkdtemp()
@@ -334,6 +438,7 @@ def upload_exemple():
 
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
+@login_required
 def download_examples():
     data_folder = os.environ.get('MFAData')
     # exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
@@ -411,6 +516,18 @@ def parse_folder(current_dir, menus, key=None):
                 menus[key]['Files'].append(file_name)
                 menus[key]['Files'].sort()
                 exemple_found = True
+            # Save name of image in menu dict
+            if(os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
+                file_names = listdir(os.path.join(current_dir, 'image_preview'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'Image' not in menus[key]:
+                        menus[key]['Image'] = []
+                    # blob=send_file(file_name,mimetype='image/png')
+                    menus[key]['Image'].append(file_name)
+                    menus[key]['Image'].sort()
+
     if not exemple_found and key in menus:
         del menus[key]
     #  if not artefact_found and key in artefacts:
@@ -419,6 +536,7 @@ def parse_folder(current_dir, menus, key=None):
 
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
+@login_required
 def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
@@ -439,10 +557,29 @@ def menus_examples():
             status=500,
             mimetype='application/json'
         )
+    # Try to import images from MFAData/OpenSankey/image_preview to static/media
+    try:
+        current_folder = os.environ.get('MFAData')
+        list_in_folder = listdir(current_folder)
+        if('MFAData' in list_in_folder and 'image_preview' in listdir(current_folder+'\\MFAData\\OpenSankey')):
+            folder_image = current_folder + '\\MFAData\\OpenSankey\\image_preview'
+            for i in listdir(folder_image):
+                if(i not in listdir(image_template_folder)):
+                    os.symlink(folder_image+'\\'+i, image_template_folder+'\\'+i)
+    except Exception as expt:
+        print(str(expt))
+        response = Response(
+            response=str(expt),
+            status=500,
+            mimetype='application/json'
+        )
+        return response
+
     return response
 
 
 @opensankey.route('/sankey/publish', methods=['POST'])
+@login_required
 def publish():
     sankey_data_str = request.get_data().decode("utf-8")
     sankey_data = json.loads(sankey_data_str)
@@ -470,6 +607,7 @@ def start():
 
 
 @opensankey.route('/loads_retrieves_result', methods=['POST'])
+@login_required
 def load_retrieves_result():
     session['load_started'] = False
     try:
@@ -493,6 +631,7 @@ def load_retrieves_result():
 
 
 @opensankey.route('/load_process', methods=['POST'])
+@login_required
 def load_process():
     if "load_started" not in session or session["load_started"] is False:
         trace.logger.debug(session['base_filename'])

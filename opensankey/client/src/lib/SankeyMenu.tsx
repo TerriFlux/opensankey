@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton } from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Col,Card } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -105,7 +105,11 @@ const MenuPropTypes = {
   showHelp:PropTypes.bool.isRequired,
   setshowHelp: PropTypes.func.isRequired,
 
-  menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
+  menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  show_modalTemplate:PropTypes.bool.isRequired,
+  set_show_modalTemplate:PropTypes.func.isRequired,
+  cardsTemplate:PropTypes.element.isRequired
+
 }
 
 const clickSaveDiagram = (data:SankeyData) => {
@@ -168,6 +172,7 @@ const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
   )
     .then(showFile).then(cleanFile)
 }
+
 const clickSaveSVG = () => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
@@ -185,7 +190,7 @@ const clickSaveSVG = () => {
   svg.select('#grid').style('opacity','1')
 }
 const clickSavePDF = (data:SankeyData) => {
-  const svg = window.d3.select(' .opensankey #svg-container svg')
+  const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
@@ -222,6 +227,44 @@ const clickSavePDF = (data:SankeyData) => {
   )
     .then(showFile).then(cleanFile)
 }
+const clickSavePNG = (data:SankeyData) => {
+  const svg = window.d3.select(' .opensankey#svg-container svg')
+  svg.selectAll('.sankey-tooltip').remove()
+  svg.selectAll('text[visibility=hidden]').remove()
+  svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('svg', blob)
+
+  const path = window.location.href
+  let url = path + 'sankey/save_png'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/png' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
+  }
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + 'sankey/clean_png'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
 
 export const OpenSankeyMenus = (
   t:TFunction,
@@ -237,7 +280,8 @@ export const OpenSankeyMenus = (
   setshowHelp:(b:boolean)=>void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  url_prefix:string
+  url_prefix:string,
+  set_show_modalTemplate:(b:boolean)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   return [
@@ -295,8 +339,10 @@ export const OpenSankeyMenus = (
       <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
         <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
         <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
       </NavDropdown>
       <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
+      <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.template')}</Dropdown.Item>
     </NavDropdown>,
     <NavDropdown id='edition' title={t('Menu.Edition')} >
       <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
@@ -360,7 +406,10 @@ const Menu: FunctionComponent<MenuTypes> = (
     showStyleLink, setShowStyleLink,
     showShortcut, setshowShortcut,
     showHelp, setshowHelp,
-    menus
+    menus,
+    show_modalTemplate,
+    set_show_modalTemplate,
+    cardsTemplate
   }
 ) => {
   let max_link_value = 0
@@ -499,7 +548,18 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Modal.Footer>
     </Modal>
   )
+  
 
+  // const modalTemplate=
+  // <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
+  //   <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
+  //   <Modal.Body>
+  //     <Row md={4}>
+  //       {cardsTemplate}
+  //     </Row>
+  //   </Modal.Body>
+  // </Modal>
+  console.log(typeof(set_show_modalTemplate))
   return (
     <>
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
@@ -651,6 +711,18 @@ const Menu: FunctionComponent<MenuTypes> = (
         />
       ) :
         (<div/>)
+      }
+      {
+      // {modalTemplate}
+      <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
+        <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
+        <Modal.Body>
+          <Row md={4}>
+            {cardsTemplate}
+          </Row>
+        </Modal.Body>
+      </Modal>
+
       }
     </>
   )

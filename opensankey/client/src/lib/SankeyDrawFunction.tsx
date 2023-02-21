@@ -6,6 +6,7 @@ import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue, San
 import { InferProps } from 'prop-types'
 import { compute_total_offsets, getLinkValue,test_link_value,link_color,delete_node,delete_link,default_node,default_link } from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
+import LZString from 'lz-string'
 import { BaseType } from 'd3'
 // Function that create the dashed pattern on links
 export const strokeDasharray =(d:SankeyLink,data:SankeyData)=>{
@@ -692,7 +693,7 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_nodes:{current: SankeyNode[] },nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_node:(n: SankeyNode) => void,static_sankey:boolean)=>{
   if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
     sankeyTooltip.style('opacity', 0)
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null && multi_selected_nodes.current.length == 0) {
       button_ref.current.click()
     }
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
@@ -705,21 +706,16 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
       d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
     }
-    // select_node(d)
-
+    select_node(d)
     if ( accordion_ref && accordion_ref.current) {
-
       for ( const child in accordion_ref.current.children) {
         if (accordion_ref.current.children[child].id === 'Nodes') {
-          console.log((accordion_ref.current.children[child] as HTMLLabelElement))
-
-          // (accordion_ref.current.children[0] as HTMLLabelElement).click()
-          // (accordion_ref.current.children[child] as HTMLLabelElement).click()
+          (accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (accordion_ref.current.children[child] as HTMLLabelElement).click()
         }
       }
     }
     if ( nodes_accordion_ref && nodes_accordion_ref.current) {
-      console.log('-------------');
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
@@ -1020,10 +1016,7 @@ export const drawArrows = (
   const top_height = res[2] / (data.user_scale / 100)
   const bottom_height = res[3] / (data.user_scale / 100)
 
-  const arrow_int_left = [[0, 0], [0, left_height], [10, left_height / 2]].map(d1=>d1.map(d2=>d2*10))
-  const arrow_int_right = [[10, 0], [10, right_height], [0, right_height / 2]].map(d1=>d1.map(d2=>d2*10))
-  const arrow_int_top = [[10, 0], [10, top_height], [0, top_height / 2]].map(d1=>d1.map(d2=>d2*10))
-  const arrow_int_bottom = [[0, 0], [0, bottom_height], [10, bottom_height / 2]].map(d1=>d1.map(d2=>d2*10))
+
   const nb_input_tot = n.inputLinksId.length
 
   let start_point_left = 0
@@ -1057,12 +1050,14 @@ export const drawArrows = (
 
     let clipped = [] as number[][]
     if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling)) {
+      const arrow_int_left = [[0, 0], [0, left_height], [10, left_height / 2]].map(d1=>d1.map(d2=>d2*10))
       //Si le lien entre à gauche
       const zone_arrow = [[0, start_point_left], [10, start_point_left], [10, start_point_left + thickness_link], [0, start_point_left + thickness_link]].map(d1=>d1.map(d2=>d2*10))
       clipped = clip(JSON.parse(JSON.stringify(arrow_int_left)), zone_arrow)
       clipped.map(d => d[1] = d[1] - start_point_left*10)
       start_point_left += thickness_link
     } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
+      const arrow_int_right = [[1, 0], [1, right_height], [-10, right_height / 2]].map(d1=>d1.map(d2=>d2*10))
       const zone_arrow = [[0, start_point_right], [10, start_point_right], [10, start_point_right + thickness_link], [0, start_point_right + thickness_link]].map(d1=>d1.map(d2=>d2*10))
       clipped = clip(arrow_int_right, zone_arrow)
       clipped.map(d => {
@@ -1073,6 +1068,7 @@ export const drawArrows = (
       orient = '0'
       start_point_right += thickness_link
     } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y > source_node_y)) {
+      const arrow_int_top = [[10, 0], [10, top_height], [0, top_height / 2]].map(d1=>d1.map(d2=>d2*10))
       //Si le lien entre en haut
       const zone_arrow = [[0, start_point_top], [10, start_point_top], [10, start_point_top + thickness_link], [0, start_point_top + thickness_link]].map(d1=>d1.map(d2=>d2*10))
 
@@ -1083,6 +1079,7 @@ export const drawArrows = (
       orient = '270'
         
     } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y < source_node_y)) {
+      const arrow_int_bottom = [[0, 0], [0, bottom_height], [10, bottom_height / 2]].map(d1=>d1.map(d2=>d2*10))
       //Si le lien entre en bas
       const zone_arrow = [[0, start_point_bottom], [10, start_point_bottom], [10, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]].map(d1=>d1.map(d2=>d2*10))
       clipped = clip(JSON.parse(JSON.stringify(arrow_int_bottom)), zone_arrow)
@@ -1627,7 +1624,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       }     
     })
     .on('mousemove', evt => {
-      //si le mode de souris est noeud+liens et que le bouton de la souris est toujours pressé
+      //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
          
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
@@ -1668,7 +1665,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       
     })
     .on('mouseup', evt => {
-      //si le mode de souris est noeud+liens alors crée un second noeud au relachement 
+      //si le mode de souris est noeud+flux alors crée un second noeud au relachement 
       //et crée un lien entre le premier noeud crée lors du click et ce dernier     
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
         // isDown = false
@@ -1741,6 +1738,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         set_first_selected_node({})
         set_data({ ...data })
       }
+      
+      
     })
 }
 
@@ -1748,52 +1747,61 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 // or creating a nodes at first click then linking it to a already existing one or the opposite
 export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:Record<string,unknown>,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
-    d3.selectAll(' .opensankey #svg #path-flux').remove()
-    const n_link = default_link(data)
-    const { links } = data
-    const fsn = (first_selected_node as SankeyNode)
-    const listId: number[] = []
-    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
 
-    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    n_link.idLink = 'link' + idLink
-    links[n_link.idLink] = n_link
+    if(d.name.includes('_tmp')){
+      d3.selectAll(' .opensankey #svg #path-flux').remove()
 
-    n_link.idSource = fsn.idNode
-    n_link.idTarget = d.idNode
-    if (n_link.idSource === n_link.idTarget) {
-      n_link.recycling = true
-    }
-
-    fsn.outputLinksId.push(n_link.idLink)
-    d.inputLinksId.push(n_link.idLink)
-
-
-    multi_selected_links.current=[n_link]
-
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
-      button_ref.current.click()
-    }
-    if ( accordion_ref && accordion_ref.current) {
-      for ( const child in accordion_ref.current.children) {
-        if (accordion_ref.current.children[child].id === 'Flux') {
-          (accordion_ref.current.children[0] as HTMLLabelElement).click();
-          (accordion_ref.current.children[child] as HTMLLabelElement).click()
+      d.name=d.idNode
+    }else{
+      d3.selectAll(' .opensankey #svg #path-flux').remove()
+      const n_link = default_link(data)
+      const { links } = data
+      const fsn = (first_selected_node as SankeyNode)
+      const listId: number[] = []
+      Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
+  
+      const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+      n_link.idLink = 'link' + idLink
+      links[n_link.idLink] = n_link
+  
+      n_link.idSource = fsn.idNode
+      n_link.idTarget = d.idNode
+      if (n_link.idSource === n_link.idTarget) {
+        n_link.recycling = true
+      }
+      fsn.outputLinksId.push(n_link.idLink)
+      d.inputLinksId.push(n_link.idLink)
+  
+  
+      multi_selected_links.current=[n_link]
+  
+      if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {        
+        button_ref.current.click()
+      }
+      if ( accordion_ref && accordion_ref.current) {
+        for ( const child in accordion_ref.current.children) {
+          if (accordion_ref.current.children[child].id === 'Flux') {
+            (accordion_ref.current.children[0] as HTMLLabelElement).click();
+            (accordion_ref.current.children[child] as HTMLLabelElement).click()
+          }
         }
       }
+      if ( links_accordion_ref && links_accordion_ref.current) {
+        (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+        (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+      }
+      if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
+        const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
+        tmp.name='node'+(Object.keys(data.nodes).length-1)
+      }
     }
-    if ( links_accordion_ref && links_accordion_ref.current) {
-      (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-      (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
-    }
-    if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
-      const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
-      tmp.name='node'+(Object.keys(data.nodes).length-1)
-    }
+    
     set_first_selected_node({})
     set_data({ ...data })
   }else if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
+    
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
+    console.log(tmp)
     //Ajout du lien entre les deux noeuds créés
     const new_link = default_link(data)
     const listIdLink: number[] = []
