@@ -218,7 +218,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   })
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref)
+    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,set_mode_selection)
   }
   //Event listener sur les touche du clavier
   //Réagis à :

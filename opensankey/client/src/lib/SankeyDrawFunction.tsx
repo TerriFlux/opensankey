@@ -1349,7 +1349,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
+  set_mode_selection:React.Dispatch<React.SetStateAction<string>>
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
     e.preventDefault()
@@ -1448,10 +1450,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
     set_data({ ...data })
   } else if (e.key == 'Escape') {
-    if ( button_ref && button_ref.current && accordion_ref ) {
-      button_ref.current.click()
-    }
-    //set_show_nav(false)
+    set_mode_selection('s')
+    set_show_nav(false)
+
   } /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
     //va chercher les différences sauvegardées dans le localStorage
@@ -1576,53 +1577,28 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   first_selected_node:Record<string,unknown>,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
 )=>{
-  svgSankey.on('click', ev => {
-    if ((!ev.ctrlKey && !ev.metaKey)&& mode_selection == 'n' ) {
-      const new_node1 = default_node(data)
-      const listId: number[] = []
-      Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-      const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-      new_node1.idNode = 'node' + idNode
-      new_node1.name = new_node1.idNode
-      if (Object.keys(data.nodes).length < 5) {
-        new_node1.x = Object.keys(data.nodes).length * 200 + 200
-      } else {
-        new_node1.x = 200
+  svgSankey.on('mousedown', evt => {
+    //si le mode de souris est noeud+flux alors crée le premier noeuds 
+    if(d3.select(evt.target).attr('class')!='node node_shape'){    
+      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
+        // isDown = true    
+        // creation nouveau noeud
+        const new_node1 = default_node(data)
+        const listId: number[] = []
+        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+        new_node1.idNode = 'node' + idNode
+        new_node1.name = 'node_tmp'    
+        data.nodes[new_node1.idNode] = new_node1
+        // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
+        const pos = d3.pointer(event)
+        new_node1.x = pos[0]
+        new_node1.y = pos[1]
+        set_first_selected_node(new_node1)
+        set_data({ ...data })
       }
-      data.nodes[new_node1.idNode] = new_node1    
-      // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
-      const pos = d3.pointer(event)
-      new_node1.x = pos[0]
-      new_node1.y = pos[1]
-      
-      multi_selected_nodes.current=[new_node1]
-      
-      set_data({...data})
-    }
-    //  else { ev.preventDefault() }
+    }     
   })
-    .on('mousedown', evt => {
-      //si le mode de souris est noeud+flux alors crée le premier noeuds 
-      if(d3.select(evt.target).attr('class')!='node node_shape'){    
-        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' ) {
-          // isDown = true    
-          // creation nouveau noeud
-          const new_node1 = default_node(data)
-          const listId: number[] = []
-          Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-          const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-          new_node1.idNode = 'node' + idNode
-          new_node1.name = 'node_tmp'    
-          data.nodes[new_node1.idNode] = new_node1
-          // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
-          const pos = d3.pointer(event)
-          new_node1.x = pos[0]
-          new_node1.y = pos[1]
-          set_first_selected_node(new_node1)
-          set_data({ ...data })
-        }
-      }     
-    })
     .on('mousemove', evt => {
       //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
