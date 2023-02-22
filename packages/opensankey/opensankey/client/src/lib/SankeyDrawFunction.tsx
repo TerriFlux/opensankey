@@ -1550,7 +1550,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }*/ 
   else if(e.key=='Delete'){
-    if(document.activeElement?.tagName!=='INPUT')
+    console.log(d3.select(document.activeElement).attr('value'))
+    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {   
       multi_selected_links.current.forEach(el=>{
         delete_link(data,el)
@@ -1562,6 +1563,11 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
       multi_selected_links.current=[]
       set_data({...data})
     }
+  }else if(e.key=='a' && e.ctrlKey){
+    e.preventDefault()
+    multi_selected_nodes.current=Object.values(data.nodes)
+    set_data({...data})
+
   }
 }
 // Function that is triggered when some event occure on the sankey zone like :

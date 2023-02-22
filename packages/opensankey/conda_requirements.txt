@@ -2,4 +2,7 @@ openpyxl
 scs
 pandas
 flask
+flask_login
+flask_cors
+flask_sqlalchemy
 parameterized
