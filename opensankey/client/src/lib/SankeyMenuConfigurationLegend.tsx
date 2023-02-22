@@ -7,10 +7,10 @@ import { TFunction } from 'i18next'
 export const OpenSankeyMenuConfigurationLegend= (
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  t: TFunction
+  t: TFunction,
+  legend_position:number[],
+  set_legend_position:(n:number[])=>void
 ) => {
-  const [legend_position, set_legend_position] = useState(data.legend_position)
-
   return [
     <Form.Group as={Row} >
       <Col xs={3}>
