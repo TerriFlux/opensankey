@@ -1563,6 +1563,11 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
       multi_selected_links.current=[]
       set_data({...data})
     }
+  }else if(e.key=='a' && e.ctrlKey){
+    e.preventDefault()
+    multi_selected_nodes.current=Object.values(data.nodes)
+    set_data({...data})
+
   }
 }
 // Function that is triggered when some event occure on the sankey zone like :
