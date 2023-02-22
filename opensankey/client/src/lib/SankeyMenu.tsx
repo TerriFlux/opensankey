@@ -615,7 +615,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     checked={show_nav}
                     onChange={(e) => { setChecked(e.currentTarget.checked) }}
                     onClick={toggleShow}
-                    value="1">{menuButton()}
+                    value="menuConfigButton">{menuButton()}
                   </ToggleButton>
                 </ButtonGroup>) : (<></>)
               }
