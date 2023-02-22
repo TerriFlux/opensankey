@@ -34,10 +34,11 @@ export const OpenSankeyConfigurationsMenus = (
     [s: string]: JSX.Element;
   },
   menu_configuration_free_labels:JSX.Element[],
-  menu_configuration_legends:JSX.Element[]
+  menu_configuration_legends:JSX.Element[],
+  sub_nav_item_active:string,
+  set_sub_nav_item_active:(s:string)=>void
 
 ) => {
-  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   return [
     <Accordion.Item
       id='MEP'
