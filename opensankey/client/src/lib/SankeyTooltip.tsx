@@ -167,7 +167,7 @@ export const nodeTooltipsContent = (
   if (n.tooltip_text) {
     //t += '<p><b>Définition'+ '</b></p>' 
     //t += '<p class="subtitle">'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
-    t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n') + '</p>' 
+    t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>' 
   }
 
   let total=0
