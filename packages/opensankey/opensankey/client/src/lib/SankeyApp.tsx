@@ -165,8 +165,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1.5 Builds Configuration Menus FreeLabel 
   const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t)
   //- 1.6 Builds Configuration Menus Legend 
-  const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t)
+  const [legend_position, set_legend_position] = useState(data.legend_position)
+
+  const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
   //- End of 1.
+  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   const configurations_menus =  OpenSankeyConfigurationsMenus(
     t,
     data, set_data,
@@ -175,7 +178,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
-    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends
+    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active
   )
 
   //- 2. Build Menus
