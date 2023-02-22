@@ -162,11 +162,8 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
     const interval = setInterval(() => {
       //const path = window.location.href
       let root = window.location.href
-      if (root.includes('sankey-diagrams') && url_prefix !== '') {
-        root = root.replace('sankey-diagrams/', '')
-      }
       //const url = root + 'load_process'
-      const url = root + 'load_process'
+      const url = root + url_prefix + 'load_process'
       const fetchData = {
         method: 'POST',
         body: ''

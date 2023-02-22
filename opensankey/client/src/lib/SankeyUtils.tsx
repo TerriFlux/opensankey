@@ -1173,9 +1173,6 @@ export const downloadExamples = (
   filetype: string
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
-    root = root.replace('sankey-diagrams/', '')
-  }
   const url = root + the_url_prefix + 'sankey/download_examples'
   const fetchData = {
     method: 'POST',
@@ -1234,10 +1231,7 @@ export const uploadExcelImpl = (
   the_url_prefix: string
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
-    root = root.replace('sankey-diagrams/', '')
-  }
-  const url = root + 'sankey/upload_excel'
+  const url = root + the_url_prefix + 'sankey/upload_excel'
   const form_data = new FormData()
   form_data.append(
     'file', input_file
@@ -1265,13 +1259,11 @@ export const uploadExemple = (
   set_data: (data: SankeyData) => void
 ) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && the_url_prefix !== '') {
-    root = root.replace('sankey-diagrams/', '')
-  }
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
-  const url = root + 'sankey/upload_examples'
+  
+  const url = root + the_url_prefix + '/sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name

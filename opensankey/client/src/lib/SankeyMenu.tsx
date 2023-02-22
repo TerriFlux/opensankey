@@ -122,9 +122,6 @@ const clickSaveDiagram = (data:SankeyData) => {
 }
 const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && url_prefix !== '') {
-    root = root.replace('sankey-diagrams/', '')
-  }
   let url = root + url_prefix + 'sankey/save_excel'
   const fetchData = {
     method: 'POST',
@@ -149,9 +146,6 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
 }
 const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
   let root = window.location.href
-  if (root.includes('sankey-diagrams') && url_prefix !== '') {
-    root = root.replace('sankey-diagrams/', '')
-  }
   let url = root + url_prefix + 'sankey/save_excel_simple'
   const fetchData = {
     method: 'POST',
@@ -621,7 +615,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     checked={show_nav}
                     onChange={(e) => { setChecked(e.currentTarget.checked) }}
                     onClick={toggleShow}
-                    value="1">{menuButton()}
+                    value="menuConfigButton">{menuButton()}
                   </ToggleButton>
                 </ButtonGroup>) : (<></>)
               }
