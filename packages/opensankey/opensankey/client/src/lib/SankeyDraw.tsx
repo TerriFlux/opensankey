@@ -1295,10 +1295,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         return (h!=undefined)?h:25
         
       })
-      .attr('fill','none')
+      .attr('fill','grey')
+      .attr('fill-opacity','0')
       .attr('stroke','grey')
       // .attr('stroke-dasharray',('3,2'))
-      .attr('stroke-width','1px')
+      .attr('stroke-width','2px')
       .attr('cursor','ew-resize')
       .attr('visibility',d=>(multi_selected_nodes.current.includes(d)?'visible':'hidden'))
       .call(dragNodeTextEventWidthBoxEvent(data,set_data))
