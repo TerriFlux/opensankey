@@ -1550,7 +1550,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }*/ 
   else if(e.key=='Delete'){
-    if(document.activeElement?.tagName!=='INPUT')
+    console.log(d3.select(document.activeElement).attr('value'))
+    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {   
       multi_selected_links.current.forEach(el=>{
         delete_link(data,el)
