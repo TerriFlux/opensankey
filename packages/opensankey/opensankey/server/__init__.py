@@ -1,6 +1,7 @@
 # Flask imports
 from flask import Flask
 
+
 # Global functions
 def create_app():
     app = Flask(__name__)
