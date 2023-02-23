@@ -12,11 +12,12 @@ export const OpenSankeyMenuConfigurationFreeLabels = (
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_label:{current:SankeyLabel[]},
-  t: TFunction
+  t: TFunction,
+  forceUpdate:boolean,
+  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>
 
 ) => {
 
-  const [forceUpdate, setForceUpdate] = useState(false)
 
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
