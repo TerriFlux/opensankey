@@ -69,7 +69,43 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const links_accordion_ref = useRef<HTMLDivElement>(null)
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
   const [data,set_data] = useState<SankeyData>(initial_sankey_data)
+  const [show_nav,set_show_nav] = useState(false)
 
+  // For OpenSankeyConfigurationsMenus
+  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
+
+  //For OpenSankeyMenuConfigurationLegend
+  const [legend_position, set_legend_position] = useState(data.legend_position)
+  
+  // For OpenSankeyMenuConfigurationLayout
+  const [user_scale, set_user_scale] = useState(data.user_scale)
+  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
+  const [node_hspace, set_node_hspace] = useState(data.h_space)
+  const [node_vspace, set_node_vspace] = useState(data.v_space)
+
+  // For OpenSankeyMenuConfigurationNodes
+  const [link_io,set_link_io]=useState<string>('output')
+  const [link_pos,set_link_pos]=useState<string>('right')
+  const [tab_colored,set_tab_colored]=useState<boolean>(false)
+
+  // For OpenSankeyMenuConfigurationFreeLabels
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  // For afm_menu_configuration_import_export
+  const [trade_close,set_trade_close] = useState(true)
+
+  // For OpenSankeyMenuConfigurationLinks
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
+  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey,
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+  }))
+  const dataTagsSelected = Object.fromEntries(newEntries)
+  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
+  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
+    set_tags_selected(dataTagsSelected)
+  }
 
 
   //- Processess
@@ -131,11 +167,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
-  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data)
+  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux,node_hspace,set_node_hspace,node_vspace,set_node_vspace)
   //- 1.2 Builds Configuration Menus Node 
   //- 1.2.1 Builds Configuration Menus Node Attributes 
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes)
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored)
   //- 1.2.1 Builds Configuration Menus Node Tags 
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -146,7 +182,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
  
   //- 1.3 Builds Configuration Menus Links 
   //- 1.3.1 Builds Configuration Menus Link Attributes 
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t)
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected)
   //- 1.3.2 Builds Configuration Menus Link tags 
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -161,15 +197,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_data={set_data}
     elementTagNameProp='dataTags'
     elementNameProp='links' />
-  const [show_nav,set_show_nav] = useState(false)
   //- 1.5 Builds Configuration Menus FreeLabel 
-  const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t)
+  const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
   //- 1.6 Builds Configuration Menus Legend 
-  const [legend_position, set_legend_position] = useState(data.legend_position)
 
   const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
   //- End of 1.
-  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
   const configurations_menus =  OpenSankeyConfigurationsMenus(
     t,
     data, set_data,
