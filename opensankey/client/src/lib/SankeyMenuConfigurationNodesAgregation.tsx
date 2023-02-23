@@ -10,12 +10,14 @@ export const SankeyMenuConfigurationNodesAgregation = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  multi_selected_nodes:{current:SankeyNode[]},
+  parent_visible:boolean,
+  set_parent_visible:React.Dispatch<React.SetStateAction<boolean>>,
+  cube_dimension:string,
+  set_cube_dimension:React.Dispatch<React.SetStateAction<string>>
+
 ) => {
-  const [parent_visible,set_parent_visible] = useState(false)
-  const [cube_dimension,set_cube_dimension] = useState(
-    Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.entries(data.nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0] : 'Primaire' 
-  )
+
   if (Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0 && cube_dimension == 'Primaire') {
     if (Object.values(data.nodeTags).filter(tag=>tag.banner == 'level' && tag.group_name == 'Primaire').length == 0) {
       set_cube_dimension(Object.entries(data.nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0])
