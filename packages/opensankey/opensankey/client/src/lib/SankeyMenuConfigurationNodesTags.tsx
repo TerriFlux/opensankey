@@ -14,10 +14,11 @@ export const SankeyMenuConfigurationNodesTags = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  multi_selected_nodes:{current:SankeyNode[]},
+  tags_group_key:string,
+  set_tags_group_key:React.Dispatch<React.SetStateAction<string>>
 )=> {
   const tags_visible = Object.keys(data.nodeTags).length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(data.nodeTags)[0] : '')
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }

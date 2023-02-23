@@ -7,12 +7,17 @@ import { TFunction } from 'i18next'
 export const OpenSankeyMenuConfigurationLayout = (
   t:TFunction,
   data: SankeyData,
-  set_data:(d:SankeyData)=>void
+  set_data:(d:SankeyData)=>void,
+  user_scale:number,
+  set_user_scale:(n:number)=>void,
+  maximum_flux:number | null | undefined,
+  set_maximum_flux:(n:number)=>void,
+  node_hspace:number,
+  set_node_hspace:(n:number)=>void,
+  node_vspace:number,
+  set_node_vspace:(n:number)=>void
 ) => { 
-  const [user_scale, set_user_scale] = useState(data.user_scale)
-  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
-  const [node_hspace, set_node_hspace] = useState(data.h_space)
-  const [node_vspace, set_node_vspace] = useState(data.v_space)
+
   return [
   <Form.Group as={Row}>
       <Col xs={5}>

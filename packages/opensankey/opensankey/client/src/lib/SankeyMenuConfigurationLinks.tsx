@@ -31,23 +31,16 @@ export const OpenSankeyMenuConfigurationLinks = (
   selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
+  tags_group_key:string,
+  set_tags_group_key:React.Dispatch<React.SetStateAction<string>>,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>
 
 ) => {
+  
   const { fluxTags,dataTags } = data
-  const newEntries = new Map(Object.entries(dataTags).map(([dataTagKey, dataTag]) => {
-    return (Object.keys(dataTag.tags).length > 0) ? [
-      dataTagKey,
-      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-  }))
-  const dataTagsSelected = Object.fromEntries(newEntries)
+  
 
-  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
-  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
-    set_tags_selected(dataTagsSelected)
-  }
-  const tags_visible = Object.keys(fluxTags).length > 0
-
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(fluxTags)[0] : '')
 
   const ui : {[s:string] : JSX.Element}= {
     'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t),
@@ -68,10 +61,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const { fluxTags,dataTags } = data
   const [forceUpdate, setForceUpdate] = useState(false)
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
+  
   const set_show_link = useState(true)[1]
 
-  const tags_visible = Object.keys(fluxTags).length > 0
-  const [tags_group_key, set_tags_group_key] = useState(tags_visible ? Object.keys(fluxTags)[0] : '')
+
   if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
     set_tags_group_key(Object.keys(fluxTags)[0])
   }

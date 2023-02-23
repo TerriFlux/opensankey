@@ -224,31 +224,36 @@ declare const window: Window &
 export const SankeyBannerRows = (
   t:TFunction,
   data:SankeyData,
-  set_data:(d:SankeyData)=>void
+  set_data:(d:SankeyData)=>void,
+  diagram:string,
+  set_diagram:(s:string)=>void,
+  diagram2:string,
+  set_diagram2:(s:string)=>void,
+  sous_filieres:any,
+  is_split:boolean,diagrams:{ [keys :string] : string[] }
 ) => { 
-  let sous_filieres = undefined
-  if (window.sankey && window.sankey.sous_filieres) {
-    sous_filieres = window.sankey.sous_filieres
-  }
-  let is_split = false
-  const diagrams : { [keys :string] : string[] } = {}
-  if ( sous_filieres ) {
-    is_split = Object.keys(sous_filieres)[0].includes('/')
-    if (is_split ) {
-      Object.keys(sous_filieres).forEach(s=> {
-        const path = s.split('/')
-        if ( !(path[0] in diagrams)) {
-          diagrams[path[0]] = [path[1]]
-        } else {
-          diagrams[path[0]].push(path[1])     
-        }
-      })
-    } else {
-      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
-    }
-  }
-  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+  // let sous_filieres = undefined
+  // if (window.sankey && window.sankey.sous_filieres) {
+  //   sous_filieres = window.sankey.sous_filieres
+  // }
+  // let is_split = false
+  // const diagrams : { [keys :string] : string[] } = {}
+  // if ( sous_filieres ) {
+  //   is_split = Object.keys(sous_filieres)[0].includes('/')
+  //   if (is_split ) {
+  //     Object.keys(sous_filieres).forEach(s=> {
+  //       const path = s.split('/')
+  //       if ( !(path[0] in diagrams)) {
+  //         diagrams[path[0]] = [path[1]]
+  //       } else {
+  //         diagrams[path[0]].push(path[1])     
+  //       }
+  //     })
+  //   } else {
+  //     Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+  //   }
+  // }
+  
   const diagram_label = 'Diagrammes'
   const setDiagram = (the_diagram : string) => {
 
@@ -336,7 +341,29 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
-
+  let sous_filieres = undefined
+  if (window.sankey && window.sankey.sous_filieres) {
+    sous_filieres = window.sankey.sous_filieres
+  }
+  let is_split = false
+  const diagrams : { [keys :string] : string[] } = {}
+  if ( sous_filieres ) {
+    is_split = Object.keys(sous_filieres)[0].includes('/')
+    if (is_split ) {
+      Object.keys(sous_filieres).forEach(s=> {
+        const path = s.split('/')
+        if ( !(path[0] in diagrams)) {
+          diagrams[path[0]] = [path[1]]
+        } else {
+          diagrams[path[0]].push(path[1])     
+        }
+      })
+    } else {
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+    }
+  }
+  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = findMaxLinkValue(
@@ -960,10 +987,10 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
   const height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
 
-  let sous_filieres = undefined
-  if (window.sankey && window.sankey.sous_filieres) {
-    sous_filieres = window.sankey.sous_filieres
-  }
+  // let sous_filieres = undefined
+  // if (window.sankey && window.sankey.sous_filieres) {
+  //   sous_filieres = window.sankey.sous_filieres
+  // }
   return (
     <>
       {/* This div contain a dropdown for selecting a diagram */}
@@ -981,7 +1008,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
         {
           data.show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-              {SankeyBannerRows(t,data,set_data)}
+              {SankeyBannerRows(t,data,set_data,diagram,set_diagram,diagram2,set_diagram2,sous_filieres,is_split,diagrams)}
             </Row>
             <Row>
               <Col className='text-end'>
