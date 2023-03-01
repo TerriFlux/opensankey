@@ -1,8 +1,10 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,TagsCatalog,SankeyDrawCurve } from './types'
 import FileSaver from 'file-saver'
 import { convert_data } from './SankeyConvert'
 import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
 import * as d3 from 'd3'
+
+import * as SankeyShapes from './SankeyShapes'
 
 
 declare const window: Window &
@@ -1395,4 +1397,37 @@ export const hideNullFluxNodes = (
       nodes[node.idNode].node_visible = false
     }
   })
+}
+
+// Function that return the color that the node has to display
+// It depend of if a tags is selected, if the persistent variable is at true and the color we gived to the node
+export const node_color = (n: SankeyNode,data:SankeyData) => {
+  let colorNode
+  if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
+    //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
+    //on controle ici qu'il y a bien un favorite tag
+    if (n.colorTag !== undefined && n.colorTag !== '') {
+      const tagGroup = n.colorTag
+      if (n.tags[tagGroup] === undefined) {
+        colorNode = 'grey'
+        colorNode=(n.colorSustainable)? n.color:colorNode
+      } else if (n.tags[tagGroup].length > 0) {  
+        if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
+          colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
+        } else {
+          colorNode = 'grey'
+          colorNode=(n.colorSustainable)? n.color:colorNode
+        }
+      } else {
+        colorNode = 'grey'
+      }
+    } else {
+      colorNode = 'grey'
+    }
+  }
+  if (n.colorParameter === 'local') {
+    // Le couleur est définie dans les parametres locaux du noeud
+    colorNode = n.color
+  }  
+  return colorNode
 }
