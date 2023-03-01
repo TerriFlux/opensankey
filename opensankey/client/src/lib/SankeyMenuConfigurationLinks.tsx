@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown,FormGroup,FormCheck } from 'react-bootstrap'
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
@@ -359,6 +359,18 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         ><FaMinus /></Button>
       </Col>
     </Row>
+    <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dls')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_link_selector=evt.target.checked
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
     <Row>
       <Col>
         <FormLabel>{t('Flux.src')}</FormLabel>
