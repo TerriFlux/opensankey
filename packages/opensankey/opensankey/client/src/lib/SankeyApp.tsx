@@ -21,7 +21,16 @@ import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import { default_link, default_node, link_text } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
-import { keyHandler } from './SankeyDrawFunction'
+import { keyHandler } from './SankeyDraw'
+import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
+import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
+import { OpenSankeyDrawLabels } from './SankeyDrawLabels'
+import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
+import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
+import { OpenSankeyDrawNodesIcon } from './SankeyDrawNodesIcon'
+
+
+
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
   exemple_menu        : object
@@ -70,6 +79,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
   const [data,set_data] = useState<SankeyData>(initial_sankey_data)
   const [show_nav,set_show_nav] = useState(false)
+
+  // For SankeyDraw
+  const [alt_key_pressed,set_alt_key_pressed] = useState(false)
+
+  const [first_selected_node,set_first_selected_node] = useState({})
+  const [show_agregation, set_show_agregation] = useState(false)
+  const [agregation_node, set_agregation_node] = useState('')
+  const [is_agregation, set_is_agregation] = useState(true)
 
   // For OpenSankeyConfigurationsMenus
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
@@ -252,10 +269,60 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     event.preventDefault()
     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
   })
+  const select_node=(n: SankeyNode) => {
+    selected_node.current = n
+  }
+
+  const select_link=(l: SankeyLink) => {
+    selected_link.current = l
+  }
+  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+  const position = data.static_sankey ? 'relative' : 'absolute'
+  
+
+  // let alt_key_pressed = false
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,set_mode_selection)
   }
+  
+  // Call the function that add nodes to the sankey
+  const draw_nodes=OpenSankeyDrawNodes(data,set_data,
+    nodes_accordion_ref,links_accordion_ref,
+    multi_selected_nodes,multi_selected_links,
+    mode_selection,
+    first_selected_node,set_first_selected_node,
+    accordion_ref,button_ref,
+    set_agregation_node,set_is_agregation,set_show_agregation,
+    select_node,
+    alt_key_pressed,
+    data.static_sankey,
+    position,nodeTooltipsContent,link_text)
+
+  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes)
+  OpenSankeyDrawNodesIcon(data,mode_selection,data.static_sankey,nodeTooltipsContent)
+
+  
+  
+  
+  // Call the function that add links to the sankey
+  const draw_links=OpenSankeyDrawLinks(
+    data,links_accordion_ref,
+    multi_selected_links,
+    mode_selection,
+    accordion_ref,
+    button_ref,
+    select_link,
+    alt_key_pressed,
+    data.static_sankey,position,node_arrow_visible,
+    linkTooltipsContent,
+    link_text
+  )
+
+  //Call the function that add free labels to the sankey
+  const draw_labels=OpenSankeyDrawLabels(data,set_data,multi_selected_label,accordion_ref,button_ref,alt_key_pressed)
+  
+  const draw_legend=OpenSankeyDrawLegend(data)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
@@ -396,25 +463,31 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_label={multi_selected_label}
             multi_selected_links={multi_selected_links}
-            accordion_ref={accordion_ref}
-            nodes_accordion_ref={nodes_accordion_ref}
-            links_accordion_ref={links_accordion_ref}
-            button_ref={button_ref}   
-            select_node={(n: SankeyNode) => {
-              selected_node.current = n
-            }}
-            node_arrow_visible={
-              (data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
-            }
+            // accordion_ref={accordion_ref}
+            // nodes_accordion_ref={nodes_accordion_ref}
+            // links_accordion_ref={links_accordion_ref}
+            // button_ref={button_ref}   
+            // node_arrow_visible={
+            //   (data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+            // }
 
-            select_link={(l: SankeyLink) => {
-              selected_link.current = l
-            }}
-            link_text = { link_text }
-            nodeTooltipsContent={nodeTooltipsContent }
-            linkTooltipsContent={linkTooltipsContent }
+            // select_link={select_link}
+
             mode_selection={mode_selection}
             set_mode_selection={set_mode_selection}
+            first_selected_node={first_selected_node}
+            set_first_selected_node={set_first_selected_node}
+            show_agregation={show_agregation} 
+            set_show_agregation={set_show_agregation}
+            agregation_node={agregation_node}
+            is_agregation={is_agregation}
+            draw_nodes={draw_nodes}
+            draw_links={draw_links}
+            draw_labels={draw_labels}
+            draw_legend={draw_legend}
+            // alt_key_pressed={alt_key_pressed}
+            set_alt_key_pressed={set_alt_key_pressed}
+
           />) : (<></>)}
         <Modal 
           bsSize="large" 
