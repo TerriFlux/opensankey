@@ -159,11 +159,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = data.nodes[l.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -173,11 +169,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     })
     .attr('stop-opacity', 1)  
@@ -194,11 +186,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = data.nodes[l.idSource]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -208,11 +196,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     })
     .attr('stop-opacity', 1)  
@@ -233,11 +217,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idTarget].x + width_trgt)
@@ -252,11 +232,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )  
@@ -270,11 +246,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = nodes[l.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -284,11 +256,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )
@@ -309,11 +277,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', 0)
@@ -328,11 +292,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )  
@@ -346,11 +306,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = nodes[l.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -360,11 +316,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )
@@ -384,11 +336,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', data.nodes[l.idTarget].x + width_trgt + 10)
@@ -403,11 +351,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )  
@@ -421,11 +365,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color as string
-        } else {
-          return n.iconColor as string
-        }
+        return n.color
       } else {
         const n = nodes[l.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -435,11 +375,7 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<S
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color as string
-        } else {
-          return n.iconColor as string
-        }
+        return n.color
       }
     }
     )  
@@ -1059,7 +995,8 @@ export const drawArrows = (
     }
 
     if (!display_style.filter || link_value >= display_style.filter) {
-      const colorArrow=(data.nodes[l.idTarget].shape_visible || data.nodes[l.idTarget].iconName === 'none')?(node_color(data.nodes[l.idTarget] as SankeyNode,data) as string):data.nodes[l.idTarget].iconColor
+      // const colorArrow=(data.nodes[l.idTarget].shape_visible || data.nodes[l.idTarget].iconName === 'none')?(node_color(data.nodes[l.idTarget] as SankeyNode,data) as string):data.nodes[l.idTarget].iconColor
+      const colorArrow=(node_color(data.nodes[l.idTarget] as SankeyNode,data) as string)
       const n = JSON.parse(JSON.stringify(clipped))
       const point = d3.line()(n)
       arr.append('marker').attr('id', 'arrow_' + l.idLink)
@@ -1139,11 +1076,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }else {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt)
@@ -1158,11 +1091,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )
@@ -1177,11 +1106,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = nodes[link.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -1191,11 +1116,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )
@@ -1247,11 +1168,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt + 10)
@@ -1266,11 +1183,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )
@@ -1285,11 +1198,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       } else {
         const n = nodes[link.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -1299,11 +1208,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
             return tag.color as string
           }
         }
-        if (n.shape_visible || n.iconName === 'none') {
-          return n.color
-        } else {
-          return n.iconColor
-        }
+        return n.color
       }
     }
     )

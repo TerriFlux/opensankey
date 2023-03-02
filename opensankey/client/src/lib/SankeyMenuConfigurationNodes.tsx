@@ -11,7 +11,6 @@ import { selected_type } from './SankeyMenu'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import {SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
-import {SankeyMenuConfigurationNodesIcon} from './SankeyMenuConfigurationNodesIcon'
 import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTags'
 import {SankeyMenuConfigurationNodesAgregation} from './SankeyMenuConfigurationNodesAgregation'
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
@@ -50,7 +49,6 @@ export const OpenSankeyMenuConfigurationNodes = (
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
     'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
-    'Icon'            : SankeyMenuConfigurationNodesIcon(t,data,set_data,multi_selected_nodes),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
   }
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {

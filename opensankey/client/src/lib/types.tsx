@@ -26,10 +26,10 @@ export const SankeyNodePropTypes = {
   node_width: PropTypes.number.isRequired,
   node_height: PropTypes.number.isRequired,
 
-  iconName: PropTypes.string.isRequired,
-  iconColor: PropTypes.string.isRequired,
-  iconRatio: PropTypes.number.isRequired,
-  iconVisible: PropTypes.bool.isRequired,
+  // iconName: PropTypes.string.isRequired,
+  // iconColor: PropTypes.string.isRequired,
+  // iconRatio: PropTypes.number.isRequired,
+  // iconVisible: PropTypes.bool.isRequired,
 
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
@@ -206,9 +206,8 @@ export const SankeyDataPropTypes = {
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  // icon_catalog: PropTypes.object.isRequired,
-  // icon_catalog: PropTypes.objectOf(PropTypes.objectOf(PropTypes.string)).isRequired,
-  icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
+
+  // icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
   show_structure: PropTypes.oneOf(['structure','data','reconciled','free']).isRequired,
   //show_data: PropTypes.bool.isRequired,

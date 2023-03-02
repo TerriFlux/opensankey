@@ -48,7 +48,7 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({t,data,set_da
       </Form.Group>
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
 
-      <Form.Group as={Row}>
+      {/* <Form.Group as={Row}>
         <Col xs={6}>Charger une police d'icones</Col>
         <Col xs={6}><FormControl
           //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
@@ -78,7 +78,7 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({t,data,set_da
         >
         </FormControl>
         </Col>
-      </Form.Group>
+      </Form.Group> */}
 
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
       <ButtonGroup>
