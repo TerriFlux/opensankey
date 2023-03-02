@@ -153,30 +153,8 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({t,data,set_da
       </Form>
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
       
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dns')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_node_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dls')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_link_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
+      
+      
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>

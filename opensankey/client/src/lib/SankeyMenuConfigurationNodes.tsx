@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, FormControl, FormLabel, Col, Tabs, Button, ButtonGroup, Dropdown } from 'react-bootstrap'
+import { Row, Form, FormControl, FormLabel, Col, Tabs, Button, ButtonGroup, Dropdown,FormCheck,FormGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
@@ -215,6 +215,18 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
       </Col>
     </Row>
+    <FormGroup as={Row}>
+        <Col xs={10}>
+          <FormLabel >{t('Menu.dns')}</FormLabel>        
+        </Col>
+        <Col xs={2}>
+          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_node_selector=evt.target.checked
+            set_data({...data})
+          }}/>        
+        </Col>
+      </FormGroup>
 
     <Row >
       <Col xs={1}>
