@@ -27,7 +27,6 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLabels } from './SankeyDrawLabels'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
-import { OpenSankeyDrawNodesIcon } from './SankeyDrawNodesIcon'
 
 
 
@@ -300,7 +299,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     position,nodeTooltipsContent,link_text)
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes)
-  OpenSankeyDrawNodesIcon(data,mode_selection,data.static_sankey,nodeTooltipsContent)
 
   
   

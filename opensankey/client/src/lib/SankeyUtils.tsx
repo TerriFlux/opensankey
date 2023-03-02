@@ -578,10 +578,10 @@ export const default_sankey_data = (): SankeyData => {
         hide_lone_node:false,
         node_width: 40,
         node_height: 40,
-        iconName: 'none',
-        iconColor: '#fff',
-        iconRatio: 80,
-        iconVisible: true,
+        // iconName: 'none',
+        // iconColor: '#fff',
+        // iconRatio: 80,
+        // iconVisible: true,
         not_to_scale:false,
         not_to_scale_direction:'right',
 
@@ -679,7 +679,7 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
 
-    icon_catalog: {},
+    // icon_catalog: {},
     labels: {},
 
     left_shift: 0.4,
@@ -932,10 +932,10 @@ export const default_node = (
     label_visible: true,
     node_width: 40,
     node_height: 40,
-    iconName: 'none',
-    iconColor: '#fff',
-    iconRatio: 80,
-    iconVisible: true,
+    // iconName: 'none',
+    // iconColor: '#fff',
+    // iconRatio: 80,
+    // iconVisible: true,
     not_to_scale:false,
     not_to_scale_direction:'right',
 

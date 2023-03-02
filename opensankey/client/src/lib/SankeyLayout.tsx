@@ -470,10 +470,10 @@ export const updateLayout = (
     if(mode.includes('attrNode')){
       node.display_style = {...node_layout.display_style}
 
-      node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
-      node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
-      node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
-      node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
+      // node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
+      // node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
+      // node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
+      // node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
   
       node.colorTag = node_layout.colorTag
       node.colorParameter = node_layout.colorParameter
@@ -592,7 +592,7 @@ export const updateLayout = (
   // data.agregation.dimension = new_layout.agregation.dimension
 
   if(mode.includes('attrGeneral')){
-    data.icon_catalog = new_layout.icon_catalog
+    // data.icon_catalog = new_layout.icon_catalog
     Object.assign(data.labels,new_layout.labels)
     data.colorMap = new_layout.colorMap
     data.user_scale = new_layout.user_scale
