@@ -406,22 +406,22 @@ import { dragGNodeEvent } from './SankeyDrag'
         }
     }
     
-    const node_mouse_click=(data:SankeyData,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
-        if (!data.static_sankey && event.shiftKey || data.static_sankey) {
-            event.preventDefault()
-            // Animation des flux du Sankey
-            sankeyTooltip.style('opacity', 0)
-            // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
-            d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
+    // const node_mouse_click=(data:SankeyData,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+    //     if (!data.static_sankey && event.shiftKey || data.static_sankey) {
+    //         event.preventDefault()
+    //         // Animation des flux du Sankey
+    //         sankeyTooltip.style('opacity', 0)
+    //         // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
+    //         d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
         
-            d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
-            d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
-            d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
-            const dd=(d as SankeyNode)
-            const nodeDisplay = [(d as SankeyNode).idNode]
-            branchAnimate(data,dd,nodeDisplay)
-        }
-    }
+    //         d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
+    //         d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
+    //         d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
+    //         const dd=(d as SankeyNode)
+    //         const nodeDisplay = [(d as SankeyNode).idNode]
+    //         branchAnimate(data,dd,nodeDisplay)
+    //     }
+    // }
     
     const node_mouse_out=(d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
     if ((d as SankeyNode).shape_visible) {
@@ -429,95 +429,96 @@ import { dragGNodeEvent } from './SankeyDrag'
     }
     }
     
-  const branchAnimate = (
-    data:SankeyData,
-    nodeData: SankeyNode,
-    nodeDisplay: string[]
-  ) => {
+//   const branchAnimate = (
+//     data:SankeyData,
+//     nodeData: SankeyNode,
+//     nodeDisplay: string[]
+//   ) => {
     
-        // Permet la progation de l'animation sur l'ensemble du Sankey
-        const nodeStart = nodeData.idNode
+//         // Permet la progation de l'animation sur l'ensemble du Sankey
+//         const nodeStart = nodeData.idNode
     
-        // on pourrait aussi evnetuellement faire un clone des noeuds
-    d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-    d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+//         // on pourrait aussi evnetuellement faire un clone des noeuds
+//     d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+//     d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
     
-    const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-        .filter(function (d) {
-        return d.idSource == nodeStart
-        })
+//     const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+//         .filter(function (d) {
+//         return d.idSource == nodeStart
+//         })
     
-    // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-    const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-    tmpLinks.selectAll('.link')
-        .each(function (this) {
-        const totalLength = (this as SVGGeometryElement).getTotalLength()
+//     // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
+//     const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+//     tmpLinks.selectAll('.link')
+//         .each(function (this) {
+//         const totalLength = (this as SVGGeometryElement).getTotalLength()
     
-        d3.select(this)
-            .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-            .attr('stroke-dashoffset', totalLength)
-            .style('stroke', function (this) {
-            // on recupere les paramêtres initiaux du stroke
-            return d3.select(this).attr('stroke')
-            })
+//         d3.select(this)
+//             .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+//             .attr('stroke-dashoffset', totalLength)
+//             .style('stroke', function (this) {
+//             // on recupere les paramêtres initiaux du stroke
+//             return d3.select(this).attr('stroke')
+//             })
     
-        })
-            .transition()
-            .duration(2000)
-            .attr('stroke-dashoffset', 0)
-            .on('end', function (this) {
-            const idLink = d3.select(this).attr('id')
-            const idTarget = data.links[idLink].idTarget
-            // Modification des arrows après l'animation
-            const arrow=d3.select(' .opensankey #arrow_'+idLink)
-            if(arrow!==undefined && arrow!= null){        
-                const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-                const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-                if(t){
-                arrow.select('path').style('fill',t)
-                }
-            }
-            // reaffichage des link value après l'animation
-            d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-                .style('display', 'inline')
-            //Propagration de l'animation sur les flux sortant du target_node
-            // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-            if (!nodeDisplay.includes(idTarget)) {
-                nodeDisplay.push(idTarget)
-                let max=0
-                const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
-                max=(tmp>max)?tmp:max
-                setTimeout(()=>{
-                branchAnimate(data,data.nodes[idTarget], nodeDisplay)
-                },max*2000)
-            }
-            })
-    }
+//         })
+//             .transition()
+//             .duration(2000)
+//             .attr('stroke-dashoffset', 0)
+//             .on('end', function (this) {
+//             const idLink = d3.select(this).attr('id')
+//             const idTarget = data.links[idLink].idTarget
+//             // Modification des arrows après l'animation
+//             const arrow=d3.select(' .opensankey #arrow_'+idLink)
+//             if(arrow!==undefined && arrow!= null){        
+//                 // const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+//                 const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+//                 const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
+//                 if(t){
+//                 arrow.select('path').style('fill',t)
+//                 }
+//             }
+//             // reaffichage des link value après l'animation
+//             d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
+//                 .style('display', 'inline')
+//             //Propagration de l'animation sur les flux sortant du target_node
+//             // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+//             if (!nodeDisplay.includes(idTarget)) {
+//                 nodeDisplay.push(idTarget)
+//                 let max=0
+//                 const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
+//                 max=(tmp>max)?tmp:max
+//                 setTimeout(()=>{
+//                 branchAnimate(data,data.nodes[idTarget], nodeDisplay)
+//                 },max*2000)
+//             }
+//             })
+//     }
     
-    const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
-    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
-    //exemple : n0 -> n1  et n0 -> n2 -> n1
-    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-    // console.log(target)
-    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
-    let max=0
+    // const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
+    // //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+    // //exemple : n0 -> n1  et n0 -> n2 -> n1
+    // //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
+    // // console.log(target)
+    // const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+    // let max=0
     
-    if(n.idNode==target.idNode){
-        return deep-1
-    }else if(next_link.length>0) {
-        next_link.map(id=>{
-        const next_node=data.nodes[data.links[id].idTarget]
-        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
-        const to_avoid=link_to_avoid.concat([id])
-        const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
-        max=(tmp>max)?tmp:max
-        })
-    }
+    // if(n.idNode==target.idNode){
+    //     return deep-1
+    // }else if(next_link.length>0) {
+    //     next_link.map(id=>{
+    //     const next_node=data.nodes[data.links[id].idTarget]
+    //     //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+    //     const to_avoid=link_to_avoid.concat([id])
+    //     const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
+    //     max=(tmp>max)?tmp:max
+    //     })
+    // }
     
-    return max
+    // return max
     
     
-    }
+    // }
     
 
     // Function that search and hide node that hvae 1 input link, 1 output link and have hideLoneNode at true
@@ -702,10 +703,10 @@ import { dragGNodeEvent } from './SankeyDrag'
             .on('mouseout', function (event, d) {
             node_mouse_out(d,sankeyTooltip)
             })
-            .on('click', (event, d) => {
-            // Apply some style change to element before starting the animation
-            node_mouse_click(data,event,d,sankeyTooltip)
-            })
+            // .on('click', (event, d) => {
+            // // Apply some style change to element before starting the animation
+            // node_mouse_click(data,event,d,sankeyTooltip)
+            // })
 
         //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 

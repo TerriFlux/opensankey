@@ -371,9 +371,9 @@ export const convert_data = (
   if (!data_to_convert.accordeonToShow) {
     data_to_convert.accordeonToShow = ['MEP']
   }
-  if (!data_to_convert.icon_catalog) {
-    data_to_convert.icon_catalog = {}
-  }
+  // if (!data_to_convert.icon_catalog) {
+  //   data_to_convert.icon_catalog = {}
+  // }
   if (data.agregated_level) {
     delete data.agregated_level
   } 
@@ -389,10 +389,10 @@ export const convert_data = (
         label_visible: true,
         node_width: 40,
         node_height: 40,
-        iconName: 'none',
-        iconColor: '#fff',
-        iconRatio: 80,
-        iconVisible: true,
+        // iconName: 'none',
+        // iconColor: '#fff',
+        // iconRatio: 80,
+        // iconVisible: true,
         not_to_scale:false,
         not_to_scale_direction:'right',
 
@@ -826,18 +826,18 @@ export const convert_data = (
         n.colorTag = ''
       }
 
-      if (n.iconName === undefined) {
-        n.iconName = 'none'
-      }
-      if (n.iconColor === undefined) {
-        n.iconColor = '#fff'
-      }
-      if (n.iconRatio === undefined) {
-        n.iconRatio = 80
-      }
-      if (n.iconVisible === undefined) {
-        n.iconVisible = true
-      }
+      // if (n.iconName === undefined) {
+      //   n.iconName = 'none'
+      // }
+      // if (n.iconColor === undefined) {
+      //   n.iconColor = '#fff'
+      // }
+      // if (n.iconRatio === undefined) {
+      //   n.iconRatio = 80
+      // }
+      // if (n.iconVisible === undefined) {
+      //   n.iconVisible = true
+      // }
       if (n_convert.type) {
         n.shape = n_convert.type === 'product' ? 'ellipse' : 'rect'
         if ( has_product && !n.tags['Type de noeud']) {
