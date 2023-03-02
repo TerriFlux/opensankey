@@ -1,23 +1,24 @@
 import { InferProps} from 'prop-types'
 import React, { Requireable } from 'react'
-import {SankeyData,SankeyLink,SankeyNode, SankeyLinkValue,SankeyLabel, TagsCatalog, drawArrowsType, drawCurveType} from 'open-sankey/src/lib/types'
+import {SankeyLink,/*SankeyNode,*/ SankeyLinkValue,SankeyLabel, TagsCatalog, drawArrowsType, drawCurveType} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast } from 'react-bootstrap'
+import {SankeyPlusData,SankeyPlusNode} from './types'
 
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
-  nodes: { [node_id: string]: SankeyNode },
-  node: SankeyNode,
+  nodes: { [node_id: string]: SankeyPlusNode },
+  node: SankeyPlusNode,
   new_links: { [link_id: string]: SankeyLink },
 ) => {
   const keys_links = Object.keys(new_links)
   // let number_new_path=0
   let long = 0
   const links_present = node.outputLinksId.filter(o => keys_links.includes(o))
-
+  
   if (links_present.length > 0) {
     long += 1
     links_present.forEach(d => {
@@ -35,21 +36,21 @@ export const view_toast = (<Toast bg='success' className='toastView' style={{ 'p
   <Toast.Body>Vue sauvegardée</Toast.Body>
 </Toast>)
 
-const viewOfData = (data:SankeyData,view:string) => {
-  const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id === view)[0].view_data)) as SankeyData
+const viewOfData = (data:SankeyPlusData,view:string) => {
+  const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id === view)[0].view_data)) as SankeyPlusData
   d.view = JSON.parse(JSON.stringify(data.view))
-  return d as SankeyData
+  return d as SankeyPlusData
 
 }
 export const sankey_draw_view = (
-  data:SankeyData,
+  data:SankeyPlusData,
   view:string,
-  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyLink[]},
   multi_selected_label:{current:SankeyLabel[]},
-  link_text:(data: SankeyData, d: SankeyLink) => string,
-  nodeTooltipsContent:(data : SankeyData,d : SankeyNode) => string,
-  linkTooltipsContent:(data : SankeyData,d : SankeyLink) => string,
+  link_text:(data: SankeyPlusData, d: SankeyLink) => string,
+  nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
+  linkTooltipsContent:(data : SankeyPlusData,d : SankeyLink) => string,
   set_show_toast:(b:boolean)=>void,
   mode_selection:boolean,
   set_mode_selection:(b:boolean)=>void
@@ -66,7 +67,7 @@ export const sankey_draw_view = (
 
     select_node={() => null}
     node_arrow_visible={
-      (n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!viewOfData(data,view).links[n.inputLinksId[0]].arrow) ? false : true
+      (n: SankeyPlusNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!viewOfData(data,view).links[n.inputLinksId[0]].arrow) ? false : true
     }
     select_link={() => null}
 
@@ -82,20 +83,20 @@ export const sankey_draw_view = (
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'p')
 export const nextView = (
-  data: SankeyData, 
-  set_data: (s:SankeyData)=>void,
-  views: { id: string, view_data: SankeyData, nom: string }[], 
+  data: SankeyPlusData, 
+  set_data: (s:SankeyPlusData)=>void,
+  views: { id: string, view_data: SankeyPlusData, nom: string }[], 
   set_view : (id: string)=>void,
   new_view: string,
-  node_color: (node:SankeyNode,data:SankeyData)=>string,
-  link_color: (link:SankeyLink,data:SankeyData)=>string,
-  multi_selected_nodes:{current:SankeyNode[]},
-  setNodeHeight:(n: SankeyNode,nodes: { [node_id: string]: SankeyNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(nodes: { [node_id: string]: SankeyNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  link_visible: (l: SankeyLink, data_s: SankeyData)=>boolean,
-  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink) => string,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
   min_thickness: number,
   drawArrows:drawArrowsType,
   drawCurve:drawCurveType
@@ -106,7 +107,7 @@ export const nextView = (
     ind = (v.id === v1) ? i : ind
   })
   if (ind < Object.keys(views).length - 1) {
-    const copy = views[ind + 1].view_data as SankeyData
+    const copy = views[ind + 1].view_data as SankeyPlusData
     const time_to_set_view = animate_view_changement(data,data, copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve)
 
     setTimeout(function () {
@@ -124,18 +125,18 @@ export const nextView = (
 }
 
 const animate_view_changement = (
-  data   :SankeyData,
-  data_v1: SankeyData,
-  data_v2: SankeyData,
-  node_color: (node:SankeyNode,data:SankeyData)=>string,
-  link_color: (link:SankeyLink,data:SankeyData)=>string,
+  data   :SankeyPlusData,
+  data_v1: SankeyPlusData,
+  data_v2: SankeyPlusData,
+  node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  multi_selected_nodes:{current:SankeyNode[]},
-  setNodeHeight:(n: SankeyNode,nodes: { [node_id: string]: SankeyNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(nodes: { [node_id: string]: SankeyNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
-  link_visible: (l: SankeyLink, data_s: SankeyData)=>boolean,
-  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink) => string,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
   min_thickness: number,
   drawArrows:drawArrowsType,
   drawCurve:drawCurveType
@@ -232,16 +233,16 @@ const animate_view_changement = (
 
 
   d3.selectAll(' .opensankey .node')
-    .filter(d => Object.keys(new_nodes).includes((d as SankeyNode).idNode))
-    .attr('id', d => (d as SankeyNode).idNode)
-  // // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
-  // .style('opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
+    .filter(d => Object.keys(new_nodes).includes((d as SankeyPlusNode).idNode))
+    .attr('id', d => (d as SankeyPlusNode).idNode)
+  // // .attr('visibility', d => (d as SankeyPlusNode).node_visible && (d as SankeyPlusNode).shape_visible ? 'visible' : 'hidden')
+  // .style('opacity', d => (d as SankeyPlusNode).node_visible && (d as SankeyPlusNode).shape_visible ? '1' : '0')
     .style('opacity', 0)
-    .attr('fill', d => node_color(d as SankeyNode,data) as string)
+    .attr('fill', d => node_color(d as SankeyPlusNode,data) as string)
     .attr('stroke', 'black')
     .attr('stroke-width', d => {
-      d = (d as SankeyNode)
-      if (multi_selected_nodes.current.map(d => { if (d !== undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
+      d = (d as SankeyPlusNode)
+      if (multi_selected_nodes.current.map(d => { if (d !== undefined) { return d.idNode } else { return '' } }).includes((d as SankeyPlusNode).idNode)) {
         return 2
       } else {
         return 0
@@ -1019,7 +1020,7 @@ const animate_view_changement = (
   //Creation des Arrows associés au link
   d3.selectAll(' .opensankey .ggg_nodes')
     .filter(m => {
-      const n = Object.values(data_v2.nodes).filter(d => d.idNode === (m as SankeyNode).idNode)[0]
+      const n = Object.values(data_v2.nodes).filter(d => d.idNode === (m as SankeyPlusNode).idNode)[0]
       //test si les noeuds ont des les flux sortant, qu'il y a des flux sortant et que les noeuds sont présents dans la vue suivantes
       //car les noeuds sélectionnés par d3.selectAll(' .opensankey .ggg_nodes') contient les noeuds qui sont en train d'être supprimé (cela est dût à la transition au debut de la fonction)
       if (n !== undefined && n.inputLinksId.length != 0 && Object.keys(data_v2.links).length != 0 && Object.values(data_v2.nodes).map(d => d.idNode).includes(n.idNode)) {
@@ -1029,8 +1030,8 @@ const animate_view_changement = (
       }
     })
     .each(function (m) {
-      const n = Object.values(data_v2.nodes).filter(d => d.idNode === (m as SankeyNode).idNode)[0]
-      drawArrows(data_v2, n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
+      const n = Object.values(data_v2.nodes).filter(d => d.idNode === (m as SankeyPlusNode).idNode)[0]
+      drawArrows(data_v2, n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
     })
 
   gg_links.filter(d => k_links.includes(d.idLink)).selectAll('.arrow').style('opacity', '0')
@@ -1054,7 +1055,7 @@ const animate_view_changement = (
     .filter(m => {
       const incl = (el: string) => Object.values(edit_links).map(d => d.idLink).includes(el)
 
-      const n = m as SankeyNode
+      const n = m as SankeyPlusNode
       if (n.inputLinksId.length != 0 && Object.keys(data_v2.links).length != 0 && Object.values(data_v2.nodes).map(d => d.idNode).includes(n.idNode) && n.inputLinksId.some(incl)) {
         return !n.node_visible || (!data_v2.links[n.inputLinksId[0]].arrow) ? false : true
       } else {
@@ -1066,8 +1067,8 @@ const animate_view_changement = (
   //Déplace les flêchesdéjà existant vers leur nouvelle position
   edit_arrow
     .each(n => {
-      const new_n = Object.values(data_v2.nodes).filter(d => d.idNode === (n as SankeyNode).idNode)[0]
-      drawArrows(data_v2, new_n as SankeyNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
+      const new_n = Object.values(data_v2.nodes).filter(d => d.idNode === (n as SankeyPlusNode).idNode)[0]
+      drawArrows(data_v2, new_n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
     })
 
   //Déplace les flux déjà existant vers leur nouvelle position
@@ -1111,8 +1112,8 @@ const animate_view_changement = (
 
 //fonction pour animer que les nouveaux liens 
 const branchAnimateForView = (
-  data: SankeyData,
-  nodeData: SankeyNode,
+  data: SankeyPlusData,
+  nodeData: SankeyPlusNode,
   nodeDisplay: string[],
   new_links: { [link_id: string]: SankeyLink },
 ) => {
@@ -1180,18 +1181,18 @@ const branchAnimateForView = (
     })
 }
 
-export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
-  multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
+  multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyLink[]},
+  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
   view:string,
   set_view:React.Dispatch<React.SetStateAction<string>>,
-  animate_view_changement:(data_v1:SankeyData,data_v2:SankeyData)=>number,
-  nextView : (data: SankeyData, views: { id: string, view_data: SankeyData, nom: string }[], new_view: string)=>void,
-  delete_link : (data: SankeyData,link: SankeyLink) => void,
-  delete_node : (data: SankeyData,node: SankeyNode) => void
+  animate_view_changement:(data_v1:SankeyPlusData,data_v2:SankeyPlusData)=>number,
+  nextView : (data: SankeyPlusData, views: { id: string, view_data: SankeyPlusData, nom: string }[], new_view: string)=>void,
+  delete_link : (data: SankeyPlusData,link: SankeyLink) => void,
+  delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void
 ) => {
   if (current) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
@@ -1438,7 +1439,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           })
           //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
           if (ind > 0) {
-            const copy = data.view[ind - 1].view_data as SankeyData
+            const copy = data.view[ind - 1].view_data as SankeyPlusData
             const time_to_set_view = animate_view_changement(data, copy)
             setTimeout(function () {
               set_view(data.view[ind - 1].id)
@@ -1453,7 +1454,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           })
           //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
           if (ind < Object.keys(data.view).length - 1) {
-            const copy = data.view[ind + 1].view_data as SankeyData
+            const copy = data.view[ind + 1].view_data as SankeyPlusData
             const time_to_set_view = animate_view_changement(data, copy)
             setTimeout(function () {
               set_view(data.view[ind + 1].id)
@@ -1461,7 +1462,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
           }
         } else if (e.key == 'p') {
           //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-          nextView(data, (data.view as { id: string, view_data: SankeyData, nom: string }[]), view)
+          nextView(data, (data.view as { id: string, view_data: SankeyPlusData, nom: string }[]), view)
         }
         set_data({ ...data })
       }
@@ -1470,13 +1471,13 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyData,
 }
 
 export const viewsAccordion = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
   nav_item_active: string,
   set_nav_item_active: (s:string)=>void,
   view:string,
   set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyLink[]},
   multi_selected_label:{current:SankeyLabel[]},
 ) => {

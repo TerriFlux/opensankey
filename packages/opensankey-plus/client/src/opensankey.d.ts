@@ -11,6 +11,7 @@ declare module 'open-sankey/dist/SankeyUtils';
 declare module 'open-sankey/dist/SankeyLayout';
 declare module 'open-sankey/dist/SankeyMenu';
 declare module 'open-sankey/dist/traduction';
+declare module 'open-sankey/dist/SankeyDrawFunction';
 declare module 'react-multiselect-dropdown-bootstrap';
 declare module 'react-beforeunload';
 declare module 'lz-string';
