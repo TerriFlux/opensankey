@@ -13,7 +13,7 @@ import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 import ModalPreference from './SankeyMenuPreferences'
-import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
+// import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { PublishModal,ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 
@@ -110,7 +110,8 @@ const MenuPropTypes = {
   set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
   token:PropTypes.bool.isRequired,
-  useNavigate:PropTypes.func.isRequired
+  useNavigate:PropTypes.func.isRequired,
+  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
 
 }
 
@@ -415,7 +416,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_modalTemplate,
     cardsTemplate,
     token,
-    useNavigate
+    useNavigate,
+    external_modal
   }
 ) => {
   let max_link_value = 0
@@ -557,20 +559,11 @@ const Menu: FunctionComponent<MenuTypes> = (
   const navigate=useNavigate()
   return (
     <>
+      {external_modal}
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
       
       } 
-      { !data.static_sankey ? (
-        <ModalStyleNode
-          t={t}
-          data={data}
-          set_data={set_data}
-          showStyle={showStyleNode}
-          setShowStyle={setShowStyleNode}
-          selected_style_node={selected_style_node}
-          set_selected_style_node={set_selected_style_node}
-        />
-      ): (<></>)}
+
       { <ModalPreference
         t={t}
         data={data}
@@ -579,18 +572,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         setShowPreference={setShowPreference}
         set_mode_selection={set_mode_selection}
       />}
-      { !data.static_sankey ? (
-        <ModalStyleLink
-          t={t}
-          data={data}
-          set_data={set_data}
-          showStyleLink={showStyleLink}
-          setShowStyleLink={setShowStyleLink}
-          selected_style_link={selected_style_link}
-          set_selected_style_link={set_selected_style_link}
-          selected_link={selected_link}
-        />
-      ): (<></>)}
+
       { !data.static_sankey ? (
         modalShortcut
       ): (<></>)}

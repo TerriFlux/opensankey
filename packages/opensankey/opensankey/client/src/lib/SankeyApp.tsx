@@ -227,7 +227,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
-    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active
+    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
+    false
   )
 
   //- 2. Build Menus
@@ -262,8 +263,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       launch={launch}
     /></NavDropdown >
   )
+  // 2.2 Modal linked to menu item
+  const external_menu_modal=[] as JSX.Element[]  
 
-  //- 3. Sankey Draws
+  //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
     event.preventDefault()
     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
@@ -445,6 +448,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           set_show_modalTemplate={set_show_modalTemplate}
           token={true}
           useNavigate={()=>''}
+          external_modal={external_menu_modal}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }

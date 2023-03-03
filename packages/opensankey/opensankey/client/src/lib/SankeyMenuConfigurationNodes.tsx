@@ -26,7 +26,8 @@ const SankeyNodeEditionPropTypes = {
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
-  menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
+  menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  style_editable:PropTypes.bool.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
@@ -64,7 +65,7 @@ export const OpenSankeyMenuConfigurationNodes = (
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes }
+  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
 
@@ -231,7 +232,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <FormLabel>Style:</FormLabel>
       </Col>
 
-      <Col xs={6}>
+     <Col xs={6}>
+     {(style_editable)?(
         <Dropdown>
           <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
           <Dropdown.Menu>
@@ -256,6 +258,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             })}
           </Dropdown.Menu>
         </Dropdown>
+      ):(<Form.Label>{style_of_selected_nodes()}</Form.Label>)}
       </Col>
       <Col xs={5}>
         <Button

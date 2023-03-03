@@ -21,7 +21,8 @@ const SankeyMenuConfigurationLinksPropTypes = {
   set_data: PropTypes.func.isRequired,
   selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
+  menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  style_editable:PropTypes.bool.isRequired
 }
 
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
@@ -56,7 +57,7 @@ export const OpenSankeyMenuConfigurationLinks = (
   return ui
 }
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links}
+  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable}
 ) => {
   const { fluxTags,dataTags } = data
   const [forceUpdate, setForceUpdate] = useState(false)
@@ -506,9 +507,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </Col>
 
       <Col xs={6}>
-        <Dropdown>
+        {(style_editable)?<Dropdown>
           <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
-
           <Dropdown.Menu>
             <Dropdown.Item onClick={() => {
               set_style_to_apply_to_link('')
@@ -529,7 +529,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             })}
 
           </Dropdown.Menu>
-        </Dropdown>
+        </Dropdown>:<Form.Label>{style_of_selected_links()}</Form.Label>}
       </Col>
 
       <Col xs={5}>
