@@ -36,7 +36,8 @@ export const OpenSankeyConfigurationsMenus = (
   menu_configuration_free_labels:JSX.Element[],
   menu_configuration_legends:JSX.Element[],
   sub_nav_item_active:string,
-  set_sub_nav_item_active:(s:string)=>void
+  set_sub_nav_item_active:(s:string)=>void,
+  style_editable:boolean
 
 ) => {
   return [
@@ -132,6 +133,7 @@ export const OpenSankeyConfigurationsMenus = (
                 multi_selected_nodes={multi_selected_nodes}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
+                style_editable={style_editable}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -196,6 +198,7 @@ export const OpenSankeyConfigurationsMenus = (
                 selected_link={selected_link}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_links={Object.values(menu_configuration_links)}
+                style_editable={style_editable}
               />
             </Accordion.Body>
           </Accordion.Item>
