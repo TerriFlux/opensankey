@@ -14,3 +14,7 @@ export interface SankeyPlusNode extends SankeyNode{
     iconRatio: number,
     iconVisible: boolean,
 }
+
+export interface SankeyPlusLink extends SankeyLink{
+
+}
