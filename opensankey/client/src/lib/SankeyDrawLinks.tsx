@@ -23,10 +23,10 @@ export const OpenSankeyDrawLinks = (
   
   alt_key_pressed:boolean,
   static_sankey:boolean,
-  position:"absolute" | "relative",
+  position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   linkTooltipsContent:(data: SankeyData, l: SankeyLink) => string,
-  link_text:(data: SankeyData, d: SankeyLink) => any,
+  link_text:(data: SankeyData, d: SankeyLink) => string,
   
 
 ) => {
@@ -672,7 +672,7 @@ export const OpenSankeyDrawLinks = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     error_msg: { text: string | undefined } | undefined,
-    display_style: {node_font_size: number,sector_uppercase: boolean,sector_bold: boolean,sector_italic: boolean,product_uppercase: boolean,product_bold: boolean,product_italic: boolean,unit: boolean,filter: number,filter_label: number,global_curvature: number,null_flux: boolean,font_family: string[],node_font_family_selected: string,link_font_family_selected: string},
+    display_style: {filter: number,filter_label: number,font_family: string[],node_font_family_selected: string,link_font_family_selected: string},
     drawCurveFunction : SankeyDrawCurve,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number,
@@ -788,7 +788,7 @@ export const OpenSankeyDrawLinks = (
   const drag_link = (
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { node_font_size: number;  filter: number; filter_label: number },
+    display_style: { filter: number; filter_label: number },
     nodeTags: TagsCatalog,
     dragged: SVGPathElement | null,
     event: d3.D3DragEvent<Element, SankeyLink, unknown>,
@@ -963,7 +963,7 @@ export const OpenSankeyDrawLinks = (
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-const dragLinkTextEvent=(alt_key_pressed:boolean,
+  const dragLinkTextEvent=(alt_key_pressed:boolean,
   )=>{
     return d3.drag<SVGTextElement, SankeyLink>()
       .subject(Object).on('drag', function (event, link) {
@@ -999,9 +999,9 @@ const dragLinkTextEvent=(alt_key_pressed:boolean,
 
   useEffect(()=>{
     add_links(static_sankey)
-})  
+  })  
   return (<>
-  <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+    <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
   </>
   )
 }

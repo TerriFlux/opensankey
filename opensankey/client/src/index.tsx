@@ -5,15 +5,18 @@ import React from 'react'
 import { render } from 'react-dom'
 
 import SankeyApp from './lib/SankeyApp'
-import { convert_data } from './lib/SankeyConvert'
-import { default_sankey_data } from './lib/SankeyUtils'
+import { convert_data,complete_sankey_data } from './lib/SankeyConvert'
+import { default_link, default_node, default_sankey_data } from './lib/SankeyUtils'
 import LZString from 'lz-string'
 import { SankeyData } from './lib/types'
 import './lib/traduction'
 
 let logo = ''
 try {
-  logo = require('./css/opensankey.png')
+  /* eslint-disable */
+  // @ts-ignore
+  logo = require('../css/opensankey.png')
+  /* eslint-enable */
 } catch (expt) {
   console.log('opensankey.png not found')
 }
@@ -53,9 +56,9 @@ if (!window.SankeyToolsStatic) {
   // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data!='null') {
     const new_data = JSON.parse(json_data)
-    convert_data(new_data)
-    data.nodeTags = {}
     Object.assign(data, new_data)
+    convert_data(data)
+    complete_sankey_data(data,default_sankey_data,default_node,default_link)
   }
   data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
   
@@ -80,6 +83,8 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={exemple_menu}
             formations_menu={formations_menu}
             logo={logo}
+            token={true}
+            set_token={()=>null}
           />
         </>,
         document.getElementById('react-container')
@@ -92,6 +97,8 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={{}}
             formations_menu={{}}
             logo={logo}
+            token={true}
+            set_token={()=>null}
           />
         </>,
         document.getElementById('react-container')
@@ -110,9 +117,7 @@ if (!window.SankeyToolsStatic) {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-    // if (data.agregation.level === -1) {
-    //   localStorage.setItem('initial_data', LZString.compress(JSON.stringify(window.sankey.filiere)))
-    // }
+    complete_sankey_data(data,default_sankey_data,default_node,default_link)
     data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
   }
   render(
@@ -122,6 +127,8 @@ if (!window.SankeyToolsStatic) {
         exemple_menu={{}}
         formations_menu={{}}
         logo={logo}
+        token={true}
+        set_token={()=>null}
       />
       {window.sankey.footer ? (
         <div id="copyright">
