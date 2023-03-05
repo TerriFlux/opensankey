@@ -7,7 +7,7 @@ Qu'est-ce qu'une étiquette ?
 
 Dans opensankey une étiquette et un élément d'une catégorie (appelé groupe d'étiquettes) permettant d'associer un élément du diagramme à un groupe.
 
-.. image:: _static/tag_exemple_node.png
+.. image:: _static/tag_exemple_node.PNG
    :width: 400
    :align: center
 
@@ -27,7 +27,7 @@ Comment créer des groupes et des étiquettes ?
 
 * **Groupe d'étiquette**:
 
-.. image:: _static/menu_tag_group.png
+.. image:: _static/menu_tag_group.PNG
    :width: 400
    :align: center
 
@@ -44,19 +44,19 @@ A la suite de l'ajout, une nouvelle ligne apparait sur le tableau contenant le n
 
 Exemple en Unique:
 
-.. image:: _static/tag_one_selected.png
+.. image:: _static/tag_one_selected.PNG
    :width: 400
    :align: center
 
 Exemple en Multiple:
 
-.. image:: _static/tag_multi_selected.png
+.. image:: _static/tag_multi_selected.PNG
    :width: 400
    :align: center
 
 * **Etiquette**:
 
-.. image:: _static/menu_tag.png
+.. image:: _static/menu_tag.PNG
    :width: 400
    :align: center
 
