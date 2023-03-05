@@ -1087,14 +1087,14 @@ export const downloadExamples = (
 export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
-  //convert_data(data)
+  convert_data(data)
   complete_sankey_data(data,default_sankey_data,default_node,default_link)
   set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
     convert_data((data as SankeyData & layout_type).layout)
-    //complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
+    complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
     compute_default_input_outputLinksId(data.nodes, data.links)
     updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
@@ -1176,6 +1176,7 @@ export const uploadExemple = (
         //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         Object.assign(data,server_data)
+        convert_data(data)
         complete_sankey_data(data,default_sankey_data,default_node,default_link)
         set_data({ ...data})
       }
