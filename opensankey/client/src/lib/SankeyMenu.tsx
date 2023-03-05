@@ -2,8 +2,8 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Col,Card } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyData } from './types'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row } from 'react-bootstrap'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
@@ -48,7 +48,6 @@ const MenuPropTypes = {
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement).isRequired}).isRequired,
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
-  selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
   example_menu: PropTypes.element,
@@ -90,16 +89,8 @@ const MenuPropTypes = {
   set_show_save_json: PropTypes.func.isRequired,
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
-  selected_style_link: PropTypes.string.isRequired,
-  set_selected_style_link: PropTypes.func.isRequired,
-  selected_style_node: PropTypes.string.isRequired,
-  set_selected_style_node: PropTypes.func.isRequired,
   show_publish_dialog:PropTypes.bool.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
-  showStyleNode:PropTypes.bool.isRequired,
-  setShowStyleNode: PropTypes.func.isRequired,
-  showStyleLink:PropTypes.bool.isRequired,
-  setShowStyleLink: PropTypes.func.isRequired,
   showShortcut:PropTypes.bool.isRequired,
   setshowShortcut: PropTypes.func.isRequired,
   showHelp:PropTypes.bool.isRequired,
@@ -122,7 +113,7 @@ const clickSaveDiagram = (data:SankeyData) => {
   FileSaver.saveAs(blob, 'sankey_diagram.json')
 }
 const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
-  let root = window.location.href
+  const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel'
   const fetchData = {
     method: 'POST',
@@ -146,7 +137,7 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
     .then(showFile).then(cleanFile)
 }
 const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
-  let root = window.location.href
+  const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel_simple'
   const fetchData = {
     method: 'POST',
@@ -186,7 +177,7 @@ const clickSaveSVG = () => {
   svg.style('border','2px solid #78c2ad')
   svg.select('#grid').style('opacity','1')
 }
-const clickSavePDF = (data:SankeyData) => {
+const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
@@ -215,7 +206,7 @@ const clickSavePDF = (data:SankeyData) => {
     const fetchData = {
       method: 'POST'
     }
-    url = path + 'sankey/clean_pdf'
+    url = path + url_prefix + 'sankey/clean_pdf'
     fetch(url, fetchData)
   }
 
@@ -224,7 +215,7 @@ const clickSavePDF = (data:SankeyData) => {
   )
     .then(showFile).then(cleanFile)
 }
-const clickSavePNG = (data:SankeyData) => {
+const clickSavePNG = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
@@ -239,7 +230,7 @@ const clickSavePNG = (data:SankeyData) => {
   form_data.append('svg', blob)
 
   const path = window.location.href
-  let url = path + 'sankey/save_png'
+  let url = path + url_prefix + 'sankey/save_png'
   const fetchData = {
     method: 'POST',
     body: form_data
@@ -253,7 +244,7 @@ const clickSavePNG = (data:SankeyData) => {
     const fetchData = {
       method: 'POST'
     }
-    url = path + 'sankey/clean_png'
+    url = path + url_prefix +  'sankey/clean_png'
     fetch(url, fetchData)
   }
 
@@ -341,8 +332,8 @@ export const OpenSankeyMenus = (
       </NavDropdown>
       <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
         <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePDF(data,url_prefix)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePNG(data,url_prefix)} >{t('Menu.exporter')} PNG</Dropdown.Item>
       </NavDropdown>
       <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
       <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.template')}</Dropdown.Item>
@@ -386,7 +377,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     button_ref,
     accordion_ref,
     selected_node,
-    selected_link,
     url_prefix,
     set_current_filter,
     mode_selection,
@@ -404,11 +394,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
     showPreference, setShowPreference,
-    selected_style_link, set_selected_style_link,
-    selected_style_node, set_selected_style_node,
     show_publish_dialog,set_show_publish_dialog,
-    showStyleNode, setShowStyleNode,
-    showStyleLink, setShowStyleLink,
     showShortcut, setshowShortcut,
     showHelp, setshowHelp,
     menus,
@@ -433,7 +419,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   if (not_started == false && processing == false) {
     const path = window.location.href
-    const url = path + 'loads_retrieves_result'
+    const url = path + url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
       method: 'POST',
@@ -692,14 +678,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       }
       {
       // {modalTemplate}
-      <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
-        <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
-        <Modal.Body>
-          <Row md={4}>
-            {cardsTemplate}
-          </Row>
-        </Modal.Body>
-      </Modal>
+        <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
+          <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
+          <Modal.Body>
+            <Row md={4}>
+              {cardsTemplate}
+            </Row>
+          </Modal.Body>
+        </Modal>
 
       }
     </>

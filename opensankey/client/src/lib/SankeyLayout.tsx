@@ -1,5 +1,4 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
-import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
@@ -415,8 +414,6 @@ export const updateLayout = (
   new_layout: SankeyData,
   mode:string[]
 ) => {
-  convert_data(new_layout)
-
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
     if (!node.node_visible) {
