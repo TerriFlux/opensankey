@@ -5,7 +5,7 @@ Introduction de l'applications
 
 **Opensankey**: WebApp accessible en ligne ici `open-sankey`_.
 
-.. image:: _static/opensankey.png
+.. image:: _static/opensankey.PNG
    :align: center
 
 

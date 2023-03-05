@@ -3,7 +3,7 @@ Mise en page
 ============
 La mise en page est onglet du menu de configuration permettant de gérer des caractèristiques global de la zone de dessin.
 
-.. image:: _static/mep.png
+.. image:: _static/mep.PNG
    :align: center
 
 Les différents paramètres modifiables sont :
@@ -72,7 +72,7 @@ Les sélecteurs permettent spécifié si l'on veux organiser les liens entrant o
 
 Ensuite le tableau affiche les liens répondant à ces critères et avec la colone position nous pouvons modifier la position des flux attachés aux noeuds
 
-.. image:: _static/menu_noeud_position_flux.png
+.. image:: _static/menu_noeud_position_flux.PNG
    :align: center
 
 Edition des étiquettes de noeuds
@@ -167,7 +167,7 @@ Label Libres
 ============
 Dans cet onglet on gère les labels libres qui sont des zone de textes que l'on peut placer où l'on veut. On peut aussi les utlisé pour repésenter des groupes d'élements sur le diagramme.
 
-.. image:: _static/label_libre_exemple.png
+.. image:: _static/label_libre_exemple.PNG
    :align: center
 
 Les paramètres modifiables des labels libres sont :

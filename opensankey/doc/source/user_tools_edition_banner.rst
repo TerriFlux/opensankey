@@ -5,7 +5,7 @@ La partie gauche de la barre d'édition contient des sélecteur du comportement 
 =======================
 
 
-.. image:: _static/selection.png
+.. image:: _static/selection.PNG
    :align: left
    :width: 20
    :height: 20
@@ -17,7 +17,7 @@ Ce mode permet de sélectionner des élements du diagramme tel que les noeuds,fl
 **Bouton d'ajout de noeud**
 ===========================
 
-.. image:: _static/add_node.png
+.. image:: _static/add_node.PNG
    :align: left
    :width: 20
    :height: 20
@@ -29,7 +29,7 @@ Ce mode permet de d'ajouter des noeuds qu click sur la zone de dessin.
 **Bouton d'ajout de flux et noeud**
 ===================================
 
-.. image:: _static/add_node_and_link.png
+.. image:: _static/add_node_and_link.PNG
    :align: left
    :width: 20
    :height: 20
@@ -46,7 +46,7 @@ Sur la partie droite  de la barre d'édition ce trouve des filtres et autres bou
 **Filtres noueds**
 ==================
 
-.. image:: _static/node_filter.png
+.. image:: _static/node_filter.PNG
 
 
 Ce bouton permet d'appliquer des groupes d'étiquettes de noeuds sur le diagramme (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
@@ -54,21 +54,21 @@ Ce bouton permet d'appliquer des groupes d'étiquettes de noeuds sur le diagramm
 **Filtres Flux**
 ================
 
-.. image:: _static/link_filter.png
+.. image:: _static/link_filter.PNG
 
 Ce bouton permet d'appliquer des groupes d'étiquettes de flux sur le diagramme (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
 **Filtres sur les étiquettes de données**
 =========================================
 
-.. image:: _static/data_filter.png
+.. image:: _static/data_filter.PNG
 
 Ce bouton permet de filtrer les valeurs de flux, on peut sélectionner une pour plusieurs étiquettes de données qui affichera plusieurs fois le même flux avec les différentes valeurs (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
 **Filtrer les valeur de flux**
 ==============================
 
-.. image:: _static/link_threshold.png
+.. image:: _static/link_threshold.PNG
 
 Ce bouton d'appliquer un filtre sur les flux pour masquer les flux et/ou labels qui sont inférieur à la valeur sélectionné.
 On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comme valeur 0.
@@ -77,7 +77,7 @@ On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comm
 **Réajuster la taille du diagramme**
 ====================================
 
-.. image:: _static/adjust_size.png
+.. image:: _static/adjust_size.PNG
 
 Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus à droite soit visible sans avoir à dézoomer 
 
@@ -85,12 +85,12 @@ Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus 
 **Mode structure**
 ====================================
 
-.. image:: _static/structure_mode.png
+.. image:: _static/structure_mode.PNG
 
 
 **Aide**
 ====================================
 
-.. image:: _static/help_banner.png
+.. image:: _static/help_banner.PNG
 
 Permets d'afficher de l'aide 
