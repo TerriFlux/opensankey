@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown,Row,Col,Card} from 'react-bootstrap'
+import { Modal,Button, NavDropdown} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
@@ -36,8 +36,7 @@ type SankeyAppTypes = {
   formations_menu      : object
   logo: string,
   token:boolean,
-  set_token:(b:boolean)=>void,
-  useNavigate:()=>any
+  set_token:(b:boolean)=>void
 }
 
 declare const window: Window &
@@ -60,7 +59,7 @@ typeof globalThis & {
   }
 }
 
-export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,token,set_token,useNavigate} : SankeyAppTypes) => {
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,token,set_token} : SankeyAppTypes) => {
 
 
   //- All
@@ -107,9 +106,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // For OpenSankeyMenuConfigurationFreeLabels
   const [forceUpdate, setForceUpdate] = useState(false)
 
-  // For afm_menu_configuration_import_export
-  const [trade_close,set_trade_close] = useState(true)
-
   // For OpenSankeyMenuConfigurationLinks
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -130,10 +126,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [not_started,setNotStarted] = useState(true)
   const [path,setPath] = useState('')
 
-  //- Styles
-  const [selected_style_link, set_selected_style_link] = useState('default')
-  const [selected_style_node, set_selected_style_node] = useState('default')
-
   //- Modals and Dialogs
   const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : '')
   const [show_draw, set_show_draw] = useState(false)
@@ -143,12 +135,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const [showStyle, setShowStyle] = useState(false)
+  const [,setShowStyle] = useState(false)
   const showStyleEdition = () => {
     setShowStyle(true)
   }
   //Modal et fonctions pour l'edition et affectation des style de flux
-  const [showStyleLink, setShowStyleLink] = useState(false)
+  const [,setShowStyleLink] = useState(false)
   const showStyleEditionLink = () => {
     setShowStyleLink(true)
   }
@@ -168,8 +160,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
-    set_selected_style_node('default')
-    set_selected_style_link('default')
     set_data({ ...data })
   }
 
@@ -331,15 +321,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //-Ctrl+S qui sauvegarde une vue 
   //document.onkeydown = formatKeyHandler
   document.onkeydown = formatKeyHandler
-  let list_template_image=[] as string[]
 
-  const tmp=JSON.parse(JSON.stringify(exemple_menu))
-  let list_template_data=[] as string[]
+  //const tmp=JSON.parse(JSON.stringify(exemple_menu))
+  // let list_template_data=[] as string[]
 
-  if(Object.keys(tmp).length!=0 && Object.keys(tmp).includes('OpenSankey') ){
-    list_template_image=tmp['OpenSankey']['Image']
-    list_template_data=tmp['OpenSankey']['Files'].filter((f:string)=>!f.includes('.xlsx'))
-  }
+  // if(Object.keys(tmp).length!=0 && Object.keys(tmp).includes('OpenSankey') ){
+  //   list_template_image=tmp['OpenSankey']['Image']
+  //   list_template_data=tmp['OpenSankey']['Files'].filter((f:string)=>!f.includes('.xlsx'))
+  // }
   const cardsTemplate=
   <>
     {/* {list_template_image.map((_,idx) => 
@@ -409,8 +398,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           }}
           selected_node={selected_node}
           accordion_ref={accordion_ref as {current : HTMLDivElement}}
-          button_ref={button_ref as {current : HTMLLabelElement}}   
-          selected_link={selected_link}
+          button_ref={button_ref as {current : HTMLLabelElement}}
           show_load={show_load}
           set_show_load={set_show_load}
           processing={processing}
@@ -425,24 +413,16 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           show_apply_layout={show_apply_layout}
           show_save_json={show_save_json}
           showPreference={showPreference}
-          showStyleNode={showStyle}
           show_publish_dialog={show_publish_dialog}
           showHelp={showHelp}
           setshowHelp={setshowHelp}
-          selected_style_node={selected_style_node}
-          selected_style_link={selected_style_link}
-          showStyleLink={showStyleLink}
           showShortcut={showShortcut}
           setshowShortcut={setshowShortcut}
           set_show_excel_dialog={set_show_excel_dialog}
           set_show_apply_layout={set_show_apply_layout}
           set_show_save_json={set_show_save_json}
           setShowPreference={setShowPreference}
-          set_selected_style_link={set_selected_style_link}
-          set_selected_style_node={set_selected_style_node}
           set_show_publish_dialog={set_show_publish_dialog}
-          setShowStyleNode={setShowStyle}
-          setShowStyleLink={setShowStyleLink}
           cardsTemplate={cardsTemplate}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}

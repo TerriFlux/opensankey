@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck } from 'react-bootstrap'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
@@ -19,7 +19,7 @@ export const OpenSankeyMenuConfigurationLayout = (
 ) => { 
 
   return [
-  <Form.Group as={Row}>
+    <Form.Group as={Row}>
       <Col xs={5}>
         <FormLabel >{t('Menu.BgC')}</FormLabel>        
       </Col>

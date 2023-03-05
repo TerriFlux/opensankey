@@ -7,7 +7,6 @@ from flask import Response
 from flask import send_file
 from flask import render_template
 from flask import session
-from flask_login import login_required
 
 # System imports
 import openpyxl
@@ -115,7 +114,6 @@ def save_png():
 
 # Create opensanker app routes
 @opensankey.route('/sankey/save_pdf', methods=['POST'])
-@login_required
 def save_pdf():
     cwd = os.getcwd()
     data_content = request.files['svg'].read().decode('UTF-8')
@@ -181,7 +179,6 @@ def clean_png():
 
 
 @opensankey.route('/sankey/clean_pdf', methods=['POST'])
-@login_required
 def clean_pdf():
     os.remove("tutu.pdf")
     response = Response(
@@ -191,7 +188,6 @@ def clean_pdf():
 
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])
-@login_required
 def save_excel():
     try:
         cwd = os.getcwd()
@@ -222,7 +218,6 @@ def save_excel():
 
 
 @opensankey.route('/sankey/save_excel_simple', methods=['POST'])
-@login_required
 def save_excel_simple():
     try:
         cwd = os.getcwd()
@@ -250,7 +245,6 @@ def save_excel_simple():
 
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
-@login_required
 def clean_excel():
     cwd = os.getcwd()
     excel_file = os.path.join(cwd, "tutu.xlsx")
@@ -262,7 +256,6 @@ def clean_excel():
 
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
-@login_required
 def upload_excel():
     session['load_started'] = True
     tmp_dir = tempfile.mkdtemp()
@@ -361,7 +354,6 @@ def upload_excel_thread(
 
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
-@login_required
 def upload_exemple():
     session['load_started'] = True
     tmp_dir = tempfile.mkdtemp()
@@ -438,7 +430,6 @@ def upload_exemple():
 
 
 @opensankey.route('/sankey/download_examples', methods=['POST'])
-@login_required
 def download_examples():
     data_folder = os.environ.get('MFAData')
     # exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
@@ -536,7 +527,6 @@ def parse_folder(current_dir, menus, key=None):
 
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
-@login_required
 def menus_examples():
     data_folder = os.environ.get('MFAData')
     menus = {}
@@ -579,7 +569,6 @@ def menus_examples():
 
 
 @opensankey.route('/sankey/publish', methods=['POST'])
-@login_required
 def publish():
     sankey_data_str = request.get_data().decode("utf-8")
     sankey_data = json.loads(sankey_data_str)
@@ -607,7 +596,6 @@ def start():
 
 
 @opensankey.route('/loads_retrieves_result', methods=['POST'])
-@login_required
 def load_retrieves_result():
     session['load_started'] = False
     try:
@@ -631,7 +619,6 @@ def load_retrieves_result():
 
 
 @opensankey.route('/load_process', methods=['POST'])
-@login_required
 def load_process():
     if "load_started" not in session or session["load_started"] is False:
         trace.logger.debug(session['base_filename'])

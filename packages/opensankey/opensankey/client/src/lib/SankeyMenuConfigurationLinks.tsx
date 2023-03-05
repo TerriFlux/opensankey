@@ -39,7 +39,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 
 ) => {
   
-  const { fluxTags,dataTags } = data
+  const { fluxTags } = data
   
 
 
@@ -361,17 +361,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </Col>
     </Row>
     <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dls')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_link_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
+      <Col xs={10}>
+        <FormLabel >{t('Menu.dls')}</FormLabel>        
+      </Col>
+      <Col xs={2}>
+        <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
+          // const c=evt.target.checkeds
+          data.displayed_link_selector=evt.target.checked
+          set_data({...data})
+        }}/>        
+      </Col>
+    </FormGroup>
     <Row>
       <Col>
         <FormLabel>{t('Flux.src')}</FormLabel>
