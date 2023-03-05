@@ -4,6 +4,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-bootstrap'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { updateLayout } from './SankeyLayout'
+import { complete_sankey_data, convert_data } from './SankeyConvert'
+import { default_link, default_node, default_sankey_data } from './SankeyUtils'
 
 /**
  * Define ApplyLayoutDialog
@@ -73,6 +75,8 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
                           if (result) {
                             result = String(result).split('<br>').join('\\\\n')
                             const new_layout = JSON.parse(result)
+                            convert_data(new_layout)
+                            complete_sankey_data(new_layout,default_sankey_data,default_node,default_link)
                             updateLayout(sankey_data, new_layout,elementToDispose)
                             set_sankey_data({ ...sankey_data })
                           }

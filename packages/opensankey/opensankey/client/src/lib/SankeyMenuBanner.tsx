@@ -184,7 +184,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
               }
               set_data({ ...data })
             }}
-            /></Col>
+          /></Col>
         </Row></>)
     }
   })
@@ -229,7 +229,7 @@ export const SankeyBannerRows = (
   set_diagram:(s:string)=>void,
   diagram2:string,
   set_diagram2:(s:string)=>void,
-  sous_filieres:any,
+  sous_filieres:{ [key: string]: string } | undefined,
   is_split:boolean,diagrams:{ [keys :string] : string[] }
 ) => { 
   // let sous_filieres = undefined
@@ -427,7 +427,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               <Col>
                 <FormLabel style={{ color: color }}>{tags_group.group_name}
                 </FormLabel></Col>
-                <Col></Col>
+              <Col></Col>
             </Row>
             <Row >
               <Col>

@@ -1,11 +1,8 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,TagsCatalog,SankeyDrawCurve } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup } from './types'
 import FileSaver from 'file-saver'
-import { convert_data } from './SankeyConvert'
+import { complete_sankey_data, convert_data } from './SankeyConvert'
 import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
 import * as d3 from 'd3'
-
-import * as SankeyShapes from './SankeyShapes'
-
 
 declare const window: Window &
   typeof globalThis & {
@@ -556,7 +553,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
  * @returns {SankeyData}
  */
 export const default_sankey_data = (): SankeyData => {
-  return {
+  const data : Omit<SankeyData,'style_node' | 'style_link'> = {
     version: '0.8',
     couleur_fond_sankey:'#f2f2f2',
     displayed_node_selector:false,
@@ -566,107 +563,6 @@ export const default_sankey_data = (): SankeyData => {
     user_scale: 20,
 
     accordeonToShow: ['MEP'],
-    style_node: {
-      'default': {
-        name: 'par défaut',
-        idNode: 'default',
-        shape: 'rect',
-        display: true,
-        node_visible: true,
-        shape_visible: true,
-        label_visible: true,
-        hide_lone_node:false,
-        node_width: 40,
-        node_height: 40,
-        // iconName: 'none',
-        // iconColor: '#fff',
-        // iconRatio: 80,
-        // iconVisible: true,
-        not_to_scale:false,
-        not_to_scale_direction:'right',
-
-        color: '#a9a9a9',
-        colorParameter: 'local',
-        colorSustainable:false,
-        position: 'absolute',
-        x: 100,
-        y: 100,
-        inputLinksId: [],
-        outputLinksId: [],
-        show_value: false,
-        tags: {},
-        colorTag: '',
-        dimensions: {},
-        style: '',
-        display_style: {
-          font_family: 'Cormorant',
-          font_size: 14,
-          uppercase: false,
-          bold: false,
-          italic: false,
-          unit: false,
-          filter: 0,
-          filter_label: 0,
-          global_curvature: 0.5,
-          null_flux: false,
-          label_vert: 'bottom',
-          label_horiz: 'middle',
-          label_vert_valeur: 'middle',
-          label_horiz_valeur: 'middle',
-          value_font_size:14,
-          label_box_width: 110,
-          label_color:false,
-        }
-      }
-
-    },
-
-    style_link: {
-      'default': {
-        idLink: 'par défaut',
-        idSource: 'None',
-        idTarget: 'None',
-
-        // type of link
-        recycling: false,
-        orientation: 'hh',
-        arrow: true,
-
-        // display_attribute
-        label_position: 'middle',
-        orthogonal_label_position: 'middle',
-        label_on_path: true,
-        label_visible: true,
-        text_color: 'black',
-        color: '#a9a9a9',
-        colorParameter: '',
-        colorTag: '',
-        label_font_size:11,
-        // Ajout
-        gradient: false,
-        dashed:true,
-        to_precision:true,
-
-        value: {},
-
-        tooltip_text: '',
-
-        // geometry
-        x_label: 0,
-        y_label: 0,
-
-        left_horiz_shift: 1/3,
-        right_horiz_shift: 2/3,
-        // vert_shift: 0,
-        vert_shift: 0,
-    
-
-        curvature: 0.5,
-        curved: false,
-        style:''
-      }
-    },
-
 
     show_banner:false,
     width: window.innerWidth - 40,
@@ -687,17 +583,8 @@ export const default_sankey_data = (): SankeyData => {
     max_shift: 0.2,
 
     display_style: {
-      node_font_size: 14,
-      sector_uppercase: true,
-      sector_bold: true,
-      sector_italic: false,
-      product_uppercase: false,
-      product_bold: false,
-      product_italic: true,
-      unit: false,
       filter: 0,
       filter_label: 0,
-      global_curvature: 0.5,
       null_flux: false,
       font_family: ['Arial', 'Roboto', 'Cormorant', 'Cantarell'],
       node_font_family_selected: 'Cormorant',
@@ -718,6 +605,12 @@ export const default_sankey_data = (): SankeyData => {
     
     view: []
   }
+  const default_data = {
+    ...data,
+    style_node: { 'default' : default_node(data as SankeyData) },
+    style_link: { 'default' : default_link(data as SankeyData) }
+  }
+  return (default_data as unknown as SankeyData)
 }
 /**
  * Return the color of the link wich depend of the groupTag selected and the color attribued to the link
@@ -955,16 +848,10 @@ export const default_node = (
     style: 'default',
     display_style: {
       font_family: 'Cormorant',
-
-      font_size: data.display_style.node_font_size,
-      uppercase: data.display_style.sector_uppercase,
-      bold: data.display_style.sector_bold,
-      italic: data.display_style.sector_italic,
-      unit: false,
-      filter: 0,
-      filter_label: 0,
-      global_curvature: 0.5,
-      null_flux: false,
+      font_size: 14,
+      uppercase: false,
+      bold: false,
+      italic: false,
       label_vert: 'bottom',
       label_horiz: 'middle',
       label_vert_valeur: 'middle',
@@ -1174,7 +1061,7 @@ export const downloadExamples = (
   the_url_prefix: string,
   filetype: string
 ) => {
-  let root = window.location.href
+  const root = window.location.href
   const url = root + the_url_prefix + 'sankey/download_examples'
   const fetchData = {
     method: 'POST',
@@ -1200,12 +1087,14 @@ export const downloadExamples = (
 export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
-  convert_data(data)
+  //convert_data(data)
+  complete_sankey_data(data,default_sankey_data,default_node,default_link)
   set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
     convert_data((data as SankeyData & layout_type).layout)
+    //complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
     compute_default_input_outputLinksId(data.nodes, data.links)
     updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
@@ -1232,7 +1121,7 @@ export const uploadExcelImpl = (
   input_file: Blob,
   the_url_prefix: string
 ) => {
-  let root = window.location.href
+  const root = window.location.href
   const url = root + the_url_prefix + 'sankey/upload_excel'
   const form_data = new FormData()
   form_data.append(
@@ -1287,7 +1176,7 @@ export const uploadExemple = (
         //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         Object.assign(data,server_data)
-        convert_data(data)
+        complete_sankey_data(data,default_sankey_data,default_node,default_link)
         set_data({ ...data})
       }
     })

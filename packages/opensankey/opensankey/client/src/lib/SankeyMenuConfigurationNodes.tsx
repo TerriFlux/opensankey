@@ -215,50 +215,50 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </Col>
     </Row>
     <FormGroup as={Row}>
-        <Col xs={10}>
-          <FormLabel >{t('Menu.dns')}</FormLabel>        
-        </Col>
-        <Col xs={2}>
-          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_node_selector=evt.target.checked
-            set_data({...data})
-          }}/>        
-        </Col>
-      </FormGroup>
+      <Col xs={10}>
+        <FormLabel >{t('Menu.dns')}</FormLabel>        
+      </Col>
+      <Col xs={2}>
+        <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
+          // const c=evt.target.checkeds
+          data.displayed_node_selector=evt.target.checked
+          set_data({...data})
+        }}/>        
+      </Col>
+    </FormGroup>
 
     <Row >
       <Col xs={1}>
         <FormLabel>Style:</FormLabel>
       </Col>
 
-     <Col xs={6}>
-     {(style_editable)?(
-        <Dropdown>
-          <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => {
-              set_style_to_apply('')
-              multi_selected_nodes.current.map(n => {
-                n.style = ''
-              })
-              set_data({ ...data })
-            }}>{'Aucun'}</Dropdown.Item>
-            {Object.keys(data.style_node).map((d,i) => {
-              return (<Dropdown.Item 
-                key={i}
-                onClick={() => {
-                  set_style_to_apply(d)
-                  multi_selected_nodes.current.map(n => {
-                    n.style = d
-                  })
-                  set_data({ ...data })
-                }}
-              >{data.style_node[d].name}</Dropdown.Item>)
-            })}
-          </Dropdown.Menu>
-        </Dropdown>
-      ):(<Form.Label>{style_of_selected_nodes()}</Form.Label>)}
+      <Col xs={6}>
+        {(style_editable)?(
+          <Dropdown>
+            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => {
+                set_style_to_apply('')
+                multi_selected_nodes.current.map(n => {
+                  n.style = ''
+                })
+                set_data({ ...data })
+              }}>{'Aucun'}</Dropdown.Item>
+              {Object.keys(data.style_node).map((d,i) => {
+                return (<Dropdown.Item 
+                  key={i}
+                  onClick={() => {
+                    set_style_to_apply(d)
+                    multi_selected_nodes.current.map(n => {
+                      n.style = d
+                    })
+                    set_data({ ...data })
+                  }}
+                >{data.style_node[d].name}</Dropdown.Item>)
+              })}
+            </Dropdown.Menu>
+          </Dropdown>
+        ):(<Form.Label>{style_of_selected_nodes()}</Form.Label>)}
       </Col>
       <Col xs={5}>
         <Button

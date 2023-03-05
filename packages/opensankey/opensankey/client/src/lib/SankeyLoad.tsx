@@ -161,7 +161,7 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
   useEffect(() =>{
     const interval = setInterval(() => {
       //const path = window.location.href
-      let root = window.location.href
+      const root = window.location.href
       //const url = root + 'load_process'
       const url = root + url_prefix + 'load_process'
       const fetchData = {
