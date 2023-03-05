@@ -201,7 +201,7 @@ def save_excel():
         )
         return response
     try:
-        io_excel.write_SankeyExcelParser_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
+        io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
         # AJoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_file)
         layout_sheet = wb.create_sheet()
@@ -211,7 +211,7 @@ def save_excel():
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_SankeyExcelParser_output_to_excel' + str(excpt),
+            response='write_mfa_problem_output_to_excel' + str(excpt),
             status=402
         )
         return response
@@ -234,11 +234,11 @@ def save_excel_simple():
         simple_mfa_output = {
             io_excel.DATA_SHEET:  mfa_output[io_excel.DATA_SHEET]
         }
-        io_excel.write_SankeyExcelParser_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
+        io_excel.write_mfa_problem_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_SankeyExcelParser_output_to_excel' + str(excpt),
+            response='write_mfa_problem_output_to_excel' + str(excpt),
             status=402
         )
         return response
