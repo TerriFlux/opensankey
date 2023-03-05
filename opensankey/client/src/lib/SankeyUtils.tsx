@@ -1087,7 +1087,7 @@ export const downloadExamples = (
 export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
-  convert_data(data)
+  //convert_data(data)
   complete_sankey_data(data,default_sankey_data,default_node,default_link)
   set_nodes_level(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {

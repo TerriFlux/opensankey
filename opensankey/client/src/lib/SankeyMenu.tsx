@@ -192,7 +192,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   form_data.append('svg', blob)
 
   const path = window.location.href
-  let url = path + 'sankey/save_pdf'
+  let url = path + url_prefix + 'sankey/save_pdf'
   const fetchData = {
     method: 'POST',
     body: form_data
