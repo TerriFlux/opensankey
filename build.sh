@@ -12,8 +12,8 @@ exit_if_error() {
 pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 flake8  || exit_if_error $?
-cd doc
+cd opensankey/doc
 sphinx-build -b html ./source ./build/html
-cd ..
+cd ../..
 pip install .  || exit_if_error $?
 
