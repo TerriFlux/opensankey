@@ -18,7 +18,10 @@ export const OpenSankeyDrawLegend = (
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
     let dx = 0
     const pas = data.legend_width
-
+    if (pas < 50) {
+      // prevent crash at the line .bounds({ height: 100, width: pas - 40 }) below
+      return
+    }
 
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
 
