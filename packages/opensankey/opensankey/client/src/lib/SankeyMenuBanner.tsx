@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
-import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
+// import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
 /**
  * 
@@ -1048,7 +1048,8 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
       The different logo in the buttons come from https://fontawesome.com/icons
       */}
       <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
-        {(data.static_sankey)? <Col>
+        {(data.static_sankey)? <></> :
+        /*<Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
               <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
@@ -1080,42 +1081,43 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               </Button>
             </ButtonGroup>
           </FormGroup>
-        </Col>:<Col>
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
+        </Col>: }*/
+          <Col>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
 
-              {//Boutons Sélection classique des éléments 
-              }
-              <OverlayTrigger
-                key={'tooltip-selection'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
+                {//Boutons Sélection classique des éléments 
                 }
-              >
-                <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                  <FontAwesomeIcon icon={faArrowPointer} />
-                </Button>
-              </OverlayTrigger>
+                <OverlayTrigger
+                  key={'tooltip-selection'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
+                  }
+                >
+                  <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                    <FontAwesomeIcon icon={faArrowPointer} />
+                  </Button>
+                </OverlayTrigger>
 
 
 
-              <OverlayTrigger
-                key={'tooltip-liaison'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
-                }
-              >
-                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                  {/* Ajout liaison entre noeud */}
+                <OverlayTrigger
+                  key={'tooltip-liaison'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
+                  }
+                >
+                  <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                    {/* Ajout liaison entre noeud */}
 
-                  <FontAwesomeIcon icon={faShareNodes} />
-                </Button>
-              </OverlayTrigger>
-            </ButtonGroup>
-          </FormGroup>
-        </Col>
+                    <FontAwesomeIcon icon={faShareNodes} />
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
         }
 
         <Col className='text-end'>
