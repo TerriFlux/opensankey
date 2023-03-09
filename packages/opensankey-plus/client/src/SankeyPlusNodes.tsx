@@ -340,6 +340,28 @@ export const SankeyPlusNodeClickEvent=(data:SankeyPlusData,sankeyTooltip:d3.Sele
       })
 }
 
+export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
+  if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
+      const selected_tag = n.tags[n.colorTag][0]
+      const tag = data.nodeTags[n.colorTag].tags[selected_tag]
+      if (tag && !n.shape_visible) {
+          return tag.color as string
+      } else {
+          //console.log('tutu')
+      }
+  }
+  return n.iconColor
+}
+  
+export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
+  const icon = data.icon_catalog[n.iconName]
+  if (icon != undefined) {
+  return icon
+  } else {
+  return ''
+  }
+}
+
 export const SankeyPlusDrawNodesIcon = (
   data:SankeyPlusData, 
   mode_selection:string,
@@ -466,27 +488,7 @@ export const SankeyPlusDrawNodesIcon = (
         
     }
 
-    const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
-        if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag && !n.shape_visible) {
-                return tag.color as string
-            } else {
-                //console.log('tutu')
-            }
-        }
-        return n.iconColor
-    }
-        
-    const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
-        const icon = data.icon_catalog[n.iconName]
-        if (icon != undefined) {
-        return icon
-        } else {
-        return ''
-        }
-    }
+    
 
     
     const add_nodes_icon = (

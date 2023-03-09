@@ -6,6 +6,8 @@ export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 export interface SankeyPlusData extends SankeyData { 
     icon_catalog: { [x: string]: string | null | undefined},
     nodes:{[x: string]:SankeyPlusNode}
+    view:{id: string,view_data: object,nom:string,details:string}[]
+
 }
 
 export interface SankeyPlusNode extends SankeyNode{
