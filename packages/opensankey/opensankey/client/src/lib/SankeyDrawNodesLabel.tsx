@@ -1,13 +1,8 @@
-import { SankeyLink, SankeyData, SankeyNode } from './types'
+import { SankeyData, SankeyNode } from './types'
 import React, { useEffect } from 'react'
 import * as d3 from 'd3'
-import { textwrap } from 'd3-textwrap'
-// import { nodeTooltipsContent } from './SankeyTooltip'
-
-import {  getLinkValue} from './SankeyUtils'
 
 import { dragNodeTextEventWidthBoxEvent } from './SankeyDrag'
-
 import {textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap} from './SankeyDrawFunction'
 
 
@@ -21,12 +16,6 @@ export const OpenSankeyDrawNodesLabel = (
   const display_nodes=data.nodes
   const display_links=data.links
 
-    
-
-  
-
-  
-    
   const add_nodes_label = (
   ) => {
         
