@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
-import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
+// import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
 /**
  * 
@@ -728,7 +728,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
         
       })
   }
-
+  const [show_banner, set_show_banner] = useState(true)
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const marginTop = data.static_sankey ? '0px' : '0px'
   //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
@@ -986,7 +986,10 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
   const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  const height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  if ( window.SankeyToolsStatic) {
+    height_navbarAndHerowrap = 0
+  }
 
   // let sous_filieres = undefined
   // if (window.sankey && window.sankey.sous_filieres) {
@@ -1007,7 +1010,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
         }}>
 
         {
-          data.show_banner?
+          show_banner?
             (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
               {SankeyBannerRows(t,data,set_data,diagram,set_diagram,diagram2,set_diagram2,sous_filieres,is_split,diagrams)}
             </Row>
@@ -1015,8 +1018,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               <Col className='text-end'>
                 <Button variant='success' size='sm'
                   onClick={()=>{
-                    data.show_banner=false
-                    set_data({...data})
+                    set_show_banner(false)
                   }}
                 >
                   <FontAwesomeIcon icon={faAngleDoubleUp} />
@@ -1029,8 +1031,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
                 <FormGroup as={Col}>
                   <Button variant='outline-success' size='sm'
                     onClick={()=>{
-                      data.show_banner=true
-                      set_data({...data})
+                      set_show_banner(true)
                     }}
                   >
                     <FontAwesomeIcon icon={faAngleDoubleDown} />
@@ -1080,42 +1081,43 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               </Button>
             </ButtonGroup>
           </FormGroup>
-        </Col>:<Col>
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
+        </Col>: }*/
+          <Col>
+            <FormGroup as={Col} lg='auto'>
+              <ButtonGroup >
 
-              {//Boutons Sélection classique des éléments 
-              }
-              <OverlayTrigger
-                key={'tooltip-selection'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
+                {//Boutons Sélection classique des éléments 
                 }
-              >
-                <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                  <FontAwesomeIcon icon={faArrowPointer} />
-                </Button>
-              </OverlayTrigger>
+                <OverlayTrigger
+                  key={'tooltip-selection'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
+                  }
+                >
+                  <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                    <FontAwesomeIcon icon={faArrowPointer} />
+                  </Button>
+                </OverlayTrigger>
 
 
 
-              <OverlayTrigger
-                key={'tooltip-liaison'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
-                }
-              >
-                <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                  {/* Ajout liaison entre noeud */}
+                <OverlayTrigger
+                  key={'tooltip-liaison'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
+                  }
+                >
+                  <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                    {/* Ajout liaison entre noeud */}
 
-                  <FontAwesomeIcon icon={faShareNodes} />
-                </Button>
-              </OverlayTrigger>
-            </ButtonGroup>
-          </FormGroup>
-        </Col>
+                    <FontAwesomeIcon icon={faShareNodes} />
+                  </Button>
+                </OverlayTrigger>
+              </ButtonGroup>
+            </FormGroup>
+          </Col>
         }
 
         <Col className='text-end'>
