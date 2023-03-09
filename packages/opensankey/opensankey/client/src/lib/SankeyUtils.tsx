@@ -353,7 +353,11 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      const extension = getLinkValue(data, links[the_id].idLink).extension
+      if (!extension) {
+        return
+      }
+      const is_free = extension.free_mini !== undefined && +extension.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
       }
@@ -374,7 +378,11 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      const extension = getLinkValue(data, links[the_id].idLink).extension
+      if (!extension) {
+        return
+      }
+      const is_free = extension.free_mini !== undefined && + extension.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
       }
@@ -396,7 +404,11 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      const extension = getLinkValue(data, links[the_id].idLink).extension
+      if (!extension) {
+        return
+      }
+      const is_free = extension.free_mini !== undefined && +extension.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
       }
@@ -418,7 +430,11 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id], selected_tags)
-      const is_free = getLinkValue(data, links[the_id].idLink).extension!.free_mini !== undefined && +getLinkValue(data, links[the_id].idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+      const extension = getLinkValue(data, links[the_id].idLink).extension
+      if (!extension) {
+        return
+      }
+      const is_free = extension.free_mini !== undefined && +extension.free_mini == 0 && data.show_structure !== 'free'
       if (v === undefined || v=='' || is_free) {
         return
       }
@@ -564,7 +580,7 @@ export const default_sankey_data = (): SankeyData => {
 
     accordeonToShow: ['MEP'],
 
-    show_banner:false,
+    //show_banner:false,
     width: window.innerWidth - 40,
     height: window.innerHeight - 40,
 

@@ -614,7 +614,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
             <SankeyConfigurationMenu 
               nav_item_active={nav_item_active}
-              accordion_ref={accordion_ref!}
+              accordion_ref={accordion_ref}
               configuration_menus={configurations_menus} />
           </Offcanvas.Body>
         </Offcanvas>
