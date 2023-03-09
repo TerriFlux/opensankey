@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue} from './types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog} from './types'
 import React, { useEffect,Requireable } from 'react'
 // import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import * as d3 from 'd3'

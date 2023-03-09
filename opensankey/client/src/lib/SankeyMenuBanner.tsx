@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
+import { FaBackward, FaForward, FaPlay } from 'react-icons/fa'
 // import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
 /**
@@ -1081,7 +1082,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
               </Button>
             </ButtonGroup>
           </FormGroup>
-        </Col>: }*/
+        </Col>:
           <Col>
             <FormGroup as={Col} lg='auto'>
               <ButtonGroup >
