@@ -1423,7 +1423,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }*/ 
   else if(e.key=='Delete'){
-    console.log(d3.select(document.activeElement).attr('value'))
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {   
       multi_selected_links.current.forEach(el=>{
@@ -2584,3 +2583,125 @@ export const drawGrid = (data:SankeyData) => {
   }
 
 }
+export const node_stroke_width=(d:SankeyNode,multi_selected_nodes:{current:SankeyNode[]})=>{
+  if (multi_selected_nodes.current.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
+    return 2
+  } else {
+    return 0
+  }
+}
+
+export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id:string]:SankeyLink},display_nodes:{[nodes_id:string]:SankeyNode})=>{
+  let total = 0
+      
+  if (d.show_value) {
+    if (d.outputLinksId.length > 0) {
+      for (let i = 0; i < d.outputLinksId.length; i++) {
+        const link = display_links[d.outputLinksId[i]]
+        if (link === undefined) {
+          //alert('Corruption du diagramme')
+          return ''
+        }  
+        let tmp=getLinkValue(data, link.idLink).value
+        tmp=(tmp)?tmp:0
+        if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+          total += tmp
+        }
+      }
+    }
+    if (total === 0) {
+      if (d.inputLinksId.length > 0) {
+        for (let i = 0; i < d.inputLinksId.length; i++) {
+          const link = display_links[d.inputLinksId[i]]
+          if (link === undefined) {
+            //alert('Corruption du diagramme')
+            return ''
+          }
+          let tmp=getLinkValue(data, link.idLink).value
+          tmp=(tmp)?tmp:0
+          if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+            total += tmp
+          }
+        }
+      }
+    }
+    return total  
+  } else {
+    return ''
+  }
+}
+
+
+ 
+export const node_label_posX=(n:SankeyNode)=>{
+  const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
+  if (n.x_label) {
+    return n.x_label
+  } else if (n.display_style.label_horiz == 'middle') {
+    return width / 2
+  } else if (n.display_style.label_horiz == 'left') {
+    return 0
+  } else if (n.display_style.label_horiz == 'right') {
+    return n.display_style.label_vert == 'middle' ? width : 0
+  } else {
+    return 0
+  }
+}
+export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
+  const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+  if (n.y_label && data.show_structure !== 'structure') {
+    return n.y_label
+  } else if (n.display_style.label_vert == 'middle') {
+    return height / 2
+  } else if (n.display_style.label_vert == 'top') {
+    return -4
+  } else if (n.display_style.label_vert == 'bottom') {
+    return height
+  } else {
+    return 0
+  }
+}
+export const node_value_posX=(n:SankeyNode)=>{
+  const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
+  const _text = document.getElementById(n.idNode + '_text')
+  const width_text = (_text) ? _text.getBoundingClientRect().width : 0
+  if (n.display_style.label_horiz_valeur == 'middle') {
+    return width / 2
+  } else if (n.display_style.label_horiz_valeur == 'left') {
+    return -width / 2
+  } else if (n.display_style.label_horiz_valeur == 'right') {
+    return width + width_text / 2
+  } else {
+    return 0
+  }
+}
+  
+export const node_value_posY=(n:SankeyNode)=>{
+  const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+  const _text = document.getElementById(n.idNode + '_text')
+  const height_text = (_text) ? _text.getBoundingClientRect().height : 0
+  if (n.display_style.label_vert_valeur == 'middle') {
+    // return height / 2 + height_text / 2
+    return height / 2 + ((node_value_and_text_same_pos(n))?n.display_style.font_size:0)
+  } else if (n.display_style.label_vert_valeur == 'top') {
+    return -n.display_style.font_size+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
+  } else if (n.display_style.label_vert_valeur == 'bottom') {
+    return height+((node_value_and_text_same_pos(n))?height_text*1.8:n.display_style.font_size)
+  } else {
+    return 0
+  }
+}
+  
+const node_value_and_text_same_pos=(node :SankeyNode)=>{
+  return (node.label_visible && node.display_style.label_horiz_valeur==node.display_style.label_horiz && node.display_style.label_vert_valeur==node.display_style.label_vert)
+}
+
+
+    
+export const node_label_text=(d:SankeyNode)=>{
+  if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange') {
+    return d.name.split(' - ')[1]
+  }
+  return d.name.split(' - ')[0].replace('-', ' ')
+}
+

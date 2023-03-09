@@ -82,7 +82,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   draw_nodes,draw_links,draw_labels,draw_legend,
   set_alt_key_pressed
 }) => {
-
+  set_mode_selection
 
   // const [first_selected_node,set_first_selected_node] = useState({})
   // const diff=require('deep-diff')
@@ -99,7 +99,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   setSelectedTags(data)
  
   
-  
+  sankeyTooltip
  
 
 
@@ -520,7 +520,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }*/ 
   else if(e.key=='Delete'){
-    console.log(d3.select(document.activeElement).attr('value'))
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {   
       multi_selected_links.current.forEach(el=>{

@@ -102,13 +102,15 @@ const MenuPropTypes = {
   cardsTemplate:PropTypes.element.isRequired,
   token:PropTypes.bool.isRequired,
   useNavigate:PropTypes.func.isRequired,
-  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
+  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  view:PropTypes.string.isRequired
 
 }
 
 const clickSaveDiagram = (data:SankeyData) => {
   const data_to_save = { ...data }
   const str_data = JSON.stringify(data_to_save, null, 2)
+
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   FileSaver.saveAs(blob, 'sankey_diagram.json')
 }
@@ -403,7 +405,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     cardsTemplate,
     token,
     useNavigate,
-    external_modal
+    external_modal,
+    view
   }
 ) => {
   let max_link_value = 0
@@ -604,6 +607,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_mode_selection={set_mode_selection}
         set_current_filter={set_current_filter}
         url_prefix={url_prefix}
+        view={view}
       /> 
       {(show_nav && !data.static_sankey) ? 
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>

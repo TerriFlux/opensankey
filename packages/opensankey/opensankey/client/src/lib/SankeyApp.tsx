@@ -27,6 +27,7 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLabels } from './SankeyDrawLabels'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
+import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 
 
 
@@ -120,6 +121,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   }
 
 
+
+
   //- Processess
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)
@@ -135,12 +138,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const [,setShowStyle] = useState(false)
+  const [showStyle,setShowStyle] = useState(false)
   const showStyleEdition = () => {
     setShowStyle(true)
   }
   //Modal et fonctions pour l'edition et affectation des style de flux
-  const [,setShowStyleLink] = useState(false)
+  const [showStyleLink,setShowStyleLink] = useState(false)
   const showStyleEditionLink = () => {
     setShowStyleLink(true)
   }
@@ -148,6 +151,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [showHelp, setshowHelp] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
+
+  //- Styles
+  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [selected_style_node, set_selected_style_node] = useState('default')
+  
   
   const {t} =useTranslation()
 
@@ -253,9 +261,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       launch={launch}
     /></NavDropdown >
   )
-  // 2.2 Modal linked to menu item
-  const external_menu_modal=[] as JSX.Element[]  
+  // 2.4 Modal linked to menu item
+  const external_menu_modal=[] as JSX.Element[]
+  
+  const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false)
+  const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
 
+  external_menu_modal.push(modale_style_link)
+  external_menu_modal.push(modale_style_node)
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
     event.preventDefault()
@@ -429,6 +442,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           token={true}
           useNavigate={()=>''}
           external_modal={external_menu_modal}
+          view={'none'}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
