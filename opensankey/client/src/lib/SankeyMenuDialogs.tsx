@@ -218,7 +218,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
                       })
                     }
                     set_sankey_data({...sankey_data})
-                    clickSaveDiagram()
+                    clickSaveDiagram(sankey_data)
                     set_sankey_data({...cpy})
                   }
                 }>{t('Menu.SaveJSON')}

@@ -1,6 +1,6 @@
 import { SankeyData } from './types'
 import { Form, FormControl, FormLabel, Row, Col} from 'react-bootstrap'
-import React, {  useState } from 'react'
+import React from 'react'
 import { TFunction } from 'i18next'
 
 

@@ -603,7 +603,7 @@ export const default_sankey_data = (): SankeyData => {
 
     legend_width:180,
     
-    view: []
+    // view: []
   }
   const default_data = {
     ...data,

@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import React, { useState } from 'react'
+import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Table } from 'react-bootstrap'
 import { SankeyData,SankeyNode } from './types'
 

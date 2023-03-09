@@ -1484,7 +1484,6 @@ export const add_drag_link_zone=(
     const source_node=nodes[link.idSource]
     const target_node=nodes[link.idTarget]
     const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale)
-    
     const pos_d=drag_zone_position(link,xs,ys,xt,yt,data,display_nodes,default_handle_size,default_horiz_shift,scale)
     d3.select(' .opensankey #gg_' + link.idLink)
       .append('rect')

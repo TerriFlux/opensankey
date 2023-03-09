@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'

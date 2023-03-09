@@ -205,6 +205,7 @@ const SankeyMenuBannerPropTypes = {
   set_mode_selection: PropTypes.func.isRequired,
   set_current_filter: PropTypes.func.isRequired,
   url_prefix: PropTypes.string.isRequired,
+  view:PropTypes.string.isRequired
 
 }
 type SankeyMenuBannerTypes = InferProps<typeof SankeyMenuBannerPropTypes>
@@ -337,7 +338,7 @@ export const SankeyBannerRows = (
  * @param {{ data: any; set_data: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
  * @returns
  */
-const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix }) => {
+const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix,view }) => {
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -1047,7 +1048,7 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
       The different logo in the buttons come from https://fontawesome.com/icons
       */}
       <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
-        {(data.static_sankey)? <Col>
+        {(view!=='none')? <Col>
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
               <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
