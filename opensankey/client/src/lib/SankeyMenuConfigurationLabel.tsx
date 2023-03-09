@@ -1,4 +1,4 @@
-import React, {useState } from 'react'
+import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck,Button, ButtonGroup } from 'react-bootstrap'
 import {  SankeyLabel,SankeyData} from './types'
 import { MultiSelect } from 'react-multi-select-component'
