@@ -1,13 +1,14 @@
 import { InferProps} from 'prop-types'
 import React, { Requireable } from 'react'
-import {SankeyLink,/*SankeyNode,*/ SankeyLinkValue,SankeyLabel, TagsCatalog, drawArrowsType, drawCurveType} from 'open-sankey/src/lib/types'
+import {SankeyLink,/*SankeyPlusNode,*/ SankeyLinkValue,SankeyLabel, TagsCatalog, drawArrowsType, drawCurveType,SankeyData} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
-import { textwrap } from 'd3-textwrap'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
+import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 
+import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
   nodes: { [node_id: string]: SankeyPlusNode },
@@ -36,7 +37,7 @@ export const view_toast = (<Toast bg='success' className='toastView' style={{ 'p
   <Toast.Body>Vue sauvegardée</Toast.Body>
 </Toast>)
 
-const viewOfData = (data:SankeyPlusData,view:string) => {
+export const viewOfData = (data:SankeyPlusData,view:string) => {
   const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id === view)[0].view_data)) as SankeyPlusData
   d.view = JSON.parse(JSON.stringify(data.view))
   return d as SankeyPlusData
@@ -52,33 +53,38 @@ export const sankey_draw_view = (
   nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
   linkTooltipsContent:(data : SankeyPlusData,d : SankeyLink) => string,
   set_show_toast:(b:boolean)=>void,
-  mode_selection:boolean,
-  set_mode_selection:(b:boolean)=>void
+  mode_selection:string,
+  set_mode_selection:(s:string)=>void,
+  draw_nodes:JSX.Element,
+  draw_links:JSX.Element,
+  draw_labels:JSX.Element,
+  draw_legend:JSX.Element,
+  set_alt_key_pressed:(b:boolean)=>void,
+  set_first_selected_node:(o:object)=>void,
+  set_show_agregation:(b:boolean)=>void,
+  
 ) => {
+
   return <SankeyDraw
-    data={viewOfData(data,view)}
-    set_data={() => null}
-    //set_multi_selected_nodes={() => null}
-    multi_selected_nodes={multi_selected_nodes}
-    //set_multi_selected_links={() => null}
-    multi_selected_links={multi_selected_links}
-    //set_multi_selected_label={set_multi_selected_label}
-    multi_selected_label={multi_selected_label}
-
-    select_node={() => null}
-    node_arrow_visible={
-      (n: SankeyPlusNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!viewOfData(data,view).links[n.inputLinksId[0]].arrow) ? false : true
-    }
-    select_link={() => null}
-
-    link_text={link_text}
-    nodeTooltipsContent={nodeTooltipsContent}
-    linkTooltipsContent={linkTooltipsContent}
-    set_show_toast={set_show_toast}
-    current={false}
-    mode_selection={mode_selection}
-    set_mode_selection={set_mode_selection}
-  />
+  data={viewOfData(data,view)}
+  set_data={()=>null}
+  multi_selected_nodes={multi_selected_nodes}
+  multi_selected_label={multi_selected_label}
+  multi_selected_links={multi_selected_links}
+  mode_selection={mode_selection}
+  set_mode_selection={set_mode_selection}
+  first_selected_node={{}}
+  set_first_selected_node={set_first_selected_node}
+  show_agregation={false} 
+  set_show_agregation={set_show_agregation}
+  agregation_node={''}
+  is_agregation={false}
+  draw_nodes={draw_nodes}
+  draw_links={draw_links}
+  draw_labels={draw_labels}
+  draw_legend={draw_legend}
+  set_alt_key_pressed={set_alt_key_pressed}
+/>
 }
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'p')
@@ -92,14 +98,15 @@ export const nextView = (
   link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
   link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
   test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
   min_thickness: number,
   drawArrows:drawArrowsType,
-  drawCurve:drawCurveType
+  drawCurve:drawCurveType,
+  link_text:(data: SankeyData, d: SankeyLink) => string,
 ) => {
   const v1 = views.filter(d => d.id === new_view)[0].id
   let ind = -1
@@ -108,17 +115,16 @@ export const nextView = (
   })
   if (ind < Object.keys(views).length - 1) {
     const copy = views[ind + 1].view_data as SankeyPlusData
-    const time_to_set_view = animate_view_changement(data,data, copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve)
-
+    const time_to_set_view = animate_view_changement(data,data, copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
     setTimeout(function () {
-      set_view(views[ind + 1].id)
-      set_data({ ...data })
+      // set_view(views[ind + 1].id)
+      // set_data({ ...data })
     }, time_to_set_view)
     setTimeout(function () {
       nextView(
         copy,set_data, views,set_view, views[ind + 1].id,node_color,link_color,multi_selected_nodes,
         setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
-        drawArrows,drawCurve
+        drawArrows,drawCurve,link_text
       )
     }, time_to_set_view + 1000)
   }
@@ -134,34 +140,35 @@ const animate_view_changement = (
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
   link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
   test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
   min_thickness: number,
   drawArrows:drawArrowsType,
-  drawCurve:drawCurveType
+  drawCurve:drawCurveType,
+  link_text:(data: SankeyData, d: SankeyPlusLink) => string
 ) => {
+
   //Cette fonction reprend le code executé pour l'affichage des noeuds et lien tout en  ajoutant une animation
   //Elle est executé avant de changé de vue (variable view) afin de pouvoir faire les animations puis ensuites 
   // Supprime les noeuds non présent dans la vu suivante avec une transition
   Object.keys(data_v1.nodes).filter(d => !Object.keys(data_v2.nodes).includes(d)).forEach(d => {
     d3.select(' .opensankey #gg_' + d).transition().duration(500).style('opacity', 0).remove()
-
   })
 
   // Supprime les liens non présent dans la vu suivante avec une transition
   Object.keys(data_v1.links).filter(d => !Object.keys(data_v2.links).includes(d)).forEach(d => {
     d3.select(' .opensankey #gg_' + d).transition().duration(500).style('opacity', 0).remove()
   })
-
   //Récupère les noeuds et liens présent uniquement dans la nouvelle data 
   const new_nodes = Object.fromEntries(Object.entries(data_v2.nodes).filter(d => !Object.keys(data_v1.nodes).includes(d[0])))
   const new_links = Object.fromEntries(Object.entries(data_v2.links).filter(d => !Object.keys(data_v1.links).includes(d[0])))
   const k_links = Object.keys(new_links)
-
+  
+  const node_data=Object.values(data_v2.nodes).filter(d=>Object.keys(new_nodes).includes(d.idNode))
 
   //=================AJOUT NOUEVEAUX NOEUDS========================================
-  const gg_nodes = d3.select(' .opensankey #view_div #g_nodes').selectAll('.gg_nodes').data(Object.values(data_v2.nodes)).enter().filter(d => Object.keys(new_nodes).includes(d.idNode)).append('g')
+  const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(node_data).append('g')
     .attr('id', d => {
       return 'gg_' + d.idNode
     })
@@ -176,47 +183,35 @@ const animate_view_changement = (
     .style('font-family', d => d.display_style.font_family)
 
 
-  const ggg_nodes = gg_nodes.append('g')
+    const ggg_nodes = gg_nodes.append('g')
     .attr('id', d => 'ggg_' + d.idNode)
     .attr('class', 'ggg_nodes')
-    .attr('transform', d => {
-      return 'translate(' + d.x + ', ' + d.y + ')'
-
-    })
+    .attr('transform', d =>nodeTransform(d,data_v2.nodes,data_v2.links))
 
 
-  if ( data.nodeTags['Type de noeud'] ) {
-    Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
-      const current_selection = ggg_nodes
+  if ( data_v2.nodeTags['Type de noeud'] ) {
+    Object.entries(data_v2.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
+      ggg_nodes
         .filter(d =>d.tags['Type de noeud'].includes(key))
         .append(tag.shape as string)
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('height', d => d.node_height)
-        .attr('width', d => d.node_width)
-      if ( tag.shape === 'ellipse' ) {
-        current_selection
-          .attr('cx', d => d.node_width / 2)
-          .attr('cy', d => d.node_height / 2)
-          .attr('rx', d => d.node_width / 2)
-          .attr('ry', d => d.node_height / 2)
-      }
     })
     ggg_nodes
       .filter(d =>d.tags['Type de noeud'].length === 0)
       .append('rect')
       .classed('node', true)
       .classed('node_shape', true)
-      .attr('height', d => d.node_height)
-      .attr('width', d => d.node_width)
+    // .attr('height', d => d.node_height)
+    // .attr('width', d => d.node_width)
   } else {
     ggg_nodes
       .filter(d => d.shape === 'rect')
       .append('rect')
       .classed('node', true)
       .classed('node_shape', true)
-      .attr('height', d => d.node_height)
-      .attr('width', d => d.node_width)      
+    // .attr('height', d => d.node_height)
+    // .attr('width', d => d.node_width)      
 
     ggg_nodes
       .filter(d => d.shape === 'ellipse')
@@ -227,28 +222,21 @@ const animate_view_changement = (
       .attr('cy', d => d.node_height / 2)
       .attr('rx', d => d.node_width / 2)
       .attr('ry', d => d.node_height / 2)
-      .attr('height', d => d.node_height)
-      .attr('width', d => d.node_width)
+          
+          
   }
 
 
   d3.selectAll(' .opensankey .node')
     .filter(d => Object.keys(new_nodes).includes((d as SankeyPlusNode).idNode))
     .attr('id', d => (d as SankeyPlusNode).idNode)
-  // // .attr('visibility', d => (d as SankeyPlusNode).node_visible && (d as SankeyPlusNode).shape_visible ? 'visible' : 'hidden')
-  // .style('opacity', d => (d as SankeyPlusNode).node_visible && (d as SankeyPlusNode).shape_visible ? '1' : '0')
-    .style('opacity', 0)
+    .attr('fill-opacity', d => (d as SankeyPlusNode).node_visible && (d as SankeyPlusNode).shape_visible ? '1' : '0')
     .attr('fill', d => node_color(d as SankeyPlusNode,data) as string)
     .attr('stroke', 'black')
     .attr('stroke-width', d => {
-      d = (d as SankeyPlusNode)
-      if (multi_selected_nodes.current.map(d => { if (d !== undefined) { return d.idNode } else { return '' } }).includes((d as SankeyPlusNode).idNode)) {
-        return 2
-      } else {
-        return 0
-      }
+      const dd = (d as SankeyPlusNode)
+      return node_stroke_width(dd,multi_selected_nodes)
     }
-
     )
 
   //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
@@ -259,222 +247,72 @@ const animate_view_changement = (
 
 
   ggg_nodes
-    .filter(d => d.iconName !== 'none' && d.iconVisible)
+    .filter(d => d.iconName != 'none' && d.iconVisible)
     .append('svg')
     .attr('viewBox', '0, 0, 1000, 1000')
     .attr('transform', n => {
-      const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
-      const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
-      return 'translate(' + shiftH + ',' + shiftV + ')'
+    const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
+    const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
+    return 'translate(' + shiftH + ',' + shiftV + ')'
     })
     .attr('height', n => +d3.select(' .opensankey #' + n.idNode).attr('height') * (n.iconRatio) / 100)
     .attr('width', n => +d3.select(' .opensankey #' + n.idNode).attr('width') * (n.iconRatio) / 100)
     .attr('x', 0)
     .append('g')
     .append('path')
-    .style('fill', (n) => {
-      if (n.colorParameter === 'groupTag') {
-        const selected_tag = n.tags[n.colorTag][0]
-        const tag = data_v2.nodeTags[n.colorTag].tags[selected_tag]
-        if (tag && !n.shape_visible) {
-          return tag.color as string
-        } else {
-          //console.log('tutu')
-        }
-      }
-      return n.iconColor
-    })
-    .attr('d', n => {
-      const icon = data_v2.icon_catalog[n.iconName]
-      if (icon !== undefined) {
-        return icon
-      } else {
-        return ''
-      }
-    })
+    .style('fill', n =>node_icon_fill_color(data,n))
+    .attr('d', n =>node_icon_path(data,n))
 
   //------------------LABEL------------------------
   ggg_nodes
-    .append('text')
-    .classed('node', true)
-    .classed('node_text', true)
-    .attr('id', n => n.idNode + '_text')
-    .attr('x', (n) => {
-      const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
-      if (n.x_label) {
-        return n.x_label
-      } else if (n.display_style.label_horiz === 'middle') {
-        return width / 2
-      } else if (n.display_style.label_horiz === 'left') {
-        return 0
-      } else if (n.display_style.label_horiz === 'right') {
-        return n.display_style.label_vert === 'middle' ? width : 0
-      } else {
-        return 0
-      }
-    })
-    .attr('y', n => {
-      const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
-      if (n.y_label && data_v2.show_structure !== 'structure') {
-        return n.y_label
-      } else if (n.display_style.label_vert === 'middle') {
-        return height / 2
-      } else if (n.display_style.label_vert === 'top') {
-        return -4
-      } else if (n.display_style.label_vert === 'bottom') {
-        return height
-      } else {
-        return 0
-      }
-    })
-    .attr('text-anchor', n => {
-      if (n.x_label && data_v2.show_structure !== 'structure') {
-        return 'center'
-      } else if (n.display_style.label_horiz === 'middle') {
-        return 'middle'
-      } else if (n.display_style.label_horiz === 'left') {
-        return 'end'
-      } else if (n.display_style.label_horiz === 'right') {
-        return 'start'
-      } else {
-        return 'start'
-      }
-    })
-    .attr('visibility', n => n.node_visible && n.label_visible ? 'visible' : 'hidden')
-    .style('text-align', 'center')
-    .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
-    .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
-    .style('font-size', d => d.display_style.font_size + 'px')
-    .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
-    .text(d => {
-      return d.name.split(' - ')[0].replace('-', ' ')
-    })
-    .each(d => {
-
-      const wrap = textwrap()
-        .bounds({ height: 100, width: (d.display_style.label_box_width !== 0) ? d.display_style.label_box_width : 110 })
-        .method('tspans')
-      d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-        .call(wrap)
-      if (!d.x_label || data_v2.show_structure === 'structure') {
-        d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-          const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-
-          if (d.display_style.label_horiz === 'middle') {
-            return width / 2
-          } else if (d.display_style.label_horiz === 'right') {
-            return d.display_style.label_vert === 'middle' ? width : 0
-          } else {
-            return 0
-          }
-        })
-      }
-
-      d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-        const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-        if (d.x_label) {
-          return d.x_label
-        } else if (d.display_style.label_horiz === 'middle') {
-          return width / 2
-        } else if (d.display_style.label_horiz === 'right') {
-          return width
+      .append('text')
+      .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
+      .classed('node', true)
+      .classed('node_text', true)
+      .classed('test_new_file',true)
+      .attr('id', n => (n as SankeyPlusNode).idNode + '_text')
+      .attr('x',n => node_label_posX(n as SankeyPlusNode))
+      .attr('y', n => node_label_posY((n as SankeyPlusNode),data))
+      .attr('text-anchor', n => {
+        if ((n as SankeyPlusNode).x_label && data_v2.show_structure !== 'structure') {
+          return 'center'
+        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'middle') {
+          return 'middle'
+        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'left') {
+          return 'end'
+        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'right') {
+          return 'start'
         } else {
-          return 0
+          return 'start'
         }
       })
-      //Nombre de tspan dans la balise text
-      const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
-      if (d.display_style.label_vert === 'middle') {
-        d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
-      } else if (d.display_style.label_vert === 'bottom') {
-        d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
-      } else if (d.display_style.label_vert === 'top') {
-        d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
-      }
-    })
+      .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).label_visible ? 'visible' : 'hidden')
+      .style('text-align', 'center')
+      .style('font-weight', n => ((n as SankeyPlusNode).display_style.bold) ? 'bold' : 'normal')
+      .style('font-style', n => ((n as SankeyPlusNode).display_style.italic) ? 'italic' : 'normal')
+      .style('font-size', n => (n as SankeyPlusNode).display_style.font_size + 'px')
+      .style('text-transform', n => ((n as SankeyPlusNode).display_style.uppercase) ? 'uppercase' : 'none')
+      .text(n => node_label_text((n as SankeyPlusNode)))
+      .each(n => textNodeWrap((n as SankeyPlusNode),data))
 
-  //Affiche valueur Noeud
-  ggg_nodes.append('text')
-    .classed('node', true)
-    .classed('node_text_value', true)
-    .attr('id', n => n.idNode + '_text_value')
-    .attr('x', (n) => {
-      const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
-      const _text = document.getElementById(n.idNode + '_text')
-      const width_text = (_text) ? _text.getBoundingClientRect().width : 0
-      if (n.display_style.label_horiz === 'middle') {
-        return width / 2
-      } else if (n.display_style.label_horiz === 'left') {
-        return -width / 2
-      } else if (n.display_style.label_horiz === 'right') {
-        return width + width_text / 2
-      } else {
-        return 0
-      }
-    })
-    .attr('y', n => {
-      const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
-      const _text = document.getElementById(n.idNode + '_text')
-      const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-      if (n.display_style.label_vert === 'middle') {
-        return height / 2 + height_text / 2
-      } else if (n.display_style.label_vert === 'top') {
-        return '-2em'
-      } else if (n.display_style.label_vert === 'bottom') {
-        return height + height_text * 0.8
-      } else {
-        return 0
-      }
-    })
-    .attr('text-anchor', () => 'middle')
-    .attr('visibility', n => n.node_visible && n.label_visible ? 'visible' : 'hidden')
-  // .style('text-align', 'center')
-  // .style('font-weight', d => (d.display_style.bold) ? 'bold' : 'normal')
-  // .style('font-style', d => (d.display_style.italic) ? 'italic' : 'normal')
-    .style('font-size', d => d.display_style.font_size + 'px')
-  // .style('text-transform', d => (d.display_style.uppercase) ? 'uppercase' : 'none')
-    .text(d => {
-      let total = 0
+    // Display value of nodes
+    // Value of nodes are the maximum between the sum of input links and the sum of output links
+    ggg_nodes.append('text')
+      .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
+      .classed('node', true)
+      .classed('node_text_value', true)
+      .attr('id', n => (n as SankeyPlusNode).idNode + '_text_value')
+      .attr('x', n =>node_value_posX(n as SankeyPlusNode))
+      .attr('y', n => node_value_posY(n as SankeyPlusNode))
+      .attr('text-anchor', () => 'middle')
+      .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).show_value ? 'visible' : 'hidden')
+    // .style('text-align', 'center')
+    // .style('font-weight', n => ((n as SankeyPlusNode).display_style.bold) ? 'bold' : 'normal')
+    // .style('font-style', n => ((n as SankeyPlusNode).display_style.italic) ? 'italic' : 'normal')
+      .style('font-size', n => (n as SankeyPlusNode).display_style.value_font_size + 'px')
+    // .style('text-transform', n => ((n as SankeyPlusNode).display_style.uppercase) ? 'uppercase' : 'none')
+      .text(n => textNodeValue((n as SankeyPlusNode),data,data_v2.links,data_v2.nodes))
 
-      if (d.show_value) {
-        if (d.outputLinksId.length > 0) {
-          for (let i = 0; i < d.outputLinksId.length; i++) {
-            const link = new_links[d.outputLinksId[i]]
-            if (link === undefined) {
-              //alert('Corruption du diagramme')
-              return ''
-            }
-            let tmp=getLinkValue(data_v2, link.idLink).value
-            tmp=(tmp)?tmp:0
-            if (new_nodes[link.idSource].node_visible && new_nodes[link.idTarget].node_visible) {
-              total += tmp
-            }
-          }
-        }
-
-        if (total === 0) {
-          if (d.inputLinksId.length > 0) {
-            for (let i = 0; i < d.inputLinksId.length; i++) {
-              const link = new_links[d.inputLinksId[i]]
-              if (link === undefined) {
-                //alert('Corruption du diagramme')
-                return ''
-              }
-              let tmp=getLinkValue(data_v2, link.idLink).value
-              tmp=(tmp)?tmp:0
-              if (new_nodes[link.idSource].node_visible && new_nodes[link.idTarget].node_visible) {
-                total += tmp
-              }
-            }
-          }
-        }
-        return total
-
-      } else {
-        return ''
-      }
-
-    })
 
   Object.values(new_nodes).map(d => {
     d3.select(' .opensankey #gg_' + d.idNode).selectAll('*').transition().duration(500).style('opacity', 1)
@@ -490,8 +328,8 @@ const animate_view_changement = (
 
   //====================AJOUT LIENS============================================
 
-  d3.selectAll(' .opensankey #svg #sankey_def').remove()
-  const defGradient = d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
+  d3.selectAll(' #svg #sankey_def').remove()
+  const defGradient = d3.select(' #svg').append('defs').attr('id', 'sankey_def')
 
   const gg_links = d3
     .select('.opensankey #g_links')
@@ -510,29 +348,7 @@ const animate_view_changement = (
     })
     .attr('pointer-events', 'auto')
     .attr('stroke-dasharray', d => {
-      if (data.show_structure === 'structure') {
-        return '5, 5'
-      }
-      if (data.show_structure === 'data' ) {
-        const link_value = getLinkValue(data, d.idLink)
-        if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-          return '5, 5'
-        }
-      }
-      const link_value = getLinkValue(data_v2, d.idLink)
-      if (link_value === undefined) {
-        return ''
-      }
-      //const display_value = getLinkValue(data_v2, d.idLink).display_value
-      const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini === 0 && data.show_structure !== 'free'
-      if (is_free) {
-        return '5, 5'
-      }
-      if (d.dashed || is_free) {
-        return '40, 5'
-      } else {
-        return ''
-      }
+      return strokeDasharray(d,data)
     })
 
   const paths = gg_links.append('path')
@@ -614,10 +430,10 @@ const animate_view_changement = (
       return link_visible(d, data_v2) && tmp >= Math.max(data_v2.display_style.filter, data_v2.display_style.filter_label) ? 'visible' : 'hidden'
     })
 
-  let error_msg: { text?: string | undefined } | undefined
   paths
     .attr('class', 'link')
-    .attr('id', d => d.idLink)
+    .attr('id', d => {
+      return d.idLink})
     .attr('fill', 'none')
   // .attr('stroke-opacity', d => data_v2.nodes[d.idSource].node_visible && data_v2.nodes[d.idTarget].node_visible && getLinkValue(data_v2, d.idLink).value >= data_v2.display_style.filter ? (!((data_v2 as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data_v2, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0)
     .attr('stroke-opacity', d => {
@@ -628,9 +444,7 @@ const animate_view_changement = (
 
 
       const node = data_v2.nodes[l.idSource]
-      // const links = data_v2.links
       const nodes = data_v2.nodes
-      // const stream_io = node.inputLinksId.concat(node.outputLinksId)
       //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
 
       //position noeud source ou target
@@ -643,7 +457,7 @@ const animate_view_changement = (
         pos_y_src = nodes[l.idSource].y
       }
 
-      const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini === 0 && data.show_structure !== 'free'
+      const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini === 0 && data_v2.show_structure !== 'free'
       if (is_free) {
         return 5
       }
@@ -1034,15 +848,20 @@ const animate_view_changement = (
       drawArrows(data_v2, n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
     })
 
-  gg_links.filter(d => k_links.includes(d.idLink)).selectAll('.arrow').style('opacity', '0')
+  Object.keys(new_links).forEach(l=>{
+    d3.select('.opensankey .defsArrow #arrow_'+l+' path').attr('opacity','0')
+  })
+
+  // gg_links.filter(d => k_links.includes(d.idLink)).selectAll('.arrow').style('opacity', '0')
 
 
+  let error_msg: { text?: string | undefined } | undefined
 
   paths.attr('d', d => {
-    setNodesHeight(data_v2.nodes, new_links, d, data_v2.nodeTags)
+    setNodesHeight(data_v2,data_v2.nodes, new_links, d, data_v2.nodeTags)
     return drawCurve(data_v2,
       data_v2.nodes, new_links, data_v2.display_style,
-      data_v2.nodeTags, d, error_msg
+      data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text
     )
   })
   if (error_msg && error_msg.text) {
@@ -1074,8 +893,9 @@ const animate_view_changement = (
   //Déplace les flux déjà existant vers leur nouvelle position
   Object.values(edit_links).map(d => {
     d3.select(' .opensankey #' + d.idLink).transition().duration(500).attr('d', l => {
-      const d = l as SankeyLink
-      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg)
+      const d = l as SankeyPlusLink
+
+      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text)
       return p
     })
   })
@@ -1099,7 +919,7 @@ const animate_view_changement = (
 
   glinks.selectAll('.link').style('stroke-opacity', 0)
   glinks.selectAll('text').style('opacity', 0)
-
+  
   setTimeout(function () {
     start_point.map(s => {
       branchAnimateForView(data_v2, s, [s.idNode], new_links)
@@ -1118,8 +938,6 @@ const branchAnimateForView = (
   new_links: { [link_id: string]: SankeyLink },
 ) => {
 
-  // console.log('branchAnimate')
-
 
   // Permet la progation de l'animation sur l'ensemble du Sankey
   const nodeStart = nodeData.idNode
@@ -1130,16 +948,23 @@ const branchAnimateForView = (
   d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
 
   const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-    .filter(function (d) {
+    .filter(function (d) {      
       return d.idSource == nodeStart && keys_links.includes(d.idLink)
     })
-
   // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
   const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
 
 
   tmpLinks.selectAll('.link').style('stroke-opacity', 1)
   tmpLinks.selectAll('text').style('opacity', 0)
+  
+  // console.log(tmpLinks.nodes().map(d=>d3.select(d).attr('id')))
+
+  tmpLinks.selectAll('.link')
+  .each(function (this) {
+    const id=d3.select(this).attr('id')
+    d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
+  })
 
 
   tmpLinks.selectAll('.link')
@@ -1153,8 +978,10 @@ const branchAnimateForView = (
           // on recupere les paramêtres initiaux du stroke
           return d3.select(this).attr('stroke')
         })
-        .style('stroke-opacity', 1)
-
+        .style('stroke-opacity', 0.8)
+        
+      // const id=d3.select(this).attr('id')
+      // d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','1')
 
     })
     .transition()
@@ -1163,11 +990,14 @@ const branchAnimateForView = (
     .on('end', function (this) {
       const idLink = d3.select(this).attr('id')
       const idTarget = data.links[idLink].idTarget
+      const id=d3.select(this).attr('id')
+      d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','1')
       // Modification des arrows après l'animation
-      const arrowInitColor = d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow').attr('fill')
-      d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow')
-        .style('fill', arrowInitColor)
-        .style('opacity', 1)
+      // console.log(d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode))
+      // const arrowInitColor = d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow').attr('fill')
+      // d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow')
+      //   .style('fill', arrowInitColor)
+      //   .style('opacity', 1)
 
       // reaffichage des link value après l'animation
       d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
@@ -1189,10 +1019,39 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
   view:string,
   set_view:React.Dispatch<React.SetStateAction<string>>,
-  animate_view_changement:(data_v1:SankeyPlusData,data_v2:SankeyPlusData)=>number,
-  nextView : (data: SankeyPlusData, views: { id: string, view_data: SankeyPlusData, nom: string }[], new_view: string)=>void,
+  nextView : (data: SankeyPlusData, 
+    set_data: (s:SankeyPlusData)=>void,
+    views: { id: string, view_data: SankeyPlusData, nom: string }[], 
+    set_view : (id: string)=>void,
+    new_view: string,
+    node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
+    link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+    multi_selected_nodes:{current:SankeyPlusNode[]},
+    setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+    setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+    scale:(t:number)=>number,inv_scale:(t:number)=>number,
+    getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+    link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
+    test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+    min_thickness: number,
+    drawArrows:drawArrowsType,
+    drawCurve:drawCurveType,
+    link_text:(data: SankeyData, d: SankeyLink) => string,)=>void,
   delete_link : (data: SankeyPlusData,link: SankeyLink) => void,
-  delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void
+  delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void,
+  node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+  scale:(t:number)=>number,inv_scale:(t:number)=>number,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+  min_thickness: number,
+  drawArrows:drawArrowsType,
+  drawCurve:drawCurveType,
+  link_text:(data: SankeyData, d: SankeyLink) => string
+
 ) => {
   if (current) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
@@ -1313,6 +1172,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           set_show_toast(false)
         }, 3000)
       }
+    }
       // } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
       //   e.preventDefault()
       //   //va chercher les différences sauvegardées dans le localStorage
@@ -1423,6 +1283,11 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           multi_selected_links.current=[]
           set_data({...data})
         }
+      }else if(e.key=='a' && e.ctrlKey){
+        e.preventDefault()
+        multi_selected_nodes.current=Object.values(data.nodes)
+        set_data({...data})
+    
       }
     } else {
       //Si nous somme dans une vue les action du clavier sont différentes :
@@ -1430,6 +1295,10 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
       //-Flêche du bas : Anime la vue vers la suivante
       //-P : Parcours les vues suvants tout en les animants
       if (['ArrowUp', 'ArrowDown', 'p'].includes(e.key)) {
+        if(e.preventDefault){
+          e.preventDefault()
+        }
+
         if (e.key == 'ArrowUp') {
           //Cherche la position de la vue sélectionné dans le tableau de vue
           const v1 = data.view.filter(d => d.id == view)[0].id
@@ -1440,9 +1309,11 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
           if (ind > 0) {
             const copy = data.view[ind - 1].view_data as SankeyPlusData
-            const time_to_set_view = animate_view_changement(data, copy)
+            const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
             setTimeout(function () {
               set_view(data.view[ind - 1].id)
+              set_data({...viewOfData(data,data.view[ind - 1].id)})
+
             }, time_to_set_view)
           }
         } else if (e.key == 'ArrowDown') {
@@ -1455,20 +1326,32 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
           if (ind < Object.keys(data.view).length - 1) {
             const copy = data.view[ind + 1].view_data as SankeyPlusData
-            const time_to_set_view = animate_view_changement(data, copy)
+          
+            const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
             setTimeout(function () {
               set_view(data.view[ind + 1].id)
+              set_data({...viewOfData(data,data.view[ind + 1].id)})
             }, time_to_set_view)
           }
         } else if (e.key == 'p') {
           //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-          nextView(data, (data.view as { id: string, view_data: SankeyPlusData, nom: string }[]), view)
+          const v1 = data.view.filter(d => d.id == view)[0].id
+          let ind = -1
+          data.view.map((v, i) => {
+            ind = (v.id == v1) ? i : ind
+          })
+          //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+          if (ind < Object.keys(data.view).length - 1) {
+            nextView(data,set_data, (data.view as { id: string, view_data: SankeyPlusData, nom: string }[]),set_view, data.view[ind + 1].id,node_color,link_color,multi_selected_nodes,
+              setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
+              drawArrows,drawCurve,link_text)
+          }
         }
-        set_data({ ...data })
+        // set_data({ ...data })
       }
     }
   }
-}
+   
 
 export const viewsAccordion = (
   data:SankeyPlusData,
@@ -1480,6 +1363,9 @@ export const viewsAccordion = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyLink[]},
   multi_selected_label:{current:SankeyLabel[]},
+  current_data:SankeyPlusData,
+  set_current_data:(d:SankeyPlusData)=>void,
+  
 ) => {
   return <Accordion.Item
     id='Visualisation'
@@ -1504,13 +1390,24 @@ export const viewsAccordion = (
           <Form.Select id="selectionNode"
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                if (evt.target.value === '') {
-                  return
-                }
                 multi_selected_nodes.current = []
                 multi_selected_links.current = []
                 multi_selected_label.current = []
-                set_view(evt.target.value)
+                
+                if (evt.target.value === '') {
+                  return
+                }else if(evt.target.value!=='none' && view === 'none'){
+                  set_view(evt.target.value)
+                  set_current_data({...data})
+                  set_data({...viewOfData(data,evt.target.value)})
+
+                }else if(evt.target.value=='none'){
+                  set_view(evt.target.value)
+                  set_data({...current_data})
+                }else{
+                  set_view(evt.target.value)
+                  set_data({...viewOfData(data,evt.target.value)})
+                }               
               }
             }
           >
