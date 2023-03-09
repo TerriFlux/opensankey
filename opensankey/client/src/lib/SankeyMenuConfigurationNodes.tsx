@@ -12,7 +12,6 @@ import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO
 import {SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
 import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTags'
-import {SankeyMenuConfigurationNodesAgregation} from './SankeyMenuConfigurationNodesAgregation'
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
 import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
@@ -43,10 +42,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
-  const [parent_visible,set_parent_visible] = useState(false)
-  const [cube_dimension,set_cube_dimension] = useState(
-    Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0 ? Object.entries(data.nodeTags).filter(([,tag])=>tag.banner == 'level')[0][0] : 'Primaire' 
-  )
+  
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
     'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
@@ -55,9 +51,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
     ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
   }
-  if (Object.values(data.nodeTags).filter(tag=>tag.banner == 'level').length > 0) {
-    ui['Agrégation'] = SankeyMenuConfigurationNodesAgregation(t,data,set_data,multi_selected_nodes,parent_visible,set_parent_visible,cube_dimension,set_cube_dimension)
-  }
+
   if (multi_selected_nodes.current.length == 1) {
     ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored)
   }
