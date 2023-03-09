@@ -15,7 +15,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
 )=>{
   const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
-
+  center
   const gradChecked = () => {
     let gradChecked = true
     multi_selected_links.current.map(d => {

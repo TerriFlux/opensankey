@@ -247,15 +247,15 @@ export const SankeyDataPropTypes = {
 
   legend_width:PropTypes.number.isRequired,
   
-  view: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      view_data: PropTypes.object.isRequired,
-      nom:PropTypes.string.isRequired,
-      details:PropTypes.string.isRequired
+  // view: PropTypes.arrayOf(
+  //   PropTypes.shape({
+  //     id: PropTypes.string.isRequired,
+  //     view_data: PropTypes.object.isRequired,
+  //     nom:PropTypes.string.isRequired,
+  //     details:PropTypes.string.isRequired
       
-    }).isRequired
-  ).isRequired
+  //   }).isRequired
+  // ).isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
@@ -283,7 +283,9 @@ export type drawCurveType = (
   display_style: { filter: number; filter_label: number; },
   nodeTags: TagsCatalog,
   link: SankeyLink,
-  error_msg: { text?: string } | undefined
+  error_msg: { text?: string } | undefined,
+  multi_selected_links:{current: SankeyLink[] },
+  link_text:(data: SankeyData, d: SankeyLink) => string
 ) => string
 
 export type drawArrowsType = (

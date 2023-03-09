@@ -1,0 +1,1 @@
+declare module 'sankeyanimation/dist/SankeyPlusStyle';

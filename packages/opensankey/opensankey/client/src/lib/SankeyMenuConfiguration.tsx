@@ -1,7 +1,7 @@
 import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
-import React, { FunctionComponent, useState, Ref } from 'react'
+import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 // import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'

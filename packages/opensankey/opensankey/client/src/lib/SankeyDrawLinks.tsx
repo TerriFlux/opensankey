@@ -4,7 +4,7 @@ import React, { useEffect,Requireable } from 'react'
 // import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import * as d3 from 'd3'
 import {  getLinkValue,test_link_value,link_color,link_visible} from './SankeyUtils'
-import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight } from './SankeyDrawFunction'
+import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray } from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 // import { linkTooltipsContent } from './SankeyTooltip'
 
@@ -421,32 +421,7 @@ export const OpenSankeyDrawLinks = (
     return '0.3em'
   }
 
-  // Function that create the dashed pattern on links
-  const strokeDasharray =(d:SankeyLink,data:SankeyData)=>{
-    if (data.show_structure === 'structure') {
-      return '5, 5'
-    }
-    if (data.show_structure === 'data' ) {
-      const link_value = getLinkValue(data, d.idLink)
-      if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-        return '5, 5'
-      }
-    }
-    const link_value = getLinkValue(data, d.idLink)
-    if (link_value === undefined) {
-      return ''
-    }
-    const display_value = getLinkValue(data, d.idLink).display_value
-    if (display_value.includes('*') && data.show_structure != 'structure' ) {
-      return '40, 5'
-    }
-    const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
-    if (d.dashed || is_free) {
-      return '5, 5'
-    } else {
-      return ''
-    }
-  }
+
 
   const add_links = (
     static_sankey: boolean,

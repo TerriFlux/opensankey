@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { ChangeEvent, FunctionComponent } from 'react'
+import React, { FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Button, ButtonGroup, FormCheck, FormGroup } from 'react-bootstrap'
+import { Form, Row, Col, Modal, Button, ButtonGroup} from 'react-bootstrap'
 import { SankeyDataPropTypes } from './types'
 import i18n from 'i18next'
 
