@@ -4,9 +4,10 @@ import {SankeyLink,/*SankeyPlusNode,*/ SankeyLinkValue,SankeyLabel, TagsCatalog,
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
+import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
 import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
@@ -164,7 +165,6 @@ const animate_view_changement = (
   const new_nodes = Object.fromEntries(Object.entries(data_v2.nodes).filter(d => !Object.keys(data_v1.nodes).includes(d[0])))
   const new_links = Object.fromEntries(Object.entries(data_v2.links).filter(d => !Object.keys(data_v1.links).includes(d[0])))
   const k_links = Object.keys(new_links)
-  
   const node_data=Object.values(data_v2.nodes).filter(d=>Object.keys(new_nodes).includes(d.idNode))
 
   //=================AJOUT NOUEVEAUX NOEUDS========================================
@@ -905,6 +905,8 @@ const animate_view_changement = (
   //Récupère parmi les noeuds, tous ceux qui emettent un nouveau flux sans en recevoir de nouveau
   const start_point = Object.values(data_v2.nodes).filter(f => (f.inputLinksId.filter(i => k_links.includes(i)).length == 0) && (f.outputLinksId.filter(i => k_links.includes(i)).length > 0))
   let time_to_animate = 500
+  Object.values(data_v2.nodes).filter(f => {
+    return (f.inputLinksId.filter(i => k_links.includes(i)).length == 0) && (f.outputLinksId.filter(i => k_links.includes(i)).length > 0)})
   //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
   if (start_point.length > 0) {
     let nb_animation = calcPath(data_v2.nodes, start_point[0], new_links)
@@ -954,7 +956,6 @@ const branchAnimateForView = (
   // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
   const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
 
-
   tmpLinks.selectAll('.link').style('stroke-opacity', 1)
   tmpLinks.selectAll('text').style('opacity', 0)
   
@@ -965,7 +966,6 @@ const branchAnimateForView = (
     const id=d3.select(this).attr('id')
     d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
   })
-
 
   tmpLinks.selectAll('.link')
     .each(function (this) {
@@ -1041,7 +1041,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void,
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
   link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
-  scale:(t:number)=>number,inv_scale:(t:number)=>number,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
   setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
@@ -1053,9 +1054,9 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   link_text:(data: SankeyData, d: SankeyLink) => string
 
 ) => {
+  
   if (current) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
-      e.preventDefault()
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
           if (d != undefined) {
@@ -1157,6 +1158,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
       //set_show_nav(false)
     } else if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
       e.preventDefault()
+
       if (current) {
         const new_ind = 'view_' + String(new Date().getTime())
         const copy = JSON.parse(JSON.stringify(data))
@@ -1271,6 +1273,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
       //     console.log('Aucune action en mémoire pour un retour en arrière')
       //   }
       else if(e.key as string=='Delete'){
+        e.preventDefault()
         if(document.activeElement?.tagName!=='INPUT')
         {   
           multi_selected_links.current.forEach(el=>{
@@ -1285,6 +1288,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
         }
       }else if(e.key=='a' && e.ctrlKey){
         e.preventDefault()
+
         multi_selected_nodes.current=Object.values(data.nodes)
         set_data({...data})
     
@@ -1298,7 +1302,6 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
         if(e.preventDefault){
           e.preventDefault()
         }
-
         if (e.key == 'ArrowUp') {
           //Cherche la position de la vue sélectionné dans le tableau de vue
           const v1 = data.view.filter(d => d.id == view)[0].id
@@ -1399,6 +1402,7 @@ export const viewsAccordion = (
                 }else if(evt.target.value!=='none' && view === 'none'){
                   set_view(evt.target.value)
                   set_current_data({...data})
+
                   set_data({...viewOfData(data,evt.target.value)})
 
                 }else if(evt.target.value=='none'){
@@ -1497,4 +1501,72 @@ export const viewsAccordion = (
       </Table>
     </Accordion.Body>
   </Accordion.Item>
+}
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      sous_filieres: { [key: string]: string }
+      help: { [key: string]: string }
+      excel: string
+      structure: boolean,
+      advanced: boolean
+    } & { [key: string]: SankeyData }
+  }
+
+export const SankeyPlusBannerView=(mode_selection:string)=>{
+
+  const elementNavBar=document.getElementsByClassName('bg-light')[0]
+  const elementHerowrap=document.getElementsByClassName('herowrap')[0]
+
+  const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
+
+  const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
+  let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  if ( window.SankeyToolsStatic) {
+    height_navbarAndHerowrap = 0
+  }
+  return(
+  <Col className='sankey-toolbar'
+  style={{'marginTop':height_navbar,'marginLeft':0}}
+  >
+    <FormGroup  as={Col} lg='auto'>
+        <ButtonGroup >
+          <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'p' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaPlay />
+          </Button>
+          <Button variant={'outline-success'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'ArrowUp' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaBackward />
+          </Button>
+          <Button variant={'outline-warning'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'ArrowDown' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaForward />
+          </Button>
+        </ButtonGroup>
+      </FormGroup>
+    </Col>)
+}
+
+export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyData) => void)=>{
+return <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+    preferenceCheck('Vis',data)
+    set_data({ ...data })
+  }} />
 }
