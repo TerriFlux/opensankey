@@ -528,10 +528,13 @@ export const SankeyPlusDrawNodesIcon = (
             .attr('d', n =>node_icon_path(data,n))
 
     }
-    useEffect(()=>{
-        add_nodes_icon()
-    })
-        
+    // useEffect(()=>{
+    //   console.log('test')
+    //   add_nodes_icon()
+    //   console.log('test2')
+
+    // })
+    add_nodes_icon()
   
 }
 
