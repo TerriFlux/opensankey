@@ -237,6 +237,7 @@ const ExcelModalPropTypes = {
   handleCloseDialog: PropTypes.func.isRequired,
   set_data: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  show_excel_dialog: PropTypes.bool.isRequired,
   set_show_excel_dialog: PropTypes.func.isRequired,
   url_prefix: PropTypes.string.isRequired,
   callback: PropTypes.func.isRequired,
@@ -251,13 +252,13 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, set_data, data,show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
 
   return (
     <Modal
-      show={true}
+      show={show_excel_dialog}
       onHide={handleCloseDialog}
     >
       <Modal.Header closeButton>
@@ -349,6 +350,7 @@ ExcelModal.propTypes = ExcelModalPropTypes
 const PublishModalPropTypes = {
   t:PropTypes.func.isRequired, 
   publishImpl: PropTypes.func.isRequired,
+  show_publish_dialog:PropTypes.bool.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
   file_path_initial: PropTypes.string.isRequired
 }
@@ -365,11 +367,11 @@ type PublishModalTypes = InferProps<typeof PublishModalPropTypes>
  * @param {PublishModalTypes} { publishImpl,set_show_publish_dialog,file_path_initial }
  * @returns
  */
-export const PublishModal: FunctionComponent<PublishModalTypes> = ({ t,publishImpl,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
+export const PublishModal: FunctionComponent<PublishModalTypes> = ({ t,publishImpl,show_publish_dialog,set_show_publish_dialog,file_path_initial } : PublishModalTypes) => {
   const [file_path,set_file_path] = useState(file_path_initial)
 
   return (
-    <Modal show={true} onHide={()=>set_show_publish_dialog(false)} >
+    <Modal show={show_publish_dialog} onHide={()=>set_show_publish_dialog(false)} >
       <Modal.Header closeButton>
         <Modal.Title>{t('Menu.pdd')}</Modal.Title>
       </Modal.Header>

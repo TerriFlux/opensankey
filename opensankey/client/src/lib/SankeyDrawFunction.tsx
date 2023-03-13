@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue, SankeyLabel,SankeyDrawCurve } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, getLinkValue,test_link_value,link_color,delete_node,delete_link,default_node,default_link,link_visible,getTotalInputLink} from './SankeyUtils'
+import { compute_total_offsets, getLinkValue,test_link_value,link_color,delete_node,delete_link,default_node,default_link,link_visible,getTotalInputLink,node_color} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
@@ -802,38 +802,7 @@ export const setNodeHeight = (
   }
 }
 
-// Function that return the color that the node has to display
-// It depend of if a tags is selected, if the persistent variable is at true and the color we gived to the node
-export const node_color = (n: SankeyNode,data:SankeyData) => {
-  let colorNode
-  if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
-    //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
-    //on controle ici qu'il y a bien un favorite tag
-    if (n.colorTag !== undefined && n.colorTag !== '') {
-      const tagGroup = n.colorTag
-      if (n.tags[tagGroup] === undefined) {
-        colorNode = 'grey'
-        colorNode=(n.colorSustainable)? n.color:colorNode
-      } else if (n.tags[tagGroup].length > 0) {  
-        if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
-          colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
-        } else {
-          colorNode = 'grey'
-          colorNode=(n.colorSustainable)? n.color:colorNode
-        }
-      } else {
-        colorNode = 'grey'
-      }
-    } else {
-      colorNode = 'grey'
-    }
-  }
-  if (n.colorParameter === 'local') {
-    // Le couleur est définie dans les parametres locaux du noeud
-    colorNode = n.color
-  }  
-  return colorNode
-}
+
 // Function that remove animation (shift+click on node)
 export const removeAnimate = () => {
   // Si il y a des .tmp (notamment issus des animations)
