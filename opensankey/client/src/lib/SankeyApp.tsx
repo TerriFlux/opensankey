@@ -28,6 +28,8 @@ import { OpenSankeyDrawLabels } from './SankeyDrawLabels'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
+import {OpenSankeyMenuBanner} from './SankeyMenuBanner'
+import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 
 
 
@@ -263,12 +265,32 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   )
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
+  const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection)
   
   const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false)
   const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
-
+  
+  const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
+    return d
+  })
+  const modale_preference=<ModalPreference
+    showPreference={showPreference}
+    setShowPreference={setShowPreference}
+    ui={elments_of_modale_preference}
+  />
   external_menu_modal.push(modale_style_link)
   external_menu_modal.push(modale_style_node)
+  external_menu_modal.push(modale_preference)
+
+  const func_current_filter=(
+    new_current_filter: number
+  ) => {
+    const { display_style } = data
+    display_style.filter = +new_current_filter
+    set_data({ ...data })
+  }
+  const menu_banner=OpenSankeyMenuBanner(t,data,set_data,mode_selection,set_mode_selection,func_current_filter,'')
+
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
     event.preventDefault()
@@ -402,13 +424,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           set_mode_selection={set_mode_selection}
           style_to_apply={style_to_apply}
           set_style_to_apply={set_style_to_apply}
-          set_current_filter={(
-            new_current_filter: number
-          ) => {
-            const { display_style } = data
-            display_style.filter = +new_current_filter
-            set_data({ ...data })
-          }}
+          
           selected_node={selected_node}
           accordion_ref={accordion_ref as {current : HTMLDivElement}}
           button_ref={button_ref as {current : HTMLLabelElement}}
@@ -442,7 +458,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           token={true}
           useNavigate={()=>''}
           external_modal={external_menu_modal}
-          view={'none'}
+          menu_banner={menu_banner}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
