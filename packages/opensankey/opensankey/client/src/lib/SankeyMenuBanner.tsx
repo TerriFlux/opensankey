@@ -339,7 +339,16 @@ export const SankeyBannerRows = (
  * @param {{ data: any; set_data: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
  * @returns
  */
-const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix,view }) => {
+export const OpenSankeyMenuBanner = (
+  t:TFunction,
+  data:SankeyData,
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  mode_selection:string, 
+  set_mode_selection:React.Dispatch<React.SetStateAction<string>>,
+  set_current_filter:(n:number)=>void,
+  url_prefix:string,
+
+)=>{
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
@@ -996,379 +1005,379 @@ const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, s
   // if (window.sankey && window.sankey.sous_filieres) {
   //   sous_filieres = window.sankey.sous_filieres
   // }
-  return (
-    <>
-      {/* This div contain a dropdown for selecting a diagram */}
-      <div className='herowrap'
-        style={{
-          color: color,
-          backgroundColor: backgroundColor,
-          marginLeft: '0',
-          marginTop: height_navbar,
-          paddingBottom: '3px',
-          alignItems: 'baseline',
-          display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
-        }}>
 
-        {
-          show_banner?
-            (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-              {SankeyBannerRows(t,data,set_data,diagram,set_diagram,diagram2,set_diagram2,sous_filieres,is_split,diagrams)}
-            </Row>
-            <Row>
-              <Col className='text-end'>
-                <Button variant='success' size='sm'
-                  onClick={()=>{
-                    set_show_banner(false)
-                  }}
-                >
-                  <FontAwesomeIcon icon={faAngleDoubleUp} />
-                </Button>
-              </Col>
-            </Row></>)
-            :
-            <Row>
-              <Col className='text-end'>
-                <FormGroup as={Col}>
-                  <Button variant='outline-success' size='sm'
-                    onClick={()=>{
-                      set_show_banner(true)
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faAngleDoubleDown} />
-                  </Button>
-                </FormGroup>
-              </Col>
-            </Row>
-        } 
-        
-      </div>
-      {/* This contains different tool to modify visualy or structuraly the sankey
-      - Buttons to modify the behavior of mouse clicks
-      - Button to filter element of the sankey like nodes, links or their color 
-
-      The different logo in the buttons come from https://fontawesome.com/icons
-      */}
-      <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
-        {(view!=='none')? <Col>
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
-              <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-                const ev = document
-                const tmp = { key: 'p' }
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
-                <FaPlay />
+  const ui={
+    'herowrap':<div className='herowrap'
+    style={{
+      color: color,
+      backgroundColor: backgroundColor,
+      marginLeft: '0',
+      marginTop: height_navbar,
+      paddingBottom: '3px',
+      alignItems: 'baseline',
+      display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
+    }}>
+    {/* This div contain a dropdown for selecting a diagram */}
+    {
+      show_banner?
+        (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
+          {SankeyBannerRows(t,data,set_data,diagram,set_diagram,diagram2,set_diagram2,sous_filieres,is_split,diagrams)}
+        </Row>
+        <Row>
+          <Col className='text-end'>
+            <Button variant='success' size='sm'
+              onClick={()=>{
+                set_show_banner(false)
+              }}
+            >
+              <FontAwesomeIcon icon={faAngleDoubleUp} />
+            </Button>
+          </Col>
+        </Row></>)
+        :
+        <Row>
+          <Col className='text-end'>
+            <FormGroup as={Col}>
+              <Button variant='outline-success' size='sm'
+                onClick={()=>{
+                  set_show_banner(true)
+                }}
+              >
+                <FontAwesomeIcon icon={faAngleDoubleDown} />
               </Button>
-              <Button variant={'outline-success'} onClick={() => {
-                const ev = document
-                const tmp = { key: 'ArrowUp' }
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
-                <FaBackward />
-              </Button>
-              <Button variant={'outline-warning'} onClick={() => {
-                const ev = document
-                const tmp = { key: 'ArrowDown' }
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
-                <FaForward />
-              </Button>
-            </ButtonGroup>
-          </FormGroup>
-        </Col>:
-          <Col>
-            <FormGroup as={Col} lg='auto'>
-              <ButtonGroup >
-
-                {//Boutons Sélection classique des éléments 
-                }
-                <OverlayTrigger
-                  key={'tooltip-selection'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
-                  }
-                >
-                  <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-                    <FontAwesomeIcon icon={faArrowPointer} />
-                  </Button>
-                </OverlayTrigger>
-
-
-
-                <OverlayTrigger
-                  key={'tooltip-liaison'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
-                  }
-                >
-                  <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-                    {/* Ajout liaison entre noeud */}
-
-                    <FontAwesomeIcon icon={faShareNodes} />
-                  </Button>
-                </OverlayTrigger>
-              </ButtonGroup>
             </FormGroup>
           </Col>
-        }
+        </Row>
+    } 
+    
+      </div>,
+    
+    'toolbar':<Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
+    {/* {(view!=='none')? <Col>
+    <FormGroup as={Col} lg='auto'>
+        <ButtonGroup >
+          <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'p' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaPlay />
+          </Button>
+          <Button variant={'outline-success'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'ArrowUp' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaBackward />
+          </Button>
+          <Button variant={'outline-warning'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'ArrowDown' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaForward />
+          </Button>
+        </ButtonGroup>
+      </FormGroup>
+    </Col>: }*/
+      <Col>
+        <FormGroup as={Col} lg='auto'>
+          <ButtonGroup >
 
-        <Col className='text-end'>
-
-          <FormGroup as={Col} lg='auto'>
-            <ButtonGroup >
-
-
-              {(node_filter)?
-                <OverlayTrigger
-                  key={'tooltip-link-color-filter'}
-                  placement={'left'}
-                  trigger={'click'}
-                  rootClose
-                  overlay={filter_color_node}
-                  
-                >
-                  <Button variant='primary' id='button-link-color-filter' >
-                    Filtre Noeuds
-                  </Button>
-                </OverlayTrigger>
-                :
-                <></>
+            {//Boutons Sélection classique des éléments 
+            }
+            <OverlayTrigger
+              key={'tooltip-selection'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
               }
-
-              {(flux_filter)?
-                <OverlayTrigger
-                  key={'tooltip-node-color-filter'}
-                  placement={'left'}
-                  trigger={'click'}
-                  rootClose
-                  overlay={filter_color_link}
-                >
-                  <Button variant='secondary' id='button-node-color-filter' >
-                    Filtre Flux
-                  </Button>
-                </OverlayTrigger>
-                :
-                <></>
-              }
-              {(Object.values(data.dataTags).length>0)?
-                <OverlayTrigger
-                  key={'tooltip-data-filter'}
-                  placement={'left'}
-                  trigger={'click'}
-                  rootClose
-                  overlay={filter_data}
-                >
-                  <Button variant='dark' id='button-data-filter' >
-                    {Object.entries(data.dataTags).map(v=>{
-                      if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
-                        return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
-                      }else{
-                        return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
-                      }
-                    }).join('/')}
-                  </Button>
-                </OverlayTrigger>
-                :
-                <></>
-              }
+            >
+              <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+                <FontAwesomeIcon icon={faArrowPointer} />
+              </Button>
+            </OverlayTrigger>
 
 
-              {(level_filter)?
-                <OverlayTrigger
-                  key={'tooltip-details-level'}
-                  placement={'left'}
-                  trigger={'click'}
-                  rootClose
-                  overlay={detail_level}
-                >
-                  <Button variant='warning' id='button-details-level' >
-                    <FontAwesomeIcon icon={faFolderTree} />
-                  </Button>
-                </OverlayTrigger>
-                :
-                <></>
+
+            <OverlayTrigger
+              key={'tooltip-liaison'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
               }
+            >
+              <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+                {/* Ajout liaison entre noeud */}
+
+                <FontAwesomeIcon icon={faShareNodes} />
+              </Button>
+            </OverlayTrigger>
+          </ButtonGroup>
+        </FormGroup>
+      </Col>
+    }
+
+    <Col className='text-end'>
+
+      <FormGroup as={Col} lg='auto'>
+        <ButtonGroup >
+
+
+          {(node_filter)?
+            <OverlayTrigger
+              key={'tooltip-link-color-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_color_node}
               
+            >
+              <Button variant='primary' id='button-link-color-filter' >
+                Filtre Noeuds
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
 
-              <OverlayTrigger
-                key={'tooltip-link-filter'}
-                placement={'left'}
-                trigger={'click'}
-                rootClose
-                overlay={link_filter}
-              >
-                <Button variant='danger' id='button-filter-link' >
-                  <FontAwesomeIcon icon={faFilter} />
-                </Button>
-              </OverlayTrigger>
-
-
-              <OverlayTrigger
-                key={'tooltip-adjust'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
-                }
-              >
-                <Button variant='dark' onClick={() => { 
-                  data.fit_screen = true
-                  const zoomed=(transform:string)=> {
-                    [data.width, data.height] = min_width_and_height()
-                      
-                    d3.select(' .opensankey #svg').attr('transform', transform)
-                    d3.select(' .opensankey #svg')
-                      .style('border', Math.round(2 ) + 'px solid #78c2ad')
-                      .style('width', data.width + 'px')
+          {(flux_filter)?
+            <OverlayTrigger
+              key={'tooltip-node-color-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_color_link}
+            >
+              <Button variant='secondary' id='button-node-color-filter' >
+                Filtre Flux
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
+          {(Object.values(data.dataTags).length>0)?
+            <OverlayTrigger
+              key={'tooltip-data-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_data}
+            >
+              <Button variant='dark' id='button-data-filter' >
+                {Object.entries(data.dataTags).map(v=>{
+                  if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
+                    return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                  }else{
+                    return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
                   }
-                  const zoom = d3.zoom()
-                    .scaleExtent([1, 40])
-                    .on('zoom', zoomed)
-                  zoom.scaleTo(d3.select(' .opensankey #svg'),1)
-                  set_data({ ...data })
-                }} >
-                  <FontAwesomeIcon icon={faMaximize} />
-                </Button>
-              </OverlayTrigger>
-
-              { url_prefix !== '' ?
-                <OverlayTrigger
-                  key={'tooltip-structur'}
-                  placement={'left'}
-                  trigger={'click'}
-                  rootClose
-                  overlay={struc_data_reconciled}
-                >
-                  <Button variant='success'>
-                    <FontAwesomeIcon icon={faDiagramProject} />
-                  </Button>
-                </OverlayTrigger> : <OverlayTrigger
-                  key={'tooltip-structur'}
-                  placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
-                  }
-                >
-                  <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
-                    data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-                    //data.show_data = false
-                    set_data({ ...data })
-                  }} >
-                    <FontAwesomeIcon icon={faCodeBranch} />
-                  </Button>
-                </OverlayTrigger>}
-
-              <OverlayTrigger
-                key={'tooltip-help'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
-                }
-              >
-                <Button variant='info' onClick={() => { set_show_readme(true) }} >
-                    ?
-                </Button>
-              </OverlayTrigger>
-
-            </ButtonGroup>
-          </FormGroup>
-        </Col>
+                }).join('/')}
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
 
 
-      </Row>
+          {(level_filter)?
+            <OverlayTrigger
+              key={'tooltip-details-level'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={detail_level}
+            >
+              <Button variant='warning' id='button-details-level' >
+                <FontAwesomeIcon icon={faFolderTree} />
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
+          
 
-      {window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0 ? (
-        <Modal
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            'color': 'black'
-          }}
-          size="lg"
-          show={show_readme}
-          onHide={() => set_show_readme(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Aide</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Row>
-              <Col>
-                <Tabs defaultActiveKey={Object.keys(window.sankey.help)[0]} id="diagram">
-                  {Object.keys(window.sankey.help).map(
-                    (key, i) => (<Tab title={key} eventKey={key} key={i}>{
-                      parse(window.sankey.help[key], {
-                        replace: (domNode:DOMNode  ) => {
-                          interface AFMSankeyData extends SankeyData { 
-                            units_names : string[][],
-                          }
-                          const domElement: Element = domNode as unknown as Element
-                          if (domElement.attribs && domElement.attribs.id === 'units') {
-                            return <div>
-                              {(data as AFMSankeyData).units_names.slice(2).map(
-                                (units_desc, i) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>) }
-                              )}</div>
-                          } else if (domElement.attribs && domElement.attribs.id === 'selectors') {
-                            return <ul>
-                              {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return (<li key={i} >{tags_group[1].group_name}</li>) })}
-                            </ul>
-                          }
+          <OverlayTrigger
+            key={'tooltip-link-filter'}
+            placement={'left'}
+            trigger={'click'}
+            rootClose
+            overlay={link_filter}
+          >
+            <Button variant='danger' id='button-filter-link' >
+              <FontAwesomeIcon icon={faFilter} />
+            </Button>
+          </OverlayTrigger>
+
+
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
+            }
+          >
+            <Button variant='dark' onClick={() => { 
+              data.fit_screen = true
+              const zoomed=(transform:string)=> {
+                [data.width, data.height] = min_width_and_height()
+                  
+                d3.select(' .opensankey #svg').attr('transform', transform)
+                d3.select(' .opensankey #svg')
+                  .style('border', Math.round(2 ) + 'px solid #78c2ad')
+                  .style('width', data.width + 'px')
+              }
+              const zoom = d3.zoom()
+                .scaleExtent([1, 40])
+                .on('zoom', zoomed)
+              zoom.scaleTo(d3.select(' .opensankey #svg'),1)
+              set_data({ ...data })
+            }} >
+              <FontAwesomeIcon icon={faMaximize} />
+            </Button>
+          </OverlayTrigger>
+
+          { url_prefix !== '' ?
+            <OverlayTrigger
+              key={'tooltip-structur'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={struc_data_reconciled}
+            >
+              <Button variant='success'>
+                <FontAwesomeIcon icon={faDiagramProject} />
+              </Button>
+            </OverlayTrigger> : <OverlayTrigger
+              key={'tooltip-structur'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
+              }
+            >
+              <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
+                data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+                //data.show_data = false
+                set_data({ ...data })
+              }} >
+                <FontAwesomeIcon icon={faCodeBranch} />
+              </Button>
+            </OverlayTrigger>}
+
+          <OverlayTrigger
+            key={'tooltip-help'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
+            }
+          >
+            <Button variant='info' onClick={() => { set_show_readme(true) }} >
+                ?
+            </Button>
+          </OverlayTrigger>
+
+        </ButtonGroup>
+      </FormGroup>
+    </Col>
+
+
+  </Row>,
+
+    'modal_help':(window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0) ? (
+      <Modal
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          'color': 'black'
+        }}
+        size="lg"
+        show={show_readme}
+        onHide={() => set_show_readme(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Aide</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Row>
+            <Col>
+              <Tabs defaultActiveKey={Object.keys(window.sankey.help)[0]} id="diagram">
+                {Object.keys(window.sankey.help).map(
+                  (key, i) => (<Tab title={key} eventKey={key} key={i}>{
+                    parse(window.sankey.help[key], {
+                      replace: (domNode:DOMNode  ) => {
+                        interface AFMSankeyData extends SankeyData { 
+                          units_names : string[][],
                         }
-                      })
-                    }</Tab>))
-                  }
-                </Tabs>
-              </Col>
-            </Row>
-          </Modal.Body>
-        </Modal>) :
-        (<Modal
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            'color': 'black'
-          }}
-          size="lg"
-          show={show_readme}
-          onHide={() => set_show_readme(false)}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Aide</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Row>
-              <Col>
-                <Tabs defaultActiveKey="diagram" id="diagram">
-                  <Tab eventKey="diagram" title="Diagramme">
-                    <br></br>
-                    <p>L&apos;épaisseur des flèches est proportionnelle aux flux.</p>
-                    <p>Le diagramme peut être visualisé avec différents niveaux d&apos;agrégations en utilisant le sélecteur <b>Niveau de détail</b></p>
-                    <p>Des filtres peuvent être utilisés pour n&apos;afficher que des parties du diagramme. Pour cela utiliser les selecteurs <b>
-                      {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return ' ' + tags_group[1].group_name })}</b></p>
-                    <p>Différents palettes de couleurs peuvent être utiliser pour colorer les noeuds et les flux en utilisant le sélecteur <b>Palette de Couleurs</b></p>
-                    <p>La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant <b>Structure du diagramme</b></p>
-                    <p>Le diagramme peut être ajusté à l'écran en cochant <b>Ajuster à l'écran</b></p>
-                    <p>Pour obtenir des informations sur chaque flux, appuyer sur <b>shift</b> et passer la souris sur le flux.</p>
-                  </Tab>
-                </Tabs>
-              </Col>
-            </Row>
-          </Modal.Body>
-        </Modal>)}
-    </>
-  )
+                        const domElement: Element = domNode as unknown as Element
+                        if (domElement.attribs && domElement.attribs.id === 'units') {
+                          return <div>
+                            {(data as AFMSankeyData).units_names.slice(2).map(
+                              (units_desc, i) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>) }
+                            )}</div>
+                        } else if (domElement.attribs && domElement.attribs.id === 'selectors') {
+                          return <ul>
+                            {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return (<li key={i} >{tags_group[1].group_name}</li>) })}
+                          </ul>
+                        }
+                      }
+                    })
+                  }</Tab>))
+                }
+              </Tabs>
+            </Col>
+          </Row>
+        </Modal.Body>
+      </Modal>) :
+      (<Modal
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          'color': 'black'
+        }}
+        size="lg"
+        show={show_readme}
+        onHide={() => set_show_readme(false)}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Aide</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Row>
+            <Col>
+              <Tabs defaultActiveKey="diagram" id="diagram">
+                <Tab eventKey="diagram" title="Diagramme">
+                  <br></br>
+                  <p>L&apos;épaisseur des flèches est proportionnelle aux flux.</p>
+                  <p>Le diagramme peut être visualisé avec différents niveaux d&apos;agrégations en utilisant le sélecteur <b>Niveau de détail</b></p>
+                  <p>Des filtres peuvent être utilisés pour n&apos;afficher que des parties du diagramme. Pour cela utiliser les selecteurs <b>
+                    {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return ' ' + tags_group[1].group_name })}</b></p>
+                  <p>Différents palettes de couleurs peuvent être utiliser pour colorer les noeuds et les flux en utilisant le sélecteur <b>Palette de Couleurs</b></p>
+                  <p>La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant <b>Structure du diagramme</b></p>
+                  <p>Le diagramme peut être ajusté à l'écran en cochant <b>Ajuster à l'écran</b></p>
+                  <p>Pour obtenir des informations sur chaque flux, appuyer sur <b>shift</b> et passer la souris sur le flux.</p>
+                </Tab>
+              </Tabs>
+            </Col>
+          </Row>
+        </Modal.Body>
+      </Modal>)
+
+  }
+
+
+  return ui
 }
+// const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix,view }) => {
+  
+// }
 
-SankeyMenuBanner.propTypes = SankeyMenuBannerPropTypes
+// SankeyMenuBanner.propTypes = SankeyMenuBannerPropTypes
 
-export default SankeyMenuBanner
+// export default SankeyMenuBanner
 
