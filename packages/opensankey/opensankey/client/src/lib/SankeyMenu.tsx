@@ -8,11 +8,10 @@ import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaPowerOff,FaUser} from 'react-icons/fa'
-import SankeyMenuBanner from './SankeyMenuBanner'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
-import ModalPreference from './SankeyMenuPreferences'
+// import ModalPreference from './SankeyMenuPreferences'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { PublishModal,ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
@@ -55,7 +54,6 @@ const MenuPropTypes = {
   formations_menu: PropTypes.element,
   url_prefix: PropTypes.string.isRequired,
 
-  set_current_filter: PropTypes.func.isRequired,
 
   nav_item_active: PropTypes.string.isRequired,
 
@@ -103,7 +101,7 @@ const MenuPropTypes = {
   token:PropTypes.bool.isRequired,
   useNavigate:PropTypes.func.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  view:PropTypes.string.isRequired
+  menu_banner:PropTypes.object.isRequired
 
 }
 
@@ -380,7 +378,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     accordion_ref,
     selected_node,
     url_prefix,
-    set_current_filter,
     mode_selection,
     set_mode_selection,
     callback,
@@ -406,7 +403,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     token,
     useNavigate,
     external_modal,
-    view
+    menu_banner
   }
 ) => {
   let max_link_value = 0
@@ -553,14 +550,14 @@ const Menu: FunctionComponent<MenuTypes> = (
       
       } 
 
-      { <ModalPreference
+      {/* { <ModalPreference
         t={t}
         data={data}
         set_data={set_data}
         showPreference={showPreference}
         setShowPreference={setShowPreference}
         set_mode_selection={set_mode_selection}
-      />}
+      />} */}
 
       { !data.static_sankey ? (
         modalShortcut
@@ -599,7 +596,13 @@ const Menu: FunctionComponent<MenuTypes> = (
       {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
-      <SankeyMenuBanner
+      {
+        
+        Object.values(menu_banner).map(d=>{
+          return d
+        })
+      }
+      {/* <SankeyMenuBanner
         t={t}
         data={data}
         set_data={set_data}
@@ -608,7 +611,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_current_filter={set_current_filter}
         url_prefix={url_prefix}
         view={view}
-      /> 
+      />  */}
       {(show_nav && !data.static_sankey) ? 
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
@@ -642,44 +645,39 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
       />
-      {show_excel_dialog ? (
-        <ExcelModal
-          t={t}
-          launch={launch}
-          handleCloseDialog={() => set_show_excel_dialog(false)}
-          uploadExcelImpl={uploadExcelImpl}
-          set_data={set_data}
-          data={data}
-          set_show_excel_dialog={set_show_excel_dialog}
-          url_prefix={url_prefix}
-          callback={callback} />
-      ) :
-        (<div />)
-      }
-      { show_publish_dialog ?  (
-        <PublishModal
-          t={t}
-          set_show_publish_dialog={set_show_publish_dialog} 
-          publishImpl = {publishImpl}
-          file_path_initial = {data.file_name as string}/>
-      ) :
-        (<div/>)
-      }
-      { show_load ?  (
-        <SankeyLoad
-          url_prefix={url_prefix}
-          successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-          show_dialog={show_load}
-          set_show_dialog={set_show_load}
-          processing={processing}
-          setProcessing={setProcessing}
-          failure={failure}
-          setFailure={setFailure}
-          setNotStarted={setNotStarted}  
-        />
-      ) :
-        (<div/>)
-      }
+      
+      <ExcelModal
+        t={t}
+        launch={launch}
+        handleCloseDialog={() => set_show_excel_dialog(false)}
+        uploadExcelImpl={uploadExcelImpl}
+        set_data={set_data}
+        data={data}
+        show_excel_dialog={show_excel_dialog}
+        set_show_excel_dialog={set_show_excel_dialog}
+        url_prefix={url_prefix}
+        callback={callback} />
+
+      <PublishModal
+        t={t}
+        show_publish_dialog={show_publish_dialog}
+        set_show_publish_dialog={set_show_publish_dialog} 
+        publishImpl = {publishImpl}
+        file_path_initial = {data.file_name as string}/>
+
+      
+      <SankeyLoad
+        url_prefix={url_prefix}
+        successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+        show_dialog={show_load}
+        set_show_dialog={set_show_load}
+        processing={processing}
+        setProcessing={setProcessing}
+        failure={failure}
+        setFailure={setFailure}
+        setNotStarted={setNotStarted}  
+      />
+
       {
       // {modalTemplate}
         <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
