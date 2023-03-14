@@ -38,8 +38,6 @@ type SankeyAppTypes = {
   exemple_menu        : object
   formations_menu      : object
   logo: string,
-  token:boolean,
-  set_token:(b:boolean)=>void
 }
 
 declare const window: Window &
@@ -62,7 +60,7 @@ typeof globalThis & {
   }
 }
 
-export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,token,set_token} : SankeyAppTypes) => {
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo} : SankeyAppTypes) => {
 
 
   //- All
@@ -235,7 +233,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    setshowShortcut,setshowHelp,data,set_data,'',set_show_modalTemplate,token,set_token,[]
+    setshowShortcut,setshowHelp,data,set_data,'',set_show_modalTemplate,false,()=>null,[]
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem 
@@ -455,7 +453,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           cardsTemplate={cardsTemplate}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}
-          token={true}
+          token={false}
           useNavigate={()=>''}
           external_modal={external_menu_modal}
           menu_banner={menu_banner}
