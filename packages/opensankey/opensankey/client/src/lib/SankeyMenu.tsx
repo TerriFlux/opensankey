@@ -112,6 +112,7 @@ const clickSaveDiagram = (data:SankeyData) => {
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   FileSaver.saveAs(blob, 'sankey_diagram.json')
 }
+
 const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
   const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel'
@@ -119,10 +120,12 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
     method: 'POST',
     body: JSON.stringify(data)
   }
+
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     FileSaver.saveAs(newBlob, 'sankey.xlsx')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -136,6 +139,7 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
   )
     .then(showFile).then(cleanFile)
 }
+
 const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
   const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel_simple'
@@ -143,10 +147,12 @@ const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
     method: 'POST',
     body: JSON.stringify(data)
   }
+
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     FileSaver.saveAs(newBlob, 'sankey.xlsx')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -177,6 +183,7 @@ const clickSaveSVG = () => {
   svg.style('border','2px solid #78c2ad')
   svg.select('#grid').style('opacity','1')
 }
+
 const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
@@ -215,6 +222,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   )
     .then(showFile).then(cleanFile)
 }
+
 const clickSavePNG = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
@@ -240,6 +248,7 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     const newBlob = new Blob([blob], { type: 'application/png' })
     FileSaver.saveAs(newBlob, 'sankey_diagram.png')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -252,6 +261,18 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     r => r.blob()
   )
     .then(showFile).then(cleanFile)
+}
+
+const goToUserDoc = () => {
+  const path = window.location.href
+  let url = path + 'doc'
+  fetch(url, {
+    method:'GET'
+  }).then((response) => {
+    if(response.redirected){
+      return window.open(response.url, '_blank');
+    }
+  }).then( win => win?.focus() )
 }
 
 export const OpenSankeyMenus = (
@@ -346,9 +367,9 @@ export const OpenSankeyMenus = (
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
-      <Dropdown.Item href={window.location.origin + "/doc"} target="_blank" rel="noopener noreferrer">{t('Menu.doc')}</Dropdown.Item>
+      {/* target="_blank" rel="noopener noreferrer" */}
+      <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
     </NavDropdown >,
-
   ]}
 
 /**
