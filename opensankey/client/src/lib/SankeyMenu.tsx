@@ -278,11 +278,11 @@ export const OpenSankeyMenus = (
   const loginOut=()=>{
     set_token(false)
   }
-  
+
   return [
     <NavDropdown  title={t('Menu.Fichiers')} id="files" >
       <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
-        <Dropdown.Item 
+        <Dropdown.Item
           onClick={() => {
             if (_load_json.current) {
               _load_json.current.name = ''
@@ -350,9 +350,10 @@ export const OpenSankeyMenus = (
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
+      <Dropdown.Item href={window.location.origin + "/doc"} target="_blank" rel="noopener noreferrer">{t('Menu.doc')}</Dropdown.Item>
       {(token)?<Dropdown.Item><Button variant='danger' onClick={()=>loginOut()}><FaPowerOff/></Button></Dropdown.Item>:<></>}
     </NavDropdown >,
-    
+
   ]}
 
 /**
@@ -366,7 +367,7 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
 /**
  * Description placeholder
  *
- * @param {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }} 
+ * @param {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  *
  * @returns
  */
@@ -447,8 +448,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     setProcessing(false)
     setFailure(false)
     setNotStarted(true)
-  }  
-  
+  }
+
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -462,7 +463,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   if (node === undefined) {
     node = default_node(data)
   }
-  
+
   const props = {
     scroll: true,
     backdrop: false,
@@ -477,7 +478,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
 
- 
+
 
   //Modal for shortcut
   const modalShortcut = (
@@ -527,8 +528,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       {external_modal}
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
-      
-      } 
+
+      }
 
       {/* { <ModalPreference
         t={t}
@@ -573,11 +574,11 @@ const Menu: FunctionComponent<MenuTypes> = (
             <br /></>)}
         </Container>
       </Navbar>
-      {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
+      {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
       {
-        
+
         Object.values(menu_banner).map(d=>{
           return d
         })
@@ -592,10 +593,10 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         view={view}
       />  */}
-      {(show_nav && !data.static_sankey) ? 
+      {(show_nav && !data.static_sankey) ?
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
-            <SankeyConfigurationMenu 
+            <SankeyConfigurationMenu
               nav_item_active={nav_item_active}
               accordion_ref={accordion_ref}
               configuration_menus={configurations_menus} />
@@ -625,7 +626,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
       />
-      
+
       <ExcelModal
         t={t}
         launch={launch}
@@ -638,9 +639,9 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         callback={callback} />
 
-      
 
-      
+
+
       <SankeyLoad
         url_prefix={url_prefix}
         successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
@@ -650,7 +651,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         setProcessing={setProcessing}
         failure={failure}
         setFailure={setFailure}
-        setNotStarted={setNotStarted}  
+        setNotStarted={setNotStarted}
       />
 
       {
