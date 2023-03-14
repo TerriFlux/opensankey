@@ -7,7 +7,7 @@ import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
-import { FaAngleDoubleLeft,FaPowerOff,FaUser} from 'react-icons/fa'
+import { FaAngleDoubleLeft,FaUser} from 'react-icons/fa'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
@@ -275,10 +275,6 @@ export const OpenSankeyMenus = (
   external_edition_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  const loginOut=()=>{
-    set_token(false)
-  }
-
   return [
     <NavDropdown  title={t('Menu.Fichiers')} id="files" >
       <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
@@ -351,7 +347,6 @@ export const OpenSankeyMenus = (
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
       <Dropdown.Item href={window.location.origin + "/doc"} target="_blank" rel="noopener noreferrer">{t('Menu.doc')}</Dropdown.Item>
-      {(token)?<Dropdown.Item><Button variant='danger' onClick={()=>loginOut()}><FaPowerOff/></Button></Dropdown.Item>:<></>}
     </NavDropdown >,
 
   ]}
@@ -381,8 +376,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     accordion_ref,
     selected_node,
     url_prefix,
-    mode_selection,
-    set_mode_selection,
     callback,
     show_load,
     set_show_load,
@@ -395,8 +388,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_excel_dialog, set_show_excel_dialog,
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
-    showPreference, setShowPreference,
-    show_publish_dialog,set_show_publish_dialog,
     showShortcut, setshowShortcut,
     showHelp, setshowHelp,
     menus,
