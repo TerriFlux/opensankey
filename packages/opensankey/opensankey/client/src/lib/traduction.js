@@ -38,13 +38,14 @@ const resources = {
         'esf':'Edition Link Style',
         'rc':'Keyboard Shortcut',
         'as':'Additional Help',
+        'doc': 'Documentation',
         'ca':'Pathway',
         'annuler':'Cancel',
         'pdd':'Publish/Update diagram',
         'fmep':'Layout File',
         'ad':'Apply disposition',
         'ns':'Name style',
-        
+
         'BgC':'White background color',
         'dns':'Display only visible nodes in the nodes selector',
         'dls':'Display only visible links in the links selector',
@@ -114,7 +115,7 @@ const resources = {
           'toScaleTop':'to the top',
           'toScaleLeft':'to the left',
           'toScaleRight':'to the right',
-            
+
         },
         labels:{
           'labels':'Labels',
@@ -168,7 +169,7 @@ const resources = {
           'edes':'Below',
           'lti':'Colored row for identification',
           'col':'Colored',
-        }    
+        }
       },
 
       Flux:{
@@ -293,6 +294,7 @@ const resources = {
         'esf':'Edition Style Flux',
         'rc':'Raccourci Clavier',
         'as':'Aide Supplémentaire',
+        'doc': 'Documentation',
         'ca':'Chemin d\'accés',
         'annuler':'Annuler',
         'pdd':'Publication/Mise à jour du diagramme',
@@ -416,7 +418,7 @@ const resources = {
           'edes':'En-Dessous',
           'lti':'Ligne tableau coloré pour identification',
           'col':'Coloré',
-        }    
+        }
       },
       Flux:{
         'pdl':'Police des labels',
@@ -500,7 +502,7 @@ const resources = {
         'tooltipAjoutNode':'Ajoute un noeud au click de la souris',
         'tooltipLiason':'Clicker puis relacher entre deux noeuds existant pour les liés avec un flux',
       }
-          
+
     }
   }
 }

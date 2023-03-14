@@ -112,6 +112,7 @@ const clickSaveDiagram = (data:SankeyData) => {
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   FileSaver.saveAs(blob, 'sankey_diagram.json')
 }
+
 const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
   const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel'
@@ -119,10 +120,12 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
     method: 'POST',
     body: JSON.stringify(data)
   }
+
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     FileSaver.saveAs(newBlob, 'sankey.xlsx')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -136,6 +139,7 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
   )
     .then(showFile).then(cleanFile)
 }
+
 const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
   const root = window.location.href
   let url = root + url_prefix + 'sankey/save_excel_simple'
@@ -143,10 +147,12 @@ const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
     method: 'POST',
     body: JSON.stringify(data)
   }
+
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     FileSaver.saveAs(newBlob, 'sankey.xlsx')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -177,6 +183,7 @@ const clickSaveSVG = () => {
   svg.style('border','2px solid #78c2ad')
   svg.select('#grid').style('opacity','1')
 }
+
 const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
@@ -215,6 +222,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   )
     .then(showFile).then(cleanFile)
 }
+
 const clickSavePNG = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
@@ -240,6 +248,7 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     const newBlob = new Blob([blob], { type: 'application/png' })
     FileSaver.saveAs(newBlob, 'sankey_diagram.png')
   }
+
   const cleanFile = () => {
     const fetchData = {
       method: 'POST'
@@ -252,6 +261,18 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     r => r.blob()
   )
     .then(showFile).then(cleanFile)
+}
+
+const goToUserDoc = () => {
+  const path = window.location.href
+  let url = path + 'doc'
+  fetch(url, {
+    method:'GET'
+  }).then((response) => {
+    if(response.redirected){
+      return window.open(response.url, '_blank');
+    }
+  }).then( win => win?.focus() )
 }
 
 export const OpenSankeyMenus = (
@@ -275,11 +296,10 @@ export const OpenSankeyMenus = (
   external_edition_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  
   return [
     <NavDropdown  title={t('Menu.Fichiers')} id="files" >
       <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
-        <Dropdown.Item 
+        <Dropdown.Item
           onClick={() => {
             if (_load_json.current) {
               _load_json.current.name = ''
@@ -347,8 +367,8 @@ export const OpenSankeyMenus = (
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
+      <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
     </NavDropdown >,
-    
   ]}
 
 /**
@@ -362,7 +382,7 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
 /**
  * Description placeholder
  *
- * @param {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }} 
+ * @param {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  *
  * @returns
  */
@@ -439,8 +459,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     setProcessing(false)
     setFailure(false)
     setNotStarted(true)
-  }  
-  
+  }
+
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -454,7 +474,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   if (node === undefined) {
     node = default_node(data)
   }
-  
+
   const props = {
     scroll: true,
     backdrop: false,
@@ -469,7 +489,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
 
- 
+
 
   //Modal for shortcut
   const modalShortcut = (
@@ -519,8 +539,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     <>
       {external_modal}
       {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
-      
-      } 
+
+      }
 
       {/* { <ModalPreference
         t={t}
@@ -565,11 +585,11 @@ const Menu: FunctionComponent<MenuTypes> = (
             <br /></>)}
         </Container>
       </Navbar>
-      {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage 
+      {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage
         //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
       }
       {
-        
+
         Object.values(menu_banner).map(d=>{
           return d
         })
@@ -584,10 +604,10 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         view={view}
       />  */}
-      {(show_nav && !data.static_sankey) ? 
+      {(show_nav && !data.static_sankey) ?
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
-            <SankeyConfigurationMenu 
+            <SankeyConfigurationMenu
               nav_item_active={nav_item_active}
               accordion_ref={accordion_ref}
               configuration_menus={configurations_menus} />
@@ -617,7 +637,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
       />
-      
+
       <ExcelModal
         t={t}
         launch={launch}
@@ -630,9 +650,9 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         callback={callback} />
 
-      
 
-      
+
+
       <SankeyLoad
         url_prefix={url_prefix}
         successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
@@ -642,7 +662,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         setProcessing={setProcessing}
         failure={failure}
         setFailure={setFailure}
-        setNotStarted={setNotStarted}  
+        setNotStarted={setNotStarted}
       />
 
       {
