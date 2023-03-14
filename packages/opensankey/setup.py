@@ -84,6 +84,7 @@ setup(name='OpenSankey',
                   'client/build/static/css/*.css',
                   'client/build/static/js/*.js',
                   'client/build/static/media/*.*',
+                  'client/src/image'
                   'doc/build/html/_images/*',
                   'doc/build/html/_sources/*',
                   'doc/build/html/_static/*',
