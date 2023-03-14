@@ -13,7 +13,7 @@ import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import ModalPreference from './SankeyMenuPreferences'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
-import { PublishModal,ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
+import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 
 declare const window: Window &
@@ -272,6 +272,7 @@ export const OpenSankeyMenus = (
   set_show_modalTemplate:(b:boolean)=>void,
   token:boolean,
   set_token:(b:boolean)=>void,
+  external_edition_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const loginOut=()=>{
@@ -340,10 +341,11 @@ export const OpenSankeyMenus = (
     </NavDropdown>,
     <NavDropdown id='edition' title={t('Menu.Edition')} >
       <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
-      <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>    
+      {/* <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>     */}
       <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
       <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
       <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
+      {external_edition_item}
     </NavDropdown >,
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
@@ -475,29 +477,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
 
-  const publishImpl = (file_path:string) =>{
-    // const form_data = new FormData()
-    // form_data.append('file', input_file)
-
-    const path = window.location.href
-
-    const url = path + url_prefix + 'sankey/publish'
-
-    const new_data = JSON.parse(JSON.stringify(data))
-    new_data.file_name = file_path
-
-    const fetchData = {
-      method: 'POST',
-      body: JSON.stringify(new_data, null, 2)
-    }
-
-    fetch(url, fetchData).then( response => {
-      if (!response.ok) {
-        alert(response)
-      }
-    })
-    set_show_publish_dialog(false)
-  }
+ 
 
   //Modal for shortcut
   const modalShortcut = (
@@ -658,12 +638,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         callback={callback} />
 
-      <PublishModal
-        t={t}
-        show_publish_dialog={show_publish_dialog}
-        set_show_publish_dialog={set_show_publish_dialog} 
-        publishImpl = {publishImpl}
-        file_path_initial = {data.file_name as string}/>
+      
 
       
       <SankeyLoad
