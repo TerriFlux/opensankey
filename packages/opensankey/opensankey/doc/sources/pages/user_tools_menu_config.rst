@@ -10,8 +10,8 @@ Les différents paramètres modifiables sont :
 
 * **L'échelle**: Permet de reduire ou augumenter l'échelle du diagramme et ainsi modifier l'épaisseur des flux
 * **Flux Maximum**:
-* **Taille Carré Grille** et **Grille visible**: Permet de choisir la taille des carrés du grillage de fond de la zone de sankey. Ce grillage aide lorsque l'on veut aligner les différents élements du diagramme. 
-* **Arranger les noeuds**:  
+* **Taille Carré Grille** et **Grille visible**: Permet de choisir la taille des carrés du grillage de fond de la zone de sankey. Ce grillage aide lorsque l'on veut aligner les différents élements du diagramme.
+* **Arranger les noeuds**:
 * **Ecart entre noeuds Horizontal/Vertical**: Permets de choisir l'écart vertical et horizontal entre les différents noeuds  pour que, lorsque le bouton **positionnement automatique** est clické, les noeuds se positionnent
 
 Edition noeuds
@@ -52,7 +52,7 @@ Dans cet onglet, on gère l'insertion d'icon dans les noeuds. Au préalable il f
 Les différents paramètres de cette onglet sont :
 
 * Sa **visibilité**
-* L'**icon** que l'on veut afficher 
+* L'**icon** que l'on veut afficher
 * Sa **couleur**
 * Son **ratio** : sa taille par rapport au noeud
 
@@ -83,11 +83,11 @@ Edition des étiquettes de noeuds
     user_tools_tag
 
 Edition flux
-================
+============
 
 L'onglet d'édition permet de modifier les paramètres des flux du diagramme. Cet onglet contient une partie supérieur qui permet de sélectionner, créer,supprimer et modifier des noeuds, et d'une partie inférieur qui, après avoir sélectionner des flux, permet de modifier des paramètres plus spécifiques regroupés dans des sous-onglets:
 
-Parmis les paramètres généraux modifiables des flux il y a : 
+Parmis les paramètres généraux modifiables des flux il y a :
 * Leur **source/cible**
 * La possibilté de **cacher** les noeuds de type produit qui sont seuls entre 2 flux
 * **Inverser** la source/cible
@@ -110,7 +110,7 @@ Cet onglet permet d'attribuer une valeur aux flux.
 Cet onglet gère des paramètres visuels des flux tel que :
 
 * Sa **couleur**
-* Si sa couleur est un **gradient** (si l'option est sélectionné le grandient est un dégradé de couleur à partir de la couleur du noeud source vers la couleur du noeud cible) 
+* Si sa couleur est un **gradient** (si l'option est sélectionné le grandient est un dégradé de couleur à partir de la couleur du noeud source vers la couleur du noeud cible)
 * Si le flux est **hachuré**
 * L'orientation du flux :
 
@@ -144,9 +144,6 @@ Cet onglet gère les paramètres liés aux labels des flux tel que :
 Dans cet onglet on gère le contenue le l'info-bulle qui s'affiche lorsque l'on survol les flux tous en ayant les la touche **shift** pressé.
 
 
-
-
-
 Edition des étiquettes de flux
 ==============================
 
@@ -165,6 +162,7 @@ Edition des étiquettes de données
 
 Label Libres
 ============
+
 Dans cet onglet on gère les labels libres qui sont des zone de textes que l'on peut placer où l'on veut. On peut aussi les utlisé pour repésenter des groupes d'élements sur le diagramme.
 
 .. image:: _static/label_libre_exemple.PNG
