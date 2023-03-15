@@ -13,8 +13,6 @@ Dans opensankey une étiquette et un élément d'une catégorie (appelé groupe 
 
 Dans cet exemple nous avons décidé d'afficher les étiquettes du groupe *certification du bois* qui est un groupe d'étiquette de noeuds. Nous voyons donc les noeuds selon leur type de certification. Les différents tags ont leur propre couleur qui prennent le dessus sur la couleur des éléments pour pouvoir les distinguer.
 
-
-
 Quels sont les différents type d'étiquette
 ==========================================
 
@@ -25,7 +23,8 @@ Avec les étiquettes de flux et noeuds, nous pouvons leurs associer des couleurs
 Comment créer des groupes et des étiquettes ?
 =============================================
 
-* **Groupe d'étiquette**:
+Groupe d'étiquette
+------------------
 
 .. image:: _static/menu_tag_group.PNG
    :width: 400
@@ -34,13 +33,13 @@ Comment créer des groupes et des étiquettes ?
 Par défault le diagramme de sankey n'a pas de groupe d'étiquettes, on peut dont en créer en cliquant sur la croix verte.
 A la suite de l'ajout, une nouvelle ligne apparait sur le tableau contenant le nom du groupe d'étiquette ainsi que d'autre éléments modifiable tel que :
 
-* **Afficher dans la légende**  
-* Le **nombre d'étiquette** du groupe 
+* **Afficher dans la légende**
+* Le **nombre d'étiquette** du groupe
 * Le choix du type de menu déroulant dans la barre d'édition. Il existe 3 type de menu déroulant :
    * **Non-existant**: Cette option empêche de pouvoir choisire d'afficher l'une des étiquettes du groupe (le menu déroulant n'est pas présent)
    * **Unique**: Cette option permet d'afficher qu'une seul étiquette du groupe
    * **Multiple**: Cette option permet d'afficher plusieurs étiquettes du groupe
-* La **position** des groupes de noeuds dans la liste des menu déroulant de la barre d'édition 
+* La **position** des groupes de noeuds dans la liste des menu déroulant de la barre d'édition
 
 Exemple en Unique:
 
@@ -54,13 +53,14 @@ Exemple en Multiple:
    :width: 400
    :align: center
 
-* **Etiquette**:
+Etiquette
+---------
 
 .. image:: _static/menu_tag.PNG
    :width: 400
    :align: center
 
-Après avoir crée des groupes d'étiquettes et au dessus du tableau des étiquettes il y a : 
+Après avoir crée des groupes d'étiquettes et au dessus du tableau des étiquettes il y a :
 
 * un sélecteur où l'on peut **choisire le groupe** dans lequel on ajoutera, supprimera ou modifira des étiquettes
 * un bouton pour **associer des une palette de couleur aleatoire** aux étiquettes
