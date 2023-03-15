@@ -1,7 +1,7 @@
 
 La partie gauche de la barre d'édition contient des sélecteur du comportement de la souris. Pour choisir le comportment de la souris il faut simplment clicquer sur le mode qui nous intéresse.
 
-**Bouton de sélection**
+Bouton de sélection
 =======================
 
 
@@ -14,7 +14,7 @@ La partie gauche de la barre d'édition contient des sélecteur du comportement 
 Ce mode permet de sélectionner des élements du diagramme tel que les noeuds,flux et labels libre (via Ctrl+click) et de les déplacer en les draggant
 
 
-**Bouton d'ajout de noeud**
+Bouton d'ajout de noeud
 ===========================
 
 .. image:: _static/add_node.PNG
@@ -26,7 +26,7 @@ Ce mode permet de sélectionner des élements du diagramme tel que les noeuds,fl
 Ce mode permet de d'ajouter des noeuds qu click sur la zone de dessin.
 
 
-**Bouton d'ajout de flux et noeud**
+Bouton d'ajout de flux et noeud
 ===================================
 
 .. image:: _static/add_node_and_link.PNG
@@ -43,7 +43,7 @@ Ce mode permet :
 
 Sur la partie droite  de la barre d'édition ce trouve des filtres et autres boutons modifiant la visualisation du diagramme sans modifier cette dernière.
 
-**Filtres noeuds**
+Filtres noeuds
 ==================
 
 .. image:: _static/node_filter.PNG
@@ -51,21 +51,21 @@ Sur la partie droite  de la barre d'édition ce trouve des filtres et autres bou
 
 Ce bouton permet d'appliquer des groupes d'étiquettes de noeuds sur le diagramme (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
-**Filtres Flux**
+Filtres Flux
 ================
 
 .. image:: _static/link_filter.PNG
 
 Ce bouton permet d'appliquer des groupes d'étiquettes de flux sur le diagramme (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
-**Filtres sur les étiquettes de données**
+Filtres sur les étiquettes de données
 =========================================
 
 .. image:: _static/data_filter.PNG
 
 Ce bouton permet de filtrer les valeurs de flux, on peut sélectionner une pour plusieurs étiquettes de données qui affichera plusieurs fois le même flux avec les différentes valeurs (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
-**Filtrer les valeur de flux**
+Filtrer les valeur de flux
 ==============================
 
 .. image:: _static/link_threshold.PNG
@@ -74,7 +74,7 @@ Ce bouton d'appliquer un filtre sur les flux pour masquer les flux et/ou labels 
 On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comme valeur 0.
 
 
-**Réajuster la taille du diagramme**
+Réajuster la taille du diagramme
 ====================================
 
 .. image:: _static/adjust_size.PNG
@@ -82,13 +82,13 @@ On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comm
 Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus à droite soit visible sans avoir à dézoomer
 
 
-**Mode structure**
+Mode structure
 ====================================
 
 .. image:: _static/structure_mode.PNG
 
 
-**Aide**
+Aide
 ====================================
 
 .. image:: _static/help_banner.PNG
