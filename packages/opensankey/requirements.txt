@@ -4,3 +4,4 @@ flaskfilemanager
 webcolors
 sphinx
 sphinx_rtd_theme
+sphinx-multibuild

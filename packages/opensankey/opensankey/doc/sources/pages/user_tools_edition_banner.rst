@@ -43,7 +43,7 @@ Ce mode permet :
 
 Sur la partie droite  de la barre d'édition ce trouve des filtres et autres boutons modifiant la visualisation du diagramme sans modifier cette dernière.
 
-**Filtres noueds**
+**Filtres noeuds**
 ==================
 
 .. image:: _static/node_filter.PNG
@@ -79,7 +79,7 @@ On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comm
 
 .. image:: _static/adjust_size.PNG
 
-Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus à droite soit visible sans avoir à dézoomer 
+Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus à droite soit visible sans avoir à dézoomer
 
 
 **Mode structure**
@@ -93,4 +93,4 @@ Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus 
 
 .. image:: _static/help_banner.PNG
 
-Permets d'afficher de l'aide 
+Permets d'afficher de l'aide
