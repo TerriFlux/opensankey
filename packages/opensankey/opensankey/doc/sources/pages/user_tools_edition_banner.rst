@@ -1,5 +1,5 @@
 
-La partie gauche de la barre d'édition contient des sélecteur du comportement de la souris. Pour choisir le comportment de la souris il faut simplment clicquer sur le mode qui nous intéresse.
+La partie gauche de la barre d'édition contient des sélecteur du comportement de la souris. Pour choisir le comportement de la souris il faut simplement cliquer sur le mode qui nous intéresse.
 
 Bouton de sélection
 =======================
@@ -59,14 +59,14 @@ Filtres Flux
 Ce bouton permet d'appliquer des groupes d'étiquettes de flux sur le diagramme (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
 Filtres sur les étiquettes de données
-=========================================
+=====================================
 
 .. image:: _static/data_filter.PNG
 
 Ce bouton permet de filtrer les valeurs de flux, on peut sélectionner une pour plusieurs étiquettes de données qui affichera plusieurs fois le même flux avec les différentes valeurs (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
 Filtrer les valeur de flux
-==============================
+==========================
 
 .. image:: _static/link_threshold.PNG
 
@@ -75,7 +75,7 @@ On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comm
 
 
 Réajuster la taille du diagramme
-====================================
+================================
 
 .. image:: _static/adjust_size.PNG
 
@@ -83,13 +83,13 @@ Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus 
 
 
 Mode structure
-====================================
+==============
 
 .. image:: _static/structure_mode.PNG
 
 
 Aide
-====================================
+====
 
 .. image:: _static/help_banner.PNG
 
