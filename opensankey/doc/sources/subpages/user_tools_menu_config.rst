@@ -1,6 +1,7 @@
 
 Mise en page
 ============
+
 La mise en page est onglet du menu de configuration permettant de gérer des caractèristiques global de la zone de dessin.
 
 .. image:: _static/mep.PNG
@@ -46,20 +47,9 @@ Dans cet onglet, nous pouvons mdoifier des paramètres liés aux labels des noeu
 * La **position horizontal de la valeur** par rapport au noeud
 * La **taille de la police de la valeur**
 
-**Icon**
-
-Dans cet onglet, on gère l'insertion d'icon dans les noeuds. Au préalable il faut avoir charger une liste d'icon provenant d'icomoon dans le menu préférectangle
-Les différents paramètres de cette onglet sont :
-
-* Sa **visibilité**
-* L'**icon** que l'on veut afficher
-* Sa **couleur**
-* Son **ratio** : sa taille par rapport au noeud
-
 **Info-bulle**
 
 Dans cet onglet on gère le contenue le l'info-bulle qui s'affiche lorsque l'on survol les noeuds tous en ayant les la touche **shift** pressé.
-
 
 **Agrégation**
 
@@ -96,7 +86,8 @@ Parmis les paramètres généraux modifiables des flux il y a :
 
 Les paramètres spécifiques regroupé par catégories sont :
 
-**Données**
+Données
+-------
 
 Cet onglet permet d'attribuer une valeur aux flux.
 
@@ -105,7 +96,8 @@ Cet onglet permet d'attribuer une valeur aux flux.
 * Nous pouvons afficher la valeur de ces flux de manière **scientifique** ou non
 * Nous pouvons choisir d'afficher un **texte** au lieu de la valeur
 
-**Apparence**
+Apparence
+---------
 
 Cet onglet gère des paramètres visuels des flux tel que :
 
@@ -128,7 +120,9 @@ Cet onglet gère des paramètres visuels des flux tel que :
 
 * La tension de la courbure si l'option est sélectionné
 
-**Label**
+Label
+-----
+
 Cet onglet gère les paramètres liés aux labels des flux tel que :
 
 * Sa **visibilité**
@@ -139,7 +133,8 @@ Cet onglet gère les paramètres liés aux labels des flux tel que :
 * **Position orthogonale** du texte (au dessus du flux, au milieux du flux ou en dessous du flux)
 * L'option de **positionner le label à la souris**, détaché du flux
 
-**Info-bulle**
+Info-bulle
+----------
 
 Dans cet onglet on gère le contenue le l'info-bulle qui s'affiche lorsque l'on survol les flux tous en ayant les la touche **shift** pressé.
 
@@ -159,29 +154,6 @@ Edition des étiquettes de données
     :maxdepth: 2
 
     user_tools_tag
-
-Label Libres
-============
-
-Dans cet onglet on gère les labels libres qui sont des zone de textes que l'on peut placer où l'on veut. On peut aussi les utlisé pour repésenter des groupes d'élements sur le diagramme.
-
-.. image:: _static/label_libre_exemple.PNG
-   :align: center
-
-Les paramètres modifiables des labels libres sont :
-
-* Son **texte**
-* **Considérer le texte comme un élément foreignObject** qui permet d'écrire du html dans la zone de texte
-* La **hauteur** du label libre
-* La **largeur** du label libre
-* Si son **fond est transparent**
-* La **couleur de fond** du label libre
-* Si la **bordure est transparente**
-* La **couleur de la bordure**
-* Sa **position vertical** par rapport au label libre
-* Sa **position horizontal** par rapport au label libre
-* La **taille de la police** du label libre
-* La **police de caractère** (Gras,Majuscule,Italique)
 
 Légendes
 ========

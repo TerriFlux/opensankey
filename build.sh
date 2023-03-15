@@ -12,7 +12,8 @@ exit_if_error() {
 pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 flake8  || exit_if_error $?
-sphinx-multibuild -i ./doc/sources/index -i ./doc/sources/pages -s ./doc/build/tmp -o ./doc/build/sphinx -b html -c ./doc/sources/
+cd opensankey/doc
+sphinx-multibuild -i ./sources/index -i ./sources/pages -i ./sources/subpages -s ./build/tmp -o ./build/html -b html -c ./sources/  || exit_if_error $?
 cd ../..
 pip install .  || exit_if_error $?
 
