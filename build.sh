@@ -13,7 +13,7 @@ pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
 flake8  || exit_if_error $?
 cd opensankey/doc
-sphinx-build -b html ./source ./build/html
+sphinx-multibuild -i ./sources/index -i ./sources/pages -i ./sources/subpages -s ./build/tmp -o ./build/html -b html -c ./sources/  || exit_if_error $?
 cd ../..
 pip install .  || exit_if_error $?
 
