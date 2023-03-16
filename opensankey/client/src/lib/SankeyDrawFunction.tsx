@@ -930,7 +930,7 @@ export const drawArrows = (
       clipped.map(d => d[1] = d[1] - start_point_left*10)
       start_point_left += thickness_link
     } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
-      const arrow_int_right = [[1, 0], [1, right_height], [-10, right_height / 2]].map(d1=>d1.map(d2=>d2*10))
+      const arrow_int_right = [[1, 0], [1, right_height], [-9, right_height / 2]].map(d1=>d1.map(d2=>d2*10))
       const zone_arrow = [[0, start_point_right], [10, start_point_right], [10, start_point_right + thickness_link], [0, start_point_right + thickness_link]].map(d1=>d1.map(d2=>d2*10))
       clipped = clip(arrow_int_right, zone_arrow)
       clipped.map(d => {
@@ -967,7 +967,7 @@ export const drawArrows = (
       const n = JSON.parse(JSON.stringify(clipped))
       const point = d3.line()(n)
       arr.append('marker').attr('id', 'arrow_' + l.idLink)
-        .attr('viewBox', [0, 0, thickness_link*10, thickness_link*10])
+        .attr('viewBox', [-thickness_link*5, 0, thickness_link*10, thickness_link*10])
         .attr('refY', (thickness_link*10) / 2)
         .attr('refX', refX)
         .attr('markerWidth', (thickness_link*10<0.5)?5:2000)
