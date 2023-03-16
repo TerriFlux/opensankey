@@ -499,8 +499,7 @@ const resources = {
         'tooltipData':'Permet d\'afficher les données du diagramme',
         'tooltipSelection':'Permet de drag les noeuds',
         'tooltipHelp':'Info supplementaires sur le diagramme',
-        'tooltipAjoutNode':'Ajoute un noeud au click de la souris',
-        'tooltipLiason':'Clicker puis relacher entre deux noeuds existant pour les liés avec un flux',
+        'tooltipLiason':'Cliquer puis relâcher entre deux noeuds existant pour les lier avec un flux',
       }
 
     }
