@@ -1439,21 +1439,26 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[new_node1.idNode] = new_node1
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        new_node1.x = pos[0]
-        new_node1.y = pos[1]
+        new_node1.x = pos[0]-(new_node1.node_width/2)
+        new_node1.y = pos[1]-(new_node1.node_height/2)
         set_first_selected_node(new_node1)
         set_data({ ...data })
       }
     }     
   })
     .on('mousemove', evt => {
+      //Empêche lors du drag de la souris d'avoir 
+      // l'effet sélection de texte sur les labels des éléments de diagramme
+
       //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-         
+      window.event?.stopPropagation()
+      window.event?.preventDefault()
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
+          // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
         if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
           d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', last_node.x + last_node.node_width / 2)
@@ -1472,6 +1477,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         const pos = d3.pointer(event)
         const fsn = (first_selected_node as SankeyNode)    
         if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+          // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
           d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', fsn.x + fsn.node_width / 2)
             .attr('y1', fsn.y + fsn.node_height / 2)
@@ -1481,8 +1487,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
             .style('stroke-width', '2px')
         } else {
           d3.selectAll(' .opensankey #svg #path-flux')
-            .attr('x2', pos[0])
-            .attr('y2', pos[1] - 5)
+            .attr('x2', pos[0]-5)
+            .attr('y2', pos[1]-5)
         }
       }    
       
@@ -1509,8 +1515,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[new_node1.idNode] = new_node1
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        new_node1.x = pos[0]
-        new_node1.y = pos[1]    
+        new_node1.x = pos[0]-(new_node1.node_width/2)
+        new_node1.y = pos[1]-(new_node1.node_height/2)
         //Ajout du lien entre les deux noeuds créés
         const new_link = default_link(data)
         const listIdLink: number[] = []
@@ -1540,8 +1546,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[n_node.idNode] = n_node
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        n_node.x = pos[0]
-        n_node.y = pos[1]
+        n_node.x = pos[0]-(n_node.node_width/2)
+        n_node.y = pos[1]-(n_node.node_height/2)
       
         const { links } = data
         const fsn = (first_selected_node as SankeyNode)
