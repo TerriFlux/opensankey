@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 
 import {delete_link,link_visible,node_color} from './SankeyUtils'
 import { BaseType } from 'd3'
-import { scale,inv_scale,drawCurveFunction,min_width_and_height,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
+import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
 import { dragGNodeEvent } from './SankeyDrag'
 
@@ -29,7 +29,9 @@ export const OpenSankeyDrawNodes = (
   static_sankey:boolean,
   position:'absolute' | 'relative',
   nodeTooltipsContent: (data: SankeyData, d: SankeyNode) => string,
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+
 
 ) => {
   const display_nodes=data.nodes
@@ -341,52 +343,7 @@ export const OpenSankeyDrawNodes = (
     
   
 
-  // Function that search and hide node that hvae 1 input link, 1 output link and have hideLoneNode at true
-  // To do so a link is created and start from the source of the input link to the target of the output link 
-  // finally we hide the node by putting it visibility to false
-  const hiddeLoneNodes=(data:SankeyData)=>{
-    const displayed_product=Object.values(data.nodes).filter(n=>{
-      const is_to_hide=n.hide_lone_node
-      const is_intermediary_node_s=Object.values(n.inputLinksId).filter(l=>{
-        return link_visible(data.links[l],data) && !data.links[l].recycling
-      }).length==1
 
-      const is_intermediary_node_t=Object.values(n.outputLinksId).filter(l=>{
-        return link_visible(data.links[l],data) && !data.links[l].recycling
-      }).length==1
-      return n.display && is_to_hide && is_intermediary_node_s && is_intermediary_node_t
-    })
-    displayed_product.map(n=>{
-      const src=Object.values(n.inputLinksId).filter(l=>link_visible(data.links[l],data))[0]
-      const trgt=Object.values(n.outputLinksId).filter(l=>link_visible(data.links[l],data))[0]
-      const n_l=JSON.parse(JSON.stringify(data.links[src]))
-
-      n_l.idSource=data.links[src].idSource
-      n_l.idTarget=data.links[trgt].idTarget
-      n_l.idLink='linkTmp'+n.idNode+'-'
-        
-      const ind_in_src=data.nodes[data.links[src].idSource].outputLinksId.indexOf(src)
-      const ind_in_trgt=data.nodes[data.links[trgt].idTarget].inputLinksId.indexOf(trgt)
-
-      data.nodes[data.links[src].idSource].outputLinksId.splice(ind_in_src,0,n_l.idLink)
-      data.nodes[data.links[trgt].idTarget].inputLinksId.splice(ind_in_trgt,0,n_l.idLink)
-        
-      data.links[n_l.idLink] = n_l
-      data.nodes[n.idNode].node_visible=false
-    })
-  }
-
-  //Function to restore hidden node when we deselect the hideLonNode property
-
-  const searchAndRestoreLoneNodes=(data:SankeyData)=>{
-    const link_tmp=Object.values(data.links).filter(l=>l.idLink.includes('linkTmp'))
-
-    Object.values(data.nodes).filter(n=>n.display && n.node_visible).forEach(n=>{
-      link_tmp.filter(l=>l.idLink.includes((n.idNode+'-'))).forEach(l=>delete_link(data,l))
-      data.nodes[n.idNode].node_visible=true
-    })
-
-  }
     
   const add_nodes = (
     static_sankey: boolean,
@@ -520,8 +477,7 @@ export const OpenSankeyDrawNodes = (
 
   }
   useEffect(()=>{
-    searchAndRestoreLoneNodes(data)
-    hiddeLoneNodes(data)
+    
     add_nodes(static_sankey)
   })
         

@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue, SankeyLabel,SankeyDrawCurve } from './types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve } from './types'
 import { InferProps } from 'prop-types'
 import { compute_total_offsets, getLinkValue,test_link_value,link_color,delete_node,delete_link,default_node,default_link,link_visible,getTotalInputLink,node_color} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
@@ -988,34 +988,7 @@ export const drawArrows = (
     }
   }
 }
-// Function triggered when a free label is selected, it add a thicker border ans some pointer events
-export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLabel,data:SankeyData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
-  if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
-    sankeyTooltip.style('opacity', 0)
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-      button_ref.current.click()
-    }
-    d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
-    if (multi_selected_label.current.includes(d)) {
-      multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
-    } else {
-      multi_selected_label.current.push(d)
-    }
 
-    //set_multi_selected_label(multi_selected_label)
-    set_data({ ...data })
-    if ( accordion_ref && accordion_ref.current) {
-      let index_LL=-1
-      //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
-      for (let i = 0; i < accordion_ref.current.children.length; i++) {
-        index_LL=(accordion_ref.current.children[i]==(accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
-      }
-      if(index_LL!=-1){
-        (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
-      }
-    }
-  }
-}
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
 export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyNode },
   link:SankeyLink,
@@ -1439,21 +1412,26 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[new_node1.idNode] = new_node1
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        new_node1.x = pos[0]
-        new_node1.y = pos[1]
+        new_node1.x = pos[0]-(new_node1.node_width/2)
+        new_node1.y = pos[1]-(new_node1.node_height/2)
         set_first_selected_node(new_node1)
         set_data({ ...data })
       }
     }     
   })
     .on('mousemove', evt => {
+      //Empêche lors du drag de la souris d'avoir 
+      // l'effet sélection de texte sur les labels des éléments de diagramme
+
       //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-         
+      window.event?.stopPropagation()
+      window.event?.preventDefault()
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
+          // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
         if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
           d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', last_node.x + last_node.node_width / 2)
@@ -1472,6 +1450,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         const pos = d3.pointer(event)
         const fsn = (first_selected_node as SankeyNode)    
         if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+          // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
           d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
             .attr('x1', fsn.x + fsn.node_width / 2)
             .attr('y1', fsn.y + fsn.node_height / 2)
@@ -1481,8 +1460,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
             .style('stroke-width', '2px')
         } else {
           d3.selectAll(' .opensankey #svg #path-flux')
-            .attr('x2', pos[0])
-            .attr('y2', pos[1] - 5)
+            .attr('x2', pos[0]-5)
+            .attr('y2', pos[1]-5)
         }
       }    
       
@@ -1509,8 +1488,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[new_node1.idNode] = new_node1
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        new_node1.x = pos[0]
-        new_node1.y = pos[1]    
+        new_node1.x = pos[0]-(new_node1.node_width/2)
+        new_node1.y = pos[1]-(new_node1.node_height/2)
         //Ajout du lien entre les deux noeuds créés
         const new_link = default_link(data)
         const listIdLink: number[] = []
@@ -1540,8 +1519,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[n_node.idNode] = n_node
         // console.log(d3.event.pageX - document.getElementById('svg').getBoundingClientRect().x + 10)
         const pos = d3.pointer(event)
-        n_node.x = pos[0]
-        n_node.y = pos[1]
+        n_node.x = pos[0]-(n_node.node_width/2)
+        n_node.y = pos[1]-(n_node.node_height/2)
       
         const { links } = data
         const fsn = (first_selected_node as SankeyNode)
@@ -2092,7 +2071,9 @@ const add_center_handle=(
   link:SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   selected_tags: { [tag_group: string]: string[] },
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+
 
 )=>{
   d3.selectAll(' .opensankey #center_handle_' + link.idLink).remove()
@@ -2173,7 +2154,9 @@ const add_shift_handle = (
   selected_tags: { [tag_group: string]: string[] },
   shift_name: string,
   position: string,
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+
 
 ) => {
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
@@ -2210,7 +2193,9 @@ const add_shift_handles = (
   ys: number,
   xt: number,
   yt: number,
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+
 
 ) => {
   let shift_handles
@@ -2230,7 +2215,7 @@ const add_shift_handles = (
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
       add_shift_handle(data,
-        link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],link_text
+        link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],link_text,min_width_and_height
       )
     }
   }
@@ -2256,7 +2241,9 @@ const drawCurve = (
   link: SankeyLink,
   error_msg: { text?: string } | undefined,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+
 
 ): string => {
   if (!link_visible(link, data)) {
@@ -2282,10 +2269,10 @@ const drawCurve = (
   let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags,data,scale,inv_scale)
   // handles_positions(links, link, xs, ys, xt, yt)
   if(link.orientation=='vv' ||link.orientation=='hh'){
-    add_shift_handles(data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text)
+    add_shift_handles(data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height)
     add_drag_link_zone(link,nodes,data,multi_selected_links,data.static_sankey,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text)
   }
-  add_center_handle(data,link,multi_selected_links,nodeTags,link_text)
+  add_center_handle(data,link,multi_selected_links,nodeTags,link_text,min_width_and_height)
 
 
   if (link_value > display_style.filter_label) {
@@ -2496,10 +2483,6 @@ export const min_width_and_height = (data:SankeyData) => {
     width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
   })
 
-  Object.values(data.labels).forEach(n => {
-    height = (n.y) ? Math.max(height, n.y) : height
-    width = (n.x ) ? Math.max(width, n.x) : width
-  })
 
   height = height + 200
   width = width + 200

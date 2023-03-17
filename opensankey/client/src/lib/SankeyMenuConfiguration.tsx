@@ -1,6 +1,6 @@
 import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyLabel } from './types'
+import { SankeyLink, SankeyData, SankeyNode } from './types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 // import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
@@ -19,7 +19,6 @@ export const OpenSankeyConfigurationsMenus = (
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   selected_link:{current:SankeyLink},
-  multi_selected_label:{current: SankeyLabel[] },
   style_to_apply:string,
   set_style_to_apply:(s:string)=>void,
   set_show_nav:(d:boolean)=>void,
