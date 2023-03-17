@@ -1,7 +1,7 @@
-cloudconvert==2.1.0
-wheel
+cairosvg
 flaskfilemanager
-webcolors
 sphinx
 sphinx_rtd_theme
 sphinx-multibuild
+webcolors
+wheel
