@@ -1,11 +1,11 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect,Requireable } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes} from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { setSelectedTags,  delete_link,delete_node} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,eventOnSankeyZone,drawGrid,min_width_and_height,update_scale} from './SankeyDrawFunction'
+import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale} from './SankeyDrawFunction'
 
 window.d3 = d3
 
@@ -17,7 +17,6 @@ const SankeyDrawPropTypes = {
 
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
 
 
   mode_selection: PropTypes.string.isRequired,
@@ -32,11 +31,11 @@ const SankeyDrawPropTypes = {
 
   draw_nodes:PropTypes.element.isRequired,
   draw_links:PropTypes.element.isRequired,
-  draw_labels:PropTypes.element.isRequired,
   draw_legend:PropTypes.element.isRequired,
 
-  set_alt_key_pressed:PropTypes.func.isRequired
+  set_alt_key_pressed:PropTypes.func.isRequired,
 
+  min_width_and_height:PropTypes.func.isRequired
   
 
 }
@@ -62,7 +61,8 @@ export const SankeyDrawDefaultProps = {
   draw_links:<></>,
   draw_labels:<></>,
   draw_legend:<></>,
-  set_alt_key_pressed:()=>false
+  set_alt_key_pressed:()=>false,
+  min_width_and_height:()=>[]
 
 }
 
@@ -74,13 +74,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
-  multi_selected_label = SankeyDrawDefaultProps.multi_selected_label,
   mode_selection,set_mode_selection,first_selected_node,set_first_selected_node,
   show_agregation, set_show_agregation,
   agregation_node,
   is_agregation,
-  draw_nodes,draw_links,draw_labels,draw_legend,
-  set_alt_key_pressed
+  draw_nodes,draw_links,draw_legend,
+  set_alt_key_pressed,min_width_and_height
 }) => {
   set_mode_selection
 
@@ -276,9 +275,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               removeAnimate()
               multi_selected_nodes.current = []
               multi_selected_links.current = []
-              multi_selected_label.current = []
+              // multi_selected_label.current = []
               Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0))
-              Object.values(data.labels).forEach(l=>d3.select(' .opensankey #' + l.idLabel + ' rect').attr('stroke-width',(l.transparent_border)?0:1))
               const visible_links = Object.values(data.links)
               visible_links.forEach(l=> {
                 const sel = d3.selectAll(' .opensankey #gg_' + l.idLink+ ' rect')
@@ -289,7 +287,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           }}>
             <g className='grid' id='grid'></g>
-            {draw_labels}
             {draw_legend}
             {draw_nodes}
             {draw_links}

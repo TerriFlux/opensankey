@@ -2,7 +2,7 @@
 import React, {Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes, SankeyLabelPropTypes } from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
 import { uploadExemple,  } from './SankeyUtils'
 
 
@@ -32,7 +32,6 @@ const ExempleItemPropTypes = {
   current_path : PropTypes.string.isRequired, 
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_label: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired}).isRequired,
   launch: PropTypes.func.isRequired
 }
 
@@ -49,7 +48,7 @@ type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
  * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
  * @returns {*}
  */
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch}: ExempleItemTypes) => {
   return (
     <>
       { ('Files' in exemple_menu) 
@@ -75,7 +74,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
               onClick={() => {
                 multi_selected_nodes.current = []
                 multi_selected_links.current = []
-                multi_selected_label.current = []
                 if (path.includes('xlsx')) {
                   launch(path, url_prefix)
                 } 
@@ -114,7 +112,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     current_path={the_current_path}
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
-                    multi_selected_label={multi_selected_label}
                     launch={launch}
                   />
                 </NavDropdown>

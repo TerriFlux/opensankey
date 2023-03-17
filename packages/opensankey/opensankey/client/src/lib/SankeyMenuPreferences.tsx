@@ -20,53 +20,6 @@ export const OpenSankeyDefaultModalePreferenceContent=(
 )=>{
 
   const ui={
-    'lang':<>{/* <Form.Group as={Row}>
-            <Col xs={1}>
-              <Form.Label  style={{marginTop:'0.5em'}}>{i18n.language.toUpperCase()}</Form.Label>
-            </Col>
-            <Col xs={2}>
-              <Form.Check
-                inline
-                style={{marginTop:'0.5em',marginLeft:'0.em'}}
-                type='switch'
-                checked={i18n.language=='en'}
-                onChange={evt => {
-                  i18n.changeLanguage((evt.target.checked)?'en':'fr')
-                }}
-              />
-            </Col>
-          </Form.Group> */}</>,
-    'police':<>{/* <Form.Group as={Row}>
-        <Col xs={6}>Charger une police d'icones</Col>
-        <Col xs={6}><FormControl
-          //Permet de charger les icon, pour l'instant permet de formater les données issus de https://icomoon.io/
-          type='file'
-          onChange={(evt: ChangeEvent) => {
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                const result = String((e.target as FileReader).result)
-                const js = JSON.parse(result)
-                type name_type = {name:string}   
-                type icon_type = {paths:string[]}   
-                type type1 = {
-                  properties: name_type
-                  icon: icon_type
-                }
-                js.icons.map((d : type1) => {
-                  const name = d.properties.name as string
-                  data.icon_catalog[name] = d.icon.paths[0]
-                })
-              }
-            })()
-            reader.readAsText(files[0])
-            set_data(data)
-          }}
-        >
-        </FormControl>
-        </Col>
-      </Form.Group> */}</>,
     'mode':<ButtonGroup>
       <Button variant={(data.static_sankey)?'success':'outline-success'}
         onClick={() => {
@@ -119,10 +72,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       preferenceCheck('ED',data)
       set_data({ ...data })
     }} />,
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
-      preferenceCheck('LL',data)
-      set_data({ ...data })
-    }} />,
+   
     <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
       preferenceCheck('Leg',data)
       set_data({ ...data })

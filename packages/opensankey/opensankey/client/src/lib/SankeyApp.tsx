@@ -14,7 +14,6 @@ import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
 import {OpenSankeyConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
 import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
-import {OpenSankeyMenuConfigurationFreeLabels} from './SankeyMenuConfigurationLabel'
 import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend'
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
@@ -24,13 +23,12 @@ import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayo
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
-import { OpenSankeyDrawLabels } from './SankeyDrawLabels'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {OpenSankeyMenuBanner} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-
+import {min_width_and_height} from './SankeyDrawFunction'
 
 
 type SankeyAppTypes = {
@@ -71,7 +69,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const selected_node = useRef(default_node(initial_sankey_data))
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
-  const multi_selected_label = useRef([])
   const button_ref = useRef<HTMLLabelElement>(null)
   const accordion_ref = useRef<HTMLDivElement>(null)
   const links_accordion_ref = useRef<HTMLDivElement>(null)
@@ -104,8 +101,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [link_pos,set_link_pos]=useState<string>('right')
   const [tab_colored,set_tab_colored]=useState<boolean>(false)
 
-  // For OpenSankeyMenuConfigurationFreeLabels
-  const [forceUpdate, setForceUpdate] = useState(false)
 
   // For OpenSankeyMenuConfigurationLinks
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
@@ -164,7 +159,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     const data = SankeyUtils.default_sankey_data()
     multi_selected_nodes.current = []
     multi_selected_links.current = []
-    multi_selected_label.current = []
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
@@ -212,7 +206,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     elementTagNameProp='dataTags'
     elementNameProp='links' />
   //- 1.5 Builds Configuration Menus FreeLabel 
-  const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
+  // const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
   //- 1.6 Builds Configuration Menus Legend 
 
   const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
@@ -222,10 +216,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data, set_data,
     nav_item_active,set_nav_item_active,
     nodes_accordion_ref,links_accordion_ref,
-    selected_node,multi_selected_nodes,multi_selected_links,selected_link,multi_selected_label,
+    selected_node,multi_selected_nodes,multi_selected_links,selected_link,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
-    menu_configuration_nodes,menu_configuration_links,menu_configuration_free_labels,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
+    menu_configuration_nodes,menu_configuration_links,[<></>],menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
     false
   )
 
@@ -244,7 +238,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       url_prefix=''
       multi_selected_links={multi_selected_links}
       multi_selected_nodes={multi_selected_nodes}
-      multi_selected_label={multi_selected_label}
       launch={launch}
     /></NavDropdown >
   )
@@ -257,7 +250,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       current_path={''}
       multi_selected_nodes={multi_selected_nodes}
       multi_selected_links={multi_selected_links}
-      multi_selected_label={multi_selected_label}
       launch={launch}
     /></NavDropdown >
   )
@@ -322,7 +314,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text)
+    position,nodeTooltipsContent,link_text,min_width_and_height)
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes)
 
@@ -343,8 +335,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     link_text
   )
 
-  //Call the function that add free labels to the sankey
-  const draw_labels=OpenSankeyDrawLabels(data,set_data,multi_selected_label,accordion_ref,button_ref,alt_key_pressed)
+  
   
   const draw_legend=OpenSankeyDrawLegend(data)
   //Event listener sur les touche du clavier
@@ -471,7 +462,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             data={data}
             set_data={set_data}
             multi_selected_nodes={multi_selected_nodes}
-            multi_selected_label={multi_selected_label}
             multi_selected_links={multi_selected_links}
             // accordion_ref={accordion_ref}
             // nodes_accordion_ref={nodes_accordion_ref}
@@ -493,10 +483,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             is_agregation={is_agregation}
             draw_nodes={draw_nodes}
             draw_links={draw_links}
-            draw_labels={draw_labels}
             draw_legend={draw_legend}
             // alt_key_pressed={alt_key_pressed}
             set_alt_key_pressed={set_alt_key_pressed}
+            min_width_and_height={min_width_and_height}
 
           />) : (<></>)}
         <Modal 
