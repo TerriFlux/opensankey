@@ -188,11 +188,15 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
+  svg.style('border','0px')
+  svg.select('#grid').style('opacity','0')
   svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+  svg.style('border','2px solid #78c2ad')
+  svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
@@ -227,11 +231,15 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
+  svg.style('border','0px')
+  svg.select('#grid').style('opacity','0')
   svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+  svg.style('border','2px solid #78c2ad')
+  svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
