@@ -1,11 +1,11 @@
 import { InferProps} from 'prop-types'
 import React, { Requireable } from 'react'
-import {SankeyLink,/*SankeyPlusNode,*/ SankeyLinkValue,SankeyLabel, TagsCatalog, drawArrowsType, drawCurveType,SankeyData} from 'open-sankey/src/lib/types'
+import {SankeyLink,/*SankeyPlusNode,*/ SankeyLinkValue, TagsCatalog, drawArrowsType, drawCurveType,SankeyData} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
 
@@ -49,7 +49,7 @@ export const sankey_draw_view = (
   view:string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyLink[]},
-  multi_selected_label:{current:SankeyLabel[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
   link_text:(data: SankeyPlusData, d: SankeyLink) => string,
   nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
   linkTooltipsContent:(data : SankeyPlusData,d : SankeyLink) => string,
@@ -1365,7 +1365,7 @@ export const viewsAccordion = (
   set_view:(s:string)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyLink[]},
-  multi_selected_label:{current:SankeyLabel[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
   current_data:SankeyPlusData,
   set_current_data:(d:SankeyPlusData)=>void,
   

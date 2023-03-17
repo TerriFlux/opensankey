@@ -6,6 +6,7 @@ declare module 'open-sankey/dist/SankeyLinkContextMenu';
 declare module 'open-sankey/dist/SankeyNodeContextMenu';
 declare module 'open-sankey/dist/SankeySettingsEdition';
 declare module 'open-sankey/dist/SankeySettingsEditionTags';
+declare module 'open-sankey/dist/SankeyMenuPreferences';
 declare module 'open-sankey/dist/SankeyDraw';
 declare module 'open-sankey/dist/SankeyUtils';
 declare module 'open-sankey/dist/SankeyLayout';
