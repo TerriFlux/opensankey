@@ -241,18 +241,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       launch={launch}
     /></NavDropdown >
   )
-  sankey_menus.splice(3,0,<NavDropdown title={t('Menu.Exemples')} id="exemples" >
-    <ExempleItem
-      exemple_menu={exemple_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
-      url_prefix=''
-      data={data}
-      set_data={set_data}
-      current_path={''}
-      multi_selected_nodes={multi_selected_nodes}
-      multi_selected_links={multi_selected_links}
-      launch={launch}
-    /></NavDropdown >
-  )
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection)
