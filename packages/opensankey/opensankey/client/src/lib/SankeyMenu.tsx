@@ -195,6 +195,8 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+  svg.style('border','2px solid #78c2ad')
+  svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
@@ -236,6 +238,8 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+  svg.style('border','2px solid #78c2ad')
+  svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
