@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyLabel,SankeyDrawCurve } from './types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve } from './types'
 import {removeAnimate,drawArrows,dragNodeRedrawGradient,compute_end_points} from './SankeyDrawFunction'
 import {  getLinkValue, link_visible,test_link_value } from './SankeyUtils'
 
@@ -306,93 +306,6 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Di
     })
 }
 
-/**
- * Function used to drag the text of free label
- * The 'alt' key need to be pressed and the text of the free label dragged
- *
- * @param {boolean} alt_key_pressed
- * @param {SankeyLabel} d
- * @returns {*}
- */
-export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyLabel)=>{
-  return d3.drag<SVGTextElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      if (alt_key_pressed) {
-        d.position_vert = ''
-        d.position_horiz = ''
-        const new_x=event.x,new_y=event.y
-        d3.select(' .opensankey #' + d.idLabel + '_text').attr('x', new_x)
-        d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)  
-        d.x_label = new_x
-        d.y_label = new_y  
-        d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-      }
-    })
-}
-// Function used to drag the free label
-// To be dragged you need to select the free label
-/**
- * Function used to drag the free label
- * To be dragged you need to select the free label
- *
- * @param {{current:SankeyLabel[]}} multi_selected_label
- * @param {SankeyLabel} d
- * @param {SankeyData} data
- * @param {()=>number[]} min_width_and_height
- * @param {()=>void} drawGrid
- * @returns {{}, drawGrid: () => void) => string}
- */
-export const dragLabelEvent=(multi_selected_label:{current:SankeyLabel[]},
-  d:SankeyLabel,
-  data:SankeyData,
-  min_width_and_height:(d:SankeyData)=>number[],
-  drawGrid:(d:SankeyData)=>void
-)=>{
-  return d3.drag<SVGGElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      if(multi_selected_label.current.length!=0 && multi_selected_label.current.includes(d)){
-        multi_selected_label.current.map(l=>{
-          const new_pos_x = l.x + event.dx
-          const new_pos_y = l.y + event.dy
-          l.x = new_pos_x
-          l.y = new_pos_y
-          d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
-          [data.width, data.height] = min_width_and_height(data)
-          if (data.fit_screen) {
-            const svgSankey = d3.select(' .opensankey #svg')
-            svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-          } else {
-            d3.select(' .opensankey #svg').style('width', data.width + 'px')
-          }
-      
-          d3.select(' .opensankey #svg').style('height', data.height + 'px')
-          drawGrid(data)
-        })
-      }
-    })
-}
-/**
- * Function to change the width and height of free label
- * To do that select a free label then dragg the border of it (the visual clue is the multi-direction pointer when hovering the border)
- *
- * @param {SankeyLabel} d
- * @param {SankeyData} data
- * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
- * @returns {*}
- */
-export const dragLabelWidthHeightEvent=(d:SankeyLabel,
-  data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>
-)=>{
-  return d3.drag<SVGRectElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      if(event.dx<100 && event.dy<100){
-        data.labels[d.idLabel].label_width+=event.dx
-        data.labels[d.idLabel].label_height+=event.dy
-        set_data({...data})
-      }
-    })
-}
 
 /**
  * Function that shift the node when dragged (function called by dragGnodeEvent)
