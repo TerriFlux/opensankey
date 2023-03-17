@@ -834,7 +834,6 @@ export const default_node = (
     idNode: 'default',
     shape: 'rect',
     display: true,
-    hide_lone_node:false,
     node_visible: true,
     shape_visible: true,
     label_visible: true,
@@ -1028,7 +1027,7 @@ export const setSelectedTags = (
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = node.hide_lone_node?node.node_visible:(node.display && true)
+    
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
