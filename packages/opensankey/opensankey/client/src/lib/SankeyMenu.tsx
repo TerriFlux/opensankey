@@ -286,13 +286,10 @@ export const OpenSankeyMenus = (
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
   setshowShortcut:(b:boolean)=>void,
-  setshowHelp:(b:boolean)=>void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
-  token:boolean,
-  set_token:(b:boolean)=>void,
   external_edition_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
@@ -366,7 +363,6 @@ export const OpenSankeyMenus = (
     </NavDropdown >,
     <NavDropdown id='Aide' title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
-      <Dropdown.Item onClick={() => setshowHelp(true)}>{t('Menu.as')}</Dropdown.Item>
       <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
     </NavDropdown >,
   ]}
@@ -519,21 +515,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal>
 
   )
-  // Modal designed to show additional help
-  const modalHelp = (
-    <Modal size={'lg'} show={showHelp} onHide={() => setshowHelp(false)}>
-      <Modal.Header closeButton>
-        <Modal.Title>Aide</Modal.Title>
-      </Modal.Header>
-      <Modal.Body >
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setshowHelp(false)}>
-          Close
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  )
+
   const navigate=useNavigate()
   return (
     <>
@@ -554,9 +536,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       { !data.static_sankey ? (
         modalShortcut
       ): (<></>)}
-      { !data.static_sankey ? (
-        modalHelp
-      ): (<></>)}
+
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
