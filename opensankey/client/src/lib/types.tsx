@@ -16,7 +16,7 @@ export const SankeyNodePropTypes = {
   // DISPLAY ATTRIBUTES
   // display controls the agregation desagregation process. 
   display: PropTypes.bool.isRequired,
-  hide_lone_node:PropTypes.bool.isRequired,
+  // hide_lone_node:PropTypes.bool.isRequired,
   // node_visible controls the other process in particular tags manipulations
   node_visible: PropTypes.bool.isRequired,
   // shape_visible and label_visible control the visibility of the element of the node
