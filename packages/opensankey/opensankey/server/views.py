@@ -12,7 +12,6 @@ from flask import session
 
 # System imports
 import openpyxl
-import cloudconvert
 import tempfile
 import os
 import json
@@ -23,8 +22,8 @@ try:
 except Exception:
     pass
 
+from cairosvg import svg2png, svg2pdf
 from threading import Thread
-from cloudconvert.exceptions import exceptions as cc_exceptions
 
 # Sankey modules imports
 import SankeyExcelParser.io_excel as io_excel
@@ -76,68 +75,13 @@ def save_png():
     cwd = os.getcwd()
     # Extract svg data
     data_content = request.files['svg'].read().decode('UTF-8')
-    # Launch conversion with cloud convert
+    # Launch conversion with cairo
+    filename = "tutu.png"
     try:
-        # New api key because last one seem to been deactivated
-        # The api key come from a  free account of cloudconvert that is limited by 25 convert a day
-        cloudconvert.configure(
-            api_key='eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIj\
-            oiZTgwYzcwNDI0N2Q0YzQ2OTcyZGIyNjgzZjE2MWQxYjliNTViMGQ0N2MyOWMwOThiZDU0N2Y1ZDBiM2IyOWRiM\
-            zgyM2ZkMWNjNDlkN2MwYjUiLCJpYXQiOjE2NzY0NTA0NTAuNTMyNjUxLCJuYmYiOjE2NzY0NTA0NTAuNTMyNjUy\
-            LCJleHAiOjQ4MzIxMjQwNTAuNTI1ODEyLCJzdWIiOiI2MjAyNzYzMSIsInNjb3BlcyI6WyJ1c2VyLnJlYWQiLCJ\
-            1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSJdfQ.Hpavt-GIo9-x-p-T2teAiy7pRTYAqB4RMsw\
-            u19cwfTUIsE1dFb6R91aNnDYDquAMztvX2KvK4RT7Q39T84dHzvWRkSzucZT43L7idpKf49TbUuiDJxlJsjeX5n\
-            js7b40VeS-KGSY2SjiSnYXUdAft5kfFX9Efe7fQH4c9A3xXDWyFox3g0SnSO7W40hjtEfPBDa7vQrUAiIfULzh9\
-            jH3FzEH7TAA2ReaXKJdlX_B-6eyTu2TFqS-FKs9yB2ZhzL8-XiLjTKjryOKgYl6VQgsYZsSuwSf9QDmTsoRPQyz\
-            _VkhmIanX0qulqMYQ3zeNHjudq_v7eJDgnwTPL2HPGvZD5eoiOCgMRWTD3ljnC3jNWIBmCmxQ5wPkE4doymx07M\
-            JIowlTRn8GoHo_VxMQXt5N5fVPq1j6fv3vEIXIDyR3FWgcPufMw0q-vgGAFWPuYRgQrLl4JwvA-_tbtAAoMlKSb\
-            0OCVppfx6MLx3QY-Qkqj4olrx8oimIm01YNtbc7JclaCb8AFPqgaTKrq4NVbWBOWK9B7bY6m-iMIpZimZFaz5DC\
-            SNqnIZ-OJKb8HTs8SUXJkxDicA_qaeT1poST_l2qAfANvoUwM5g9EVZAgzNqmoxeabI1EP2C29DlqZ8R0od2_8n\
-            bN7IWE1tlBA96m_BEVYuqLqmz5s1Itxw_iiQKIA',
-            sandbox=False
-        )
-        # Converter job creation
-        cc_job = cloudconvert.Job.create(payload={
-            "tasks": {
-                "import-2": {
-                    "operation": "import/raw",
-                    "file": data_content,
-                    "filename": "tutu.svg"
-                },
-                "task-1": {
-                    "operation": "convert",
-                    "input_format": "svg",
-                    "output_format": "png",
-                    "engine": "inkscape",
-                    "input": [
-                        "import-2"
-                    ],
-                    "text_to_path": False,
-                    "engine_version": "1.1.2"
-                },
-                "export-1": {
-                    "operation": "export/url",
-                    "input": [
-                        "task-1"
-                    ]
-                }
-            }
-        })
-        exported_url_task_id = cc_job['tasks'][2]['id']
-        res = cloudconvert.Task.wait(id=exported_url_task_id)
-        file = res.get("result").get("files")[0]
-        res = cloudconvert.download(filename=file['filename'], url=file['url'])
-    except cc_exceptions.InvalidConfig as e:
-        current_app.logger.error("SAVE_PNG | CloudConvert - Invalid config | {0}".format(e))
-        abort(503)
-    except cc_exceptions.ConnectionError as e:
-        current_app.logger.error("SAVE_PNG | CloudConvert - Connection error | {0}".format(e))
-        abort(503)
+        svg2png(bytestring=data_content, write_to=filename)
     except Exception as e:
         current_app.logger.error('SAVE_PNG | {0}'.format(e))
         abort(500)
-    # os.remove("tutu.svg")
-    filename = "tutu.png"
     return send_file(os.path.join(cwd, filename), as_attachment=True)
 
 
@@ -155,65 +99,13 @@ def save_pdf():
     cwd = os.getcwd()
     # Extract svg data
     data_content = request.files['svg'].read().decode('UTF-8')
-    # Launch conversion with cloud convert
+    # Launch conversion with cairo
+    filename = "tutu.pdf"
     try:
-        # New api key because last one seem to been deactivated
-        # The api key come from a  free account of cloudconvert that is limited by 25 convert a day
-        cloudconvert.configure(api_key='eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpI\
-            joiZTgwYzcwNDI0N2Q0YzQ2OTcyZGIyNjgzZjE2MWQxYjliNTViMGQ0N2MyOWMwOThiZDU0N2Y1ZDBiM2IyOWR\
-            iMzgyM2ZkMWNjNDlkN2MwYjUiLCJpYXQiOjE2NzY0NTA0NTAuNTMyNjUxLCJuYmYiOjE2NzY0NTA0NTAuNTMyN\
-            jUyLCJleHAiOjQ4MzIxMjQwNTAuNTI1ODEyLCJzdWIiOiI2MjAyNzYzMSIsInNjb3BlcyI6WyJ1c2VyLnJlYWQ\
-            iLCJ1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSJdfQ.Hpavt-GIo9-x-p-T2teAiy7pRTYAqB\
-            4RMswu19cwfTUIsE1dFb6R91aNnDYDquAMztvX2KvK4RT7Q39T84dHzvWRkSzucZT43L7idpKf49TbUuiDJxlJ\
-            sjeX5njs7b40VeS-KGSY2SjiSnYXUdAft5kfFX9Efe7fQH4c9A3xXDWyFox3g0SnSO7W40hjtEfPBDa7vQrUAi\
-            IfULzh9jH3FzEH7TAA2ReaXKJdlX_B-6eyTu2TFqS-FKs9yB2ZhzL8-XiLjTKjryOKgYl6VQgsYZsSuwSf9QDm\
-            TsoRPQyz_VkhmIanX0qulqMYQ3zeNHjudq_v7eJDgnwTPL2HPGvZD5eoiOCgMRWTD3ljnC3jNWIBmCmxQ5wPkE\
-            4doymx07MJIowlTRn8GoHo_VxMQXt5N5fVPq1j6fv3vEIXIDyR3FWgcPufMw0q-vgGAFWPuYRgQrLl4JwvA-_t\
-            btAAoMlKSb0OCVppfx6MLx3QY-Qkqj4olrx8oimIm01YNtbc7JclaCb8AFPqgaTKrq4NVbWBOWK9B7bY6m-iMI\
-            pZimZFaz5DCSNqnIZ-OJKb8HTs8SUXJkxDicA_qaeT1poST_l2qAfANvoUwM5g9EVZAgzNqmoxeabI1EP2C29D\
-            lqZ8R0od2_8nbN7IWE1tlBA96m_BEVYuqLqmz5s1Itxw_iiQKIA', sandbox=False)
-
-        tutu = cloudconvert.Job.create(payload={
-            "tasks": {
-                "import-2": {
-                    "operation": "import/raw",
-                    "file": data_content,
-                    "filename": "tutu.svg"
-                },
-                "task-1": {
-                    "operation": "convert",
-                    "input_format": "svg",
-                    "output_format": "pdf",
-                    "engine": "inkscape",
-                    "input": [
-                        "import-2"
-                    ],
-                    "text_to_path": False,
-                    "engine_version": "1.1.2"
-                },
-                "export-1": {
-                    "operation": "export/url",
-                    "input": [
-                        "task-1"
-                    ]
-                }
-            }
-        })
-        exported_url_task_id = tutu['tasks'][2]['id']
-        res = cloudconvert.Task.wait(id=exported_url_task_id)
-        file = res.get("result").get("files")[0]
-        res = cloudconvert.download(filename=file['filename'], url=file['url'])
-    except cc_exceptions.InvalidConfig as e:
-        current_app.logger.error("SAVE_PDF | CloudConvert - Invalid config | {0}".format(e))
-        abort(503)
-    except cc_exceptions.ConnectionError as e:
-        current_app.logger.error("SAVE_PDF | CloudConvert - Connection error | {0}".format(e))
-        abort(503)
+        svg2pdf(bytestring=data_content, write_to=filename)
     except Exception as e:
         current_app.logger.error('SAVE_PDF | {0}'.format(e))
         abort(500)
-    # os.remove("tutu.svg")
-    filename = "tutu.pdf"
     return send_file(os.path.join(cwd, filename), as_attachment=True)
 
 
