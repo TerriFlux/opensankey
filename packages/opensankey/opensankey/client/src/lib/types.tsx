@@ -145,33 +145,7 @@ export const SankeyLinkPropTypes = {
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
 
 
-export const SankeyLabelPropTypes = {
-  // identification
-  idLabel: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  transparent:PropTypes.bool.isRequired,
-  color:PropTypes.string.isRequired,
-  color_border:PropTypes.string.isRequired,
-  transparent_border:PropTypes.bool.isRequired,
-  position_vert:PropTypes.string.isRequired,
-  position_horiz:PropTypes.string.isRequired,
-  isTextHTML:PropTypes.bool.isRequired,
 
-  font_size:PropTypes.number.isRequired,
-  font_weight:PropTypes.bool.isRequired,
-  font_style:PropTypes.bool.isRequired,
-  font_uppercase:PropTypes.bool.isRequired,
-
-  label_width: PropTypes.number.isRequired,
-  label_height: PropTypes.number.isRequired,
- 
-  x: PropTypes.number.isRequired,
-  y: PropTypes.number.isRequired,
-  x_label: PropTypes.number.isRequired,
-  y_label: PropTypes.number.isRequired,
-}
-
-export type SankeyLabel = InferProps<typeof SankeyLabelPropTypes>
 
 export const TagsGroupPropTypes = {
   group_name: PropTypes.string.isRequired,
@@ -225,7 +199,6 @@ export const SankeyDataPropTypes = {
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  labels: PropTypes.objectOf(PropTypes.shape(SankeyLabelPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
     filter: PropTypes.number.isRequired,
     filter_label: PropTypes.number.isRequired,
