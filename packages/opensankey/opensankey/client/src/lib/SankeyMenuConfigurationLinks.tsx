@@ -50,7 +50,7 @@ export const OpenSankeyMenuConfigurationLinks = (
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
     
   }
-  if (Object.keys(fluxTags).length > 0){
+  if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
     ui['tags']=SankeyMenuConfigurationLinksTags(data,multi_selected_links,set_data,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,t)
   }
  
