@@ -590,7 +590,6 @@ export const updateLayout = (
 
   if(mode.includes('attrGeneral')){
     // data.icon_catalog = new_layout.icon_catalog
-    Object.assign(data.labels,new_layout.labels)
     data.colorMap = new_layout.colorMap
     data.user_scale = new_layout.user_scale
     data.legend_position = new_layout.legend_position;

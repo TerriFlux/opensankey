@@ -397,10 +397,10 @@ export const OpenSankeyMenuBanner = (
       width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
     })
 
-    Object.values(data.labels).forEach(n => {
-      height = (n.y) ? Math.max(height, n.y) : height
-      width = (n.x ) ? Math.max(width, n.x) : width
-    })
+    // Object.values(data.labels).forEach(n => {
+    //   height = (n.y) ? Math.max(height, n.y) : height
+    //   width = (n.x ) ? Math.max(width, n.x) : width
+    // })
 
     height = height + 200
     width = width + 200

@@ -592,7 +592,6 @@ export const default_sankey_data = (): SankeyData => {
     fit_screen: window.SankeyToolsStatic,
 
     // icon_catalog: {},
-    labels: {},
 
     left_shift: 0.4,
     right_shift: 0.5,

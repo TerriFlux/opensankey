@@ -265,12 +265,12 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
 
 const goToUserDoc = () => {
   const path = window.location.href
-  let url = path + 'doc'
+  const url = path + 'doc'
   fetch(url, {
     method:'GET'
   }).then((response) => {
     if(response.redirected){
-      return window.open(response.url, '_blank');
+      return window.open(response.url, '_blank')
     }
   }).then( win => win?.focus() )
 }
