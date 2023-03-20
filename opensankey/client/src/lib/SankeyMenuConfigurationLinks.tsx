@@ -35,7 +35,8 @@ export const OpenSankeyMenuConfigurationLinks = (
   tags_group_key:string,
   set_tags_group_key:React.Dispatch<React.SetStateAction<string>>,
   tags_selected:{[k: string]: string},
-  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>
+  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+  additional_data_element:JSX.Element[]
 
 ) => {
   
@@ -44,7 +45,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 
 
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t),
+    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element),
     'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t),
     'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)

@@ -82,11 +82,9 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 export const SankeyLinkValueTypes =
 {
   value: PropTypes.any,
-  is_percent:PropTypes.bool.isRequired,
-  percent:PropTypes.number.isRequired,
+  // is_percent:PropTypes.bool.isRequired,
+  // percent:PropTypes.number.isRequired,
   display_value: PropTypes.string.isRequired,
-  // corresponding to tag_favorite. to be used in conjunction with colorTag
-  //  const selected_tag = getLinkValue(data,l.idLink).tags[l.colorTag]
   tags: PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
   // for previous_value, data_value, data_source, data_period, mini, maxi ...
   extension: PropTypes.objectOf(PropTypes.string.isRequired)
@@ -258,7 +256,8 @@ export type drawCurveType = (
   link: SankeyLink,
   error_msg: { text?: string } | undefined,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => string
 
 export type drawArrowsType = (

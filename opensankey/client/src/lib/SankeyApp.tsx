@@ -18,7 +18,7 @@ import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-import { default_link, default_node, link_text } from './SankeyUtils'
+import { default_link, default_node, link_text,getLinkValue } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
@@ -59,7 +59,7 @@ typeof globalThis & {
 }
 
 export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo} : SankeyAppTypes) => {
-
+  exemple_menu
 
   //- All
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -144,7 +144,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   }
   const [showShortcut, setshowShortcut] = useState(false)
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
-  const [showHelp, setshowHelp] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
 
   //- Styles
@@ -179,7 +178,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1.2 Builds Configuration Menus Node 
   //- 1.2.1 Builds Configuration Menus Node Attributes 
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes)
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
   //- 1.2.1 Builds Configuration Menus Node Tags 
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -190,7 +189,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
  
   //- 1.3 Builds Configuration Menus Links 
   //- 1.3.1 Builds Configuration Menus Link Attributes 
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected)
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[])
   //- 1.3.2 Builds Configuration Menus Link tags 
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -302,9 +301,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text,min_width_and_height)
+    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue)
 
-  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes)
+  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
   
   
@@ -320,12 +319,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     alt_key_pressed,
     data.static_sankey,position,node_arrow_visible,
     linkTooltipsContent,
-    link_text
+    link_text,getLinkValue
   )
 
   
   
-  const draw_legend=OpenSankeyDrawLegend(data)
+  const draw_legend=OpenSankeyDrawLegend(data,getLinkValue)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
@@ -420,8 +419,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           show_save_json={show_save_json}
           showPreference={showPreference}
           show_publish_dialog={show_publish_dialog}
-          showHelp={showHelp}
-          setshowHelp={setshowHelp}
           showShortcut={showShortcut}
           setshowShortcut={setshowShortcut}
           set_show_excel_dialog={set_show_excel_dialog}
@@ -475,7 +472,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             // alt_key_pressed={alt_key_pressed}
             set_alt_key_pressed={set_alt_key_pressed}
             min_width_and_height={min_width_and_height}
-
+            getLinkValue={getLinkValue}
           />) : (<></>)}
         <Modal 
           bsSize="large" 

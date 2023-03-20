@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Row, Form, FormControl, FormLabel, Col, Tabs, Button, ButtonGroup, Dropdown,FormCheck,FormGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes } from './types'
+import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes,SankeyLinkValue } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { cut_name,default_node,delete_node } from './SankeyUtils'
 import * as d3 from 'd3'
@@ -40,6 +40,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
   link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
   
@@ -53,7 +54,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   }
 
   if (multi_selected_nodes.current.length == 1) {
-    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored)
+    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
   }
   return ui
 }
