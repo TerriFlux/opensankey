@@ -1,7 +1,7 @@
 import React from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tab} from 'react-bootstrap'
 import { SankeyData, SankeyLink, SankeyLinkValue } from './types'
-
+import {value_selected_parameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 
 import {TFunction} from 'i18next'
@@ -15,6 +15,7 @@ export const SankeyMenuConfigurationLinksData = (
   multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   t:TFunction,
+  additional_data_element:JSX.Element[]
 
 )=>{
 
@@ -27,32 +28,7 @@ export const SankeyMenuConfigurationLinksData = (
     return toPrecision
   }
   
-  const value_selected_parameter = (): SankeyLinkValue => {
-    if(multi_selected_links.current.length==0){
-      return ({} as SankeyLinkValue)
-    }else{
-      if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
-        console.log(multi_selected_links)
-        let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
-        Object.values(tags_selected).map(tag_selected => {
-          if (val[tag_selected] === undefined) {
-            val[tag_selected] = {}
-          }
-          val = val[tag_selected]
-        })
-        return val
-      }
-      let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
-      Object.values(tags_selected).map(tag_selected => {
-        if (val[tag_selected] === undefined) {
-          val[tag_selected] = {'display_value': '',tags:{},value:0}
-        }
-        val = val[tag_selected]
-      })
-      return val
-    }
-    
-  }
+ 
   
   const test_value=(v:number | null | undefined)=>{
     return ((v || v===0)&& v!==undefined) ? v:''
@@ -65,8 +41,6 @@ export const SankeyMenuConfigurationLinksData = (
         //Définition des valeurs selon les paramètre dataTags
         Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
           if (Object.keys(dataTag.tags).length != 0) {
-            // console.log(dataTagKey)
-            // console.log(tags_selected)
             return (
               <Row key={dataTagKey}>
                 <Col >
@@ -100,17 +74,17 @@ export const SankeyMenuConfigurationLinksData = (
 
         })}
       <Col>
-        <FormLabel style={{color:(!value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>{t('Flux.data.vpp')}</FormLabel>
+        <FormLabel>{t('Flux.data.vpp')}</FormLabel>
       </Col>
       <Col>
         <Form.Control
-          disabled={value_selected_parameter().is_percent}
+          
           type='text'
-          value={test_value(value_selected_parameter().value)}
+          value={test_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)}
           onChange={
             evt => {
               if(evt.target.value!=='' && !isNaN(+evt.target.value )){
-                const was_empty=test_value(value_selected_parameter().value)===''
+                const was_empty=test_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)===''
                 let val = Object(selected_link.current.value)
                 multi_selected_links.current.map(d => {
                   d.dashed=(was_empty)?false:d.dashed
@@ -167,61 +141,7 @@ export const SankeyMenuConfigurationLinksData = (
         </Col>
       </Row>
 
-      <Row>
-        <Col>
-          <FormCheck
-            type='checkbox'
-            checked={value_selected_parameter().is_percent}
-            label='Valeur proportionnel à la valeur du noeuds source'
-            onChange={evt=>{
-              let val = Object(selected_link.current.value)
-              multi_selected_links.current.map(d => {
-              
-                val = d.value
-                Object.values(tags_selected).forEach(tag => {
-                  if (val[tag] === undefined) {
-                    val[tag] = {}
-                  }
-                  val = val[tag]
-                })
-                val.is_percent = evt.target.checked
-  
-              })
-              set_data({...data})
-            }}
-          />
-        </Col>
-      </Row>
-      <Row >
-        <Col xs={3}>
-          <FormLabel style={{color:(value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>Pourcent</FormLabel>
-        </Col>
-        <Col xs={3}>
-          <FormLabel style={{color:(value_selected_parameter().is_percent)?'#555555':'#DADADA'}}>{value_selected_parameter().percent}</FormLabel>
-        </Col>
-        <Col>
-          <Form.Range
-            disabled={!value_selected_parameter().is_percent}
-            value={value_selected_parameter().percent}
-            onChange={
-              evt => {
-                let val = Object(selected_link.current.value)
-                multi_selected_links.current.map(d => {
-                  val = d.value
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.percent = +evt.target.value
-                })  
-                set_data({ ...data })
-              }
-            }
-          />
-        </Col>
-      </Row>
+      
       <Row >
         <Col>
           <FormLabel>{t('Flux.data.affichage')}</FormLabel>
@@ -229,7 +149,7 @@ export const SankeyMenuConfigurationLinksData = (
         <Col>
           <Form.Control
             type='text'
-            value={value_selected_parameter().display_value}
+            value={value_selected_parameter(data,multi_selected_links,tags_selected).display_value}
             onChange={
               evt => {
                 let val = Object(selected_link.current.value)
@@ -250,6 +170,8 @@ export const SankeyMenuConfigurationLinksData = (
           />
         </Col>
       </Row>
+
+      {additional_data_element}
 
     </Form>
   </Tab>

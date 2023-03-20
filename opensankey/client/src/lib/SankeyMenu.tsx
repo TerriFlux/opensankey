@@ -91,8 +91,6 @@ const MenuPropTypes = {
   set_show_publish_dialog: PropTypes.func.isRequired,
   showShortcut:PropTypes.bool.isRequired,
   setshowShortcut: PropTypes.func.isRequired,
-  showHelp:PropTypes.bool.isRequired,
-  setshowHelp: PropTypes.func.isRequired,
 
   menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
@@ -413,7 +411,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
     showShortcut, setshowShortcut,
-    showHelp, setshowHelp,
     menus,
     show_modalTemplate,
     set_show_modalTemplate,

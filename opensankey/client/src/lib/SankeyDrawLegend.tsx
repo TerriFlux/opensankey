@@ -1,12 +1,13 @@
-import { SankeyData } from './types'
+import { SankeyData,SankeyLinkValue } from './types'
 import React, { useEffect} from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { getLinkValue,link_visible} from './SankeyUtils'
+import { link_visible} from './SankeyUtils'
 
 export const OpenSankeyDrawLegend = (
   data:SankeyData, 
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   // Function that add legend of tags
@@ -53,7 +54,7 @@ export const OpenSankeyDrawLegend = (
             if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
                 const tmp=getLinkValue(data,l.idLink)
-                return link_visible(l,data) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
+                return link_visible(l,data,getLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
               }).length
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){

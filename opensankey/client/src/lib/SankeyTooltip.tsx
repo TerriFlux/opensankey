@@ -1,5 +1,5 @@
-import { SankeyNode, SankeyLink, SankeyData } from './types'
-import { getLinkValue, toPrecision,link_visible } from './SankeyUtils'
+import { SankeyNode, SankeyLink, SankeyData,SankeyLinkValue } from './types'
+import { toPrecision,link_visible } from './SankeyUtils'
 
 
 /**
@@ -17,7 +17,9 @@ function write_children_table(
   desagregate_target_nodes : SankeyNode[], 
   data: SankeyData,
   t: string, 
-  l: SankeyLink
+  l: SankeyLink,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 ) {
   let header_written = false
   desagregate_source_nodes.forEach(n1 => {
@@ -67,7 +69,9 @@ function write_children_table(
  */
 export const  linkTooltipsContent = (
   data : SankeyData,
-  d : SankeyLink | SankeyNode
+  d : SankeyLink | SankeyNode,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 ) => {  
   const l = d as SankeyLink
   let t = '<p class="title" style="margin-bottom: 5px;">'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' → ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</p>'
@@ -138,7 +142,7 @@ export const  linkTooltipsContent = (
     desagregate_source_nodes.push(source_node)
   }
   if (children) {
-    t = write_children_table(desagregate_source_nodes, desagregate_target_nodes, data, t, l)
+    t = write_children_table(desagregate_source_nodes, desagregate_target_nodes, data, t, l,getLinkValue)
   }
 
   return t
@@ -154,7 +158,8 @@ export const  linkTooltipsContent = (
  */
 export const nodeTooltipsContent = (
   data : SankeyData,
-  d : SankeyNode
+  d : SankeyNode,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const n = d as SankeyNode
   const {nodes} = data
@@ -178,7 +183,7 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!link_visible(link,data)) {
+      if (!link_visible(link,data,getLinkValue)) {
         continue
       }
       const link_info = getLinkValue(data,link.idLink)
@@ -211,7 +216,7 @@ export const nodeTooltipsContent = (
       if (link_info.display_value == 'missing') {
         continue
       }
-      if (!link_visible(link,data)) {
+      if (!link_visible(link,data,getLinkValue)) {
         continue
       }
       
@@ -243,7 +248,7 @@ export const nodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!link_visible(link,data)) {
+      if (!link_visible(link,data,getLinkValue)) {
         continue
       }
       const link_info = getLinkValue(data,link.idLink)
@@ -274,7 +279,7 @@ export const nodeTooltipsContent = (
           return ''
         }
         const link_info = getLinkValue(data,link.idLink)
-        if (!link_visible(link,data)) {
+        if (!link_visible(link,data,getLinkValue)) {
           continue
         }
         let the_value = link_info.value
