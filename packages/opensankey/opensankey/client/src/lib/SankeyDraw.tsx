@@ -35,7 +35,8 @@ const SankeyDrawPropTypes = {
 
   set_alt_key_pressed:PropTypes.func.isRequired,
 
-  min_width_and_height:PropTypes.func.isRequired
+  min_width_and_height:PropTypes.func.isRequired,
+  getLinkValue:PropTypes.func.isRequired
   
 
 }
@@ -62,7 +63,8 @@ export const SankeyDrawDefaultProps = {
   draw_labels:<></>,
   draw_legend:<></>,
   set_alt_key_pressed:()=>false,
-  min_width_and_height:()=>[]
+  min_width_and_height:()=>[],
+  getLinkValue:()=>[]
 
 }
 
@@ -79,7 +81,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   is_agregation,
   draw_nodes,draw_links,draw_legend,
-  set_alt_key_pressed,min_width_and_height
+  set_alt_key_pressed,min_width_and_height,
+  getLinkValue
 }) => {
   set_mode_selection
 
@@ -95,7 +98,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .attr('class', 'sankey-tooltip')
 
 
-  setSelectedTags(data)
+  setSelectedTags(data,getLinkValue)
  
   
   sankeyTooltip

@@ -168,15 +168,11 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
         method: 'POST',
         body: ''
       }
-      //console.log('fetch')
       fetch(url, fetchData).then(
         function(response) {
-          //console.log('response')
           if(response.ok) {
-            //console.log('response ok')
             response.json().then(
               function (data) {
-                //console.log('setResult')
                 setResult(data.output)
               }
             )

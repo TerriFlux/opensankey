@@ -1,10 +1,10 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog} from './types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue} from './types'
 import React, { useEffect,Requireable } from 'react'
 // import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import * as d3 from 'd3'
-import {  getLinkValue,test_link_value,link_color,link_visible} from './SankeyUtils'
-import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray } from './SankeyDrawFunction'
+import {  test_link_value,link_color,link_visible} from './SankeyUtils'
+import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 // import { linkTooltipsContent } from './SankeyTooltip'
 
@@ -25,9 +25,11 @@ export const OpenSankeyDrawLinks = (
   static_sankey:boolean,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
-  linkTooltipsContent:(data: SankeyData, l: SankeyLink) => string,
-  link_text:(data: SankeyData, d: SankeyLink) => string,
-  
+  linkTooltipsContent:(data: SankeyData, l: SankeyLink,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 
 ) => {
 
@@ -325,7 +327,7 @@ export const OpenSankeyDrawLinks = (
       }
       )  
     }
-    return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data) as string
+    return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data,getLinkValue) as string
   } 
 
   // Function that compute the link width
@@ -348,7 +350,7 @@ export const OpenSankeyDrawLinks = (
     if (is_free) {
       return 5
     }  
-    let link_value = test_link_value(data, nodes, l)
+    let link_value = test_link_value(data, nodes, l,getLinkValue)
     link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)  
     //Zones limite à ne pas êtres
     const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
@@ -378,13 +380,11 @@ export const OpenSankeyDrawLinks = (
     if (draw_warning && !l.recycling) {
       return '1px'
     } else {  
-      const link_value = test_link_value(data, display_nodes, l)
+      const link_value = test_link_value(data, display_nodes, l,getLinkValue)
       const tmp =(link_value=='')?1:link_value
-      // console.log(scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0)))
       return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))  
     }
   }
-  
 
   // Function that return the side of link label
   const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
@@ -458,13 +458,13 @@ export const OpenSankeyDrawLinks = (
       // On gere la visibilité directement sur gg_nodes avec un display <inline />
       .style('display', (d) => {
         let display: string
-        if (link_visible(d, data)) { display = 'inline' } else { display = 'none' }
+        if (link_visible(d, data,getLinkValue)) { display = 'inline' } else { display = 'none' }
         return display
       })
       .attr('pointer-events', 'auto')
       .attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
       .attr('stroke-dasharray', d => {
-        return strokeDasharray(d,data)
+        return strokeDasharray(d,data,getLinkValue)
       })
 
     const paths = gg_links.append('path')
@@ -484,7 +484,7 @@ export const OpenSankeyDrawLinks = (
       .attr('style',d=> 'font-weight: bold; font-size:' + d.label_font_size + 'px;')
       .attr('fill', l => {
         if (l.text_color === l.color) {
-          return link_color(l,data) as string
+          return link_color(l,data,getLinkValue) as string
         }
         return l.text_color
       })
@@ -517,7 +517,7 @@ export const OpenSankeyDrawLinks = (
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
         
-        return  link_visible(d, data) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
+        return  link_visible(d, data,getLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
       })
 
     if (!static_sankey ) {
@@ -563,7 +563,7 @@ export const OpenSankeyDrawLinks = (
           return
         }
         sankeyTooltip
-          .html(linkTooltipsContent(data, d))
+          .html(linkTooltipsContent(data, d,getLinkValue))
         
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
@@ -616,14 +616,14 @@ export const OpenSankeyDrawLinks = (
       .filter(l=>arrowVisible(l as SankeyLink))
       .each(function (l) {
         const n =data.nodes[(l as SankeyLink).idTarget]
-        drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags,scale,inv_scale,min_thickness)
+        drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags,scale,inv_scale,min_thickness,getLinkValue)
       })
 
     paths.attr('d', d => {
-      setNodesHeight(data,display_nodes, display_links, d, data.nodeTags)
+      setNodesHeight(data,display_nodes, display_links, d, data.nodeTags,getLinkValue)
       return drawCurveFunction.curve(data,
         display_nodes, display_links, display_style,
-        data.nodeTags, d, error_msg,multi_selected_links,link_text
+        data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
       )
     })
 
@@ -633,7 +633,7 @@ export const OpenSankeyDrawLinks = (
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue)
         }
       })
     if (error_msg && error_msg.text) {
@@ -679,7 +679,7 @@ export const OpenSankeyDrawLinks = (
                   return drawCurveFunction.curve(data,
                     display_nodes, display_links, display_style,
                     data.nodeTags, link,
-                    error_msg,multi_selected_links,link_text
+                    error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
                   )
                 }
               )
@@ -795,8 +795,8 @@ export const OpenSankeyDrawLinks = (
       return
     }
     const node = nodes[linked_node.node_id]
-    let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && link_visible(data.links[id],data) })
-    let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data))
+    let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && link_visible(data.links[id],data,getLinkValue) })
+    let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data,getLinkValue))
     const link_dragged=data.links[idLink]
     let io=''
         
@@ -938,7 +938,7 @@ export const OpenSankeyDrawLinks = (
           }
         }
       }
-      drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+      drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
     }
   }
 

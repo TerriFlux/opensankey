@@ -34,8 +34,8 @@ export const addDataTags = (
       v[listKey[i]] = {
         value: v.value as unknown as number,
         display_value: v.display_value as unknown as string,
-        is_percent:false as unknown as boolean,
-        percent:0 as unknown as number,
+        // is_percent:false as unknown as boolean,
+        // percent:0 as unknown as number,
         tags: {},
         extension: {}
       }
@@ -86,8 +86,8 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: '',
-      is_percent:false,
-      percent:0,
+      // is_percent:false,
+      // percent:0,
       tags: {},
       extension: {}
     }
@@ -108,8 +108,8 @@ export const getLinkValue = (
       value: 0,
       display_value: '',
       tags: {},
-      is_percent:false,
-      percent:0,
+      // is_percent:false,
+      // percent:0,
       extension: {}
     }
   }
@@ -125,8 +125,8 @@ export const getLinkValue = (
         value: 0,
         display_value: '',
         tags: {},
-        is_percent:false,
-        percent:0,
+        // is_percent:false,
+        // percent:0,
         extension: {}
       }      
     }
@@ -162,26 +162,7 @@ export const findMaxLinkValue = (
   return new_max_node_value
 }
 
-/**
- * Return the sum of links value visible incoming to the node
- *
- * @param {SankeyData} data
- * @param {SankeyNode} node
- * @returns {number}
- */
-export const getTotalInputLink=(data:SankeyData,
-  node:SankeyNode)=>{
-  let total = 0
-  node.inputLinksId.forEach(element => {
-    // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
-    if (data.nodes[data.links[element].idSource].node_visible && data.nodes[data.links[element].idTarget].node_visible) {
-      const tmp = getLinkValue(data, element).value
-      
-      total += (tmp)?tmp:0
-    }
-  })
-  return total
-}
+
 
 /**
  *  Compute the sum of all link visible
@@ -193,6 +174,7 @@ export const getTotalInputLink=(data:SankeyData,
 export const getTotalLinks = (
   data: SankeyData,
   Links: string[],
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   let total = 0
   Links.forEach(element => {
@@ -206,23 +188,18 @@ export const getTotalLinks = (
   return total
 }
 
-/**
- *
- * @param {(t:number)=>number} inv_scale
- * @param {SankeyNode} node
- * @param {SankeyData} data
- * @param {{ [tag_group: string]: string[] }} selected_tags
- * @param {(data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string} test_link_value
- * @param {(SankeyLink | undefined)} [ref_link=undefined]
- * @returns {number[]}
- */
+
 export const compute_total_offsets = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
   selected_tags: { [tag_group: string]: string[] },
-  test_link_value: (data:SankeyData, node: { [node_id: string]: SankeyNode }, d: SankeyLink, selected_tags: { [tag_group: string]: string[] }) => string,
-  ref_link: SankeyLink | undefined = undefined
+  test_link_value: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  ) => SankeyLinkValue | object | string,
+  ref_link: SankeyLink | undefined = undefined,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 ) => {
   const { nodes, links} = data
 
@@ -352,7 +329,7 @@ export const compute_total_offsets = (
       if (top_order !== -1) {
         the_id = top_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -377,7 +354,7 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -403,7 +380,7 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -429,7 +406,7 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id], selected_tags)
+      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -472,7 +449,11 @@ export const toPrecision = (
 export const link_text = (
   data: SankeyData,
   d: SankeyLink,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
+  if(getLinkValue===undefined){
+    console.log('stop')
+  }
   let the_link_value = getLinkValue(data, d.idLink).value
   const str_display = String(getLinkValue(data, d.idLink).display_value)
   if (str_display !== '' && str_display!=='*') {
@@ -493,14 +474,10 @@ export const link_text = (
   return the_link_value
 }
 
-/**
- *
- * @param {SankeyData} data
- * @param {{ [node_id: string]: SankeyNode }} nodes
- * @param {SankeyLink} d
- * @returns {*}
- */
-export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink) => {
+
+export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+) => {
   const { dataTags } = data
   if (data.show_structure == 'structure' ) {
     const inv_scale = d3.scaleLinear()
@@ -634,7 +611,9 @@ export const default_sankey_data = (): SankeyData => {
  * @param {SankeyData} data_s
  * @returns {*}
  */
-export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
+export const link_color = (l: SankeyLink,data_s:SankeyData,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+) => {
   let colorLink
   if (l.colorParameter === 'groupTag') {
     //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
@@ -758,7 +737,9 @@ export   const link_color = (l: SankeyLink,data_s:SankeyData) => {
  * @param {SankeyData} data_s
  * @returns {boolean}
  */
-export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
+export const link_visible = (l: SankeyLink, data_s: SankeyData,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+) => {
   const { dataTags, fluxTags } = data_s
   if (data_s.show_structure === 'structure') {
     if (data_s.nodes[l.idSource].position === 'relative' || data_s.nodes[l.idTarget].position === 'relative') {
@@ -811,7 +792,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData) => {
   if (!visible) {
     return false
   }
-  if (test_link_value(data_s, data_s.nodes, l) === 0) {
+  if (test_link_value(data_s, data_s.nodes, l,getLinkValue) === 0) {
     if (data_s.display_style.null_flux) {
       return true
     }
@@ -1020,7 +1001,9 @@ export const delete_node = (
  * @param {SankeyData} sankey_data
  */
 export const setSelectedTags = (
-  sankey_data: SankeyData
+  sankey_data: SankeyData,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 ) => {
 
   const { nodeTags } = sankey_data
@@ -1052,7 +1035,7 @@ export const setSelectedTags = (
     }
   })
   if (!sankey_data.show_structure) {
-    hideNullFluxNodes(sankey_data)
+    hideNullFluxNodes(sankey_data,getLinkValue)
   }
 }
 
@@ -1248,7 +1231,9 @@ export const set_nodes_level = (
  * @param {SankeyData} sankey_data
  */
 export const hideNullFluxNodes = (
-  sankey_data: SankeyData
+  sankey_data: SankeyData,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
 ) => {
   const { nodes, links } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(nodes).filter(n => n.display)
