@@ -1,9 +1,9 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode} from './types'
+import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
 import React, { useEffect,Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {delete_link,link_visible,node_color} from './SankeyUtils'
+import {node_color} from './SankeyUtils'
 import { BaseType } from 'd3'
 import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
@@ -28,9 +28,12 @@ export const OpenSankeyDrawNodes = (
   alt_key_pressed:boolean,
   static_sankey:boolean,
   position:'absolute' | 'relative',
-  nodeTooltipsContent: (data: SankeyData, d: SankeyNode) => string,
-  link_text:(data: SankeyData, d: SankeyLink) => string,
+  nodeTooltipsContent: (data: SankeyData, d: SankeyNode,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  link_text:(data: SankeyData, d: SankeyLink,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 
 ) => {
@@ -48,7 +51,7 @@ export const OpenSankeyDrawNodes = (
     const display_nodes=data.nodes
     const display_links=data.links
     Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
-      setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale)
+      setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue)
       d3.select(' .opensankey #' + n.idNode)
         .attr('fill-opacity',0)
     })
@@ -311,7 +314,7 @@ export const OpenSankeyDrawNodes = (
     if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
-        .html(nodeTooltipsContent(data, d as SankeyNode))
+        .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
     }
   }
     
@@ -394,7 +397,7 @@ export const OpenSankeyDrawNodes = (
 
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text,getLinkValue))
       }
     }
     // if node have a unique groupTag then it control the shape of the node
@@ -467,7 +470,7 @@ export const OpenSankeyDrawNodes = (
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale))
+    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue))
         
     const nodes_not_to_scale=ggg_nodes
       .filter(d=>d.not_to_scale)

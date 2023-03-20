@@ -1,4 +1,4 @@
-import { SankeyData, SankeyNode } from './types'
+import { SankeyData, SankeyNode,SankeyLinkValue } from './types'
 import React, { useEffect } from 'react'
 import * as d3 from 'd3'
 
@@ -11,6 +11,7 @@ export const OpenSankeyDrawNodesLabel = (
   data:SankeyData, 
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_nodes:{current: SankeyNode[] },
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
   
 ) => {
   const display_nodes=data.nodes
@@ -69,7 +70,7 @@ export const OpenSankeyDrawNodesLabel = (
     // .style('font-style', n => ((n as SankeyNode).display_style.italic) ? 'italic' : 'normal')
       .style('font-size', n => (n as SankeyNode).display_style.value_font_size + 'px')
     // .style('text-transform', n => ((n as SankeyNode).display_style.uppercase) ? 'uppercase' : 'none')
-      .text(n => textNodeValue((n as SankeyNode),data,display_links,display_nodes))
+      .text(n => textNodeValue((n as SankeyNode),data,display_links,display_nodes,getLinkValue))
 
         
     // Drag zone for changing label box width
