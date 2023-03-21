@@ -69,16 +69,16 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
     if (the_tags_group.banner == 'one') {
       return (
         <>
-          <Row><Col><FormLabel>{the_tags_group.group_name}</FormLabel></Col><Col></Col></Row>
-          <Row>
-            <Col xs={10}>
+          <tr><td><FormLabel>{the_tags_group.group_name}</FormLabel></td></tr>
+          <tr>
+            <td>
               {<Form.Select key={the_tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
                 Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
                   return (<option key={i} value={tag_key}>{tag.name}</option>)
                 })}
               </Form.Select>}
-            </Col>
-            <Col xs={2}>
+            </td>
+            <td>
               <FormCheck inline
                 type='switch'
                 checked={data.colorMap==tags_selected[0]}
@@ -117,26 +117,27 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
 
                 }}
               />
-            </Col>
-          </Row>
+            </td>
+          </tr>
 
         </>)
     } else if (the_tags_group.banner == 'multi') {
       const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
       return (<>
-        <Row>
-          <Col><FormLabel>{the_tags_group.group_name}</FormLabel></Col>
-          <Col></Col>
-        </Row>
-        <Row>
+        <tr>
+          <td><FormLabel>{the_tags_group.group_name}</FormLabel></td>
+        </tr>
+        <tr>
           
-          <Col><MultiSelect
-            style={{ color: 'black' }}
+          <td><MultiSelect
+            className={'multidropdown_filter_node_link'}
+
+            style={{ color: 'black',width:'200px' }}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
             }}
-            labelledBy={'hello'}
+            labelledBy={'dropdown_node_filter'}
             overrideStrings={{
               'selectAll': 'Tout sélectionner',
             }}
@@ -145,9 +146,9 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
             options={options}
             onChange={(selected: [{ label: string, value: string }]) => {
               handleMultiDropdown(selected, the_tags_group, data, set_data)
-            }} /></Col>
+            }} /></td>
 
-          <Col><FormCheck inline
+          <td><FormCheck inline
             type='switch'
             checked={data.colorMap==tags_selected[0]}
             onChange={evt => {
@@ -182,11 +183,11 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
               }
               set_data({ ...data })
             }}
-          /></Col>
-        </Row></>)
+          /></td>
+        </tr></>)
     }
   })
-  return (<><Form.Group  as={Row} className='FormForFilterFlux'><Row><Col xs={6}>Liste groupe étiquette</Col><Col xs={6}>Appliquer couleur filtre</Col></Row>{allDD}</Form.Group></>) 
+  return (<><tr><th>Liste groupe étiquette</th><th>Appliquer couleur filtre</th></tr>{allDD}</>) 
 }
 
 /**
@@ -431,21 +432,21 @@ export const OpenSankeyMenuBanner = (
       if (tags_group.banner == 'one' ) {
         return (
           <>
-            <Row>
-              <Col>
+            <tr>
+              <td colSpan={2}>
                 <FormLabel style={{ color: color }}>{tags_group.group_name}
-                </FormLabel></Col>
-              <Col></Col>
-            </Row>
-            <Row >
-              <Col>
+                </FormLabel></td>
+              
+            </tr>
+            <tr >
+              <td>
                 {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                     return (<option key={i} value={tag_key}>{tag.name}</option>)
                   })}
                 </Form.Select>}
-              </Col>
-              <Col>
+              </td>
+              <td>
                 <FormCheck inline
                   type='switch'
                   checked={data.colorMap==tags_selected[0]}
@@ -485,8 +486,8 @@ export const OpenSankeyMenuBanner = (
 
                   }}
                 />
-              </Col>
-            </Row>
+              </td>
+            </tr>
           </>)
       } else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
         if (Object.keys(tags_group.tags).length < 2) {
@@ -496,16 +497,16 @@ export const OpenSankeyMenuBanner = (
         const selected = tmp.length > 0 ? tmp[0][0] : ''
         return (
           <>
-            {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
-            <FormGroup as={Row}>
-              <Col xs={10}>
+            <tr>{banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}</tr>
+            <tr>
+              <td >
                 {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                     return (<option key={i} value={tag_key}>{tag.name}</option>)
                   })}
                 </Form.Select>}
-              </Col>
-              <Col xs={2}>
+              </td>
+              <td>
                 <FormCheck inline
                   type='switch'
                   checked={tags_group.activated}
@@ -516,8 +517,8 @@ export const OpenSankeyMenuBanner = (
                     set_data({ ...data })
                   }}
                 />
-              </Col>
-            </FormGroup>
+              </td>
+            </tr>
           </>)
       } else if (tags_group.banner == 'multi') {
         const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
@@ -525,21 +526,23 @@ export const OpenSankeyMenuBanner = (
 
         return (
           <>
-            <Row>
-              <Col>
+            <tr>
+              <td colSpan={2}>
                 <FormLabel style={{ color: color }}>{tags_group.group_name}
                 </FormLabel>
-              </Col>
-              <Col></Col>
-            </Row>
-            <Row >
-              <Col>
+              </td>
+              
+            </tr>
+            <tr >
+              <td>
                 <MultiSelect
-                  style={{ color: 'black' }}
+                  className={'multidropdown_filter_node_link'}
+
+                  style={{widthMax:'200px', color: 'black' }}
                   valueRenderer={(selected:selected_type[]) => {
                     return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
                   }}
-                  labelledBy={'hello'}
+                  labelledBy={'dropdown_node_filter'}
                   overrideStrings={{
                     'selectAll': 'Tout sélectionner',
                   }}
@@ -549,8 +552,8 @@ export const OpenSankeyMenuBanner = (
                   onChange={(selected: [{ label: string, value: string }]) => {
                     handleMultiDropdown(selected, tags_group, data, set_data)
                   }} />
-              </Col>
-              <Col>
+              </td>
+              <td>
                 <FormCheck inline
                   type='switch'
                   checked={data.colorMap==tags_selected[0]}
@@ -589,14 +592,14 @@ export const OpenSankeyMenuBanner = (
 
                   }}
                 />
-              </Col>
-            </Row>
+              </td>
+            </tr>
           </>)
       }
 
 
     })
-    return (<><Form.Group  as={Row} className='FormForFilterNode'><Row><Col xs={6}>Liste groupe étiquette</Col><Col xs={6}>Appliquer couleur filtre</Col></Row>{allDD}</Form.Group></>) 
+    return (<><tr><th >Liste groupe étiquette</th><th >Appliquer couleur filtre</th></tr>{allDD}</>) 
     
     
   }
@@ -658,8 +661,9 @@ export const OpenSankeyMenuBanner = (
           <>
             <FormLabel>{tags_group.group_name}</FormLabel>
             <MultiSelect
-              style={{ color: 'black' }}
-              labelledBy={'hello'}
+              className={'multidropdown_filter_node_link'}
+              style={{ color: 'black',width:'200px' }}
+              labelledBy={'dropdown_link_filter'}
               overrideStrings={{
                 'selectAll': 'Tout sélectionner',
               }}
@@ -873,10 +877,11 @@ export const OpenSankeyMenuBanner = (
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-      {(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
+
+      <table>{(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
         {addAllDropDownNode(true)}</>
       ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}          
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
     </Popover.Body>
   </Popover>
 
@@ -887,11 +892,11 @@ export const OpenSankeyMenuBanner = (
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
 
-      { (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+      <table>{ (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(false)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-      }
+      }</table>
          
     </Popover.Body>
   </Popover>
@@ -901,7 +906,7 @@ export const OpenSankeyMenuBanner = (
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
 
-      {addAllDropDownFlux(data.fluxTags, data, set_data)}
+      <table>{addAllDropDownFlux(data.fluxTags, data, set_data)}</table>
         
     </Popover.Body>
   </Popover>
