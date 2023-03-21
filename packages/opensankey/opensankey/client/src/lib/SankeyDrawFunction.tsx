@@ -644,10 +644,19 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 }
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border 
-export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_nodes:{current: SankeyNode[] },nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_node:(n: SankeyNode) => void,static_sankey:boolean)=>{
+export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  multi_selected_nodes:{current: SankeyNode[] },
+  nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  select_node:(n: SankeyNode) => void,
+  static_sankey:boolean,
+  data:SankeyData,
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
   if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
     sankeyTooltip.style('opacity', 0)
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null && multi_selected_nodes.current.length == 0) {
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
       button_ref.current.click()
     }
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
@@ -673,6 +682,18 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
+  }else if(!static_sankey &&  !event.ctrlKey){
+    multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
+    if (multi_selected_nodes.current.includes(d)) {
+      multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
+      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',0)
+      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
+    } else {
+      multi_selected_nodes.current.push(d)
+      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
+      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+    }
+    set_data({...data})
   }
 } 
 
