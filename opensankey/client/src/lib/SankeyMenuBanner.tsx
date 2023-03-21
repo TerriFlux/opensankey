@@ -1091,7 +1091,7 @@ export const OpenSankeyMenuBanner = (
               }
               <OverlayTrigger
                 key={'tooltip-selection'}
-                placement={'top'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
                 }
@@ -1105,7 +1105,7 @@ export const OpenSankeyMenuBanner = (
 
               <OverlayTrigger
                 key={'tooltip-liaison'}
-                placement={'top'}
+                placement={'right'}
                 delay={500}
                 overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
                 }
