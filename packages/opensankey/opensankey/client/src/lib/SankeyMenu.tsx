@@ -359,7 +359,7 @@ export const OpenSankeyMenus = (
         <Dropdown.Item onClick={()=>clickSavePNG(data,url_prefix)} >{t('Menu.exporter')} PNG</Dropdown.Item>
       </NavDropdown>
       <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
-      <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.template')}</Dropdown.Item>
+      <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Dropdown.Item>
     </NavDropdown>,
     <NavDropdown id='edition' title={t('Menu.Edition')} >
       <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
