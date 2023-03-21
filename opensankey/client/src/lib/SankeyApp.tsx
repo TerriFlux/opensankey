@@ -29,7 +29,7 @@ import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation
 import {OpenSankeyMenuBanner} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {min_width_and_height} from './SankeyDrawFunction'
-
+import i18next from './traduction'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -242,7 +242,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   )
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
-  const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection)
+  const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection,i18next)
   
   const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false)
   const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
