@@ -8,7 +8,7 @@ import { TFunction,i18n } from 'i18next'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
-  ui:PropTypes.object.isRequired 
+  ui:PropTypes.object.isRequired
 }
 type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
@@ -91,8 +91,8 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       preferenceCheck('ED',data)
       set_data({ ...data })
     }} />,
-   
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label="Légends" onChange={() => {
+
+    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
       preferenceCheck('Leg',data)
       set_data({ ...data })
     }} />]
@@ -116,7 +116,7 @@ export const preferenceCheck = (str: string,data:SankeyData) => {
 
 
 const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreference,setShowPreference,ui})=>{
-  
+
   return (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
     <Modal.Header closeButton>
       <Modal.Title>Édition Préferences</Modal.Title>
