@@ -28,8 +28,8 @@ export const OpenSankeyDrawLinks = (
   linkTooltipsContent:(data: SankeyData, l: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>
 
 ) => {
 
@@ -42,7 +42,15 @@ export const OpenSankeyDrawLinks = (
 
  
   // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
-  const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_links:{current: SankeyLink[] },links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_link:(n: SankeyLink) => void)=>{
+  const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,
+    mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+    accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+    button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+    multi_selected_links:{current: SankeyLink[] },
+    links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+    select_link:(n: SankeyLink) => void,
+    set_data:React.Dispatch<React.SetStateAction<SankeyData>>
+    )=>{
     if ((event.ctrlKey || event.metaKey) && !mode_visualisation) {
       sankeyTooltip.style('opacity', 0)
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -79,6 +87,26 @@ export const OpenSankeyDrawLinks = (
         (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
       }
       select_link(d)
+    }else if(!event.ctrlKey  && !mode_visualisation){
+      multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
+      if (multi_selected_links.current.includes(d)) {
+        multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+      } else {
+        multi_selected_links.current.push(d)
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
+        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
+      }
+      set_data({...data})
     }
   }
 
@@ -599,7 +627,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link))
+    paths.on('click', (event, d) =>eventLinkClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link,set_data))
     const arrowVisible=(l :SankeyLink)=>{
       return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 

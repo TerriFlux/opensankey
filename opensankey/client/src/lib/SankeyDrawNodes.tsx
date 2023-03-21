@@ -382,7 +382,7 @@ export const OpenSankeyDrawNodes = (
     if (!data.static_sankey) {
       // Add event listener to click 
       // When we Ctrl + click a node, it select it and open a menu 
-      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey))
+      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey,data,set_data))
 
       if (mode_selection == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
