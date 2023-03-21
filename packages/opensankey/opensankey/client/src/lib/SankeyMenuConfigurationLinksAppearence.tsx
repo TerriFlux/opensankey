@@ -117,7 +117,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
       return false
     }
   }
-  
+
 
 
   return <Tab eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>
@@ -192,7 +192,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
       <Form.Group as={Row} >
         <Col sm={3}>
           <FormCheck
-          
+
             name='orientation'
             type='radio'
             label='Horiz-Horiz'
@@ -211,7 +211,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Col sm={3}>
 
           <FormCheck
-          
+
             name='orientation'
             type='radio'
             label='Vert-Vert'
@@ -230,7 +230,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Col sm={3}>
 
           <FormCheck
-          
+
             name='orientation'
             type='radio'
             label='Vert-Horiz'
@@ -270,7 +270,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <FormLabel >{t('Flux.apparence.pdc')}</FormLabel>
         </Col>
         <Col>
-      
+
           <FormControl
             min={0} max={100}
             type={'number'}
@@ -283,7 +283,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                   let shift_gap = (d.right_horiz_shift - d.left_horiz_shift)/2
                   if (center - shift_gap < 0) {
                     shift_gap = center
-                  } 
+                  }
                   if (center + shift_gap > 1) {
                     shift_gap = 1-center
                   }
@@ -301,10 +301,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <FormLabel >{t('Flux.apparence.eep')}</FormLabel>
         </Col>
         <Col>
-        
-
           <FormControl
-            min={0} max={5} 
+            min={0} max={5}
             type={'number'}
             value={shift()*100}
             disabled={(linkOrientation('hv')||linkOrientation('vh'))}
@@ -343,7 +341,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             onChange={
               evt => {
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
-
                 set_data({ ...data })
               }
             }
@@ -369,14 +366,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
             checked={linkType('recycle')}
             onChange={
               evt => {
-
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.recycling = evt.target.checked
                   d.left_horiz_shift = 0
                   d.right_horiz_shift = 0
                 })
-
-
                 set_data({ ...data })
               }
             }
@@ -387,7 +381,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Col>
           <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
         </Col>
-      
+
         <Col>
           <FormControl
 
@@ -406,7 +400,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         </Col>
         <Col sm={2}>{selected_link.current.curvature}</Col>
       </Form.Group>
-  
+
     </Form>
   </Tab>
 }

@@ -14,7 +14,7 @@ import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
 /**
- * 
+ *
  *
  * @param {React.ChangeEvent<HTMLSelectElement>} evt
  * @param {TagsGroup} tags_group
@@ -32,7 +32,7 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
 }
 
 /**
- * 
+ *
  *
  * @param {[{ label: string, value: string }]} selected
  * @param {TagsGroup} tags_group
@@ -45,7 +45,7 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
     return d.value
   })
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
-  // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur  
+  // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
   if(tab_sel.length==0 && Object.values(data.dataTags).map(dt=>dt.group_name).includes(tags_group.group_name)){
     Object.entries(tags_group.tags)[0][1].selected=true
   }
@@ -83,11 +83,11 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                 type='switch'
                 checked={data.colorMap==tags_selected[0]}
                 onChange={evt => {
-                  Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
-                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
+                  Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
-                  
+
                   Object.values(data.nodes).forEach(el => {
                     el.colorParameter = 'local'
                     el.colorTag = 'no_colormap'
@@ -98,8 +98,8 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
                     el.colorTag = 'no_colormap'
                   })
                   data.colorMap = 'no_colormap'
-                    
-                  
+
+
                   if(evt.target.checked){
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'groupTag'
@@ -129,7 +129,6 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
           <td><FormLabel>{the_tags_group.group_name}</FormLabel></td>
         </tr>
         <tr>
-          
           <td><MultiSelect
             className={'multidropdown_filter_node_link'}
 
@@ -153,11 +152,9 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
             checked={data.colorMap==tags_selected[0]}
             onChange={evt => {
 
-              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
-              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
-
-
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
               Object.values(data.nodes).forEach(el => {
                 el.colorParameter = 'local'
@@ -187,7 +184,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
         </tr></>)
     }
   })
-  return (<><tr><th>Liste groupe étiquette</th><th>Appliquer couleur filtre</th></tr>{allDD}</>) 
+  return (<><tr><th>Liste groupe étiquette</th><th>Appliquer couleur filtre</th></tr>{allDD}</>)
 }
 
 /**
@@ -231,7 +228,7 @@ export const SankeyBannerRows = (
   set_diagram2:(s:string)=>void,
   sous_filieres:{ [key: string]: string } | undefined,
   is_split:boolean,diagrams:{ [keys :string] : string[] }
-) => { 
+) => {
   // let sous_filieres = undefined
   // if (window.sankey && window.sankey.sous_filieres) {
   //   sous_filieres = window.sankey.sous_filieres
@@ -246,14 +243,14 @@ export const SankeyBannerRows = (
   //       if ( !(path[0] in diagrams)) {
   //         diagrams[path[0]] = [path[1]]
   //       } else {
-  //         diagrams[path[0]].push(path[1])     
+  //         diagrams[path[0]].push(path[1])
   //       }
   //     })
   //   } else {
   //     Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
   //   }
   // }
-  
+
   const diagram_label = 'Diagrammes'
   const setDiagram = (the_diagram : string) => {
 
@@ -271,16 +268,16 @@ export const SankeyBannerRows = (
     // if (!is_split) {
     //   set_diagram(the_diagram)
     // }
- 
+
     Object.values(data.nodes).forEach(node => {
       node.node_visible = true
-      node.display = true 
+      node.display = true
     })
     set_nodes_level(data)
     new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
     set_data({ ...new_data })
-    
+
   }
   return [
     (data.static_sankey && sous_filieres && !is_split) ? (<>
@@ -308,7 +305,7 @@ export const SankeyBannerRows = (
           value={diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
         </Form.Select>
-        {is_split ? 
+        {is_split ?
           (<Form.Select style={{ width: '200px', color:'black' }}
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               set_diagram2(evt.target.value)
@@ -341,7 +338,7 @@ export const OpenSankeyMenuBanner = (
   t:TFunction,
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  mode_selection:string, 
+  mode_selection:string,
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>,
   set_current_filter:(n:number)=>void,
   url_prefix:string,
@@ -364,7 +361,7 @@ export const OpenSankeyMenuBanner = (
         if ( !(path[0] in diagrams)) {
           diagrams[path[0]] = [path[1]]
         } else {
-          diagrams[path[0]].push(path[1])     
+          diagrams[path[0]].push(path[1])
         }
       })
     } else {
@@ -436,7 +433,7 @@ export const OpenSankeyMenuBanner = (
               <td colSpan={2}>
                 <FormLabel style={{ color: color }}>{tags_group.group_name}
                 </FormLabel></td>
-              
+
             </tr>
             <tr >
               <td>
@@ -451,11 +448,11 @@ export const OpenSankeyMenuBanner = (
                   type='switch'
                   checked={data.colorMap==tags_selected[0]}
                   onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
-                    
+
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
@@ -467,8 +464,8 @@ export const OpenSankeyMenuBanner = (
                     })
 
                     data.colorMap = 'no_colormap'
-                      
-                    
+
+
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
@@ -511,7 +508,7 @@ export const OpenSankeyMenuBanner = (
                   type='switch'
                   checked={tags_group.activated}
                   onChange={evt => {
-                    tags_group.activated = evt.target.checked 
+                    tags_group.activated = evt.target.checked
                     tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
                     set_nodes_level(data)
                     set_data({ ...data })
@@ -531,7 +528,7 @@ export const OpenSankeyMenuBanner = (
                 <FormLabel style={{ color: color }}>{tags_group.group_name}
                 </FormLabel>
               </td>
-              
+
             </tr>
             <tr >
               <td>
@@ -558,10 +555,10 @@ export const OpenSankeyMenuBanner = (
                   type='switch'
                   checked={data.colorMap==tags_selected[0]}
                   onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
-                    
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
@@ -573,8 +570,8 @@ export const OpenSankeyMenuBanner = (
                     })
 
                     data.colorMap = 'no_colormap'
-                      
-                    
+
+
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
@@ -596,13 +593,11 @@ export const OpenSankeyMenuBanner = (
             </tr>
           </>)
       }
-
-
     })
-    return (<><tr><th >Liste groupe étiquette</th><th >Appliquer couleur filtre</th></tr>{allDD}</>) 
-    
-    
+    return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
   }
+
+
   // Function that return a simple or multiple dropdown of groupTag of data and links
   // This allow us to choose wich grouptag to select and wich tag of these group to display
   const addAllDropDownLinks = () => {
@@ -618,7 +613,7 @@ export const OpenSankeyMenuBanner = (
             <FormLabel>{tags_group.group_name}</FormLabel>
             <FormGroup as={Row}>
               <Col xs={10}>
-                {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+                {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   const pl=Object.entries(data.links).map(l=>{
                     const suffixeStart= l[0].indexOf('_')
                     if(suffixeStart>=0){
@@ -626,8 +621,8 @@ export const OpenSankeyMenuBanner = (
                       l[1].idLink=l[0]
                       data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
                       data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                      
-                      //Ajoute dans les noeuds source/target les id de flux 
+
+                      //Ajoute dans les noeuds source/target les id de flux
                       const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
                       if(ind_in_src==-1){
                         data.nodes[l[1].idSource].outputLinksId.push(l[0])
@@ -644,7 +639,7 @@ export const OpenSankeyMenuBanner = (
                   // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
                   const pureLinks=Object.fromEntries(pl)
                   data.links=pureLinks
-                  handleSimpleDropdown(evt, tags_group,data,set_data) 
+                  handleSimpleDropdown(evt, tags_group,data,set_data)
                 }}>
                   {
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -697,9 +692,9 @@ export const OpenSankeyMenuBanner = (
                   data.links=new_links
                   set_data({...data})
                 }
-                
+
               }} />
-              
+
           </>)
       }
 
@@ -719,7 +714,7 @@ export const OpenSankeyMenuBanner = (
           n_l.idLink=n_l.idLink+n_suffix
           new_links[n_l.idLink]=n_l
 
-          //Ajoute dans les noeuds source/target les id de flux 
+          //Ajoute dans les noeuds source/target les id de flux
           const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
           if(ind_in_src>=0){
             data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)
@@ -736,7 +731,7 @@ export const OpenSankeyMenuBanner = (
         }else{
           recursionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
         }
-        
+
       })
   }
   const [show_banner, set_show_banner] = useState(true)
@@ -766,7 +761,7 @@ export const OpenSankeyMenuBanner = (
   // - scale of link
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
-  // - filter on null link (if link value is null (0), we can display it or not) 
+  // - filter on null link (if link value is null (0), we can display it or not)
   const link_filter=
   <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
@@ -891,27 +886,23 @@ export const OpenSankeyMenuBanner = (
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-
       <table>{ (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(false)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
       }</table>
-         
     </Popover.Body>
   </Popover>
-  //Popover element to handle the display of link tags 
+  //Popover element to handle the display of link tags
   const filter_color_link=
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-
       <table>{addAllDropDownFlux(data.fluxTags, data, set_data)}</table>
-        
     </Popover.Body>
   </Popover>
   const DT_length=Object.keys(data.dataTags).length
-  //Popover element to handle the display of data tags 
+  //Popover element to handle the display of data tags
   const filter_data=
   <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
@@ -925,12 +916,12 @@ export const OpenSankeyMenuBanner = (
             checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
             onChange={evt=> {
               //Déselecitonne tous les type de tag
-              
-              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)  
-              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)  
-              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)  
 
-              
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+
               Object.values(data.nodes).forEach(el => {
                 el.colorParameter = 'local'
                 el.colorTag = 'no_colormap'
@@ -942,7 +933,7 @@ export const OpenSankeyMenuBanner = (
               })
 
               data.colorMap = 'no_colormap'
-                      
+
               //Met le dernier dataTag en tant que couleur a suivre pour les flux
               if(evt.target.checked){
                 Object.values(data.nodes).forEach(el => {
@@ -963,7 +954,7 @@ export const OpenSankeyMenuBanner = (
           />
         </Col>
       </FormGroup>
-        
+
     </Popover.Body>
   </Popover>
 
@@ -973,12 +964,12 @@ export const OpenSankeyMenuBanner = (
     <Popover.Body>
       <FormGroup as={Row}>
         <Col xs={10}>
-          <Form.Select 
+          <Form.Select
             style={{ width: '200px', color: 'black' }}
-            placeholder='all' 
+            placeholder='all'
             value={data.show_structure}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data.show_structure = evt.target.value 
+              data.show_structure = evt.target.value
               set_data({...data})
             }}>
             <option key='structure'  value='structure' >Structure</option>
@@ -987,7 +978,7 @@ export const OpenSankeyMenuBanner = (
             <option key='free'       value='free'      >Données réconciliées+flux indéterminées</option>
           </Form.Select>
         </Col>
-      </FormGroup>           
+      </FormGroup>
     </Popover.Body>
   </Popover>
 
@@ -1050,10 +1041,10 @@ export const OpenSankeyMenuBanner = (
               </FormGroup>
             </Col>
           </Row>
-      } 
-    
+      }
+
     </div>,
-    
+
     'toolbar':<Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
       {/* {(view!=='none')? <Col>
       <FormGroup as={Col} lg='auto'>
@@ -1092,28 +1083,23 @@ export const OpenSankeyMenuBanner = (
           <FormGroup as={Col} lg='auto'>
             <ButtonGroup >
 
-              {//Boutons Sélection classique des éléments 
+              {//Boutons Sélection classique des éléments
               }
               <OverlayTrigger
                 key={'tooltip-selection'}
                 placement={'bottom'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>
-                }
+                overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}
               >
                 <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
                   <FontAwesomeIcon icon={faArrowPointer} />
                 </Button>
               </OverlayTrigger>
-
-
-
               <OverlayTrigger
                 key={'tooltip-liaison'}
                 placement={'right'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>
-                }
+                overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}
               >
                 <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
                   {/* Ajout liaison entre noeud */}
@@ -1139,7 +1125,7 @@ export const OpenSankeyMenuBanner = (
                 trigger={'click'}
                 rootClose
                 overlay={filter_color_node}
-                
+
               >
                 <Button variant='primary' id='button-link-color-filter' >
                   Filtre Noeuds
@@ -1202,7 +1188,7 @@ export const OpenSankeyMenuBanner = (
               :
               <></>
             }
-            
+
 
             <OverlayTrigger
               key={'tooltip-link-filter'}
@@ -1224,11 +1210,11 @@ export const OpenSankeyMenuBanner = (
               overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>
               }
             >
-              <Button variant='dark' onClick={() => { 
+              <Button variant='dark' onClick={() => {
                 data.fit_screen = true
                 const zoomed=(transform:string)=> {
                   [data.width, data.height] = min_width_and_height()
-                    
+
                   d3.select(' .opensankey #svg').attr('transform', transform)
                   d3.select(' .opensankey #svg')
                     .style('border', Math.round(2 ) + 'px solid #78c2ad')
@@ -1262,7 +1248,7 @@ export const OpenSankeyMenuBanner = (
                 overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>
                 }
               >
-                <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => { 
+                <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
                   data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
                   //data.show_data = false
                   set_data({ ...data })
@@ -1312,7 +1298,7 @@ export const OpenSankeyMenuBanner = (
                   (key, i) => (<Tab title={key} eventKey={key} key={i}>{
                     parse(window.sankey.help[key], {
                       replace: (domNode:DOMNode  ) => {
-                        interface AFMSankeyData extends SankeyData { 
+                        interface AFMSankeyData extends SankeyData {
                           units_names : string[][],
                         }
                         const domElement: Element = domNode as unknown as Element
@@ -1376,7 +1362,7 @@ export const OpenSankeyMenuBanner = (
   return ui
 }
 // const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix,view }) => {
-  
+
 // }
 
 // SankeyMenuBanner.propTypes = SankeyMenuBannerPropTypes
