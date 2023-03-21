@@ -296,7 +296,8 @@ export const OpenSankeyMenus = (
   set_data:(d:SankeyData)=>void,
   url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
-  external_edition_item:JSX.Element[]
+  external_edition_item:JSX.Element[],
+  externale_save_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   return [
@@ -348,8 +349,9 @@ export const OpenSankeyMenus = (
         <Dropdown.Item onClick={()=>{
           set_show_save_json(true)
         }} >JSON</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item>
+        {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
         <Dropdown.Item onClick={()=>clickSaveExcel(url_prefix,data)} >Excel</Dropdown.Item>
+        {externale_save_item}
       </NavDropdown>
       <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
         <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
