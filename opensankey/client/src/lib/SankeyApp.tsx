@@ -319,7 +319,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     alt_key_pressed,
     data.static_sankey,position,node_arrow_visible,
     linkTooltipsContent,
-    link_text,getLinkValue
+    link_text,getLinkValue,set_data
   )
 
   
