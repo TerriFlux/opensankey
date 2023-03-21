@@ -63,6 +63,7 @@ export const sankey_draw_view = (
   set_alt_key_pressed:(b:boolean)=>void,
   set_first_selected_node:(o:object)=>void,
   set_show_agregation:(b:boolean)=>void,
+
   
 ) => {
 
@@ -101,7 +102,7 @@ export const nextView = (
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
   setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
   link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
   test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
   min_thickness: number,
@@ -138,7 +139,7 @@ const animate_view_changement = (
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
   link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
   setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
@@ -861,7 +862,7 @@ const animate_view_changement = (
     setNodesHeight(data_v2,data_v2.nodes, new_links, d, data_v2.nodeTags)
     return drawCurve(data_v2,
       data_v2.nodes, new_links, data_v2.display_style,
-      data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text
+      data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,getLinkValue
     )
   })
   if (error_msg && error_msg.text) {
@@ -895,7 +896,7 @@ const animate_view_changement = (
     d3.select(' .opensankey #' + d.idLink).transition().duration(500).attr('d', l => {
       const d = l as SankeyPlusLink
 
-      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text)
+      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,getLinkValue)
       return p
     })
   })
@@ -1043,7 +1044,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
   setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
   setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
   link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
