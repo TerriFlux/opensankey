@@ -210,7 +210,54 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #78c2ad')        
           }
 
-        })).on('dblclick.zoom', null)
+        }))
+        .on('dblclick.zoom', null)
+        .call(d3.drag<Element, unknown, HTMLElement>()
+          .subject(Object).on('drag', function (event) {
+            d3.selectAll('.ggg_nodes').attr('transform',(d)=>{
+              const n=d as SankeyNode
+              n.x+=event.dx
+              n.y+=event.dy
+            return 'translate('+n.x+','+n.y+')'
+            })
+            d3.selectAll('.link').attr('d',(d)=>{
+              const l=d as SankeyLink
+              // Get the path of each displayed link
+              const path=d3.select('#'+l.idLink).attr('d').split(' ')
+
+              // Each path is splitted into small part of the path then depending on the small part :
+              //  - If it's a letter then do nothing
+              //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+              //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one, 
+              //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+              // 
+              // Then once the subpart of the path are modified, we join the array to reform the path
+              const new_path=path.map((p,i)=>{
+                // Case when it's a [x,y] coordinates
+                if(p.includes(',')){
+                  const pos=p.split(',')
+                  const newPosX=Number(pos[0])+event.dx
+                  const newPosY=Number(pos[1])+event.dy
+                  p=''+newPosX+','+newPosY
+                }
+                // Case when it's a number alone so we search the previous element to know wich shift
+                if(Number(p)){
+                  if(path[i-1]=='H'){
+                    p=Number(p)+event.x
+                  }else if(path[i-1]=='V'){
+                    p=Number(p)+event.y
+                  }
+                }
+                return p
+              })
+            return new_path.join(' ')
+            })
+          })
+          .on('end',()=>{
+            set_data({...data})
+          })
+        
+        )
 
     //Ajout des events sur les l'ajout des noeuds aux click 
     eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node)
