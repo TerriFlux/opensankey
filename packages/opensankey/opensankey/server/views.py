@@ -191,33 +191,6 @@ def save_excel():
         return response
 
 
-@opensankey.route('/sankey/save_excel_simple', methods=['POST'])
-def save_excel_simple():
-    try:
-        cwd = os.getcwd()
-        excel_file = os.path.join(cwd, "tutu.xlsx")
-        sankey_data = request.get_data().decode("utf-8")
-        mfa_output, _ = parser_excel.save_excel(json.loads(sankey_data), False)
-    except Exception as excpt:
-        response = Response(
-            response='save_excel: ' + str(excpt),
-            status=401
-        )
-        return response
-    try:
-        simple_mfa_output = {
-            io_excel.DATA_SHEET:  mfa_output[io_excel.DATA_SHEET]
-        }
-        io_excel.write_mfa_problem_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
-        return send_file(excel_file, as_attachment=True)
-    except Exception as excpt:
-        response = Response(
-            response='write_mfa_problem_output_to_excel' + str(excpt),
-            status=402
-        )
-        return response
-
-
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
     cwd = os.getcwd()
@@ -482,7 +455,7 @@ def parse_folder(current_dir, menus, key=None):
                 menus[key]['Files'].sort()
                 exemple_found = True
             # Save name of image in menu dict
-            if(os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
                 file_names = os.listdir(os.path.join(current_dir, 'image_preview'))
                 for file_name in file_names:
                     if key not in menus:
@@ -525,10 +498,10 @@ def menus_examples():
     try:
         current_folder = os.environ.get('MFAData')
         list_in_folder = os.listdir(current_folder)
-        if('MFAData' in list_in_folder and 'image_preview' in os.listdir(current_folder+'\\MFAData\\OpenSankey')):
+        if ('MFAData' in list_in_folder and 'image_preview' in os.listdir(current_folder+'\\MFAData\\OpenSankey')):
             folder_image = current_folder + '\\MFAData\\OpenSankey\\image_preview'
             for i in os.listdir(folder_image):
-                if(i not in os.listdir(image_template_folder)):
+                if (i not in os.listdir(image_template_folder)):
                     os.symlink(folder_image+'\\'+i, image_template_folder+'\\'+i)
     except Exception as expt:
         print(str(expt))
@@ -539,24 +512,6 @@ def menus_examples():
         )
         return response
 
-    return response
-
-
-@opensankey.route('/sankey/publish', methods=['POST'])
-def publish():
-    sankey_data_str = request.get_data().decode("utf-8")
-    sankey_data = json.loads(sankey_data_str)
-    file_name = sankey_data['file_name']
-    #  del sankey_data['file_name']
-    #  sankey_data_str = json.dumps(sankey_data,indent=2)
-    data_folder = os.environ.get('MFAData')
-    with open(os.path.join(data_folder, file_name), 'w', encoding='utf-8') as outfile:
-        outfile.write(sankey_data_str)
-    response = Response(
-        response='',
-        status=200,
-        mimetype='application/json'
-    )
     return response
 
 
