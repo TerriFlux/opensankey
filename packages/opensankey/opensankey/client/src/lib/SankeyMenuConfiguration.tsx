@@ -9,7 +9,7 @@ import { TFunction } from 'i18next'
 
 export const OpenSankeyConfigurationsMenus = (
   t:TFunction,
-  data:SankeyData, 
+  data:SankeyData,
   set_data:(d:SankeyData)=>void,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
@@ -23,8 +23,8 @@ export const OpenSankeyConfigurationsMenus = (
   set_style_to_apply:(s:string)=>void,
   set_show_nav:(d:boolean)=>void,
   menu_configuration_layout: JSX.Element[],
-  menu_configuration_node_tags:JSX.Element, 
-  menu_configuration_link_tags:JSX.Element, 
+  menu_configuration_node_tags:JSX.Element,
+  menu_configuration_link_tags:JSX.Element,
   menu_configuration_data_tags:JSX.Element,
   menu_configuration_nodes:{
     [s: string]: JSX.Element;
@@ -172,7 +172,7 @@ export const OpenSankeyConfigurationsMenus = (
             <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
             <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
           </Accordion.Item>
-          <Accordion.Item  
+          <Accordion.Item
             eventKey='editionFlux'
             onClick={
               evt => {
@@ -184,11 +184,10 @@ export const OpenSankeyConfigurationsMenus = (
                   set_sub_nav_item_active('editionFlux')
                   set_nav_item_active('3')
                   set_show_nav(true)
-
                 }
               }
             }>
-            <Accordion.Header className='level2'>Edition Flux</Accordion.Header>
+            <Accordion.Header className='level2'>{t('Menu.EdF')}</Accordion.Header>
             <Accordion.Body>
               <SankeyMenuConfigurationLinks
                 t={t}
@@ -281,7 +280,7 @@ const ConfigurationMenuPropTypes = {
 type ConfigurationMenuTypes = InferProps<typeof ConfigurationMenuPropTypes>
 
 export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
-  { 
+  {
     nav_item_active,
     accordion_ref,
     configuration_menus

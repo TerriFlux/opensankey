@@ -60,9 +60,14 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => any}
  */
-export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_data: (data: SankeyData) => void) => {
-  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
-  const allDD = banner_grouptag.map(tags_group => {
+export const addAllDropDownFlux = (
+  t:TFunction,
+  fluxTags: TagsCatalog,
+  data: SankeyData,
+  set_data: (data: SankeyData) => void) =>
+{
+    const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
+    const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
     const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
 
@@ -184,7 +189,7 @@ export const addAllDropDownFlux = (fluxTags: TagsCatalog, data: SankeyData, set_
         </tr></>)
     }
   })
-  return (<><tr><th>Liste groupe étiquette</th><th>Appliquer couleur filtre</th></tr>{allDD}</>)
+  return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
 }
 
 /**
@@ -898,7 +903,7 @@ export const OpenSankeyMenuBanner = (
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-      <table>{addAllDropDownFlux(data.fluxTags, data, set_data)}</table>
+      <table>{addAllDropDownFlux(t, data.fluxTags, data, set_data)}</table>
     </Popover.Body>
   </Popover>
   const DT_length=Object.keys(data.dataTags).length
@@ -1288,7 +1293,7 @@ export const OpenSankeyMenuBanner = (
         show={show_readme}
         onHide={() => set_show_readme(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Aide</Modal.Title>
+          <Modal.Title>{t('Banner.hlp')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Row>
@@ -1333,31 +1338,29 @@ export const OpenSankeyMenuBanner = (
         onHide={() => set_show_readme(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Aide</Modal.Title>
+          <Modal.Title>{t('Banner.hlp')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Row>
             <Col>
               <Tabs defaultActiveKey="diagram" id="diagram">
-                <Tab eventKey="diagram" title="Diagramme">
+                <Tab eventKey="diagram" title={t('Banner.hlp_1')}>
                   <br></br>
-                  <p>L&apos;épaisseur des flèches est proportionnelle aux flux.</p>
-                  <p>Le diagramme peut être visualisé avec différents niveaux d&apos;agrégations en utilisant le sélecteur <b>Niveau de détail</b></p>
-                  <p>Des filtres peuvent être utilisés pour n&apos;afficher que des parties du diagramme. Pour cela utiliser les selecteurs <b>
+                  <p>{t('Banner.hlp_1_txt_1')}</p>
+                  <p>{t('Banner.hlp_1_txt_2')}</p>
+                  <p>{t('Banner.hlp_1_txt_3')}<b>
                     {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return ' ' + tags_group[1].group_name })}</b></p>
-                  <p>Différents palettes de couleurs peuvent être utiliser pour colorer les noeuds et les flux en utilisant le sélecteur <b>Palette de Couleurs</b></p>
-                  <p>La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant <b>Structure du diagramme</b></p>
-                  <p>Le diagramme peut être ajusté à l'écran en cochant <b>Ajuster à l'écran</b></p>
-                  <p>Pour obtenir des informations sur chaque flux, appuyer sur <b>shift</b> et passer la souris sur le flux.</p>
+                  <p>{t('Banner.hlp_1_txt_4')}</p>
+                  <p>{t('Banner.hlp_1_txt_5')}</p>
+                  <p>{t('Banner.hlp_1_txt_6')}</p>
+                  <p>{t('Banner.hlp_1_txt_7')}</p>
                 </Tab>
               </Tabs>
             </Col>
           </Row>
         </Modal.Body>
       </Modal>)
-
   }
-
 
   return ui
 }
