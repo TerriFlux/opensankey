@@ -191,8 +191,6 @@ def save_excel():
         return response
 
 
-
-
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
     cwd = os.getcwd()
@@ -457,7 +455,7 @@ def parse_folder(current_dir, menus, key=None):
                 menus[key]['Files'].sort()
                 exemple_found = True
             # Save name of image in menu dict
-            if(os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
                 file_names = os.listdir(os.path.join(current_dir, 'image_preview'))
                 for file_name in file_names:
                     if key not in menus:
@@ -500,10 +498,10 @@ def menus_examples():
     try:
         current_folder = os.environ.get('MFAData')
         list_in_folder = os.listdir(current_folder)
-        if('MFAData' in list_in_folder and 'image_preview' in os.listdir(current_folder+'\\MFAData\\OpenSankey')):
+        if ('MFAData' in list_in_folder and 'image_preview' in os.listdir(current_folder+'\\MFAData\\OpenSankey')):
             folder_image = current_folder + '\\MFAData\\OpenSankey\\image_preview'
             for i in os.listdir(folder_image):
-                if(i not in os.listdir(image_template_folder)):
+                if (i not in os.listdir(image_template_folder)):
                     os.symlink(folder_image+'\\'+i, image_template_folder+'\\'+i)
     except Exception as expt:
         print(str(expt))
@@ -515,9 +513,6 @@ def menus_examples():
         return response
 
     return response
-
-
-
 
 
 @opensankey.route('/')
