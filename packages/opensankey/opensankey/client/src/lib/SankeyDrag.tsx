@@ -1239,8 +1239,8 @@ export const drag_handle = (
     const right_horiz_shift = d.right_horiz_shift ? d.right_horiz_shift : 0
     if (right_horiz_shift + the_event.dx > -default_horiz_shift) {
       d.right_horiz_shift = right_horiz_shift + the_event.dx
-      if (data.width < d.right_horiz_shift + data.nodes[d.idSource].x + 200) {
-        data.width = d.right_horiz_shift + data.nodes[d.idSource].x + 200
+      if (data.width < d.right_horiz_shift + data.nodes[d.idSource].x + 100) {
+        data.width = d.right_horiz_shift + data.nodes[d.idSource].x + 100
         d3.select(' .opensankey #svg').style('width', data.width + 'px')
         drawGrid(data)
       }
