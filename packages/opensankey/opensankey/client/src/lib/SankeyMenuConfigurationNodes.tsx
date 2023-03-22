@@ -43,7 +43,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
-  
+
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
     'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
@@ -74,25 +74,25 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       <div id='DD_multi_node'>
         <MultiSelect
           valueRenderer={(selected: selected_type[]) => {
-            return selected.length ? selected.map(({ label })=> label + ', ') : 'Aucun noeud sélectionné'
+            return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
           }}
           options={INITIAL_OPTIONS}
           value={selected}
           overrideStrings={{
-            'selectAll': 'Tout sélectionner',
+            'selectAll': t('Noeud.TS'),
           }}
           onChange={(selected: [{ label: string, value: string }]) => {
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             multi_selected_nodes.current = m_s
-            Object.values(data.nodes).forEach( n => 
+            Object.values(data.nodes).forEach( n =>
               d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
             )
-            multi_selected_nodes.current.forEach( n => 
+            multi_selected_nodes.current.forEach( n =>
               d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)
-            set_data({...data})         
+            set_data({...data})
           }}
           labelledBy={'hello'}
         />
@@ -102,7 +102,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const add_new_node = () => {
     const { nodes } = data
     const node: SankeyNode = default_node(data)
-  
+
     // Méthode pour incrementer idNode
     const listId: number[] = []
     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
@@ -118,13 +118,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     for (const tag_group_key in data.nodeTags) {
       node.tags[tag_group_key] = []
     }
-    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style 
+    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
     //set_multi_selected_nodes([node])
     multi_selected_nodes.current = [node]
     style_to_apply = 'default'
     apply_style_to_nodes()
     set_data({...data})
-  
+
   }
 
   const apply_style_to_nodes = () => {
@@ -198,7 +198,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               multi_selected_nodes.current.map(d => delete_node(data, d))
               selected_node.current = default_node(data)
               multi_selected_nodes.current = []
-              // Object.values(data.nodes).forEach( n => 
+              // Object.values(data.nodes).forEach( n =>
               //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
               // )
               // setForceUpdate(!forceUpdate)
@@ -211,14 +211,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     </Row>
     <FormGroup as={Row}>
       <Col xs={10}>
-        <FormLabel >{t('Menu.dns')}</FormLabel>        
+        <FormLabel >{t('Menu.dns')}</FormLabel>
       </Col>
       <Col xs={2}>
         <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
           // const c=evt.target.checkeds
           data.displayed_node_selector=evt.target.checked
           set_data({...data})
-        }}/>        
+        }}/>
       </Col>
     </FormGroup>
 
@@ -240,7 +240,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 set_data({ ...data })
               }}>{'Aucun'}</Dropdown.Item>
               {Object.keys(data.style_node).map((d,i) => {
-                return (<Dropdown.Item 
+                return (<Dropdown.Item
                   key={i}
                   onClick={() => {
                     set_style_to_apply(d)
@@ -265,7 +265,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               apply_style_to_nodes()
             }
           }
-        >{t('Flux.as')}</Button>
+        >{t('Noeud.AS')}</Button>
       </Col>
     </Row>
     <Form.Group as={Row} >
@@ -284,7 +284,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             }
             multi_selected_nodes.current[0].name = evt.target.value
             const d = multi_selected_nodes.current[0]
-            d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)            
+            d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)
             const wrap = textwrap()
               .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
               .method('tspans')
