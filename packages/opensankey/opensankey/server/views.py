@@ -191,31 +191,6 @@ def save_excel():
         return response
 
 
-@opensankey.route('/sankey/save_excel_simple', methods=['POST'])
-def save_excel_simple():
-    try:
-        cwd = os.getcwd()
-        excel_file = os.path.join(cwd, "tutu.xlsx")
-        sankey_data = request.get_data().decode("utf-8")
-        mfa_output, _ = parser_excel.save_excel(json.loads(sankey_data), False)
-    except Exception as excpt:
-        response = Response(
-            response='save_excel: ' + str(excpt),
-            status=401
-        )
-        return response
-    try:
-        simple_mfa_output = {
-            io_excel.DATA_SHEET:  mfa_output[io_excel.DATA_SHEET]
-        }
-        io_excel.write_mfa_problem_output_to_excel(excel_file, [], simple_mfa_output,  'w', verbosity=1)
-        return send_file(excel_file, as_attachment=True)
-    except Exception as excpt:
-        response = Response(
-            response='write_mfa_problem_output_to_excel' + str(excpt),
-            status=402
-        )
-        return response
 
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
@@ -542,22 +517,7 @@ def menus_examples():
     return response
 
 
-@opensankey.route('/sankey/publish', methods=['POST'])
-def publish():
-    sankey_data_str = request.get_data().decode("utf-8")
-    sankey_data = json.loads(sankey_data_str)
-    file_name = sankey_data['file_name']
-    #  del sankey_data['file_name']
-    #  sankey_data_str = json.dumps(sankey_data,indent=2)
-    data_folder = os.environ.get('MFAData')
-    with open(os.path.join(data_folder, file_name), 'w', encoding='utf-8') as outfile:
-        outfile.write(sankey_data_str)
-    response = Response(
-        response='',
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+
 
 
 @opensankey.route('/')
