@@ -1,19 +1,17 @@
 import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue} from './types'
 import React, { useEffect,Requireable } from 'react'
-// import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import * as d3 from 'd3'
 import {  test_link_value,link_color,link_visible} from './SankeyUtils'
 import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
-// import { linkTooltipsContent } from './SankeyTooltip'
+import {value_selected_parameter} from './SankeyDrawFunction'
 
 
 export const OpenSankeyDrawLinks = (
   data:SankeyData, 
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_links:{current: SankeyLink[] },
-  // sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>,
   mode_selection:string,
 
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
@@ -29,7 +27,10 @@ export const OpenSankeyDrawLinks = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_displayed_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+
 
 ) => {
 
@@ -51,7 +52,7 @@ export const OpenSankeyDrawLinks = (
     select_link:(n: SankeyLink) => void,
     set_data:React.Dispatch<React.SetStateAction<SankeyData>>
     )=>{
-    if ((event.ctrlKey || event.metaKey) && !mode_visualisation) {
+    if (!mode_visualisation) {
       sankeyTooltip.style('opacity', 0)
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
         button_ref.current.click()
@@ -74,38 +75,27 @@ export const OpenSankeyDrawLinks = (
         d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
         d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
       }
-      if ( accordion_ref && accordion_ref.current) {
-        for ( const child in accordion_ref.current.children) {
-          if (accordion_ref.current.children[child].id === 'Flux') {
-            (accordion_ref.current.children[0] as HTMLLabelElement).click();
-            (accordion_ref.current.children[child] as HTMLLabelElement).click()
+      if((event.ctrlKey || event.metaKey)){
+        if ( accordion_ref && accordion_ref.current) {
+          for ( const child in accordion_ref.current.children) {
+            if (accordion_ref.current.children[child].id === 'Flux') {
+              (accordion_ref.current.children[0] as HTMLLabelElement).click();
+              (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            }
           }
         }
+        if ( links_accordion_ref && links_accordion_ref.current) {
+          (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+        }
       }
-      if ( links_accordion_ref && links_accordion_ref.current) {
-        (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-        (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+      if(multi_selected_links.current.length>0){
+        set_displayed_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)
+      }else{
+        set_displayed_value('')
       }
+      
       select_link(d)
-    }else if(!event.ctrlKey  && !mode_visualisation){
-      multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
-      if (multi_selected_links.current.includes(d)) {
-        multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
-      } else {
-        multi_selected_links.current.push(d)
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
-      }
       set_data({...data})
     }
   }
