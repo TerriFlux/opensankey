@@ -396,17 +396,21 @@ export const OpenSankeyMenuBanner = (
     let height = 0
     let width = 0
     Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+      // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
+      let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width
+      if(n.display_style.label_horiz=='left'){
+        width_label/=2
+      }else if(n.display_style.label_horiz=='middle'){
+        width_label=0
+      }
+
       height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
-      width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
+      width = (n.x && n.node_visible) ? Math.max(width, n.x+width_label) : width
     })
 
-    // Object.values(data.labels).forEach(n => {
-    //   height = (n.y) ? Math.max(height, n.y) : height
-    //   width = (n.x ) ? Math.max(width, n.x) : width
-    // })
 
-    height = height + 200
-    width = width + 200
+    height = height + 100
+    width = width + 100
     Object.values(data.links).forEach(l => {
       if (l.recycling) {
         height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
