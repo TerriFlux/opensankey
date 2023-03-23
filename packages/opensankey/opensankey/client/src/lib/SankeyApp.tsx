@@ -434,6 +434,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           useNavigate={()=>''}
           external_modal={external_menu_modal}
           menu_banner={menu_banner}
+          loginOut={()=>null}
+          unsetTokens={()=>null}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
