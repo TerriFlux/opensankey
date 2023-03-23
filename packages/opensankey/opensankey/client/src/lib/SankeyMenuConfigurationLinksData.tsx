@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState} from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tab} from 'react-bootstrap'
 import { SankeyData, SankeyLink, SankeyLinkValue } from './types'
 import {value_selected_parameter} from './SankeyDrawFunction'
@@ -15,11 +15,11 @@ export const SankeyMenuConfigurationLinksData = (
   multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   t:TFunction,
-  additional_data_element:JSX.Element[]
+  additional_data_element:JSX.Element[],
+  displayed_value:string,
+  set_displayed_value:(s:string)=>void
 
 )=>{
-
-
   const isAllLinkToPrecision=(multi_selected_links:{current:SankeyLink[]},)=>{
     let toPrecision = true
     multi_selected_links.current.map(d => {
@@ -28,13 +28,6 @@ export const SankeyMenuConfigurationLinksData = (
     return toPrecision
   }
   
- 
-  
-  const test_value=(v:number | null | undefined)=>{
-    return ((v || v===0)&& v!==undefined) ? v:''
-  }
-
-
   return <Tab eventKey="flux_data" title={t('Flux.data.données')}>
     <Form >
       {
@@ -78,54 +71,64 @@ export const SankeyMenuConfigurationLinksData = (
       </Col>
       <Col>
         <Form.Control
-          
+          className='inputValueLink'
           type='text'
-          value={test_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)}
+          value={displayed_value}
           onChange={
             evt => {
-              if(evt.target.value!=='' && !isNaN(+evt.target.value )){
-                const was_empty=test_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)===''
-                let val = Object(selected_link.current.value)
-                multi_selected_links.current.map(d => {
-                  d.dashed=(was_empty)?false:d.dashed
-                  val = d.value
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = +evt.target.value
-
-                })
-
-                const scale = d3.scaleLinear()
-                  .domain([0, data.user_scale])
-                  .range([0, 100])
-                if (scale(+evt.target.value) > 500) {
-                  data.user_scale = +evt.target.value
-                }
+              set_displayed_value(evt.target.value)
+              const formatedValue=evt.target.value.replace(',','.')
+              if(formatedValue!='' && isNaN(+formatedValue)){
+                d3.select('.inputValueLink').style('border','red 1px solid')
               }else{
-  
-                let val = Object(selected_link.current.value)
-                multi_selected_links.current.map(d => {
-                  val = d.value
-                  d.dashed=true
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = ''
-
-                })
+                d3.select('.inputValueLink').style('border','#ced4da 1px solid')
               }
-              
-  
-              set_data({ ...data })
             }
           }
+          onBlur={evt=>{
+            const formatedValue=evt.target.value.replace(',','.')
+            if(formatedValue!=='' && !isNaN(+formatedValue )){
+              const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
+              let val = Object(selected_link.current.value)
+              multi_selected_links.current.map(d => {
+                d.dashed=(was_empty)?false:d.dashed
+                val = d.value
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
+                })
+                val.value = +formatedValue
+
+              })
+
+              const scale = d3.scaleLinear()
+                .domain([0, data.user_scale])
+                .range([0, 100])
+              if (scale(+formatedValue) > 500) {
+                data.user_scale = +formatedValue
+              }
+            set_data({ ...data })
+
+            }else if(formatedValue==''){
+
+              let val = Object(selected_link.current.value)
+              multi_selected_links.current.map(d => {
+                val = d.value
+                d.dashed=true
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
+                })
+                val.value = ''
+
+              })
+            set_data({ ...data })
+            }
+          }}
         />
       </Col>
       <Row>
