@@ -7,7 +7,7 @@ import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
-import { FaAngleDoubleLeft,FaUser} from 'react-icons/fa'
+import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
@@ -99,7 +99,9 @@ const MenuPropTypes = {
   token:PropTypes.bool.isRequired,
   useNavigate:PropTypes.func.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  menu_banner:PropTypes.object.isRequired
+  menu_banner:PropTypes.object.isRequired,
+  loginOut:PropTypes.func.isRequired,
+  unsetTokens:PropTypes.func.isRequired,
 
 }
 
@@ -420,7 +422,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     token,
     useNavigate,
     external_modal,
-    menu_banner
+    menu_banner,
+    loginOut,
+    unsetTokens
   }
 ) => {
   let max_link_value = 0
@@ -524,6 +528,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   )
 
   const navigate=useNavigate()
+  const returnToApp=()=>{
+    navigate('/')
+    set_data({...data})
+  }
   return (
     <>
       {external_modal}
@@ -552,6 +560,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Nav>
               {menus}
               <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
+              {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
               {!data.static_sankey ? (
                 <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
                   <ToggleButton
