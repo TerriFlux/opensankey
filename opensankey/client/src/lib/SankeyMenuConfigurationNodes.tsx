@@ -26,7 +26,8 @@ const SankeyNodeEditionPropTypes = {
   style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  style_editable:PropTypes.bool.isRequired
+  style_editable:PropTypes.bool.isRequired,
+  token:PropTypes.bool.isRequired
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
@@ -60,7 +61,7 @@ export const OpenSankeyMenuConfigurationNodes = (
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable }
+  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable,token }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
 
@@ -173,14 +174,24 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
 
   return (<>
+  {
+    (token==false && Object.keys(data.nodes).length>15)?<>
+    <Row>
+      <FormLabel style={{'color':'red'}}>{t('Menu.warningLimitNode')}</FormLabel>
+    </Row>
+    </>:<></>
+  }
     <Row >
       <Col xs={1}>
-        <Button size="sm" onClick={() => {
-          set_style_to_apply('default')
-          add_new_node()
-          style_to_apply = 'default'
-          apply_style_to_nodes()
-        }}><FaPlus /></Button>
+        <Button size="sm"
+          disabled={token==false && Object.keys(data.nodes).length>15}
+          onClick={() => {
+
+            set_style_to_apply('default')
+            add_new_node()
+            style_to_apply = 'default'
+            apply_style_to_nodes()
+          }}><FaPlus /></Button>
       </Col>
 
       <Col xs={10}>

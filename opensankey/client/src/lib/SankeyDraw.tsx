@@ -36,7 +36,9 @@ const SankeyDrawPropTypes = {
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
-  getLinkValue:PropTypes.func.isRequired
+  getLinkValue:PropTypes.func.isRequired,
+  token:PropTypes.bool.isRequired,
+  set_show_toast_limit_node:PropTypes.func.isRequired
   
 
 }
@@ -64,7 +66,9 @@ export const SankeyDrawDefaultProps = {
   draw_legend:<></>,
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
-  getLinkValue:()=>[]
+  getLinkValue:()=>[],
+  token:false,
+  set_show_toast_limit_node:()=>false
 
 }
 
@@ -82,7 +86,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   is_agregation,
   draw_nodes,draw_links,draw_legend,
   set_alt_key_pressed,min_width_and_height,
-  getLinkValue
+  getLinkValue,token,set_show_toast_limit_node
 }) => {
   set_mode_selection
 
@@ -278,7 +282,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   
     )
     //Ajout des events sur les l'ajout des noeuds aux click 
-    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node)
+    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node)
 
     drawGrid(data)
 

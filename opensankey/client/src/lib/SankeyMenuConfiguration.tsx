@@ -36,7 +36,8 @@ export const OpenSankeyConfigurationsMenus = (
   menu_configuration_legends:JSX.Element[],
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
-  style_editable:boolean
+  style_editable:boolean,
+  token:boolean
 
 ) => {
   return [
@@ -133,6 +134,7 @@ export const OpenSankeyConfigurationsMenus = (
                 multi_selected_links={multi_selected_links}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 style_editable={style_editable}
+                token={token}
               />
             </Accordion.Body>
           </Accordion.Item>
