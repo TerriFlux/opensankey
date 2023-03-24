@@ -1,20 +1,20 @@
 import { InferProps} from 'prop-types'
 import React, { Requireable } from 'react'
-import {SankeyLink,/*SankeyPlusNode,*/ SankeyLinkValue, TagsCatalog, drawArrowsType, drawCurveType,SankeyData} from 'open-sankey/src/lib/types'
+import {/*SankeyPlusNode,*/ SankeyLinkValue, TagsCatalog} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
-
+import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
   nodes: { [node_id: string]: SankeyPlusNode },
   node: SankeyPlusNode,
-  new_links: { [link_id: string]: SankeyLink },
+  new_links: { [link_id: string]: SankeyPlusLink },
 ) => {
   const keys_links = Object.keys(new_links)
   // let number_new_path=0
@@ -48,11 +48,11 @@ export const sankey_draw_view = (
   data:SankeyPlusData,
   view:string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyLink[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  link_text:(data: SankeyPlusData, d: SankeyLink) => string,
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
-  linkTooltipsContent:(data : SankeyPlusData,d : SankeyLink) => string,
+  linkTooltipsContent:(data : SankeyPlusData,d : SankeyPlusLink) => string,
   set_show_toast:(b:boolean)=>void,
   mode_selection:string,
   set_mode_selection:(s:string)=>void,
@@ -97,18 +97,18 @@ export const nextView = (
   set_view : (id: string)=>void,
   new_view: string,
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
-  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
-  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
   min_thickness: number,
-  drawArrows:drawArrowsType,
-  drawCurve:drawCurveType,
-  link_text:(data: SankeyData, d: SankeyLink) => string,
+  drawArrows:plusDrawArrowsType,
+  drawCurve:PlusDrawCurveType,
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
 ) => {
   const v1 = views.filter(d => d.id === new_view)[0].id
   let ind = -1
@@ -137,18 +137,18 @@ const animate_view_changement = (
   data_v1: SankeyPlusData,
   data_v2: SankeyPlusData,
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
-  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
-  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
-  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
+  link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
   min_thickness: number,
-  drawArrows:drawArrowsType,
-  drawCurve:drawCurveType,
-  link_text:(data: SankeyData, d: SankeyPlusLink) => string
+  drawArrows:plusDrawArrowsType,
+  drawCurve:PlusDrawCurveType,
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
 ) => {
 
   //Cette fonction reprend le code executé pour l'affichage des noeuds et lien tout en  ajoutant une animation
@@ -846,7 +846,7 @@ const animate_view_changement = (
     })
     .each(function (m) {
       const n = Object.values(data_v2.nodes).filter(d => d.idNode === (m as SankeyPlusNode).idNode)[0]
-      drawArrows(data_v2, n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
+      drawArrows(data_v2, n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness,getLinkValue)
     })
 
   Object.keys(new_links).forEach(l=>{
@@ -862,7 +862,7 @@ const animate_view_changement = (
     setNodesHeight(data_v2,data_v2.nodes, new_links, d, data_v2.nodeTags)
     return drawCurve(data_v2,
       data_v2.nodes, new_links, data_v2.display_style,
-      data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,getLinkValue
+      data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,sankey_plus_min_width_and_height,getLinkValue,drawArrows
     )
   })
   if (error_msg && error_msg.text) {
@@ -888,7 +888,7 @@ const animate_view_changement = (
   edit_arrow
     .each(n => {
       const new_n = Object.values(data_v2.nodes).filter(d => d.idNode === (n as SankeyPlusNode).idNode)[0]
-      drawArrows(data_v2, new_n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness)
+      drawArrows(data_v2, new_n as SankeyPlusNode, data_v2.nodes, data_v2.links, data_v2.display_style, data_v2.nodeTags,scale,inv_scale,min_thickness,getLinkValue)
     })
 
   //Déplace les flux déjà existant vers leur nouvelle position
@@ -896,7 +896,7 @@ const animate_view_changement = (
     d3.select(' .opensankey #' + d.idLink).transition().duration(500).attr('d', l => {
       const d = l as SankeyPlusLink
 
-      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,getLinkValue)
+      const p = drawCurve(data_v2, data_v2.nodes, edit_links, data_v2.display_style, data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,sankey_plus_min_width_and_height,getLinkValue,drawArrows)
       return p
     })
   })
@@ -915,7 +915,7 @@ const animate_view_changement = (
     nb_animation = (nb_animation !== undefined) ? nb_animation : 0
     time_to_animate += nb_animation * 2000
   }
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
     .filter(function (d) {
       return k_links.includes(d.idLink)
     })
@@ -938,7 +938,7 @@ const branchAnimateForView = (
   data: SankeyPlusData,
   nodeData: SankeyPlusNode,
   nodeDisplay: string[],
-  new_links: { [link_id: string]: SankeyLink },
+  new_links: { [link_id: string]: SankeyPlusLink },
 ) => {
 
 
@@ -950,7 +950,7 @@ const branchAnimateForView = (
   d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
   d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
 
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
     .filter(function (d) {      
       return d.idSource == nodeStart && keys_links.includes(d.idLink)
     })
@@ -1013,7 +1013,7 @@ const branchAnimateForView = (
 }
 
 export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
-  multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyLink[]},
+  multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyPlusLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
@@ -1026,33 +1026,33 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
     set_view : (id: string)=>void,
     new_view: string,
     node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
-    link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+    link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
     multi_selected_nodes:{current:SankeyPlusNode[]},
-    setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-    setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
+    setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+    setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
     scale:(t:number)=>number,inv_scale:(t:number)=>number,
     getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
-    link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
-    test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+    link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
+    test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
     min_thickness: number,
-    drawArrows:drawArrowsType,
-    drawCurve:drawCurveType,
-    link_text:(data: SankeyData, d: SankeyLink) => string,)=>void,
-  delete_link : (data: SankeyPlusData,link: SankeyLink) => void,
+    drawArrows:plusDrawArrowsType,
+    drawCurve:PlusDrawCurveType,
+    link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,)=>void,
+  delete_link : (data: SankeyPlusData,link: SankeyPlusLink) => void,
   delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void,
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
-  link_color: (link:SankeyLink,data:SankeyPlusData)=>string,
+  link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(data:SankeyData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyLink },d: SankeyLink,nodeTags: TagsCatalog) =>void,
-  link_visible: (l: SankeyLink, data_s: SankeyPlusData)=>boolean,
-  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyLink) => string,
+  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
+  link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
+  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
   min_thickness: number,
-  drawArrows:drawArrowsType,
-  drawCurve:drawCurveType,
-  link_text:(data: SankeyData, d: SankeyLink) => string
+  drawArrows:plusDrawArrowsType,
+  drawCurve:PlusDrawCurveType,
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string
 
 ) => {
   
@@ -1365,7 +1365,7 @@ export const viewsAccordion = (
   view:string,
   set_view:(s:string)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyLink[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
   current_data:SankeyPlusData,
   set_current_data:(d:SankeyPlusData)=>void,
@@ -1512,7 +1512,7 @@ declare const window: Window &
       excel: string
       structure: boolean,
       advanced: boolean
-    } & { [key: string]: SankeyData }
+    } & { [key: string]: SankeyPlusData }
   }
 
 export const SankeyPlusBannerView=(mode_selection:string)=>{
@@ -1565,7 +1565,7 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
     </Col>)
 }
 
-export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyData) => void)=>{
+export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
 return <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
     preferenceCheck('Vis',data)
     set_data({ ...data })

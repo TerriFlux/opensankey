@@ -4,7 +4,7 @@ import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/type
 import { TFunction } from 'i18next'
 import {node_color,removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
 import * as d3 from 'd3'
-import {SankeyPlusData,SankeyPlusNode} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import {  getLinkValue,test_link_value } from 'open-sankey/dist/SankeyUtils'
 export const SankeyPlusNodesAttributes = (
   t:TFunction,
@@ -540,7 +540,7 @@ export const SankeyPlusDrawNodesIcon = (
 
 export  const SankeyPlusDrag_nodes = (
   nodes: { [node_id: string]: SankeyPlusNode },
-  links: { [link_id: string]: SankeyLink },
+  links: { [link_id: string]: SankeyPlusLink },
   display_style: { italic?: boolean; bold?: boolean; node_font_size: number;  uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number },
   nodeTags: TagsCatalog,
   dragged:Element,
