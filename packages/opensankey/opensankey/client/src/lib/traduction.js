@@ -60,7 +60,10 @@ const resources = {
         'attrGeneral':'Generals attributes',
         'SaveJSON':'Save as JSON',
         'SaveValue':'Save with links\' values',
-        'templates':'Templates'
+        'templates':'Templates',
+        'warningLimitNode':'Warning : Limit of node reach for unconnected user',
+        'warningLimitNode':'Attention :Nombre de noeuds limite atteint pour les utilisateurs non connecté'
+
       },
       MEP:{
         'Echelle':'Scale of diagram',
