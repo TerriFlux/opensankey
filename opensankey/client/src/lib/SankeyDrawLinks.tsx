@@ -1,9 +1,9 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue} from './types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue,drawArrowsType} from './types'
 import React, { useEffect,Requireable } from 'react'
 import * as d3 from 'd3'
 import {  test_link_value,link_color,link_visible} from './SankeyUtils'
-import { drawArrows,drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'
+import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter} from './SankeyDrawFunction'
 
@@ -30,6 +30,10 @@ export const OpenSankeyDrawLinks = (
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   set_displayed_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
+  linkStroke:(l:SankeyLink,
+    data:SankeyData,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
+  drawArrows:drawArrowsType
 
 
 ) => {
@@ -102,251 +106,7 @@ export const OpenSankeyDrawLinks = (
 
   // Function that return the link color
   // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags), if it's a gradient between the source node color and it's target node color
-  const linkStroke=(l:SankeyLink,data:SankeyData,defGradient:d3.Selection<SVGDefsElement,unknown,HTMLElement,unknown>)=>{
-    const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
-    const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
-    const width_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('width')
-    // const height_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('height')  
-    const gradient = defGradient.append('defs')
-      .append('linearGradient')
-      .attr('id', 'gradient-' + l.idSource + '-' + l.idTarget)
-      .attr('gradientUnits', 'userSpaceOnUse')  
-    gradient.append('stop')
-      .attr('id', 'stop-start')
-      .attr('offset', '0%')
-      .attr('stop-color', () => {  
-        if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
-          const n = data.nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          const n = data.nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      })
-      .attr('stop-opacity', 1)  
-    gradient.append('stop')
-      .attr('id', 'stop-end')
-      .attr('offset', '100%')
-      .attr('stop-color', () => {
-        if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
-          const n = data.nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          const n = data.nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      })
-      .attr('stop-opacity', 1)  
-    const nodes = data.nodes  
-    if (l.orientation == 'hh' || l.orientation == 'hv') {
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-        if (nodes[l.idSource].x < nodes[l.idTarget].x) {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', data.nodes[l.idSource].x + width_src)
-            .attr('y1', '0')
-            .attr('x2', nodes[l.idTarget].x)
-            .attr('y2', 0)
-          const n = data.nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', data.nodes[l.idTarget].x + width_trgt)
-            .attr('y1', '0')
-            .attr('x2', nodes[l.idSource].x)
-            .attr('y2', 0)
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )  
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-        if (nodes[l.idSource].x > nodes[l.idTarget].x) {
-          const n = nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )
-    } else if (l.orientation == 'vv' || l.orientation == 'hv') {
-      //orientation vert-vert
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-        if (nodes[l.idSource].y < nodes[l.idTarget].y) {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', 0)
-            .attr('y1', data.nodes[l.idSource].y + height_src)
-            .attr('x2', 0)
-            .attr('y2', data.nodes[l.idTarget].y)  
-          const n = nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', 0)
-            .attr('y1', data.nodes[l.idTarget].y + height_src)
-            .attr('x2', 0)
-            .attr('y2', data.nodes[l.idSource].y)  
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )  
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-        if (nodes[l.idSource].y > nodes[l.idTarget].y) {
-          const n = nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )
-    } else if (l.orientation == 'vh') {  
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-        if (nodes[l.idSource].x < nodes[l.idTarget].x) {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', data.nodes[l.idSource].x + width_src - 10)
-            .attr('y1', '0')
-            .attr('x2', nodes[l.idTarget].x)
-            .attr('y2', 0)
-          const n = nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-            .attr('x1', data.nodes[l.idTarget].x + width_trgt + 10)
-            .attr('y1', '0')
-            .attr('x2', nodes[l.idSource].x)
-            .attr('y2', 0)
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )  
-      d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-        if (nodes[l.idSource].x > nodes[l.idTarget].x) {
-          const n = nodes[l.idSource]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        } else {
-          const n = nodes[l.idTarget]
-          if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-            const selected_tag = n.tags[n.colorTag][0]
-            const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-            if (tag) {
-              return tag.color as string
-            }
-          }
-          return n.color
-        }
-      }
-      )  
-    }
-    return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : link_color(l,data,getLinkValue) as string
-  } 
+  
 
   // Function that compute the link width
   const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number,min_thickness:number,display_nodes:{ [node_id: string]: SankeyNode })=>{
@@ -443,7 +203,10 @@ export const OpenSankeyDrawLinks = (
 
   const add_links = (
     static_sankey: boolean,
-    remove_previous_links = true
+    linkStroke:(l:SankeyLink,
+      data:SankeyData,
+      getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
+    drawArrows:drawArrowsType
   ) => {
     // Structure svg du link
     //- link : 
@@ -451,15 +214,13 @@ export const OpenSankeyDrawLinks = (
     //- rect :
     //- rect :
     //- arrow :       
-    d3.selectAll(' .opensankey #svg #sankey_def').remove()
-    const defGradient = d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
+    
 
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
     const { display_style } = data
-    if (remove_previous_links) {
       d3.select(' .opensankey #g_links').selectAll('.gg_links').remove()
-    }
+    
     d3.select(' .opensankey #svg').selectAll('.link_value').remove()
 
     if (display_links === undefined) {
@@ -567,7 +328,7 @@ export const OpenSankeyDrawLinks = (
         return data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible && tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? 0.85 : 0.85) : 0})
       .attr('stroke-width', l =>linkStrokeWidth(l,data,scale,inv_scale,min_thickness,display_nodes))
 
-      .attr('stroke', l => linkStroke(l,data,defGradient)
+      .attr('stroke', l => linkStroke(l,data,getLinkValue)
       )
       .on('mouseover', function (event, d) {
         // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
@@ -651,7 +412,7 @@ export const OpenSankeyDrawLinks = (
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
         }
       })
     if (error_msg && error_msg.text) {
@@ -1005,7 +766,7 @@ export const OpenSankeyDrawLinks = (
 
 
   useEffect(()=>{
-    add_links(static_sankey)
+    add_links(static_sankey,linkStroke,drawArrows)
   })  
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

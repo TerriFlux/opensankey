@@ -919,7 +919,6 @@ export const default_link = (data: SankeyData): SankeyLink => {
     value: nObjet,
     color: '#a9a9a9',
     recycling:false,
-    gradient: false,
     curved: false,
     arrow: true,
     text_color: 'black',

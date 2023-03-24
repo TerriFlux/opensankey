@@ -12,17 +12,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
   multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   t:TFunction,
-
+  additional_link_appearence_items:JSX.Element[]
 )=>{
   const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
   center
-  const gradChecked = () => {
-    let gradChecked = true
-    multi_selected_links.current.map(d => {
-      gradChecked = (d.gradient) ? gradChecked : false
-    })
-    return gradChecked
-  }
+  
 
   const dashChecked = () => {
     let dashChecked = true
@@ -144,27 +138,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </Form.Group>
       <Form.Group as={Row} >
         <Col>
-          <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
-        </Col>
-        <Col>
-          <Form.Check
-            inline
-            type="checkbox"
-            checked={
-              gradChecked()
-            }
-            onChange={
-              evt => {
-              // selected_link.gradient = evt.target.checked
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
-                set_data({ ...data })
-              }
-            }
-          />
-        </Col>
-      </Form.Group>
-      <Form.Group as={Row} >
-        <Col>
           <FormLabel >{t('Flux.apparence.hach')}:</FormLabel>
         </Col>
         <Col>
@@ -176,7 +149,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             }
             onChange={
               evt => {
-              // selected_link.gradient = evt.target.checked
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                 set_data({ ...data })
               }
@@ -400,6 +372,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         </Col>
         <Col sm={2}>{selected_link.current.curvature}</Col>
       </Form.Group>
+      {additional_link_appearence_items}
 
     </Form>
   </Tab>

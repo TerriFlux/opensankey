@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue } from './types'
-import {removeAnimate,drawArrows,dragNodeRedrawGradient,compute_end_points, min_width_and_height} from './SankeyDrawFunction'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
+import {removeAnimate,compute_end_points, min_width_and_height} from './SankeyDrawFunction'
 import {   link_visible,test_link_value } from './SankeyUtils'
 
 /**
@@ -30,21 +30,18 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
   min_thickness:number,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
 )=>{
   return d3.drag<SVGPathElement, SankeyLink>()
     .subject(Object)
     .on('drag', function (event,l) {
       if(multi_selected_links.current.includes(l)){
-        drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event,data,scale,inv_scale,min_thickness,getLinkValue)
+        drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
-            d3.select(' .opensankey #' + link.idLink).attr('d',
-              () => {
-                return drawCurveFunction.curve(data,
-                  display_nodes, display_links, display_style,
-                  data.nodeTags, link,
-                  error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+            d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
+                return drawCurveFunction.curve(data,            display_nodes, display_links, display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
                 )
               }
             )
@@ -95,22 +92,19 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
   min_thickness:number,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
 )=>{
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object)
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link)){
         const tmp=(this as unknown as  SVGPathElement)
-        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, tmp, event,data,scale,inv_scale,min_thickness,getLinkValue)
+        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, tmp, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
-            d3.select(' .opensankey #' + link.idLink).attr('d',
-              () => {
-                return drawCurveFunction.curve(data,
-                  display_nodes, display_links, data.display_style,
-                  data.nodeTags, link,
-                  error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+            d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
+                return drawCurveFunction.curve(data,            display_nodes, display_links, data.display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
                 )
               }
             )
@@ -204,10 +198,7 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !mode_visualisation){
         drag_handle(
-          link, nodes, links, display_style,
-          selected_tags,
-          this, position, event,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,
-          link_text,getLinkValue
+          link, nodes, links, display_style,    selected_tags,    this, position, event,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,    link_text,getLinkValue
         )
       }
         
@@ -257,8 +248,9 @@ export const dragGNodeEvent=(
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType,
+  dragging:Function
 
 )=>{
   return d3.drag<SVGGElement, SankeyNode>()
@@ -268,21 +260,12 @@ export const dragGNodeEvent=(
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
-            display_nodes, display_links,
-            display_style,
-            data.nodeTags,this,
-            event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue
+            display_nodes, display_links,display_style,data.nodeTags,this,event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows,dragging
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(
-            display_nodes, display_links,
-            display_style,
-            data.nodeTags,this,
-            event,data,multi_selected_nodes,
-            min_width_and_height,drawGrid,scale,inv_scale,
-            sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,
-            link_text,getLinkValue
+            display_nodes, display_links,display_style,data.nodeTags,this,event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows,dragging
           )
         }
       }
@@ -353,551 +336,214 @@ export  const drag_nodes = (
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType,
+  dragging:Function
 
 ) => {
   const { width } = data
   removeAnimate()
   
+  
   if(multi_selected_nodes.current.length>0){
     multi_selected_nodes.current.map(node=>{
-  
-      const old_x = +node.x
-      const old_y = +node.y
-      const new_x = old_x + event.dx
-      const new_y = old_y + event.dy
-  
-  
-      if (new_x < 0 || new_x > (width - node.node_width) || new_y < 0 || new_y > (data.height - node.node_height)) {
-        return
-      }
-  
-      node.x = new_x
-      node.y = new_y;
-  
-  
-  
-      [data.width, data.height] = min_width_and_height(data)
-      if (data.fit_screen) {
-        const svgSankey = d3.select(' .opensankey #svg')
-        svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-      } else {
-        d3.select(' .opensankey #svg').style('width', data.width + 'px')
-      }
-  
-  
-  
-      d3.select(' .opensankey #svg').style('height', data.height + 'px')
-      drawGrid(data)
-  
-      const stream_io = node.inputLinksId.concat(node.outputLinksId)
-      //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
-      for (const i in stream_io) {
-        const l = links[stream_io[i]]
-        if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
-          continue
-        }
-        //position noeud source ou target
-        let pos_x_src, pos_y_src
-        if (node.idNode == nodes[l.idSource].idNode) {
-          pos_x_src = nodes[l.idTarget].x
-          pos_y_src = nodes[l.idTarget].y
-        } else {
-          pos_x_src = nodes[l.idSource].x
-          pos_y_src = nodes[l.idSource].y
-        }
-        const link_value = test_link_value(data, nodes, l,getLinkValue)
-        //Zones limite à ne pas êtres
-        const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
-        const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
-        let draw_warning = false
-        //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
-        //si partie gauche du noeud ne se situe pas dans les coord du noeud source
-        const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
-        //si partie droite du noeud ne se situe pas dans le noeud source
-        const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-        //si partie haute du noeud ne se situe pas dans le noeud source
-        const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-        //const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
-        if (l.orientation == 'hh') {
-        //orientation hh
-          draw_warning = left_in_src || right_in_src
-        } else if (l.orientation == 'vv') {
-        //orientation vv
-          draw_warning = top_in_src
-        } else if (l.orientation == 'vh') {
-          draw_warning = left_in_src || right_in_src || top_in_src
-        } else {
-        //orientation hv 
-          draw_warning = left_in_src || right_in_src || top_in_src
-        }
-        if (draw_warning && !l.recycling) {
-          d3.select(' .opensankey #' + l.idLink).attr('stroke-width', '1px')
-        } else {
-        //retour à la normal
-          d3.select(' .opensankey #' + l.idLink).attr('stroke-width', d => {
-            const is_free = getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini !== undefined && +getLinkValue(data, (d as SankeyLink).idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
-            if (is_free) {
-              return 5
-            }
-            const link_value = test_link_value(data, nodes, (d as SankeyLink),getLinkValue)
-            const tmp=(link_value=='')?1:link_value
-            return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
-          })
-        }
-      }
-  
-      sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
-  
-      d3.select(' .opensankey #ggg_'+node.idNode).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
-      d3.select(' .opensankey #tooltip_node' + node.idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
-      const error_msg: { [text: string]: string } = {}
-      Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
-        link => {
-  
-  
-          //Redessine les gradients correctement si la pos du noeud source passe de l'autre coté du noeud target
-          if (link.gradient) {
-            dragNodeRedrawGradient(nodes,link,data)
-          }
-  
-          if (link.label_on_path) {
-            if (link.recycling) {
-              if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-                d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-              } else if (link.label_position === 'middle' && link.orientation === 'hh') {
-                d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-              }
-            } else {
-              if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-                d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-              } else if (link.label_position === 'middle' /*&& link.orientation === 'hh'*/) {
-                d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-              }
-            }
-              
-            if (link.orthogonal_label_position === 'middle') {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('dy', '0.3em')
-            } else if (link.orthogonal_label_position === 'below') {
-              let tmp=getLinkValue(data, link.idLink).value
-              tmp=(tmp)?tmp:0
-              // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-  
-            } else if (link.orthogonal_label_position === 'above') {
-              let tmp=getLinkValue(data, link.idLink).value
-              tmp=(tmp)?tmp:0
-              // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 'px')
-  
-            }
-          
-          }
-  
-          if (link.idSource === node.idNode || link.idTarget === node.idNode) {
-            // Redraw link
-            const old_x_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('x')
-            const old_y_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('y')
-            if (!(link.label_position === 'frozen')) {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
-            }
-            // select allows to redraw directly without refreshing
-            d3.select(' .opensankey #' + link.idLink)
-              .attr('d', () => {
-                return drawCurveFunction.curve(data,
-                  nodes, links, display_style,
-                  data.nodeTags,
-                  link,
-                  error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                )
-              })
-            const target_node = nodes[link.idTarget]
-            if (link.arrow) {
-              drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
-            }
-            for (let i = 0; i < target_node.inputLinksId.length; i++) {
-              d3.select(' .opensankey #' + target_node.inputLinksId[i])
-                .attr('d', (link => {
-                  return drawCurveFunction.curve(data,
-                    nodes, links, display_style,
-                    nodeTags,
-                      link as SankeyLink,
-                      error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                  )
-                }))
-            }
-            for (let i = 0; i < target_node.outputLinksId.length; i++) {
-              d3.select(' .opensankey #' + target_node.outputLinksId[i])
-                .attr('d', link => {
-                  return drawCurveFunction.curve(data,
-                    nodes, links, display_style,
-                    nodeTags,
-                      link as SankeyLink,
-                      error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                  )
-                })
-  
-            }
-          }
-        })
-  
-      if (error_msg.text !== undefined) {
-        alert(error_msg)
-      }
-  
+    dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
     })
   }else{
     const idNode = dragged.id.substring(4)
     const node=nodes[idNode]
+    dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
+  }
 
-    const old_x = +node.x
-    const old_y = +node.y
-    const new_x = old_x + event.dx
-    const new_y = old_y + event.dy
+}
+export const dragging=(node:SankeyNode,
+  nodes: { [node_id: string]: SankeyNode },
+  links: { [link_id: string]: SankeyLink },
+  display_style: { filter: number; filter_label: number },
+  nodeTags: TagsCatalog,
+  event: { dx: number; dy: number },
+  data:SankeyData,
+  min_width_and_height:(d:SankeyData)=>number[],
+  drawGrid:(d:SankeyData)=>void,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  min_thickness:number,
+  drawCurveFunction : SankeyDrawCurve,
+  multi_selected_links:{current: SankeyLink[] },
+  link_text:(data: SankeyData, d: SankeyLink,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
+  )=>{
+  const old_x = +node.x
+  const old_y = +node.y
+  const new_x = old_x + event.dx
+  const new_y = old_y + event.dy
 
-  
-    if (new_x < 0 || new_x > (width - node.node_width) || new_y < 0 || new_y > (data.height - node.node_height)) {
-      return
+
+  if (new_x < 0 || new_x > (data.width - node.node_width) || new_y < 0 || new_y > (data.height - node.node_height)) {
+    return
+  }
+
+  node.x = new_x
+  node.y = new_y;
+
+
+
+  [data.width, data.height] = min_width_and_height(data)
+  if (data.fit_screen) {
+    const svgSankey = d3.select(' .opensankey #svg')
+    svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+  } else {
+    d3.select(' .opensankey #svg').style('width', data.width + 'px')
+  }
+
+
+
+  d3.select(' .opensankey #svg').style('height', data.height + 'px')
+  drawGrid(data)
+
+  const stream_io = node.inputLinksId.concat(node.outputLinksId)
+  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
+  for (const i in stream_io) {
+    const l = links[stream_io[i]]
+    if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
+      continue
     }
-  
-    node.x = new_x
-    node.y = new_y;
 
-
-
-    [data.width, data.height] = min_width_and_height(data)
-    if (data.fit_screen) {
-      const svgSankey = d3.select(' .opensankey #svg')
-      svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+    //position noeud source ou target
+    let pos_x_src, pos_y_src
+    if (node.idNode == nodes[l.idSource].idNode) {
+      pos_x_src = nodes[l.idTarget].x
+      pos_y_src = nodes[l.idTarget].y
     } else {
-      d3.select(' .opensankey #svg').style('width', data.width + 'px')
+      pos_x_src = nodes[l.idSource].x
+      pos_y_src = nodes[l.idSource].y
     }
-  
-  
-  
-    d3.select(' .opensankey #svg').style('height', data.height + 'px')
-    drawGrid(data)
 
-    const stream_io = node.inputLinksId.concat(node.outputLinksId)
-    //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
-    for (const i in stream_io) {
-      const l = links[stream_io[i]]
-      if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
-        continue
-      }
-  
-      //position noeud source ou target
-      let pos_x_src, pos_y_src
-      if (node.idNode == nodes[l.idSource].idNode) {
-        pos_x_src = nodes[l.idTarget].x
-        pos_y_src = nodes[l.idTarget].y
-      } else {
-        pos_x_src = nodes[l.idSource].x
-        pos_y_src = nodes[l.idSource].y
-      }
-  
-  
-      const link_value = test_link_value(data, nodes, l,getLinkValue)
-      //Zones limite à ne pas êtres
-      const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
-      const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
-  
-      let draw_warning = false
-  
-      //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
-      //si partie gauche du noeud ne se situe pas dans les coord du noeud source
-      const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
-      //si partie droite du noeud ne se situe pas dans le noeud source
-      const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-      //si partie haute du noeud ne se situe pas dans le noeud source
-      const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-      //const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
-  
-      if (l.orientation == 'hh') {
-        //orientation hh
-        draw_warning = left_in_src || right_in_src
-      } else if (l.orientation == 'vv') {
-        //orientation vv
-        draw_warning = top_in_src
-      } else if (l.orientation == 'vh') {
-        draw_warning = left_in_src || right_in_src || top_in_src
-      } else {
-        //orientation hv 
-        draw_warning = left_in_src || right_in_src || top_in_src
-      }
-  
-      if (draw_warning && !l.recycling) {
-        d3.select(' .opensankey #' + l.idLink).attr('stroke-width', '1px')
-      } else {
-        //retour à la normal
-        d3.select(' .opensankey #' + l.idLink).attr('stroke-width', d => {
-          const link_value = test_link_value(data, nodes, (d as SankeyLink),getLinkValue)
-          const tmp=(link_value=='')?1:link_value
-          return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
-        })
-      }
+
+    const link_value = test_link_value(data, nodes, l,getLinkValue)
+    //Zones limite à ne pas êtres
+    const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
+    const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
+
+    let draw_warning = false
+
+    //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
+    //si partie gauche du noeud ne se situe pas dans les coord du noeud source
+    const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
+    //si partie droite du noeud ne se situe pas dans le noeud source
+    const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
+    //si partie haute du noeud ne se situe pas dans le noeud source
+    const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
+    //const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
+
+    if (l.orientation == 'hh') {
+      //orientation hh
+      draw_warning = left_in_src || right_in_src
+    } else if (l.orientation == 'vv') {
+      //orientation vv
+      draw_warning = top_in_src
+    } else if (l.orientation == 'vh') {
+      draw_warning = left_in_src || right_in_src || top_in_src
+    } else {
+      //orientation hv 
+      draw_warning = left_in_src || right_in_src || top_in_src
     }
-  
-    sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
 
-    d3.select(' .opensankey #ggg_'+node.idNode).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
-    d3.select(' .opensankey #tooltip_node' + node.idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
-    const error_msg: { [text: string]: string } = {}
-    Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
-      link => {
-  
-  
-        //Redessine les gradients correctement si la pos du noeud source passe de l'autre coté du noeud target
-        if (link.gradient) {
-          const width_src = +d3.select(' .opensankey #' + link.idSource).attr('width')
-          const height_src = +d3.select(' .opensankey #' + link.idSource).attr('height')
-          const width_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('width')
-          //const height_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('height')
-  
-  
-          if (link.orientation == 'hh' || link.orientation == 'hv') {
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-              if (nodes[link.idSource].x < nodes[link.idTarget].x) {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', data.nodes[link.idSource].x + width_src)
-                  .attr('y1', '0')
-                  .attr('x2', nodes[link.idTarget].x)
-                  .attr('y2', 0)
-                const n = nodes[link.idSource]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              } else {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', data.nodes[link.idTarget].x + width_trgt)
-                  .attr('y1', '0')
-                  .attr('x2', nodes[link.idSource].x)
-                  .attr('y2', 0)
-                const n = nodes[link.idTarget]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              }
-            }
-            )
-  
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-              if (nodes[link.idSource].x > nodes[link.idTarget].x) {
-                const n = nodes[link.idSource]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              } else {
-                const n = nodes[link.idTarget]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              }
-            }
-            )
-          } else if (link.orientation == 'vv' || link.orientation == 'hv') {
-            //orientation vert-vert
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-              if (nodes[link.idSource].y < nodes[link.idTarget].y) {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', 0)
-                  .attr('y1', data.nodes[link.idSource].y + height_src)
-                  .attr('x2', 0)
-                  .attr('y2', data.nodes[link.idTarget].y)
-  
-                return nodes[link.idSource].color
-              } else {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', 0)
-                  .attr('y1', data.nodes[link.idTarget].y + height_src)
-                  .attr('x2', 0)
-                  .attr('y2', data.nodes[link.idSource].y)
-  
-                return nodes[link.idTarget].color
-              }
-            }
-            )
-  
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-              if (nodes[link.idSource].y > nodes[link.idTarget].y) {
-                return nodes[link.idSource].color
-              } else {
-                return nodes[link.idTarget].color
-              }
-            }
-            )
-          } else if (link.orientation == 'vh') {
-  
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-              if (nodes[link.idSource].x < nodes[link.idTarget].x) {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', data.nodes[link.idSource].x + width_src - 10)
-                  .attr('y1', '0')
-                  .attr('x2', nodes[link.idTarget].x)
-                  .attr('y2', 0)
-                const n = nodes[link.idSource]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              } else {
-                d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
-                  .attr('x1', data.nodes[link.idTarget].x + width_trgt + 10)
-                  .attr('y1', '0')
-                  .attr('x2', nodes[link.idSource].x)
-                  .attr('y2', 0)
-                const n = nodes[link.idTarget]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              }
-            }
-            )
-  
-            d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-              if (nodes[link.idSource].x > nodes[link.idTarget].x) {
-                const n = nodes[link.idSource]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              } else {
-                const n = nodes[link.idTarget]
-                if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-                  const selected_tag = n.tags[n.colorTag][0]
-                  const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-                  if (tag) {
-                    return tag.color as string
-                  }
-                }
-                return n.color
-              }
-            }
-            )
-  
-          }
-  
-        }
-  
-        if (link.label_on_path) {
-          if (link.recycling) {
-            if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-            } else if (link.label_position === 'middle' && link.orientation === 'hh') {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-            }   
-          } else {
-            if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-            } else if (link.label_position === 'middle' /*&& link.orientation === 'hh'*/) {
-              d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-            }
-          }
-          
-          if (link.orthogonal_label_position === 'middle') {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('dy', '0.3em')
-          } else if (link.orthogonal_label_position === 'below') {
-            let tmp=getLinkValue(data, link.idLink).value
-            tmp=(tmp)?tmp:0
-            // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-  
-          } else if (link.orthogonal_label_position === 'above') {
-            let tmp=getLinkValue(data, link.idLink).value
-            tmp=(tmp)?tmp:0
-            // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 'px')
-  
-          }
-          
-        }
-  
-        if (link.idSource === node.idNode || link.idTarget === node.idNode) {
-          // Redraw link
-          const old_x_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('x')
-          const old_y_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('y')
-          if (!(link.label_position === 'frozen')) {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
-          }
-          // select allows to redraw directly without refreshing
-          d3.select(' .opensankey #' + link.idLink)
-            .attr('d', () => {
-              return drawCurveFunction.curve(data,nodes, links, display_style,data.nodeTags,link,error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue)
-            })
-          const target_node = nodes[link.idTarget]
-          if (link.arrow) {
-            drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
-          }
-          for (let i = 0; i < target_node.inputLinksId.length; i++) {
-            d3.select(' .opensankey #' + target_node.inputLinksId[i])
-              .attr('d', (link => {
-                return drawCurveFunction.curve(data,
-                  nodes, links, display_style,
-                  nodeTags,
-                  link as SankeyLink,
-                  error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                )
-              }))
-          }
-          for (let i = 0; i < target_node.outputLinksId.length; i++) {
-            d3.select(' .opensankey #' + target_node.outputLinksId[i])
-              .attr('d', link => {
-                return drawCurveFunction.curve(data,
-                  nodes, links, display_style,
-                  nodeTags,
-                  link as SankeyLink,
-                  error_msg,
-                  multi_selected_links,
-                  link_text,min_width_and_height,getLinkValue
-                )
-              })
-  
-          }
-        }
+    if (draw_warning && !l.recycling) {
+      d3.select(' .opensankey #' + l.idLink).attr('stroke-width', '1px')
+    } else {
+      //retour à la normal
+      d3.select(' .opensankey #' + l.idLink).attr('stroke-width', d => {
+        const link_value = test_link_value(data, nodes, (d as SankeyLink),getLinkValue)
+        const tmp=(link_value=='')?1:link_value
+        return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
       })
-  
-    if (error_msg.text !== undefined) {
-      alert(error_msg)
     }
   }
 
+  sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
+
+  d3.select(' .opensankey #ggg_'+node.idNode).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
+  d3.select(' .opensankey #tooltip_node' + node.idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
+  const error_msg: { [text: string]: string } = {}
+  Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
+    link => {
+
+      if (link.label_on_path) {
+        if (link.recycling) {
+          if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
+          } else if (link.label_position === 'middle' && link.orientation === 'hh') {
+            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
+          }   
+        } else {
+          if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
+            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
+          } else if (link.label_position === 'middle' /*&& link.orientation === 'hh'*/) {
+            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
+          }
+        }
+        
+        if (link.orthogonal_label_position === 'middle') {
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy', '0.3em')
+        } else if (link.orthogonal_label_position === 'below') {
+          let tmp=getLinkValue(data, link.idLink).value
+          tmp=(tmp)?tmp:0
+          // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
+
+        } else if (link.orthogonal_label_position === 'above') {
+          let tmp=getLinkValue(data, link.idLink).value
+          tmp=(tmp)?tmp:0
+          // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 'px')
+
+        }
+        
+      }
+
+      if (link.idSource === node.idNode || link.idTarget === node.idNode) {
+        // Redraw link
+        const old_x_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('x')
+        const old_y_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('y')
+        if (!(link.label_position === 'frozen')) {
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
+          d3.select(' .opensankey #' + link.idLink + '_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
+        }
+        // select allows to redraw directly without refreshing
+        d3.select(' .opensankey #' + link.idLink)
+          .attr('d', () => {
+            return drawCurveFunction.curve(data,nodes, links, display_style,data.nodeTags,link,error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue)
+          })
+        const target_node = nodes[link.idTarget]
+        if (link.arrow) {
+          drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
+        }
+        for (let i = 0; i < target_node.inputLinksId.length; i++) {
+          d3.select(' .opensankey #' + target_node.inputLinksId[i])
+            .attr('d', (link => {
+              return drawCurveFunction.curve(data,          nodes, links, display_style,          nodeTags,          link as SankeyLink,          error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+              )
+            }))
+        }
+        for (let i = 0; i < target_node.outputLinksId.length; i++) {
+          d3.select(' .opensankey #' + target_node.outputLinksId[i])
+            .attr('d', link => {
+              return drawCurveFunction.curve(data,          nodes, links, display_style,          nodeTags,          link as SankeyLink,          error_msg,          multi_selected_links,          link_text,min_width_and_height,getLinkValue
+              )
+            })
+
+        }
+      }
+    })
+
+  if (error_msg.text !== undefined) {
+    alert(error_msg)
+  }
 }
 
 /**
@@ -978,7 +624,8 @@ const drag_link = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   min_thickness:number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
 ) => {
   //Peut etre appelé sur un drag de path qui a directement l'id du link 
   //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
@@ -1256,9 +903,7 @@ export const drag_handle = (
   }
   d3.select(' .opensankey #' + d.idLink).attr('d', () => {
     let error_msg
-    return drawCurveFunction.curve(data,
-      nodes, links, display_style,
-      data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+    return drawCurveFunction.curve(data,nodes, links, display_style,data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
     )
   })
 }
@@ -1398,7 +1043,8 @@ export const add_drag_link_zone=(
   min_thickness:number,
   drawCurveFunction:SankeyDrawCurve,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
 
 )=>{
   d3.selectAll(' .opensankey #drag_zone_s_' + link.idLink).remove()
@@ -1423,7 +1069,7 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue)
+      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows)
       )  
     d3.select(' .opensankey #gg_' + link.idLink)
       .append('rect')
@@ -1438,7 +1084,7 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue))  
+      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows))  
   }
 }
 /**
