@@ -1022,27 +1022,39 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   multi_selected_links:{current:SankeyLink[]},
   first_selected_node:object,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  token:boolean,
+  set_show_toast_limit_node:(b:boolean)=>void
 )=>{
+
   svgSankey.on('mousedown', evt => {
     //si le mode de souris est noeud+flux alors crée le premier noeuds 
-    if(d3.select(evt.target).attr('class')!='node node_shape'){    
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
-        // isDown = true    
-        // creation nouveau noeud
-        const new_node1 = default_node(data)
-        const listId: number[] = []
-        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-        new_node1.idNode = 'node' + idNode
-        new_node1.name = 'node_tmp'    
-        data.nodes[new_node1.idNode] = new_node1
-        const pos = d3.pointer(event)
-        new_node1.x = pos[0]-(new_node1.node_width/2)
-        new_node1.y = pos[1]-(new_node1.node_height/2)
-        set_first_selected_node(new_node1)
-        set_data({ ...data })
-      }
-    }     
+    
+    if(d3.select(evt.target).attr('class')!='node node_shape'){
+      
+        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
+          if(!token && Object.keys(data.nodes).length>15){
+            set_show_toast_limit_node(true)
+            setTimeout(function () {
+              set_show_toast_limit_node(false)
+            }, 3000)
+          }else{
+          // isDown = true    
+          // creation nouveau noeud
+            const new_node1 = default_node(data)
+            const listId: number[] = []
+            Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+            const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+            new_node1.idNode = 'node' + idNode
+            new_node1.name = 'node_tmp'    
+            data.nodes[new_node1.idNode] = new_node1
+            const pos = d3.pointer(event)
+            new_node1.x = pos[0]-(new_node1.node_width/2)
+            new_node1.y = pos[1]-(new_node1.node_height/2)
+            set_first_selected_node(new_node1)
+            set_data({ ...data })
+          }
+        }
+      }    
   })
     .on('mousemove', evt => {
       //Empêche lors du drag de la souris d'avoir 
@@ -1166,6 +1178,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       
       
     })
+  
+  
 }
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes, 

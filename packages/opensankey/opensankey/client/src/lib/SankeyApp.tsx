@@ -221,7 +221,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
     menu_configuration_nodes,menu_configuration_links,[<></>],menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
-    false
+    false,true
   )
 
   //- 2. Build Menus
@@ -477,6 +477,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_alt_key_pressed={set_alt_key_pressed}
             min_width_and_height={min_width_and_height}
             getLinkValue={getLinkValue}
+            token={true}
+            set_show_toast_limit_node={()=>false}
           />) : (<></>)}
         <Modal 
           bsSize="large" 
