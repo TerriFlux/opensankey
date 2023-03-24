@@ -6,7 +6,7 @@ import * as d3 from 'd3'
 import {node_color} from './SankeyUtils'
 import { BaseType } from 'd3'
 import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
-  eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
+  eventNodeContextMenu,nodeTransform,node_stroke_width, drawArrows } from './SankeyDrawFunction'
 import { dragGNodeEvent } from './SankeyDrag'
 
 export const OpenSankeyDrawNodes = (
@@ -33,7 +33,8 @@ export const OpenSankeyDrawNodes = (
   link_text:(data: SankeyData, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  dragging:Function
 
 
 ) => {
@@ -397,7 +398,7 @@ export const OpenSankeyDrawNodes = (
 
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text,getLinkValue))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text,getLinkValue,drawArrows,dragging))
       }
     }
     // if node have a unique groupTag then it control the shape of the node

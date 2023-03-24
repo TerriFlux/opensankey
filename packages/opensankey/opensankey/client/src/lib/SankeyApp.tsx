@@ -28,7 +28,8 @@ import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {OpenSankeyMenuBanner} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-import {min_width_and_height} from './SankeyDrawFunction'
+import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
+import {dragging} from './SankeyDrag'
 import i18next from './traduction'
 
 type SankeyAppTypes = {
@@ -190,7 +191,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
  
   //- 1.3 Builds Configuration Menus Links 
   //- 1.3.1 Builds Configuration Menus Link Attributes 
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_value,set_displayed_value)
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_value,set_displayed_value,[])
   //- 1.3.2 Builds Configuration Menus Link tags 
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -302,7 +303,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue)
+    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue,dragging)
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
@@ -320,7 +321,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     alt_key_pressed,
     data.static_sankey,position,node_arrow_visible,
     linkTooltipsContent,
-    link_text,getLinkValue,set_data,set_displayed_value,tags_selected
+    link_text,getLinkValue,set_data,set_displayed_value,tags_selected,linkStroke,drawArrows
   )
 
   

@@ -117,7 +117,6 @@ export const SankeyLinkPropTypes = {
   colorTag: PropTypes.string.isRequired,
 
   // Ajout
-  gradient: PropTypes.bool.isRequired,
   dashed:PropTypes.bool.isRequired,
   to_precision:PropTypes.bool.isRequired,
 
@@ -141,8 +140,6 @@ export const SankeyLinkPropTypes = {
 }
 
 export type SankeyLink = InferProps<typeof SankeyLinkPropTypes>
-
-
 
 
 export const TagsGroupPropTypes = {
@@ -257,8 +254,11 @@ export type drawCurveType = (
   error_msg: { text?: string } | undefined,
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  min_width_and_height:(d:SankeyData)=>number[],
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
 ) => string
+
 
 export type drawArrowsType = (
   data: SankeyData,
@@ -269,5 +269,6 @@ export type drawArrowsType = (
   nodeTags: TagsCatalog,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  min_thickness:number
+  min_thickness:number,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => void

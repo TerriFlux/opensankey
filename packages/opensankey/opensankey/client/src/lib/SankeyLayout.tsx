@@ -509,7 +509,7 @@ export const updateLayout = (
       }
       const link = links[0]
   
-      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,gradient } = link_layout
+      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position } = link_layout
       link.curvature = curvature
       link.curved = curved
       link.arrow = arrow
@@ -523,7 +523,6 @@ export const updateLayout = (
       link.orientation = link_layout.orientation
       link.recycling = recycling
       link.orthogonal_label_position = orthogonal_label_position
-      link.gradient = gradient
   
       link.colorTag = link_layout.colorTag
       link.colorParameter = link_layout.colorParameter
