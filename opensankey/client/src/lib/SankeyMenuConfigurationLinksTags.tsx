@@ -1,8 +1,7 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tab,Table} from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tab, Table } from 'react-bootstrap'
 import { SankeyData, SankeyLink,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
-
 
 
 export const SankeyMenuConfigurationLinksTags = (
@@ -13,19 +12,18 @@ export const SankeyMenuConfigurationLinksTags = (
   set_tags_group_key:React.Dispatch<React.SetStateAction<string>>,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
-
   t:TFunction
 )=>{
 
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0
 
-
   const value_selected_parameter = (): SankeyLinkValue => {
-    if(multi_selected_links.current.length==0){
+    if (multi_selected_links.current.length === 0) {
       return ({} as SankeyLinkValue)
-    }else{
-      if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
+    }
+    else {
+      if (Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
         let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
         Object.values(tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {
@@ -48,6 +46,8 @@ export const SankeyMenuConfigurationLinksTags = (
 
   return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
     disabled={/*node.colorParameter !== 'groupTag'*/false} >
+
+    {/* Groupe d'étiquettes  */}
     <Form.Group as={Row} >
       <Col xs={2}>
         <FormLabel >{t('Tags.GE')}:</FormLabel>
@@ -56,8 +56,7 @@ export const SankeyMenuConfigurationLinksTags = (
         <Form.Select
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
-          }
-        >
+        }>
           {Object.entries(fluxTags).map(
             (tags_group, i) =>
               <option
@@ -69,11 +68,11 @@ export const SankeyMenuConfigurationLinksTags = (
         </Form.Select>
       </Col>
     </Form.Group>
-    {
-      //Définition des valeurs selon les paramètre dataTags
+
+    {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
-  
+
           return (
             <Row key={dataTagKey}>
               <Col >
@@ -81,23 +80,20 @@ export const SankeyMenuConfigurationLinksTags = (
                   {dataTag.group_name} :
                 </FormLabel>
               </Col>
-  
+
               <Col >
-  
                 <Form.Select
                   name={dataTagKey}
                   value={tags_selected[dataTagKey]}
                   onChange={
                     (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      //Modifie les paramètres selectionnés 
+                      //Modifie les paramètres selectionnés
                       const { name, value } = evt.target
                       set_tags_selected(prevState => ({
                         ...prevState,
                         [name]: value
-                      }))
-                    }
-                  }
-                >
+                    }))
+                }}>
                   {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                     return (
                       <option key={tag.name} value={tag_key}>{tag.name}</option>
@@ -108,8 +104,8 @@ export const SankeyMenuConfigurationLinksTags = (
             </Row>
           )
         }
-  
-      })}
+    })}
+
     <Form.Group xs={12} as={Row} >
       <Table striped bordered hover className='link_tags_affiliation'>
         <thead>
@@ -121,7 +117,7 @@ export const SankeyMenuConfigurationLinksTags = (
         <tbody>
           {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
             ([tag_key,tag]) => {
-          
+
               return (
                 <tr key={tag_key}>
                   <td><FormLabel>{tag.name}</FormLabel></td>

@@ -1,9 +1,8 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tab,FormControl} from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, FormCheck, Tab, FormControl, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
 
 import { TFunction } from 'i18next'
-
 
 
 export const SankeyMenuConfigurationLinksAppearence = (
@@ -16,7 +15,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 )=>{
   const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
   center
-  
+
 
   const dashChecked = () => {
     let dashChecked = true
@@ -34,6 +33,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     const current_link = multi_selected_links.current[idx]
     return parseFloat(((current_link.left_horiz_shift + current_link.right_horiz_shift) / 2).toPrecision(2))
   }
+
   const shift = () => {
     if (multi_selected_links.current.length == 0) {
       return 0.1
@@ -43,6 +43,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     const the_shift = (current_link.right_horiz_shift - current_link.left_horiz_shift)/2
     return parseFloat(the_shift.toPrecision(2))
   }
+
   const linkOrientation = (param: string) => {
     let allChecked = true
     switch (param) {
@@ -57,7 +58,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
         allChecked = (d.orientation == 'vv') ? allChecked : false
       })
       return allChecked
-
       break
     case 'hv':
       multi_selected_links.current.map(d => {
@@ -70,11 +70,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
         allChecked = (d.orientation == 'vh') ? allChecked : false
       })
       return allChecked
-
       break
     }
-
   }
+
   const courbure = () => {
     let display_courbe = true
     let courbe = 0.5
@@ -86,6 +85,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     })
     return (display_courbe) ? courbe : 0
   }
+
   const linkType = (param: string) => {
     let allChecked = true
     if (multi_selected_links.current.length != 0) {
@@ -112,263 +112,324 @@ export const SankeyMenuConfigurationLinksAppearence = (
     }
   }
 
-
-
+  /* Formattage de l'affichage du menu attribut de flux */
   return <Tab eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>
+
+    {/* Choix de la couleur du flux */}
     <Form >
       <Form.Group as={Row} >
         <Col>
           <FormLabel >{t('Flux.apparence.couleur')}:</FormLabel>
         </Col>
         <Col>
-          <Form.Control
-            type="color"
-            value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
-            onChange={
-              evt => {
-              // selected_link.current.color = evt.target.value
-                const color = evt.target.value
-                multi_selected_links.current.map(d => d.color = evt.target.value)
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.couleur')} </Tooltip>}>
+              <Form.Control
+                type="color"
+                value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
+                onChange={
+                  evt => {
+                  // selected_link.current.color = evt.target.value
+                    const color = evt.target.value
+                    multi_selected_links.current.map(d => d.color = evt.target.value)
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
+
+      {/* Flux hachuré */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel >{t('Flux.apparence.hach')}:</FormLabel>
         </Col>
         <Col>
-          <Form.Check
-            inline
-            type="checkbox"
-            checked={
-              dashChecked()
-            }
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
+              <Form.Check
+                inline
+                type="checkbox"
+                checked={
+                  dashChecked()
+                }
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
+
+      {/* Orientation du flux */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel>{t('Flux.apparence.of')}:</FormLabel>
         </Col>
       </Form.Group>
+      {/* Horizontal - Horizontal  */}
       <Form.Group as={Row} >
         <Col sm={3}>
-          <FormCheck
-
-            name='orientation'
-            type='radio'
-            label='Horiz-Horiz'
-            value='hh'
-            checked={linkOrientation('hh')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orientation = evt.target.value
-                })
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_hh')} </Tooltip>}>
+              <FormCheck
+                name='orientation'
+                type='radio'
+                label='Horiz-Horiz'
+                value='hh'
+                checked={linkOrientation('hh')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.orientation = evt.target.value
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
+        {/* Vertical - Verticale  */}
         <Col sm={3}>
-
-          <FormCheck
-
-            name='orientation'
-            type='radio'
-            label='Vert-Vert'
-            value='vv'
-            checked={linkOrientation('vv')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orientation = evt.target.value
-                })
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_vv')} </Tooltip>}>
+              <FormCheck
+                name='orientation'
+                type='radio'
+                label='Vert-Vert'
+                value='vv'
+                checked={linkOrientation('vv')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.orientation = evt.target.value
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
+        {/* Vertical - Horizontal  */}
         <Col sm={3}>
-
-          <FormCheck
-
-            name='orientation'
-            type='radio'
-            label='Vert-Horiz'
-            value='vh'
-            checked={linkOrientation('vh')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orientation = evt.target.value
-                })
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_vh')} </Tooltip>}>
+              <FormCheck
+                name='orientation'
+                type='radio'
+                label='Vert-Horiz'
+                value='vh'
+                checked={linkOrientation('vh')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.orientation = evt.target.value
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
+        {/* Horizontal - Vertical  */}
         <Col sm={3}>
-          <FormCheck
-            name='orientation'
-            type='radio'
-            label='Horiz-Vert'
-            value='hv'
-            checked={linkOrientation('hv')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orientation = evt.target.value
-                })
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_hv')} </Tooltip>}>
+              <FormCheck
+                name='orientation'
+                type='radio'
+                label='Horiz-Vert'
+                value='hv'
+                checked={linkOrientation('hv')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.orientation = evt.target.value
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
 
+      {/* Positionnement du centre du flux  */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel >{t('Flux.apparence.pdc')}</FormLabel>
         </Col>
         <Col>
-
-          <FormControl
-            min={0} max={100}
-            type={'number'}
-            value={shiftCenter()*100}
-            disabled={(linkOrientation('hv')||linkOrientation('vh'))}
-            onChange={
-              evt => {
-                const center = +evt.target.value/100
-                multi_selected_links.current.forEach(d => {
-                  let shift_gap = (d.right_horiz_shift - d.left_horiz_shift)/2
-                  if (center - shift_gap < 0) {
-                    shift_gap = center
-                  }
-                  if (center + shift_gap > 1) {
-                    shift_gap = 1-center
-                  }
-                  d.left_horiz_shift = center - shift_gap
-                  d.right_horiz_shift = center + shift_gap
-                })
-                set_data({ ...data })
-              }
-            } />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
+              <FormControl
+                min={0} max={100}
+                type={'number'}
+                value={shiftCenter()*100}
+                disabled={(linkOrientation('hv')||linkOrientation('vh'))}
+                onChange={
+                  evt => {
+                    const center = +evt.target.value/100
+                    multi_selected_links.current.forEach(d => {
+                      let shift_gap = (d.right_horiz_shift - d.left_horiz_shift)/2
+                      if (center - shift_gap < 0) {
+                        shift_gap = center
+                      }
+                      if (center + shift_gap > 1) {
+                        shift_gap = 1-center
+                      }
+                      d.left_horiz_shift = center - shift_gap
+                      d.right_horiz_shift = center + shift_gap
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
         <Col sm={2}>{shiftCenter()}</Col>
       </Form.Group>
+
+      {/* Distance des poignée */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel >{t('Flux.apparence.eep')}</FormLabel>
         </Col>
         <Col>
-          <FormControl
-            min={0} max={5}
-            type={'number'}
-            value={shift()*100}
-            disabled={(linkOrientation('hv')||linkOrientation('vh'))}
-            onChange={
-              evt => {
-                const shift_gap = +evt.target.value/100
-                if (shift_gap > 0.5 ) {
-                  return
-                }
-                multi_selected_links.current.forEach(d => {
-                  let new_center_position = shiftCenter()
-                  if (new_center_position - shift_gap < 0) {
-                    new_center_position = shift_gap
-                  }
-                  if (new_center_position + shift_gap > 1) {
-                    new_center_position = 1-shift_gap
-                  }
-                  d.left_horiz_shift = new_center_position - shift_gap
-                  d.right_horiz_shift = new_center_position + shift_gap
-                })
-                set_data({ ...data })
-              }
-            } />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
+              <FormControl
+                min={0} max={5}
+                type={'number'}
+                value={shift()*100}
+                disabled={(linkOrientation('hv')||linkOrientation('vh'))}
+                onChange={
+                  evt => {
+                    const shift_gap = +evt.target.value/100
+                    if (shift_gap > 0.5 ) {
+                      return
+                    }
+                    multi_selected_links.current.forEach(d => {
+                      let new_center_position = shiftCenter()
+                      if (new_center_position - shift_gap < 0) {
+                        new_center_position = shift_gap
+                      }
+                      if (new_center_position + shift_gap > 1) {
+                        new_center_position = 1-shift_gap
+                      }
+                      d.left_horiz_shift = new_center_position - shift_gap
+                      d.right_horiz_shift = new_center_position + shift_gap
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
         <Col sm={2}>{shift()}</Col>
       </Form.Group>
+
+      {/* Choix du type de représentation du flux  */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
         </Col>
+        {/* Forme courbée  */}
         <Col>
-          <FormCheck
-            type='checkbox'
-            label={t('Flux.apparence.courbe')}
-            checked={linkType('courbe')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
+              <FormCheck
+                type='checkbox'
+                label={t('Flux.apparence.courbe')}
+                checked={linkType('courbe')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
+        {/* Forme fleche droite  */}
         <Col>
-          <FormCheck
-            type='checkbox'
-            label={t('Flux.apparence.fleche')}
-            checked={linkType('arrow')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.fleche')} </Tooltip>}>
+              <FormCheck
+                type='checkbox'
+                label={t('Flux.apparence.fleche')}
+                checked={linkType('arrow')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
+        {/* Flux en recyclage  */}
         <Col>
-          <FormCheck
-            type='checkbox'
-            label={t('Flux.apparence.recy')}
-            checked={linkType('recycle')}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.recycling = evt.target.checked
-                  d.left_horiz_shift = 0
-                  d.right_horiz_shift = 0
-                })
-                set_data({ ...data })
-              }
-            }
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.recy')} </Tooltip>}>
+              <FormCheck
+                type='checkbox'
+                label={t('Flux.apparence.recy')}
+                checked={linkType('recycle')}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.recycling = evt.target.checked
+                      d.left_horiz_shift = 0
+                      d.right_horiz_shift = 0
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
+
+      {/* Modification du rayon de courbure du flux  */}
       <Form.Group as={Row} >
         <Col>
           <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
         </Col>
-
         <Col>
-          <FormControl
-
-            min={0} max={1} step={0.01}
-            type={'number'}
-            value={courbure()}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.curvature = +evt.target.value
-                })
-
-                set_data({ ...data })
-              }
-            } />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.courbure')} </Tooltip>}>
+              <FormControl
+                min={0} max={1} step={0.01}
+                type={'number'}
+                value={courbure()}
+                onChange={
+                  evt => {
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.curvature = +evt.target.value
+                    })
+                    set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
         </Col>
         <Col sm={2}>{selected_link.current.curvature}</Col>
       </Form.Group>
