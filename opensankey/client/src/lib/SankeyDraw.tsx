@@ -294,6 +294,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
     
+    d3.select(' .opensankey #svg').selectAll('.g_label').remove()
   
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
