@@ -12,8 +12,6 @@ Welcome to opensankey's documentation!
    :caption: Sommaire:
    
    user
-   dev
-   installation
 
 
 
