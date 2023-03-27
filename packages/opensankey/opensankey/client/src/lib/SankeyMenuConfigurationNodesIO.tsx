@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup} from 'react-bootstrap'
+import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyNode,SankeyLinkValue } from './types'
 import { link_visible,link_color} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
@@ -56,7 +56,7 @@ const getIOLink=(
         const cond_recy=(data.links[k].recycling && n_t.x>n.x)
         return (( cond_no_recy|| cond_recy)) && (data.links[k].orientation=='hh' ||data.links[k].orientation=='hv')&& link_visible(data.links[k],data,getLinkValue)
       })
-    }else if(pos=='right'){ 
+    }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
       link_io=Object.values(n.outputLinksId).filter(k=>{
         const n_t=data.nodes[data.links[k].idTarget]
@@ -102,7 +102,7 @@ const handleUpLinkIOPos=(
   if(io=='input'){
     if(pos=='left'){
       //Recherche tous les flux entrant a gauche
-        
+
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -111,11 +111,11 @@ const handleUpLinkIOPos=(
         const posElemt = n.inputLinksId.indexOf(k_link)
         n.inputLinksId.splice(posElemt, 1)
         n.inputLinksId.splice(posElementPrec,0,k_link)
-      } 
+      }
 
     }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
-        
+
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -127,7 +127,7 @@ const handleUpLinkIOPos=(
 
     }else if(pos=='top'){
       //Recherche tous les flux entrant en haut
-        
+
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -139,7 +139,7 @@ const handleUpLinkIOPos=(
 
     }else if(pos=='bottom'){
       //Recherche tous les flux entrant en haut
-     
+
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -180,8 +180,8 @@ const handleUpLinkIOPos=(
 
     }else if(pos=='top'){
       //Recherche tous les flux sortant en haut
- 
-        
+
+
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)-1]
@@ -206,7 +206,7 @@ const handleUpLinkIOPos=(
 
     }
   }
-    
+
   set_data({...data})
 }
 
@@ -217,7 +217,7 @@ const handleUpLinkIOPos=(
    * @param {string} pos
    * @param {string} io
    */
-const handleDownLinkIOPos=(    
+const handleDownLinkIOPos=(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
@@ -232,7 +232,7 @@ const handleDownLinkIOPos=(
   if(io=='input'){
     if(pos=='left'){
       //Recherche tous les flux entrant a gauche
-        
+
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -241,11 +241,11 @@ const handleDownLinkIOPos=(
         const posElemt = n.inputLinksId.indexOf(k_link)
         n.inputLinksId.splice(posElemt, 1)
         n.inputLinksId.splice(posElementPrec,0,k_link)
-      } 
+      }
 
     }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
-        
+
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -256,7 +256,7 @@ const handleDownLinkIOPos=(
       }
     }else if(pos=='top'){
       //Recherche tous les flux entrant en haut
- 
+
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -294,7 +294,7 @@ const handleDownLinkIOPos=(
 
     }else if(pos=='right'){
       //Recherche tous les flux sortant a droite
-        
+
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
 
@@ -330,7 +330,7 @@ const handleDownLinkIOPos=(
 
     }
   }
-    
+
   set_data({...data})
 }
 /**
@@ -354,7 +354,7 @@ const has_link_come_from=(
 
 
 /**
-   * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from 
+   * Create a html table displaying links attached to the selected node and filtered by where they're coming/going from
    *
    * @param {string} pos
    * @param {string} io
@@ -389,7 +389,7 @@ const tab_pos_link=(
 
                 return (
                   <tr key={i.toString()}>
-                      
+
                     <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
@@ -407,7 +407,7 @@ const tab_pos_link=(
     </>
   )
 }
-         
+
 export const SankeyMenuConfigurationNodesIO = (
   t:TFunction,
   data:SankeyData,
@@ -424,107 +424,156 @@ export const SankeyMenuConfigurationNodesIO = (
   // const [link_io,set_link_io]=useState<string>('output')
   // const [link_pos,set_link_pos]=useState<string>('right')
   // const [tab_colored,set_tab_colored]=useState<boolean>(false)
+
   return <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
     <Form>
       <Form.Group as={Row}>
         <Col xs={6}>
           <FormLabel >{t('Noeud.PF.FES')}</FormLabel>
         </Col>
+
+        {/* Choisir un lien entrant */}
         <Col xs={3}>
-          <FormCheck
-            value="output"
-            type='radio'
-            label={t('Noeud.PF.sort')}
-            checked={link_io=='output'}
-            onChange={() => {
-              set_link_io('output')
-              set_link_pos('')
-            }}
-          />
-        </Col>
-        <Col xs={3}>
-          <FormCheck
-            value="input"
-            type='radio'
-            label={t('Noeud.PF.ent')}
-            checked={link_io=='input'}
-            onChange={() => {
-              set_link_io('input')
-              set_link_pos('')
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
+              <FormCheck
+                value="output"
+                type='radio'
+                label={t('Noeud.PF.sort')}
+                checked={link_io=='output'}
+                onChange={() => {
+                  set_link_io('output')
+                  set_link_pos('')
+              }}/>
+          </OverlayTrigger>
         </Col>
 
+        {/* Choisir un lien entrant */}
+        <Col xs={3}>
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
+              <FormCheck
+                value="input"
+                type='radio'
+                label={t('Noeud.PF.ent')}
+                checked={link_io=='input'}
+                onChange={() => {
+                  set_link_io('input')
+                  set_link_pos('')
+              }}/>
+          </OverlayTrigger>
+        </Col>
       </Form.Group>
 
       <Form.Group as={Row}>
         <Col xs={2}>
           <FormLabel >{t('Noeud.PF.FRN')}</FormLabel>
         </Col>
+
+        {/* Choisir un lien situé à gauche */}
         <Col xs={2}>
-          <FormCheck
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
-            value="left"
-            type='radio'
-            label={t('Noeud.labels.gauche')}
-            checked={link_pos=='left'}
-            onChange={() => {
-              set_link_pos('left')
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
+              <FormCheck
+                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
+                value="left"
+                type='radio'
+                label={t('Noeud.PF.gauche')}
+                checked={link_pos=='left'}
+                onChange={() => {
+                  set_link_pos('left')
+              }}/>
+            </OverlayTrigger>
         </Col>
+
+        {/* Choisir un lien situé à droite */}
         <Col xs={2}>
-          <FormCheck
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
-            value="right"
-            type='radio'
-            label={t('Noeud.labels.droite')}
-            checked={link_pos=='right'}
-            onChange={() => {
-              set_link_pos('right')
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
+              <FormCheck
+                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
+                value="right"
+                type='radio'
+                label={t('Noeud.PF.droite')}
+                checked={link_pos=='right'}
+                onChange={() => {
+                  set_link_pos('right')
+              }}/>
+          </OverlayTrigger>
         </Col>
+
+        {/* Choisir un lien situé au dessus */}
         <Col xs={3}>
-          <FormCheck
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
-            value="top"
-            type='radio'
-            label={t('Noeud.PF.ades')}
-            checked={link_pos=='top'}
-            onChange={() => {
-              set_link_pos('top')
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
+              <FormCheck
+                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
+                value="top"
+                type='radio'
+                label={t('Noeud.PF.ades')}
+                checked={link_pos=='top'}
+                onChange={() => {
+                  set_link_pos('top')
+              }}/>
+            </OverlayTrigger>
         </Col>
+
+        {/* Choisir un lien situé en dessous */}
         <Col xs={3}>
-          <FormCheck
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
-            value="bottom"
-            type='radio'
-            label={t('Noeud.PF.edes')}
-            checked={link_pos=='bottom'}
-            onChange={() => {
-              set_link_pos('bottom')
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
+              <FormCheck
+                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
+                value="bottom"
+                type='radio'
+                label={t('Noeud.PF.edes')}
+                checked={link_pos=='bottom'}
+                onChange={() => {
+                  set_link_pos('bottom')
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
+
+      {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
       <Form.Group as={Row}>
         <Col xs={8}>
           <FormLabel >{t('Noeud.PF.lti')}</FormLabel>
         </Col>
         <Col xs={3}>
-          <FormCheck
-            value="bottom"
-            type='checkbox'
-            label={t('Noeud.PF.col')}
-            checked={tab_colored}
-            onChange={() => {
-              //console.log(tab_colored)
-              set_tab_colored(!tab_colored)
-            }}
-          />
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
+              <FormCheck
+                value="bottom"
+                type='checkbox'
+                label={t('Noeud.PF.col')}
+                checked={tab_colored}
+                onChange={() => {
+                  //console.log(tab_colored)
+                  set_tab_colored(!tab_colored)
+              }}/>
+          </OverlayTrigger>
         </Col>
       </Form.Group>
     </Form>
@@ -533,4 +582,3 @@ export const SankeyMenuConfigurationNodesIO = (
 }
 
 
- 
