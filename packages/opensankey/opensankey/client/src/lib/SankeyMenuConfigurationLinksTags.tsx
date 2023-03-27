@@ -19,11 +19,10 @@ export const SankeyMenuConfigurationLinksTags = (
   const tags_visible = Object.keys(fluxTags).length > 0
 
   const value_selected_parameter = (): SankeyLinkValue => {
-    if (multi_selected_links.current.length === 0) {
+    if(multi_selected_links.current.length==0){
       return ({} as SankeyLinkValue)
-    }
-    else {
-      if (Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
+    }else{
+      if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
         let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
         Object.values(tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {
@@ -42,6 +41,7 @@ export const SankeyMenuConfigurationLinksTags = (
       })
       return val
     }
+    
   }
 
   return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}

@@ -30,6 +30,7 @@ export const OpenSankeyDrawLinks = (
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   set_displayed_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
+  set_tags_selected:(o:{[k: string]: string})=>void,
   linkStroke:(l:SankeyLink,
     data:SankeyData,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
@@ -94,7 +95,24 @@ export const OpenSankeyDrawLinks = (
         }
       }
       if(multi_selected_links.current.length>0){
-        set_displayed_value(value_selected_parameter(data,multi_selected_links,tags_selected).value)
+        let new_tags_selected=tags_selected
+        const link_data_ref=multi_selected_links.current[0].idLink
+        // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
+        // alors on cherche quel étiquette de quel groupe il represente
+        // On prend pour référence pour la valeur le premier flux sélectionné
+        if(link_data_ref.includes('_')){
+          const index_grp_tag=link_data_ref.split('_')
+          // Supprime le première élément du tableau qui ne contient que l'id du flux
+          index_grp_tag.shift()
+          new_tags_selected={}
+          // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+          for(const i in index_grp_tag){
+            const key=Object.keys(data.dataTags)[Number(i)]
+            new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+          }
+          set_tags_selected(new_tags_selected)
+        }
+        set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
       }else{
         set_displayed_value('')
       }
