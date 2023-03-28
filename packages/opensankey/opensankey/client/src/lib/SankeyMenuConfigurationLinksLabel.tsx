@@ -128,24 +128,28 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   return <Tab eventKey="label" title={t('Flux.label.label')}>
     {/* Display label  */}
-    <Form.Group >
-      <OverlayTrigger
-        key={'tooltip-adjust'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
-        <FormCheck
-          type='switch'
-          label='Visibilité du label'
-          checked={labelVisibleChecked()}
-          onChange={
-            evt => {
-              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                d.label_visible = evt.target.checked
-              })
-              set_data({ ...data })
-            }}/>
-      </OverlayTrigger>
+    <Form.Group as={Row}>
+      <Col xs={2}>
+        <OverlayTrigger
+          key={'flux.label.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.1'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
+          <FormCheck
+            type='switch'
+            checked={labelVisibleChecked()}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.label_visible = evt.target.checked
+                })
+                set_data({ ...data })
+          }}/>
+        </OverlayTrigger>
+      </Col>
+      <Col xs={10}>
+        <Form.Label>{t('Flux.label.vdb')}</Form.Label>
+      </Col>
     </Form.Group>
 
     {/* Couleur des Labels  */}
@@ -153,10 +157,10 @@ export const SankeyMenuConfigurationLinksLabel = (
       {/* Label en noir  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.2'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
           <FormCheck
             value='black'
             disabled={!labelVisibleChecked()}
@@ -169,17 +173,17 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
 
       {/* Label en blanc  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.3'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
           <FormCheck
             value='white'
             disabled={!labelVisibleChecked()}
@@ -192,17 +196,17 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
 
       {/* Label en couleur  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.4'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
           <FormCheck
             value='same_color'
             disabled={!labelVisibleChecked()}
@@ -244,10 +248,10 @@ export const SankeyMenuConfigurationLinksLabel = (
     <Form.Group as={Row}>
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.5'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
           <FormCheck
             disabled={!labelVisibleChecked()}
             type='radio'
@@ -277,10 +281,10 @@ export const SankeyMenuConfigurationLinksLabel = (
       {/* Vers le début  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.6'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
           <Form.Check
             value='beginning'
             disabled={!labelVisibleChecked()}
@@ -294,17 +298,17 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
 
       {/* Vers le milieu  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.7'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
           <Form.Check
             value='middle'
             disabled={!labelVisibleChecked()}
@@ -318,17 +322,17 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
 
       {/* Vers la fin du flux  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.8'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
           <Form.Check
             value='end'
             disabled={!labelVisibleChecked()}
@@ -342,7 +346,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-              }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -355,10 +359,10 @@ export const SankeyMenuConfigurationLinksLabel = (
       {/* Positionnement au dessous  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.9'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
           <Form.Check
             value='below'
             disabled={!labelVisibleChecked()}
@@ -372,16 +376,16 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au milieu  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.10'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
           <Form.Check
             value='middle'
             disabled={!labelVisibleChecked()}
@@ -395,16 +399,16 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au dessus  */}
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.11'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
           <Form.Check
             value='above'
             disabled={!labelVisibleChecked()}
@@ -418,7 +422,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -427,10 +431,10 @@ export const SankeyMenuConfigurationLinksLabel = (
     <Form.Group as={Row}>
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'flux.label.tooltips.12'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
+          overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
           <FormCheck
             disabled={!labelVisibleChecked()}
             type='checkbox'
@@ -445,7 +449,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
                 })
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
