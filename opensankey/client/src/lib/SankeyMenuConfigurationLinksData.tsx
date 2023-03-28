@@ -36,12 +36,12 @@ export const SankeyMenuConfigurationLinksData = (
           if (Object.keys(dataTag.tags).length != 0) {
             return (
               <Row key={dataTagKey}>
-                <Col >
+                <Col xs={4}>
                   <FormLabel>
                     {dataTag.group_name} :
                   </FormLabel>
                 </Col>
-                <Col >
+                <Col xs={8}>
                   <Form.Select
                     name={dataTagKey}
                     value={tags_selected[dataTagKey]}
@@ -64,103 +64,114 @@ export const SankeyMenuConfigurationLinksData = (
         })}
 
       {/* Valeur du flux pour les parametre (flitres) choisi  */}
-      <Col>
-        <FormLabel>{t('Flux.data.vpp')}</FormLabel>
-      </Col>
-      <Col>
-        <OverlayTrigger
-          key={'tooltip-adjust'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.data.tooltips.vpp')} </Tooltip>}>
-          <Form.Control
-            className='inputValueLink'
-            type='text'
-            value={displayed_value}
-            onChange={
-              evt => {
-                set_displayed_value(evt.target.value)
-                const formatedValue=evt.target.value.replace(',','.')
-                if(formatedValue!='' && isNaN(+formatedValue)){
-                  d3.select('.inputValueLink').style('border','red 1px solid')
-                }else{
-                  d3.select('.inputValueLink').style('border','#ced4da 1px solid')
-                }
-              }
-            }
-            onBlur={evt=>{
-              const formatedValue=evt.target.value.replace(',','.')
-              if(formatedValue!=='' && !isNaN(+formatedValue )){
-                const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
-                let val = Object(selected_link.current.value)
-                multi_selected_links.current.map(d => {
-                  d.dashed=(was_empty)?false:d.dashed
-                  val = d.value
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = +formatedValue
-                })
-                const scale = d3.scaleLinear()
-                  .domain([0, data.user_scale])
-                  .range([0, 100])
-                if (scale(+formatedValue) > 500) {
-                  data.user_scale = +formatedValue
-                }
-                set_data({ ...data })
-              }
-              else if(formatedValue=='') {
-                let val = Object(selected_link.current.value)
-                multi_selected_links.current.map(d => {
-                  val = d.value
-                  d.dashed=true
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = ''
-                })
-                set_data({ ...data })
-              }
-            }}/>
-        </OverlayTrigger>
-      </Col>
-
-      {/* Choix d'affichage en notation scientifique  */}
       <Row>
-        <Col>
-          <Form.Label>{t('Flux.data.toPrecision')}</Form.Label>
+        <Col xs={4}>
+          <FormLabel>{t('Flux.data.vpp')}</FormLabel>
         </Col>
-        <Col>
-          <OverlayTrigger
-            key={'tooltip-adjust'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.data.tooltips.toPrecision')} </Tooltip>}>
-            <FormCheck inline type='switch' checked={isAllLinkToPrecision(multi_selected_links)} onChange={evt=>{
-              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
-              set_data({...data})
-            }}/>
-          </OverlayTrigger>
+        <Col xs={8}>
+          {/* Valeur du flux  */}
+          <Row>
+            <Col xs={12}>
+              <OverlayTrigger
+                key={'flux.data.tooltips.1'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'flux.data.tooltips.1'}>{t('Flux.data.tooltips.vpp')} </Tooltip>}>
+                <Form.Control
+                  className='inputValueLink'
+                  type='text'
+                  value={displayed_value}
+                  onChange={
+                    evt => {
+                      set_displayed_value(evt.target.value)
+                      const formatedValue=evt.target.value.replace(',','.')
+                      if(formatedValue!='' && isNaN(+formatedValue)){
+                        d3.select('.inputValueLink').style('border','red 1px solid')
+                      }else{
+                        d3.select('.inputValueLink').style('border','#ced4da 1px solid')
+                      }
+                    }
+                  }
+                  onBlur={evt=>{
+                    const formatedValue=evt.target.value.replace(',','.')
+                    if(formatedValue!=='' && !isNaN(+formatedValue )){
+                      const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
+                      let val = Object(selected_link.current.value)
+                      multi_selected_links.current.map(d => {
+                        d.dashed=(was_empty)?false:d.dashed
+                        val = d.value
+                        Object.values(tags_selected).forEach(tag => {
+                          if (val[tag] === undefined) {
+                            val[tag] = {}
+                          }
+                          val = val[tag]
+                        })
+                        val.value = +formatedValue
+                      })
+                      const scale = d3.scaleLinear()
+                        .domain([0, data.user_scale])
+                        .range([0, 100])
+                      if (scale(+formatedValue) > 500) {
+                        data.user_scale = +formatedValue
+                      }
+                      set_data({ ...data })
+                    }
+                    else if(formatedValue=='') {
+                      let val = Object(selected_link.current.value)
+                      multi_selected_links.current.map(d => {
+                        val = d.value
+                        d.dashed=true
+                        Object.values(tags_selected).forEach(tag => {
+                          if (val[tag] === undefined) {
+                            val[tag] = {}
+                          }
+                          val = val[tag]
+                        })
+                        val.value = ''
+                      })
+                    set_data({ ...data })
+                    }
+                  }}/>
+              </OverlayTrigger>
+            </Col>
+          </Row>
+          {/* Choix d'affichage en notation scientifique  */}
+          <Row>
+            <Col xs={2}>
+              <OverlayTrigger
+                key={'flux.data.tooltips.2'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'flux.data.tooltips.2'}>{t('Flux.data.tooltips.toPrecision')} </Tooltip>}>
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={isAllLinkToPrecision(multi_selected_links)}
+                  onChange={evt=>{
+                    Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
+                    set_data({...data})
+                }}/>
+              </OverlayTrigger>
+            </Col>
+            <Col xs={10}>
+              <Form.Label >{t('Flux.data.toPrecision')}</Form.Label>
+            </Col>
+          </Row>
         </Col>
       </Row>
 
+
       {/* Afficher ou non les donnée sur le Sankey  */}
       <Row >
-        <Col>
+        <Col xs={4}>
           <FormLabel>{t('Flux.data.affichage')}</FormLabel>
         </Col>
-        <Col>
+        <Col xs={8}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.data.tooltips.3'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.data.tooltips.affichage')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.data.tooltips.3'}>{t('Flux.data.tooltips.affichage')} </Tooltip>}>
             <Form.Control
               type='text'
               value={value_selected_parameter(data,multi_selected_links,tags_selected).display_value}
@@ -176,9 +187,9 @@ export const SankeyMenuConfigurationLinksData = (
                       val = val[tag]
                     })
                     val.display_value = evt.target.value
-                  })
-                  set_data({ ...data })
-                }}/>
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Row>

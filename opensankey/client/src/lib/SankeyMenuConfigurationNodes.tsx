@@ -173,21 +173,22 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
 
   return (<>
-    {
-      (token==false && Object.keys(data.nodes).length>15)?<>
-        <Row>
-          <FormLabel style={{'color':'red'}}>{t('Menu.warningLimitNode')}</FormLabel>
-        </Row>
+  {
+    (token==false && Object.keys(data.nodes).length>15)?<>
+      <FormGroup as={Row}>
+        <FormLabel style={{'color':'red'}}>{t('Menu.warningLimitNode')}</FormLabel>
+      </FormGroup>
       </>:<></>
     }
-    <Row >
+
+    <FormGroup as={Row}>
       {/* Boutton pour ajouter un noeud */}
       <Col xs={1}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.1'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
+          overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
           <Button
             size="sm"
             disabled={token==false && Object.keys(data.nodes).length>15}
@@ -196,19 +197,19 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               add_new_node()
               style_to_apply = 'default'
               apply_style_to_nodes()
-            }}>
-            <FaPlus/>
-          </Button>
+          }}>
+          <FaPlus/>
+        </Button>
         </OverlayTrigger>
       </Col>
 
       {/* Liste déroulante pour selectionner un noeud */}
       <Col xs={10}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.2'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
+          overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
           {dropdownMultiNode()}
         </OverlayTrigger>
       </Col>
@@ -216,13 +217,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       {/* Boutton pour supprimer le noeud selectionné */}
       <Col xs={1}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.3'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
+          overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
           <Button
             size="sm"
-            variant='danger'
+            variant='danger-right'
+            // style={{marginRight: "-1em"}}
             disabled={multi_selected_nodes.current.length == 0}
             onClick={
               () => {
@@ -234,40 +236,44 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 // )
                 // setForceUpdate(!forceUpdate)
                 set_data({ ...data })
-              }}>
+          }}>
             <FaMinus />
           </Button>
         </OverlayTrigger>
       </Col>
-    </Row>
+    </FormGroup>
 
     {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
     <FormGroup as={Row}>
-      <Col xs={10}>
-        <FormLabel >{t('Menu.dns')}</FormLabel>
-      </Col>
-      <Col xs={2}>
+      <Col xs={1}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.4'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
-          <FormCheck inline type='switch' checked={data.displayed_node_selector} onChange={evt=>{
-            // const c=evt.target.checkeds
-            data.displayed_node_selector=evt.target.checked
-            set_data({...data})
+          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+          <FormCheck
+            inline
+            type='switch'
+            checked={data.displayed_node_selector}
+            onChange={evt=>{
+              // const c=evt.target.checkeds
+              data.displayed_node_selector=evt.target.checked
+              set_data({...data})
           }}/>
         </OverlayTrigger>
+      </Col>
+      <Col xs={11}>
+        <FormLabel >{t('Menu.dns')}</FormLabel>
       </Col>
     </FormGroup>
 
     {/* Styles par défaut */}
-    <Row >
-      <Col xs={1}>
-        <FormLabel>Style:</FormLabel>
+    <FormGroup as={Row}>
+      <Col xs={2}>
+        <FormLabel>{t('Noeud.Style')}:</FormLabel>
       </Col>
 
-      <Col xs={6}>
+      <Col xs={5}>
         {(style_editable)?(
           <Dropdown>
             <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
@@ -298,32 +304,36 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
       <Col xs={5}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.5'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.AS')} </Tooltip>}>
+          overlay={<Tooltip id={'menu.tooltips.noeud.5'}>{t('Noeud.tooltips.AS')} </Tooltip>}>
           <Button
             size="sm"
             variant='info'
-            onClick={() => {apply_style_to_nodes()}}>
-            {t('Noeud.AS')}
+            style={{'width': '100%'}}
+            onClick={() => {
+              apply_style_to_nodes()
+              set_data({ ...data })
+          }}>
+              {t('Noeud.AS')}
           </Button>
         </OverlayTrigger>
       </Col>
-    </Row>
+    </FormGroup>
 
     {/* Affichage du nom des noeuds selectionnés */}
     <Form.Group as={Row} >
-      <Col xs={1} >
-        <FormLabel >Nom</FormLabel>
+      <Col xs={2} >
+        <FormLabel>{t('Noeud.Nom')}</FormLabel>
       </Col>
 
       <Col xs={10} >
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'menu.tooltips.noeud.6'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
+          overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
           <FormControl
             value={
               (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
@@ -331,69 +341,66 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onChange={evt => {
               if (multi_selected_nodes.current.length != 1) {
                 return
-              }
-              multi_selected_nodes.current[0].name = evt.target.value
-              const d = multi_selected_nodes.current[0]
-              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)
-              const wrap = textwrap()
-                .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
-                .method('tspans')
-              d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-                .call(wrap)
-              if (!d.x_label || data.show_structure === 'structure') {
-                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-                  if (d.display_style.label_horiz == 'middle') {
-                    return width / 2
-                  } else if (d.display_style.label_horiz == 'right') {
-                    return d.display_style.label_vert == 'middle' ? width : 0
-                  } else {
-                    return 0
-                  }
-                })
-              }
+            }
+            multi_selected_nodes.current[0].name = evt.target.value
+            const d = multi_selected_nodes.current[0]
+            d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)
+            const wrap = textwrap()
+              .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
+              .method('tspans')
+            d3.select(' .opensankey #ggg_' + d.idNode + ' text')
+              .call(wrap)
+            if (!d.x_label || data.show_structure === 'structure') {
               d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                 const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-                if (d.x_label) {
-                  return d.x_label
-                } else if (d.display_style.label_horiz == 'middle') {
+                if (d.display_style.label_horiz == 'middle') {
                   return width / 2
                 } else if (d.display_style.label_horiz == 'right') {
-                  return width
+                  return d.display_style.label_vert == 'middle' ? width : 0
                 } else {
                   return 0
                 }
               })
-              setForceUpdate(!forceUpdate)
-            }}
-            disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
+            }
+            d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+              const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
+              if (d.x_label) {
+                return d.x_label
+              } else if (d.display_style.label_horiz == 'middle') {
+                return width / 2
+              } else if (d.display_style.label_horiz == 'right') {
+                return width
+              } else {
+                return 0
+              }
+            })
+            setForceUpdate(!forceUpdate)
+          }}
+          disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
         </OverlayTrigger>
-      </Col>
-
-      <Col xs={3}>
       </Col>
     </Form.Group>
 
     {/* Declenché si des neouds sont selectionnées */}
     {(multi_selected_nodes.current.length !== 0) ? (
-      <Row>
-        <Col sm={12}>
-          <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
+      <FormGroup as={Row}>
+        <Col xs={12}>
+          <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
             {menu_configuration_nodes.map((c:JSX.Element)=>{
               return c})}
           </Tabs>
 
           {/* Boutons de rérrangement / selection des flux  */}
           <ButtonGroup as={Row}>
-            <Col>
+            <Col xs={4}>
               <OverlayTrigger
-                key={'tooltip-adjust'}
+                key={'menu.tooltips.noeud.7'}
                 placement={'top'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
+                overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
                 <Button
                   size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%', 'height': '50px' }}
                   onClick={
                     () => {
                       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -401,20 +408,20 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                         reorganize_node_outputLinksId(d, data.nodes, data.links)
                       })
                       set_data({ ...data })
-                    }}>
+                }}>
                   {t('Noeud.Reorg')}
                 </Button>
               </OverlayTrigger>
             </Col>
-            <Col>
+            <Col xs={4}>
               <OverlayTrigger
-                key={'tooltip-adjust'}
+                key={'menu.tooltips.noeud.8'}
                 placement={'top'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
+                overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
                 <Button
                   size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%','height': '50px' }}
                   onClick={
                     () => {
                       multi_selected_links.current = []
@@ -422,20 +429,20 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                         multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                       })
                       multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-                    }}>
+                }}>
                   {t('Noeud.SlctOutLink')}
                 </Button>
               </OverlayTrigger>
             </Col>
-            <Col>
+            <Col xs={4}>
               <OverlayTrigger
-                key={'tooltip-adjust'}
+                key={'menu.tooltips.noeud.9'}
                 placement={'top'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
+                overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
                 <Button
                   size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px' }}
+                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%', 'height': '50px'}}
                   onClick={
                     () => {
                       multi_selected_links.current = []
@@ -443,14 +450,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                         multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
                       })
                       multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-                    }}>
+                }}>
                   {t('Noeud.SlctInLink')}
                 </Button>
               </OverlayTrigger>
             </Col>
           </ButtonGroup>
         </Col>
-      </Row >) : (<></>)}</>
+      </FormGroup >) : (<></>)}</>
   )
 }
 

@@ -118,41 +118,41 @@ export const SankeyMenuConfigurationLinksAppearence = (
     {/* Choix de la couleur du flux */}
     <Form >
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={5}>
           <FormLabel >{t('Flux.apparence.couleur')}:</FormLabel>
         </Col>
-        <Col>
+        <Col xs={7}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'Flux.apparence.tooltips.1'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.couleur')} </Tooltip>}>
+            overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.couleur')} </Tooltip>}>
             <Form.Control
               type="color"
               value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
               onChange={
                 evt => {
-                  // selected_link.current.color = evt.target.value
-                  const color = evt.target.value
-                  multi_selected_links.current.map(d => d.color = evt.target.value)
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
-                  set_data({ ...data })
-                }}/>
+                // selected_link.current.color = evt.target.value
+                const color = evt.target.value
+                multi_selected_links.current.map(d => d.color = evt.target.value)
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
 
       {/* Flux hachuré */}
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={5}>
           <FormLabel >{t('Flux.apparence.hach')}:</FormLabel>
         </Col>
-        <Col>
+        <Col xs={7}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'Flux.apparence.tooltips.2'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
+            overlay={<Tooltip id={'Flux.apparence.tooltips.2'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
             <Form.Check
               inline
               type="checkbox"
@@ -163,28 +163,27 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
 
       {/* Orientation du flux */}
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={4}>
           <FormLabel>{t('Flux.apparence.of')}:</FormLabel>
         </Col>
-      </Form.Group>
-      {/* Horizontal - Horizontal  */}
-      <Form.Group as={Row} >
-        <Col sm={3}>
+
+        {/* Horizontal - Horizontal  */}
+        <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'Flux.apparence.tooltips.3'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_hh')} </Tooltip>}>
+            overlay={<Tooltip id={'Flux.apparence.tooltips.3'}>{t('Flux.apparence.tooltips.of_hh')} </Tooltip>}>
             <FormCheck
               name='orientation'
-              type='radio'
+              type='checkbox'
               label='Horiz-Horiz'
               value='hh'
               checked={linkOrientation('hh')}
@@ -194,19 +193,19 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         {/* Vertical - Verticale  */}
-        <Col sm={3}>
+        <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'Flux.apparence.tooltips.4'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_vv')} </Tooltip>}>
+            overlay={<Tooltip id={'Flux.apparence.tooltips.4'}>{t('Flux.apparence.tooltips.of_vv')} </Tooltip>}>
             <FormCheck
               name='orientation'
-              type='radio'
+              type='checkbox'
               label='Vert-Vert'
               value='vv'
               checked={linkOrientation('vv')}
@@ -216,19 +215,19 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         {/* Vertical - Horizontal  */}
-        <Col sm={3}>
+        <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'Flux.apparence.tooltips.5'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_vh')} </Tooltip>}>
+            overlay={<Tooltip id={'Flux.apparence.tooltips.5'}>{t('Flux.apparence.tooltips.of_vh')} </Tooltip>}>
             <FormCheck
               name='orientation'
-              type='radio'
+              type='checkbox'
               label='Vert-Horiz'
               value='vh'
               checked={linkOrientation('vh')}
@@ -238,19 +237,19 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         {/* Horizontal - Vertical  */}
-        <Col sm={3}>
+        <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.6'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.of_hv')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.6'}>{t('Flux.apparence.tooltips.of_hv')} </Tooltip>}>
             <FormCheck
               name='orientation'
-              type='radio'
+              type='checkbox'
               label='Horiz-Vert'
               value='hv'
               checked={linkOrientation('hv')}
@@ -260,22 +259,22 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
 
       {/* Positionnement du centre du flux  */}
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={5}>
           <FormLabel >{t('Flux.apparence.pdc')}</FormLabel>
         </Col>
-        <Col>
+        <Col xs={5}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.7'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.7'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
             <FormControl
               min={0} max={100}
               type={'number'}
@@ -296,23 +295,23 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = center + shift_gap
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
-        <Col sm={2}>{shiftCenter()}</Col>
+        <Col xs={2}>{shiftCenter()}</Col>
       </Form.Group>
 
       {/* Distance des poignée */}
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={5}>
           <FormLabel >{t('Flux.apparence.eep')}</FormLabel>
         </Col>
-        <Col>
+        <Col xs={5}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.8'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.8'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
             <FormControl
               min={0} max={5}
               type={'number'}
@@ -336,10 +335,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = new_center_position + shift_gap
                   })
                   set_data({ ...data })
-                }}/>
+              }}
+            />
           </OverlayTrigger>
         </Col>
-        <Col sm={2}>{shift()}</Col>
+        <Col xs={2}>{shift()}</Col>
       </Form.Group>
 
       {/* Choix du type de représentation du flux  */}
@@ -350,10 +350,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
         {/* Forme courbée  */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.9'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.9'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
             <FormCheck
               type='checkbox'
               label={t('Flux.apparence.courbe')}
@@ -362,16 +362,16 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         {/* Forme fleche droite  */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.10'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.fleche')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.10'}>{t('Flux.apparence.tooltips.fleche')} </Tooltip>}>
             <FormCheck
               type='checkbox'
               label={t('Flux.apparence.fleche')}
@@ -380,16 +380,16 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         {/* Flux en recyclage  */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.11'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.recy')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.11'}>{t('Flux.apparence.tooltips.recy')} </Tooltip>}>
             <FormCheck
               type='checkbox'
               label={t('Flux.apparence.recy')}
@@ -402,22 +402,22 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = 0
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
 
       {/* Modification du rayon de courbure du flux  */}
       <Form.Group as={Row} >
-        <Col>
+        <Col xs={5}>
           <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
         </Col>
-        <Col>
+        <Col xs={5}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'flux.apparence.tooltips.12'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.apparence.tooltips.courbure')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.apparence.tooltips.12'}>{t('Flux.apparence.tooltips.courbure')} </Tooltip>}>
             <FormControl
               min={0} max={1} step={0.01}
               type={'number'}
@@ -428,10 +428,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.curvature = +evt.target.value
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
-        <Col sm={2}>{selected_link.current.curvature}</Col>
+        <Col xs={2}>{selected_link.current.curvature}</Col>
       </Form.Group>
       {additional_link_appearence_items}
 

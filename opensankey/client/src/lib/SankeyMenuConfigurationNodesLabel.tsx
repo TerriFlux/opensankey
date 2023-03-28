@@ -117,17 +117,17 @@ export const SankeyMenuConfigurationNodesLabel = (
         <Col xs={4}>{t('Noeud.labels.vdb')}</Col>
         <Col xs={1}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.1'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
             <FormCheck inline
               type='switch'
               checked={isAllLabelVisible()}
               onChange={evt => {
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
                 set_data({ ...data })
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -137,17 +137,17 @@ export const SankeyMenuConfigurationNodesLabel = (
         <Col xs={4}>{t('Noeud.labels.lb')}</Col>
         <Col xs={1}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.2'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
             <FormCheck inline
               type='switch'
               checked={isAllLabelWhite()}
               onChange={evt => {
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
                 set_data({ ...data })
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -160,10 +160,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         {/* En haut */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.3'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.3'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.haut')}
@@ -183,10 +183,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         {/* au Milieu */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.4'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.4'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.Milieu')}
@@ -199,17 +199,17 @@ export const SankeyMenuConfigurationNodesLabel = (
                     delete d.y_label
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* En bas */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.5'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.5'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.Bas')}
@@ -235,10 +235,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         {/* A gauche  */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.6'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.6'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.gauche')}
@@ -251,17 +251,17 @@ export const SankeyMenuConfigurationNodesLabel = (
                     delete d.y_label
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Au milieu */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.7'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.7'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.Milieu')}
@@ -274,17 +274,17 @@ export const SankeyMenuConfigurationNodesLabel = (
                     delete d.y_label
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* A droite */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.8'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.8'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
             <FormCheck disabled={!isAllLabelVisible()}
               type='radio'
               label={t('Noeud.labels.droite')}
@@ -297,7 +297,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                     delete d.y_label
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -385,10 +385,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         </Col>
         <Col xs={5}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.9'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
             <FormControl
               value={valueAllNodeLabelBox()}
               type={'number'}
@@ -402,7 +402,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
                   set_data({ ...data })
                 }
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
         <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -416,10 +416,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         </Col>
         <Col xs={1}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.10'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
             <FormCheck inline
               type='switch'
               checked={isAllNodeTotal()}
@@ -428,7 +428,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                 // node.node_visible = node.label_visible || node.shape_visible
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
                 set_data({ ...data })
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -441,10 +441,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         {/* en haut */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.11'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.11'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
             <FormCheck
               disabled={!isAllNodeTotal()}
               type='radio'
@@ -456,17 +456,17 @@ export const SankeyMenuConfigurationNodesLabel = (
                     d.display_style.label_vert_valeur = 'top'
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Au milieu */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.12'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.12'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
             <FormCheck
               disabled={!isAllNodeTotal()}
               type='radio'
@@ -477,19 +477,19 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                     d.display_style.label_vert_valeur = 'middle'
 
-                  })
-                  set_data({ ...data })
-                }}/>
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
         {/* EN bas */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.13'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Bas_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.13'}>{t('Noeud.labels.tooltips.Bas_val')} </Tooltip>}>
             <FormCheck
               type='radio'
               label={t('Noeud.labels.Bas')}
@@ -500,9 +500,9 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                     d.display_style.label_vert_valeur = 'bottom'
 
-                  })
-                  set_data({ ...data })
-                }}/>
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -516,10 +516,10 @@ export const SankeyMenuConfigurationNodesLabel = (
         {/* A gauche */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.14'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.14'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
             <FormCheck disabled={!isAllNodeTotal()}
               type='radio'
               label={t('Noeud.labels.gauche')}
@@ -529,19 +529,19 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                     d.display_style.label_horiz_valeur = 'left'
 
-                  })
-                  set_data({ ...data })
-                }}/>
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Au milieu */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.15'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.15'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
             <FormCheck disabled={!isAllNodeTotal()}
               type='radio'
               label={t('Noeud.labels.Milieu')}
@@ -551,18 +551,18 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                     d.display_style.label_horiz_valeur = 'middle'
                   })
-                  set_data({ ...data })
-                }}/>
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
         {/* A droite */}
         <Col>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.labels.tooltips.16'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.labels.tooltips.16'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
             <FormCheck disabled={!isAllNodeTotal()}
               type='radio'
               label={t('Noeud.labels.droite')}
@@ -575,7 +575,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                     delete d.y_label
                   })
                   set_data({ ...data })
-                }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
