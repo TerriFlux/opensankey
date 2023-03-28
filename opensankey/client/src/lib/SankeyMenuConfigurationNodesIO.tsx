@@ -439,14 +439,14 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
-              <FormCheck
-                value="output"
-                type='radio'
-                label={t('Noeud.PF.sort')}
-                checked={link_io=='output'}
-                onChange={() => {
-                  set_link_io('output')
-                  set_link_pos('')
+            <FormCheck
+              value="output"
+              type='radio'
+              label={t('Noeud.PF.sort')}
+              checked={link_io=='output'}
+              onChange={() => {
+                set_link_io('output')
+                set_link_pos('')
               }}/>
           </OverlayTrigger>
         </Col>
@@ -458,14 +458,14 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
-              <FormCheck
-                value="input"
-                type='radio'
-                label={t('Noeud.PF.ent')}
-                checked={link_io=='input'}
-                onChange={() => {
-                  set_link_io('input')
-                  set_link_pos('')
+            <FormCheck
+              value="input"
+              type='radio'
+              label={t('Noeud.PF.ent')}
+              checked={link_io=='input'}
+              onChange={() => {
+                set_link_io('input')
+                set_link_pos('')
               }}/>
           </OverlayTrigger>
         </Col>
@@ -483,16 +483,16 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
-              <FormCheck
-                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
-                value="left"
-                type='radio'
-                label={t('Noeud.PF.gauche')}
-                checked={link_pos=='left'}
-                onChange={() => {
-                  set_link_pos('left')
+            <FormCheck
+              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
+              value="left"
+              type='radio'
+              label={t('Noeud.PF.gauche')}
+              checked={link_pos=='left'}
+              onChange={() => {
+                set_link_pos('left')
               }}/>
-            </OverlayTrigger>
+          </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien situé à droite */}
@@ -502,14 +502,14 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
-              <FormCheck
-                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
-                value="right"
-                type='radio'
-                label={t('Noeud.PF.droite')}
-                checked={link_pos=='right'}
-                onChange={() => {
-                  set_link_pos('right')
+            <FormCheck
+              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
+              value="right"
+              type='radio'
+              label={t('Noeud.PF.droite')}
+              checked={link_pos=='right'}
+              onChange={() => {
+                set_link_pos('right')
               }}/>
           </OverlayTrigger>
         </Col>
@@ -521,16 +521,16 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
-              <FormCheck
-                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
-                value="top"
-                type='radio'
-                label={t('Noeud.PF.ades')}
-                checked={link_pos=='top'}
-                onChange={() => {
-                  set_link_pos('top')
+            <FormCheck
+              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
+              value="top"
+              type='radio'
+              label={t('Noeud.PF.ades')}
+              checked={link_pos=='top'}
+              onChange={() => {
+                set_link_pos('top')
               }}/>
-            </OverlayTrigger>
+          </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien situé en dessous */}
@@ -540,14 +540,14 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
-              <FormCheck
-                disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
-                value="bottom"
-                type='radio'
-                label={t('Noeud.PF.edes')}
-                checked={link_pos=='bottom'}
-                onChange={() => {
-                  set_link_pos('bottom')
+            <FormCheck
+              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
+              value="bottom"
+              type='radio'
+              label={t('Noeud.PF.edes')}
+              checked={link_pos=='bottom'}
+              onChange={() => {
+                set_link_pos('bottom')
               }}/>
           </OverlayTrigger>
         </Col>
@@ -564,14 +564,14 @@ export const SankeyMenuConfigurationNodesIO = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
-              <FormCheck
-                value="bottom"
-                type='checkbox'
-                label={t('Noeud.PF.col')}
-                checked={tab_colored}
-                onChange={() => {
-                  //console.log(tab_colored)
-                  set_tab_colored(!tab_colored)
+            <FormCheck
+              value="bottom"
+              type='checkbox'
+              label={t('Noeud.PF.col')}
+              checked={tab_colored}
+              onChange={() => {
+                //console.log(tab_colored)
+                set_tab_colored(!tab_colored)
               }}/>
           </OverlayTrigger>
         </Col>

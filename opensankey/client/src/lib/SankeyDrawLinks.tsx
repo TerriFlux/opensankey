@@ -56,7 +56,7 @@ export const OpenSankeyDrawLinks = (
     links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
     select_link:(n: SankeyLink) => void,
     set_data:React.Dispatch<React.SetStateAction<SankeyData>>
-    )=>{
+  )=>{
     if (!mode_visualisation) {
       sankeyTooltip.style('opacity', 0)
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -237,7 +237,7 @@ export const OpenSankeyDrawLinks = (
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
     const { display_style } = data
-      d3.select(' .opensankey #g_links').selectAll('.gg_links').remove()
+    d3.select(' .opensankey #g_links').selectAll('.gg_links').remove()
     
     d3.select(' .opensankey #svg').selectAll('.link_value').remove()
 

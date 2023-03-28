@@ -1031,30 +1031,30 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     
     if(d3.select(evt.target).attr('class')!='node node_shape'){
       
-        if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
-          if(!token && Object.keys(data.nodes).length>15){
-            set_show_toast_limit_node(true)
-            setTimeout(function () {
-              set_show_toast_limit_node(false)
-            }, 3000)
-          }else{
+      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
+        if(!token && Object.keys(data.nodes).length>15){
+          set_show_toast_limit_node(true)
+          setTimeout(function () {
+            set_show_toast_limit_node(false)
+          }, 3000)
+        }else{
           // isDown = true    
           // creation nouveau noeud
-            const new_node1 = default_node(data)
-            const listId: number[] = []
-            Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-            const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-            new_node1.idNode = 'node' + idNode
-            new_node1.name = 'node_tmp'    
-            data.nodes[new_node1.idNode] = new_node1
-            const pos = d3.pointer(event)
-            new_node1.x = pos[0]-(new_node1.node_width/2)
-            new_node1.y = pos[1]-(new_node1.node_height/2)
-            set_first_selected_node(new_node1)
-            set_data({ ...data })
-          }
+          const new_node1 = default_node(data)
+          const listId: number[] = []
+          Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+          const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+          new_node1.idNode = 'node' + idNode
+          new_node1.name = 'node_tmp'    
+          data.nodes[new_node1.idNode] = new_node1
+          const pos = d3.pointer(event)
+          new_node1.x = pos[0]-(new_node1.node_width/2)
+          new_node1.y = pos[1]-(new_node1.node_height/2)
+          set_first_selected_node(new_node1)
+          set_data({ ...data })
         }
-      }    
+      }
+    }    
   })
     .on('mousemove', evt => {
       //Empêche lors du drag de la souris d'avoir 
@@ -2320,7 +2320,7 @@ export const node_label_text=(d:SankeyNode)=>{
 export const value_selected_parameter = (data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
   tags_selected:{[k: string]: string},
-  ): SankeyLinkValue => {
+): SankeyLinkValue => {
   if(multi_selected_links.current.length==0){
     return ({} as SankeyLinkValue)
   }else{
