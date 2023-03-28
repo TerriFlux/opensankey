@@ -15,15 +15,15 @@ export const OpenSankeyMenuConfigurationLegend= (
   return [
     /* Position X de la legende  */
     <Form.Group as={Row} >
-      <Col xs={3}>
+      <Col xs={7}>
         <FormLabel >{t('Menu.LegX')}</FormLabel>
       </Col>
-      <Col>
+      <Col xs={5}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'Menu.tooltips.LegX'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
+          overlay={<Tooltip id={'Menu.tooltips.LegX'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
           <FormControl
             type="text"
             value={legend_position[0]}
@@ -31,21 +31,21 @@ export const OpenSankeyMenuConfigurationLegend= (
             onBlur={() => {
               data.legend_position = legend_position
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
     /* Position Y de la legende */
     <Form.Group as={Row} >
-      <Col xs={3}>
+      <Col xs={7}>
         <FormLabel>{t('Menu.LegY')}</FormLabel>
       </Col>
-      <Col>
+      <Col xs={5}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'Menu.tooltips.LegY'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
+          overlay={<Tooltip id={'Menu.tooltips.LegY'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
           <FormControl
             type="text"
             value={legend_position[1]}
@@ -53,21 +53,21 @@ export const OpenSankeyMenuConfigurationLegend= (
             onBlur={() => {
               data.legend_position = legend_position
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
     /* Largeur de la fenetre de legende */
     <Form.Group as={Row} >
-      <Col xs={3}>
+      <Col xs={7}>
         <FormLabel>{t('Menu.LegWidth')}</FormLabel>
       </Col>
-      <Col>
+      <Col xs={5}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'Menu.tooltips.LegWidth'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
+          overlay={<Tooltip id={'Menu.tooltips.LegWidth'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
           <FormControl
             type="number"
             step={1}
@@ -75,7 +75,7 @@ export const OpenSankeyMenuConfigurationLegend= (
             onChange={evt =>{
               data.legend_width=+evt.target.value
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>

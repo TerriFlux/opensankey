@@ -13,13 +13,12 @@ export const SankeyMenuConfigurationNodesTooltip = (
     <Tab eventKey="node_tooltip" title={t('Noeud.IB')}>
       <Form >
         <Row>
-          <FormLabel column sm={1}>{t('Noeud.IB')}:</FormLabel>
-          <Col sm={11}>
+          <Col xs={12}>
             <OverlayTrigger
-              key={'tooltip-adjust'}
+              key={'Noeud.tooltips.IB.1'}
               placement={'top'}
               delay={500}
-              overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.IB')} </Tooltip>}>
+              overlay={<Tooltip id={'Noeud.tooltips.IB.1'}>{t('Noeud.tooltips.IB')} </Tooltip>}>
               <Form.Control
                 as="textarea"
                 rows={10}
@@ -28,7 +27,7 @@ export const SankeyMenuConfigurationNodesTooltip = (
                   (evt) => {
                     multi_selected_nodes.current.map(node => node.tooltip_text = evt.target.value)
                     set_data({ ...data })
-                  }}/>
+              }}/>
             </OverlayTrigger>
           </Col>
         </Row>

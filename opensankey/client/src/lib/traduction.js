@@ -76,6 +76,18 @@ const resources = {
           LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth: 'Width (in px) for the legend space',
           BgC: 'Change the background color of the interactive graphic space',
+        }
+      },
+      MEP:{
+        'Echelle':'Scale of diagram',
+        'MaxFlux':'Maximal value for links (px)',
+        'vp100':'value for 100px',
+        'TCG':'Background grid',
+        'AN':'Arrange the nodes on the grid',
+        'Horizontal':'Horizontal spacing between nodes',
+        'Vertical':'Vertical spacing between nodes',
+        'PA':'Automatic positioning of nodes and links',
+        tooltips: {
           Echelle: 'Change the scale of the links and nodes',
           MaxFlux: 'Change the maximum size (in pixels) for the display of the links',
           TCG: 'Size of the background grid tiles (in pixels)',
@@ -85,18 +97,6 @@ const resources = {
           EEN_v: 'Default vertical distance (in pixel) between nodes for automatic positioning',
           PA: 'Perform an automatic positioning of the nodes according to the specified default distances'
         }
-      },
-      MEP:{
-        'Echelle':'Scale of diagram',
-        'MaxFlux':'Maximal value for links (px)',
-        'vp100':'value for 100px',
-        'TCG':'Grid size (px)',
-        'GV':'Show grid',
-        'AN':'Arrange the nodes on the grid',
-        'EEN':'Spacing between nodes on the grid (px)',
-        'Horizontal':'Horizontal',
-        'Vertical':'Vertical',
-        'PA':'Automatic positioning of nodes and links',
       },
       Tags:{
         'Nom':'Name',
@@ -255,7 +255,9 @@ const resources = {
         }
       },
       Flux:{
+        'pg': 'General settings',
         'pdl':'Font',
+        'pl': 'Parameters per link',
         'src':'Source',
         'trgt':'Target',
         'if':'Reverse direction',
@@ -316,6 +318,7 @@ const resources = {
         },
         label:{
           'label':'Label',
+          'vdb':'Label visibility',
           'len':'Black label',
           'lb':'White label',
           'lec':'Colored label',
@@ -468,6 +471,18 @@ const resources = {
           LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegWidth: 'Largeur (en px) de l\'espace de la légende',
           BgC: 'Changer la couleur fond de l\'espace graphique interactif',
+        }
+      },
+      MEP:{
+        'Echelle': 'Echelle du diagramme',
+        'MaxFlux': 'Taille maximale des flux (px)',
+        'vp100':'valeur pour 100px',
+        'TCG':'Quadrillage en fond',
+        'AN':'Arranger les noeuds sur le quadrillage',
+        'Horizontal':'Ecartement horizontal des noeuds',
+        'Vertical':'Ecartement vertical des noeuds',
+        'PA':'Positionnement automatique des noeuds et flux',
+        tooltips: {
           Echelle: 'Modifier l\'échelle des flux et noeuds',
           MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
           TCG: 'Taille des carreaux de la grille de fond (en pixel)',
@@ -477,18 +492,6 @@ const resources = {
           EEN_v: 'Ecart vertical par défaut (en pixel) entre les noeuds pour un positionnement automatique',
           PA: 'Réaliser un positionnement automatique des noeuds en fonction des écarts par défaut spécifiés'
         }
-      },
-      MEP:{
-        'Echelle': 'Echelle du diagramme',
-        'MaxFlux': 'Taille maximale des flux (px)',
-        'vp100':'valeur pour 100px',
-        'TCG':'Taille du quadrillage (px)',
-        'GV':'Afficher le quadrillage',
-        'AN':'Arranger les noeuds sur le quadrillage',
-        'EEN':'Ecart entre les noeuds sur le quadrillage (px)',
-        'Horizontal':'Horizontal',
-        'Vertical':'Vertical',
-        'PA':'Positionnement automatique des noeuds et flux'
       },
       Tags:{
         'Nom':'Nom',
@@ -624,7 +627,7 @@ const resources = {
           'CLE':'Copier liens enfants'
         },
         PF:{
-          'PF':'Position flux e/s',
+          'PF':'Flux E/S',
           'FES':'Type de flux',
           'ent':'Entrant',
           'sort':'Sortant',
@@ -647,7 +650,9 @@ const resources = {
         }
       },
       Flux:{
+        'pg': 'Paramètres généraux',
         'pdl':'Police des labels',
+        'pl': 'Paramètres par flux',
         'src':'Source',
         'trgt':'Cible',
         'if':'Inverser la direction',
@@ -708,6 +713,7 @@ const resources = {
         },
         label:{
           'label':'Label',
+          'vdb':'Visibilité du label',
           'len':'Label en noir',
           'lb':'Label en blanc',
           'lec':'Label en couleur',
