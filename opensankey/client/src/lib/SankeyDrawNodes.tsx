@@ -7,7 +7,7 @@ import {node_color} from './SankeyUtils'
 import { BaseType } from 'd3'
 import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width, drawArrows } from './SankeyDrawFunction'
-import { dragGNodeEvent } from './SankeyDrag'
+import { dragging_type, dragGNodeEvent } from './SankeyDrag'
 
 export const OpenSankeyDrawNodes = (
   data:SankeyData, 
@@ -34,7 +34,7 @@ export const OpenSankeyDrawNodes = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  dragging:Function
+  dragging:dragging_type
 
 
 ) => {

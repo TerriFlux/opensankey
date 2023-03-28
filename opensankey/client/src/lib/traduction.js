@@ -61,29 +61,29 @@ const resources = {
         'warningLimitNode':'Warning : Limit of node reach for unconnected user',
         tooltips:{
           noeud:{
-            slct: "Choose one / some / all nodes to select via a drop-down list",
-            plus: "Add a node, which will be automatically selected.",
-            rm: "Allow to delete all currently selected nodes",
-            dns: "Display in the node selection list, only the node(s) that is/are currently visible in the graphic space"
+            slct: 'Choose one / some / all nodes to select via a drop-down list',
+            plus: 'Add a node, which will be automatically selected.',
+            rm: 'Allow to delete all currently selected nodes',
+            dns: 'Display in the node selection list, only the node(s) that is/are currently visible in the graphic space'
           },
           flux:{
-            slct: "Choose one / some / all link(s) to select via a drop-down list",
-            plus: "Add a new link. This one will be automatically selected.",
-            rm: "Allow to delete currently selected link(s)",
-            dls: "Display in the list of selection of link(s), only the link(s) that is/are currently visible on the graphic space",
+            slct: 'Choose one / some / all link(s) to select via a drop-down list',
+            plus: 'Add a new link. This one will be automatically selected.',
+            rm: 'Allow to delete currently selected link(s)',
+            dls: 'Display in the list of selection of link(s), only the link(s) that is/are currently visible on the graphic space',
           },
-          LegX: "Horizontal distance (in px) between the upper left corner of the legend and the upper left corner of the window",
-          LegY: "Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window",
-          LegWidth: "Width (in px) for the legend space",
-          BgC: "Change the background color of the interactive graphic space",
-          Echelle: "Change the scale of the links and nodes",
-          MaxFlux: "Change the maximum size (in pixels) for the display of the links",
-          TCG: "Size of the background grid tiles (in pixels)",
-          GV: "Enable or disable the display of the background grid",
-          AN: "Automatically arrange nodes: ie come and paste the upper left corner of the nodes on the nearest grid corner",
-          EEN_h: "Default horizontal distance (in pixel) between nodes for automatic positioning",
-          EEN_v: "Default vertical distance (in pixel) between nodes for automatic positioning",
-          PA: "Perform an automatic positioning of the nodes according to the specified default distances"
+          LegX: 'Horizontal distance (in px) between the upper left corner of the legend and the upper left corner of the window',
+          LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
+          LegWidth: 'Width (in px) for the legend space',
+          BgC: 'Change the background color of the interactive graphic space',
+          Echelle: 'Change the scale of the links and nodes',
+          MaxFlux: 'Change the maximum size (in pixels) for the display of the links',
+          TCG: 'Size of the background grid tiles (in pixels)',
+          GV: 'Enable or disable the display of the background grid',
+          AN: 'Automatically arrange nodes: ie come and paste the upper left corner of the nodes on the nearest grid corner',
+          EEN_h: 'Default horizontal distance (in pixel) between nodes for automatic positioning',
+          EEN_v: 'Default vertical distance (in pixel) between nodes for automatic positioning',
+          PA: 'Perform an automatic positioning of the nodes according to the specified default distances'
         }
       },
       MEP:{
@@ -114,22 +114,22 @@ const resources = {
         'GE':'Tags\' Group',
         'selct':'Selected',
         tooltips: {
-          pal: "Apply a random color palette for the tags of the selected group",
-          pal_shuffle: "Change the order of the colors applied to the tags of the selected group",
-          pal_std: "Choose a standard color palette for the tags of the selected group",
-          add: "Add a tag to the selected group",
-          add_grp: "Add a tag group",
-          rm: "Delete the tag",
-          rm_grp: "Delete this tag group",
-          nom: "Rename the current tag",
-          nom_grp: "Rename this tag group",
-          leg_grp: "Activate or not the legend on the filtering of this group of tags and therefore the colors associated with the tags of this group",
-          visible: "Choose to make visible or not the nodes associated with this tag",
-          couleur: "Change the color of the current tag",
-          forme: "Choose the shape of the nodes associated with this tag",
-          banner: "Choose the type of dropdown menu on the filtering of this tag group (None / Single / Multiple / LevelTags)",
-          up: "Move the tag group up in the node filtering menu",
-          down: "Move the tag group down in the node filter menu"
+          pal: 'Apply a random color palette for the tags of the selected group',
+          pal_shuffle: 'Change the order of the colors applied to the tags of the selected group',
+          pal_std: 'Choose a standard color palette for the tags of the selected group',
+          add: 'Add a tag to the selected group',
+          add_grp: 'Add a tag group',
+          rm: 'Delete the tag',
+          rm_grp: 'Delete this tag group',
+          nom: 'Rename the current tag',
+          nom_grp: 'Rename this tag group',
+          leg_grp: 'Activate or not the legend on the filtering of this group of tags and therefore the colors associated with the tags of this group',
+          visible: 'Choose to make visible or not the nodes associated with this tag',
+          couleur: 'Change the color of the current tag',
+          forme: 'Choose the shape of the nodes associated with this tag',
+          banner: 'Choose the type of dropdown menu on the filtering of this tag group (None / Single / Multiple / LevelTags)',
+          up: 'Move the tag group up in the node filtering menu',
+          down: 'Move the tag group down in the node filter menu'
         }
       },
       Noeud:{
@@ -143,12 +143,12 @@ const resources = {
         'SlctInLink':'Select incoming links',
         'IB':'Tooltip',
         tooltips:{
-          Nom: "Change the name of the selected node. If several nodes are selected, this field is disabled",
-          AS: "Allow to apply a predefined style in the preference menu to the selected node(s)",
-          Reorg:"Allows automatic reorganization of incoming and outgoing flows (up/down position)",
-          SlctOutLink:"Allow to select all outgoing flows from the node(s)",
-          SlctInLink:"Allow to select all incoming flows to the node(s)",
-          IB: "Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node."
+          Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
+          AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
+          Reorg:'Allows automatic reorganization of incoming and outgoing flows (up/down position)',
+          SlctOutLink:'Allow to select all outgoing flows from the node(s)',
+          SlctInLink:'Allow to select all incoming flows to the node(s)',
+          IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.'
         },
         apparence:{
           'apparence':'Appearence',
@@ -169,12 +169,12 @@ const resources = {
           'toScaleLeft':'to the left',
           'toScaleRight':'to the right',
           tooltips: {
-            Visibilité: "Makes the selected node(s) visible or invisible",
-            Couleur: "Choose the color of the selected node(s)",
-            CouleurPérenne: "Keep the color of the node(s) if any filter is activated",
-            Forme: "Choose a shape between rectangle or circle for the selected node(s)",
-            TML: "Minimum width in pixels of the selected node(s)",
-            TMH: "Minimum height in pixels of the selected node(s)"
+            Visibilité: 'Makes the selected node(s) visible or invisible',
+            Couleur: 'Choose the color of the selected node(s)',
+            CouleurPérenne: 'Keep the color of the node(s) if any filter is activated',
+            Forme: 'Choose a shape between rectangle or circle for the selected node(s)',
+            TML: 'Minimum width in pixels of the selected node(s)',
+            TMH: 'Minimum height in pixels of the selected node(s)'
           }
         },
         labels:{
@@ -196,22 +196,22 @@ const resources = {
           'cl':'Text box width',
           'vdv':'Set value visibility',
           tooltips: {
-            vdb: "Displays or not the label(s) attached to the selected node(s)",
-            lb: "Displays the text of the label(s) in white or black (useful if label is positioned on node(s))",
-            top: "Displays the label(s) above the selected node(s)",
-            Milieu_pv: "Displays the label(s) in the middle (vertically) of the selected node(s)",
-            Bas: "Displays the label(s) below the selected node(s)",
-            gauche: "Displays the label(s) to the left of the selected node(s)",
-            Milieu_ph: "Displays the label(s) in the middle (horizontally) of the selected node(s)",
-            droite: "Displays the label(s) to the right of the selected node(s)",
-            cl: "Width of the text area (in pixels) for the label(s) of the selected node(s)",
-            vdv: "Displays or not the associated value with the selected node(s)",
-            haut_val: "Displays the associated value above the selected node(s)",
-            Milieu_pv_val: "Displays the associated value in the middle (vertically) of the selected node(s)",
-            Bas_val: "Displays the associated value below the selected node(s)",
-            gauche_val: "Displays the associated value to the left of the selected node(s)",
-            Milieu_ph_val: "Displays the associated value in the middle (horizontally) of the selected node(s)",
-            droite_val: "Displays the associated value to the right of the selected node(s)",
+            vdb: 'Displays or not the label(s) attached to the selected node(s)',
+            lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
+            top: 'Displays the label(s) above the selected node(s)',
+            Milieu_pv: 'Displays the label(s) in the middle (vertically) of the selected node(s)',
+            Bas: 'Displays the label(s) below the selected node(s)',
+            gauche: 'Displays the label(s) to the left of the selected node(s)',
+            Milieu_ph: 'Displays the label(s) in the middle (horizontally) of the selected node(s)',
+            droite: 'Displays the label(s) to the right of the selected node(s)',
+            cl: 'Width of the text area (in pixels) for the label(s) of the selected node(s)',
+            vdv: 'Displays or not the associated value with the selected node(s)',
+            haut_val: 'Displays the associated value above the selected node(s)',
+            Milieu_pv_val: 'Displays the associated value in the middle (vertically) of the selected node(s)',
+            Bas_val: 'Displays the associated value below the selected node(s)',
+            gauche_val: 'Displays the associated value to the left of the selected node(s)',
+            Milieu_ph_val: 'Displays the associated value in the middle (horizontally) of the selected node(s)',
+            droite_val: 'Displays the associated value to the right of the selected node(s)',
           }
         },
         icon:{
@@ -244,13 +244,13 @@ const resources = {
           'lti':'Identify the links in the table with their colors',
           'col':'Apply',
           tooltips:{
-            ent: "Display in the table below, the incoming links of the selected node(s)",
-            sort: "Display in the table below, the outgoing links of the selected node(s)",
-            droite: "Display in the table below, the links on the right of the selected node(s)",
-            gauche: "Display in the table below, the links on the left of the selected node(s)",
-            ades: "Display in the table below, the feeds above the selected node(s)",
-            edes: "Display in the table below, the feeds below the selected node(s)",
-            lti: "Display the lines of the links table with their respective colors to better identify them"
+            ent: 'Display in the table below, the incoming links of the selected node(s)',
+            sort: 'Display in the table below, the outgoing links of the selected node(s)',
+            droite: 'Display in the table below, the links on the right of the selected node(s)',
+            gauche: 'Display in the table below, the links on the left of the selected node(s)',
+            ades: 'Display in the table below, the feeds above the selected node(s)',
+            edes: 'Display in the table below, the feeds below the selected node(s)',
+            lti: 'Display the lines of the links table with their respective colors to better identify them'
           }
         }
       },
@@ -264,15 +264,15 @@ const resources = {
         'as':'Apply the style to selected link(s)',
         'IB':'ToolTip',
         tooltips: {
-          src: "Choice of the departure node for the selected link(s)",
-          trgt: "Choice of the arrival node for the selected link(s)",
-          if: "Reverse the start and finish nodes for the selected link(s)",
-          up: "Move up one step to the foreground",
-          upup: "Put the selected stream(s) in the foreground",
-          dwn: "Go down one step to the last plane",
-          dwndwn: "Move the selected stream(s) to the last plane",
-          as: "Allow to apply a predefined style in the preference menu to the selected link(s)",
-          IB: "Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link."
+          src: 'Choice of the departure node for the selected link(s)',
+          trgt: 'Choice of the arrival node for the selected link(s)',
+          if: 'Reverse the start and finish nodes for the selected link(s)',
+          up: 'Move up one step to the foreground',
+          upup: 'Put the selected stream(s) in the foreground',
+          dwn: 'Go down one step to the last plane',
+          dwndwn: 'Move the selected stream(s) to the last plane',
+          as: 'Allow to apply a predefined style in the preference menu to the selected link(s)',
+          IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.'
         },
         data:{
           'données':'Data',
@@ -280,9 +280,9 @@ const resources = {
           'affichage':'Display',
           'toPrecision':'Display the value in scientific notation',
           tooltips: {
-            vpp: "Data associated to the selected link and, if existing, for the selected tag(s)",
-            toPrecision: "Activate or not the notation in scientific format, for the display of the link's data on the Sankey diagram",
-            affichage: "Replacement text for the display of the link's data on the Sankey diagram"
+            vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
+            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
+            affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
           }
         },
         apparence:{
@@ -329,18 +329,18 @@ const resources = {
           'dessus':'Below',
           'pls':'Position the label with the mouse',
           tooltips: {
-            label: "Display or not the label (data / text) associated to the selected link(s)",
-            len: "Display the label in black, for the selected stream(s)",
-            lb: "Display the label in white, for the selected stream(s)",
-            lec: "Display the label with the same color(s) as the one(s) associated with the selected stream(s)",
-            acf: "For the selected stream(s), allows to orient the label following the shape of the associated stream",
-            deb: "For the selected link(s), allows to position the label towards the starting point of the link",
-            milieu_h: "For the selected link(s), allows to position the label between the starting point and the end point of the link",
-            end: "For the selected stream(s), allows to position the label towards the end point of the stream",
-            below: "For the selected stream(s), allows to position the label below the stream",
-            milieu_v: "For the selected link(s), allows to position the label inside the link",
-            top: "For the selected stream(s), allows to position the label above the stream",
-            pls: "Activates the possibility to move the label of the selected stream(s) with the mouse"
+            label: 'Display or not the label (data / text) associated to the selected link(s)',
+            len: 'Display the label in black, for the selected stream(s)',
+            lb: 'Display the label in white, for the selected stream(s)',
+            lec: 'Display the label with the same color(s) as the one(s) associated with the selected stream(s)',
+            acf: 'For the selected stream(s), allows to orient the label following the shape of the associated stream',
+            deb: 'For the selected link(s), allows to position the label towards the starting point of the link',
+            milieu_h: 'For the selected link(s), allows to position the label between the starting point and the end point of the link',
+            end: 'For the selected stream(s), allows to position the label towards the end point of the stream',
+            below: 'For the selected stream(s), allows to position the label below the stream',
+            milieu_v: 'For the selected link(s), allows to position the label inside the link',
+            top: 'For the selected stream(s), allows to position the label above the stream',
+            pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse'
           }
         }
       },
@@ -453,29 +453,29 @@ const resources = {
         'warningLimitNode':'Attention :Nombre de noeuds limite atteint pour les utilisateurs non connecté',
         tooltips:{
           noeud:{
-            slct: "Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante",
-            plus: "Ajouter un noeud. Celui-ci sera automatiquement selectionné.",
-            rm: "Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)",
-            dns: "Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles sur l'espace graphique"
+            slct: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante',
+            plus: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.',
+            rm: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)',
+            dns: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles sur l\'espace graphique'
           },
           flux:{
-            slct: "Choisir un / des / tous les flux à sélectionner via une liste déroulante",
-            plus: "Ajouter un flux. Celui-ci sera automatiquement selectionné.",
-            rm: "Permettre de supprimer tous les flux actuellement sélectionné(s)",
-            dls: "Afficher dans la liste de selection des flux, uniquement ceux actuellement visibles sur l'espace graphique",
+            slct: 'Choisir un / des / tous les flux à sélectionner via une liste déroulante',
+            plus: 'Ajouter un flux. Celui-ci sera automatiquement selectionné.',
+            rm: 'Permettre de supprimer tous les flux actuellement sélectionné(s)',
+            dls: 'Afficher dans la liste de selection des flux, uniquement ceux actuellement visibles sur l\'espace graphique',
           },
-          LegX: "Ecart horizontal (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre",
-          LegY: "Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre",
-          LegWidth: "Largeur (en px) de l'espace de la légende",
-          BgC: "Changer la couleur fond de l'espace graphique interactif",
-          Echelle: "Modifier l'échelle des flux et noeuds",
-          MaxFlux: "Modifier la taille maximale (en pixel) pour l'affichage des flux",
-          TCG: "Taille des carreaux de la grille de fond (en pixel)",
-          GV: "Activer ou désactiver l'affichage de la grille de fond",
-          AN: "Arrangement automatiquement les noeuds : ie venir coller le coin supérieur gauche des noeuds sur le coin de grille le plus proche",
-          EEN_h: "Ecart horizontal par défaut (en pixel) entre les noeuds pour un positionnement automatique",
-          EEN_v: "Ecart vertical par défaut (en pixel) entre les noeuds pour un positionnement automatique",
-          PA: "Réaliser un positionnement automatique des noeuds en fonction des écarts par défaut spécifiés"
+          LegX: 'Ecart horizontal (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
+          LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
+          LegWidth: 'Largeur (en px) de l\'espace de la légende',
+          BgC: 'Changer la couleur fond de l\'espace graphique interactif',
+          Echelle: 'Modifier l\'échelle des flux et noeuds',
+          MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
+          TCG: 'Taille des carreaux de la grille de fond (en pixel)',
+          GV: 'Activer ou désactiver l\'affichage de la grille de fond',
+          AN: 'Arrangement automatiquement les noeuds : ie venir coller le coin supérieur gauche des noeuds sur le coin de grille le plus proche',
+          EEN_h: 'Ecart horizontal par défaut (en pixel) entre les noeuds pour un positionnement automatique',
+          EEN_v: 'Ecart vertical par défaut (en pixel) entre les noeuds pour un positionnement automatique',
+          PA: 'Réaliser un positionnement automatique des noeuds en fonction des écarts par défaut spécifiés'
         }
       },
       MEP:{
@@ -506,22 +506,22 @@ const resources = {
         'GE':'Groupe d\'étiquettes',
         'selct':'Sélectionné',
         tooltips: {
-          pal: "Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné",
-          pal_shuffle: "Changer l'ordre des couleur appliquées aux étiquettes du groupe sélectionné",
-          pal_std: "Choisir une palette de couleurs standard pour les étiquettes du groupe sélectionné",
-          add: "Ajouter une étiquette au groupe sélectionné",
-          add_grp: "Ajouter un groupe d'étiquette",
-          rm: "Supprimer l'étiquette",
-          rm_grp: "Supprimer ce groupe d'étiquette",
-          nom: "Renommer l'étiquette courante",
-          nom_grp: "Renommer ce groupe d'étiquette",
-          leg_grp: " Active ou non la légende sur le filtrage de ce groupe d'étiquettes et donc les couleurs associées aux étiquettes de ce groupe",
-          visible: "Choisir de rendre visible ou non les noeuds associés à cette étiquette",
-          couleur: "Changer la couleur de l'étiquette courante",
-          forme: "Choisir la forme des noeuds associés à cette étiquette",
-          banner: "Choisir le type de menu déroulant sur le filtrage de ce groupe d'étiquettes (Aucun / Unique / multiple / LevelTags)",
-          up: "Monter le groupe d'étiquettes dans le menu de filtrage des noeuds",
-          down: "Descendre le groupe d'étiquettes dans le menu de filtrage des noeuds"
+          pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
+          pal_shuffle: 'Changer l\'ordre des couleur appliquées aux étiquettes du groupe sélectionné',
+          pal_std: 'Choisir une palette de couleurs standard pour les étiquettes du groupe sélectionné',
+          add: 'Ajouter une étiquette au groupe sélectionné',
+          add_grp: 'Ajouter un groupe d\'étiquette',
+          rm: 'Supprimer l\'étiquette',
+          rm_grp: 'Supprimer ce groupe d\'étiquette',
+          nom: 'Renommer l\'étiquette courante',
+          nom_grp: 'Renommer ce groupe d\'étiquette',
+          leg_grp: ' Active ou non la légende sur le filtrage de ce groupe d\'étiquettes et donc les couleurs associées aux étiquettes de ce groupe',
+          visible: 'Choisir de rendre visible ou non les noeuds associés à cette étiquette',
+          couleur: 'Changer la couleur de l\'étiquette courante',
+          forme: 'Choisir la forme des noeuds associés à cette étiquette',
+          banner: 'Choisir le type de menu déroulant sur le filtrage de ce groupe d\'étiquettes (Aucun / Unique / multiple / LevelTags)',
+          up: 'Monter le groupe d\'étiquettes dans le menu de filtrage des noeuds',
+          down: 'Descendre le groupe d\'étiquettes dans le menu de filtrage des noeuds'
         }
       },
       Noeud:{
@@ -535,12 +535,12 @@ const resources = {
         'SlctInLink':'Sélectionner flux entrants',
         'IB':'Info-bulle',
         tooltips:{
-          Nom: "Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé",
-          AS: "Permettre d'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)",
-          Reorg: "Permet de réorganiser automatiquement les flux entrant et sortant (position haut / bas)",
-          SlctOutLink: "Permettre de sélectionner tous les flux sortants du/des noeud(s)",
-          SlctInLink: "Permettre de sélectionner tous les flux entrants vers le/les noeud(s)",
-          IB: "Info bulle : texte formaté en HTML et affiché avec l'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud"
+          Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
+          AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
+          Reorg: 'Permet de réorganiser automatiquement les flux entrant et sortant (position haut / bas)',
+          SlctOutLink: 'Permettre de sélectionner tous les flux sortants du/des noeud(s)',
+          SlctInLink: 'Permettre de sélectionner tous les flux entrants vers le/les noeud(s)',
+          IB: 'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud'
         },
         apparence:{
           'apparence':'Apparence',
@@ -561,12 +561,12 @@ const resources = {
           'toScaleLeft':'Vers la gauche',
           'toScaleRight':'Vers la droite',
           tooltips: {
-            Visibilité: "Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)",
-            Couleur: "Choisir la couleur du/des noeud(s) selectionné(s)",
-            CouleurPérenne: "Garder la couleur du/des noeud(s) en cas de filtrage",
-            Forme: "Choisir une Forme entre rectangle ou cercle pour le/les noeud(s) selectionné(s)",
-            TML: "Largeur minimale en pixel du/des noeud(s) selectionné(s)",
-            TMH: "Hauteur minimale en pixel du/des noeud(s) selectionné(s)"
+            Visibilité: 'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)',
+            Couleur: 'Choisir la couleur du/des noeud(s) selectionné(s)',
+            CouleurPérenne: 'Garder la couleur du/des noeud(s) en cas de filtrage',
+            Forme: 'Choisir une Forme entre rectangle ou cercle pour le/les noeud(s) selectionné(s)',
+            TML: 'Largeur minimale en pixel du/des noeud(s) selectionné(s)',
+            TMH: 'Hauteur minimale en pixel du/des noeud(s) selectionné(s)'
           }
         },
         labels:{
@@ -588,22 +588,22 @@ const resources = {
           'cl':'Largeur zone de texte',
           'vdv':'Afficher la valeur',
           tooltips: {
-            vdb: "Permet d'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)",
-            lb: "Permet d'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))",
-            haut: "Positionner le label au dessus du/des noeud(s) sélectionné(s)",
-            Milieu_pv: "Positionner le label au milieu (verticalement) du/des noeud(s) sélectionné(s)",
-            Bas: "Positionner le label en dessous du/des noeud(s) sélectionné(s)",
-            gauche: "Positionner le label à gauche du/des noeud(s) sélectionné(s)",
-            Milieu_ph: "Positionner le label au milieu (horizontalement) du/des noeud(s) sélectionné(s)",
-            droite: "Positionner le label à droite du/des noeud(s) sélectionné(s)",
-            cl: "Largeur de la zone de texte (en pixel) pour le label du/des noeud(s) sélectionné(s)",
-            vdv: "Active l'affichage de la valeur associée au(x) noeud(s) sélectionné(s)",
-            haut_val: "Positionner l'affichage de la valeur associée au dessus du/des noeud(s) sélectionné(s)",
-            Milieu_pv_val: "Positionner l'affichage de la valeur associée au milieu (verticalement) du/des noeud(s) sélectionné(s)",
-            Bas_val: "Positionner l'affichage de la valeur associée en dessous du/des noeud(s) sélectionné(s)",
-            gauche_val: "Positionner l'affichage de la valeur associée à gauche du/des noeud(s) sélectionné(s)",
-            Milieu_ph_val: "Positionner l'affichage de la valeur associée au milieu (horizontalement) du/des noeud(s) sélectionné(s)",
-            droite_val: "Positionner l'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)",
+            vdb: 'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
+            lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
+            haut: 'Positionner le label au dessus du/des noeud(s) sélectionné(s)',
+            Milieu_pv: 'Positionner le label au milieu (verticalement) du/des noeud(s) sélectionné(s)',
+            Bas: 'Positionner le label en dessous du/des noeud(s) sélectionné(s)',
+            gauche: 'Positionner le label à gauche du/des noeud(s) sélectionné(s)',
+            Milieu_ph: 'Positionner le label au milieu (horizontalement) du/des noeud(s) sélectionné(s)',
+            droite: 'Positionner le label à droite du/des noeud(s) sélectionné(s)',
+            cl: 'Largeur de la zone de texte (en pixel) pour le label du/des noeud(s) sélectionné(s)',
+            vdv: 'Active l\'affichage de la valeur associée au(x) noeud(s) sélectionné(s)',
+            haut_val: 'Positionner l\'affichage de la valeur associée au dessus du/des noeud(s) sélectionné(s)',
+            Milieu_pv_val: 'Positionner l\'affichage de la valeur associée au milieu (verticalement) du/des noeud(s) sélectionné(s)',
+            Bas_val: 'Positionner l\'affichage de la valeur associée en dessous du/des noeud(s) sélectionné(s)',
+            gauche_val: 'Positionner l\'affichage de la valeur associée à gauche du/des noeud(s) sélectionné(s)',
+            Milieu_ph_val: 'Positionner l\'affichage de la valeur associée au milieu (horizontalement) du/des noeud(s) sélectionné(s)',
+            droite_val: 'Positionner l\'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)',
           }
         },
         icon:{
@@ -636,13 +636,13 @@ const resources = {
           'lti':'Identifier les flux du tableau avec leurs couleurs',
           'col':'Appliquer',
           tooltips:{
-            ent: "Afficher les flux entrants du/des noeud(s) selectionné(s)",
-            sort: "Afficher les flux sortant du/des noeud(s) selectionné(s)",
-            droite: "Afficher les flux se situant à droite du/des noeud(s) selectionné(s)",
-            gauche: "Afficher les flux se situant à gauche du/des noeud(s) selectionné(s)",
-            ades: "Afficher les flux se situant au dessus du/des noeud(s) selectionné(s)",
-            edes: "Afficher les flux se situant en dessous du/des noeud(s) selectionné(s)",
-            lti: "Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier"
+            ent: 'Afficher les flux entrants du/des noeud(s) selectionné(s)',
+            sort: 'Afficher les flux sortant du/des noeud(s) selectionné(s)',
+            droite: 'Afficher les flux se situant à droite du/des noeud(s) selectionné(s)',
+            gauche: 'Afficher les flux se situant à gauche du/des noeud(s) selectionné(s)',
+            ades: 'Afficher les flux se situant au dessus du/des noeud(s) selectionné(s)',
+            edes: 'Afficher les flux se situant en dessous du/des noeud(s) selectionné(s)',
+            lti: 'Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier'
           }
         }
       },
@@ -656,15 +656,15 @@ const resources = {
         'as':'Appliquer le style au(x) flux selectionné(s)',
         'IB':'Info-bulle',
         tooltips: {
-          src: "Choix du noeud de départ pour le/les flux sélectionné(s)",
-          trgt: "Choix du noeud d'arrivée pour le/les flux sélectionné(s)",
-          if: "Permet d'inverser les noeuds de départ et d\'arrivée pour le/les flux sélectionné(s)",
-          up: "Monter d'un cran vers le premier plan",
-          upup: "Mettre le/les flux selectionné(s) au premier plan",
-          dwn: "Descendre d'un cran vers le dernier plan",
-          dwndwn: "Mettre le/les flux sélectionné(s) au dernier plan",
-          as: "Permettre d'appliquer un style prédéfini dans le menu préférence au(x) flux selectionné(s)",
-          IB: "Info bulle : texte formaté en HTML et affiché avec l'info-bulle du flux. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le flux"
+          src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
+          trgt: 'Choix du noeud d\'arrivée pour le/les flux sélectionné(s)',
+          if: 'Permet d\'inverser les noeuds de départ et d\'arrivée pour le/les flux sélectionné(s)',
+          up: 'Monter d\'un cran vers le premier plan',
+          upup: 'Mettre le/les flux selectionné(s) au premier plan',
+          dwn: 'Descendre d\'un cran vers le dernier plan',
+          dwndwn: 'Mettre le/les flux sélectionné(s) au dernier plan',
+          as: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) flux selectionné(s)',
+          IB: 'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du flux. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le flux'
         },
         data:{
           'données':'Données',
@@ -672,9 +672,9 @@ const resources = {
           'affichage':'Affichage',
           'toPrecision':'Afficher la valeur en notation scientifique',
           tooltips: {
-            vpp: "Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)",
-            toPrecision: "Activer ou non la notation en format scientifique, pour l'affichage de la valeur du flux sur le diagramme de Sankey",
-            affichage: "Texte de remplacement de l'affichage de la valeur du flux sur le diagramme de Sankey"
+            vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
+            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
           }
         },
         apparence:{
@@ -721,18 +721,18 @@ const resources = {
           'dessus':'Dessus',
           'pls':'Positionner le label à la souris',
           tooltips: {
-            label: "Permet d'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)",
-            len: "Afficher le texte du label en noir, pour le(s) flux sélectionné(s)",
-            lb:"Afficher le texte du label en blanc, pour le(s) flux sélectionné(s)",
-            lec: "Afficher le texte du label avec la/les même(s) couleur(s) que celle(s) associée(s) au(x) flux sélectionné(s)",
-            acf: "Pour le/les flux sélectionné(s), permet d'orienter le texte du label en suivant la forme du flux associé",
-            deb: "Pour le/les flux sélectionné(s), permet de positionner le texte du label vers le point de départ du flux",
-            milieu_h: "Pour le/les flux sélectionné(s), permet de positionner le texte du label entre le point de départ et le point d'arrivée du flux",
-            fin: "Pour le/les flux sélectionné(s), permet de positionner le texte du label vers le point d'arrivée du flux",
-            dessous: "Pour le/les flux sélectionné(s), permet de positionner le texte du label en dessous du flux",
-            milieu_v: "Pour le/les flux sélectionné(s), permet de positionner le texte du label dans le flux",
-            dessus: "Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux",
-            pls: "Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)"
+            label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
+            len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
+            lb:'Afficher le texte du label en blanc, pour le(s) flux sélectionné(s)',
+            lec: 'Afficher le texte du label avec la/les même(s) couleur(s) que celle(s) associée(s) au(x) flux sélectionné(s)',
+            acf: 'Pour le/les flux sélectionné(s), permet d\'orienter le texte du label en suivant la forme du flux associé',
+            deb: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label vers le point de départ du flux',
+            milieu_h: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label entre le point de départ et le point d\'arrivée du flux',
+            fin: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label vers le point d\'arrivée du flux',
+            dessous: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label en dessous du flux',
+            milieu_v: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label dans le flux',
+            dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
+            pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)'
           }
         }
       },

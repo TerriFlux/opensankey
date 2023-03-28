@@ -134,17 +134,17 @@ export const SankeyMenuConfigurationLinksLabel = (
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
-          <FormCheck
-            type='switch'
-            label='Visibilité du label'
-            checked={labelVisibleChecked()}
-            onChange={
-              evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_visible = evt.target.checked
-                })
-                set_data({ ...data })
-          }}/>
+        <FormCheck
+          type='switch'
+          label='Visibilité du label'
+          checked={labelVisibleChecked()}
+          onChange={
+            evt => {
+              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                d.label_visible = evt.target.checked
+              })
+              set_data({ ...data })
+            }}/>
       </OverlayTrigger>
     </Form.Group>
 
@@ -157,7 +157,7 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
-            <FormCheck
+          <FormCheck
             value='black'
             disabled={!labelVisibleChecked()}
             type='radio'
@@ -169,7 +169,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
-            }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -180,19 +180,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
-            <FormCheck
-              value='white'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.lb')}
-              checked={linkLabelColor('white')}
-              onChange={
-                (evt) => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.text_color = evt.target.value
-                  })
-                  set_data({ ...data })
-            }}/>
+          <FormCheck
+            value='white'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.lb')}
+            checked={linkLabelColor('white')}
+            onChange={
+              (evt) => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.text_color = evt.target.value
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -203,7 +203,7 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
-            <FormCheck
+          <FormCheck
             value='same_color'
             disabled={!labelVisibleChecked()}
             type='radio'
@@ -215,7 +215,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = d.color
                 })
                 set_data({ ...data })
-            }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -248,7 +248,7 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
-            <FormCheck
+          <FormCheck
             disabled={!labelVisibleChecked()}
             type='radio'
             label={t('Flux.label.acf')}
@@ -281,20 +281,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
-            <Form.Check
-              value='beginning'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.deb')}
-              checked={labelPositionVert('beginning')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_position = evt.target.value
-                    d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='beginning'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.deb')}
+            checked={labelPositionVert('beginning')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.label_position = evt.target.value
+                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -305,20 +305,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
-            <Form.Check
-              value='middle'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.milieu')}
-              checked={labelPositionVert('middle')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_position = evt.target.value
-                    d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='middle'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.milieu')}
+            checked={labelPositionVert('middle')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.label_position = evt.target.value
+                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -329,20 +329,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
-            <Form.Check
-              value='end'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.fin')}
-              checked={labelPositionVert('end')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_position = evt.target.value
-                    d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='end'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.fin')}
+            checked={labelPositionVert('end')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.label_position = evt.target.value
+                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -359,20 +359,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
-            <Form.Check
-              value='below'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.dessous')}
-              checked={labelPositionOrtho('below')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.orthogonal_label_position = evt.target.value
-                    d.label_position=(d.label_position=='frozen')?'middle':d.label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='below'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.dessous')}
+            checked={labelPositionOrtho('below')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.orthogonal_label_position = evt.target.value
+                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au milieu  */}
@@ -382,20 +382,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
-            <Form.Check
-              value='middle'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.milieu')}
-              checked={labelPositionOrtho('middle')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.orthogonal_label_position = evt.target.value
-                    d.label_position=(d.label_position=='frozen')?'middle':d.label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='middle'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.milieu')}
+            checked={labelPositionOrtho('middle')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.orthogonal_label_position = evt.target.value
+                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au dessus  */}
@@ -405,20 +405,20 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
-            <Form.Check
-              value='above'
-              disabled={!labelVisibleChecked()}
-              type='radio'
-              label={t('Flux.label.dessus')}
-              checked={labelPositionOrtho('above')}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.orthogonal_label_position = evt.target.value
-                    d.label_position=(d.label_position=='frozen')?'middle':d.label_position
-                  })
-                  set_data({ ...data })
-            }}/>
+          <Form.Check
+            value='above'
+            disabled={!labelVisibleChecked()}
+            type='radio'
+            label={t('Flux.label.dessus')}
+            checked={labelPositionOrtho('above')}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.orthogonal_label_position = evt.target.value
+                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -431,21 +431,21 @@ export const SankeyMenuConfigurationLinksLabel = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
-            <FormCheck
-              disabled={!labelVisibleChecked()}
-              type='checkbox'
-              label={t('Flux.label.pls')}
-              // disabled={selected_link.current.label_position === 'frozen'}
-              checked={labelLinkFree()}
-              onChange={
-                evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_on_path = (evt.target.checked)?false:d.label_on_path
-                    d.label_position=(evt.target.checked)?'frozen':'middle'
-                    d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
-                  })
-                  set_data({ ...data })
-            }}/>
+          <FormCheck
+            disabled={!labelVisibleChecked()}
+            type='checkbox'
+            label={t('Flux.label.pls')}
+            // disabled={selected_link.current.label_position === 'frozen'}
+            checked={labelLinkFree()}
+            onChange={
+              evt => {
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  d.label_on_path = (evt.target.checked)?false:d.label_on_path
+                  d.label_position=(evt.target.checked)?'frozen':'middle'
+                  d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
+                })
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
