@@ -1104,9 +1104,18 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       
     })
     .on('mouseup', evt => {
+      // si le token de connexion est à false alors ne crée pas de second noeud
       //si le mode de souris est noeud+flux alors crée un second noeud au relachement 
-      //et crée un lien entre le premier noeud crée lors du click et ce dernier     
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
+      //et crée un lien entre le premier noeud crée lors du click et ce dernier
+      if(!token && Object.keys(data.nodes).length>15 && mode_selection == 'ln'){
+        Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
+        set_first_selected_node({})
+        set_show_toast_limit_node(true)
+        setTimeout(function () {
+          set_show_toast_limit_node(false)
+        }, 3000)
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
         // isDown = false
         d3.selectAll(' .opensankey #svg #path-flux').remove()
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
@@ -1144,7 +1153,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         set_first_selected_node({})
         set_data({...data})    
       }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
-        d3.selectAll(' .opensankey #svg #path-flux').remove()
+        
+      
         const n_link = default_link(data)
         const n_node = default_node(data)
         const listIdN: number[] = []
@@ -1174,6 +1184,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         multi_selected_links.current=[n_link]
         set_first_selected_node({})
         set_data({ ...data })
+        
       }
       
       
