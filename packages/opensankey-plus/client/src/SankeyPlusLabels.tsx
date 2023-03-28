@@ -141,7 +141,9 @@ export const SankeyPlusDrawLabels = (
     })
   }
     
-  d3.select('.opensankey #svg').append('g').attr('class','g_label').attr('id','g_label')     
+  // Insert la balise qui contient tous les lables libres avant la balise de la légende
+  d3.select('.opensankey #svg').insert('g',"#g_legend").attr('class','g_label').attr('id','g_label')     
+  // Ajoute l'event au click sur la zone du dessin qui désélectionne tous les labels libres sélectionné
   d3.select('.opensankey #svg').on('click',evt=>{
     if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id')=='svg'){
       multi_selected_label.current = []
