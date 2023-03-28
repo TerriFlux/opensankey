@@ -30,11 +30,11 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.BgC')} </Tooltip>}>
-            <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
-              // const c=evt.target.checkeds
-              data.couleur_fond_sankey=evt.target.value
-              set_data({...data})
-            }}/>
+          <Form.Control type='color' value={data.couleur_fond_sankey} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.couleur_fond_sankey=evt.target.value
+            set_data({...data})
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -49,15 +49,15 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.Echelle')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={user_scale}
-              onChange={evt => {
-                set_user_scale(+evt.target.value)
-              }}
-              onBlur={() => {
-                data.user_scale = user_scale
-                set_data({ ...data })
+          <FormControl
+            type="text"
+            value={user_scale}
+            onChange={evt => {
+              set_user_scale(+evt.target.value)
+            }}
+            onBlur={() => {
+              data.user_scale = user_scale
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
         <FormControl.Feedback />
@@ -75,15 +75,15 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.MaxFlux')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={maximum_flux == null ? undefined : maximum_flux}
-              onChange={evt => {
-                set_maximum_flux(+evt.target.value)
-              }}
-              onBlur={() => {
-                data.maximum_flux = maximum_flux
-                set_data({ ...data })
+          <FormControl
+            type="text"
+            value={maximum_flux == null ? undefined : maximum_flux}
+            onChange={evt => {
+              set_maximum_flux(+evt.target.value)
+            }}
+            onBlur={() => {
+              data.maximum_flux = maximum_flux
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -99,15 +99,15 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.TCG')} </Tooltip>}>
-            <FormControl
-              type="number"
-              min={1}
-              max={100}
-              step={1}
-              value={data.grid_square_size}
-              onChange={evt => {
-                data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
-                set_data({ ...data })
+          <FormControl
+            type="number"
+            min={1}
+            max={100}
+            step={1}
+            value={data.grid_square_size}
+            onChange={evt => {
+              data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -118,14 +118,14 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.GV')} </Tooltip>}>
-            <FormCheck
-              inline
-              type='switch'
-              checked={data.grid_visible}
-              label={t('MEP.GV')}
-              onChange={() => {
-                data.grid_visible = !data.grid_visible
-                set_data({ ...data })
+          <FormCheck
+            inline
+            type='switch'
+            checked={data.grid_visible}
+            label={t('MEP.GV')}
+            onChange={() => {
+              data.grid_visible = !data.grid_visible
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -138,15 +138,15 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.AN')} </Tooltip>}>
-            <Button
-              size="sm"
-              onClick={() => {
-                arrangeNodes(data)
-                set_data({ ...data })
-              }}
-            >
-              {t('MEP.AN')}
-            </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              arrangeNodes(data)
+              set_data({ ...data })
+            }}
+          >
+            {t('MEP.AN')}
+          </Button>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -165,12 +165,12 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.EEN_h')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={node_hspace}
-              onChange={evt => {
-                set_node_hspace(+evt.target.value)
-                data.h_space = +evt.target.value
+          <FormControl
+            type="text"
+            value={node_hspace}
+            onChange={evt => {
+              set_node_hspace(+evt.target.value)
+              data.h_space = +evt.target.value
             }}/>
         </OverlayTrigger>
       </Col>
@@ -184,12 +184,12 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.EEN_v')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={node_vspace}
-              onChange={evt => {
-                set_node_vspace(+evt.target.value)
-                data.v_space = +evt.target.value
+          <FormControl
+            type="text"
+            value={node_vspace}
+            onChange={evt => {
+              set_node_vspace(+evt.target.value)
+              data.v_space = +evt.target.value
             }}/>
         </OverlayTrigger>
       </Col>
@@ -202,15 +202,15 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.PA')} </Tooltip>}>
-            <Button
-              size="sm"
-              onClick={() => {
-                compute_auto_sankey(data, node_hspace)
-                set_data({ ...data })
-              }}
-            >
-              {t('MEP.PA')}
-            </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              compute_auto_sankey(data, node_hspace)
+              set_data({ ...data })
+            }}
+          >
+            {t('MEP.PA')}
+          </Button>
         </OverlayTrigger>
       </Col>
     </Form.Group>
