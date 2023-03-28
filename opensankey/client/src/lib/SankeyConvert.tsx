@@ -120,7 +120,9 @@ export const complete_sankey_data = (
   Object.assign(data,the_data)
   Object.values(nodes).forEach(
     n => {
-      const nn = default_node(data)
+      let nn = default_node(data);
+      (nn as unknown as {x:undefined}).x = undefined;
+      (nn as unknown as {y:undefined}).y = undefined
       Object.assign(nn, n)
       Object.assign(n, nn)
     }
@@ -569,6 +571,19 @@ export const convert_tags = (
       data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
+  if (!('Primaire' in data.nodeTags)) {
+    data.nodeTags['Primaire'] = {
+      group_name: 'Primaire',
+      show_legend: false,
+      color_map: 'custom',
+      tags: {
+        '1' : { name: '1', selected: true, color:'#696969' }
+      },
+      banner: 'level',
+      activated: true,
+      siblings:[]
+    }
+  }
 }
 
 export const convert_nodes = (
@@ -710,6 +725,9 @@ export const convert_nodes = (
         n.position = 'relative'
         n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
         n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number      
+      }
+      if ( !('Primaire' in n.dimensions) ) {
+        n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
       }
       if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
         n.tags['Type de noeud'] = ['échange']
