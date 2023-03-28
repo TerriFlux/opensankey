@@ -52,7 +52,12 @@ export const addAllDropDownNode = (
   const {nodeTags} = data
   let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
   if (level) {
-    banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+    const nb_level_tag = Object.values(nodeTags).filter(tags_group=>tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1).length
+    if (nb_level_tag > 1) {
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 1)
+    } else {
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+    }
   }
   const allDD = banner_grouptag.map(([, tags_group]) => {
     const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
@@ -129,7 +134,7 @@ export const addAllDropDownNode = (
           </Row>
         </FormGroup>)
     }
-    else if (tags_group.banner === 'level' && tags_group.group_name != 'Primaire' && Object.values(tags_group.tags).length > 0) {
+    else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
       if (Object.keys(tags_group.tags).length < 2) {
         return <></>
       }
