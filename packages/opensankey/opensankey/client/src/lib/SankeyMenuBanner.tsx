@@ -13,6 +13,226 @@ import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderT
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
+export const addSimpleLevelDropDown = (
+  t:TFunction,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  level:boolean
+) => {
+  const color = 'black'
+  const {nodeTags} = data
+  if (Object.keys(nodeTags['Primaire'].tags).length < 2) {
+    return <></>
+  }
+  const tmp = Object.entries(nodeTags['Primaire'].tags).filter(tag=>tag[1].selected)
+  const selected = tmp.length > 0 ? tmp[0][0] : ''
+  return (
+    <>
+      <tr><FormLabel style={{ color: color }}>{nodeTags['Primaire'].group_name}</FormLabel></tr>
+      <tr>
+        <td >
+          {<Form.Select style={{ width: '200px', color: 'black' }} key={nodeTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, nodeTags['Primaire'], data, set_data) }}>{
+            Object.entries(nodeTags['Primaire'].tags).map(([tag_key, tag],i) => {
+              return (<option key={i} value={tag_key}>{tag.name}</option>)
+            })}
+          </Form.Select>}
+        </td>
+      </tr>
+    </>)
+  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
+}
+
+export const addAllDropDownNode = (
+  t:TFunction,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  level:boolean
+) => {
+  const color = 'black'
+  const {nodeTags} = data
+  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
+  if (level) {
+    banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+  }
+  const allDD = banner_grouptag.map(([, tags_group]) => {
+    const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
+
+    if (tags_group.banner == 'one' ) {
+      return (
+        <>
+          <tr>
+            <td colSpan={2}>
+              <FormLabel style={{ color: color }}>{tags_group.group_name}
+              </FormLabel></td>
+
+          </tr>
+          <tr >
+            <td>
+              {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key}>{tag.name}</option>)
+                })}
+              </Form.Select>}
+            </td>
+            <td>
+              <FormCheck inline
+                type='switch'
+                checked={data.colorMap==tags_selected[0]}
+                onChange={evt => {
+                  Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+
+                  Object.values(data.nodes).forEach(el => {
+                    el.colorParameter = 'local'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  Object.values(data.links).forEach(el => {
+                    el.colorParameter = 'local'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  data.colorMap = 'no_colormap'
+
+
+                  if(evt.target.checked){
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = tags_selected[0]
+                    })
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = tags_selected[0]
+                    data['nodeTags'][tags_selected[0]].show_legend = true
+                  }
+
+                  set_data({ ...data })
+
+                }}
+              />
+            </td>
+          </tr>
+        </>)
+    } else if (tags_group.banner === 'level' && tags_group.group_name != 'Primaire' && Object.values(tags_group.tags).length > 0) {
+      if (Object.keys(tags_group.tags).length < 2) {
+        return <></>
+      }
+      const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
+      const selected = tmp.length > 0 ? tmp[0][0] : ''
+      return (
+        <>
+          <tr>{banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}</tr>
+          <tr>
+            <td >
+              {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key}>{tag.name}</option>)
+                })}
+              </Form.Select>}
+            </td>
+            {tags_group.siblings.length > 0 ?
+            <td>
+              <FormCheck inline
+                type='switch'
+                checked={tags_group.activated}
+                onChange={evt => {
+                  tags_group.activated = evt.target.checked
+                  tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
+                  set_nodes_level(data)
+                  set_data({ ...data })
+                }}
+              />
+            </td> :<></>}
+          </tr>
+        </>)
+    } else if (tags_group.banner == 'multi') {
+      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+
+      return (
+        <>
+          <tr>
+            <td colSpan={2}>
+              <FormLabel style={{ color: color }}>{tags_group.group_name}
+              </FormLabel>
+            </td>
+
+          </tr>
+          <tr >
+            <td>
+              <MultiSelect
+                className={'multidropdown_filter_node_link'}
+
+                style={{widthMax:'200px', color: 'black' }}
+                valueRenderer={(selected:selected_type[]) => {
+                  return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
+                }}
+                labelledBy={'dropdown_node_filter'}
+                overrideStrings={{
+                  'selectAll': 'Tout sélectionner',
+                }}
+                // hasSelectAll={false}
+                value={selected}
+                options={options}
+                onChange={(selected: [{ label: string, value: string }]) => {
+                  handleMultiDropdown(selected, tags_group, data, set_data)
+                }} />
+            </td>
+            <td>
+              <FormCheck inline
+                type='switch'
+                checked={data.colorMap==tags_selected[0]}
+                onChange={evt => {
+                  Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                  Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+                  Object.values(data.nodes).forEach(el => {
+                    el.colorParameter = 'local'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  Object.values(data.links).forEach(el => {
+                    el.colorParameter = 'local'
+                    el.colorTag = 'no_colormap'
+                  })
+
+                  data.colorMap = 'no_colormap'
+
+
+                  if(evt.target.checked){
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = tags_selected[0]
+                    })
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'groupTag'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = tags_selected[0]
+                    data['nodeTags'][tags_selected[0]].show_legend = true
+                  }
+
+                  set_data({ ...data })
+
+                }}
+              />
+            </td>
+          </tr>
+        </>)
+    }
+  })
+  if (!level) {
+    return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
+  } else {
+    return (<><tr><th >{t('Banner.ndd_lst')}</th><th></th></tr>{allDD}</>)
+  }
+}
+
 /**
  *
  *
@@ -66,8 +286,8 @@ export const addAllDropDownFlux = (
   data: SankeyData,
   set_data: (data: SankeyData) => void) =>
 {
-    const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
-    const allDD = banner_grouptag.map(tags_group => {
+  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
+  const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
     const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
 
@@ -347,7 +567,7 @@ export const OpenSankeyMenuBanner = (
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>,
   set_current_filter:(n:number)=>void,
   url_prefix:string,
-
+  detail_level: React.ReactElement
 )=>{
   const { nodeTags, fluxTags, dataTags } = data
   const [show_readme, set_show_readme] = useState(false)
@@ -424,188 +644,6 @@ export const OpenSankeyMenuBanner = (
     })
     return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
   }
-
-
-
-  const addAllDropDownNode = (level:boolean) => {
-    let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
-    if (level) {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
-    }
-    const allDD = banner_grouptag.map(([, tags_group]) => {
-      const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
-
-      if (tags_group.banner == 'one' ) {
-        return (
-          <>
-            <tr>
-              <td colSpan={2}>
-                <FormLabel style={{ color: color }}>{tags_group.group_name}
-                </FormLabel></td>
-
-            </tr>
-            <tr >
-              <td>
-                {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
-                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                    return (<option key={i} value={tag_key}>{tag.name}</option>)
-                  })}
-                </Form.Select>}
-              </td>
-              <td>
-                <FormCheck inline
-                  type='switch'
-                  checked={data.colorMap==tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    data.colorMap = 'no_colormap'
-
-
-                    if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
-                      })
-                      Object.values(data.links).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = 'no_colormap'
-                      })
-                      data.colorMap = tags_selected[0]
-                      data['nodeTags'][tags_selected[0]].show_legend = true
-                    }
-
-                    set_data({ ...data })
-
-                  }}
-                />
-              </td>
-            </tr>
-          </>)
-      } else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
-        if (Object.keys(tags_group.tags).length < 2) {
-          return <></>
-        }
-        const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
-        const selected = tmp.length > 0 ? tmp[0][0] : ''
-        return (
-          <>
-            <tr>{banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}</tr>
-            <tr>
-              <td >
-                {<Form.Select style={{ width: '200px', color: 'black' }} key={tags_group.group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
-                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                    return (<option key={i} value={tag_key}>{tag.name}</option>)
-                  })}
-                </Form.Select>}
-              </td>
-              <td>
-                <FormCheck inline
-                  type='switch'
-                  checked={tags_group.activated}
-                  onChange={evt => {
-                    tags_group.activated = evt.target.checked
-                    tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
-                    set_nodes_level(data)
-                    set_data({ ...data })
-                  }}
-                />
-              </td>
-            </tr>
-          </>)
-      } else if (tags_group.banner == 'multi') {
-        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-
-        return (
-          <>
-            <tr>
-              <td colSpan={2}>
-                <FormLabel style={{ color: color }}>{tags_group.group_name}
-                </FormLabel>
-              </td>
-
-            </tr>
-            <tr >
-              <td>
-                <MultiSelect
-                  className={'multidropdown_filter_node_link'}
-
-                  style={{widthMax:'200px', color: 'black' }}
-                  valueRenderer={(selected:selected_type[]) => {
-                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
-                  }}
-                  labelledBy={'dropdown_node_filter'}
-                  overrideStrings={{
-                    'selectAll': 'Tout sélectionner',
-                  }}
-                  // hasSelectAll={false}
-                  value={selected}
-                  options={options}
-                  onChange={(selected: [{ label: string, value: string }]) => {
-                    handleMultiDropdown(selected, tags_group, data, set_data)
-                  }} />
-              </td>
-              <td>
-                <FormCheck inline
-                  type='switch'
-                  checked={data.colorMap==tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    data.colorMap = 'no_colormap'
-
-
-                    if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
-                      })
-                      Object.values(data.links).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = 'no_colormap'
-                      })
-                      data.colorMap = tags_selected[0]
-                      data['nodeTags'][tags_selected[0]].show_legend = true
-                    }
-
-                    set_data({ ...data })
-
-                  }}
-                />
-              </td>
-            </tr>
-          </>)
-      }
-    })
-    return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
-  }
-
 
   // Function that return a simple or multiple dropdown of groupTag of data and links
   // This allow us to choose wich grouptag to select and wich tag of these group to display
@@ -876,19 +914,6 @@ export const OpenSankeyMenuBanner = (
     </Popover.Body>
   </Popover>
 
-  //Popover element to handle node levels (aggregation)
-  const detail_level=
-  <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-
-      <table>{(Object.entries(nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
-        {addAllDropDownNode(true)}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
-    </Popover.Body>
-  </Popover>
-
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=
@@ -896,7 +921,7 @@ export const OpenSankeyMenuBanner = (
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
       <table>{ (Object.entries(nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-        {addAllDropDownNode(false)}</>
+        {addAllDropDownNode(t,data,set_data,false)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
       }</table>
