@@ -1009,7 +1009,7 @@ export const setSelectedTags = (
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    
+    node.node_visible = node.display
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
