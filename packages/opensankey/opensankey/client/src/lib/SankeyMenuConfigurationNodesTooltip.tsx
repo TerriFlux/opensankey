@@ -20,15 +20,15 @@ export const SankeyMenuConfigurationNodesTooltip = (
               placement={'top'}
               delay={500}
               overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.tooltips.IB')} </Tooltip>}>
-                <Form.Control
-                  as="textarea"
-                  rows={10}
-                  value={multi_selected_nodes.current.length>0 && multi_selected_nodes.current[0].tooltip_text ? multi_selected_nodes.current[0].tooltip_text : ''}
-                  onChange={
-                    (evt) => {
-                      multi_selected_nodes.current.map(node => node.tooltip_text = evt.target.value)
-                      set_data({ ...data })
-                }}/>
+              <Form.Control
+                as="textarea"
+                rows={10}
+                value={multi_selected_nodes.current.length>0 && multi_selected_nodes.current[0].tooltip_text ? multi_selected_nodes.current[0].tooltip_text : ''}
+                onChange={
+                  (evt) => {
+                    multi_selected_nodes.current.map(node => node.tooltip_text = evt.target.value)
+                    set_data({ ...data })
+                  }}/>
             </OverlayTrigger>
           </Col>
         </Row>

@@ -21,15 +21,15 @@ export const SankeyMenuConfigurationLinksTooltip = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.IB')} </Tooltip>}>
-              <Form.Control
-                as="textarea"
-                rows={10}
-                value={selected_link.current.tooltip_text ? selected_link.current.tooltip_text : ''}
-                onChange={evt => {
-                  selected_link.current.tooltip_text = evt.target.value
-                  set_data({ ...data })
+            <Form.Control
+              as="textarea"
+              rows={10}
+              value={selected_link.current.tooltip_text ? selected_link.current.tooltip_text : ''}
+              onChange={evt => {
+                selected_link.current.tooltip_text = evt.target.value
+                set_data({ ...data })
               }}/>
-            </OverlayTrigger>
+          </OverlayTrigger>
         </Col>
       </Row>
     </Form>

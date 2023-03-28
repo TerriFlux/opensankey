@@ -22,22 +22,22 @@ export const OpenSankeyDefaultModalePreferenceContent=(
 )=>{
   const ui={
     'lang':<Form.Group as={Row}>
-            <Col xs={1}>
-              <Form.Label  style={{marginTop:'0.5em'}}>{trad.language.toUpperCase()}</Form.Label>
-            </Col>
-            <Col xs={2}>
-              <Form.Check
-                inline
-                style={{marginTop:'0.5em',marginLeft:'0.em'}}
-                type='switch'
-                checked={trad.language=='en'}
-                onChange={evt => {
-                  trad.changeLanguage((evt.target.checked)?'en':'fr')
-                  set_data({...data})
-                }}
-              />
-            </Col>
-          </Form.Group>,
+      <Col xs={1}>
+        <Form.Label  style={{marginTop:'0.5em'}}>{trad.language.toUpperCase()}</Form.Label>
+      </Col>
+      <Col xs={2}>
+        <Form.Check
+          inline
+          style={{marginTop:'0.5em',marginLeft:'0.em'}}
+          type='switch'
+          checked={trad.language=='en'}
+          onChange={evt => {
+            trad.changeLanguage((evt.target.checked)?'en':'fr')
+            set_data({...data})
+          }}
+        />
+      </Col>
+    </Form.Group>,
 
     'mode':<ButtonGroup>
       <Button variant={(data.static_sankey)?'success':'outline-success'}

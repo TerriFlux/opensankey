@@ -56,7 +56,7 @@ export const SankeyMenuConfigurationLinksTags = (
         <Form.Select
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
-        }>
+          }>
           {Object.entries(fluxTags).map(
             (tags_group, i) =>
               <option
@@ -92,8 +92,8 @@ export const SankeyMenuConfigurationLinksTags = (
                       set_tags_selected(prevState => ({
                         ...prevState,
                         [name]: value
-                    }))
-                }}>
+                      }))
+                    }}>
                   {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                     return (
                       <option key={tag.name} value={tag_key}>{tag.name}</option>
@@ -104,7 +104,7 @@ export const SankeyMenuConfigurationLinksTags = (
             </Row>
           )
         }
-    })}
+      })}
 
     <Form.Group xs={12} as={Row} >
       <Table striped bordered hover className='link_tags_affiliation'>

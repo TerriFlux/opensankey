@@ -24,13 +24,13 @@ export const OpenSankeyMenuConfigurationLegend= (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={legend_position[0]}
-              onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
-              onBlur={() => {
-                data.legend_position = legend_position
-                set_data({ ...data })
+          <FormControl
+            type="text"
+            value={legend_position[0]}
+            onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
+            onBlur={() => {
+              data.legend_position = legend_position
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -46,13 +46,13 @@ export const OpenSankeyMenuConfigurationLegend= (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={legend_position[1]}
-              onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
-              onBlur={() => {
-                data.legend_position = legend_position
-                set_data({ ...data })
+          <FormControl
+            type="text"
+            value={legend_position[1]}
+            onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
+            onBlur={() => {
+              data.legend_position = legend_position
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -63,18 +63,18 @@ export const OpenSankeyMenuConfigurationLegend= (
         <FormLabel>{t('Menu.LegWidth')}</FormLabel>
       </Col>
       <Col>
-      <OverlayTrigger
+        <OverlayTrigger
           key={'tooltip-adjust'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
-            <FormControl
-              type="number"
-              step={1}
-              value={data.legend_width}
-              onChange={evt =>{
-                data.legend_width=+evt.target.value
-                set_data({ ...data })
+          <FormControl
+            type="number"
+            step={1}
+            value={data.legend_width}
+            onChange={evt =>{
+              data.legend_width=+evt.target.value
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>

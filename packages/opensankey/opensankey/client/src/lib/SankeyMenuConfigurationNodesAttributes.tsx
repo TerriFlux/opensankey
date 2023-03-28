@@ -82,12 +82,12 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-            <FormCheck inline
-              type='switch'
-              checked={isAllNodeVisible()}
-              onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
-                set_data({ ...data })
+          <FormCheck inline
+            type='switch'
+            checked={isAllNodeVisible()}
+            onChange={evt => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -104,14 +104,14 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
-            <Form.Control
-              type='color'
-              disabled={ !isAllNodeVisible()}
-              value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].color : '#ffffff'}
-              onChange={evt => {
-                const color = evt.target.value
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
-                set_data({ ...data })
+          <Form.Control
+            type='color'
+            disabled={ !isAllNodeVisible()}
+            value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].color : '#ffffff'}
+            onChange={evt => {
+              const color = evt.target.value
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -128,14 +128,14 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
-            <Form.Check
-              type='checkbox'
-              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-              checked={isAllNodeColorSustainable()}
-              onChange={evt => {
-                const checked = evt.target.checked
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
-                set_data({ ...data })
+          <Form.Check
+            type='checkbox'
+            //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+            checked={isAllNodeColorSustainable()}
+            onChange={evt => {
+              const checked = evt.target.checked
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
+              set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>
@@ -152,17 +152,17 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
-            <FormCheck
-              value="ellipse"
-              type='radio'
-              label={t('Noeud.apparence.Cercle')}
-              disabled={!isAllNodeVisible()}
-              checked={isAllNodeCircle()}
-              onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
-                set_data({ ...data })
+          <FormCheck
+            value="ellipse"
+            type='radio'
+            label={t('Noeud.apparence.Cercle')}
+            disabled={!isAllNodeVisible()}
+            checked={isAllNodeCircle()}
+            onChange={evt => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              set_data({ ...data })
             }}/>
-          </OverlayTrigger>
+        </OverlayTrigger>
       </Col>
       <Col xs={2}>
         <OverlayTrigger
@@ -170,17 +170,17 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
-            <FormCheck
-              value="rect"
-              type='radio'
-              label={t('Noeud.apparence.Rectangle')}
-              disabled={!isAllNodeVisible()}
-              checked={isAllNodeRect()}
-              onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
-                set_data({ ...data })
+          <FormCheck
+            value="rect"
+            type='radio'
+            label={t('Noeud.apparence.Rectangle')}
+            disabled={!isAllNodeVisible()}
+            checked={isAllNodeRect()}
+            onChange={evt => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              set_data({ ...data })
             }}/>
-          </OverlayTrigger>
+        </OverlayTrigger>
       </Col>
     </Form.Group>,
 
@@ -195,18 +195,18 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
-            <FormControl
-              min={0} max={100}
-              type={'number'}
-              value={displayedValueNodeWidth()}
-              disabled={!isAllNodeVisible()}
-              onChange={
-                evt => {
-                  multi_selected_nodes.current.map(d => d.node_width = +evt.target.value)
-                  //set_multi_selected_nodes(multi_selected_nodes)
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
-                  set_data({ ...data })
-            }}/>
+          <FormControl
+            min={0} max={100}
+            type={'number'}
+            value={displayedValueNodeWidth()}
+            disabled={!isAllNodeVisible()}
+            onChange={
+              evt => {
+                multi_selected_nodes.current.map(d => d.node_width = +evt.target.value)
+                //set_multi_selected_nodes(multi_selected_nodes)
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -223,17 +223,17 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
-            <FormControl
-              min={0} max={100}
-              type={'number'}
-              value={displayedValueNodeHeight()}
-              disabled={!isAllNodeVisible()}
-              onChange={
-                evt => {
-                  //set_multi_selected_nodes(multi_selected_nodes)
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
-                  set_data({ ...data })
-            }}/>
+          <FormControl
+            min={0} max={100}
+            type={'number'}
+            value={displayedValueNodeHeight()}
+            disabled={!isAllNodeVisible()}
+            onChange={
+              evt => {
+                //set_multi_selected_nodes(multi_selected_nodes)
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
+                set_data({ ...data })
+              }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>

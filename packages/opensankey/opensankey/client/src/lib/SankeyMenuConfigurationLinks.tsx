@@ -301,15 +301,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 data.display_style.link_font_family_selected = evt.target.value
                 set_data({ ...data })
-            }}>
-          {data.display_style.font_family.map((d) => {
-            return <option
-              key={'ff-' + d}
-              value={d}
-              selected={d == data.display_style.link_font_family_selected}
-            >{d}</option>
-          })}
-        </Form.Select></Col>
+              }}>
+            {data.display_style.font_family.map((d) => {
+              return <option
+                key={'ff-' + d}
+                value={d}
+                selected={d == data.display_style.link_font_family_selected}
+              >{d}</option>
+            })}
+          </Form.Select></Col>
       </Row>
     </Form.Group>
 
@@ -321,16 +321,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
-            <Button
-              size="sm"
-              variant="success"
-              onClick={
-                () => {
-                  add_new_link()
-                  set_data({ ...data })
-            }}>
-              <FaPlus/>
-            </Button>
+          <Button
+            size="sm"
+            variant="success"
+            onClick={
+              () => {
+                add_new_link()
+                set_data({ ...data })
+              }}>
+            <FaPlus/>
+          </Button>
         </OverlayTrigger>
       </Col>
 
@@ -341,7 +341,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.flux.slct')} </Tooltip>}>
-            {dropdownMultiLinks()}
+          {dropdownMultiLinks()}
         </OverlayTrigger>
       </Col>
 
@@ -352,17 +352,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.flux.rm')} </Tooltip>}>
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={
-                () => {
-                  multi_selected_links.current.forEach(l => delete_link(data, l))
-                  multi_selected_links.current = []
-                  set_data({ ...data })
-            }}>
-              <FaMinus />
-            </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={
+              () => {
+                multi_selected_links.current.forEach(l => delete_link(data, l))
+                multi_selected_links.current = []
+                set_data({ ...data })
+              }}>
+            <FaMinus />
+          </Button>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -378,11 +378,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.flux.dls')} </Tooltip>}>
-            <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
-              // const c=evt.target.checkeds
-              data.displayed_link_selector=evt.target.checked
-              set_data({...data})
-            }}/>
+          <FormCheck inline type='switch' checked={data.displayed_link_selector} onChange={evt=>{
+            // const c=evt.target.checkeds
+            data.displayed_link_selector=evt.target.checked
+            set_data({...data})
+          }}/>
         </OverlayTrigger>
       </Col>
     </FormGroup>
@@ -398,9 +398,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.src')} </Tooltip>}>
-            <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
-              {addDropSource()}
-            </Form.Select>
+          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
+            {addDropSource()}
+          </Form.Select>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -416,9 +416,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-            <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
-              {addDropCible()}
-            </Form.Select>
+          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
+            {addDropCible()}
+          </Form.Select>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -434,31 +434,31 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.if')} </Tooltip>}>
-            <Button variant='info'
-              onClick={() => {
-                const nodes_to_reorganize: SankeyNode[] = []
-                multi_selected_links.current.forEach(l => {
-                  const tmp = l.idSource
-                  const previous_node_s = data.nodes[l.idSource]
-                  previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                  const source_node = data.nodes[l.idTarget]
-                  l.idSource = source_node.idNode
-                  source_node.outputLinksId.push(l.idLink)
-                  nodes_to_reorganize.push(source_node)
-                  const previous_node_t = data.nodes[l.idTarget]
-                  previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                  const target_node = data.nodes[tmp]
-                  l.idTarget = target_node.idNode
-                  target_node.inputLinksId.push(l.idLink)
-                  nodes_to_reorganize.push(target_node)
-                })
-                nodes_to_reorganize.forEach(n => {
-                  reorganize_inputLinksId(n, true, true, data.nodes, data.links)
-                })
-                set_data({ ...data })
+          <Button variant='info'
+            onClick={() => {
+              const nodes_to_reorganize: SankeyNode[] = []
+              multi_selected_links.current.forEach(l => {
+                const tmp = l.idSource
+                const previous_node_s = data.nodes[l.idSource]
+                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+                const source_node = data.nodes[l.idTarget]
+                l.idSource = source_node.idNode
+                source_node.outputLinksId.push(l.idLink)
+                nodes_to_reorganize.push(source_node)
+                const previous_node_t = data.nodes[l.idTarget]
+                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+                const target_node = data.nodes[tmp]
+                l.idTarget = target_node.idNode
+                target_node.inputLinksId.push(l.idLink)
+                nodes_to_reorganize.push(target_node)
+              })
+              nodes_to_reorganize.forEach(n => {
+                reorganize_inputLinksId(n, true, true, data.nodes, data.links)
+              })
+              set_data({ ...data })
             }}>
-              <FaArrowsAltH/>
-            </Button>
+            <FaArrowsAltH/>
+          </Button>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -475,12 +475,12 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.up')} </Tooltip>}>
-              <Button variant='info' disabled={multi_selected_links.current.length != 1}
+            <Button variant='info' disabled={multi_selected_links.current.length != 1}
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   handleDownLink(l.idLink)
-              })
-            }}>
+                })
+              }}>
               <FaAngleUp/>
             </Button>
           </OverlayTrigger>
@@ -490,26 +490,26 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.up')} </Tooltip>}>
-              <Button variant='info' disabled={multi_selected_links.current.length != 1}
-                onClick={() => {
-                  multi_selected_links.current.map(l => {
-                    const i = l.idLink
-                    const { links } = data
-                    const listElmt = Object.keys(links)
-                    const posElemt = listElmt.indexOf(i)
-                    listElmt.splice(posElemt, 1)
-                    listElmt.splice(listElmt.length, 0, i)
-                    const new_cat: { [key: string]: SankeyLink } = {}
-                    listElmt.forEach(elt => {
-                      new_cat[elt] = links[elt]
-                    })
-                    for (const member in links) delete links[member]
-                    Object.assign(links, new_cat)
+            <Button variant='info' disabled={multi_selected_links.current.length != 1}
+              onClick={() => {
+                multi_selected_links.current.map(l => {
+                  const i = l.idLink
+                  const { links } = data
+                  const listElmt = Object.keys(links)
+                  const posElemt = listElmt.indexOf(i)
+                  listElmt.splice(posElemt, 1)
+                  listElmt.splice(listElmt.length, 0, i)
+                  const new_cat: { [key: string]: SankeyLink } = {}
+                  listElmt.forEach(elt => {
+                    new_cat[elt] = links[elt]
+                  })
+                  for (const member in links) delete links[member]
+                  Object.assign(links, new_cat)
                 })
                 set_data({ ...data })
               }}>
-                <FaAngleDoubleUp />
-              </Button>
+              <FaAngleDoubleUp />
+            </Button>
           </OverlayTrigger>
 
           {/* Boutton pour baisser le lien sélctionné */}
@@ -518,14 +518,14 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
-              <Button variant='warning' disabled={multi_selected_links.current.length != 1}
-                onClick={() => {
-                  multi_selected_links.current.map(l => {
-                    handleUpLink(l.idLink)
+            <Button variant='warning' disabled={multi_selected_links.current.length != 1}
+              onClick={() => {
+                multi_selected_links.current.map(l => {
+                  handleUpLink(l.idLink)
                 })
               }}>
-                <FaAngleDown />
-              </Button>
+              <FaAngleDown />
+            </Button>
           </OverlayTrigger>
 
           <OverlayTrigger
@@ -533,26 +533,26 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
-              <Button variant='warning' disabled={multi_selected_links.current.length != 1}
-                onClick={() => {
-                  multi_selected_links.current.map(l => {
-                    const i = l.idLink
-                    const { links } = data
-                    const listElmt = Object.keys(links)
-                    const posElemt = listElmt.indexOf(i)
-                    listElmt.splice(posElemt, 1)
-                    listElmt.splice(0, 0, i)
-                    const new_cat: { [key: string]: SankeyLink } = {}
-                    listElmt.forEach(elt => {
-                      new_cat[elt] = links[elt]
-                    })
-                    for (const member in links) delete links[member]
-                    Object.assign(links, new_cat)
+            <Button variant='warning' disabled={multi_selected_links.current.length != 1}
+              onClick={() => {
+                multi_selected_links.current.map(l => {
+                  const i = l.idLink
+                  const { links } = data
+                  const listElmt = Object.keys(links)
+                  const posElemt = listElmt.indexOf(i)
+                  listElmt.splice(posElemt, 1)
+                  listElmt.splice(0, 0, i)
+                  const new_cat: { [key: string]: SankeyLink } = {}
+                  listElmt.forEach(elt => {
+                    new_cat[elt] = links[elt]
+                  })
+                  for (const member in links) delete links[member]
+                  Object.assign(links, new_cat)
                 })
                 set_data({ ...data })
               }}>
-                <FaAngleDoubleDown />
-              </Button>
+              <FaAngleDoubleDown />
+            </Button>
           </OverlayTrigger>
         </ButtonGroup>
       </Col>
@@ -596,16 +596,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Flux.tooltips.as')} </Tooltip>}>
-            <Button
-              size="sm"
-              variant='info'
-              onClick={
-                () => {
-                  apply_style_to_selected_links()
-                  set_data({ ...data })
-            }}>
-              {t('Flux.as')}
-            </Button>
+          <Button
+            size="sm"
+            variant='info'
+            onClick={
+              () => {
+                apply_style_to_selected_links()
+                set_data({ ...data })
+              }}>
+            {t('Flux.as')}
+          </Button>
         </OverlayTrigger>
       </Col>
     </Row>

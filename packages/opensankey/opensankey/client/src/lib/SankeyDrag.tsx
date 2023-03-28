@@ -41,9 +41,9 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
-                return drawCurveFunction.curve(data,            display_nodes, display_links, display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                )
-              }
+              return drawCurveFunction.curve(data,            display_nodes, display_links, display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+              )
+            }
             )
           }
         )
@@ -104,9 +104,9 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
-                return drawCurveFunction.curve(data,            display_nodes, display_links, data.display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-                )
-              }
+              return drawCurveFunction.curve(data,            display_nodes, display_links, data.display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+              )
+            }
             )
           }
         )
@@ -250,7 +250,7 @@ export const dragGNodeEvent=(
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   drawArrows:drawArrowsType,
-  dragging:Function
+  dragging:dragging_type
 
 )=>{
   return d3.drag<SVGGElement, SankeyNode>()
@@ -338,16 +338,15 @@ export  const drag_nodes = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   drawArrows:drawArrowsType,
-  dragging:Function
+  dragging:dragging_type
 
 ) => {
-  const { width } = data
   removeAnimate()
   
   
   if(multi_selected_nodes.current.length>0){
     multi_selected_nodes.current.map(node=>{
-    dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
+      dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
     })
   }else{
     const idNode = dragged.id.substring(4)
@@ -356,6 +355,28 @@ export  const drag_nodes = (
   }
 
 }
+
+export type dragging_type = (node:SankeyNode,
+  nodes: { [node_id: string]: SankeyNode },
+  links: { [link_id: string]: SankeyLink },
+  display_style: { filter: number; filter_label: number },
+  nodeTags: TagsCatalog,
+  event: { dx: number; dy: number },
+  data:SankeyData,
+  min_width_and_height:(d:SankeyData)=>number[],
+  drawGrid:(d:SankeyData)=>void,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  min_thickness:number,
+  drawCurveFunction : SankeyDrawCurve,
+  multi_selected_links:{current: SankeyLink[] },
+  link_text:(data: SankeyData, d: SankeyLink,
+    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType
+) => void
+
 export const dragging=(node:SankeyNode,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
@@ -375,7 +396,7 @@ export const dragging=(node:SankeyNode,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   drawArrows:drawArrowsType
-  )=>{
+)=>{
   const old_x = +node.x
   const old_y = +node.y
   const new_x = old_x + event.dx
