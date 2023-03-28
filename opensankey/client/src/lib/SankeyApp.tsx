@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown} from 'react-bootstrap'
+import { Modal,Button, NavDropdown, Popover, Form} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
@@ -26,7 +26,7 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
-import {OpenSankeyMenuBanner} from './SankeyMenuBanner'
+import {addSimpleLevelDropDown, OpenSankeyMenuBanner} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
 import {dragging} from './SankeyDrag'
@@ -268,7 +268,22 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     display_style.filter = +new_current_filter
     set_data({ ...data })
   }
-  const menu_banner=OpenSankeyMenuBanner(t,data,set_data,mode_selection,set_mode_selection,func_current_filter,'')
+  
+  Object.values(data.nodeTags).filter(tag_group=>tag_group.banner==='level').forEach(tag_group=>tag_group.activated = false)
+  data.nodeTags['Primaire'].activated = true
+  const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
+  const detail_level=
+    <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+      <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
+      <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
+
+        <table>{(Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
+          {addSimpleLevelDropDown(t,data,set_data,true)}</>
+        ) : (<>
+          <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
+      </Popover.Body>
+    </Popover>
+  const menu_banner=OpenSankeyMenuBanner(t,data,set_data,mode_selection,set_mode_selection,func_current_filter,'',detail_level)
 
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
