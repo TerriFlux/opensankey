@@ -305,15 +305,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               data.display_style.link_font_family_selected = evt.target.value
               set_data({ ...data })
-          }}>
-        {data.display_style.font_family.map((d) => {
-          return <option
-            key={'ff-' + d}
-            value={d}
-            // selected={d == data.display_style.link_font_family_selected}
-          >{d}</option>
-        })}
-      </Form.Select></Col>
+            }}>
+          {data.display_style.font_family.map((d) => {
+            return <option
+              key={'ff-' + d}
+              value={d}
+              // selected={d == data.display_style.link_font_family_selected}
+            >{d}</option>
+          })}
+        </Form.Select>
+      </Col>
     </Form.Group>
 
     <FormLabel style={{ justifyContent: 'center', marginTop: '20px', marginBottom: '5px' }} ><b>{t('Flux.pl')}</b></FormLabel>
@@ -333,7 +334,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               () => {
                 add_new_link()
                 set_data({ ...data })
-          }}>
+              }}>
             <FaPlus/>
           </Button>
         </OverlayTrigger>
@@ -365,7 +366,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 multi_selected_links.current.forEach(l => delete_link(data, l))
                 multi_selected_links.current = []
                 set_data({ ...data })
-          }}>
+              }}>
             <FaMinus />
           </Button>
         </OverlayTrigger>
@@ -388,7 +389,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               // const c=evt.target.checkeds
               data.displayed_link_selector=evt.target.checked
               set_data({...data})
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
       <Col xs={11}>
@@ -531,9 +532,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   handleUpLink(l.idLink)
-              })
-            }}>
-                <FaAngleDown />
+                })
+              }}>
+              <FaAngleDown />
             </Button>
           </OverlayTrigger>
 
@@ -557,9 +558,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   })
                   for (const member in links) delete links[member]
                   Object.assign(links, new_cat)
-              })
-              set_data({ ...data })
-            }}>
+                })
+                set_data({ ...data })
+              }}>
               <FaAngleDoubleDown />
             </Button>
           </OverlayTrigger>
@@ -612,7 +613,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               () => {
                 apply_style_to_selected_links()
                 set_data({ ...data })
-          }}>
+              }}>
             {t('Flux.as')}
           </Button>
         </OverlayTrigger>

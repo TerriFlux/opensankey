@@ -39,7 +39,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </Col>
     </Form.Group>,
 
-    
+
     'mode_expert':<ButtonGroup key={'3'}>
       <Button variant='info'
         disabled={data.static_sankey}
@@ -107,7 +107,7 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreferenc
     <Modal.Body>
       {Object.values(ui).map((d,i)=>{
         return <React.Fragment key={i}>{d}</React.Fragment>
-        })}
+      })}
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
