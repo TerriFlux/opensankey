@@ -88,7 +88,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -112,7 +112,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               const color = evt.target.value
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -136,7 +136,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               const checked = evt.target.checked
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -161,7 +161,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
       <Col xs={2}>
@@ -179,7 +179,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -206,7 +206,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
                 //set_multi_selected_nodes(multi_selected_nodes)
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -233,7 +233,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
                 //set_multi_selected_nodes(multi_selected_nodes)
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -250,7 +250,6 @@ export const SankeyMenuConfigurationNodesAttributes = (
     disabled={/*!(node.colorParameter == 'local')*/false}>
     <Form >
       {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
-        
         return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Form>
   </Tab>}

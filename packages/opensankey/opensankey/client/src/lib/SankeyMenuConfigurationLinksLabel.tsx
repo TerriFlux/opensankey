@@ -144,7 +144,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_visible = evt.target.checked
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
       <Col xs={10}>
@@ -173,7 +173,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -196,7 +196,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -298,7 +298,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -322,7 +322,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
 
@@ -346,7 +346,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
                 set_data({ ...data })
-            }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -376,7 +376,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au milieu  */}
@@ -399,7 +399,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
       {/* Positionnement au dessus  */}
@@ -422,7 +422,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>
@@ -449,7 +449,7 @@ export const SankeyMenuConfigurationLinksLabel = (
                   d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
                 })
                 set_data({ ...data })
-          }}/>
+              }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>

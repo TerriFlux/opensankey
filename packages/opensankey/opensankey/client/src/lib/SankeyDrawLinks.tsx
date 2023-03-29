@@ -9,7 +9,7 @@ import {value_selected_parameter} from './SankeyDrawFunction'
 
 
 export const OpenSankeyDrawLinks = (
-  data:SankeyData, 
+  data:SankeyData,
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:string,
@@ -18,7 +18,7 @@ export const OpenSankeyDrawLinks = (
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
 
   select_link:(l: SankeyLink) => void,
-  
+
   alt_key_pressed:boolean,
   static_sankey:boolean,
   position:'absolute' | 'relative',
@@ -46,7 +46,7 @@ export const OpenSankeyDrawLinks = (
 
   const min_thickness=2
 
- 
+
   // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
   const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,
     mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
@@ -113,14 +113,14 @@ export const OpenSankeyDrawLinks = (
           set_tags_selected(new_tags_selected)
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
-          let tmp=[] as string[]
+          const tmp=[] as string[]
           Object.values(data.dataTags).forEach(dt=>{
-             tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
+            tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
           })
           const n_t_s={} as {[x:string]:string}
           Object.keys(data.dataTags).forEach((dt,i)=>{
-           n_t_s[dt]=tmp[i]
-         })
+            n_t_s[dt]=tmp[i]
+          })
           set_displayed_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
         }else{
           set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
@@ -128,7 +128,7 @@ export const OpenSankeyDrawLinks = (
       }else{
         set_displayed_value('')
       }
-      
+
       select_link(d)
       set_data({...data})
     }
@@ -136,7 +136,7 @@ export const OpenSankeyDrawLinks = (
 
   // Function that return the link color
   // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags), if it's a gradient between the source node color and it's target node color
-  
+
 
   // Function that compute the link width
   const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number,min_thickness:number,display_nodes:{ [node_id: string]: SankeyNode })=>{
@@ -144,7 +144,7 @@ export const OpenSankeyDrawLinks = (
     // const links = data.links
     const nodes = data.nodes
     // const stream_io = node.inputLinksId.concat(node.outputLinksId)
-    //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs  
+    //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
     //position noeud source ou target
     let pos_x_src, pos_y_src
     if (node.idNode == nodes[l.idSource].idNode) {
@@ -157,13 +157,13 @@ export const OpenSankeyDrawLinks = (
     const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
     if (is_free) {
       return 5
-    }  
+    }
     let link_value = test_link_value(data, nodes, l,getLinkValue)
-    link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)  
+    link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
     //Zones limite à ne pas êtres
     const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
-    const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]  
-    let draw_warning = false  
+    const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
+    let draw_warning = false
     //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
     //si partie gauche du noeud ne se situe pas dans les coord du noeud source
     const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
@@ -171,7 +171,7 @@ export const OpenSankeyDrawLinks = (
     const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
     //si partie haute du noeud ne se situe pas dans le noeud source
     const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-    // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]  
+    // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
     if (l.orientation == 'hh') {
       //orientation hh
       draw_warning = left_in_src || right_in_src
@@ -181,16 +181,16 @@ export const OpenSankeyDrawLinks = (
     } else if (l.orientation == 'vh') {
       draw_warning = left_in_src || right_in_src || top_in_src
     } else {
-      //orientation hv 
+      //orientation hv
       //draw_warning = node_in_src_hh || node_in_src_vv
       draw_warning = left_in_src || right_in_src || top_in_src
-    }  
+    }
     if (draw_warning && !l.recycling) {
       return '1px'
-    } else {  
+    } else {
       const link_value = test_link_value(data, display_nodes, l,getLinkValue)
       const tmp =(link_value=='')?1:link_value
-      return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))  
+      return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
     }
   }
 
@@ -239,18 +239,18 @@ export const OpenSankeyDrawLinks = (
     drawArrows:drawArrowsType
   ) => {
     // Structure svg du link
-    //- link : 
-    //- text : 
+    //- link :
+    //- text :
     //- rect :
     //- rect :
-    //- arrow :       
-    
+    //- arrow :
+
 
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
     const { display_style } = data
     d3.select(' .opensankey #g_links').selectAll('.gg_links').remove()
-    
+
     d3.select(' .opensankey #svg').selectAll('.link_value').remove()
 
     if (display_links === undefined) {
@@ -325,7 +325,7 @@ export const OpenSankeyDrawLinks = (
       .attr('visibility', d => {
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
-        
+
         return  link_visible(d, data,getLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
       })
 
@@ -373,7 +373,7 @@ export const OpenSankeyDrawLinks = (
         }
         sankeyTooltip
           .html(linkTooltipsContent(data, d,getLinkValue))
-        
+
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
         if (data.nodes[d.idSource].node_visible && data.nodes[d.idTarget].node_visible  && tmp >= display_style.filter) {
@@ -415,7 +415,7 @@ export const OpenSankeyDrawLinks = (
     }
     //Creation des Arrows associés au link
     d3.selectAll(' .opensankey .ggg_nodes')
-      .filter((n) => node_arrow_visible(data,(n as SankeyNode)))      
+      .filter((n) => node_arrow_visible(data,(n as SankeyNode)))
     //   .each(function (n) {
     //     drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags)
     //   })
@@ -504,17 +504,17 @@ export const OpenSankeyDrawLinks = (
 
 
 
-  
-  
-  
-   
-  
-  
 
-  
-  
 
-  
+
+
+
+
+
+
+
+
+
 
   /**
  * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
@@ -595,7 +595,7 @@ export const OpenSankeyDrawLinks = (
     inv_scale:(t:number)=>number,
     min_thickness:number
   ) => {
-    //Peut etre appelé sur un drag de path qui a directement l'id du link 
+    //Peut etre appelé sur un drag de path qui a directement l'id du link
     //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
     const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
     const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
@@ -608,9 +608,9 @@ export const OpenSankeyDrawLinks = (
     let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data,getLinkValue))
     const link_dragged=data.links[idLink]
     let io=''
-        
+
     if (linked_node.type === 'source') {
-        
+
       if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
         if((!link_dragged.recycling && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(link_dragged.recycling && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
           io='right'
@@ -636,7 +636,7 @@ export const OpenSankeyDrawLinks = (
         }else if(io=='bottom'){
           good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
         }
-        return good_orientation 
+        return good_orientation
       })
       const true_source_order = node.outputLinksId.indexOf(idLink)
       const source_order = id_output_filtered.indexOf(idLink)
@@ -677,7 +677,7 @@ export const OpenSankeyDrawLinks = (
           }
         }
       }
-        
+
     }
     if (linked_node.type === 'target') {
       if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
@@ -694,7 +694,7 @@ export const OpenSankeyDrawLinks = (
         }
       }
       //Filtre les flux qui arrivent du même coté que le flux dragged
-        
+
       id_input_filtered=id_input_filtered.filter(id=>{
         let good_orientation=false
         if(io=='right'){
@@ -706,7 +706,7 @@ export const OpenSankeyDrawLinks = (
         }else if(io=='bottom'){
           good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
         }
-        return good_orientation 
+        return good_orientation
       })
       const true_target_order = node.inputLinksId.indexOf(idLink)
       const target_order = id_input_filtered.indexOf(idLink)
@@ -751,7 +751,7 @@ export const OpenSankeyDrawLinks = (
     }
   }
 
- 
+
 
 
 
@@ -770,7 +770,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
   }
-  
+
   /**
   *
   * @param {SankeyLink} link
@@ -790,14 +790,14 @@ export const OpenSankeyDrawLinks = (
     link.y_label = new_y
     link.label_position = 'frozen'
   }
-  
-  
+
+
 
 
 
   useEffect(()=>{
     add_links(static_sankey,linkStroke,drawArrows)
-  })  
+  })
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
   </>

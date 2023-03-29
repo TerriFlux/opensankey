@@ -251,7 +251,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
-          <Form.Select 
+          <Form.Select
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 data[elementTagName][tags_group_key].color_map = evt.target.value
@@ -382,7 +382,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                             const visible = new_nb_element.checked
                             data[elementTagName][tags_group_key].tags[tag_key].selected = visible
                             set_data({ ...data })
-                      }}/>
+                          }}/>
                     </OverlayTrigger>
                   </td>:<></>
                 }
@@ -400,7 +400,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         evt => {
                           data[elementTagName][tags_group_key].tags[tag_key].color = evt.target.value
                           set_data({ ...data })
-                    }}/>
+                        }}/>
                   </OverlayTrigger>
                 </td>
                 {/* Chosir la forme du noeud  */}
@@ -493,7 +493,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                               const new_name = (evt.target as HTMLInputElement).value
                               data[elementTagName][tags_group_key].group_name = new_name
                               set_data({ ...data })
-                        }}/>
+                            }}/>
                       </OverlayTrigger>
                     </td>
                     {/* Legende de groupe d'étiquette  */}
@@ -517,7 +517,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                               const visible = new_nb_element.checked
                               data[elementTagName][tags_group_key].show_legend = visible
                               set_data({ ...data })
-                        }}/>
+                            }}/>
                       </OverlayTrigger>
                     </td>
                     {/* Nombre d'étiquettes présentes  */}

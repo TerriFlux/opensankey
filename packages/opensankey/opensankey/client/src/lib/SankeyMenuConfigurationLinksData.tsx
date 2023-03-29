@@ -134,7 +134,7 @@ export const SankeyMenuConfigurationLinksData = (
                         })
                         val.value = ''
                       })
-                    set_data({ ...data })
+                      set_data({ ...data })
                     }
                   }}/>
               </OverlayTrigger>
@@ -155,7 +155,7 @@ export const SankeyMenuConfigurationLinksData = (
                   onChange={evt=>{
                     Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
                     set_data({...data})
-                }}/>
+                  }}/>
               </OverlayTrigger>
             </Col>
             <Col xs={10}>
@@ -192,9 +192,9 @@ export const SankeyMenuConfigurationLinksData = (
                       val = val[tag]
                     })
                     val.display_value = evt.target.value
-                })
-                set_data({ ...data })
-              }}/>
+                  })
+                  set_data({ ...data })
+                }}/>
           </OverlayTrigger>
         </Col>
       </Row>

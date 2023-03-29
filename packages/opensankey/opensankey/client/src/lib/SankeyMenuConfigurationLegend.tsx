@@ -31,7 +31,7 @@ export const OpenSankeyMenuConfigurationLegend= (
             onBlur={() => {
               data.legend_position = legend_position
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -53,7 +53,7 @@ export const OpenSankeyMenuConfigurationLegend= (
             onBlur={() => {
               data.legend_position = legend_position
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -75,7 +75,7 @@ export const OpenSankeyMenuConfigurationLegend= (
             onChange={evt =>{
               data.legend_width=+evt.target.value
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>

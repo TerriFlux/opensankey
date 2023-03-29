@@ -90,7 +90,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //For OpenSankeyMenuConfigurationLegend
   const [legend_position, set_legend_position] = useState(data.legend_position)
-  
+
   // For OpenSankeyMenuConfigurationLayout
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
@@ -151,11 +151,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- Styles
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [selected_style_node, set_selected_style_node] = useState('default')
-  
-  
+
+
   const {t} =useTranslation()
 
-  //Réinitialise data et vide les noeud/flux sélectionnés 
+  //Réinitialise data et vide les noeud/flux sélectionnés
   const reinitialization = () => {
     const data = SankeyUtils.default_sankey_data()
     multi_selected_nodes.current = []
@@ -177,38 +177,38 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
   const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux,node_hspace,set_node_hspace,node_vspace,set_node_vspace)
-  //- 1.2 Builds Configuration Menus Node 
-  //- 1.2.1 Builds Configuration Menus Node Attributes 
+  //- 1.2 Builds Configuration Menus Node
+  //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes)
   const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
-  //- 1.2.1 Builds Configuration Menus Node Tags 
+  //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='nodeTags'
     elementNameProp='nodes' />
- 
-  //- 1.3 Builds Configuration Menus Links 
-  //- 1.3.1 Builds Configuration Menus Link Attributes 
+
+  //- 1.3 Builds Configuration Menus Links
+  //- 1.3.1 Builds Configuration Menus Link Attributes
   const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_value,set_displayed_value,[])
-  //- 1.3.2 Builds Configuration Menus Link tags 
+  //- 1.3.2 Builds Configuration Menus Link tags
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='fluxTags'
     elementNameProp='links' />
-  //- 1.4 Builds Configuration Menus DataTags 
+  //- 1.4 Builds Configuration Menus DataTags
   const  menu_configuration_data_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='dataTags'
     elementNameProp='links' />
-  //- 1.5 Builds Configuration Menus FreeLabel 
+  //- 1.5 Builds Configuration Menus FreeLabel
   // const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
-  //- 1.6 Builds Configuration Menus Legend 
+  //- 1.6 Builds Configuration Menus Legend
 
   const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
   //- End of 1.
@@ -231,7 +231,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setshowShortcut,data,set_data,'',set_show_modalTemplate,[],[]
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
-    <ExempleItem 
+    <ExempleItem
       exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
       data={data}
       set_data={set_data}
@@ -245,10 +245,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection,i18next)
-  
+
   const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false)
   const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
-  
+
   const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
     return d
   })
@@ -268,7 +268,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     display_style.filter = +new_current_filter
     set_data({ ...data })
   }
-  
+
   Object.values(data.nodeTags).filter(tag_group=>tag_group.banner==='level').forEach(tag_group=>tag_group.activated = false)
   data.nodeTags['Primaire'].activated = true
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
@@ -299,14 +299,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   }
   const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
   const position = data.static_sankey ? 'relative' : 'absolute'
-  
+
 
   // let alt_key_pressed = false
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,set_mode_selection)
   }
-  
+
   // Call the function that add nodes to the sankey
   const draw_nodes=OpenSankeyDrawNodes(data,set_data,
     nodes_accordion_ref,links_accordion_ref,
@@ -322,9 +322,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
-  
-  
-  
+
+
+
   // Call the function that add links to the sankey
   const draw_links=OpenSankeyDrawLinks(
     data,links_accordion_ref,
@@ -339,14 +339,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     link_text,getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows
   )
 
-  
-  
+
+
   const draw_legend=OpenSankeyDrawLegend(data,getLinkValue)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
   //-Echape qui ferme la navbar
-  //-Ctrl+S qui sauvegarde une vue 
+  //-Ctrl+S qui sauvegarde une vue
   //document.onkeydown = formatKeyHandler
   document.onkeydown = formatKeyHandler
 
@@ -359,10 +359,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // }
   const cardsTemplate=
   <>
-    {/* {list_template_image.map((_,idx) => 
+    {/* {list_template_image.map((_,idx) =>
     {
       // let tmp_template=''
-      // try { 
+      // try {
       //   tmp_template=require('../images/'+list_template_image[idx])
       // } catch (expt) {
       //   console.log('images '+list_template_image[idx]+' for template not found')
@@ -376,7 +376,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             <Card.Body>
               <Card.Title>{title.join(' ')}</Card.Title>
               <Card.Text>
-                
+
               </Card.Text>
               <Button variant='primary'
                 onClick={() => {
@@ -399,9 +399,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
-        <Menu 
+        <Menu
           t={t}
-          data={data} 
+          data={data}
           set_data={set_data}
           show_nav={show_nav}
           set_show_nav={set_show_nav}
@@ -411,13 +411,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           launch={launch}
           url_prefix={ ''}
           logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
-          logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}       
+          logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
           app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
           mode_selection={mode_selection}
           set_mode_selection={set_mode_selection}
           style_to_apply={style_to_apply}
           set_style_to_apply={set_style_to_apply}
-          
+
           selected_node={selected_node}
           accordion_ref={accordion_ref as {current : HTMLDivElement}}
           button_ref={button_ref as {current : HTMLLabelElement}}
@@ -467,37 +467,26 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_data={set_data}
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_links={multi_selected_links}
-            // accordion_ref={accordion_ref}
-            // nodes_accordion_ref={nodes_accordion_ref}
-            // links_accordion_ref={links_accordion_ref}
-            // button_ref={button_ref}   
-            // node_arrow_visible={
-            //   (data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
-            // }
-
-            // select_link={select_link}
-
             mode_selection={mode_selection}
             set_mode_selection={set_mode_selection}
             first_selected_node={first_selected_node}
             set_first_selected_node={set_first_selected_node}
-            show_agregation={show_agregation} 
+            show_agregation={show_agregation}
             set_show_agregation={set_show_agregation}
             agregation_node={agregation_node}
             is_agregation={is_agregation}
             draw_nodes={draw_nodes}
             draw_links={draw_links}
             draw_legend={draw_legend}
-            // alt_key_pressed={alt_key_pressed}
             set_alt_key_pressed={set_alt_key_pressed}
             min_width_and_height={min_width_and_height}
             getLinkValue={getLinkValue}
             token={true}
             set_show_toast_limit_node={()=>false}
           />) : (<></>)}
-        <Modal 
-          bsSize="large" 
-          show={welcome_text !== undefined && welcome_text !== ''} 
+        <Modal
+          bsSize="large"
+          show={welcome_text !== undefined && welcome_text !== ''}
           onHide={()=>{
             set_welcome_text('')
           }}
@@ -511,7 +500,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           </Modal.Header>
           <Modal.Body>
             {welcome_text ? parse(welcome_text) : ''}
-            <Button 
+            <Button
               onClick={()=>{
                 set_welcome_text('')
               }}
@@ -525,7 +514,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   return (
     d
-  
+
   )
 }
 

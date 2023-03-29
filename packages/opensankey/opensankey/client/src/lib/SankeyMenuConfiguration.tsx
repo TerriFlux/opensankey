@@ -61,7 +61,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
       <Accordion.Body>
         {menu_configuration_layout.map((c,i)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>})}
+          return <React.Fragment key={i}>{c}</React.Fragment>})}
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
@@ -304,7 +304,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
       {configuration_menus.map((c:JSX.Element,i:number)=>{
-      return <React.Fragment key={i}>{c}</React.Fragment>})}
+        return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Accordion>
   )
 }

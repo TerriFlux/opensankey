@@ -132,12 +132,12 @@ export const SankeyMenuConfigurationLinksAppearence = (
               value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
               onChange={
                 evt => {
-                // selected_link.current.color = evt.target.value
-                const color = evt.target.value
-                multi_selected_links.current.map(d => d.color = evt.target.value)
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
-                set_data({ ...data })
-              }}/>
+                  // selected_link.current.color = evt.target.value
+                  const color = evt.target.value
+                  multi_selected_links.current.map(d => d.color = evt.target.value)
+                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
+                  set_data({ ...data })
+                }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -163,7 +163,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -193,7 +193,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         {/* Vertical - Verticale  */}
@@ -215,7 +215,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         {/* Vertical - Horizontal  */}
@@ -237,7 +237,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         {/* Horizontal - Vertical  */}
@@ -259,7 +259,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -295,7 +295,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = center + shift_gap
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         <Col xs={2}>{shiftCenter()}</Col>
@@ -335,7 +335,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = new_center_position + shift_gap
                   })
                   set_data({ ...data })
-              }}
+                }
+              }
             />
           </OverlayTrigger>
         </Col>
@@ -362,7 +363,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         {/* Forme fleche droite  */}
@@ -380,7 +381,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 evt => {
                   Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         {/* Flux en recyclage  */}
@@ -402,7 +403,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.right_horiz_shift = 0
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -428,7 +429,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                     d.curvature = +evt.target.value
                   })
                   set_data({ ...data })
-            }}/>
+                }}/>
           </OverlayTrigger>
         </Col>
         <Col xs={2}>{selected_link.current.curvature}</Col>

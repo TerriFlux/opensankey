@@ -447,7 +447,7 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 set_link_io('output')
                 set_link_pos('')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -466,7 +466,7 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 set_link_io('input')
                 set_link_pos('')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -491,7 +491,7 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='left'}
               onChange={() => {
                 set_link_pos('left')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -510,7 +510,7 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='right'}
               onChange={() => {
                 set_link_pos('right')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -529,7 +529,7 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='top'}
               onChange={() => {
                 set_link_pos('top')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -548,7 +548,7 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='bottom'}
               onChange={() => {
                 set_link_pos('bottom')
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -572,7 +572,7 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 //console.log(tab_colored)
                 set_tab_colored(!tab_colored)
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>

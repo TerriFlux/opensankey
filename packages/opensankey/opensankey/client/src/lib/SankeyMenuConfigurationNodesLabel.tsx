@@ -127,7 +127,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               onChange={evt => {
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
                 set_data({ ...data })
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -147,7 +147,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               onChange={evt => {
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
                 set_data({ ...data })
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -168,15 +168,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelVert('vert', 'top')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert = 'top'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert = 'top'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -191,15 +190,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('vert', 'middle')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert = 'middle'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert = 'middle'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -214,15 +212,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.Bas')}
               checked={isAllNodeLabelVert('vert', 'bottom')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert = 'bottom'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert = 'bottom'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -243,15 +240,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelVert('horiz', 'left')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz = 'left'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz = 'left'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -266,15 +262,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('horiz', 'middle')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz = 'middle'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz = 'middle'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -289,15 +284,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelVert('horiz', 'right')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz = 'right'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz = 'right'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -402,7 +396,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
                   set_data({ ...data })
                 }
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
         <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -428,7 +422,7 @@ export const SankeyMenuConfigurationNodesLabel = (
                 // node.node_visible = node.label_visible || node.shape_visible
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
                 set_data({ ...data })
-            }}/>
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -450,13 +444,12 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelValueVert('vert', 'top')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert_valeur = 'top'
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert_valeur = 'top'
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
 
@@ -472,11 +465,9 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('vert', 'middle')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert_valeur = 'middle'
-
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert_valeur = 'middle'
                 })
                 set_data({ ...data })
               }}/>
@@ -495,11 +486,9 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Bas')}
               disabled={!isAllNodeTotal()}
               checked={isAllNodeLabelValueVert('vert', 'bottom')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_vert_valeur = 'bottom'
-
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_vert_valeur = 'bottom'
                 })
                 set_data({ ...data })
               }}/>
@@ -524,11 +513,9 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelValueVert('horiz', 'left')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz_valeur = 'left'
-
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz_valeur = 'left'
                 })
                 set_data({ ...data })
               }}/>
@@ -546,11 +533,10 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('horiz', 'middle')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz_valeur = 'middle'
-                  })
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz_valeur = 'middle'
+                })
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -567,15 +553,14 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='radio'
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelValueVert('horiz', 'right')}
-              onChange={
-                () => {
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                    d.display_style.label_horiz_valeur = 'right'
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-            }}/>
+              onChange={() => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.display_style.label_horiz_valeur = 'right'
+                  delete d.x_label
+                  delete d.y_label
+                })
+                set_data({ ...data })
+              }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>

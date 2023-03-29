@@ -37,7 +37,7 @@ export const OpenSankeyMenuConfigurationLayout = (
               // const c=evt.target.checkeds
               data.couleur_fond_sankey=evt.target.value
               set_data({...data})
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -62,7 +62,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onChange={evt => {
               data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
       {/* Afficher le quadrillage */}
@@ -80,7 +80,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onChange={() => {
               data.grid_visible = !data.grid_visible
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -104,7 +104,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onBlur={() => {
               data.user_scale = user_scale
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
         <FormControl.Feedback />
         <Form.Text>({t('MEP.vp100')})</Form.Text>
@@ -130,7 +130,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onBlur={() => {
               data.maximum_flux = maximum_flux
               set_data({ ...data })
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -151,7 +151,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onChange={evt => {
               set_node_hspace(+evt.target.value)
               data.h_space = +evt.target.value
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -172,7 +172,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onChange={evt => {
               set_node_vspace(+evt.target.value)
               data.v_space = +evt.target.value
-          }}/>
+            }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -190,7 +190,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onClick={() => {
               compute_auto_sankey(data, node_hspace)
               set_data({ ...data })
-          }}>
+            }}>
             {t('MEP.PA')}
           </Button>
         </OverlayTrigger>
@@ -207,7 +207,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             onClick={() => {
               arrangeNodes(data)
               set_data({ ...data })
-          }}>
+            }}>
             {t('MEP.AN')}
           </Button>
         </OverlayTrigger>

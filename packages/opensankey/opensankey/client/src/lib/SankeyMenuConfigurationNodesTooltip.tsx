@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, FormLabel, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyNode} from './types'
 
 export const SankeyMenuConfigurationNodesTooltip = (
@@ -27,7 +27,7 @@ export const SankeyMenuConfigurationNodesTooltip = (
                   (evt) => {
                     multi_selected_nodes.current.map(node => node.tooltip_text = evt.target.value)
                     set_data({ ...data })
-              }}/>
+                  }}/>
             </OverlayTrigger>
           </Col>
         </Row>

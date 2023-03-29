@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
 import { TFunction } from 'i18next'
 
@@ -26,8 +26,8 @@ export const SankeyMenuConfigurationLinksTooltip = (
             onChange={evt => {
               selected_link.current.tooltip_text = evt.target.value
               set_data({ ...data })
-          }}/>
-          </OverlayTrigger>
+            }}/>
+        </OverlayTrigger>
       </Col>
     </Form.Group>
   </Tab>
