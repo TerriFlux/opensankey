@@ -72,7 +72,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   // Tableau d'elements de sous-menu attribut de noeuds
   return [
     /* Visibilite du noeud */
-    <Form.Group as={Row} >
+    <Form.Group as={Row} key={'node_visibility'} >
       <Col xs={4}>
         <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
       </Col>
@@ -249,6 +249,8 @@ export const SankeyMenuConfigurationNodesAttributes = (
   return <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}
     disabled={/*!(node.colorParameter == 'local')*/false}>
     <Form >
-      {menu_configuration_nodes_attributes.map((c:JSX.Element)=>c)}
+      {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
+        
+        return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Form>
   </Tab>}

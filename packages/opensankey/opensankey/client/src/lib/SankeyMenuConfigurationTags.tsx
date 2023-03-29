@@ -182,13 +182,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
-          }}>
+          }}
+        value={tags_group_key}>
           {Object.keys(data[elementTagName]).map(
             (key, i) =>
               <option
                 key={i}
                 value={key}
-                selected={tags_group_key === key} >
+              >
                 {data[elementTagName][key].group_name}
               </option>
           )}
@@ -250,36 +251,34 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
-          <Form.Select onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data[elementTagName][tags_group_key].color_map = evt.target.value
-              const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
-              if (evt.target.value === 'custom') {
-                return
-              }
-              const colors = colormap({
-                colormap: evt.target.value,
-                nshades: Math.max(11, nb_tags),
-                format: 'hex',
-                alpha: 1
-              })
-              let step = 1
-              if (nb_tags < 11) {
-                step = Math.round(11 / nb_tags)
-              }
-              Object.keys(data[elementTagName][tags_group_key].tags).forEach(
-                (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
-              )
-              set_data({ ...data })
-            }}>
+          <Form.Select 
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                data[elementTagName][tags_group_key].color_map = evt.target.value
+                const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
+                if (evt.target.value === 'custom') {
+                  return
+                }
+                const colors = colormap({
+                  colormap: evt.target.value,
+                  nshades: Math.max(11, nb_tags),
+                  format: 'hex',
+                  alpha: 1
+                })
+                let step = 1
+                if (nb_tags < 11) {
+                  step = Math.round(11 / nb_tags)
+                }
+                Object.keys(data[elementTagName][tags_group_key].tags).forEach(
+                  (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
+                )
+                set_data({ ...data })
+              }}
+            value={(Object.keys(data[elementTagName]).length>0 && tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
+          >
             {colormaps.map(
               (cur_colormap, i) =>
-                <option
-                  key={i}
-                  value={cur_colormap}
-                  selected={data[elementTagName][tags_group_key] && data[elementTagName][tags_group_key].color_map === cur_colormap} >
-                  {cur_colormap}
-                </option>
+                <option key={i} value={cur_colormap}>{cur_colormap}</option>
             )}
           </Form.Select>
         </OverlayTrigger>
@@ -290,8 +289,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     <Table striped bordered hover responsive='sm' size='sm' className='node_tags_definition'>
       <thead>
         <tr>
-          {/* Bouton ajout d'une étiquette  */}
           <th>
+            {/* Bouton ajout d'une étiquette  */}
             <OverlayTrigger
               key={'tags.tooltips.4'}
               placement={'top'}
@@ -530,11 +529,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         placement={'top'}
                         delay={500}
                         overlay={<Tooltip id={'tags.tooltips.14'}>{t('Tags.tooltips.banner')} </Tooltip>}>
-                        <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}>
-                          {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>{t('Tags.Aucun')}</option>:<></>}
+                        <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
+                          value={data[type_tag_name][tags_group_key].banner}
+                        >
+                          {/* {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>{t('Tags.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>{t('Tags.Multiple')}</option>
-                          {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>{t('Tags.Niveau')}</option>:<></>}
+                          {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>{t('Tags.Niveau')}</option>:<></>} */}
+
+                          {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Tags.Aucun')}</option>:<></>}
+                          <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
+                          <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
+                          {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>}
                         </Form.Select>
                       </OverlayTrigger>
                     </td>
