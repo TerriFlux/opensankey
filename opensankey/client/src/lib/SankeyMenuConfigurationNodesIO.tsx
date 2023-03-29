@@ -435,10 +435,10 @@ export const SankeyMenuConfigurationNodesIO = (
         {/* Choisir un lien entrant */}
         <Col xs={3}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.1'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
             <FormCheck
               value="output"
               type='radio'
@@ -447,17 +447,17 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 set_link_io('output')
                 set_link_pos('')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien entrant */}
         <Col xs={3}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.2'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
             <FormCheck
               value="input"
               type='radio'
@@ -466,7 +466,7 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 set_link_io('input')
                 set_link_pos('')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -479,10 +479,10 @@ export const SankeyMenuConfigurationNodesIO = (
         {/* Choisir un lien situé à gauche */}
         <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.3'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
             <FormCheck
               disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
               value="left"
@@ -491,17 +491,17 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='left'}
               onChange={() => {
                 set_link_pos('left')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien situé à droite */}
         <Col xs={2}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.4'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
             <FormCheck
               disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
               value="right"
@@ -510,17 +510,17 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='right'}
               onChange={() => {
                 set_link_pos('right')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien situé au dessus */}
         <Col xs={3}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.5'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
             <FormCheck
               disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
               value="top"
@@ -529,17 +529,17 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='top'}
               onChange={() => {
                 set_link_pos('top')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
 
         {/* Choisir un lien situé en dessous */}
         <Col xs={3}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.6'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
             <FormCheck
               disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
               value="bottom"
@@ -548,7 +548,7 @@ export const SankeyMenuConfigurationNodesIO = (
               checked={link_pos=='bottom'}
               onChange={() => {
                 set_link_pos('bottom')
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>
@@ -560,10 +560,10 @@ export const SankeyMenuConfigurationNodesIO = (
         </Col>
         <Col xs={3}>
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'noeud.pf.tooltips.7'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
+            overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
             <FormCheck
               value="bottom"
               type='checkbox'
@@ -572,7 +572,7 @@ export const SankeyMenuConfigurationNodesIO = (
               onChange={() => {
                 //console.log(tab_colored)
                 set_tab_colored(!tab_colored)
-              }}/>
+            }}/>
           </OverlayTrigger>
         </Col>
       </Form.Group>

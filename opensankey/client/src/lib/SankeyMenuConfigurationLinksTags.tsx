@@ -49,10 +49,10 @@ export const SankeyMenuConfigurationLinksTags = (
 
     {/* Groupe d'étiquettes  */}
     <Form.Group as={Row} >
-      <Col xs={2}>
+      <Col xs={4}>
         <FormLabel >{t('Tags.GE')}:</FormLabel>
       </Col>
-      <Col xs={6}>
+      <Col xs={8}>
         <Form.Select
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
@@ -72,16 +72,15 @@ export const SankeyMenuConfigurationLinksTags = (
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
-
           return (
             <Row key={dataTagKey}>
-              <Col >
+              <Col xs={4} >
                 <FormLabel>
                   {dataTag.group_name} :
                 </FormLabel>
               </Col>
 
-              <Col >
+              <Col xs={8}>
                 <Form.Select
                   name={dataTagKey}
                   value={tags_selected[dataTagKey]}
@@ -106,8 +105,8 @@ export const SankeyMenuConfigurationLinksTags = (
         }
       })}
 
-    <Form.Group xs={12} as={Row} >
-      <Table striped bordered hover className='link_tags_affiliation'>
+    <Form.Group as={Row} style={{paddingTop: '15px'}} >
+      <Table striped bordered hover responsive='sm' size='sm' className='link_tags_affiliation'>
         <thead>
           <tr>
             <th>{t('Tags.Nom')}</th>

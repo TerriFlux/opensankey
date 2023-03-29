@@ -396,15 +396,15 @@ def parse_nodes(mfa_input, nodes, nodeTags):
         if 'dimensions' not in new_node:
             new_node['dimensions'] = {}
         levelTags = [tags for tags in nodeTags.keys() if nodeTags[tags]['banner'] == 'level']
-        if len(levelTags) == 0:
-            new_node['dimensions']['Primaire'] = {}
-            # new_node['dimensions']['Primaire']['level'] = int(level)
-            new_node['tags']['Primaire'] = [str(int(level))]
-            if i != len(mfa_input[NODES_SHEET])-1 and mfa_input[NODES_SHEET].iat[i+1, nodes_cols.index(NODES_LEVEL)] <=\
-                    mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]:
-                new_node['tags']['set_level'] = True
-            elif level == 1 and i == len(mfa_input[NODES_SHEET])-1:
-                new_node['tags']['set_level'] = True
+        # if len(levelTags) == 0:
+        new_node['dimensions']['Primaire'] = {}
+        # new_node['dimensions']['Primaire']['level'] = int(level)
+        new_node['tags']['Primaire'] = [str(int(level))]
+        if i != len(mfa_input[NODES_SHEET])-1 and mfa_input[NODES_SHEET].iat[i+1, nodes_cols.index(NODES_LEVEL)] <=\
+                mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]:
+            new_node['tags']['set_level'] = True
+        elif level == 1 and i == len(mfa_input[NODES_SHEET])-1:
+            new_node['tags']['set_level'] = True
         if level == 1:
             for dim in levelTags:
                 group_name = dim
@@ -420,8 +420,8 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                         mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]:
                     parent_name = mfa_input[NODES_SHEET].iat[j, nodes_cols.index(NODES_NODE)].strip()
                     if parent_name in nodes:
-                        if len(levelTags) == 0:
-                            new_node['dimensions']['Primaire']['parent_name'] = nodes[parent_name]['idNode']
+                        # if len(levelTags) == 0:
+                        new_node['dimensions']['Primaire']['parent_name'] = nodes[parent_name]['idNode']
                         for dim in levelTags:
                             group_name = dim
                             node_tags = new_node['tags']
@@ -436,36 +436,36 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                                 break
                 if mfa_input[NODES_SHEET].iat[j, nodes_cols.index(NODES_LEVEL)] == 1:
                     break
-    if len(levelTags) == 0:
-        max_level = 0
-        for node in nodes.values():
-            if int(node['tags']['Primaire'][0]) > max_level:
-                max_level = int(node['tags']['Primaire'][0])
-        for node in nodes.values():
-            try:
-                if 'set_level' in node['tags'] and node['tags']['set_level']:
-                    node['tags']['Primaire'] =\
-                        [str(lev) for lev in list(range(int(node['tags']['Primaire'][0]), max_level+1))]
-                    del node['tags']['set_level']
-            except Exception:
-                pass
-        if max_level > 1:
-            nodeTags['Primaire'] = {
-                'group_name': 'Primaire',
-                'show_legend': 0,
-                'tags': {},
-                'banner': 'level',
-                'activated': 1
+    # if len(levelTags) == 0:
+    max_level = 0
+    for node in nodes.values():
+        if int(node['tags']['Primaire'][0]) > max_level:
+            max_level = int(node['tags']['Primaire'][0])
+    for node in nodes.values():
+        try:
+            if 'set_level' in node['tags'] and node['tags']['set_level']:
+                node['tags']['Primaire'] =\
+                    [str(lev) for lev in list(range(int(node['tags']['Primaire'][0]), max_level+1))]
+                del node['tags']['set_level']
+        except Exception:
+            pass
+    if max_level > 1:
+        nodeTags['Primaire'] = {
+            'group_name': 'Primaire',
+            'show_legend': 0,
+            'tags': {},
+            'banner': 'level',
+            'activated': 1
+        }
+        for tag in range(1, max_level+1):
+            selected = False
+            if tag == 1:
+                selected = True
+            nodeTags['Primaire']['tags'][str(tag)] = {
+                'name': str(tag),
+                'selected': selected,
+                'color': ''
             }
-            for tag in range(1, max_level+1):
-                selected = False
-                if tag == 1:
-                    selected = True
-                nodeTags['Primaire']['tags'][str(tag)] = {
-                    'name': str(tag),
-                    'selected': selected,
-                    'color': ''
-                }
 
 
 def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
