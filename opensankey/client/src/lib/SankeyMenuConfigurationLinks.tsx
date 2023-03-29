@@ -216,7 +216,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const addDropSource = () => {
     if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links.current[0].idSource === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
       )
     }
   }
@@ -224,7 +224,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const addDropCible = () => {
     if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
       return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} selected={multi_selected_links.current[0].idTarget === n.idNode} >{n.name}</option>)
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
       )
     }
   }
@@ -300,6 +300,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </Col>
       <Col xs={5}>
         <Form.Select
+          value={data.display_style.link_font_family_selected}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               data.display_style.link_font_family_selected = evt.target.value
@@ -309,7 +310,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           return <option
             key={'ff-' + d}
             value={d}
-            selected={d == data.display_style.link_font_family_selected}
+            // selected={d == data.display_style.link_font_family_selected}
           >{d}</option>
         })}
       </Form.Select></Col>
@@ -406,7 +407,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change}>
+          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
             {addDropSource()}
           </Form.Select>
         </OverlayTrigger>
@@ -424,7 +425,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change}>
+          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
             {addDropCible()}
           </Form.Select>
         </OverlayTrigger>
