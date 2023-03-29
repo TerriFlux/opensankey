@@ -39,23 +39,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </Col>
     </Form.Group>,
 
-    'mode':<ButtonGroup key={'2'}>
-      <Button variant={(data.static_sankey)?'success':'outline-success'}
-        onClick={() => {
-          data.accordeonToShow = ['Vis','Leg']
-          set_mode_selection('s')
-          data.static_sankey = true
-          set_data({ ...data })
-
-        }}
-      >Visualisation</Button>
-      <Button variant={(data.static_sankey)?'outline-warning':'warning'}
-        onClick={() => {
-          data.static_sankey = false
-          set_data({ ...data })
-        }}
-      >Construction</Button>
-    </ButtonGroup>,
+    
     'mode_expert':<ButtonGroup key={'3'}>
       <Button variant='info'
         disabled={data.static_sankey}
