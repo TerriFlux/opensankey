@@ -43,7 +43,10 @@ export const SankeyMenuConfigurationLinksTags = (
     }
     
   }
-
+  // Si le tags_group_key n'est pas (qu'il soit vide ou différent) dans la liste des keys de fluxTags, alors on met à jour en prenant le premier
+  if(!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length>0){
+    set_tags_group_key(Object.keys(fluxTags)[0])
+  }
   return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
     disabled={/*node.colorParameter !== 'groupTag'*/false} >
 
