@@ -42,6 +42,7 @@ export const OpenSankeyConfigurationsMenus = (
 ) => {
   return [
     <Accordion.Item
+      key='1'
       id='MEP'
       style={{ 'display': (data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
       eventKey="1"
@@ -59,10 +60,12 @@ export const OpenSankeyConfigurationsMenus = (
       }
       <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
       <Accordion.Body>
-        {menu_configuration_layout}
+        {menu_configuration_layout.map((c,i)=>{
+        return <React.Fragment key={i}>{c}</React.Fragment>})}
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
+      key='2'
       style={{ 'display': 'block'  }}
       eventKey="2"
       id="Nodes"
@@ -80,6 +83,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Body style={{ padding: '0px' }}>
         <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string} >
           <Accordion.Item
+            key='3'
             style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
             eventKey="EtiquetteNoeud"
             onClick={
@@ -105,7 +109,8 @@ export const OpenSankeyConfigurationsMenus = (
             </Accordion.Body>
           </Accordion.Item>
 
-          <Accordion.Item eventKey='editionNoeud'
+          <Accordion.Item
+            key='4' eventKey='editionNoeud'
             onClick={
               evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
@@ -142,6 +147,7 @@ export const OpenSankeyConfigurationsMenus = (
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
+      key='5'
       style={{ 'display': 'block' }}
       id='Flux'
       eventKey="3"
@@ -157,6 +163,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Body  style={{ padding: '0px' }}>
         <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={sub_nav_item_active as string}>
           <Accordion.Item
+            key='6'
             eventKey="8"
             style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
             onClick={evt => {
@@ -175,6 +182,7 @@ export const OpenSankeyConfigurationsMenus = (
             <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
           </Accordion.Item>
           <Accordion.Item
+            key='7'
             eventKey='editionFlux'
             onClick={
               evt => {
@@ -206,6 +214,7 @@ export const OpenSankeyConfigurationsMenus = (
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
+      key='8'
       id="dataTags"
       eventKey="dimension"
       style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
@@ -221,6 +230,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
+      key='9'
       id="LL"
       eventKey="7"
       style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
@@ -240,10 +250,12 @@ export const OpenSankeyConfigurationsMenus = (
           set_data={set_data}
           multi_selected_label={multi_selected_label}
         /> */}
-        {menu_configuration_free_labels}
+        {menu_configuration_free_labels.map((c,i)=>{
+          return <React.Fragment key={i}>{c}</React.Fragment>})}
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
+      key='10'
       id="Legend"
       style={{ 'display': (data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
       eventKey="legend"
@@ -258,7 +270,8 @@ export const OpenSankeyConfigurationsMenus = (
       }>
       <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
       <Accordion.Body>
-        {menu_configuration_legends}
+        {menu_configuration_legends.map((c,i)=>{
+          return <React.Fragment key={i}>{c}</React.Fragment>})}
       </Accordion.Body>
     </Accordion.Item>
   ]
@@ -270,7 +283,7 @@ export const OpenSankeyConfigurationsMenus = (
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 const ConfigurationMenuPropTypes = {
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   nav_item_active: PropTypes.string.isRequired,
   configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
 }
@@ -290,7 +303,8 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 ) => {
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
-      {configuration_menus}
+      {configuration_menus.map((c:JSX.Element,i:number)=>{
+      return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Accordion>
   )
 }

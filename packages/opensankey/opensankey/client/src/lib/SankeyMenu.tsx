@@ -45,8 +45,8 @@ const MenuPropTypes = {
   logo_width: PropTypes.number,
   app_name: PropTypes.string.isRequired,
 
-  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement).isRequired}).isRequired,
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement).isRequired}).isRequired,
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
   example_menu: PropTypes.element,
@@ -140,32 +140,6 @@ const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
     .then(showFile).then(cleanFile)
 }
 
-const clickSaveExcelSimple = (url_prefix:string,data:SankeyData) => {
-  const root = window.location.href
-  let url = root + url_prefix + 'sankey/save_excel_simple'
-  const fetchData = {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, 'sankey.xlsx')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = root + url_prefix + 'sankey/clean_excel'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
 
 const clickSaveSVG = () => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
@@ -302,8 +276,8 @@ export const OpenSankeyMenus = (
   externale_save_item:JSX.Element[]
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  return [
-    <NavDropdown  title={t('Menu.Fichiers')} id="files" >
+  return  [
+    <NavDropdown key={'files'}  title={t('Menu.Fichiers')} id={'files'} >
       <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
         <Dropdown.Item
           onClick={() => {
@@ -363,7 +337,7 @@ export const OpenSankeyMenus = (
       <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
       <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Dropdown.Item>
     </NavDropdown>,
-    <NavDropdown id='edition' title={t('Menu.Edition')} >
+    <NavDropdown key={'edition'} id={'edition'} title={t('Menu.Edition')} >
       <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
       {/* <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>     */}
       <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
@@ -371,11 +345,15 @@ export const OpenSankeyMenus = (
       <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
       {external_edition_item}
     </NavDropdown >,
-    <NavDropdown id='Aide' title={t('Menu.Aide')} >
+    <NavDropdown key={'Aide'} id={'Aide'} title={t('Menu.Aide')} >
       <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
       <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
     </NavDropdown >,
-  ]}
+  ]
+
+
+
+}
 
 /**
  * Description placeholder
@@ -534,31 +512,20 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   return (
     <>
-      {external_modal}
-      {//Ajout des pop up des différents menu d'edition (style,raccourci clavier, aide supplémentaire)
-
-      }
-
-      {/* { <ModalPreference
-        t={t}
-        data={data}
-        set_data={set_data}
-        showPreference={showPreference}
-        setShowPreference={setShowPreference}
-        set_mode_selection={set_mode_selection}
-      />} */}
+      {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
 
       { !data.static_sankey ? (
         modalShortcut
       ): (<></>)}
-
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
           <Navbar.Brand href="#"><img src={logo} width={logo_width ? logo_width : 200} /> {app_name} </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav>
-              {menus}
+              {menus.map((c,i)=>{
+                return <React.Fragment key={i}>{c}</React.Fragment>
+              })}
               <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
               {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
               {!data.static_sankey ? (
@@ -586,9 +553,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       }
       {
 
-        Object.values(menu_banner).map(d=>{
-          return d
-        })
+        Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
       }
       {/* <SankeyMenuBanner
         t={t}

@@ -66,8 +66,8 @@ export const addAllDropDownFlux = (
   data: SankeyData,
   set_data: (data: SankeyData) => void) =>
 {
-    const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
-    const allDD = banner_grouptag.map(tags_group => {
+  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
+  const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
     const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
 
@@ -189,7 +189,7 @@ export const addAllDropDownFlux = (
         </tr></>)
     }
   })
-  return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
+  return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
 }
 
 /**
@@ -284,9 +284,9 @@ export const SankeyBannerRows = (
     set_data({ ...new_data })
 
   }
-  return [
-    (data.static_sankey && sous_filieres && !is_split) ? (<>
-      <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+  return[
+    (data.static_sankey && sous_filieres && !is_split) ? (
+      <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
         <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={evt=> {
@@ -296,10 +296,10 @@ export const SankeyBannerRows = (
           value={diagram}>
           {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
         </Form.Select>
-      </Form.Group></>) : (<></>)
+      </Form.Group>) : (<React.Fragment key={'1'}></React.Fragment>)
     ,
-    (data.static_sankey && sous_filieres && is_split) ? (<>
-      <Form.Group as={Col} style={{ marginLeft: '10px' }} lg="auto">
+    (data.static_sankey && sous_filieres && is_split) ? (
+      <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
         <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
@@ -319,16 +319,16 @@ export const SankeyBannerRows = (
 
             }}
             value={diagram2}>
-            {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<></>)}
-          </Form.Select>) :(<></>)
+            {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+          </Form.Select>) :(<React.Fragment></React.Fragment>)
         }
-      </Form.Group></>) : (<></>),
-    //data.static_sankey && sous_filieres && additional_selector ? (<></>) : (<Col></Col>),
+      </Form.Group>) : (<React.Fragment key={'2'}></React.Fragment>),
+    //data.static_sankey && sous_filieres && additional_selector ? (<React.Fragment></React.Fragment>) : (<Col></Col>),
     window.sankey && window.sankey.excel ? (
-      <Form.Group as={Col} lg="auto" >
+      <Form.Group key={'3'} as={Col} lg="auto" >
         <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
         <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
-      </Form.Group>) : (<></>)
+      </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
   ]
 }
 
@@ -1007,7 +1007,6 @@ export const OpenSankeyMenuBanner = (
   // if (window.sankey && window.sankey.sous_filieres) {
   //   sous_filieres = window.sankey.sous_filieres
   // }
-
   const ui={
     'herowrap':<div className='herowrap'
       style={{
@@ -1221,7 +1220,7 @@ export const OpenSankeyMenuBanner = (
             >
               <Button variant='dark' onClick={() => {
                 data.fit_screen = true
-                const zoomed=(transform:any)=> {
+                const zoomed=(transform:{transform:string})=> {
                   [data.width, data.height] = min_width_and_height()
                   d3.select(' .opensankey #svg').attr('transform', transform['transform'])
                   d3.select(' .opensankey #svg')
