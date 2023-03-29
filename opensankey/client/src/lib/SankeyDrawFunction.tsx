@@ -753,8 +753,6 @@ export const drawArrows = (
     }
 
     if (!display_style.filter || link_value >= display_style.filter) {
-      // const colorArrow=(data.nodes[l.idTarget].shape_visible || data.nodes[l.idTarget].iconName === 'none')?(node_color(data.nodes[l.idTarget] as SankeyNode,data) as string):data.nodes[l.idTarget].iconColor
-      const colorArrow=(node_color(data.nodes[l.idTarget] as SankeyNode,data) as string)
       const n = JSON.parse(JSON.stringify(clipped))
       const point = d3.line()(n)
       arr.append('marker').attr('id', 'arrow_' + l.idLink)

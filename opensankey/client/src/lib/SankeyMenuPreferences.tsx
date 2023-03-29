@@ -8,7 +8,7 @@ import { TFunction,i18n } from 'i18next'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
-  ui:PropTypes.object.isRequired
+  ui:PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element),PropTypes.element]).isRequired).isRequired
 }
 type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
@@ -21,12 +21,12 @@ export const OpenSankeyDefaultModalePreferenceContent=(
   trad:i18n
 )=>{
   const ui={
-    'lang':<Form.Group as={Row}>
+    'lang':<Form.Group key={'1'} as={Row}>
       <Col xs={1}>
         <Form.Label  style={{marginTop:'0.5em'}}>{trad.language.toUpperCase()}</Form.Label>
       </Col>
       <Col xs={2}>
-        <Form.Check
+        <Form.Check key=''
           inline
           style={{marginTop:'0.5em',marginLeft:'0.em'}}
           type='switch'
@@ -39,7 +39,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </Col>
     </Form.Group>,
 
-    'mode':<ButtonGroup>
+    'mode':<ButtonGroup key={'2'}>
       <Button variant={(data.static_sankey)?'success':'outline-success'}
         onClick={() => {
           data.accordeonToShow = ['Vis','Leg']
@@ -56,7 +56,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         }}
       >Construction</Button>
     </ButtonGroup>,
-    'mode_expert':<ButtonGroup>
+    'mode_expert':<ButtonGroup key={'3'}>
       <Button variant='info'
         disabled={data.static_sankey}
         onClick={() => {
@@ -73,33 +73,32 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         }}
       >Expert</Button>
     </ButtonGroup>,
-    'form':[<Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
+    'form':[<Form.Check key='MEP' disabled={data.static_sankey} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
       preferenceCheck('MEP',data)
       set_data({ ...data })
     }} />,
-    <Form.Check checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.Noeuds')} />,
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
+    <Form.Check key='Node' checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.Noeuds')} />,
+    <Form.Check key='EN' disabled={data.static_sankey} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
       preferenceCheck('EN',data)
       set_data({ ...data })
     }} />,
-    <Form.Check checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.flux')} />,
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
+    <Form.Check key='flux' checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.flux')} />,
+    <Form.Check key='ef' disabled={data.static_sankey} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
       preferenceCheck('EF',data)
       set_data({ ...data })
     }} />,
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
+    <Form.Check key='ed' disabled={data.static_sankey} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
       preferenceCheck('ED',data)
       set_data({ ...data })
     }} />,
 
-    <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
+    <Form.Check key='leg' disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
       preferenceCheck('Leg',data)
       set_data({ ...data })
     }} />]
 
 
   }
-
 
   return ui
 }
@@ -122,7 +121,9 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreferenc
       <Modal.Title>Édition Préferences</Modal.Title>
     </Modal.Header>
     <Modal.Body>
-      {Object.values(ui).map(d=>d)}
+      {Object.values(ui).map((d,i)=>{
+        return <React.Fragment key={i}>{d}</React.Fragment>
+        })}
     </Modal.Body>
     <Modal.Footer>
       <Button variant="secondary" onClick={() => { setShowPreference(false) }}>

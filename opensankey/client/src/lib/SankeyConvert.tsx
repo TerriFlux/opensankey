@@ -120,7 +120,7 @@ export const complete_sankey_data = (
   Object.assign(data,the_data)
   Object.values(nodes).forEach(
     n => {
-      let nn = default_node(data);
+      const nn = default_node(data);
       (nn as unknown as {x:undefined}).x = undefined;
       (nn as unknown as {y:undefined}).y = undefined
       Object.assign(nn, n)
