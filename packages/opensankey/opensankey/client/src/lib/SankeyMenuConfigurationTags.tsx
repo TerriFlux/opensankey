@@ -174,10 +174,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   const tagSetting = (<>
     <Form.Group as={Row} >
-      <Col>
+      <Col xs={3}>
         <FormLabel >{t('Tags.GE')}:</FormLabel>
       </Col>
-      <Col>
+      <Col xs={4}>
         <Form.Select onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
@@ -197,14 +197,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       </Col>
 
       {/* Boutons des palettes de couleur  */}
-      <Col>
+      <Col xs={2}>
         <ButtonGroup>
           {/* Palette de couleur aléatoire  */}
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'tags.tooltips.1'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.pal')} </Tooltip>}>
+            overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
             <Button variant="secondary" value='rand' onClick={()=>{
               const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
               const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
@@ -218,10 +218,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           </OverlayTrigger>
           {/* Melanger les couleur  */}
           <OverlayTrigger
-            key={'tooltip-adjust'}
+            key={'tags.tooltips.2'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
+            overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
             <Button variant="dark" value='alea' onClick={()=>{
               const color=element_tags.map(d=>{
                 return data[elementTagName][tags_group_key].tags[d].color
@@ -245,12 +245,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       </Col>
 
       {/* Palettes des couleurs standard */}
-      <Col>
+      <Col xs={3}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'tags.tooltips.3'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
+          overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
           <Form.Select 
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -292,10 +292,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           <th>
             {/* Bouton ajout d'une étiquette  */}
             <OverlayTrigger
-              key={'tooltip-adjust'}
+              key={'tags.tooltips.4'}
               placement={'top'}
               delay={500}
-              overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.add')} </Tooltip>}>
+              overlay={<Tooltip id={'tags.tooltips.4'}>{t('Tags.tooltips.add')} </Tooltip>}>
               <Button variant="success" value='+' onClick={handleAddTagButton}>
                 <FaPlus />
               </Button>
@@ -331,10 +331,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                 {/* Supprimer une etiquette  */}
                 <td style={{ 'width': '10%' }}>
                   <OverlayTrigger
-                    key={'tooltip-adjust'}
+                    key={'tags.tooltips.5'}
                     placement={'top'}
                     delay={500}
-                    overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.rm')} </Tooltip>}>
+                    overlay={<Tooltip id={'tags.tooltips.5'}>{t('Tags.tooltips.rm')} </Tooltip>}>
                     <Button variant="danger" value='-' onClick={() => { handleDelTag(tag_key) }}>
                       <FaMinus />
                     </Button>
@@ -343,10 +343,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                 {/* Renommer l'étiquette  */}
                 <td style={{ 'width': '33%' }}>
                   <OverlayTrigger
-                    key={'tooltip-adjust'}
+                    key={'tags.tooltips.6'}
                     placement={'top'}
                     delay={500}
-                    overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.nom')} </Tooltip>}>
+                    overlay={<Tooltip id={'tags.tooltips.6'}>{t('Tags.tooltips.nom')} </Tooltip>}>
                     <FormControl /* size='sm' */
                       id={i.toString()}
                       type="text"
@@ -365,15 +365,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                 { elementTagName !== 'dataTags' ?
                   <td style={{ 'width': '20%' }}>
                     <OverlayTrigger
-                      key={'tooltip-adjust'}
+                      key={'tags.tooltips.7'}
                       placement={'top'}
                       delay={500}
-                      overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.visible')} </Tooltip>}>
+                      overlay={<Tooltip id={'tags.tooltips.7'}>{t('Tags.tooltips.visible')} </Tooltip>}>
                       <Form.Check inline={true}
                         name={'element_visible' + tag_key}
                         checked={data[elementTagName][tags_group_key].tags[tag_key].selected}
                         id={tag_key}
                         type='switch'
+                        style={{marginRight: '0px', marginLeft: '2.5em'}}
                         onChange={
                           (evt: React.ChangeEvent) => {
                             const new_nb_element = evt.target as HTMLInputElement
@@ -381,17 +382,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                             const visible = new_nb_element.checked
                             data[elementTagName][tags_group_key].tags[tag_key].selected = visible
                             set_data({ ...data })
-                          }}/>
+                      }}/>
                     </OverlayTrigger>
                   </td>:<></>
                 }
                 {/* Choix de la couleur  */}
                 <td style={{'width':'10%'}}>
                   <OverlayTrigger
-                    key={'tooltip-adjust'}
+                    key={'tags.tooltips.8'}
                     placement={'top'}
                     delay={500}
-                    overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
+                    overlay={<Tooltip id={'tags.tooltips.8'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
                     <Form.Control
                       type="color"
                       value={data[elementTagName][tags_group_key].tags[tag_key].color as string}
@@ -399,16 +400,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         evt => {
                           data[elementTagName][tags_group_key].tags[tag_key].color = evt.target.value
                           set_data({ ...data })
-                        }}/>
+                    }}/>
                   </OverlayTrigger>
                 </td>
                 {/* Chosir la forme du noeud  */}
                 { elementNameProp === 'nodes' ? (
                   <OverlayTrigger
-                    key={'tooltip-adjust'}
+                    key={'tags.tooltips.9'}
                     placement={'top'}
                     delay={500}
-                    overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.forme')} </Tooltip>}>
+                    overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
                     <Form.Select
                       onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                         data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
@@ -440,10 +441,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
             {/* Ajouter un groupe */}
             <th>
               <OverlayTrigger
-                key={'tooltip-adjust'}
+                key={'tags.tooltips.10'}
                 placement={'top'}
                 delay={500}
-                overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.add_grp')} </Tooltip>}>
+                overlay={<Tooltip id={'tags.tooltips.10'}>{t('Tags.tooltips.add_grp')} </Tooltip>}>
                 <Button variant="success" onClick={handleAddTagGrpButton}>
                   <FaPlus/>
                 </Button>
@@ -467,10 +468,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     {/* Suppression d'un groupe  */}
                     <td style={{ 'width': '10%' }}>
                       <OverlayTrigger
-                        key={'tooltip-adjust'}
+                        key={'tags.tooltips.11'}
                         placement={'top'}
                         delay={500}
-                        overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.rm_grp')} </Tooltip>}>
+                        overlay={<Tooltip id={'tags.tooltips.11'}>{t('Tags.tooltips.rm_grp')} </Tooltip>}>
                         <Button variant="danger" onClick={() => handleDelGroupTag(tags_group_key)}>
                           <FaMinus />
                         </Button>
@@ -479,10 +480,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     {/* Renommer le groupe d'étiquettes */}
                     <td>
                       <OverlayTrigger
-                        key={'tooltip-adjust'}
+                        key={'tags.tooltips.12'}
                         placement={'top'}
                         delay={500}
-                        overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.nom_grp')} </Tooltip>}>
+                        overlay={<Tooltip id={'tags.tooltips.12'}>{t('Tags.tooltips.nom_grp')} </Tooltip>}>
                         <FormControl
                           id={i.toString()}
                           type="text"
@@ -492,22 +493,23 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                               const new_name = (evt.target as HTMLInputElement).value
                               data[elementTagName][tags_group_key].group_name = new_name
                               set_data({ ...data })
-                            }}/>
+                        }}/>
                       </OverlayTrigger>
                     </td>
                     {/* Legende de groupe d'étiquette  */}
                     <td>
                       <OverlayTrigger
-                        key={'tooltip-adjust'}
+                        key={'tags.tooltips.13'}
                         placement={'top'}
                         delay={500}
-                        overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.leg_grp')} </Tooltip>}>
+                        overlay={<Tooltip id={'tags.tooltips.13'}>{t('Tags.tooltips.leg_grp')} </Tooltip>}>
                         <Form.Check inline={true}
                           // Permet de selection le étiquette pour l'affichage dans la légende
                           name={'element_legend_' + tags_group_key}
                           checked={data[elementTagName][tags_group_key].show_legend}
                           id={tags_group_key}
                           type='switch'
+                          style={{marginRight: '0px', marginLeft: '1.65em'}}
                           onChange={
                             (evt: React.ChangeEvent) => {
                               const new_nb_element = evt.target as HTMLInputElement
@@ -515,7 +517,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                               const visible = new_nb_element.checked
                               data[elementTagName][tags_group_key].show_legend = visible
                               set_data({ ...data })
-                            }}/>
+                        }}/>
                       </OverlayTrigger>
                     </td>
                     {/* Nombre d'étiquettes présentes  */}
@@ -523,10 +525,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     {/* Banniere  */}
                     <td>
                       <OverlayTrigger
-                        key={'tooltip-adjust'}
+                        key={'tags.tooltips.14'}
                         placement={'top'}
                         delay={500}
-                        overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.banner')} </Tooltip>}>
+                        overlay={<Tooltip id={'tags.tooltips.14'}>{t('Tags.tooltips.banner')} </Tooltip>}>
                         <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
                           value={data[type_tag_name][tags_group_key].banner}
                         >
@@ -548,20 +550,20 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         <ButtonGroup className="button_position" size="sm">
                           {/* Monter le groupe d'étiquette */}
                           <OverlayTrigger
-                            key={'tooltip-adjust'}
+                            key={'tags.tooltips.15'}
                             placement={'top'}
                             delay={500}
-                            overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.up')} </Tooltip>}>
+                            overlay={<Tooltip id={'tags.tooltips.15'}>{t('Tags.tooltips.up')} </Tooltip>}>
                             <Button variant="info" onClick={() => handleUpGrpTag(tags_group_key)}>
                               <FaArrowAltCircleUp />
                             </Button>
                           </OverlayTrigger>
                           {/* Descendre le groupe d'étiquettes  */}
                           <OverlayTrigger
-                            key={'tooltip-adjust'}
+                            key={'tags.tooltips.16'}
                             placement={'top'}
                             delay={500}
-                            overlay={<Tooltip id={'tooltip-adjust'}>{t('Tags.tooltips.down')} </Tooltip>}>
+                            overlay={<Tooltip id={'tags.tooltips.16'}>{t('Tags.tooltips.down')} </Tooltip>}>
                             <Button variant="info" onClick={() => handleDownGrpTag(tags_group_key)}>
                               <FaArrowAltCircleDown />
                             </Button>

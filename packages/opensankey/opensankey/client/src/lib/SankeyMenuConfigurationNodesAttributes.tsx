@@ -78,17 +78,17 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col xs={1}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.1'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
           <FormCheck inline
             type='switch'
             checked={isAllNodeVisible()}
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -100,10 +100,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col xs={3}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.2'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
           <Form.Control
             type='color'
             disabled={ !isAllNodeVisible()}
@@ -112,7 +112,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               const color = evt.target.value
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -124,10 +124,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col xs={3}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.3'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
           <Form.Check
             type='checkbox'
             //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
@@ -136,7 +136,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               const checked = evt.target.checked
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -148,10 +148,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col xs={2}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.4'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
           <FormCheck
             value="ellipse"
             type='radio'
@@ -161,15 +161,15 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
       <Col xs={2}>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.5'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.5'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
           <FormCheck
             value="rect"
             type='radio'
@@ -179,7 +179,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={evt => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
-            }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
     </Form.Group>,
@@ -191,10 +191,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.6'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
           <FormControl
             min={0} max={100}
             type={'number'}
@@ -206,7 +206,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
                 //set_multi_selected_nodes(multi_selected_nodes)
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
@@ -219,10 +219,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
       <Col>
         <OverlayTrigger
-          key={'tooltip-adjust'}
+          key={'noeud.apparence.tooltips.7'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
+          overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
           <FormControl
             min={0} max={100}
             type={'number'}
@@ -233,7 +233,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
                 //set_multi_selected_nodes(multi_selected_nodes)
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
                 set_data({ ...data })
-              }}/>
+          }}/>
         </OverlayTrigger>
       </Col>
       <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
