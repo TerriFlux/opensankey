@@ -49,7 +49,12 @@ export const SankeyMenuConfigurationLinksData = (
                       (evt: React.ChangeEvent<HTMLSelectElement>) => {
                       //Modifie les paramètres selectionnés
                         const { name, value } = evt.target
-                        set_tags_selected(prevState => ({...prevState,[name]: value}))
+                        let tmp={}
+                        set_tags_selected(prevState => {
+                          tmp= ({...prevState,[name]: value})
+                          return ({...prevState,[name]: value})})
+                        set_displayed_value(value_selected_parameter(data,multi_selected_links,tmp).value)
+
                       }}>
                     {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                       return (
