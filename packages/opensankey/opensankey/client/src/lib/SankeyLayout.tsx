@@ -526,6 +526,7 @@ export const updateLayout = (
   
       link.colorTag = link_layout.colorTag
       link.colorParameter = link_layout.colorParameter
+      link.color = link_layout.color
   
       if (link_layout.vert_shift) {
         link.left_horiz_shift = link_layout.left_horiz_shift

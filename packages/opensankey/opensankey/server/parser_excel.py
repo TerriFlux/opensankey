@@ -525,6 +525,8 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                         banner = 'none'
                     if mfa_input[TAG_SHEET].iat[i, 1] == 'levelTags':
                         banner = 'level'
+                    if tag_group_name == 'Primaire':
+                        banner = 'level'
                     activated = 0
                     if j == 0:
                         activated = 1
