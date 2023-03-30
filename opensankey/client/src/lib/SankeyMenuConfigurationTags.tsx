@@ -540,7 +540,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                           {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Tags.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
-                          {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>}
+                          {/* {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>} */}
                         </Form.Select>
                       </OverlayTrigger>
                     </td>
