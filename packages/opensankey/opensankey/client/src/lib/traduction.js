@@ -771,7 +771,7 @@ const resources = {
         'ff':'Filtrage visuel des flux',
         'filtre':'Valeur seuil pour l\'affichage des flux',
         'fl':'Valeur seuil pour l\'affichage des labels',
-        'fn':'Flux non-renseignés',
+        'fn':'Flux nuls',
         'visible':'Visible',
         'hlp':'Aide',
         'hlp_1':'Les diagrammes de Sankey',
