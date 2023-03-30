@@ -34,7 +34,7 @@ export const SankeyMenuConfigurationNodesTags = (
             (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
           }
         >
-          {Object.entries(data.nodeTags).map(
+          {Object.entries(data.nodeTags).filter(nodeTag=>nodeTag[1].banner !== 'level').map(
             (tags_group, i) =>
               <option
                 key={i}
