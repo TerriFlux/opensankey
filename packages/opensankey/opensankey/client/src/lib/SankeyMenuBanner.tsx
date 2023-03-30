@@ -29,7 +29,6 @@ export const addSimpleLevelDropDown = (
   const selected = tmp.length > 0 ? tmp[0][0] : ''
   return (
     <>
-      <tr><FormLabel style={{ color: color }}>{nodeTags['Primaire'].group_name}</FormLabel></tr>
       <tr>
         <td >
           {<Form.Select style={{ width: '200px', color: 'black' }} key={nodeTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, nodeTags['Primaire'], data, set_data) }}>{
