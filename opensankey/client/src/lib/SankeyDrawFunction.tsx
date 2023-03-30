@@ -37,7 +37,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   if (display_value.includes('*') && data.show_structure != 'structure' ) {
     return '40, 5'
   }
-  const is_free = getLinkValue(data, d.idLink).extension!.free_mini !== undefined && +getLinkValue(data, d.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+  const is_free = getLinkValue(data, d.idLink).extension?.free_mini !== undefined && +(getLinkValue(data, d.idLink).extension?.free_mini ??false) == 0 && data.show_structure !== 'free'
   if (d.dashed || is_free) {
     return '5, 5'
   } else {
@@ -99,7 +99,7 @@ export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>num
     pos_x_src = nodes[l.idSource].x
     pos_y_src = nodes[l.idSource].y
   }
-  const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini == 0 && data.show_structure !== 'free'
+  const is_free = getLinkValue(data, l.idLink).extension?.free_mini !== undefined && +(getLinkValue(data, l.idLink).extension?.free_mini ??false) == 0 && data.show_structure !== 'free'
   if (is_free) {
     return 5
   }  
@@ -1944,7 +1944,7 @@ const drawCurve = (
         is_structure = true
       }
     } else if ( data.show_structure === 'reconciled' ) {
-      is_structure = theLinkValue.extension!.free_mini !== undefined && +getLinkValue(data, link.idLink).extension!.free_mini == 0 
+      is_structure = theLinkValue.extension?.free_mini !== undefined && +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
     }
   }
   if (link.orientation === 'vh' && !link.recycling) {

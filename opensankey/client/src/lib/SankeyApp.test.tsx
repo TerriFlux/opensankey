@@ -1,13 +1,13 @@
-import React from 'react'
 //import { render } from "@testing-library/react";
-import renderer from 'react-test-renderer'
 import {default_sankey_data} from './SankeyUtils'
-import SankeyApp from './SankeyApp'
 
 test('adds 1 + 2 to equal 3', () => {
   const x = jest.spyOn(window, 'focus') 
-  x.mockImplementation(() => {})
+  x.mockImplementation(() => {
+    'nothing'
+  })
   const data  = default_sankey_data()
+  data
   // const component = renderer.create(<SankeyApp sankey_data={data}></SankeyApp>)
   // const tree = component.toJSON()
   // expect(tree).toMatchSnapshot()
