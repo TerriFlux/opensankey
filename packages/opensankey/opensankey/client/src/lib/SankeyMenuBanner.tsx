@@ -166,7 +166,7 @@ export const addAllDropDownNode = (
                 </Form.Select>
               </Col>
             </OverlayTrigger>
-            {tags_group.siblings.length > 0 ?
+            {tags_group.siblings !== undefined && tags_group.siblings.length > 0 ?
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
