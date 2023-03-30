@@ -439,7 +439,7 @@ export const convert_tags = (
       }
       Object.values(data.nodes).forEach(n=>{
         if (n.dimensions[tag]) {
-          n.tags[tag] = [String(n.dimensions[tag].level!)]
+          n.tags[tag] = [String((n.dimensions[tag].level??0))]
         }
         if ('Dimensions' in n.tags) {
           delete n.tags.Dimensions
@@ -448,8 +448,8 @@ export const convert_tags = (
 
       let max_level = 1
       Object.values(data.nodes).forEach(n=>{
-        if (n.dimensions[tag] && n.dimensions[tag].level! > max_level) {
-          max_level = n.dimensions[tag].level!
+        if (n.dimensions[tag] && (n.dimensions[tag].level??0) > max_level) {
+          max_level = n.dimensions[tag].level??0
         }
       })
       Object.values(data.nodes).forEach(n=>{

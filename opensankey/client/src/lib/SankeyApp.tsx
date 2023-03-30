@@ -6,7 +6,7 @@ import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
 
 import SankeyDraw from './SankeyDraw'
-import Menu, { OpenSankeyMenus } from './SankeyMenu'
+import Menu, { OpenSankeyMenus,OpenSankeyModalShortcut} from './SankeyMenu'
 import { ExempleItem } from './SankeyMenuExamples'
 import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 import * as SankeyUtils from './SankeyUtils'
@@ -339,6 +339,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     link_text,getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows
   )
 
+  const shortcut_modale=OpenSankeyModalShortcut(t,showShortcut,setshowShortcut,[])
+
 
 
   const draw_legend=OpenSankeyDrawLegend(data,getLinkValue)
@@ -436,8 +438,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           show_save_json={show_save_json}
           showPreference={showPreference}
           show_publish_dialog={show_publish_dialog}
-          showShortcut={showShortcut}
-          setshowShortcut={setshowShortcut}
+
           set_show_excel_dialog={set_show_excel_dialog}
           set_show_apply_layout={set_show_apply_layout}
           set_show_save_json={set_show_save_json}
@@ -452,6 +453,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           menu_banner={menu_banner}
           loginOut={()=>null}
           unsetTokens={()=>null}
+          modalShortcut={shortcut_modale}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
