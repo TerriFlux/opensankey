@@ -124,6 +124,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)
   const [not_started,setNotStarted] = useState(true)
+  const [result,setResult] = useState('')
   const [path,setPath] = useState('')
 
   //- Modals and Dialogs
@@ -268,9 +269,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     display_style.filter = +new_current_filter
     set_data({ ...data })
   }
-
   Object.values(data.nodeTags).filter(tag_group=>tag_group.banner==='level').forEach(tag_group=>tag_group.activated = false)
-  data.nodeTags['Primaire'].activated = true
+  if ('Primaire' in data.nodeTags && data.nodeTags['Primaire'].activated === false) {
+    data.nodeTags['Primaire'].activated = true
+  }
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const detail_level=
     <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
@@ -431,6 +433,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           setFailure={setFailure}
           not_started={not_started}
           setNotStarted={setNotStarted}
+          result={result}
+          setResult={setResult}
           configurations_menus={configurations_menus}
           menus={sankey_menus}
           show_excel_dialog={show_excel_dialog}
