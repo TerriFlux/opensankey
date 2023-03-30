@@ -73,6 +73,8 @@ const MenuPropTypes = {
   setFailure : PropTypes.func.isRequired,
   not_started : PropTypes.bool.isRequired,
   setNotStarted : PropTypes.func.isRequired,
+  result : PropTypes.string.isRequired,
+  setResult : PropTypes.func.isRequired,
   path: PropTypes.string.isRequired,
   launch: PropTypes.func.isRequired,
   configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
@@ -385,6 +387,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     processing,setProcessing,
     failure,setFailure,
     not_started,setNotStarted,
+    result,setResult,
     path,
     launch,
     configurations_menus,
@@ -583,9 +586,6 @@ const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={url_prefix}
         callback={callback} />
 
-
-
-
       <SankeyLoad
         url_prefix={url_prefix}
         successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
@@ -596,6 +596,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         failure={failure}
         setFailure={setFailure}
         setNotStarted={setNotStarted}
+        result={result}
+        setResult={setResult}
       />
 
       {
