@@ -90,7 +90,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
           (key, index) => {
             let title = key
             if (title === 'artefacts') {
-              title = 'Page Web et Zip' 
+              return <></> 
             }
             if (key == 'Tests') {
               return <></>
