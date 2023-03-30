@@ -13,9 +13,9 @@ import { default_link, default_node, default_sankey_data } from './SankeyUtils'
  * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 const ApplyLayoutDialogPropTypes = {
-  t:PropTypes.func.isRequired, 
+  t:PropTypes.func.isRequired,
   show_apply_layout : PropTypes.bool.isRequired,
-  set_show_apply_layout: PropTypes.func.isRequired, 
+  set_show_apply_layout: PropTypes.func.isRequired,
   sankey_data : SankeyDataPropTypes,
   set_sankey_data : PropTypes.func.isRequired
 }
@@ -116,7 +116,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
               }}}/>
           </Col>
           <Col xs={2}>
-            <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{ 
+            <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{
               if(evt.target.checked){
                 elementToDispose.push('attrFlux')
                 set_elementToDispose(elementToDispose)
@@ -133,7 +133,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
                 set_elementToDispose(elementToDispose)
-                
+
               }}}/>
           </Col>
           <Col xs={2}>
@@ -151,7 +151,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
               if(evt.target.checked){
                 elementToDispose.push('attrGeneral')
                 set_elementToDispose(elementToDispose)
-                
+
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
                 set_elementToDispose(elementToDispose)
@@ -168,7 +168,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
  * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; clickSaveDiagram: any; }}
  */
 const ApplySaveJSONPropTypes = {
-  t:PropTypes.func.isRequired, 
+  t:PropTypes.func.isRequired,
   show_save_json : PropTypes.bool.isRequired,
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data:SankeyDataPropTypes,
@@ -202,7 +202,17 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
       <Modal.Body>
         <Form >
           <Form.Group as={Row} >
-            <Col xs={8}><Form.Check type='switch' inline label={t('Menu.SaveValue')} checked={mode_save}  onChange={(evt)=>set_mode_save(evt.target.checked)}/></Col>
+            <Col xs={1}>
+              <Form.Check
+                inline
+                type='switch'
+                style={{marginTop: '-0.25em', marginBottom:'0em'}}
+                checked={mode_save}
+                onChange={(evt)=>set_mode_save(evt.target.checked)}/>
+            </Col>
+            <Col xs={7}>
+              <FormLabel style={{justifyContent: 'left', marginLeft: '-2.75em'}}>{t('Menu.SaveValue')}</FormLabel>
+            </Col>
             <Col xs={4}>
               <Button
                 size="sm"
@@ -232,7 +242,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
 }
 
 const ExcelModalPropTypes = {
-  t:PropTypes.func.isRequired, 
+  t:PropTypes.func.isRequired,
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
   set_data: PropTypes.func.isRequired,
