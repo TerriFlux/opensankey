@@ -31,6 +31,8 @@ interface SankeyLoadProdTypes {
    * @type {(b:boolean)=>void}
    */
   setNotStarted : (b:boolean)=>void
+  result : string;
+  setResult: (s:string)=>void
 }
 
 const SankeyLoad = ({
@@ -39,9 +41,9 @@ const SankeyLoad = ({
   show_dialog,set_show_dialog,
   processing,setProcessing,
   failure,setFailure,
-  setNotStarted
+  setNotStarted,
+  result,setResult
 } : SankeyLoadProdTypes) => {
-  const [result,setResult] = useState('')
   const [value,setValue] = useState([1,2])
   
   const reset = () => {
