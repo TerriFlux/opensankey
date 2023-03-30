@@ -3,16 +3,18 @@ import { render } from '@testing-library/react'
 //import renderer from 'react-test-renderer';
 //import {default_sankey_data, getLinkValue} from './SankeyUtils'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
-import { SankeyData, SankeyLink, SankeyNode } from './types'
+import { SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import { compute_auto_sankey } from './SankeyLayout'
-
+// const fs = require('fs')
+import fs from 'fs'
+// const path = require('path')
+import path from 'path'
 beforeEach(() => {
-  (window.SVGElement.prototype as any).getComputedTextLength = () => 200
+  (window.SVGElement.prototype as SVGTextContentElement).getComputedTextLength = () => 200
 })
 
-const fs = require('fs')
-const path = require('path')
+
 const the_tests : string[] = []
 const mfadata = process.env.MFAData as string
 const parse_folder = (current_dir : string) => {
@@ -48,17 +50,19 @@ parse_folder(mfadata)
 
 test.each(the_tests)( 'tyty',(full_path) => {
   const x = jest.spyOn(window, 'focus') 
-  x.mockImplementation(() => {})
+  x.mockImplementation(() => {
+    'nothing'
+  })
 
   const new_data = require(full_path)
-  convert_data(new_data as any)
-  compute_auto_sankey(new_data as any,200)
+  convert_data(new_data as SankeyData)
+  compute_auto_sankey(new_data as SankeyData,200)
   const base_file_name = path.basename(full_path,'.json')
   const sankey_file_name = path.join(path.dirname(full_path),base_file_name+'_auto_layout.json')
   fs.writeFile(
     sankey_file_name,
     JSON.stringify(new_data, null, 3),
-    function (err:any) {
+    function (err:Error | null) {
       if (err) throw err
       console.log('File is created successfully.')
     }

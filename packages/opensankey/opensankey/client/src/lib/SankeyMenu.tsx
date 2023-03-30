@@ -89,8 +89,6 @@ const MenuPropTypes = {
   setShowPreference: PropTypes.func.isRequired,
   show_publish_dialog:PropTypes.bool.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
-  showShortcut:PropTypes.bool.isRequired,
-  setshowShortcut: PropTypes.func.isRequired,
 
   menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
@@ -102,6 +100,7 @@ const MenuPropTypes = {
   menu_banner:PropTypes.object.isRequired,
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
+  modalShortcut:PropTypes.element.isRequired,
 
 }
 
@@ -273,7 +272,7 @@ export const OpenSankeyMenus = (
   url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
-  externale_save_item:JSX.Element[]
+  externale_save_item:JSX.Element[],
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   return  [
@@ -392,7 +391,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_excel_dialog, set_show_excel_dialog,
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
-    showShortcut, setshowShortcut,
     menus,
     show_modalTemplate,
     set_show_modalTemplate,
@@ -402,7 +400,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     external_modal,
     menu_banner,
     loginOut,
-    unsetTokens
+    unsetTokens,
+    modalShortcut
   }
 ) => {
   let max_link_value = 0
@@ -476,34 +475,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
 
-  //Modal for shortcut
-  const modalShortcut = (
-    <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.rc')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body >
-        <p>Fonctionnement des clics :</p>
-        <p><b>CTRL + Clic (noeuds) :</b> Sélectionne le noeuds click dans l'onglet "<b>Noeuds</b>" du menu</p>
-        <p><b>CTRL + Clic (flux) :</b> Sélectionne le flux click dans l'onglet "<b>Flux</b>" du menu</p>
-        <p><b>Suppr</b> ou <b>Retour arrière :</b> Supprime les noeuds et flux sélectionnés</p>
-        <p><b>Clic (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
-        <p><b>Clic droit (noeuds) :</b>  Agrége le noeud</p>
-        <p><b>Alt Clic droit (noeuds) :</b>  Désagrége le noeud</p>
-        <p><b>Alt Clic (label noeuds) :</b>  Déplace le label</p>
-        <p><b>CTRL + S :</b> Sauvegarde la configuration actuelle dans une vue, qui peut ensuite être visualisé dans le Menu Vue </p>
-        <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
-        <p><b>Echap :</b> Ferme le Menu si il est ouvert </p>
-
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setshowShortcut(false)}>
-          Close
-        </Button>
-      </Modal.Footer>
-    </Modal>
-
-  )
+  
 
   const navigate=useNavigate()
   const returnToApp=()=>{
@@ -645,4 +617,55 @@ const Menu: FunctionComponent<MenuTypes> = (
 Menu.propTypes = MenuPropTypes
 
 export default Menu
+
+export //Modal for shortcut
+const OpenSankeyModalShortcut = (t:TFunction,
+  showShortcut:boolean,
+  setshowShortcut:React.Dispatch<React.SetStateAction<boolean>>,
+  additional_shortcut_item:JSX.Element[]
+)=>{
+  return <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
+    <Modal.Header closeButton>
+      <Modal.Title>{t('Menu.rc')}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body >
+      <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
+      
+      <h5>Avec la souris en mode sélection :</h5>
+      <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
+      <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
+      <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
+      <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
+      <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
+      <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
+      <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
+      <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
+      
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+      
+      <h5>Avec la souris en mode édition :</h5>
+      <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
+      <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
+      <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
+      
+      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+      
+      <h5>Autres raccourcis :</h5>
+      <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
+      <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
+      <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
+
+      <p><b>Echap :</b> Ferme le Menu si il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
+
+      {additional_shortcut_item}
+
+    </Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary" onClick={() => setshowShortcut(false)}>
+        Close
+      </Button>
+    </Modal.Footer>
+  </Modal>
+}
+  
 

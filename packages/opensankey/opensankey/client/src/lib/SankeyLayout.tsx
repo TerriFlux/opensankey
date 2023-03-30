@@ -659,7 +659,7 @@ export const agregation = (
     return
   }
   const desagregated_node = data.nodes[idNode]
-  const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name!]
+  const parent_node = data.nodes[desagregated_node.dimensions[cur_dimension].parent_name??'']
   if (!parent_node) {
     return
   }
