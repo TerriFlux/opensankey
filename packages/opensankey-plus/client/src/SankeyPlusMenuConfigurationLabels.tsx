@@ -4,6 +4,7 @@ import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import { TFunction } from 'i18next'
+import Accordion from 'react-bootstrap/Accordion'
 
 
 
@@ -33,8 +34,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   t: TFunction,
   forceUpdate:boolean,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>
-
+  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  nav_item_active:string,
+  set_nav_item_active:React.Dispatch<React.SetStateAction<string>>
 ) => {
 
 
@@ -237,9 +239,24 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       }
     })
   }
-    
+  
    
-  return [<Form.Group as={Row}>
+  return <Accordion.Item
+  key='9'
+  id="LL"
+  eventKey="7"
+  style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
+  onClick={evt => {
+    if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
+      set_nav_item_active('')
+    } else {
+      set_nav_item_active('7')
+    }
+  }}
+>
+  <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
+  <Accordion.Body>
+  <Form.Group as={Row}>
     <Col xs={1}>
       <Button size="sm" onClick={() => {
         const new_label = {
@@ -301,7 +318,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
           }}><FaAngleDown /></Button>
       </ButtonGroup>
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Row>
       <FormLabel column sm={1}>Text:</FormLabel>
@@ -320,7 +337,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         />
       </Col>
     </Row>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.textAsHTML')}</FormLabel>
@@ -336,7 +353,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.hl')}</FormLabel>
@@ -354,7 +371,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.ll')}</FormLabel>
@@ -372,7 +389,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.ft')}</FormLabel>
@@ -388,7 +405,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.cfl')}</FormLabel>
@@ -404,7 +421,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.bt')}</FormLabel>
@@ -420,7 +437,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel >{t('LL.cbl')}</FormLabel>
@@ -436,7 +453,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.pvt')}</FormLabel>
@@ -497,7 +514,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }
       />
     </Col>
-  </Form.Group>,<Form.Group as={Row}>
+  </Form.Group>
+  <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.at')}</FormLabel>
     </Col>
@@ -551,7 +569,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row}>
     <Col xs={4}>
       <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
@@ -571,7 +589,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </Col>
-  </Form.Group>,
+  </Form.Group>
   <Form.Group as={Row} >
     <Col>
       <FormLabel style={{color:(!allLabelAsHTML())?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
@@ -618,7 +636,10 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }
       />
     </Col>
-  </Form.Group>]
+  </Form.Group>
+  </Accordion.Body>
+</Accordion.Item>
+
       
 }
   
