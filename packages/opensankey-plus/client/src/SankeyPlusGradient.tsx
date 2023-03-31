@@ -42,7 +42,6 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
 }
 
 export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{
-    d3.selectAll(' .opensankey #svg #sankey_def').remove()
     const defGradient = d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
    
    
