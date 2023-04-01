@@ -32,7 +32,7 @@ export const OpenSankeyConfigurationsMenus = (
   menu_configuration_links:{
     [s: string]: JSX.Element;
   },
-  menu_configuration_free_labels:JSX.Element[],
+  menu_configuration_free_labels:JSX.Element,
   menu_configuration_legends:JSX.Element[],
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
@@ -230,31 +230,6 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item
-      key='9'
-      id="LL"
-      eventKey="7"
-      style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
-      onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
-          set_nav_item_active('')
-        } else {
-          set_nav_item_active('7')
-        }
-      }}
-    >
-      <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
-      <Accordion.Body>
-        {/* <SankeyLabelEdition
-          t={t}
-          data={data}
-          set_data={set_data}
-          multi_selected_label={multi_selected_label}
-        /> */}
-        {menu_configuration_free_labels.map((c,i)=>{
-          return <React.Fragment key={i}>{c}</React.Fragment>})}
-      </Accordion.Body>
-    </Accordion.Item>,
-    <Accordion.Item
       key='10'
       id="Legend"
       style={{ 'display': (data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
@@ -273,7 +248,8 @@ export const OpenSankeyConfigurationsMenus = (
         {menu_configuration_legends.map((c,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>})}
       </Accordion.Body>
-    </Accordion.Item>
+    </Accordion.Item>,
+    <>{menu_configuration_free_labels}</>,
   ]
 }
 
