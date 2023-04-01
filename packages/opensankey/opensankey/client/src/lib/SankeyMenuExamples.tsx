@@ -88,8 +88,8 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
         }
         ) : Object.keys(exemple_menu).map(
           (key, index) => {
-            let title = key
-            if (title === 'artefacts') {
+            const title = key
+            if (key === 'artefacts') {
               return <></> 
             }
             if (key == 'Tests') {
