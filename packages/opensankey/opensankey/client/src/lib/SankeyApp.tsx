@@ -280,7 +280,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
 
         <table>{(Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
-          {addSimpleLevelDropDown(t,data,set_data,true)}</>
+          {addSimpleLevelDropDown(t,data,set_data)}</>
         ) : (<>
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
       </Popover.Body>
