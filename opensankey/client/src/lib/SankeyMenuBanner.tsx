@@ -16,11 +16,8 @@ import { TFunction } from 'i18next'
 export const addSimpleLevelDropDown = (
   t:TFunction,
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  level:boolean
+  set_data:(d:SankeyData)=>void
 ) => {
-  console.log(level)
-  const color = 'black'
   const {nodeTags} = data
   if (Object.keys(nodeTags['Primaire'].tags).length < 2) {
     return <></>
