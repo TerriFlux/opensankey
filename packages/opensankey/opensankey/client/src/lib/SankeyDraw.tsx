@@ -607,6 +607,12 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     multi_selected_nodes.current=Object.values(data.nodes)
     set_data({...data})
 
+  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
+    for(let item of document.getElementsByTagName('input')){
+      if(item.className.includes('form-control') && item.type=='text'){
+        item.blur()
+      }
+    }
   }
 }
 
