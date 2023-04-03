@@ -15,7 +15,7 @@ import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
-
+import Draggable from 'react-draggable';
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -530,26 +530,32 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
       }
-      {/* <SankeyMenuBanner
-        t={t}
-        data={data}
-        set_data={set_data}
-        mode_selection={mode_selection}
-        set_mode_selection={set_mode_selection}
-        set_current_filter={set_current_filter}
-        url_prefix={url_prefix}
-        view={view}
-      />  */}
-      {(show_nav && !data.static_sankey) ?
-        <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
-          <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
+    <Draggable>
+          <div style={{"display":(show_nav)?'flex':'none',width:'33%',
+          'position': 'fixed',
+          'flexDirection': 'column',
+          'backgroundColor': '#fff',
+          'backgroundClip': 'padding-box',
+          'border': '1px solid rgba(0, 0, 0, 0.2)',
+          'borderRadius':' 0.6rem',
+          'zIndex':'10',
+          'padding':'0.5rem'
+
+        }}
+          >
+            <h3 style={{
+                 'borderBottom':' 1px solid #eceeef',
+                 'lineHeight':'1.5rem',
+                 'alignItems':'center',
+                 'padding':'1rem'
+            }}>{menuButton()}</h3>
             <SankeyConfigurationMenu
-              nav_item_active={nav_item_active}
-              accordion_ref={accordion_ref}
-              configuration_menus={configurations_menus} />
-          </Offcanvas.Body>
-        </Offcanvas>
-        : <></>}
+                nav_item_active={nav_item_active}
+                accordion_ref={accordion_ref}
+                configuration_menus={configurations_menus} />
+              
+          </div>
+      </Draggable>
 
       {
         processing ? (
