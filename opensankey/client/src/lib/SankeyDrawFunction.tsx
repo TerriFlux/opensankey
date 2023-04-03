@@ -464,7 +464,12 @@ export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
     const dim_names: string[] = []
     Object.values(data.nodes).forEach(n2 => {
       for (const dim in n2.dimensions) {
-        if (n2.dimensions[dim].parent_name == n.idNode) {
+        if ( dim === 'Primaire') {
+          if ( data.nodeTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+            child_names.push(n2.idNode)
+            dim_names.push(dim)
+          }
+        } else if (!data.nodeTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
           if (dim_names.indexOf(dim) === -1) {
             child_names.push(n2.idNode)
             dim_names.push(dim)
@@ -488,7 +493,12 @@ export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
     const dim_names: string[] = []
     Object.keys(n.dimensions).forEach(
       dim => {
-        if (n.dimensions[dim].parent_name) {
+        if (dim === 'Primaire') {
+          if (data.nodeTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+            parent_names.push(n.idNode)
+            dim_names.push(dim)
+          }
+        } else if (!data.nodeTags['Primaire'].activated && n.dimensions[dim].parent_name) {
           parent_names.push(n.dimensions[dim].parent_name as string)
           dim_names.push(dim)
         }
