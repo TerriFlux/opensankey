@@ -555,11 +555,11 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   //Nombre de tspan dans la balise text
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   if (d.display_style.label_vert == 'middle') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
   } else if (d.display_style.label_vert == 'bottom') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(1em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,1em)')
   } else if (d.display_style.label_vert == 'top') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translateY(' + (-(nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (-(nb_tspan - 1)) + 'em)')
   }
 
 }
