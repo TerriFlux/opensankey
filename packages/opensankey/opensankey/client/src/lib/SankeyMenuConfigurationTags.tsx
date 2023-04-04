@@ -274,7 +274,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                 )
                 set_data({ ...data })
               }}
-            value={(Object.keys(data[elementTagName]).length>0 && tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
+            value={(Object.keys(data[elementTagName]).length>0 && data[elementTagName][tags_group_key] &&  tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
           >
             {colormaps.map(
               (cur_colormap, i) =>
