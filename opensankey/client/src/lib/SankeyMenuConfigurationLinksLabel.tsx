@@ -8,25 +8,29 @@ export const SankeyMenuConfigurationLinksLabel = (
   multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   t:TFunction,
+  menu_for_style:boolean,
+  selected_style_link:string
 )=>{
+  const parameter_to_modify=(menu_for_style)?data.style_link:data.links
+  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
 
   const linkLabelColor = (param: string) => {
     let allChecked = true
 
-    if (multi_selected_links.current.length != 0) {
+    if (selected_parameter.length != 0) {
       switch (param) {
       case 'white':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.text_color == 'white') ? allChecked : false
         })
         break
       case 'black':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.text_color == 'black') ? allChecked : false
         })
         break
       case 'color':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.text_color == d.color) ? allChecked : false
         })
         break
@@ -40,10 +44,10 @@ export const SankeyMenuConfigurationLinksLabel = (
   const allNodeLabelFontSize = () => {
     let display_size = true
     let size = 11
-    if (multi_selected_links.current.length != 0) {
-      size = multi_selected_links.current[0].label_font_size
+    if (selected_parameter.length != 0) {
+      size = selected_parameter[0].label_font_size
     }
-    multi_selected_links.current.map((d) => {
+    selected_parameter.map((d) => {
       display_size = (d.label_font_size == size) ? display_size : false
     })
     return (display_size) ? size : 11
@@ -51,20 +55,20 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   const labelPositionVert = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.current.length != 0) {
+    if (selected_parameter.length != 0) {
       switch (param) {
       case 'beginning':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.label_position == 'beginning') ? allChecked : false
         })
         break
       case 'middle':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.label_position == 'middle') ? allChecked : false
         })
         break
       case 'end':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.label_position == 'end') ? allChecked : false
         })
         break
@@ -77,7 +81,7 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   const labelSticktoLinkDisabled = () => {
     let labelSticktoLink = false
-    multi_selected_links.current.map(d => {
+    selected_parameter.map(d => {
       labelSticktoLink = (d.label_on_path) ? true : labelSticktoLink
     })
     return labelSticktoLink
@@ -85,7 +89,7 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   const labelLinkFree = () => {
     let labelLinkFree = false
-    multi_selected_links.current.map(d => {
+    selected_parameter.map(d => {
       labelLinkFree = (d.label_position === 'frozen'&& d.orthogonal_label_position === 'frozen') ? true : labelLinkFree
     })
     return labelLinkFree
@@ -93,20 +97,20 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   const labelPositionOrtho = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.current.length != 0) {
+    if (selected_parameter.length != 0) {
       switch (param) {
       case 'above':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.orthogonal_label_position == 'above') ? allChecked : false
         })
         break
       case 'middle':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.orthogonal_label_position == 'middle') ? allChecked : false
         })
         break
       case 'below':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.orthogonal_label_position == 'below') ? allChecked : false
         })
         break
@@ -119,7 +123,7 @@ export const SankeyMenuConfigurationLinksLabel = (
 
   const labelVisibleChecked = () => {
     let labelVisibleChecked = true
-    multi_selected_links.current.map(d => {
+    selected_parameter.map(d => {
       labelVisibleChecked = (d.label_visible) ? labelVisibleChecked : false
     })
     return labelVisibleChecked
@@ -140,7 +144,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelVisibleChecked()}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.label_visible = evt.target.checked
                 })
                 set_data({ ...data })
@@ -169,7 +173,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={linkLabelColor('black')}
             onChange={
               (evt) => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
@@ -192,7 +196,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={linkLabelColor('white')}
             onChange={
               (evt) => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.text_color = evt.target.value
                 })
                 set_data({ ...data })
@@ -215,7 +219,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={linkLabelColor('color')}
             onChange={
               () => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.text_color = d.color
                 })
                 set_data({ ...data })
@@ -236,7 +240,7 @@ export const SankeyMenuConfigurationLinksLabel = (
           disabled={!labelVisibleChecked()}
           value={allNodeLabelFontSize()}
           onChange={evt => {
-            Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.label_font_size = +evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.label_font_size = +evt.target.value)
             set_data({ ...data })
           }}
         />
@@ -260,7 +264,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelSticktoLinkDisabled()}
             onClick={()=>{
               const val=labelSticktoLinkDisabled()
-              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                 d.label_on_path = !val
                 if(!val){
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
@@ -293,7 +297,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionVert('beginning')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.label_position = evt.target.value
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
@@ -317,7 +321,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionVert('middle')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.label_position = evt.target.value
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
@@ -341,7 +345,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionVert('end')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.label_position = evt.target.value
                   d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
                 })
@@ -371,7 +375,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionOrtho('below')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.orthogonal_label_position = evt.target.value
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
@@ -394,7 +398,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionOrtho('middle')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.orthogonal_label_position = evt.target.value
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
@@ -417,7 +421,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelPositionOrtho('above')}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.orthogonal_label_position = evt.target.value
                   d.label_position=(d.label_position=='frozen')?'middle':d.label_position
                 })
@@ -443,7 +447,7 @@ export const SankeyMenuConfigurationLinksLabel = (
             checked={labelLinkFree()}
             onChange={
               evt => {
-                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   d.label_on_path = (evt.target.checked)?false:d.label_on_path
                   d.label_position=(evt.target.checked)?'frozen':'middle'
                   d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'

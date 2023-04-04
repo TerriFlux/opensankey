@@ -47,7 +47,7 @@ export const OpenSankeyMenuConfigurationNodes = (
 
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
-    'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes),
+    'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes,false,'default'),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
   }
 

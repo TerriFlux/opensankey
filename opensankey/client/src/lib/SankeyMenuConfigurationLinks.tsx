@@ -44,8 +44,8 @@ export const OpenSankeyMenuConfigurationLinks = (
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_value,set_displayed_value),
-    'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items),
-    'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t),
+    'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default'),
+    'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default'),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
   }
 
