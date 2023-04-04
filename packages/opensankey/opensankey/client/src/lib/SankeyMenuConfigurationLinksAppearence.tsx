@@ -11,35 +11,36 @@ export const SankeyMenuConfigurationLinksAppearence = (
   multi_selected_links:{current:SankeyLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   t:TFunction,
-  additional_link_appearence_items:JSX.Element[]
+  additional_link_appearence_items:JSX.Element[],
+  menu_for_style:boolean,
+  selected_style_link:string
 )=>{
-  const center = selected_link.current.left_horiz_shift && selected_link.current.right_horiz_shift ? (selected_link.current.left_horiz_shift + selected_link.current.right_horiz_shift) / 2 : 0.5
-  center
-
+  const parameter_to_modify=(menu_for_style)?data.style_link:data.links
+  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
 
   const dashChecked = () => {
     let dashChecked = true
-    multi_selected_links.current.map(d => {
+    selected_parameter.map(d => {
       dashChecked = (d.dashed) ? dashChecked : false
     })
     return dashChecked
   }
 
   const shiftCenter = () => {
-    if (multi_selected_links.current.length == 0) {
+    if (selected_parameter.length == 0) {
       return 0.5
     }
-    const idx = multi_selected_links.current.length-1
-    const current_link = multi_selected_links.current[idx]
+    const idx = selected_parameter.length-1
+    const current_link = selected_parameter[idx]
     return parseFloat(((current_link.left_horiz_shift + current_link.right_horiz_shift) / 2).toPrecision(2))
   }
 
   const shift = () => {
-    if (multi_selected_links.current.length == 0) {
+    if (selected_parameter.length == 0) {
       return 0.1
     }
-    const idx = multi_selected_links.current.length-1
-    const current_link = multi_selected_links.current[idx]
+    const idx = selected_parameter.length-1
+    const current_link = selected_parameter[idx]
     const the_shift = (current_link.right_horiz_shift - current_link.left_horiz_shift)/2
     return parseFloat(the_shift.toPrecision(2))
   }
@@ -48,25 +49,25 @@ export const SankeyMenuConfigurationLinksAppearence = (
     let allChecked = true
     switch (param) {
     case 'hh':
-      multi_selected_links.current.map(d => {
+      selected_parameter.map(d => {
         allChecked = (d.orientation == 'hh') ? allChecked : false
       })
       return allChecked
       break
     case 'vv':
-      multi_selected_links.current.map(d => {
+      selected_parameter.map(d => {
         allChecked = (d.orientation == 'vv') ? allChecked : false
       })
       return allChecked
       break
     case 'hv':
-      multi_selected_links.current.map(d => {
+      selected_parameter.map(d => {
         allChecked = (d.orientation == 'hv') ? allChecked : false
       })
       return allChecked
       break
     case 'vh':
-      multi_selected_links.current.map(d => {
+      selected_parameter.map(d => {
         allChecked = (d.orientation == 'vh') ? allChecked : false
       })
       return allChecked
@@ -77,10 +78,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const courbure = () => {
     let display_courbe = true
     let courbe = 0.5
-    if (multi_selected_links.current.length != 0) {
-      courbe = multi_selected_links.current[0].curvature
+    if (selected_parameter.length != 0) {
+      courbe = selected_parameter[0].curvature
     }
-    multi_selected_links.current.map((d) => {
+    selected_parameter.map((d) => {
       display_courbe = (d.curvature == courbe) ? display_courbe : false
     })
     return (display_courbe) ? courbe : 0
@@ -88,20 +89,20 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
   const linkType = (param: string) => {
     let allChecked = true
-    if (multi_selected_links.current.length != 0) {
+    if (selected_parameter.length != 0) {
       switch (param) {
       case 'courbe':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.curved) ? allChecked : false
         })
         break
       case 'arrow':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.arrow) ? allChecked : false
         })
         break
       case 'recycle':
-        multi_selected_links.current.map(d => {
+        selected_parameter.map(d => {
           allChecked = (d.recycling) ? allChecked : false
         })
         break
@@ -129,13 +130,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.couleur')} </Tooltip>}>
             <Form.Control
               type="color"
-              value={(multi_selected_links.current.length == 1) ? multi_selected_links.current[0].color : '#ffffff'}
+              value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
               onChange={
                 evt => {
-                  // selected_link.current.color = evt.target.value
+                  // selected_parameter[0].color = evt.target.value
                   const color = evt.target.value
-                  multi_selected_links.current.map(d => d.color = evt.target.value)
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
+                  selected_parameter.map(d => d.color = evt.target.value)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
                   set_data({ ...data })
                 }}/>
           </OverlayTrigger>
@@ -161,7 +162,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               }
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.dashed = evt.target.checked)
                   set_data({ ...data })
                 }}/>
           </OverlayTrigger>
@@ -189,7 +190,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkOrientation('hh')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
@@ -211,7 +212,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkOrientation('vv')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
@@ -233,7 +234,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkOrientation('vh')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
@@ -255,7 +256,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkOrientation('hv')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.orientation = evt.target.value
                   })
                   set_data({ ...data })
@@ -283,7 +284,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               onChange={
                 evt => {
                   const center = +evt.target.value/100
-                  multi_selected_links.current.forEach(d => {
+                  selected_parameter.forEach(d => {
                     let shift_gap = (d.right_horiz_shift - d.left_horiz_shift)/2
                     if (center - shift_gap < 0) {
                       shift_gap = center
@@ -323,7 +324,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                   if (shift_gap > 0.5 ) {
                     return
                   }
-                  multi_selected_links.current.forEach(d => {
+                  selected_parameter.forEach(d => {
                     let new_center_position = shiftCenter()
                     if (new_center_position - shift_gap < 0) {
                       new_center_position = shift_gap
@@ -361,7 +362,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkType('courbe')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.curved = evt.target.checked)
                   set_data({ ...data })
                 }}/>
           </OverlayTrigger>
@@ -379,7 +380,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkType('arrow')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.arrow = evt.target.checked)
                   set_data({ ...data })
                 }}/>
           </OverlayTrigger>
@@ -397,7 +398,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               checked={linkType('recycle')}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.recycling = evt.target.checked
                     d.left_horiz_shift = 0
                     d.right_horiz_shift = 0
@@ -425,14 +426,14 @@ export const SankeyMenuConfigurationLinksAppearence = (
               value={courbure()}
               onChange={
                 evt => {
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                     d.curvature = +evt.target.value
                   })
                   set_data({ ...data })
                 }}/>
           </OverlayTrigger>
         </Col>
-        <Col xs={2}>{selected_link.current.curvature}</Col>
+        <Col xs={2}>{(selected_parameter.length>0)?selected_parameter[0].curvature:0}</Col>
       </Form.Group>
       {additional_link_appearence_items}
 
