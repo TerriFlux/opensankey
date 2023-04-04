@@ -1,8 +1,8 @@
-openpyxl
-scs
-pandas
-flask
-flask_login
-flask_cors
-flask_sqlalchemy
-parameterized
+openpyxl==3.1.0
+scs==3.2.2
+pandas==1.5.3
+Flask==2.2.3
+Flask-Login==0.6.2
+Flask-Cors==3.0.10
+Flask-SQLAlchemy==3.0.3
+parameterized==0.8.1
