@@ -180,7 +180,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux,node_hspace,set_node_hspace,node_vspace,set_node_vspace)
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
-  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes)
+  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node)
   const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
   //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
@@ -247,7 +247,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection,i18next)
 
-  const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false)
+  const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
   const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
 
   const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
