@@ -7,33 +7,39 @@ export const SankeyMenuConfigurationNodesLabel = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  multi_selected_nodes:{current:SankeyNode[]},
+  menu_for_style:boolean,
+  selected_style_node:string
 )=> {
+
+  const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
+  const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
+
   const isAllLabelVisible = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.label_visible) ? true : visible)
+    selected_parameter.map(d => visible = (d.label_visible) ? true : visible)
     return visible
   }
 
   const isAllLabelWhite = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.display_style.label_color) ? true : visible)
+    selected_parameter.map(d => visible = (d.display_style.label_color) ? true : visible)
     return visible
   }
 
   const isAllNodeTotal = () => {
     let show_value = false
-    multi_selected_nodes.current.map(d => show_value = (d.show_value) ? true : show_value)
+    selected_parameter.map(d => show_value = (d.show_value) ? true : show_value)
     return show_value
   }
 
   const isAllNodeLabelValueVert = (arg: string, pos: string) => {
     let all_same = true
-    if (multi_selected_nodes.current.length > 0) {
+    if (selected_parameter.length > 0) {
       if (arg == 'vert') {
-        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_vert_valeur !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (d.display_style.label_vert_valeur !== pos) ? false : all_same)
       } else if (arg == 'horiz') {
-        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_horiz_valeur !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (d.display_style.label_horiz_valeur !== pos) ? false : all_same)
       }
     } else {
       all_same = false
@@ -44,10 +50,10 @@ export const SankeyMenuConfigurationNodesLabel = (
   const valueAllNodeLabelBox = () => {
     let display_size = true
     let size = 110
-    if (multi_selected_nodes.current.length != 0) {
-      size = multi_selected_nodes.current[0].display_style.label_box_width
+    if (selected_parameter.length != 0) {
+      size = selected_parameter[0].display_style.label_box_width
     }
-    multi_selected_nodes.current.map((d) => {
+    selected_parameter.map((d) => {
       display_size = (d.display_style.label_box_width == size) ? display_size : false
     })
     const d = (size == 0) ? '' : size
@@ -56,11 +62,11 @@ export const SankeyMenuConfigurationNodesLabel = (
 
   const isAllNodeLabelVert = (arg: string, pos: string) => {
     let all_same = true
-    if (multi_selected_nodes.current.length > 0) {
+    if (selected_parameter.length > 0) {
       if (arg == 'vert') {
-        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_vert !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (d.display_style.label_vert !== pos) ? false : all_same)
       } else if (arg == 'horiz') {
-        multi_selected_nodes.current.map(d => all_same = (d.display_style.label_horiz !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (d.display_style.label_horiz !== pos) ? false : all_same)
       }
     } else {
       all_same = false
@@ -71,10 +77,10 @@ export const SankeyMenuConfigurationNodesLabel = (
   const allNodeLabelFontSize = () => {
     let display_size = true
     let size = 11
-    if (multi_selected_nodes.current.length != 0) {
-      size = multi_selected_nodes.current[0].display_style.font_size
+    if (selected_parameter.length != 0) {
+      size = selected_parameter[0].display_style.font_size
     }
-    multi_selected_nodes.current.map((d) => {
+    selected_parameter.map((d) => {
       display_size = (d.display_style.font_size == size) ? display_size : false
     })
     return (display_size) ? size : 11
@@ -83,10 +89,10 @@ export const SankeyMenuConfigurationNodesLabel = (
   const allNodeValueFontSize = () => {
     let display_size = true
     let size = 11
-    if (multi_selected_nodes.current.length != 0) {
-      size = multi_selected_nodes.current[0].display_style.value_font_size
+    if (selected_parameter.length != 0) {
+      size = selected_parameter[0].display_style.value_font_size
     }
-    multi_selected_nodes.current.map((d) => {
+    selected_parameter.map((d) => {
       display_size = (d.display_style.value_font_size == size) ? display_size : false
     })
     return (display_size) ? size : 11
@@ -94,20 +100,20 @@ export const SankeyMenuConfigurationNodesLabel = (
 
   const isAllNodeBold = () => {
     let visible = true
-    multi_selected_nodes.current.map(d => visible = (!d.display_style.bold) ? false : visible)
-    return (multi_selected_nodes.current.length > 0) ? visible : false
+    selected_parameter.map(d => visible = (!d.display_style.bold) ? false : visible)
+    return (selected_parameter.length > 0) ? visible : false
   }
 
   const isAllNodeUpper = () => {
     let visible = true
-    multi_selected_nodes.current.map(d => visible = (!d.display_style.uppercase) ? false : visible)
-    return (multi_selected_nodes.current.length > 0) ? visible : false
+    selected_parameter.map(d => visible = (!d.display_style.uppercase) ? false : visible)
+    return (selected_parameter.length > 0) ? visible : false
   }
 
   const isAllNodeItalic = () => {
     let visible = true
-    multi_selected_nodes.current.map(d => visible = (!d.display_style.italic) ? false : visible)
-    return (multi_selected_nodes.current.length > 0) ? visible : false
+    selected_parameter.map(d => visible = (!d.display_style.italic) ? false : visible)
+    return (selected_parameter.length > 0) ? visible : false
   }
 
   return <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
@@ -125,7 +131,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='switch'
               checked={isAllLabelVisible()}
               onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -145,7 +151,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='switch'
               checked={isAllLabelWhite()}
               onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -169,7 +175,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelVert('vert', 'top')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert = 'top'
                   delete d.x_label
                   delete d.y_label
@@ -191,7 +197,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('vert', 'middle')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert = 'middle'
                   delete d.x_label
                   delete d.y_label
@@ -213,7 +219,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Bas')}
               checked={isAllNodeLabelVert('vert', 'bottom')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert = 'bottom'
                   delete d.x_label
                   delete d.y_label
@@ -241,7 +247,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelVert('horiz', 'left')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz = 'left'
                   delete d.x_label
                   delete d.y_label
@@ -263,7 +269,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('horiz', 'middle')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz = 'middle'
                   delete d.x_label
                   delete d.y_label
@@ -285,7 +291,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelVert('horiz', 'right')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz = 'right'
                   delete d.x_label
                   delete d.y_label
@@ -308,7 +314,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             disabled={!isAllLabelVisible()}
             value={allNodeLabelFontSize()}
             onChange={evt => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
               set_data({ ...data })
             }}
           />
@@ -330,7 +336,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             disabled={!isAllLabelVisible()}
             onChange={
               evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
                 set_data({ ...data })
               }
             }
@@ -346,7 +352,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             checked={isAllNodeUpper()}
             onChange={
               evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.uppercase = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.uppercase = evt.target.checked)
                 set_data({ ...data })
               }
             }
@@ -362,7 +368,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             disabled={!isAllLabelVisible()}
             onChange={
               evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
                 set_data({ ...data })
               }
             }
@@ -393,7 +399,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               onChange={evt => {
                 if (!isNaN(+evt.target.value)) {
                   const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-                  Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
                   set_data({ ...data })
                 }
               }}/>
@@ -420,7 +426,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               onChange={evt => {
                 // node.shape_visible = evt.target.checked
                 // node.node_visible = node.label_visible || node.shape_visible
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -445,7 +451,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelValueVert('vert', 'top')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert_valeur = 'top'
                 })
                 set_data({ ...data })
@@ -466,7 +472,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('vert', 'middle')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert_valeur = 'middle'
                 })
                 set_data({ ...data })
@@ -487,7 +493,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               disabled={!isAllNodeTotal()}
               checked={isAllNodeLabelValueVert('vert', 'bottom')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_vert_valeur = 'bottom'
                 })
                 set_data({ ...data })
@@ -514,7 +520,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelValueVert('horiz', 'left')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz_valeur = 'left'
                 })
                 set_data({ ...data })
@@ -534,7 +540,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('horiz', 'middle')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz_valeur = 'middle'
                 })
                 set_data({ ...data })
@@ -554,7 +560,7 @@ export const SankeyMenuConfigurationNodesLabel = (
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelValueVert('horiz', 'right')}
               onChange={() => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   d.display_style.label_horiz_valeur = 'right'
                   delete d.x_label
                   delete d.y_label
@@ -578,7 +584,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             disabled={!isAllNodeTotal()}
             value={allNodeValueFontSize()}
             onChange={evt => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
               set_data({ ...data })
             }}
           />

@@ -7,18 +7,23 @@ export const OpenSankeyConfigurationNodesAttributes = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  multi_selected_nodes:{current:SankeyNode[]},
+  menu_for_style:boolean,
+  selected_style_node:string
 ) => {
+  const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
+  const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
+  let colorOnBlur='grey'
   const isAllNodeVisible = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
+    selected_parameter.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
     return visible
   }
 
   const isAllNodeRect = () => {
     let rect = true
-    if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => rect = (d.shape !== 'rect') ? false : rect)
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => rect = (d.shape !== 'rect') ? false : rect)
     } else {
       rect = false
     }
@@ -27,8 +32,8 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const isAllNodeCircle = () => {
     let circle = true
-    if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => circle = (d.shape !== 'ellipse') ? false : circle)
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => circle = (d.shape !== 'ellipse') ? false : circle)
     } else {
       circle = false
     }
@@ -37,8 +42,8 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const isAllNodeColorSustainable = () => {
     let colorS = true
-    if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => colorS = (!d.colorSustainable) ? false : colorS)
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => colorS = (!d.colorSustainable) ? false : colorS)
     } else {
       colorS = false
     }
@@ -48,10 +53,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
   const displayedValueNodeWidth = () => {
     let display_width = true
     let width = 0
-    if (multi_selected_nodes.current.length != 0) {
-      width = multi_selected_nodes.current[0].node_width
+    if (selected_parameter.length != 0) {
+      width = selected_parameter[0].node_width
     }
-    multi_selected_nodes.current.map((d) => {
+    selected_parameter.map((d) => {
       display_width = (d.node_width == width) ? display_width : false
     })
     return (display_width) ? width : 0
@@ -60,10 +65,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
   const displayedValueNodeHeight = () => {
     let display_height = true
     let width = 0
-    if (multi_selected_nodes.current.length != 0) {
-      width = multi_selected_nodes.current[0].node_height
+    if (selected_parameter.length != 0) {
+      width = selected_parameter[0].node_height
     }
-    multi_selected_nodes.current.map((d) => {
+    selected_parameter.map((d) => {
       display_height = (d.node_height == width) ? display_height : false
     })
     return (display_height) ? width : 0
@@ -86,7 +91,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             type='switch'
             checked={isAllNodeVisible()}
             onChange={evt => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -107,10 +112,13 @@ export const OpenSankeyConfigurationNodesAttributes = (
           <Form.Control
             type='color'
             disabled={ !isAllNodeVisible()}
-            value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].color : '#ffffff'}
-            onChange={evt => {
-              const color = evt.target.value
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
+            value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
+            onChange={evt=>{
+              colorOnBlur=evt.target.value
+            }}
+            onBlur={() => {
+              const color = colorOnBlur
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -134,7 +142,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             checked={isAllNodeColorSustainable()}
             onChange={evt => {
               const checked = evt.target.checked
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -159,7 +167,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             disabled={!isAllNodeVisible()}
             checked={isAllNodeCircle()}
             onChange={evt => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -177,7 +185,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             disabled={!isAllNodeVisible()}
             checked={isAllNodeRect()}
             onChange={evt => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -202,9 +210,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
             disabled={!isAllNodeVisible()}
             onChange={
               evt => {
-                multi_selected_nodes.current.map(d => d.node_width = +evt.target.value)
+                selected_parameter.map(d => d.node_width = +evt.target.value)
                 //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
                 set_data({ ...data })
               }}/>
         </OverlayTrigger>
@@ -231,7 +239,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             onChange={
               evt => {
                 //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
                 set_data({ ...data })
               }}/>
         </OverlayTrigger>
