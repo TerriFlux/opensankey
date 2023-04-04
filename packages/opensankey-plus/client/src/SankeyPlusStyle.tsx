@@ -7,7 +7,10 @@ import {SankeyPlusNode,SankeyPlusData,SankeyPlusLink} from './types'
 import { default_node, default_link,cut_name } from 'open-sankey/dist/SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
-
+import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from 'open-sankey/dist/SankeyMenuConfigurationNodesAttributes'
+import {SankeyMenuConfigurationNodesLabel} from 'open-sankey/dist/SankeyMenuConfigurationNodesLabel'
+import {SankeyMenuConfigurationLinksAppearence} from 'open-sankey/dist/SankeyMenuConfigurationLinksAppearence'
+import {SankeyMenuConfigurationLinksLabel} from 'open-sankey/dist/SankeyMenuConfigurationLinksLabel'
 // /**
 //  * Variable that define the Menu element, it's variable and function
 //  *
@@ -48,6 +51,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
   const closeStyleEdition = () => {
     setShowStyle(false)
   }
+  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node)
   const applyStyleToNodes = () => {
     const style = data.style_node[selected_style_node]
     Object.values(data.nodes).filter(d => d.style != '' && d.style == selected_style_node).map(d => {
@@ -97,8 +101,11 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
 
             }}><FaPlus /></Button>
           </Col>:<></>}
-
-          <Col xs={5}>
+          {
+            // Drodown to select the style to modify
+            // The dropdown is not visible when sankey+ isn't activated
+          }
+          {(editable)?<Col xs={5}>
             <Dropdown>
               <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
@@ -108,7 +115,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
                 })}
               </Dropdown.Menu>
             </Dropdown>
-          </Col>
+          </Col>:<></>}
 
           {(editable)?<Col xs={1}>
             <Button
@@ -153,382 +160,11 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
 
         <Col md={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
-              <Form >
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
-                  </Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape_visible : false
-                      }
+            {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute)}
 
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape_visible = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.Couleur')}</FormLabel>
-                  </Col>
-                  <Col xs={3}>
-                    <Form.Control
-                      type='color'
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].color : '#ffffff'
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].color = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel>{t('Noeud.apparence.Forme')}</FormLabel>
-                  </Col>
-                  <Col xs={2}>
-                    <FormCheck
-                      value="ellipse"
-                      type='radio'
-                      label={t('Noeud.apparence.Cercle')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'ellipse' : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                  <Col xs={2}>
-                    <FormCheck
-                      value="rect"
-                      type='radio'
-                      label={t('Noeud.apparence.Rectangle')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].shape == 'rect' : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].shape = evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-              </Form>
-              <Form >
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      min={0} max={100}
-                      type={'number'}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].node_width : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].node_width = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormControl
-                      min={0} max={100}
-                      type={'number'}
-
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].node_height : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].node_height = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-
-
-              </Form>
-            </Tab>
-
-            <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
-              <Form>
-
-                <Row>
-                  <Col xs={6}>{t('Flux.pdl')}</Col>
-                  <Col xs={6}><Form.Select
-                    onChange={
-                      (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                        data.style_node[selected_style_node].display_style.font_family = evt.target.value
-                        set_data({ ...data })
-                      }
-                    }
-                  >
-                    {data.display_style.font_family.map((d) => {
-                      return <option
-                        key={'ff-' + d}
-                        value={d}
-                        selected={d == data.style_node[selected_style_node].display_style.font_family}
-                      >{d}</option>
-
-                    })}
-                  </Form.Select></Col>
-                </Row>
-
-                <Form.Group as={Row} >
-                  <Col xs={4}>{t('Noeud.apparence.Visibilité')}</Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].label_visible : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].label_visible = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.vdv')}</FormLabel>
-                  </Col>
-                  <Col xs={1}>
-                    <FormCheck inline
-                      type='switch'
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].show_value : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].show_value = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.tp')}</FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      min={11} max={20}
-                      type={'number'}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.font_size : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.font_size = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={3}>
-                    <FormLabel >{t('Noeud.labels.police')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.gras')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.bold : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.bold = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.maj')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.uppercase : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.uppercase = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='checkbox'
-                      label={t('LL.ita')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.italic : false
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.italic = evt.target.checked
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel>{t('Noeud.labels.cl')}</FormLabel>
-                  </Col>
-                  <Col xs={5}>
-                    <FormControl
-                      type={'number'}
-                      placeholder={'110'}
-                      min={0}
-                      max={500}
-                      value={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_box_width : 0
-                      }
-
-                      onChange={evt => {
-                        data.style_node[selected_style_node].display_style.label_box_width = +evt.target.value
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>px</Col>
-                </Form.Group>
-
-
-                <Form.Group as={Row}>
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.pv')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.haut')}
-
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'top' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'top'
-                        set_data({ ...data })
-                      }}
-
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'middle' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'middle'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Bas')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_vert == 'bottom' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_vert = 'bottom'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col xs={4}>
-                    <FormLabel >{t('Noeud.labels.ph')}</FormLabel>
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.gauche')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'left' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'left'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'middle' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'middle'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      type='radio'
-                      label={t('Noeud.labels.droite')}
-                      checked={
-                        (selected_style_node != '') ? data.style_node[selected_style_node].display_style.label_horiz == 'right' : false
-                      }
-
-                      onChange={() => {
-                        data.style_node[selected_style_node].display_style.label_horiz = 'right'
-                        set_data({ ...data })
-                      }}
-                    />
-                  </Col>
-                </Form.Group>
-              </Form>
-            </Tab>
+            {SankeyMenuConfigurationNodesLabel(t,data,set_data,{current:[]},true,'default')}
           </Tabs>
         </Col>
-        <Row>Noeuds affectés au style :{Object.values(data.nodes).filter(d => d.style == selected_style_node).map(d => d.name).join('/')}</Row>
 
       </Modal.Body>
       <Modal.Footer>
@@ -547,7 +183,8 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
   selected_link:{current:SankeyPlusLink},
   selected_style_link:string,
   set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
-  editable:boolean
+  editable:boolean,
+  additional_link_appearence_items:JSX.Element[]
 ) => { 
 
   if(selected_style_link!='default' && !editable){
@@ -599,22 +236,18 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
 
             }}><FaPlus /></Button>
           </Col>:<></>}
-
-          <Col xs={5}>
+          
+          {(editable)?<Col xs={5}>
             <Dropdown>
               <Dropdown.Toggle disabled={!editable} variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
-
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map((d,i) => {
-
                   return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
-
                 })}
-
-
               </Dropdown.Menu>
             </Dropdown>
-          </Col>
+          </Col>:<></>}
+          
 
           {(editable)?<Col xs={1}>
             <Button
@@ -643,6 +276,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
           <Col xs={10} >
 
             <FormControl
+              disabled={!editable}
               value={
                 (selected_style_link != '') ? data.style_link[selected_style_link].idLink : ''
               }
@@ -660,352 +294,13 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
         <Row>
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
-              <Tab eventKey="flux_attributes" title={t('Noeud.apparence.apparence')}>
-                <Form >
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Noeud.apparence.Visibilité')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <Form.Control
-                        type="color"
-                        value={data.style_link[selected_style_link].color}
-                        onChange={
-                          evt => {
-                            // selected_link.current.color = evt.target.value
-                            const color = evt.target.value
-                            data.style_link[selected_style_link].color = color
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Flux.apparence.grad')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <Form.Check
-                        inline
-                        type="checkbox"
-                        checked={data.style_link[selected_style_link].gradient}
-                        onChange={
-                          evt => {
-                            // selected_link.current.color = evt.target.value
-                            data.style_link[selected_style_link].gradient = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-
-
-
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel>{t('Flux.apparence.type')}:</FormLabel>
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.courbe')}
-                        checked={data.style_link[selected_style_link].curved}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].curved = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.fleche')}
-                        checked={data.style_link[selected_style_link].arrow}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].arrow = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <FormCheck
-                        type='checkbox'
-                        label={t('Flux.apparence.recy')}
-                        checked={(data.style_link[selected_style_link].recycling) ? true : false}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].recycling = evt.target.checked
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <Col>
-                      <FormLabel >{t('Flux.apparence.courbure')}</FormLabel>
-                    </Col>
-
-                    <Col>
-                      <FormControl
-
-                        min={0} max={1} step={0.01}
-                        type={'number'}
-                        value={data.style_link[selected_style_link].curvature}
-                        onChange={
-                          evt => {
-                            data.style_link[selected_style_link].curvature = +evt.target.value
-
-                            set_data({ ...data })
-                          }
-                        } />
-                    </Col>
-                    <Col sm={2}>{selected_link.current.curvature}</Col>
-                  </Form.Group>
-                  <Form.Group as={Row} >
-                    <Col sm={12}>
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Horiz-Horiz'
-                        value='hh'
-                        checked={data.style_link[selected_style_link].orientation == 'hh'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'hh'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Vert-Vert'
-                        value='vv'
-                        checked={data.style_link[selected_style_link].orientation == 'vv'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation == 'vv'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Vert-Horiz'
-                        value='vh'
-                        checked={data.style_link[selected_style_link].orientation == 'vh'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'vh'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                      <FormCheck
-                        inline
-                        name='orientation'
-                        type='radio'
-                        label='Horiz-Vert'
-                        value='hv'
-                        checked={data.style_link[selected_style_link].orientation == 'hv'}
-                        onChange={
-                          () => {
-                            data.style_link[selected_style_link].orientation = 'hv'
-                            set_data({ ...data })
-                          }
-                        }
-                      />
-                    </Col>
-                  </Form.Group>
-                </Form>
-              </Tab>
-              <Tab eventKey="label" title={t('Flux.label.label')}>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormCheck
-                      value='black'
-                      type='radio'
-                      label={t('Flux.label.len')}
-                      checked={data.style_link[selected_style_link].text_color == 'black'}
-                      onChange={
-                        () => {
-                          data.style_link[selected_style_link].text_color = 'black'
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      value='white'
-                      type='radio'
-                      label={t('Flux.label.lb')}
-                      checked={data.style_link[selected_style_link].text_color == 'white'}
-                      onChange={
-                        (evt) => {
-                          data.style_link[selected_style_link].text_color = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <FormCheck
-                      value='same_color'
-                      type='radio'
-                      label={t('Flux.label.lec')}
-                      checked={data.style_link[selected_style_link].text_color == 'color'}
-                      onChange={
-                        () => {
-                          data.style_link[selected_style_link].text_color = data.style_link[selected_style_link].color
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group >
-                  <FormCheck
-                    type='checkbox'
-                    label='Visibilité du label'
-                    checked={data.style_link[selected_style_link].label_visible}
-                    onChange={
-                      evt => {
-                        data.style_link[selected_style_link].label_visible = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel>{t('Flux.label.pl')}:</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='beginning'
-                      type='radio'
-                      label={t('Flux.label.deb')}
-                      checked={data.style_link[selected_style_link].label_position == 'beginning'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='middle'
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={data.style_link[selected_style_link].label_position == 'middle'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='end'
-                      type='radio'
-                      label={t('Flux.label.fin')}
-                      checked={data.style_link[selected_style_link].label_position == 'end'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group>
-                  <FormCheck
-                    type='checkbox'
-                    label={t('Flux.label.acf')}
-                    disabled={selected_link.current.label_position === 'frozen'}
-                    checked={data.style_link[selected_style_link].label_on_path}
-                    onChange={
-                      evt => {
-                        data.style_link[selected_style_link].label_on_path = evt.target.checked
-                        set_data({ ...data })
-                      }
-                    }
-                  />
-                </Form.Group>
-                <Form.Group as={Row} >
-                  <Col>
-                    <FormLabel>{t('Flux.label.po')}:</FormLabel>
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='below'
-                      type='radio'
-                      label={t('Flux.label.dessous')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'below'}
-
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='middle'
-                      type='radio'
-                      label={t('Noeud.labels.Milieu')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'middle'}
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Check
-                      value='above'
-                      type='radio'
-                      label={t('Flux.label.dessus')}
-                      checked={data.style_link[selected_style_link].orthogonal_label_position == 'above'}
-
-                      onChange={
-                        evt => {
-                          data.style_link[selected_style_link].orthogonal_label_position = evt.target.value
-                          set_data({ ...data })
-                        }
-                      }
-                    />
-                  </Col>
-                </Form.Group>
-              </Tab>
+              
+              {SankeyMenuConfigurationLinksAppearence(data,selected_link,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link)}
+              {SankeyMenuConfigurationLinksLabel(data,{current:[]},set_data,t,true,selected_style_link)}
+              
             </Tabs>
           </Col>
         </Row>
-        <Row>Noeuds affectés au style :{Object.values(data.links).filter(d => d.style == selected_style_link).map(d => d.idSource + '-->' + d.idTarget).join('/')}</Row>
 
       </Modal.Body>
       <Modal.Footer>

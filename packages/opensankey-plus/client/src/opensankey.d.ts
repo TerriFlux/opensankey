@@ -17,3 +17,7 @@ declare module 'react-multiselect-dropdown-bootstrap';
 declare module 'react-beforeunload';
 declare module 'lz-string';
 declare module 'd3-textwrap';
+declare module 'open-sankey/dist/SankeyMenuConfigurationNodesAttributes';
+declare module 'open-sankey/dist/SankeyMenuConfigurationNodesLabel';
+declare module 'open-sankey/dist/SankeyMenuConfigurationLinksAppearence';
+declare module 'open-sankey/dist/SankeyMenuConfigurationLinksLabel';
