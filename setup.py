@@ -62,8 +62,8 @@ class BDistWheelInfoPyCommand(wheel.bdist_wheel.bdist_wheel):
 
 
 setup(name='OpenSankey',
-      version='0.12.0dev',
-      description='Sankey Tools',
+      version='1.0.0',
+      description='OpenSankey server',
       url='git@gitlab.com:su-model/opensankey.git',
       author='Greel',
       author_email='julien.alapetite@gmail.com',
