@@ -714,7 +714,7 @@ export const drawArrows = (
     const source_node = nodes[l.idSource]
     const source_node_x = source_node.position === 'absolute' ? source_node.x : +n.x + +source_node.x
     const source_node_y = source_node.position === 'absolute' ? source_node.y : +n.y + +source_node.y
-    if ( !+d3.select(' .opensankey #' + source_node.idNode)) {
+    if ( d3.select(' .opensankey #' + source_node.idNode).empty() ) {
       continue
     }
     const node_x = n.position === 'absolute' ? n.x : +source_node.x + +n.x + +d3.select(' .opensankey #' + source_node.idNode).attr('width')
