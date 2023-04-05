@@ -429,9 +429,10 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                             if group_name not in parent_tags or group_name not in node_tags:
                                 continue
                             keys_dict = {}
-                            for idx,v in enumerate(nodeTags[dim]['tags']):
+                            for idx, v in enumerate(nodeTags[dim]['tags']):
                                 keys_dict[v] = idx+1
-                            if parent_tags[group_name][0] in keys_dict and node_tags[group_name][0] in keys_dict and keys_dict[parent_tags[group_name][0]] == keys_dict[node_tags[group_name][0]]-1:
+                            if parent_tags[group_name][0] in keys_dict and node_tags[group_name][0] in keys_dict and\
+                                keys_dict[parent_tags[group_name][0]] == keys_dict[node_tags[group_name][0]]-1:
                                 if group_name not in new_node['dimensions']:
                                     new_node['dimensions'][group_name] = {}
                                 new_node['dimensions'][group_name]['parent_name'] = nodes[parent_name]['idNode']
