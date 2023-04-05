@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row } from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, ToggleButton,Row } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -15,7 +15,7 @@ import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
-import Draggable from 'react-draggable';
+import Draggable from 'react-draggable'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -462,11 +462,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     node = default_node(data)
   }
 
-  const props = {
-    scroll: true,
-    backdrop: false,
-  }
-
   const menuButton = () => {
     if (show_nav) {
       return t('Menu.confSankey')
@@ -530,8 +525,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
       }
-    <Draggable>
-          <div style={{"display":(show_nav)?'flex':'none',width:'33%',
+      <Draggable>
+        <div style={{'display':(show_nav)?'flex':'none',width:'33%',
           'position': 'fixed',
           'flexDirection': 'column',
           'backgroundColor': '#fff',
@@ -542,19 +537,19 @@ const Menu: FunctionComponent<MenuTypes> = (
           'padding':'0.5rem'
 
         }}
-          >
-            <h3 style={{
-                 'borderBottom':' 1px solid #eceeef',
-                 'lineHeight':'1.5rem',
-                 'alignItems':'center',
-                 'padding':'1rem'
-            }}>{menuButton()}</h3>
-            <SankeyConfigurationMenu
-                nav_item_active={nav_item_active}
-                accordion_ref={accordion_ref}
-                configuration_menus={configurations_menus} />
+        >
+          <h3 style={{
+            'borderBottom':' 1px solid #eceeef',
+            'lineHeight':'1.5rem',
+            'alignItems':'center',
+            'padding':'1rem'
+          }}>{menuButton()}</h3>
+          <SankeyConfigurationMenu
+            nav_item_active={nav_item_active}
+            accordion_ref={accordion_ref}
+            configuration_menus={configurations_menus} />
               
-          </div>
+        </div>
       </Draggable>
 
       {
