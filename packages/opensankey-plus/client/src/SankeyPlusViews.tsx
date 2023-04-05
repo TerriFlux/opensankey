@@ -99,7 +99,7 @@ export const nextView = (
   node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
   link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) =>void,
   setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
@@ -117,18 +117,18 @@ export const nextView = (
   })
   if (ind < Object.keys(views).length - 1) {
     const copy = views[ind + 1].view_data as SankeyPlusData
-    const time_to_set_view = animate_view_changement(data,data, copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-    setTimeout(function () {
-      // set_view(views[ind + 1].id)
-      // set_data({ ...data })
-    }, time_to_set_view)
+    //const time_to_set_view = animate_view_changement(data,data, copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+    // setTimeout(function () {
+    //   // set_view(views[ind + 1].id)
+    //   // set_data({ ...data })
+    // }, time_to_set_view)
     setTimeout(function () {
       nextView(
         copy,set_data, views,set_view, views[ind + 1].id,node_color,link_color,multi_selected_nodes,
         setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
         drawArrows,drawCurve,link_text
       )
-    }, time_to_set_view + 1000)
+    }, 1000)
   }
 }
 
@@ -141,8 +141,8 @@ const animate_view_changement = (
   scale:(t:number)=>number,inv_scale:(t:number)=>number,
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) =>void,
+  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog,getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue) =>void,
   link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
   test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
   min_thickness: number,
@@ -242,7 +242,7 @@ const animate_view_changement = (
 
   //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-  Object.values(new_nodes).map(n => setNodeHeight(n, data_v2.nodes, data_v2.links, data_v2.nodeTags,data,scale,inv_scale))
+  Object.values(new_nodes).map(n => setNodeHeight(n, data_v2.nodes, data_v2.links, data_v2.nodeTags,data,scale,inv_scale,getLinkValue))
 
   //----------------ICON-----------------
 
@@ -349,7 +349,7 @@ const animate_view_changement = (
     })
     .attr('pointer-events', 'auto')
     .attr('stroke-dasharray', d => {
-      return strokeDasharray(d,data)
+      return strokeDasharray(d,data,getLinkValue)
     })
 
   const paths = gg_links.append('path')
@@ -505,6 +505,12 @@ const animate_view_changement = (
     })
 
     .attr('stroke', l => {
+      if (d3.select(' .opensankey #' + l.idSource).empty()) {
+        return link_color(l,data_v2)
+      }
+      if (d3.select(' .opensankey #' + l.idTarget).empty()) {
+        return link_color(l,data_v2)
+      }
       const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
       const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
       const width_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('width')
@@ -859,7 +865,7 @@ const animate_view_changement = (
   let error_msg: { text?: string | undefined } | undefined
 
   paths.attr('d', d => {
-    setNodesHeight(data_v2,data_v2.nodes, new_links, d, data_v2.nodeTags)
+    setNodesHeight(data_v2,data_v2.nodes, new_links, d, data_v2.nodeTags,getLinkValue)
     return drawCurve(data_v2,
       data_v2.nodes, new_links, data_v2.display_style,
       data_v2.nodeTags, d, error_msg,{current:([] as SankeyPlusLink[])},link_text,sankey_plus_min_width_and_height,getLinkValue,drawArrows
@@ -1028,8 +1034,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
     node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
     link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
     multi_selected_nodes:{current:SankeyPlusNode[]},
-    setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-    setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
+    setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) =>void,
+    setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog,getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue) =>void,
     scale:(t:number)=>number,inv_scale:(t:number)=>number,
     getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
     link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
@@ -1045,8 +1051,8 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number) =>void,
-  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog) =>void,
+  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) =>void,
+  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog,getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue) =>void,
   link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
   test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
   min_thickness: number,
@@ -1319,12 +1325,11 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
           if (ind > 0) {
             const copy = data.view[ind - 1].view_data as SankeyPlusData
-            const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-            setTimeout(function () {
-              set_view(data.view[ind - 1].id)
-              set_data({...viewOfData(data,data.view[ind - 1].id)})
-
-            }, time_to_set_view)
+            // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+            // setTimeout(function () {
+            set_view(data.view[ind - 1].id)
+            set_data({...viewOfData(data,data.view[ind - 1].id)})
+            // }, time_to_set_view)
           }
         } else if (e.key == 'ArrowDown') {
           //Cherche la position de la vue sélectionné dans le tableau de vue
@@ -1337,11 +1342,11 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
           if (ind < Object.keys(data.view).length - 1) {
             const copy = data.view[ind + 1].view_data as SankeyPlusData
           
-            const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-            setTimeout(function () {
-              set_view(data.view[ind + 1].id)
-              set_data({...viewOfData(data,data.view[ind + 1].id)})
-            }, time_to_set_view)
+            // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+            // setTimeout(function () {
+            set_view(data.view[ind + 1].id)
+            set_data({...viewOfData(data,data.view[ind + 1].id)})
+            // }, time_to_set_view)
           }
         } else if (e.key == 'p') {
           //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
