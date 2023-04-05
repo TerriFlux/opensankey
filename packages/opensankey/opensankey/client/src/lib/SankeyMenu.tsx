@@ -327,7 +327,7 @@ export const OpenSankeyMenus = (
           set_show_save_json(true)
         }} >JSON</Dropdown.Item>
         {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
-        <Dropdown.Item onClick={()=>clickSaveExcel(url_prefix,data)} >Excel</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
         {externale_save_item}
       </NavDropdown>
       <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
