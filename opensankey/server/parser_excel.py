@@ -674,8 +674,11 @@ def save_excel(
                 if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
                     # level = node['dimensions'][levelTag]['level']
                     parent_id = node['dimensions'][levelTag]['parent_name']
-                    parent_name =\
-                        [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+                    parent_names =\
+                        [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+                    if len(parent_names) == 0:
+                        continue
+                    parent_name = parent_names[0]
                 else:
                     continue
                 parent_rows =\
@@ -711,8 +714,11 @@ def save_excel(
                 if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
                     # level = node['dimensions'][levelTag]['level']
                     parent_id = node['dimensions'][levelTag]['parent_name']
-                    parent_name = \
-                        [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id][0]
+                    parent_names =\
+                        [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+                    if len(parent_names) == 0:
+                        continue
+                    parent_name = parent_names[0]
                 else:
                     continue
                 parent_rows = [k for k in range(len(nodes)) if nodes[k][nodes_cols.index(NODES_NODE)] == parent_name]
