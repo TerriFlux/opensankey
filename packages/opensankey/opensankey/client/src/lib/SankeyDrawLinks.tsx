@@ -362,7 +362,7 @@ export const OpenSankeyDrawLinks = (
       )
       .on('mouseover', function (event, d) {
         // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
-        if(linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes)<15){
+        if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes)<15){
           d3.select('.link#'+d.idLink).attr('stroke-width','15')
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 5')
@@ -392,7 +392,7 @@ export const OpenSankeyDrawLinks = (
       })
       .on('mouseout', function (event, d) {
         // Quand on quitte le survole des flux petit : remet la taille du flux a sa valeur originel
-        if(linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes)<15){
+        if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes)<15){
           d3.select('.link#'+d.idLink).attr('stroke-width',linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes))
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','5, 5')
