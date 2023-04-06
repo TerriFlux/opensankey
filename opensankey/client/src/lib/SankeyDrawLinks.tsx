@@ -156,7 +156,6 @@ export const OpenSankeyDrawLinks = (
     }
     const link_values = getLinkValue(data, l.idLink)
     const is_free = link_values.extension!.free_mini !== undefined &&
-                    +(link_values.extension!.free_mini) == 0 &&
                     data.show_structure !== 'free_interval' &&
                     data.show_structure !== 'free_value' &&
                     !link_values.extension!.free_visible

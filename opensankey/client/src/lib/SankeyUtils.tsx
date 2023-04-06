@@ -335,7 +335,6 @@ export const compute_total_offsets = (
         return
       }
       const is_free = extension.free_mini !== undefined && 
-                      +extension.free_mini == 0 &&
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
@@ -364,7 +363,6 @@ export const compute_total_offsets = (
         return
       }
       const is_free = extension.free_mini !== undefined &&
-                      +extension.free_mini == 0 &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
@@ -394,7 +392,6 @@ export const compute_total_offsets = (
         return
       }
       const is_free = extension.free_mini !== undefined &&
-                      +extension.free_mini == 0 &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
@@ -424,7 +421,6 @@ export const compute_total_offsets = (
         return
       }
       const is_free = extension.free_mini !== undefined &&
-                      +extension.free_mini == 0 &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
