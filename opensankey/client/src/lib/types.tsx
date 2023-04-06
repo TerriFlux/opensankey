@@ -178,7 +178,7 @@ export const SankeyDataPropTypes = {
 
   // icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
-  show_structure: PropTypes.oneOf(['structure','data','reconciled','free']).isRequired,
+  show_structure: PropTypes.oneOf(['structure','data','reconciled','free_value','free_interval']).isRequired,
   //show_data: PropTypes.bool.isRequired,
   fit_screen: PropTypes.bool.isRequired,
   height: PropTypes.number.isRequired,
