@@ -179,6 +179,10 @@ export const complete_sankey_data = (
   compute_initial_colors(data)
   convert_boolean(data)
   compute_flux_max(data)
+
+  if (data.show_structure == 'free') {
+    data.show_structure = 'free_interval'
+  }
 }
 
 export const compute_initial_colors = (

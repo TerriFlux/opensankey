@@ -2166,8 +2166,12 @@ export const min_width_and_height = (data:SankeyData) => {
     }else if(n.display_style.label_horiz=='middle'){
       width_label=0
     }
+    let node_height = 0
+    if (!d3.select(' .opensankey #' + n.idNode).empty()) {
+      node_height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+    }
 
-    height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
+    height = (n.y && n.node_visible) ? Math.max(height, n.y + node_height) : height
     width = (n.x && n.node_visible) ? Math.max(width, n.x+width_label) : width
   })
 

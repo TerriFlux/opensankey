@@ -83,8 +83,6 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={exemple_menu}
             formations_menu={formations_menu}
             logo={logo}
-            token={true}
-            set_token={()=>null}
           />
         </>,
         document.getElementById('react-container')
@@ -97,8 +95,6 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={{}}
             formations_menu={{}}
             logo={logo}
-            token={true}
-            set_token={()=>null}
           />
         </>,
         document.getElementById('react-container')
@@ -127,8 +123,6 @@ if (!window.SankeyToolsStatic) {
         exemple_menu={{}}
         formations_menu={{}}
         logo={logo}
-        token={true}
-        set_token={()=>null}
       />
       {window.sankey.footer ? (
         <div id="copyright">
