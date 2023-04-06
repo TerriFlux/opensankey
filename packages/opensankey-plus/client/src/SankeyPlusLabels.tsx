@@ -283,10 +283,12 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
     let height = 0
     let width = 0
     Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
-      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
+      const node_height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+      height = (n.y && n.node_visible) ? Math.max(height, n.y+node_height) : height
       width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
     })
-  
+
+
     Object.values(data.labels).forEach(n => {
       height =  Math.max(height, n.y+n.label_height) 
       width = Math.max(width, (n.x+n.label_width))
