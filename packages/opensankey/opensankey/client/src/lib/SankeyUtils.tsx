@@ -1050,7 +1050,7 @@ export const setSelectedTags = (
       node.node_visible = node.display && true
     }
   })
-  if (!sankey_data.show_structure) {
+  if (sankey_data.show_structure !== 'structure') {
     hideNullFluxNodes(sankey_data,getLinkValue)
   }
 }
