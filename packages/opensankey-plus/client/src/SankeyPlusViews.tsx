@@ -457,8 +457,11 @@ const animate_view_changement = (
         pos_x_src = nodes[l.idSource].x
         pos_y_src = nodes[l.idSource].y
       }
-
-      const is_free = getLinkValue(data, l.idLink).extension!.free_mini !== undefined && +getLinkValue(data, l.idLink).extension!.free_mini === 0 && data_v2.show_structure !== 'free'
+      const link_values = getLinkValue(data, l.idLink)
+      const is_free = link_values.extension!.free_mini !== undefined &&
+                      data_v2.show_structure !== 'free_interval' &&
+                      data.show_structure !== 'free_value' &&
+                      !link_values.extension!.free_visible
       if (is_free) {
         return 5
       }
