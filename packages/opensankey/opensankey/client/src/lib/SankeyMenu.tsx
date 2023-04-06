@@ -159,7 +159,7 @@ const clickSaveSVG = () => {
   svg.select('#grid').style('opacity','1')
 }
 
-const clickSavePDF = (data:SankeyData,url_prefix:string) => {
+const clickSavePDF = (data:SankeyData) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
@@ -178,7 +178,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
   form_data.append('svg', blob)
 
   const path = window.location.href
-  let url = path + url_prefix + 'sankey/save_pdf'
+  let url = path + '/opensankey/sankey/save_pdf'
   const fetchData = {
     method: 'POST',
     body: form_data
@@ -192,7 +192,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
     const fetchData = {
       method: 'POST'
     }
-    url = path + url_prefix + 'sankey/clean_pdf'
+    url = path + '/opensankey/sankey/clean_pdf'
     fetch(url, fetchData)
   }
 
@@ -202,7 +202,7 @@ const clickSavePDF = (data:SankeyData,url_prefix:string) => {
     .then(showFile).then(cleanFile)
 }
 
-const clickSavePNG = (data:SankeyData,url_prefix:string) => {
+const clickSavePNG = (data:SankeyData) => {
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
@@ -221,7 +221,7 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
   form_data.append('svg', blob)
 
   const path = window.location.href
-  let url = path + url_prefix + 'sankey/save_png'
+  let url = path + '/opensankey/sankey/save_png'
   const fetchData = {
     method: 'POST',
     body: form_data
@@ -236,7 +236,7 @@ const clickSavePNG = (data:SankeyData,url_prefix:string) => {
     const fetchData = {
       method: 'POST'
     }
-    url = path + url_prefix +  'sankey/clean_png'
+    url = path + '/opensankey/sankey/clean_png'
     fetch(url, fetchData)
   }
 
@@ -332,8 +332,8 @@ export const OpenSankeyMenus = (
       </NavDropdown>
       <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
         <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePDF(data,url_prefix)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePNG(data,url_prefix)} >{t('Menu.exporter')} PNG</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
       </NavDropdown>
       <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
       <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Dropdown.Item>
