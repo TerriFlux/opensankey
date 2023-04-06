@@ -808,7 +808,12 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
   if (!visible) {
     return false
   }
-  if (test_link_value(data_s, data_s.nodes, l,getLinkValue) === 0) {
+  const link_values = getLinkValue(data_s,l.idLink)
+  const is_free = link_values.extension!.free_mini !== undefined &&
+                  data_s.show_structure !== 'free_interval' &&
+                  data_s.show_structure !== 'free_value' &&
+                  !link_values.extension!.free_visible
+  if (!is_free && test_link_value(data_s, data_s.nodes, l,getLinkValue) === 0) {
     if (data_s.display_style.null_flux) {
       return true
     }
