@@ -23,27 +23,31 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   if (data.show_structure === 'structure') {
     return '5, 5'
   }
+  const link_values = getLinkValue(data, d.idLink)
+  if (link_values === undefined) {
+    return ''
+  }
   if (data.show_structure === 'data' ) {
-    const link_value = getLinkValue(data, d.idLink)
-    if (!(link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+    if (!(link_values as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
       return '5, 5'
     }
   }
-  const link_value = getLinkValue(data, d.idLink)
-  if (link_value === undefined) {
-    return ''
-  }
-  const display_value = getLinkValue(data, d.idLink).display_value
+
+  const display_value = link_values.display_value
   if (display_value.includes('*') && data.show_structure != 'structure' ) {
     return '40, 5'
   }
-  const is_free = getLinkValue(data, d.idLink).extension?.free_mini !== undefined && +(getLinkValue(data, d.idLink).extension?.free_mini ??false) == 0 && data.show_structure !== 'free'
-  if (d.dashed || is_free) {
+  const is_free = link_values.extension?.free_mini !== undefined &&
+                 data.show_structure !== 'free_value' && 
+                 data.show_structure !== 'free_interval' &&
+                 !link_values.extension!.free_visible
+  if (d.dashed || is_free ) {
     return '5, 5'
   } else {
     return ''
   }
 }
+
 // Function that return the Y position of link label
 export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
@@ -99,7 +103,11 @@ export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>num
     pos_x_src = nodes[l.idSource].x
     pos_y_src = nodes[l.idSource].y
   }
-  const is_free = getLinkValue(data, l.idLink).extension?.free_mini !== undefined && +(getLinkValue(data, l.idLink).extension?.free_mini ??false) == 0 && data.show_structure !== 'free'
+  const link_values = getLinkValue(data, l.idLink)
+  const is_free = link_values.extension!.free_mini !== undefined 
+                  && data.show_structure !== 'free_interval'
+                  && data.show_structure !== 'free_value'
+                  && !link_values.extension!.free_visible
   if (is_free) {
     return 5
   }  

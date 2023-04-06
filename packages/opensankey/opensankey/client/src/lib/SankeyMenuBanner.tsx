@@ -1093,7 +1093,8 @@ export const OpenSankeyMenuBanner = (
             <option key='structure'  value='structure' >Structure</option>
             <option key='data'       value='data'      >Données collectées</option>
             <option key='reconciled' value='reconciled'>Données réconciliées</option>
-            <option key='free'       value='free'      >Données réconciliées+flux indéterminées</option>
+            <option key='free_interval' value='free_interval' >Données réconciliées+flux indéterminées (intervalles)</option>
+            <option key='free_value' value='free_value' >Données réconciliées+flux indéterminées (valeurs)</option>
           </Form.Select>
         </Col>
       </FormGroup>
