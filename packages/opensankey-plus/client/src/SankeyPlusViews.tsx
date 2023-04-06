@@ -1021,7 +1021,11 @@ const branchAnimateForView = (
     })
 }
 
-export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
+export const keyHandler = (
+  e: KeyboardEvent,
+  current:boolean,
+  data:SankeyPlusData,
+  view_data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyPlusLink[]},
   set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
@@ -1064,7 +1068,32 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string
 
 ) => {
-  
+  if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
+    e.preventDefault()
+
+    if (current) {
+      const new_ind = 'view_' + String(new Date().getTime())
+      const copy = JSON.parse(JSON.stringify(data))
+      copy.view = []
+      data.view.push({
+        id: new_ind,
+        view_data: copy,
+        nom: 'data_' + new_ind,
+        details: ''
+      })
+      set_show_toast(true)
+      setTimeout(function () {
+        set_show_toast(false)
+      }, 3000)
+    } else {
+      data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(view_data))
+      set_show_toast(true)
+      setTimeout(function () {
+        set_show_toast(false)
+      }, 3000)
+    }
+  }
+
   if (current) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
       if (e.key == 'ArrowUp') {
@@ -1166,25 +1195,7 @@ export const keyHandler = (e: KeyboardEvent,current:boolean,data:SankeyPlusData,
         button_ref.current.click()
       }
       //set_show_nav(false)
-    } else if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
-      e.preventDefault()
-
-      if (current) {
-        const new_ind = 'view_' + String(new Date().getTime())
-        const copy = JSON.parse(JSON.stringify(data))
-        copy.view = []
-        data.view.push({
-          id: new_ind,
-          view_data: copy,
-          nom: 'data_' + new_ind,
-          details: ''
-        })
-        set_show_toast(true)
-        setTimeout(function () {
-          set_show_toast(false)
-        }, 3000)
-      }
-    }
+    } 
       // } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
       //   e.preventDefault()
       //   //va chercher les différences sauvegardées dans le localStorage
