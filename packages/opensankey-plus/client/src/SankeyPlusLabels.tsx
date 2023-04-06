@@ -283,9 +283,19 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
     let height = 0
     let width = 0
     Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
-      const node_height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+      let node_height = 0
+      if (!d3.select(' .opensankey #' + n.idNode).empty()) {
+        node_height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+      }
       height = (n.y && n.node_visible) ? Math.max(height, n.y+node_height) : height
-      width = (n.x && n.node_visible) ? Math.max(width, n.x) : width
+      // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
+      let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width
+      if(n.display_style.label_horiz=='left'){
+        width_label/=2
+      }else if(n.display_style.label_horiz=='middle'){
+        width_label=0
+      }
+      width = (n.x && n.node_visible) ? Math.max(width, n.x+width_label) : width
     })
 
 
