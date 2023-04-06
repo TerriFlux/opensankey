@@ -2160,7 +2160,7 @@ export const min_width_and_height = (data:SankeyData) => {
   let width = 0
   Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
     // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
-    let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width
+    let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
     if(n.display_style.label_horiz=='left'){
       width_label/=2
     }else if(n.display_style.label_horiz=='middle'){
