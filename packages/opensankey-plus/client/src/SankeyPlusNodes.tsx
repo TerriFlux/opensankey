@@ -227,7 +227,6 @@ export const SankeyPlusNodeIcon = (
 
 const branchAnimate = (
   data:SankeyPlusData,
-  set_animating: (b:boolean)=>void,
   nodeData: SankeyPlusNode,
   nodeDisplay: string[]
 ) => {
@@ -265,11 +264,6 @@ const branchAnimate = (
     .on('end', function (this) {
       const idLink = d3.select(this).attr('id')
       const idTarget = data.links[idLink].idTarget
-      if (data.nodes[idTarget].outputLinksId.length===0) {
-        set_animating(true)
-      } else {
-        set_animating(false)          
-      }
       // Modification des arrows après l'animation
       const arrow=d3.select(' .opensankey #arrow_'+idLink)
       if(arrow!==undefined && arrow!= null){        
@@ -291,12 +285,32 @@ const branchAnimate = (
         const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
         max=(tmp>max)?tmp:max
         setTimeout(()=>{
-          branchAnimate(data,set_animating,data.nodes[idTarget], nodeDisplay)
+          branchAnimate(data,data.nodes[idTarget], nodeDisplay)
         },max*2000)
-      } else {
-        set_animating(false)
-      }
+      } 
     })
+}
+
+const calcPath = (
+  data: SankeyPlusData,
+  nodes: { [node_id: string]: SankeyPlusNode },
+  node: SankeyPlusNode,
+  new_links: string[],
+) => {
+  // let number_new_path=0
+  let long = 0
+  const links_present = node.outputLinksId.filter(o => new_links.includes(o))
+  
+  if (links_present.length > 0) {
+    long += 1
+    links_present.forEach(d => {
+      const n = nodes[data.links[d].idTarget]
+      const lng = calcPath(data,nodes, n, new_links) as number
+      long += isNaN(lng) ? 0 : lng
+
+    })
+    return long
+  }
 }
 
 const node_mouse_click=(
@@ -316,7 +330,22 @@ const node_mouse_click=(
     d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
     const dd=(d as SankeyPlusNode)
     const nodeDisplay = [(d as SankeyPlusNode).idNode]
-    branchAnimate(data,set_animating,dd,nodeDisplay)
+    branchAnimate(data,dd,nodeDisplay)
+
+    const visible_links = Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible ).map(l=>l.idLink)
+    const start_point = Object.values(data.nodes).filter(f => (f.inputLinksId.filter(i => visible_links.includes(i)).length == 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0))
+    let time_to_animate = 500
+    Object.values(data.nodes).filter(f => {
+      return (f.inputLinksId.filter(i => visible_links.includes(i)).length == 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0)})
+    //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
+    if (start_point.length > 0) {
+      let nb_animation = calcPath(data,data.nodes, start_point[0], visible_links)
+      nb_animation = (nb_animation !== undefined) ? nb_animation : 0
+      time_to_animate += nb_animation * 2000
+    }
+    setTimeout(function () {
+      set_animating(false)
+    }, time_to_animate)
   }
 }
 
@@ -387,7 +416,6 @@ export const SankeyPlusDrawNodesIcon = (
 ) => {
   const branchAnimate = (
     data:SankeyPlusData,
-    set_animating:(b:boolean)=>void,
     nodeData: SankeyPlusNode,
     nodeDisplay: string[]
   ) => {
@@ -425,11 +453,6 @@ export const SankeyPlusDrawNodesIcon = (
       .on('end', function (this) {
         const idLink = d3.select(this).attr('id')
         const idTarget = data.links[idLink].idTarget
-        if (data.nodes[idTarget].outputLinksId.length===0) {
-          set_animating(true)
-        } else {
-          set_animating(false)          
-        }
         // Modification des arrows après l'animation
         const arrow=d3.select(' .opensankey #arrow_'+idLink)
         if(arrow!==undefined && arrow!= null){        
@@ -450,7 +473,7 @@ export const SankeyPlusDrawNodesIcon = (
           const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
           max=(tmp>max)?tmp:max
           setTimeout(()=>{
-            branchAnimate(data,set_animating,data.nodes[idTarget], nodeDisplay)
+            branchAnimate(data,data.nodes[idTarget], nodeDisplay)
           },max*2000)
         } 
       })
