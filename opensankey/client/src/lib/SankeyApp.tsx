@@ -310,7 +310,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   }
 
   // Call the function that add nodes to the sankey
-  const draw_nodes=OpenSankeyDrawNodes(data,set_data,
+  OpenSankeyDrawNodes(data,set_data,
     nodes_accordion_ref,links_accordion_ref,
     multi_selected_nodes,multi_selected_links,
     mode_selection,
@@ -324,11 +324,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
-
-
-
   // Call the function that add links to the sankey
-  const draw_links=OpenSankeyDrawLinks(
+  OpenSankeyDrawLinks(
     data,links_accordion_ref,
     multi_selected_links,
     mode_selection,
@@ -343,9 +340,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   const shortcut_modale=OpenSankeyModalShortcut(t,showShortcut,setshowShortcut,[])
 
-
-
-  const draw_legend=OpenSankeyDrawLegend(data,getLinkValue)
+  OpenSankeyDrawLegend(data,getLinkValue)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
@@ -471,6 +466,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           (show_draw ) ? (<SankeyDraw
             data={data}
             set_data={set_data}
+            animation={false}
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_links={multi_selected_links}
             mode_selection={mode_selection}
@@ -481,9 +477,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_show_agregation={set_show_agregation}
             agregation_node={agregation_node}
             is_agregation={is_agregation}
-            draw_nodes={draw_nodes}
-            draw_links={draw_links}
-            draw_legend={draw_legend}
             set_alt_key_pressed={set_alt_key_pressed}
             min_width_and_height={min_width_and_height}
             getLinkValue={getLinkValue}
