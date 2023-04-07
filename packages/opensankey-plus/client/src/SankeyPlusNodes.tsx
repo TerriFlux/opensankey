@@ -1,11 +1,11 @@
 import React,{useEffect} from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab } from "react-bootstrap"
+import { Col, Form, FormCheck, FormLabel, Row,Tab } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {node_color,removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
-import {  getLinkValue,test_link_value } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,test_link_value,node_color } from 'open-sankey/dist/SankeyUtils'
 export const SankeyPlusNodesAttributes = (
   t:TFunction,
   data:SankeyPlusData,
