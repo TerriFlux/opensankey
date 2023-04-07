@@ -175,7 +175,7 @@ export const OpenSankeyDrawLegend = (
     })
   }
 
-  useEffect(()=>{drawLegend()})
+  drawLegend()
         
   return (
     <g className='g_legend' id='g_legend'></g>

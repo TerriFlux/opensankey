@@ -344,10 +344,7 @@ export const OpenSankeyDrawNodes = (
       sankeyTooltip.style('opacity', 0)
     }
   }
-    
   
-
-
     
   const add_nodes = (
     static_sankey: boolean,
@@ -480,10 +477,8 @@ export const OpenSankeyDrawNodes = (
 
 
   }
-  useEffect(()=>{
-    
-    add_nodes(static_sankey)
-  })
+
+  add_nodes(static_sankey)
         
   return (
     <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

@@ -125,10 +125,7 @@ export const OpenSankeyDrawNodesLabel = (
       .call(dragNodeTextEventWidthBoxEvent(data,set_data))
 
   }
-  useEffect(()=>{
-    add_nodes_label()
-  })
-        
-  
+  add_nodes_label()
+
 }
 

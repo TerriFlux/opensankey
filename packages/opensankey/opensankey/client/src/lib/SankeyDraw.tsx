@@ -13,7 +13,7 @@ window.d3 = d3
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-
+  animation:PropTypes.bool.isRequired, 
 
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
@@ -29,10 +29,6 @@ const SankeyDrawPropTypes = {
   agregation_node:PropTypes.string.isRequired, 
   is_agregation:PropTypes.bool.isRequired, 
 
-  draw_nodes:PropTypes.element.isRequired,
-  draw_links:PropTypes.element.isRequired,
-  draw_legend:PropTypes.element.isRequired,
-
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
@@ -45,7 +41,7 @@ const SankeyDrawPropTypes = {
 
 export const SankeyDrawDefaultProps = {
   set_data: () => null,
-
+  animation: false,
 
   multi_selected_nodes: {current : []},
   multi_selected_links: {current : []},
@@ -60,10 +56,6 @@ export const SankeyDrawDefaultProps = {
   agregation_node:'',
   is_agregation:false,
 
-  draw_nodes:<></>,
-  draw_links:<></>,
-  draw_labels:<></>,
-  draw_legend:<></>,
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
   getLinkValue:()=>[],
@@ -77,14 +69,13 @@ type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   set_data = SankeyDrawDefaultProps.set_data,
-
+  animation,
   multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
   mode_selection,set_mode_selection,first_selected_node,set_first_selected_node,
   show_agregation, set_show_agregation,
   agregation_node,
   is_agregation,
-  draw_nodes,draw_links,draw_legend,
   set_alt_key_pressed,min_width_and_height,
   getLinkValue,token,set_show_toast_limit_node
 }) => {
@@ -168,6 +159,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   useEffect(() => {
+    if (animation) {
+      return
+    }
     [data.width, data.height] = min_width_and_height(data)
     removeAnimate()
     d3.select('body').style('background-color',data.couleur_fond_sankey)
@@ -360,9 +354,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           }}>
             <g className='grid' id='grid'></g>
-            {draw_legend}
-            {draw_nodes}
-            {draw_links}
+            <g className='g_legend' id='g_legend'></g>
+            <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+            <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
           </svg>
         </div>
       </div>

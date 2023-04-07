@@ -795,13 +795,8 @@ export const OpenSankeyDrawLinks = (
     link.label_position = 'frozen'
   }
 
-
-
-
-
-  useEffect(()=>{
-    add_links(static_sankey,linkStroke,drawArrows)
-  })
+  add_links(static_sankey,linkStroke,drawArrows)
+  
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
   </>
