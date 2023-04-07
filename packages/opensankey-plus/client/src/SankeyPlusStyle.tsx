@@ -41,11 +41,11 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
   selected_style_node:string,
   set_selected_style_node:React.Dispatch<React.SetStateAction<string>>,
   editable:boolean
-  ) => { 
+) => { 
 
-    if(selected_style_node!='default' && !editable){
-      set_selected_style_node('default')
-    }
+  if(selected_style_node!='default' && !editable){
+    set_selected_style_node('default')
+  }
 
 
   const closeStyleEdition = () => {

@@ -68,25 +68,26 @@ export const sankey_draw_view = (
 ) => {
 
   return <SankeyDraw
-  data={viewOfData(data,view)}
-  set_data={()=>null}
-  multi_selected_nodes={multi_selected_nodes}
-  multi_selected_label={multi_selected_label}
-  multi_selected_links={multi_selected_links}
-  mode_selection={mode_selection}
-  set_mode_selection={set_mode_selection}
-  first_selected_node={{}}
-  set_first_selected_node={set_first_selected_node}
-  show_agregation={false} 
-  set_show_agregation={set_show_agregation}
-  agregation_node={''}
-  is_agregation={false}
-  draw_nodes={draw_nodes}
-  draw_links={draw_links}
-  draw_labels={draw_labels}
-  draw_legend={draw_legend}
-  set_alt_key_pressed={set_alt_key_pressed}
-/>
+    data={viewOfData(data,view)}
+    set_data={()=>null}
+    animation={false}
+    multi_selected_nodes={multi_selected_nodes}
+    multi_selected_label={multi_selected_label}
+    multi_selected_links={multi_selected_links}
+    mode_selection={mode_selection}
+    set_mode_selection={set_mode_selection}
+    first_selected_node={{}}
+    set_first_selected_node={set_first_selected_node}
+    show_agregation={false} 
+    set_show_agregation={set_show_agregation}
+    agregation_node={''}
+    is_agregation={false}
+    draw_nodes={draw_nodes}
+    draw_links={draw_links}
+    draw_labels={draw_labels}
+    draw_legend={draw_legend}
+    set_alt_key_pressed={set_alt_key_pressed}
+  />
 }
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'p')
@@ -128,7 +129,7 @@ export const nextView = (
         setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
         drawArrows,drawCurve,link_text
       )
-    }, 1000)
+    }, 2000)
   }
 }
 
@@ -184,7 +185,7 @@ const animate_view_changement = (
     .style('font-family', d => d.display_style.font_family)
 
 
-    const ggg_nodes = gg_nodes.append('g')
+  const ggg_nodes = gg_nodes.append('g')
     .attr('id', d => 'ggg_' + d.idNode)
     .attr('class', 'ggg_nodes')
     .attr('transform', d =>nodeTransform(d,data_v2.nodes,data_v2.links))
@@ -252,9 +253,9 @@ const animate_view_changement = (
     .append('svg')
     .attr('viewBox', '0, 0, 1000, 1000')
     .attr('transform', n => {
-    const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
-    const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
-    return 'translate(' + shiftH + ',' + shiftV + ')'
+      const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
+      const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
+      return 'translate(' + shiftH + ',' + shiftV + ')'
     })
     .attr('height', n => +d3.select(' .opensankey #' + n.idNode).attr('height') * (n.iconRatio) / 100)
     .attr('width', n => +d3.select(' .opensankey #' + n.idNode).attr('width') * (n.iconRatio) / 100)
@@ -266,53 +267,53 @@ const animate_view_changement = (
 
   //------------------LABEL------------------------
   ggg_nodes
-      .append('text')
-      .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
-      .classed('node', true)
-      .classed('node_text', true)
-      .classed('test_new_file',true)
-      .attr('id', n => (n as SankeyPlusNode).idNode + '_text')
-      .attr('x',n => node_label_posX(n as SankeyPlusNode))
-      .attr('y', n => node_label_posY((n as SankeyPlusNode),data))
-      .attr('text-anchor', n => {
-        if ((n as SankeyPlusNode).x_label && data_v2.show_structure !== 'structure') {
-          return 'center'
-        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'middle') {
-          return 'middle'
-        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'left') {
-          return 'end'
-        } else if ((n as SankeyPlusNode).display_style.label_horiz == 'right') {
-          return 'start'
-        } else {
-          return 'start'
-        }
-      })
-      .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).label_visible ? 'visible' : 'hidden')
-      .style('text-align', 'center')
-      .style('font-weight', n => ((n as SankeyPlusNode).display_style.bold) ? 'bold' : 'normal')
-      .style('font-style', n => ((n as SankeyPlusNode).display_style.italic) ? 'italic' : 'normal')
-      .style('font-size', n => (n as SankeyPlusNode).display_style.font_size + 'px')
-      .style('text-transform', n => ((n as SankeyPlusNode).display_style.uppercase) ? 'uppercase' : 'none')
-      .text(n => node_label_text((n as SankeyPlusNode)))
-      .each(n => textNodeWrap((n as SankeyPlusNode),data))
+    .append('text')
+    .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
+    .classed('node', true)
+    .classed('node_text', true)
+    .classed('test_new_file',true)
+    .attr('id', n => (n as SankeyPlusNode).idNode + '_text')
+    .attr('x',n => node_label_posX(n as SankeyPlusNode))
+    .attr('y', n => node_label_posY((n as SankeyPlusNode),data))
+    .attr('text-anchor', n => {
+      if ((n as SankeyPlusNode).x_label && data_v2.show_structure !== 'structure') {
+        return 'center'
+      } else if ((n as SankeyPlusNode).display_style.label_horiz == 'middle') {
+        return 'middle'
+      } else if ((n as SankeyPlusNode).display_style.label_horiz == 'left') {
+        return 'end'
+      } else if ((n as SankeyPlusNode).display_style.label_horiz == 'right') {
+        return 'start'
+      } else {
+        return 'start'
+      }
+    })
+    .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).label_visible ? 'visible' : 'hidden')
+    .style('text-align', 'center')
+    .style('font-weight', n => ((n as SankeyPlusNode).display_style.bold) ? 'bold' : 'normal')
+    .style('font-style', n => ((n as SankeyPlusNode).display_style.italic) ? 'italic' : 'normal')
+    .style('font-size', n => (n as SankeyPlusNode).display_style.font_size + 'px')
+    .style('text-transform', n => ((n as SankeyPlusNode).display_style.uppercase) ? 'uppercase' : 'none')
+    .text(n => node_label_text((n as SankeyPlusNode)))
+    .each(n => textNodeWrap((n as SankeyPlusNode),data))
 
-    // Display value of nodes
-    // Value of nodes are the maximum between the sum of input links and the sum of output links
-    ggg_nodes.append('text')
-      .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
-      .classed('node', true)
-      .classed('node_text_value', true)
-      .attr('id', n => (n as SankeyPlusNode).idNode + '_text_value')
-      .attr('x', n =>node_value_posX(n as SankeyPlusNode))
-      .attr('y', n => node_value_posY(n as SankeyPlusNode))
-      .attr('text-anchor', () => 'middle')
-      .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).show_value ? 'visible' : 'hidden')
+  // Display value of nodes
+  // Value of nodes are the maximum between the sum of input links and the sum of output links
+  ggg_nodes.append('text')
+    .attr('fill',n=>((n as SankeyPlusNode).display_style.label_color)?'white':'black')
+    .classed('node', true)
+    .classed('node_text_value', true)
+    .attr('id', n => (n as SankeyPlusNode).idNode + '_text_value')
+    .attr('x', n =>node_value_posX(n as SankeyPlusNode))
+    .attr('y', n => node_value_posY(n as SankeyPlusNode))
+    .attr('text-anchor', () => 'middle')
+    .attr('visibility', n => (n as SankeyPlusNode).node_visible && (n as SankeyPlusNode).show_value ? 'visible' : 'hidden')
     // .style('text-align', 'center')
     // .style('font-weight', n => ((n as SankeyPlusNode).display_style.bold) ? 'bold' : 'normal')
     // .style('font-style', n => ((n as SankeyPlusNode).display_style.italic) ? 'italic' : 'normal')
-      .style('font-size', n => (n as SankeyPlusNode).display_style.value_font_size + 'px')
+    .style('font-size', n => (n as SankeyPlusNode).display_style.value_font_size + 'px')
     // .style('text-transform', n => ((n as SankeyPlusNode).display_style.uppercase) ? 'uppercase' : 'none')
-      .text(n => textNodeValue((n as SankeyPlusNode),data,data_v2.links,data_v2.nodes))
+    .text(n => textNodeValue((n as SankeyPlusNode),data,data_v2.links,data_v2.nodes))
 
 
   Object.values(new_nodes).map(d => {
@@ -972,10 +973,10 @@ const branchAnimateForView = (
   // console.log(tmpLinks.nodes().map(d=>d3.select(d).attr('id')))
 
   tmpLinks.selectAll('.link')
-  .each(function (this) {
-    const id=d3.select(this).attr('id')
-    d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
-  })
+    .each(function (this) {
+      const id=d3.select(this).attr('id')
+      d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
+    })
 
   tmpLinks.selectAll('.link')
     .each(function (this) {
@@ -1196,190 +1197,190 @@ export const keyHandler = (
       }
       //set_show_nav(false)
     } 
-      // } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
-      //   e.preventDefault()
-      //   //va chercher les différences sauvegardées dans le localStorage
-      //   // const differences = JSON.parse(localStorage.getItem('diff') as string)
-      //   const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-      //   const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
-      //   //Si il y a des différences, prend la dernière effectuée
-      //   if (differences !== undefined && differences.length != 0) {
-      //     type difference_type = {
-      //       kind: string,
-      //       path: string[],
-      //       item: {
-      //         rhs: string,
-      //         kind: string
-      //       },
-      //       rhs: string,
-      //       index: string
-      //     }
-      //     const difference = differences.pop() as difference_type[]
-      //     //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
-      //     //La copie nous permet de reffecter une variable avec d'autre type d'objet
-      //     //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
-      //     //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
-      //     let dt = JSON.parse(JSON.stringify(data))
-      //     //Parcours les dernières modifications à effectuer
-      //     //D : Supprime un objet qui a été ajouté
-      //     //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
-      //     //A : Annule des moddification faites à des array
-      //     //E : Annule des modifications faites à des propriétées de l'objet
-      //     //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
-      //     // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
-      //     difference.map(d => {
-      //       let element_to_delete = dt
-      //       if (d['kind'] == 'D') {
-      //         let cpt = 0
-      //         d.path.map(dd => {
-      //           cpt++
-      //           if (cpt == d['path'].length) {
-      //             delete element_to_delete[dd]
-      //           } else {
-      //             element_to_delete = element_to_delete[dd]
-      //           }
-      //         })
-      //       } else if (d['kind'] == 'N') {
-      //         let cpt = 0
-      //         d.path.map(dd => {
-      //           cpt++
-      //           if (cpt == d['path'].length) {
-      //             element_to_delete[dd] = d['rhs']
-      //           } else {
-      //             element_to_delete = element_to_delete[dd]
-      //           }
-      //         })
-      //       } else if (d['kind'] == 'A') {
-      //         let cpt = 0
-      //         d.path.map(dd => {
-      //           cpt++
-      //           if (cpt == d['path'].length) {
-      //             if (d['item']['kind'] == 'N') {
-      //               element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
-      //             } else if (d['item']['kind'] == 'D') {
-      //               element_to_delete[dd].splice(d['index'], 1)
-      //             }
-      //           } else {
-      //             element_to_delete = element_to_delete[dd]
-      //           }
-      //         })
-      //       } else if (d['kind'] == 'E') {
-      //         let cpt = 0
-      //         if (d.path !== null && d.path !== undefined) {
-      //           d.path.map(dd => {
-      //             cpt++
-      //             if (cpt == d['path'].length) {
-      //               element_to_delete[dd] = d['rhs']
-      //             } else {
-      //               element_to_delete = element_to_delete[dd]
-      //             }
-      //           })
-      //         } else {
-      //           dt = d['rhs']
-      //         }
-      //       }
-      //     })
-      //     data = dt
-      //     localStorage.setItem('diff', JSON.stringify(differences))
-      //     try {
-      //       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
-      //       if (current) {
-      //         localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      //       }
-      //     } catch (e) {
-      //       localStorage.clear()
-      //     }
-      //     set_data({ ...data })
-      //   } else {
-      //     console.log('Aucune action en mémoire pour un retour en arrière')
-      //   }
-      else if(e.key as string=='Delete'){
-        e.preventDefault()
-        if(document.activeElement?.tagName!=='INPUT')
-        {   
-          multi_selected_links.current.forEach(el=>{
-            delete_link(data,el)
-          })
-          multi_selected_nodes.current.forEach(el=>{
-            delete_node(data,el)
-          })
-          multi_selected_nodes.current=[]
-          multi_selected_links.current=[]
-          set_data({...data})
-        }
-      }else if(e.key=='a' && e.ctrlKey){
-        e.preventDefault()
-
-        multi_selected_nodes.current=Object.values(data.nodes)
+    // } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
+    //   e.preventDefault()
+    //   //va chercher les différences sauvegardées dans le localStorage
+    //   // const differences = JSON.parse(localStorage.getItem('diff') as string)
+    //   const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
+    //   const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
+    //   //Si il y a des différences, prend la dernière effectuée
+    //   if (differences !== undefined && differences.length != 0) {
+    //     type difference_type = {
+    //       kind: string,
+    //       path: string[],
+    //       item: {
+    //         rhs: string,
+    //         kind: string
+    //       },
+    //       rhs: string,
+    //       index: string
+    //     }
+    //     const difference = differences.pop() as difference_type[]
+    //     //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
+    //     //La copie nous permet de reffecter une variable avec d'autre type d'objet
+    //     //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
+    //     //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
+    //     let dt = JSON.parse(JSON.stringify(data))
+    //     //Parcours les dernières modifications à effectuer
+    //     //D : Supprime un objet qui a été ajouté
+    //     //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
+    //     //A : Annule des moddification faites à des array
+    //     //E : Annule des modifications faites à des propriétées de l'objet
+    //     //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
+    //     // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
+    //     difference.map(d => {
+    //       let element_to_delete = dt
+    //       if (d['kind'] == 'D') {
+    //         let cpt = 0
+    //         d.path.map(dd => {
+    //           cpt++
+    //           if (cpt == d['path'].length) {
+    //             delete element_to_delete[dd]
+    //           } else {
+    //             element_to_delete = element_to_delete[dd]
+    //           }
+    //         })
+    //       } else if (d['kind'] == 'N') {
+    //         let cpt = 0
+    //         d.path.map(dd => {
+    //           cpt++
+    //           if (cpt == d['path'].length) {
+    //             element_to_delete[dd] = d['rhs']
+    //           } else {
+    //             element_to_delete = element_to_delete[dd]
+    //           }
+    //         })
+    //       } else if (d['kind'] == 'A') {
+    //         let cpt = 0
+    //         d.path.map(dd => {
+    //           cpt++
+    //           if (cpt == d['path'].length) {
+    //             if (d['item']['kind'] == 'N') {
+    //               element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
+    //             } else if (d['item']['kind'] == 'D') {
+    //               element_to_delete[dd].splice(d['index'], 1)
+    //             }
+    //           } else {
+    //             element_to_delete = element_to_delete[dd]
+    //           }
+    //         })
+    //       } else if (d['kind'] == 'E') {
+    //         let cpt = 0
+    //         if (d.path !== null && d.path !== undefined) {
+    //           d.path.map(dd => {
+    //             cpt++
+    //             if (cpt == d['path'].length) {
+    //               element_to_delete[dd] = d['rhs']
+    //             } else {
+    //               element_to_delete = element_to_delete[dd]
+    //             }
+    //           })
+    //         } else {
+    //           dt = d['rhs']
+    //         }
+    //       }
+    //     })
+    //     data = dt
+    //     localStorage.setItem('diff', JSON.stringify(differences))
+    //     try {
+    //       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+    //       if (current) {
+    //         localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+    //       }
+    //     } catch (e) {
+    //       localStorage.clear()
+    //     }
+    //     set_data({ ...data })
+    //   } else {
+    //     console.log('Aucune action en mémoire pour un retour en arrière')
+    //   }
+    else if(e.key as string=='Delete'){
+      e.preventDefault()
+      if(document.activeElement?.tagName!=='INPUT')
+      {   
+        multi_selected_links.current.forEach(el=>{
+          delete_link(data,el)
+        })
+        multi_selected_nodes.current.forEach(el=>{
+          delete_node(data,el)
+        })
+        multi_selected_nodes.current=[]
+        multi_selected_links.current=[]
         set_data({...data})
-    
-      }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
-        for(let item of document.getElementsByTagName('input')){
-          if(item.className.includes('form-control') && item.type=='text'){
-            item.blur()
-          }
-        }
       }
-    } else {
-      //Si nous somme dans une vue les action du clavier sont différentes :
-      //-Flêche du haut : Anime la vue vers la vue précédente
-      //-Flêche du bas : Anime la vue vers la suivante
-      //-P : Parcours les vues suvants tout en les animants
-      if (['ArrowUp', 'ArrowDown', 'p'].includes(e.key)) {
-        if(e.preventDefault){
-          e.preventDefault()
+    }else if(e.key=='a' && e.ctrlKey){
+      e.preventDefault()
+
+      multi_selected_nodes.current=Object.values(data.nodes)
+      set_data({...data})
+    
+    }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
+      for(const item of document.getElementsByTagName('input')){
+        if(item.className.includes('form-control') && item.type=='text'){
+          item.blur()
         }
-        if (e.key == 'ArrowUp') {
-          //Cherche la position de la vue sélectionné dans le tableau de vue
-          const v1 = data.view.filter(d => d.id == view)[0].id
-          let ind = -1
-          data.view.map((v, i) => {
-            ind = (v.id == v1) ? i : ind
-          })
-          //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
-          if (ind > 0) {
-            const copy = data.view[ind - 1].view_data as SankeyPlusData
-            // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-            // setTimeout(function () {
-            set_view(data.view[ind - 1].id)
-            set_data({...viewOfData(data,data.view[ind - 1].id)})
-            // }, time_to_set_view)
-          }
-        } else if (e.key == 'ArrowDown') {
-          //Cherche la position de la vue sélectionné dans le tableau de vue
-          const v1 = data.view.filter(d => d.id == view)[0].id
-          let ind = -1
-          data.view.map((v, i) => {
-            ind = (v.id == v1) ? i : ind
-          })
-          //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-          if (ind < Object.keys(data.view).length - 1) {
-            const copy = data.view[ind + 1].view_data as SankeyPlusData
-          
-            // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-            // setTimeout(function () {
-            set_view(data.view[ind + 1].id)
-            set_data({...viewOfData(data,data.view[ind + 1].id)})
-            // }, time_to_set_view)
-          }
-        } else if (e.key == 'p') {
-          //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-          const v1 = data.view.filter(d => d.id == view)[0].id
-          let ind = -1
-          data.view.map((v, i) => {
-            ind = (v.id == v1) ? i : ind
-          })
-          //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-          if (ind < Object.keys(data.view).length - 1) {
-            nextView(data,set_data, (data.view as { id: string, view_data: SankeyPlusData, nom: string }[]),set_view, data.view[ind + 1].id,node_color,link_color,multi_selected_nodes,
-              setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
-              drawArrows,drawCurve,link_text)
-          }
-        }
-        // set_data({ ...data })
       }
     }
+  } else {
+    //Si nous somme dans une vue les action du clavier sont différentes :
+    //-Flêche du haut : Anime la vue vers la vue précédente
+    //-Flêche du bas : Anime la vue vers la suivante
+    //-P : Parcours les vues suvants tout en les animants
+    if (['ArrowUp', 'ArrowDown', 'p'].includes(e.key)) {
+      if(e.preventDefault){
+        e.preventDefault()
+      }
+      if (e.key == 'ArrowUp') {
+        //Cherche la position de la vue sélectionné dans le tableau de vue
+        const v1 = data.view.filter(d => d.id == view)[0].id
+        let ind = -1
+        data.view.map((v, i) => {
+          ind = (v.id == v1) ? i : ind
+        })
+        //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
+        if (ind > 0) {
+          const copy = data.view[ind - 1].view_data as SankeyPlusData
+          // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+          // setTimeout(function () {
+          set_view(data.view[ind - 1].id)
+          set_data({...viewOfData(data,data.view[ind - 1].id)})
+          // }, time_to_set_view)
+        }
+      } else if (e.key == 'ArrowDown') {
+        //Cherche la position de la vue sélectionné dans le tableau de vue
+        const v1 = data.view.filter(d => d.id == view)[0].id
+        let ind = -1
+        data.view.map((v, i) => {
+          ind = (v.id == v1) ? i : ind
+        })
+        //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+        if (ind < Object.keys(data.view).length - 1) {
+          const copy = data.view[ind + 1].view_data as SankeyPlusData
+          
+          // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+          // setTimeout(function () {
+          set_view(data.view[ind + 1].id)
+          set_data({...viewOfData(data,data.view[ind + 1].id)})
+          // }, time_to_set_view)
+        }
+      } else if (e.key == 'p') {
+        //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
+        const v1 = data.view.filter(d => d.id == view)[0].id
+        let ind = -1
+        data.view.map((v, i) => {
+          ind = (v.id == v1) ? i : ind
+        })
+        //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+        if (ind < Object.keys(data.view).length - 1) {
+          nextView(data,set_data, (data.view as { id: string, view_data: SankeyPlusData, nom: string }[]),set_view, data.view[ind + 1].id,node_color,link_color,multi_selected_nodes,
+            setNodeHeight,setNodesHeight,scale,inv_scale,getLinkValue,link_visible,test_link_value,min_thickness,
+            drawArrows,drawCurve,link_text)
+        }
+      }
+      // set_data({ ...data })
+    }
   }
+}
    
 
 export const viewsAccordion = (
@@ -1553,10 +1554,10 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
     height_navbarAndHerowrap = 0
   }
   return(
-  <Col className='sankey-toolbar'
-  style={{'marginTop':height_navbar,'marginLeft':0}}
-  >
-    <FormGroup  as={Col} lg='auto'>
+    <Col className='sankey-toolbar'
+      style={{'marginTop':height_navbar,'marginLeft':0}}
+    >
+      <FormGroup  as={Col} lg='auto'>
         <ButtonGroup >
           <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
             const ev = document
@@ -1591,7 +1592,7 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
-return <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+  return <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
     preferenceCheck('Vis',data)
     set_data({ ...data })
   }} />

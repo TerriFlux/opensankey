@@ -15,7 +15,7 @@ export const SankeyPlusDrawLabels = (
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
   alt_key_pressed:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[]
-  ) => {
+) => {
   const add_labels = () => {
     d3.selectAll(' .opensankey #svg #g_label g').remove()
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -142,7 +142,7 @@ export const SankeyPlusDrawLabels = (
   }
     
   // Insert la balise qui contient tous les lables libres avant la balise de la légende
-  d3.select('.opensankey #svg').insert('g',"#g_legend").attr('class','g_label').attr('id','g_label')     
+  d3.select('.opensankey #svg').insert('g','#g_legend').attr('class','g_label').attr('id','g_label')     
   // Ajoute l'event au click sur la zone du dessin qui désélectionne tous les labels libres sélectionné
   d3.select('.opensankey #svg').on('click',evt=>{
     if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id')=='svg'){
@@ -156,32 +156,32 @@ export const SankeyPlusDrawLabels = (
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
-    if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
-      sankeyTooltip.style('opacity', 0)
-      if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-        button_ref.current.click()
-      }
-      d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
-      if (multi_selected_label.current.includes(d)) {
-        multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
-      } else {
-        multi_selected_label.current.push(d)
-      }
-      set_data({ ...data })
-  
-      if ( accordion_ref && accordion_ref.current) {
-        let index_LL=-1
-        //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
-        for (let i = 0; i < accordion_ref.current.children.length; i++) {
-          index_LL=(accordion_ref.current.children[i]==(accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
-        }
-        if(index_LL!=-1){
-          (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
-        }
-      }
-
+  if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
+    sankeyTooltip.style('opacity', 0)
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+      button_ref.current.click()
     }
+    d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
+    if (multi_selected_label.current.includes(d)) {
+      multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
+    } else {
+      multi_selected_label.current.push(d)
+    }
+    set_data({ ...data })
+  
+    if ( accordion_ref && accordion_ref.current) {
+      let index_LL=-1
+      //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
+      for (let i = 0; i < accordion_ref.current.children.length; i++) {
+        index_LL=(accordion_ref.current.children[i]==(accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
+      }
+      if(index_LL!=-1){
+        (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
+      }
+    }
+
   }
+}
 
 /**
  * Function used to drag the text of free label
@@ -192,57 +192,40 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
  * @returns {*}
  */
 export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)=>{
-    return d3.drag<SVGTextElement, unknown>()
-      .subject(Object).on('drag', function (event) {
-        if (alt_key_pressed) {
-          d.position_vert = ''
-          d.position_horiz = ''
-          const new_x=event.x,new_y=event.y
-          d3.select(' .opensankey #' + d.idLabel + '_text').attr('x', new_x)
-          d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)  
-          d.x_label = new_x
-          d.y_label = new_y  
-          d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-        }
-      })
-  }
-  // Function used to drag the free label
-  // To be dragged you need to select the free label
+  return d3.drag<SVGTextElement, unknown>()
+    .subject(Object).on('drag', function (event) {
+      if (alt_key_pressed) {
+        d.position_vert = ''
+        d.position_horiz = ''
+        const new_x=event.x,new_y=event.y
+        d3.select(' .opensankey #' + d.idLabel + '_text').attr('x', new_x)
+        d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)  
+        d.x_label = new_x
+        d.y_label = new_y  
+        d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
+      }
+    })
+}
+// Function used to drag the free label
+// To be dragged you need to select the free label
   
-  const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
-    d:SankeyPlusLabel,
-    data:SankeyPlusData,
-    min_width_and_height:(d:SankeyPlusData)=>number[],
-    drawGrid:(d:SankeyPlusData)=>void,
+const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
+  d:SankeyPlusLabel,
+  data:SankeyPlusData,
+  min_width_and_height:(d:SankeyPlusData)=>number[],
+  drawGrid:(d:SankeyPlusData)=>void,
     
-  )=>{
-    return (d3.drag<SVGGElement, unknown>()
-      .subject(Object).on('drag', function (event) {
-        if(multi_selected_label.current.length!=0 && multi_selected_label.current.includes(d)){
+)=>{
+  return (d3.drag<SVGGElement, unknown>()
+    .subject(Object).on('drag', function (event) {
+      if(multi_selected_label.current.length!=0 && multi_selected_label.current.includes(d)){
 
-          multi_selected_label.current.map(l=>{
-            const new_pos_x = l.x + event.dx
-            const new_pos_y = l.y + event.dy
-            l.x = new_pos_x
-            l.y = new_pos_y
-            d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
-            [data.width, data.height] = min_width_and_height(data)
-            if (data.fit_screen) {
-              const svgSankey = d3.select(' .opensankey #svg')
-              svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-            } else {
-              d3.select(' .opensankey #svg').style('width', data.width + 'px')
-            }
-        
-            d3.select(' .opensankey #svg').style('height', data.height + 'px')
-            
-          })
-        }else{
-          const new_pos_x = d.x + event.dx
-          const new_pos_y = d.y + event.dy
-          d.x = new_pos_x
-          d.y = new_pos_y
-          d3.select(' .opensankey #' + d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')');
+        multi_selected_label.current.map(l=>{
+          const new_pos_x = l.x + event.dx
+          const new_pos_y = l.y + event.dy
+          l.x = new_pos_x
+          l.y = new_pos_y
+          d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
           [data.width, data.height] = min_width_and_height(data)
           if (data.fit_screen) {
             const svgSankey = d3.select(' .opensankey #svg')
@@ -250,13 +233,30 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
           } else {
             d3.select(' .opensankey #svg').style('width', data.width + 'px')
           }
-      
+        
           d3.select(' .opensankey #svg').style('height', data.height + 'px')
-          drawGrid(data)
+            
+        })
+      }else{
+        const new_pos_x = d.x + event.dx
+        const new_pos_y = d.y + event.dy
+        d.x = new_pos_x
+        d.y = new_pos_y
+        d3.select(' .opensankey #' + d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')');
+        [data.width, data.height] = min_width_and_height(data)
+        if (data.fit_screen) {
+          const svgSankey = d3.select(' .opensankey #svg')
+          svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+        } else {
+          d3.select(' .opensankey #svg').style('width', data.width + 'px')
         }
-      }))
-  }
-  /**
+      
+        d3.select(' .opensankey #svg').style('height', data.height + 'px')
+        drawGrid(data)
+      }
+    }))
+}
+/**
    * Function to change the width and height of free label
    * To do that select a free label then dragg the border of it (the visual clue is the multi-direction pointer when hovering the border)
    *
@@ -265,28 +265,28 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
    * @param {React.Dispatch<React.SetStateAction<SankeyPlusData>>} set_data
    * @returns {*}
    */
-  export const dragLabelWidthHeightEvent=(d:SankeyPlusLabel,
-    data:SankeyPlusData,
-    set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>
-  )=>{
-    return d3.drag<SVGRectElement, unknown>()
-      .subject(Object).on('drag', function (event) {
-        if(event.dx<100 && event.dy<100){
-          data.labels[d.idLabel].label_width+=event.dx
-          data.labels[d.idLabel].label_height+=event.dy
-          set_data({...data})
-        }
-      })
-  }
-  
-  export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
-    let [width,height]=min_width_and_height(data)
-
-
-    Object.values(data.labels).forEach(n => {
-      height =  Math.max(height, n.y+n.label_height) 
-      width = Math.max(width, (n.x+n.label_width))
+export const dragLabelWidthHeightEvent=(d:SankeyPlusLabel,
+  data:SankeyPlusData,
+  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>
+)=>{
+  return d3.drag<SVGRectElement, unknown>()
+    .subject(Object).on('drag', function (event) {
+      if(event.dx<100 && event.dy<100){
+        data.labels[d.idLabel].label_width+=event.dx
+        data.labels[d.idLabel].label_height+=event.dy
+        set_data({...data})
+      }
     })
+}
   
-    return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
-  }
+export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
+  let [width,height]=min_width_and_height(data)
+
+
+  Object.values(data.labels).forEach(n => {
+    height =  Math.max(height, n.y+n.label_height) 
+    width = Math.max(width, (n.x+n.label_width))
+  })
+  
+  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
+}

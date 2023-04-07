@@ -33,78 +33,78 @@ export const SankeyPlusNodesAttributes = (
   }
   return [
     <Form.Group as={Row} >
-    <Col xs={4}>
-      <FormLabel >{t('Noeud.apparence.toScale')}</FormLabel>
-    </Col>
-    <Col xs={1}>
-      <FormCheck inline
-        type='switch'
-        checked={isAllNodeToScale()}
-        onChange={evt => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
+      <Col xs={4}>
+        <FormLabel >{t('Noeud.apparence.toScale')}</FormLabel>
+      </Col>
+      <Col xs={1}>
+        <FormCheck inline
+          type='switch'
+          checked={isAllNodeToScale()}
+          onChange={evt => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
 
-  </Form.Group>,
-  <Col xs={5}>
-    <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
-  </Col>,
-  <Form.Group as={Row} >       
-    <Col  xs={3}>
-      <FormCheck
-        value="left"
-        type='radio'
-        label={t('Noeud.apparence.toScaleLeft')}
-        disabled={!isAllNodeToScale()}
-        checked={isAllNodeNotToScaleOrientation('left')}
-        onChange={evt => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
-    <Col xs={3}>
-      <FormCheck
-        value="right"
-        type='radio'
-        label={t('Noeud.apparence.toScaleRight')}
-        disabled={!isAllNodeToScale()}
-        checked={isAllNodeNotToScaleOrientation('right')}
-        onChange={evt => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
-    <Col xs={3}>
-      <FormCheck
-        value="top"
-        type='radio'
-        label={t('Noeud.apparence.toScaleTop')}
-        disabled={!isAllNodeToScale()}
-        checked={isAllNodeNotToScaleOrientation('top')}
-        onChange={evt => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
-    <Col xs={3}>
-      <FormCheck
-        value="bottom"
-        type='radio'
-        label={t('Noeud.apparence.toScaleBottom')}
-        disabled={!isAllNodeToScale()}
-        checked={isAllNodeNotToScaleOrientation('bottom')}
-        onChange={evt => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
-  </Form.Group>]
+    </Form.Group>,
+    <Col xs={5}>
+      <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
+    </Col>,
+    <Form.Group as={Row} >       
+      <Col  xs={3}>
+        <FormCheck
+          value="left"
+          type='radio'
+          label={t('Noeud.apparence.toScaleLeft')}
+          disabled={!isAllNodeToScale()}
+          checked={isAllNodeNotToScaleOrientation('left')}
+          onChange={evt => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
+      <Col xs={3}>
+        <FormCheck
+          value="right"
+          type='radio'
+          label={t('Noeud.apparence.toScaleRight')}
+          disabled={!isAllNodeToScale()}
+          checked={isAllNodeNotToScaleOrientation('right')}
+          onChange={evt => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
+      <Col xs={3}>
+        <FormCheck
+          value="top"
+          type='radio'
+          label={t('Noeud.apparence.toScaleTop')}
+          disabled={!isAllNodeToScale()}
+          checked={isAllNodeNotToScaleOrientation('top')}
+          onChange={evt => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
+      <Col xs={3}>
+        <FormCheck
+          value="bottom"
+          type='radio'
+          label={t('Noeud.apparence.toScaleBottom')}
+          disabled={!isAllNodeToScale()}
+          checked={isAllNodeNotToScaleOrientation('bottom')}
+          onChange={evt => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
+    </Form.Group>]
 }
 
 export const SankeyPlusNodeIcon = (
@@ -227,84 +227,96 @@ export const SankeyPlusNodeIcon = (
 
 const branchAnimate = (
   data:SankeyPlusData,
+  set_animating: (b:boolean)=>void,
   nodeData: SankeyPlusNode,
   nodeDisplay: string[]
 ) => {
   
-      // Permet la progation de l'animation sur l'ensemble du Sankey
-      const nodeStart = nodeData.idNode
+  // Permet la progation de l'animation sur l'ensemble du Sankey
+  const nodeStart = nodeData.idNode
   
-      // on pourrait aussi evnetuellement faire un clone des noeuds
+  // on pourrait aussi evnetuellement faire un clone des noeuds
   d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
   d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
   
   const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-      .filter(function (d) {
+    .filter(function (d) {
       return d.idSource == nodeStart
-      })
+    })
   
   // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
   const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
   tmpLinks.selectAll('.link')
-      .each(function (this) {
+    .each(function (this) {
       const totalLength = (this as SVGGeometryElement).getTotalLength()
   
       d3.select(this)
-          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-          .attr('stroke-dashoffset', totalLength)
-          .style('stroke', function (this) {
+        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+        .attr('stroke-dashoffset', totalLength)
+        .style('stroke', function (this) {
           // on recupere les paramêtres initiaux du stroke
           return d3.select(this).attr('stroke')
-          })
+        })
   
-      })
-          .transition()
-          .duration(2000)
-          .attr('stroke-dashoffset', 0)
-          .on('end', function (this) {
-          const idLink = d3.select(this).attr('id')
-          const idTarget = data.links[idLink].idTarget
-          // Modification des arrows après l'animation
-          const arrow=d3.select(' .opensankey #arrow_'+idLink)
-          if(arrow!==undefined && arrow!= null){        
-              // const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-              const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-              const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-              if(t){
-              arrow.select('path').style('fill',t)
-              }
-          }
-          // reaffichage des link value après l'animation
-          d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-              .style('display', 'inline')
-          //Propagration de l'animation sur les flux sortant du target_node
-          // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-          if (!nodeDisplay.includes(idTarget)) {
-              nodeDisplay.push(idTarget)
-              let max=0
-              const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
-              max=(tmp>max)?tmp:max
-              setTimeout(()=>{
-              branchAnimate(data,data.nodes[idTarget], nodeDisplay)
-              },max*2000)
-          }
-          })
-  }
+    })
+    .transition()
+    .duration(2000)
+    .attr('stroke-dashoffset', 0)
+    .on('end', function (this) {
+      const idLink = d3.select(this).attr('id')
+      const idTarget = data.links[idLink].idTarget
+      if (data.nodes[idTarget].outputLinksId.length===0) {
+        set_animating(true)
+      } else {
+        set_animating(false)          
+      }
+      // Modification des arrows après l'animation
+      const arrow=d3.select(' .opensankey #arrow_'+idLink)
+      if(arrow!==undefined && arrow!= null){        
+        // const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+        const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+        const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
+        if(t){
+          arrow.select('path').style('fill',t)
+        }
+      }
+      // reaffichage des link value après l'animation
+      d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
+        .style('display', 'inline')
+      //Propagration de l'animation sur les flux sortant du target_node
+      // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+      if (!nodeDisplay.includes(idTarget)) {
+        nodeDisplay.push(idTarget)
+        let max=0
+        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
+        max=(tmp>max)?tmp:max
+        setTimeout(()=>{
+          branchAnimate(data,set_animating,data.nodes[idTarget], nodeDisplay)
+        },max*2000)
+      } else {
+        set_animating(false)
+      }
+    })
+}
 
-const node_mouse_click=(data:SankeyPlusData,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+const node_mouse_click=(
+  data:SankeyPlusData,
+  set_animating:(b:boolean)=>void,
+  event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
   if (!data.static_sankey && event.shiftKey || data.static_sankey) {
-      event.preventDefault()
-      // Animation des flux du Sankey
-      sankeyTooltip.style('opacity', 0)
-      // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
-      d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
+    event.preventDefault()
+    set_animating(true)
+    // Animation des flux du Sankey
+    sankeyTooltip.style('opacity', 0)
+    // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
+    d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
   
-      d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
-      d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
-      d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
-      const dd=(d as SankeyPlusNode)
-      const nodeDisplay = [(d as SankeyPlusNode).idNode]
-      branchAnimate(data,dd,nodeDisplay)
+    d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
+    d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
+    d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
+    const dd=(d as SankeyPlusNode)
+    const nodeDisplay = [(d as SankeyPlusNode).idNode]
+    branchAnimate(data,set_animating,dd,nodeDisplay)
   }
 }
 
@@ -316,39 +328,43 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
   let max=0
   
   if(n.idNode==target.idNode){
-      return deep-1
+    return deep-1
   }else if(next_link.length>0) {
-      next_link.map(id=>{
+    next_link.map(id=>{
       const next_node=data.nodes[data.links[id].idTarget]
       //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
       const to_avoid=link_to_avoid.concat([id])
       const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
       max=(tmp>max)?tmp:max
-      })
+    })
   }
   
   return max
   
   
-  }
+}
 
-export const SankeyPlusNodeClickEvent=(data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+export const SankeyPlusNodeClickEvent=(
+  data:SankeyPlusData,
+  set_animating:(b:boolean)=>void,
+  sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>
+)=>{
   d3.selectAll(' .opensankey .node')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
-      node_mouse_click(data,event,d,sankeyTooltip)
-      })
+      node_mouse_click(data,set_animating,event,d,sankeyTooltip)
+    })
 }
 
 export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-      const selected_tag = n.tags[n.colorTag][0]
-      const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-      if (tag && !n.shape_visible) {
-          return tag.color as string
-      } else {
-          //console.log('tutu')
-      }
+    const selected_tag = n.tags[n.colorTag][0]
+    const tag = data.nodeTags[n.colorTag].tags[selected_tag]
+    if (tag && !n.shape_visible) {
+      return tag.color as string
+    } else {
+      //console.log('tutu')
+    }
   }
   return n.iconColor
 }
@@ -356,9 +372,9 @@ export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
 export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
   const icon = data.icon_catalog[n.iconName]
   if (icon != undefined) {
-  return icon
+    return icon
   } else {
-  return ''
+    return ''
   }
 }
 
@@ -369,172 +385,178 @@ export const SankeyPlusDrawNodesIcon = (
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
   
 ) => {
-    const branchAnimate = (
-        data:SankeyPlusData,
-        nodeData: SankeyPlusNode,
-        nodeDisplay: string[]
-      ) => {
+  const branchAnimate = (
+    data:SankeyPlusData,
+    set_animating:(b:boolean)=>void,
+    nodeData: SankeyPlusNode,
+    nodeDisplay: string[]
+  ) => {
         
-        // Permet la progation de l'animation sur l'ensemble du Sankey
-        const nodeStart = nodeData.idNode
+    // Permet la progation de l'animation sur l'ensemble du Sankey
+    const nodeStart = nodeData.idNode
         
-        // on pourrait aussi evnetuellement faire un clone des noeuds
-        d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-        d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+    // on pourrait aussi evnetuellement faire un clone des noeuds
+    d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+    d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
         
-        const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-            .filter(function (d) {
-            return d.idSource == nodeStart
-            })
+    const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+      .filter(function (d) {
+        return d.idSource == nodeStart
+      })
         
-        // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-        const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-        tmpLinks.selectAll('.link')
-            .each(function (this) {
-            const totalLength = (this as SVGGeometryElement).getTotalLength()
+    // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
+    const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+    tmpLinks.selectAll('.link')
+      .each(function () {
+        const totalLength = (this as SVGGeometryElement).getTotalLength()
         
         d3.select(this)
-            .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-            .attr('stroke-dashoffset', totalLength)
-            .style('stroke', function (this) {
+          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+          .attr('stroke-dashoffset', totalLength)
+          .style('stroke', function (this) {
             // on recupere les paramêtres initiaux du stroke
             return d3.select(this).attr('stroke')
-            })
+          })
     
-        })
-            .transition()
-            .duration(2000)
-            .attr('stroke-dashoffset', 0)
-            .on('end', function (this) {
-            const idLink = d3.select(this).attr('id')
-            const idTarget = data.links[idLink].idTarget
-            // Modification des arrows après l'animation
-            const arrow=d3.select(' .opensankey #arrow_'+idLink)
-            if(arrow!==undefined && arrow!= null){        
-                const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-                const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-                if(t){
-                arrow.select('path').style('fill',t)
-                }
-            }
-            // reaffichage des link value après l'animation
-            d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-                .style('display', 'inline')
-            //Propagration de l'animation sur les flux sortant du target_node
-            // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-            if (!nodeDisplay.includes(idTarget)) {
-                nodeDisplay.push(idTarget)
-                let max=0
-                const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
-                max=(tmp>max)?tmp:max
-                setTimeout(()=>{
-                branchAnimate(data,data.nodes[idTarget], nodeDisplay)
-                },max*2000)
-            }
-            })
-    }
+      })
+      .transition()
+      .duration(2000)
+      .attr('stroke-dashoffset', 0)
+      .on('end', function (this) {
+        const idLink = d3.select(this).attr('id')
+        const idTarget = data.links[idLink].idTarget
+        if (data.nodes[idTarget].outputLinksId.length===0) {
+          set_animating(true)
+        } else {
+          set_animating(false)          
+        }
+        // Modification des arrows après l'animation
+        const arrow=d3.select(' .opensankey #arrow_'+idLink)
+        if(arrow!==undefined && arrow!= null){        
+          const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+          const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
+          if(t){
+            arrow.select('path').style('fill',t)
+          }
+        }
+        // reaffichage des link value après l'animation
+        d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
+          .style('display', 'inline')
+        //Propagration de l'animation sur les flux sortant du target_node
+        // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+        if (!nodeDisplay.includes(idTarget)) {
+          nodeDisplay.push(idTarget)
+          let max=0
+          const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
+          max=(tmp>max)?tmp:max
+          setTimeout(()=>{
+            branchAnimate(data,set_animating,data.nodes[idTarget], nodeDisplay)
+          },max*2000)
+        } 
+      })
+  }
 
   
-    const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
-        d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
-                if ((d as SankeyPlusNode).shape_visible && (static_sankey || event.shiftKey)) {
-                sankeyTooltip
-                    .style('opacity', 1)
-                    .html(nodeTooltipsContent(data, d as SankeyPlusNode))
-                }
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+    d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
+    if ((d as SankeyPlusNode).shape_visible && (static_sankey || event.shiftKey)) {
+      sankeyTooltip
+        .style('opacity', 1)
+        .html(nodeTooltipsContent(data, d as SankeyPlusNode))
     }
+  }
         
-    const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>,over_icon:boolean)=>{
-        if (((d as SankeyPlusNode).shape_visible ||over_icon) && (static_sankey || event.shiftKey)) {
-            const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
-            let pos_tooltip_y= event.clientY
-            const size_browser=window.innerHeight 
-            pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
+  const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>,over_icon:boolean)=>{
+    if (((d as SankeyPlusNode).shape_visible ||over_icon) && (static_sankey || event.shiftKey)) {
+      const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
+      let pos_tooltip_y= event.clientY
+      const size_browser=window.innerHeight 
+      pos_tooltip_y=((h_tooltip+pos_tooltip_y)>size_browser)?event.pageY+(size_browser-(pos_tooltip_y+h_tooltip))-5:event.pageY
         
-            const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
-            let pos_tooltip_x= event.clientX
-            const size_browser_w=window.innerWidth 
-            pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
+      const w_tooltip=Number(sankeyTooltip.style('width').replace('px',''))     
+      let pos_tooltip_x= event.clientX
+      const size_browser_w=window.innerWidth 
+      pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
             
-            sankeyTooltip
-            .style('top',pos_tooltip_y + 'px')
-            .style('left',pos_tooltip_x + 'px')
-        }
+      sankeyTooltip
+        .style('top',pos_tooltip_y + 'px')
+        .style('left',pos_tooltip_x + 'px')
     }
+  }
         
 
 
-    const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
-        //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
-        //exemple : n0 -> n1  et n0 -> n2 -> n1
-        //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-        const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
-        let max=0
+  const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
+    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
+    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+    let max=0
         
-        if(n.idNode==target.idNode){
-            return deep-1
-        }else if(next_link.length>0) {
-            next_link.map(id=>{
-            const next_node=data.nodes[data.links[id].idTarget]
-            //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
-            const to_avoid=link_to_avoid.concat([id])
-            const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
-            max=(tmp>max)?tmp:max
-            })
-        }
-        
-        return max
-        
-        
+    if(n.idNode==target.idNode){
+      return deep-1
+    }else if(next_link.length>0) {
+      next_link.map(id=>{
+        const next_node=data.nodes[data.links[id].idTarget]
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid=link_to_avoid.concat([id])
+        const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
+        max=(tmp>max)?tmp:max
+      })
     }
+        
+    return max
+        
+        
+  }
 
     
 
     
-    const add_nodes_icon = (
-    ) => {
-        //----------------ICON-----------------
+  const add_nodes_icon = (
+  ) => {
+    //----------------ICON-----------------
         
-        // Add icon to node (if there is one associated to it)
-        // then apply selected parameter
-        const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
+    // Add icon to node (if there is one associated to it)
+    // then apply selected parameter
+    const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
-        const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
 
-        ggg_nodes
-            .filter(d => d.iconName != 'none' && d.iconVisible)
-            .append('svg')
-            .attr('viewBox', '0, 0, 1000, 1000')
-            .attr('transform', n => {
-            const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
-            const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
-            return 'translate(' + shiftH + ',' + shiftV + ')'
-            })
-            .attr('height', n => +d3.select(' .opensankey #' + n.idNode).attr('height') * (n.iconRatio) / 100)
-            .attr('width', n => +d3.select(' .opensankey #' + n.idNode).attr('width') * (n.iconRatio) / 100)
-            .attr('x', 0)
-            .append('g')
-            .append('path')
-            .on('mouseover', function (event, d) {
-            node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
-            })
-            .on('mousemove', function (event,d) {
-            node_mouse_move(static_sankey,event,d,sankeyTooltip,true)
-            })
-            .on('mouseout', function () {
-            sankeyTooltip.style('opacity', 0)
-            })
-            .style('fill', n =>node_icon_fill_color(data,n))
-            .attr('d', n =>node_icon_path(data,n))
+    ggg_nodes
+      .filter(d => d.iconName != 'none' && d.iconVisible)
+      .append('svg')
+      .attr('viewBox', '0, 0, 1000, 1000')
+      .attr('transform', n => {
+        const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
+        const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
+        return 'translate(' + shiftH + ',' + shiftV + ')'
+      })
+      .attr('height', n => +d3.select(' .opensankey #' + n.idNode).attr('height') * (n.iconRatio) / 100)
+      .attr('width', n => +d3.select(' .opensankey #' + n.idNode).attr('width') * (n.iconRatio) / 100)
+      .attr('x', 0)
+      .append('g')
+      .append('path')
+      .on('mouseover', function (event, d) {
+        node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
+      })
+      .on('mousemove', function (event,d) {
+        node_mouse_move(static_sankey,event,d,sankeyTooltip,true)
+      })
+      .on('mouseout', function () {
+        sankeyTooltip.style('opacity', 0)
+      })
+      .style('fill', n =>node_icon_fill_color(data,n))
+      .attr('d', n =>node_icon_path(data,n))
 
-    }
-    // useEffect(()=>{
-    //   console.log('test')
-    //   add_nodes_icon()
-    //   console.log('test2')
+  }
+  // useEffect(()=>{
+  //   console.log('test')
+  //   add_nodes_icon()
+  //   console.log('test2')
 
-    // })
-    add_nodes_icon()
+  // })
+  add_nodes_icon()
   
 }
 
