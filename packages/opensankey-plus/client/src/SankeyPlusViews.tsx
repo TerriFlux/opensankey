@@ -1550,10 +1550,8 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
   if ( window.SankeyToolsStatic) {
     height_navbarAndHerowrap = 0
   }
-  return(
-    <Col className='sankey-toolbar'
-      style={{'marginTop':height_navbar,'marginLeft':0}}
-    >
+  return [
+    <Col>
       <FormGroup  as={Col} lg='auto'>
         <ButtonGroup >
           <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
@@ -1585,7 +1583,7 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
           </Button>
         </ButtonGroup>
       </FormGroup>
-    </Col>)
+    </Col>]
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
