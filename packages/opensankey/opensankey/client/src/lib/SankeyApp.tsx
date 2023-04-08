@@ -26,7 +26,7 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
-import {addSimpleLevelDropDown, OpenSankeyMenuBanner} from './SankeyMenuBanner'
+import {addSimpleLevelDropDown, OpenSankeyMenuBanner, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
 import {dragging} from './SankeyDrag'
@@ -285,7 +285,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
       </Popover.Body>
     </Popover>
-  const menu_banner=OpenSankeyMenuBanner(t,data,set_data,mode_selection,set_mode_selection,func_current_filter,'',detail_level)
+  const [show_readme, set_show_readme] = useState(false)
+  const {filter}=data.display_style
+  const menu_banner=OpenSankeyMenuBanner(
+    t,data,set_data,show_readme,set_show_readme,
+    toolbar_builder(  t,data,set_data,mode_selection,set_mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',set_show_readme)
+  )
 
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
