@@ -33,8 +33,8 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('x',n => node_label_posX(n as SankeyNode))
       .attr('y', n => node_label_posY((n as SankeyNode),data))
       .attr('text-anchor', n => {
-        if ((n as SankeyNode).x_label && data.show_structure !== 'structure') {
-          return 'center'
+        if ((n as SankeyNode).x_label !== undefined && data.show_structure !== 'structure') {
+          return 'left'
         } else if ((n as SankeyNode).display_style.label_horiz == 'middle') {
           return 'middle'
         } else if ((n as SankeyNode).display_style.label_horiz == 'left') {
