@@ -7,7 +7,7 @@ import * as d3 from 'd3'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
-import { FaPlay, FaForward, FaBackward} from 'react-icons/fa'
+import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
 import {  node_color } from 'open-sankey/dist/SankeyUtils'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
@@ -1038,6 +1038,7 @@ export const keyHandler = (
   e: KeyboardEvent,
   current:boolean,
   data:SankeyPlusData,
+  set_current_data:(d:SankeyPlusData)=>void,
   view_data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyPlusLink[]},
@@ -1076,14 +1077,16 @@ export const keyHandler = (
 
     if (current) {
       const new_ind = 'view_' + String(new Date().getTime())
-      const copy = JSON.parse(JSON.stringify(data))
-      copy.view = []
+      //copy.view = []
       data.view.push({
         id: new_ind,
-        view_data: copy,
+        view_data: {},
         nom: 'data_' + new_ind,
         details: ''
       })
+      data.view[data.view.length-1].view_data = { ...viewOfData(data,new_ind) }
+      set_view(new_ind)
+      set_current_data(data)
       set_show_toast(true)
       setTimeout(function () {
         set_show_toast(false)
@@ -1096,6 +1099,30 @@ export const keyHandler = (
       }, 3000)
     }
   }
+  if (e.key == 'p') {
+    //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
+    let ind = 0
+    if (!current) {
+      data.view.map((v, i) => {
+        ind = (v.id == view) ? i : ind
+      })
+      //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+      nextView(data, set_data,data.view[ind].id,set_view,set_animating)
+    } else {
+      set_current_data({...data})
+      set_view(data.view[ind].id)
+      set_data({ ...viewOfData(data,data.view[ind].id) })
+
+      setTimeout(function () {
+        nextView(data,set_data,data.view[ind].id,set_view,set_animating)
+      }, 500)
+    }
+  }
+  if (e.key == 'h') {
+    set_view('none')
+    set_data({ ...data })    
+  }
+
 
   if (current) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
@@ -1365,15 +1392,7 @@ export const keyHandler = (
           set_data({...viewOfData(data,data.view[ind + 1].id)})
           // }, time_to_set_view)
         }
-      } else if (e.key == 'p') {
-        //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-        let ind = -1
-        data.view.map((v, i) => {
-          ind = (v.id == view) ? i : ind
-        })
-        //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-        nextView(data, set_data,data.view[ind].id,set_view,set_animating)
-      }
+      } 
       // set_data({ ...data })
     }
   }
@@ -1538,7 +1557,9 @@ declare const window: Window &
     } & { [key: string]: SankeyPlusData }
   }
 
-export const SankeyPlusBannerView=(mode_selection:string)=>{
+export const SankeyPlusBannerView=(
+  mode_selection:string
+)=>{
 
   const elementNavBar=document.getElementsByClassName('bg-light')[0]
   const elementHerowrap=document.getElementsByClassName('herowrap')[0]
@@ -1554,6 +1575,15 @@ export const SankeyPlusBannerView=(mode_selection:string)=>{
     <Col>
       <FormGroup  as={Col} lg='auto'>
         <ButtonGroup >
+        <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
+            const ev = document
+            const tmp = { key: 'h' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+            <FaHome />
+          </Button>
           <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
             const ev = document
             const tmp = { key: 'p' }
