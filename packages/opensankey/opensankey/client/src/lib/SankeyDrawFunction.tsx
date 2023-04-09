@@ -2345,9 +2345,9 @@ const node_value_and_text_same_pos=(node :SankeyNode)=>{
 
     
 export const node_label_text=(d:SankeyNode)=>{
-  if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange') {
-    return d.name.split(' - ')[1]
-  }
+  // if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange') {
+  //   return d.name.split(' - ')[1]
+  // }
   return d.name.split(' - ')[0].replace('-', ' ')
 }
 
