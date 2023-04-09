@@ -873,9 +873,9 @@ export const toolbar_builder = (
       </FormGroup>
     </Popover.Body>
   </Popover>
-//Popover element to handle node tags
-// Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-const filter_color_node=
+  //Popover element to handle node tags
+  // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
+  const filter_color_node=
 <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
   <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
   <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
@@ -887,7 +887,7 @@ const filter_color_node=
   </Popover.Body>
 </Popover>
 //Popover element to handle the display of link tags
-const filter_color_link=
+  const filter_color_link=
 <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
   <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
   <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
@@ -895,7 +895,7 @@ const filter_color_link=
   </Popover.Body>
 </Popover>
 //Popover element to handle the display of data tags
-const filter_data=
+  const filter_data=
 <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
   <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
   <Popover.Body>
@@ -948,173 +948,173 @@ const filter_data=
   </Popover.Body>
 </Popover>
   return [
-  <Col>
-    <FormGroup as={Col} lg='auto'>
-      <ButtonGroup >
-        {/* Boutons Sélection classique des éléments */}
-        <OverlayTrigger
-          key={'tooltip-selection'}
-          placement={'bottom'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
-          <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-            <FontAwesomeIcon icon={faArrowPointer} />
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          key={'tooltip-liaison'}
-          placement={'right'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
-          <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-            {/* Ajout liaison entre noeud */}
-            <FontAwesomeIcon icon={faShareNodes}/>
-          </Button>
-        </OverlayTrigger>
-      </ButtonGroup>
-    </FormGroup>
-  </Col>,
-  <Col className='text-end'>
-<FormGroup as={Col} lg='auto'>
-<ButtonGroup >
-  {(node_filter)?
-    <OverlayTrigger
-      key={'tooltip-link-color-filter'}
-      placement={'left'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_color_node}>
-      <Button variant='primary' id='button-link-color-filter' >
+    <Col>
+      <FormGroup as={Col} lg='auto'>
+        <ButtonGroup >
+          {/* Boutons Sélection classique des éléments */}
+          <OverlayTrigger
+            key={'tooltip-selection'}
+            placement={'bottom'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
+            <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+              <FontAwesomeIcon icon={faArrowPointer} />
+            </Button>
+          </OverlayTrigger>
+          <OverlayTrigger
+            key={'tooltip-liaison'}
+            placement={'right'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
+            <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+              {/* Ajout liaison entre noeud */}
+              <FontAwesomeIcon icon={faShareNodes}/>
+            </Button>
+          </OverlayTrigger>
+        </ButtonGroup>
+      </FormGroup>
+    </Col>,
+    <Col className='text-end'>
+      <FormGroup as={Col} lg='auto'>
+        <ButtonGroup >
+          {(node_filter)?
+            <OverlayTrigger
+              key={'tooltip-link-color-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_color_node}>
+              <Button variant='primary' id='button-link-color-filter' >
         Filtre Noeuds
-      </Button>
-    </OverlayTrigger>
-    :
-    <></>
-  }
-
-  {(flux_filter)?
-    <OverlayTrigger
-      key={'tooltip-node-color-filter'}
-      placement={'left'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_color_link}>
-      <Button variant='secondary' id='button-node-color-filter' >
-        Filtre Flux
-      </Button>
-    </OverlayTrigger>
-    :
-    <></>
-  }
-  {(Object.values(data.dataTags).length>0)?
-    <OverlayTrigger
-      key={'tooltip-data-filter'}
-      placement={'left'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_data}>
-      <Button variant='dark' id='button-data-filter' >
-        {Object.entries(data.dataTags).map(v=>{
-          if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
-            return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
-          }else{
-            return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
           }
-        }).join('/')}
-      </Button>
-    </OverlayTrigger>
-    :
-    <></>
-  }
 
-  {(level_filter)?
-    <OverlayTrigger
-      key={'tooltip-details-level'}
-      placement={'left'}
-      trigger={'click'}
-      rootClose
-      overlay={detail_level}>
-      <Button variant='warning' id='button-details-level' >
-        <FontAwesomeIcon icon={faFolderTree} />
-      </Button>
-    </OverlayTrigger>
-    :
-    <></>
-  }
+          {(flux_filter)?
+            <OverlayTrigger
+              key={'tooltip-node-color-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_color_link}>
+              <Button variant='secondary' id='button-node-color-filter' >
+        Filtre Flux
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
+          {(Object.values(data.dataTags).length>0)?
+            <OverlayTrigger
+              key={'tooltip-data-filter'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={filter_data}>
+              <Button variant='dark' id='button-data-filter' >
+                {Object.entries(data.dataTags).map(v=>{
+                  if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
+                    return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
+                  }else{
+                    return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
+                  }
+                }).join('/')}
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
 
-  <OverlayTrigger
-    key={'tooltip-link-filter'}
-    placement={'left'}
-    trigger={'click'}
-    rootClose
-    overlay={link_filter}>
-    <Button variant='danger' id='button-filter-link' >
-      <FontAwesomeIcon icon={faFilter} />
-    </Button>
-  </OverlayTrigger>
+          {(level_filter)?
+            <OverlayTrigger
+              key={'tooltip-details-level'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={detail_level}>
+              <Button variant='warning' id='button-details-level' >
+                <FontAwesomeIcon icon={faFolderTree} />
+              </Button>
+            </OverlayTrigger>
+            :
+            <></>
+          }
 
-  <OverlayTrigger
-    key={'tooltip-adjust'}
-    placement={'top'}
-    delay={500}
-    overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-    <Button variant='dark' onClick={() => {
-      data.fit_screen = true
-      const zoomed=(transform:{transform:string})=> {
-        [data.width, data.height] = min_width_and_height()
-        d3.select(' .opensankey #svg').attr('transform', transform['transform'])
-        d3.select(' .opensankey #svg')
-          .style('border', Math.round(2 ) + 'px solid #78c2ad')
-          .style('width', data.width + 'px')
-      }
-      const zoom = d3.zoom()
-        .scaleExtent([1, 40])
-        .on('zoom', zoomed)
-      zoom.scaleTo(d3.select(' .opensankey #svg'),1)
-      set_data({ ...data })
-    }} >
-      <FontAwesomeIcon icon={faMaximize} />
-    </Button>
-  </OverlayTrigger>
+          <OverlayTrigger
+            key={'tooltip-link-filter'}
+            placement={'left'}
+            trigger={'click'}
+            rootClose
+            overlay={link_filter}>
+            <Button variant='danger' id='button-filter-link' >
+              <FontAwesomeIcon icon={faFilter} />
+            </Button>
+          </OverlayTrigger>
 
-  { url_prefix !== '' ?
-    <OverlayTrigger
-      key={'tooltip-structur'}
-      placement={'left'}
-      trigger={'click'}
-      rootClose
-      overlay={struc_data_reconciled}>
-      <Button variant='success'>
-        <FontAwesomeIcon icon={faDiagramProject} />
-      </Button>
-    </OverlayTrigger>
-    :
-    <OverlayTrigger
-      key={'tooltip-structur'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
-      <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
-        data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-        //data.show_data = false
-        set_data({ ...data })
-      }} >
-        <FontAwesomeIcon icon={faCodeBranch} />
-      </Button>
-      </OverlayTrigger>}
-      <OverlayTrigger
-        key={'tooltip-help'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>}>
-        <Button variant='info' onClick={() => { set_show_readme(true) }} >
+          <OverlayTrigger
+            key={'tooltip-adjust'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+            <Button variant='dark' onClick={() => {
+              data.fit_screen = true
+              const zoomed=(transform:{transform:string})=> {
+                [data.width, data.height] = min_width_and_height()
+                d3.select(' .opensankey #svg').attr('transform', transform['transform'])
+                d3.select(' .opensankey #svg')
+                  .style('border', Math.round(2 ) + 'px solid #78c2ad')
+                  .style('width', data.width + 'px')
+              }
+              const zoom = d3.zoom()
+                .scaleExtent([1, 40])
+                .on('zoom', zoomed)
+              zoom.scaleTo(d3.select(' .opensankey #svg'),1)
+              set_data({ ...data })
+            }} >
+              <FontAwesomeIcon icon={faMaximize} />
+            </Button>
+          </OverlayTrigger>
+
+          { url_prefix !== '' ?
+            <OverlayTrigger
+              key={'tooltip-structur'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={struc_data_reconciled}>
+              <Button variant='success'>
+                <FontAwesomeIcon icon={faDiagramProject} />
+              </Button>
+            </OverlayTrigger>
+            :
+            <OverlayTrigger
+              key={'tooltip-structur'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
+              <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
+                data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+                //data.show_data = false
+                set_data({ ...data })
+              }} >
+                <FontAwesomeIcon icon={faCodeBranch} />
+              </Button>
+            </OverlayTrigger>}
+          <OverlayTrigger
+            key={'tooltip-help'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>}>
+            <Button variant='info' onClick={() => { set_show_readme(true) }} >
             ?
-        </Button>
-      </OverlayTrigger>
+            </Button>
+          </OverlayTrigger>
 
-      </ButtonGroup>
-    </FormGroup>
-  </Col>]
+        </ButtonGroup>
+      </FormGroup>
+    </Col>]
 }
 
 export const SankeyBannerRows = (
@@ -1372,7 +1372,7 @@ export const OpenSankeyMenuBanner = (
           </ButtonGroup>
         </FormGroup>
           </Col>: }*/}
-    {toolbar.map((c:JSX.Element,i)=>{
+      {toolbar.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
     </Row>,
