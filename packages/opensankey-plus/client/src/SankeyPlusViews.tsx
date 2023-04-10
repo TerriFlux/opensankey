@@ -18,20 +18,21 @@ const calcPath = (
   node: SankeyPlusNode,
   new_links: string[],
 ) => {
-  // let number_new_path=0
-  let long = 0
-  const links_present = node.outputLinksId.filter(o => new_links.includes(o))
-  
-  if (links_present.length > 0) {
-    long += 1
-    links_present.forEach(d => {
-      const n = nodes[data.links[d].idTarget]
-      const lng = calcPath(data,nodes, n, new_links) as number
-      long += isNaN(lng) ? 0 : lng
-
-    })
-    return long
-  }
+    // let number_new_path=0
+    let long = 0
+    const links_present = node.outputLinksId.filter(o => new_links.includes(o) )
+    if (links_present.length > 0) {
+        long += 1
+        let lng = 0
+        links_present.forEach(d => {
+            const n = nodes[data.links[d].idTarget];
+            const new_lng = calcPath(data, nodes, n, new_links)
+            lng = isNaN(new_lng) ? lng : Math.max(lng,new_lng)
+        });
+        long += lng
+        return long
+    }
+    return NaN
 }
 
 export const view_toast = (<Toast bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
@@ -39,12 +40,7 @@ export const view_toast = (<Toast bg='success' className='toastView' style={{ 'p
   <Toast.Body>Vue sauvegardée</Toast.Body>
 </Toast>)
 
-export const viewOfData = (data:SankeyPlusData,view:string) => {
-  const d = JSON.parse(JSON.stringify(data.view.filter(d => d.id === view)[0].view_data)) as SankeyPlusData
-  d.view = JSON.parse(JSON.stringify(data.view))
-  return d as SankeyPlusData
-
-}
+// }
 export const sankey_draw_view = (
   data:SankeyPlusData,
   view:string,
@@ -69,7 +65,7 @@ export const sankey_draw_view = (
 ) => {
 
   return <SankeyDraw
-    data={viewOfData(data,view)}
+    data={data}
     set_data={()=>null}
     animation={false}
     multi_selected_nodes={multi_selected_nodes}
@@ -93,7 +89,7 @@ export const sankey_draw_view = (
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'p')
 export const nextView = (
-  data: SankeyPlusData,
+  master_data: SankeyPlusData,
   set_data:(s:SankeyPlusData)=>void,
   new_view: string,
   set_view:(s:string)=>void,
@@ -101,23 +97,23 @@ export const nextView = (
 ) => {
   //const v1 = data.view[].filter(d => d.id === new_view)[0].id
   let ind = -1
-  data.view.forEach((v, i) => {
+  master_data.view.forEach((v, i) => {
     ind = (v.id === new_view) ? i : ind
   })
   set_animating(true)
-  const view_data = data.view[ind].view_data as SankeyPlusData
+  const view_data = master_data.view[ind].view_data as SankeyPlusData
   const time_to_set_view = animate_view_changement(view_data)
-  if (ind === data.view.length -1) {
+  if (ind === master_data.view.length -1) {
     set_animating(false)
     return 
   }
   setTimeout(function () {
-    set_view(data.view[ind + 1].id)
-    set_data({ ...viewOfData(data,data.view[ind+1].id) })
-  }, time_to_set_view)
-  setTimeout(function () {
-    nextView(data,set_data,data.view[ind+1].id,set_view,set_animating)
-    set_animating(false)
+    set_view(master_data.view[ind + 1].id)
+    set_data({ ...master_data.view[ind+1].view_data as SankeyPlusData })
+    setTimeout(function () {
+      nextView(master_data,set_data,master_data.view[ind+1].id,set_view,set_animating)
+      set_animating(false)
+    }, 500)
   }, time_to_set_view)
 }
 
@@ -904,7 +900,11 @@ const animate_view_changement = (views_data:SankeyPlusData) => {
   //Récupère parmi les noeuds, tous ceux qui emettent un nouveau flux sans en recevoir de nouveau
   const visible_links = Object.values(views_data.links).filter(l=>views_data.nodes[l.idSource].node_visible && views_data.nodes[l.idTarget].node_visible )
   const visible_linksId = visible_links.map(l=>l.idLink)
-  const start_point = Object.values(views_data.nodes).filter(f => (f.inputLinksId.filter(i => visible_linksId.includes(i)).length == 0) && (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0))
+  const start_point = Object.values(views_data.nodes).filter(f => 
+    (f.inputLinksId.filter(i => visible_linksId.includes(i)).length == 0) && 
+    (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0) &&
+    (!('Type de noeud' in f.tags) || f.tags['Type de noeud'][0] !== 'échange')
+  )
   let time_to_animate = 500
   Object.values(views_data.nodes).filter(f => {
     return (f.inputLinksId.filter(i => visible_linksId.includes(i)).length == 0) && (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0)})
@@ -1036,18 +1036,18 @@ const branchAnimateForView = (
 
 export const keyHandler = (
   e: KeyboardEvent,
-  current:boolean,
+  master:boolean,
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
   data:SankeyPlusData,
-  set_current_data:(d:SankeyPlusData)=>void,
-  view_data:SankeyPlusData,
+  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  view:string,
+  set_view:React.Dispatch<React.SetStateAction<string>>,
   set_animating:(b:boolean)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyPlusLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
-  view:string,
-  set_view:React.Dispatch<React.SetStateAction<string>>,
   nextView : (
     data: SankeyPlusData,
     set_data:(d:SankeyPlusData)=>void,
@@ -1057,42 +1057,39 @@ export const keyHandler = (
   )=>void,
   delete_link : (data: SankeyPlusData,link: SankeyPlusLink) => void,
   delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void,
-  node_color: (node:SankeyPlusNode,data:SankeyPlusData)=>string,
-  link_color: (link:SankeyPlusLink,data:SankeyPlusData)=>string,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue,
-  setNodeHeight:(n: SankeyPlusNode,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },selected_tags: TagsCatalog,data:SankeyPlusData,scale:(t:number)=>number,inv_scale:(t:number)=>number,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) =>void,
-  setNodesHeight:(data:SankeyPlusData,nodes: { [node_id: string]: SankeyPlusNode },links: { [link_id: string]: SankeyPlusLink },d: SankeyPlusLink,nodeTags: TagsCatalog,getLinkValue: (data: SankeyPlusData, idLink: string, up? : boolean)=>SankeyLinkValue) =>void,
-  link_visible: (l: SankeyPlusLink, data_s: SankeyPlusData)=>boolean,
-  test_link_value: (data:SankeyPlusData, node: { [node_id: string]: SankeyPlusNode }, d: SankeyPlusLink) => string,
-  min_thickness: number,
-  drawArrows:plusDrawArrowsType,
-  drawCurve:PlusDrawCurveType,
-  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string
-
 ) => {
   if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
 
-    if (current) {
+    if (master) {
+      // data is master data and master_data might not be  set
       const new_ind = 'view_' + String(new Date().getTime())
+      const copy_data = JSON.parse(JSON.stringify(data))
+      if (!copy_data.accordeonToShow.includes('Vis')) {
+        copy_data.accordeonToShow.push('Vis')
+        data.accordeonToShow.push('Vis')
+      }
+      set_data(copy_data)
       //copy.view = []
       data.view.push({
         id: new_ind,
-        view_data: {},
+        view_data: copy_data,
         nom: 'data_' + new_ind,
         details: ''
       })
-      data.view[data.view.length-1].view_data = { ...viewOfData(data,new_ind) }
       set_view(new_ind)
-      set_current_data(data)
+      // master data is now set
+      set_master_data({...JSON.parse(JSON.stringify(data))})
+      // at this stage data is a view and is equal with master data
       set_show_toast(true)
       setTimeout(function () {
         set_show_toast(false)
       }, 3000)
     } else {
-      data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(view_data))
+      // data is view data
+      master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
+      set_master_data({...master_data})
+      set_data({...data})
       set_show_toast(true)
       setTimeout(function () {
         set_show_toast(false)
@@ -1102,29 +1099,32 @@ export const keyHandler = (
   if (e.key == 'p') {
     //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
     let ind = 0
-    if (!current) {
-      data.view.map((v, i) => {
+    if (master) {
+      //data is master data
+      set_master_data({...master_data})
+      set_view(master_data.view[ind].id)
+      //const copy = JSON.parse(JSON.stringify(master_data.view[ind].view_data)
+      set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
+
+      setTimeout(function () {
+        nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
+      }, 500)
+    } else {
+      // data is view data
+      master_data.view.map((v, i) => {
         ind = (v.id == view) ? i : ind
       })
       //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-      nextView(data, set_data,data.view[ind].id,set_view,set_animating)
-    } else {
-      set_current_data({...data})
-      set_view(data.view[ind].id)
-      set_data({ ...viewOfData(data,data.view[ind].id) })
-
-      setTimeout(function () {
-        nextView(data,set_data,data.view[ind].id,set_view,set_animating)
-      }, 500)
-    }
+      nextView(master_data, set_data,master_data.view[ind].id,set_view,set_animating)
+    } 
   }
   if (e.key == 'h') {
     set_view('none')
-    set_data({ ...data })    
+    set_data({ ...master_data })    
   }
 
 
-  if (current) {
+  if (master) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
@@ -1361,37 +1361,43 @@ export const keyHandler = (
       }
       if (e.key == 'ArrowUp') {
         //Cherche la position de la vue sélectionné dans le tableau de vue
-        const v1 = data.view.filter(d => d.id == view)[0].id
-        let ind = -1
-        data.view.map((v, i) => {
-          ind = (v.id == v1) ? i : ind
-        })
-        //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
-        if (ind > 0) {
-          const copy = data.view[ind - 1].view_data as SankeyPlusData
-          // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-          // setTimeout(function () {
-          set_view(data.view[ind - 1].id)
-          set_data({...viewOfData(data,data.view[ind - 1].id)})
-          // }, time_to_set_view)
+        const v1 = master_data.view.filter(d => d.id == view)[0].id
+        let ind = -1;
+        master_data.view.map((v, i) => {
+            ind = (v.id == v1) ? i : ind;
+        });
+        if (ind === -1) {
+          ind = 1
+        } else if (ind===0) {
+          ind = Object.keys(master_data.view).length
         }
+        //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
+        //const copy = master_data.view[ind].view_data as SankeyPlusData
+        // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+        // setTimeout(function () {
+        set_view(master_data.view[ind-1].id)
+        set_data({...master_data.view[ind-1].view_data as SankeyPlusData})
+        // }, time_to_set_view)
       } else if (e.key == 'ArrowDown') {
         //Cherche la position de la vue sélectionné dans le tableau de vue
-        const v1 = data.view.filter(d => d.id == view)[0].id
-        let ind = -1
-        data.view.map((v, i) => {
-          ind = (v.id == v1) ? i : ind
-        })
+        const v1 = master_data.view.filter(d => d.id == view)[0].id
+        let ind = -1;
+        master_data.view.map((v, i) => {
+            ind = (v.id == v1) ? i : ind;
+        });
         //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-        if (ind < Object.keys(data.view).length - 1) {
-          const copy = data.view[ind + 1].view_data as SankeyPlusData
-          
-          // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-          // setTimeout(function () {
-          set_view(data.view[ind + 1].id)
-          set_data({...viewOfData(data,data.view[ind + 1].id)})
-          // }, time_to_set_view)
+        if (ind === Object.keys(master_data.view).length - 1) {
+            ind = -1
+        } else if (ind === -1) {
+            ind = -1
         }
+
+        // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
+        // setTimeout(function () {
+        set_view(master_data.view[ind+1].id)
+        set_data({...master_data.view[ind+1].view_data as SankeyPlusData})
+          // }, time_to_set_view)
+        //}
       } 
       // set_data({ ...data })
     }
@@ -1409,8 +1415,8 @@ export const viewsAccordion = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  current_data:SankeyPlusData,
-  set_current_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
   
 ) => {
   return <Accordion.Item
@@ -1444,24 +1450,24 @@ export const viewsAccordion = (
                   return
                 }else if(evt.target.value!=='none' && view === 'none'){
                   set_view(evt.target.value)
-                  set_current_data({...data})
+                  set_master_data({...data})
 
-                  set_data({...viewOfData(data,evt.target.value)})
+                  set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
 
-                }else if(evt.target.value=='none'){
+                } else if(evt.target.value=='none'){
                   set_view(evt.target.value)
-                  set_data({...current_data})
+                  set_data({...master_data})
                 }else{
                   set_view(evt.target.value)
-                  set_data({...viewOfData(data,evt.target.value)})
+                  set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
                 }               
               }
             }
           >
             <option selected={view == 'none'} value={'none'}>Données actuelles</option>
-            {data.view.map(d => {
+            {master_data ? master_data.view.map(d => {
               return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-            })}
+            }) : <></>}
           </Form.Select>
         </Col>
       </Row>
@@ -1475,13 +1481,13 @@ export const viewsAccordion = (
           </tr>
         </thead>
         <tbody>
-          {Object.values(data.view).map(d => {
+          {master_data ? Object.values(master_data.view).map(d => {
             return (
               <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
                 <td><FormControl size='sm'
                   value={d.nom}
                   onChange={evt => {
-                    data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                    master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
                     set_data({ ...data })
                   }}
                 /></td>
@@ -1493,12 +1499,13 @@ export const viewsAccordion = (
                       onClick={
                         () => {
                           let ind = -1
-                          data.view.map((v, i) => {
+                          master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
                           const toShift = data.view[ind]
-                          data.view.splice(ind, 1)
-                          data.view.splice(ind - 1, 0, toShift)
+                          master_data.view.splice(ind, 1)
+                          master_data.view.splice(ind - 1, 0, toShift)
+                          set_master_data({...master_data})
                           set_data({ ...data })
 
                         }
@@ -1509,12 +1516,13 @@ export const viewsAccordion = (
                       onClick={
                         () => {
                           let ind = -1
-                          data.view.map((v, i) => {
+                          master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
                           const toShift = data.view[ind]
-                          data.view.splice(ind, 1)
-                          data.view.splice(ind + 1, 0, toShift)
+                          master_data.view.splice(ind, 1)
+                          master_data.view.splice(ind + 1, 0, toShift)
+                          set_master_data({...master_data})
                           set_data({ ...data })
                         }
                       }
@@ -1528,18 +1536,19 @@ export const viewsAccordion = (
                   onClick={
                     () => {
                       let ind = -1
-                      data.view.map((v, i) => {
+                      master_data.view.map((v, i) => {
                         ind = (v.id == d.id) ? i : ind
                       })
-                      data.view.splice(ind, 1)
+                      master_data.view.splice(ind, 1)
                       set_view('none')
+                      set_master_data({...master_data})
                       set_data({ ...data })
                     }
                   }
                 ><FaMinus /></Button></td>
               </tr>
             )
-          })}
+          }) : <></>}
         </tbody>
       </Table>
     </Accordion.Body>
@@ -1558,7 +1567,8 @@ declare const window: Window &
   }
 
 export const SankeyPlusBannerView=(
-  mode_selection:string
+  mode_selection:string,
+  view: string
 )=>{
 
   const elementNavBar=document.getElementsByClassName('bg-light')[0]
@@ -1612,6 +1622,7 @@ export const SankeyPlusBannerView=(
             <FaForward />
           </Button>
         </ButtonGroup>
+        <Form.Label>{view}</Form.Label>
       </FormGroup>
     </Col>]
 }
