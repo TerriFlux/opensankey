@@ -1069,6 +1069,7 @@ export const keyHandler = (
         copy_data.accordeonToShow.push('Vis')
         data.accordeonToShow.push('Vis')
       }
+      copy_data.view = []
       set_data(copy_data)
       //copy.view = []
       data.view.push({
@@ -1450,7 +1451,7 @@ export const viewsAccordion = (
                   return
                 }else if(evt.target.value!=='none' && view === 'none'){
                   set_view(evt.target.value)
-                  set_master_data({...data})
+                  set_master_data({...JSON.parse(JSON.stringify(data))})
 
                   set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
 
