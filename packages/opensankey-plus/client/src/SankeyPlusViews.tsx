@@ -1097,7 +1097,7 @@ export const keyHandler = (
       }, 3000)
     }
   }
-  if (e.key == 'p') {
+  if (!master && e.key == 'p') {
     //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
     let ind = 0
     if (master) {
@@ -1119,7 +1119,7 @@ export const keyHandler = (
       nextView(master_data, set_data,master_data.view[ind].id,set_view,set_animating)
     } 
   }
-  if (e.key == 'h') {
+  if (!master && e.key == 'h') {
     set_view('none')
     set_data({ ...master_data })    
   }
