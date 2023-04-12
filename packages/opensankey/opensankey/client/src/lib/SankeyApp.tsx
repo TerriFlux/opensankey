@@ -241,6 +241,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       multi_selected_links={multi_selected_links}
       multi_selected_nodes={multi_selected_nodes}
       launch={launch}
+      reinitialization={reinitialization}
     /></NavDropdown >
   )
   // 2.4 Modal linked to menu item
