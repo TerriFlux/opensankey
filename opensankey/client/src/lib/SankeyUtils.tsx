@@ -1160,7 +1160,8 @@ export const uploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
-  set_data: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void,
+  reinitialization: ()=>void
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
@@ -1188,6 +1189,7 @@ export const uploadExemple = (
         // set_data({ ...data })
         //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
+        reinitialization()
         Object.assign(data,server_data)
         convert_data(data)
         complete_sankey_data(data,default_sankey_data,default_node,default_link)

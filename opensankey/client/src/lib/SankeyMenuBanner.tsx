@@ -1344,7 +1344,7 @@ export const OpenSankeyMenuBanner = (
           <ButtonGroup >
             <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
               const ev = document
-              const tmp = { key: 'p' }
+              const tmp = { key: 'F6' }
               if (ev.onkeydown) {
                 ev.onkeydown(tmp as KeyboardEvent)
               }
@@ -1353,7 +1353,7 @@ export const OpenSankeyMenuBanner = (
             </Button>
             <Button variant={'outline-success'} onClick={() => {
               const ev = document
-              const tmp = { key: 'ArrowUp' }
+              const tmp = { key: 'F8' }
               if (ev.onkeydown) {
                 ev.onkeydown(tmp as KeyboardEvent)
               }
@@ -1362,7 +1362,7 @@ export const OpenSankeyMenuBanner = (
             </Button>
             <Button variant={'outline-warning'} onClick={() => {
               const ev = document
-              const tmp = { key: 'ArrowDown' }
+              const tmp = { key: 'F9' }
               if (ev.onkeydown) {
                 ev.onkeydown(tmp as KeyboardEvent)
               }
