@@ -465,7 +465,26 @@ def parse_folder(current_dir, menus, key=None):
                     # blob=send_file(file_name,mimetype='image/png')
                     menus[key]['Image'].append(file_name)
                     menus[key]['Image'].sort()
+            # Save template sorted in difficulty
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'easy_template' in folder_content):
+                file_names = os.listdir(os.path.join(current_dir, 'easy_template'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'easy_template' not in menus[key]:
+                        menus[key]['easy_template'] = []
+                    menus[key]['easy_template'].append(file_name)
+                    menus[key]['easy_template'].sort()
 
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'expert_template' in folder_content):
+                file_names = os.listdir(os.path.join(current_dir, 'expert_template'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'expert_template' not in menus[key]:
+                        menus[key]['expert_template'] = []
+                    menus[key]['expert_template'].append(file_name)
+                    menus[key]['expert_template'].sort()
     if not exemple_found and key in menus:
         del menus[key]
     #  if not artefact_found and key in artefacts:
