@@ -148,11 +148,6 @@ class DictResultTest(unittest.TestCase):
         file_name: str,
         expected_results: dict
     ):
-        tests_to_skip = [
-            "Filières/Déchets/DéchetsBTP_reconciled sankey"
-        ]
-        if test_name in tests_to_skip:
-            return
         mfa_input, _ = io_excel.load_mfa_excel(os.path.join(mfa_data_dir, file_name))
         sankey_data = parser_excel.parse_excel(
             mfa_input
