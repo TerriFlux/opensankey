@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown, Popover, Form} from 'react-bootstrap'
+import { Modal,Button, NavDropdown, Popover, Form,Pagination,FormCheck} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
 
 import SankeyDraw from './SankeyDraw'
-import Menu, { OpenSankeyMenus,OpenSankeyModalShortcut} from './SankeyMenu'
+import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome} from './SankeyMenu'
 import { ExempleItem } from './SankeyMenuExamples'
 import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 import * as SankeyUtils from './SankeyUtils'
@@ -76,6 +76,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
   const [data,set_data] = useState<SankeyData>(initial_sankey_data)
   const [show_nav,set_show_nav] = useState(false)
+  const [show_modal_welcome,set_show_modal_welcome]=useState(true)
+  const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
 
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
@@ -174,6 +176,34 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setFailure(true)
     setNotStarted(false)
   }
+  const [active_page,set_active_page]=useState('intro')
+  const intro=<div>
+    <h2>{t('welcome.introduction')}</h2>
+    <img src='/fm/userfiles/OpenSankey/image_carousel/intro.png'   style={{'objectFit':'contain','width':'100%'}}/>
+    <ol>
+      <li>{t('welcome.1')}</li>
+      <li>{t('welcome.2')}</li>
+      <li>{t('welcome.3')}</li>
+      <li>{t('welcome.4')}</li>
+      <li>{t('welcome.5')}</li>
+      <li>{t('welcome.6')}</li>
+      <li>{t('welcome.7')}</li>
+      <li>{t('welcome.8')}</li>
+      <li>{t('welcome.9')}</li>
+      <li>{t('welcome.10')}</li>
+    </ol>
+  </div>
+  
+  const pagination_intro=<Pagination.Item active={active_page==='intro'} key={'intro'} onClick={()=>{
+    set_active_page('intro')
+    }}>Introduction
+  </Pagination.Item>
+
+  const external_pagination=[pagination_intro]
+  const external_content={'intro':intro} 
+
+  const intro_modal=OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content)
+
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
@@ -229,7 +259,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    setshowShortcut,data,set_data,'',set_show_modalTemplate,[],[]
+    set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem
@@ -262,6 +292,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   external_menu_modal.push(modale_style_link)
   external_menu_modal.push(modale_style_node)
   external_menu_modal.push(modale_preference)
+  external_menu_modal.push(intro_modal)
 
   const func_current_filter=(
     new_current_filter: number
@@ -344,7 +375,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     link_text,getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows
   )
 
-  const shortcut_modale=OpenSankeyModalShortcut(t,showShortcut,setshowShortcut,[])
 
   OpenSankeyDrawLegend(data,getLinkValue)
   //Event listener sur les touche du clavier
@@ -458,7 +488,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           menu_banner={menu_banner}
           loginOut={()=>null}
           unsetTokens={()=>null}
-          modalShortcut={shortcut_modale}
+          // modalShortcut={shortcut_modale}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
