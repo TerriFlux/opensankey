@@ -394,7 +394,23 @@ const resources = {
         'tooltipHelp':'Additional informations about Sankey diagrams',
         'tooltipAjoutNode':'Adds a node to the mouse click',
         'tooltipLiason':'Allows to create links between two existing nodes, from an existing node or to an existing node'
-      }
+      },
+      welcome:{
+        'welcome':'Welcome to OpenSankey web application',
+        'introduction':'Introduction to OpenSankey web application',
+        1: 'Mouse mode selection button, there are 2 modes: a mode to select nodes and flows to be able to move them, then a mode to create links and nodes with mouse click',
+        2: 'Buttons to filter the visibility or colors of nodes and flows according to the groups to which they are associated',
+        3: 'Buttons to filter the nodes according to their aggregation level',
+        4: 'Buttons to filter the visibility of the flows according to their values, this button also allows to modify the scale of the diagram (the thickness of the flows)',
+        5: 'Buttons to adjust the size of the drawing area so that all elements are visible',
+        6: 'Buttons to display the diagram without taking into account the value of the flows',
+        7: 'Buttons to display additional help',
+        8: 'Navigation menu to open,save, edit sankeys',
+        9: 'Buttons to connect with an opensankey account and enable additional modules',
+        10:'Buttons to open the configuration menu to edit the elements of the sankey diagram' ,
+      },
+      'DisplayWelcome':'Display Bienvenue',
+      'dontSeeAgain':'Don\'t show again',
     }
   },
   //=======================================================
@@ -788,7 +804,24 @@ const resources = {
         'tooltipSelection':'Permet de sélectionner ou de déplacer les noeuds',
         'tooltipHelp':'Informations supplémentaires sur la représentation avec les diagrammes de Sankey',
         'tooltipLiason':'Permet de créer des flux entre deux noeuds existants, depuis un noeud existant ou vers un noeud existant'
-      }
+      },
+      welcome:{
+        'welcome':'Bienvenue sur l\'applicaion web OpenSankey',
+        'introduction':'Introduction à l\'application web OpenSankey',
+        1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant des sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds au clique de la souris',
+        2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
+        3:'Boutons permettant de filtrer les noeuds en fonction de leur niveau d\'aggrégation',
+        4:'Boutons permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce boutons permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
+        5:'Boutons permettant de réajuster la taille de la zone de dessin pour que tous les éléments soit visible',
+        6:'Boutons permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
+        7:'Boutons permettant d`\'afficher de l\'aide supplémentaire',
+        8:'Menu de navigation permettant d\'ouvrir,enregistrer, éditer des sankeys ',
+        9:'Boutons permetttant de ce connecter avec un compte opensankey et activer des modules supplémentaires',
+        10:'Boutons permetttant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
+      },
+      'DisplayWelcome':'Afficher Bienvenue',
+      'dontSeeAgain':'Ne plus montrer',
+
     }
   }
 }
