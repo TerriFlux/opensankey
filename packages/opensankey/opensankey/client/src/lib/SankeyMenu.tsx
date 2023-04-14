@@ -705,8 +705,8 @@ export const OpenSankeyModalWelcome=(t:TFunction,
       
       <h5>Avec la souris en mode édition :</h5>
       <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
-      <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
-      <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
+      <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux à partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin</p>
+      <p><b>Drag (à partir d'un noeud) :</b> Créer un flux à partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin  </p>
       
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
       
@@ -715,7 +715,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
       <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
       <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
 
-      <p><b>Echap :</b> Ferme le Menu si il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
+      <p><b>Echap :</b> Ferme le Menu quand il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
       
       {additional_shortcut_item}
 
