@@ -1097,7 +1097,7 @@ export const keyHandler = (
     if (master) {
       // data is master data and master_data might not be  set
       const new_ind = 'view_' + String(new Date().getTime())
-      let copy_data : SankeyPlusData = JSON.parse(JSON.stringify(data))
+      const copy_data : SankeyPlusData = JSON.parse(JSON.stringify(data))
       if (!copy_data.accordeonToShow.includes('Vis')) {
         copy_data.accordeonToShow.push('Vis')
         data.accordeonToShow.push('Vis')
@@ -1128,18 +1128,16 @@ export const keyHandler = (
       }, 3000)
     } else {
       // data is view data
-      master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
-      set_master_data({...master_data})
       const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
-      const view_data : SankeyPlusData = master_data.view.filter(v => v.id == view)[0].view_data as SankeyPlusData
-      Object.values(view_data.links).forEach(l=> {
+      Object.values(data.links).forEach(l=> {
         if (dataTagsArray.length == 0) {
-          l.value = master_data.links[l.idLink].value;
-          return;
+          l.value = master_data.links[l.idLink].value
+          return
         }
         setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_data.links[l.idLink].value as { [key: string]: SankeyLinkValue },0)
-    })
-
+      })
+      master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
+      set_master_data({...master_data})
       set_data({...data})
       set_show_toast(true)
       setTimeout(function () {
