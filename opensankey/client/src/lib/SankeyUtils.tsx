@@ -1199,6 +1199,65 @@ export const uploadExemple = (
   })
 }
 
+export const downloadExempleExcel = (
+  file_name: string,
+  the_url_prefix: string,
+) => {
+  let root = window.location.href
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
+  
+  const url = root + the_url_prefix + '/sankey/upload_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  fetch(url, fetchData).then((response) => {
+    response.text().then((text) => {
+      const server_data = JSON.parse(text)
+      const error = server_data['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
+      }
+      clickSaveExcel(the_url_prefix,server_data)
+
+      
+    })
+  })
+}
+export const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
+  let root = window.location.href
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
+  let url = root + url_prefix + 'sankey/save_excel'
+  
+  const fetchData = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = root + url_prefix + 'sankey/clean_excel'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
 /**
  *
  * @param {SankeyData} sankey_data
