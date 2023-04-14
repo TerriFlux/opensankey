@@ -1132,9 +1132,13 @@ export const keyHandler = (
       set_master_data({...master_data})
       const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
       const view_data : SankeyPlusData = master_data.view.filter(v => v.id == view)[0].view_data as SankeyPlusData
-      const new_links = Object.values(view_data.links).forEach(l=>
+      Object.values(view_data.links).forEach(l=> {
+        if (dataTagsArray.length == 0) {
+          l.value = master_data.links[l.idLink].value;
+          return;
+        }
         setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_data.links[l.idLink].value as { [key: string]: SankeyLinkValue },0)
-      )
+    })
 
       set_data({...data})
       set_show_toast(true)
