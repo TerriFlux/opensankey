@@ -1,6 +1,6 @@
 import { InferProps} from 'prop-types'
 import React, { Requireable } from 'react'
-import {/*SankeyPlusNode,*/ SankeyLinkValue, TagsCatalog} from 'open-sankey/src/lib/types'
+import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsCatalog, TagsGroup} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
@@ -1035,6 +1035,38 @@ const branchAnimateForView = (
     })
 }
 
+export const setValue = (
+  dataTags: TagsGroup[],
+  v_target: {[key:string] : SankeyLinkValue},
+  v_source: {[key:string] : SankeyLinkValue},
+  depth: number
+) => {
+  const dataTag = Object.values(dataTags)[depth]
+  const listKey = Object.keys(dataTag.tags)
+  for (const i in listKey) {
+    if (depth === dataTags.length - 1 ) {
+      try {
+        if ( v_target[listKey[i]] !== undefined) {
+          continue
+        }
+      } catch {
+        return
+      }
+      // const the_val = v.value as unknown as number
+      v_target[listKey[i]] = v_source[listKey[i]]
+    } else {
+      if ( v_target[listKey[i]] == undefined ) {
+        (v_target[listKey[i]] as SankeyLinkValueDict) = {}        
+      }
+      setValue(
+        dataTags, 
+        v_target[listKey[i]] as unknown as {[key:string] : SankeyLinkValue},
+        v_source[listKey[i]] as unknown as {[key:string] : SankeyLinkValue},  
+        depth + 1)
+    }
+  }
+}
+
 export const keyHandler = (
   e: KeyboardEvent,
   master:boolean,
@@ -1098,6 +1130,12 @@ export const keyHandler = (
       // data is view data
       master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
       set_master_data({...master_data})
+      const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
+      const view_data : SankeyPlusData = master_data.view.filter(v => v.id == view)[0].view_data as SankeyPlusData
+      const new_links = Object.values(view_data.links).forEach(l=>
+        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_data.links[l.idLink].value as { [key: string]: SankeyLinkValue },0)
+      )
+
       set_data({...data})
       set_show_toast(true)
       setTimeout(function () {
@@ -1112,7 +1150,6 @@ export const keyHandler = (
       //data is master data
       set_master_data({...master_data})
       set_view(master_data.view[ind].id)
-      //const copy = JSON.parse(JSON.stringify(master_data.view[ind].view_data)
       set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
 
       setTimeout(function () {
