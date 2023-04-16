@@ -1045,14 +1045,6 @@ export const setValue = (
   const listKey = Object.keys(dataTag.tags)
   for (const i in listKey) {
     if (depth === dataTags.length - 1 ) {
-      try {
-        if ( v_target[listKey[i]] !== undefined) {
-          continue
-        }
-      } catch {
-        return
-      }
-      // const the_val = v.value as unknown as number
       v_target[listKey[i]] = v_source[listKey[i]]
     } else {
       if ( v_target[listKey[i]] == undefined ) {
