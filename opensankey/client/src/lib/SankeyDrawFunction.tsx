@@ -810,7 +810,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
@@ -909,11 +908,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
       })
     }
     set_data({ ...data })
-  } else if (e.key == 'Escape') {
-    set_mode_selection('s')
-    set_show_nav(false)
-
-  } /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
+  } 
+  /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
     //va chercher les différences sauvegardées dans le localStorage
     // const differences = JSON.parse(localStorage.getItem('diff') as string)
