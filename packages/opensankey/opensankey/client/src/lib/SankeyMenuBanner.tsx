@@ -1059,10 +1059,9 @@ export const toolbar_builder = (
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
             <Button variant='dark' onClick={() => {
-              data.fit_screen = true
-              const zoomed=(transform:{transform:string})=> {
+              const zoomed=()=> {
                 [data.width, data.height] = min_width_and_height()
-                d3.select(' .opensankey #svg').attr('transform', transform['transform'])
+                d3.select(' .opensankey #svg').attr('transform', 'scale(1) translate("0px","0px")')
                 d3.select(' .opensankey #svg')
                   .style('border', Math.round(2 ) + 'px solid #78c2ad')
                   .style('width', data.width + 'px')
