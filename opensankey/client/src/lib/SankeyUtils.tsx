@@ -1201,14 +1201,13 @@ export const uploadExemple = (
 
 export const downloadExempleExcel = (
   file_name: string,
-  the_url_prefix: string,
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
   
-  const url = root + the_url_prefix + '/sankey/upload_examples'
+  const url = root + '/opensankey/sankey/upload_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -1221,7 +1220,7 @@ export const downloadExempleExcel = (
         alert(error)
         return
       }
-      clickSaveExcel(the_url_prefix,server_data)
+      clickSaveExcel('/opensankey/',server_data)
 
       
     })
