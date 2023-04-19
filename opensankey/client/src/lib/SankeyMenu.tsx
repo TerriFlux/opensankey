@@ -417,10 +417,11 @@ const Menu: FunctionComponent<MenuTypes> = (
           if ((data as SankeyData & { layout?: SankeyData }).layout ) {
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
-          Object.assign(data,processExample(server_data))
-          callback(data)
-          delete (data as SankeyData & { layout?: SankeyData }).layout
-          set_data({ ...data })
+          
+          const new_data=Object.assign(default_sankey_data(),processExample(server_data))
+          callback(new_data)
+          delete (new_data as SankeyData & { layout?: SankeyData }).layout
+          set_data({ ...new_data })
           //set_show_load(false)
         } catch(err) {
           alert(err)
