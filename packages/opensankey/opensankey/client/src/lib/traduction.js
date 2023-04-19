@@ -397,6 +397,9 @@ const resources = {
       },
       welcome:{
         'welcome':'Welcome to OpenSankey web application',
+        'exemple1':'Exemple of a sankey diagram with gradient links (functionality from Opensankey+) ',
+        'exemple2':'Exemple of a sankey diagram realised with Opensankey',
+
         'introduction':'Introduction to OpenSankey web application',
         1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant de sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds aux cliques de la souris',
         2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
@@ -807,6 +810,8 @@ const resources = {
       },
       welcome:{
         'welcome':'Bienvenue sur l\'applicaion web OpenSankey',
+        'exemple1':'Exemple d\'un diagramme de sankey comme des dégradés comme couleur de flux  (fonctionnalité d\'Opensankey+) ',
+        'exemple2':'Exemple d\'un diagramme de sankey pouvant être réaliser avec Opensankey',
         'introduction':'Introduction à l\'application web OpenSankey',
         1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant des sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds au clique de la souris',
         2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
