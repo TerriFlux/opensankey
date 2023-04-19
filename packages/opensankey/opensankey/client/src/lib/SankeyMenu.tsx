@@ -620,7 +620,9 @@ const OpenSankeyModalShortcut = (t:TFunction,
       <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
       <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
       <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
-      <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
+      <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
+      <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
+      <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
       
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
       
