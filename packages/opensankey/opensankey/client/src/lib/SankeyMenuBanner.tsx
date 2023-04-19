@@ -541,7 +541,9 @@ export const toolbar_builder = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  set_show_readme:(b:boolean)=>void
+  set_show_readme:(b:boolean)=>void,
+  first_selected_node:object,
+  set_first_selected_node:(o:object)=>void,
 ) => {
   const default_horiz_shift = 50
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
@@ -554,6 +556,11 @@ export const toolbar_builder = (
    * @param {string} val
    */
   const setSelectionMode = (val: string) => {
+    d3.selectAll(' .opensankey #svg #path-flux').remove()
+    if(val=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+      data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
+      set_first_selected_node({})
+    }
     set_mode_selection(val)
   }
   let max_link_value = 0
