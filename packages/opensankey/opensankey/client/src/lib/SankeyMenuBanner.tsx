@@ -883,77 +883,77 @@ export const toolbar_builder = (
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=
-<Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
-  <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-    <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-      {addAllDropDownNode(t,data,set_data,false)}</>
-    ) : (<>
-      <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-    }</table>
-  </Popover.Body>
-</Popover>
-//Popover element to handle the display of link tags
-  const filter_color_link=
-<Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
-  <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-    {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
-  </Popover.Body>
-</Popover>
-//Popover element to handle the display of data tags
-  const filter_data=
-<Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
-  <Popover.Body>
-    <FormGroup as={Row}>
-      <Col xs={10}>
-        {addAllDropDownLinks()}
-      </Col>
-      <Col xs={2}>
-        <FormCheck
-          type='switch'
-          style={{marginLeft: '-2em'}}
-          checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
-          onChange={evt=> {
-            //Déselecitonne tous les type de tag
-            Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-            Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-            Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+  <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+        {addAllDropDownNode(t,data,set_data,false)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+      }</table>
+    </Popover.Body>
+  </Popover>
+  //Popover element to handle the display of link tags
+    const filter_color_link=
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
+    </Popover.Body>
+  </Popover>
+  //Popover element to handle the display of data tags
+    const filter_data=
+  <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
+    <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          {addAllDropDownLinks()}
+        </Col>
+        <Col xs={2}>
+          <FormCheck
+            type='switch'
+            style={{marginLeft: '-2em'}}
+            checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
+            onChange={evt=> {
+              //Déselecitonne tous les type de tag
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
-            Object.values(data.nodes).forEach(el => {
-              el.colorParameter = 'local'
-              el.colorTag = 'no_colormap'
-            })
-
-            Object.values(data.links).forEach(el => {
-              el.colorParameter = 'local'
-              el.colorTag = 'no_colormap'
-            })
-
-            data.colorMap = 'no_colormap'
-
-            //Met le dernier dataTag en tant que couleur a suivre pour les flux
-            if(evt.target.checked){
               Object.values(data.nodes).forEach(el => {
-                el.colorParameter = 'groupTag'
+                el.colorParameter = 'local'
                 el.colorTag = 'no_colormap'
               })
-              Object.values(data.links).forEach(el => {
-                el.colorParameter = 'groupTag'
-                el.colorTag = 'no_colormap'
-              })
-              data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
-              Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
-            }
 
-            set_data({...data})
-          }}
-        />
-      </Col>
-    </FormGroup>
-  </Popover.Body>
-</Popover>
+              Object.values(data.links).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              data.colorMap = 'no_colormap'
+
+              //Met le dernier dataTag en tant que couleur a suivre pour les flux
+              if(evt.target.checked){
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                Object.values(data.links).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
+                Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
+              }
+
+              set_data({...data})
+            }}
+          />
+        </Col>
+      </FormGroup>
+    </Popover.Body>
+  </Popover>
   return [
     <Col>
       <FormGroup as={Col} lg='auto'>
@@ -1344,7 +1344,7 @@ export const OpenSankeyMenuBanner = (
       }
     </div>,
 
-    'toolbar': <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
+    'toolbar': <Row className='sankey-toolbar bg-light' style={{'marginTop':height_navbarAndHerowrap,position:'fixed',width:'100%',zIndex:'10'}}>
       {/* {(view!=='none')? <Col>
       <FormGroup as={Col} lg='auto'>
           <ButtonGroup >
