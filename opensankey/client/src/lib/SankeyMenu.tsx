@@ -704,10 +704,12 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   const content_carousel=<Carousel variant='dark'>
     <Carousel.Item>
       <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_1.png'   style={{'objectFit':'contain','width':'100%'}}   />
+      <Carousel.Caption><p>{t('welcome.exemple1')}</p></Carousel.Caption>
     </Carousel.Item>
 
     <Carousel.Item>
       <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_2.png'   style={{'objectFit':'contain','width':'100%'}}   />
+      <Carousel.Caption><p>{t('welcome.exemple2')}</p></Carousel.Caption>
     </Carousel.Item>
   </Carousel>
   external_content['carousel']=content_carousel
