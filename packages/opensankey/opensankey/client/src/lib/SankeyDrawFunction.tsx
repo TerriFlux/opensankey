@@ -1083,6 +1083,10 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
       window.event?.stopPropagation()
       window.event?.preventDefault()
+      if(mode_selection=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+        data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
+        set_first_selected_node({})
+      }
       if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
@@ -1172,6 +1176,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         set_first_selected_node({})
         set_data({...data})    
       }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
         
       
         const n_link = default_link(data)
