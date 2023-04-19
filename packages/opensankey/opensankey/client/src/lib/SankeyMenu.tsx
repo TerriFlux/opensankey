@@ -4,9 +4,9 @@ import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 're
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Image} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
-import { convert_data } from './SankeyConvert'
+import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel } from './SankeyUtils'
+import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -281,6 +281,7 @@ export const OpenSankeyMenus = (
                   (new_data.version as unknown as undefined) = undefined
                 }
                 convert_data(new_data)
+                complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
                 set_nodes_level(data)
                 set_data(new_data)
                 const test = document.getElementsByClassName('navbar')
