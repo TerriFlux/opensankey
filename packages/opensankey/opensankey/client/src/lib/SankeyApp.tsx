@@ -166,6 +166,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
+    set_user_scale(data.user_scale)
     set_data({ ...data })
   }
 
@@ -259,7 +260,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
+    set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[],set_user_scale
   )
   sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
     <ExempleItem
@@ -272,6 +273,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       multi_selected_nodes={multi_selected_nodes}
       launch={launch}
       reinitialization={reinitialization}
+      set_user_scale={set_user_scale}
     /></NavDropdown >
   )
   // 2.4 Modal linked to menu item
@@ -489,6 +491,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           loginOut={()=>null}
           unsetTokens={()=>null}
           // modalShortcut={shortcut_modale}
+          set_user_scale={set_user_scale}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
