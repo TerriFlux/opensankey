@@ -1161,7 +1161,9 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  reinitialization: ()=>void
+  reinitialization: ()=>void,
+  set_user_scale:(n:number)=>void
+
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
@@ -1193,6 +1195,7 @@ export const uploadExemple = (
         Object.assign(data,server_data)
         convert_data(data)
         complete_sankey_data(data,default_sankey_data,default_node,default_link)
+        set_user_scale(data.user_scale)
         set_data({ ...data})
       }
     })
