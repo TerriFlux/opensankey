@@ -114,13 +114,13 @@ export const OpenSankeyConfigurationNodesAttributes = (
             disabled={ !isAllNodeVisible()}
             value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
             onChange={evt=>{
-              colorOnBlur=evt.target.value
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
+              // set_data({ ...data })
             }}
-            onBlur={() => {
-              const color = colorOnBlur
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
-              set_data({ ...data })
-            }}/>
+          onBlurCapture={()=>{
+            set_data({ ...data })
+          }}
+        />  
         </OverlayTrigger>
       </Col>
     </Form.Group>,
