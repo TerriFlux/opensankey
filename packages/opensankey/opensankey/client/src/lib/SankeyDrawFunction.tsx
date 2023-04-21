@@ -814,7 +814,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
-    e.preventDefault()
     if (e.key == 'ArrowUp') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
