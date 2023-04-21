@@ -1392,9 +1392,6 @@ export const keyHandler = (
     }
   } 
   if (['ArrowUp', 'ArrowDown', , 'F8', 'F9'].includes(e.key)) {
-    if(e.preventDefault){
-      e.preventDefault()
-    }
     if (!master && e.key == 'ArrowUp' || e.key == 'F8') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
