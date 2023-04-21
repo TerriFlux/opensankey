@@ -17,7 +17,8 @@ export const OpenSankeyMenuConfigurationLayout = (
   node_vspace:number,
   set_node_vspace:(n:number)=>void
 ) => {
-
+  let vertical_dilation = 1
+  let horizontal_dilation = 1
   return [
     /* Couleur du fond de la page */
     <Form.Group as={Row}>
@@ -39,6 +40,42 @@ export const OpenSankeyMenuConfigurationLayout = (
               set_data({...data})
             }}/>
         </OverlayTrigger>
+      </Col>
+    </Form.Group>,
+    <Form.Group as={Row} >
+    <Col xs={3}>
+      <FormLabel >Horizontal dilation</FormLabel>
+    </Col>
+    <Col>
+      <FormControl
+        type="text"
+        value={horizontal_dilation}
+        onChange={evt => {
+          horizontal_dilation = +evt.target.value
+        }}
+        onBlur={() => {
+          Object.values(data.nodes).forEach( n=>n.x = n.x*horizontal_dilation)
+          set_data({ ...data })
+        }}
+      />
+    </Col>
+  </Form.Group>,
+    <Form.Group as={Row} >
+      <Col xs={3}>
+        <FormLabel >Vertical dilation</FormLabel>
+      </Col>
+      <Col>
+        <FormControl
+          type="text"
+          value={vertical_dilation}
+          onChange={evt => {
+            vertical_dilation = +evt.target.value
+          }}
+          onBlur={() => {
+            Object.values(data.nodes).forEach( n=>n.y = n.y*+vertical_dilation)
+            set_data({ ...data })
+          }}
+        />
       </Col>
     </Form.Group>,
     /* Quadrillage */
