@@ -16,8 +16,8 @@ export const OpenSankeyMenuConfigurationLayout = (
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
-  vertical_dilation: {current:number},
-  horizontal_dilation: {current:number}
+  vertical_dilation: {current:string},
+  horizontal_dilation: {current:string}
 ) => {
   return [
     /* Couleur du fond de la page */
@@ -51,10 +51,10 @@ export const OpenSankeyMenuConfigurationLayout = (
         type="text"
         value={horizontal_dilation.current}
         onChange={evt => {
-          horizontal_dilation.current = +evt.target.value
+          horizontal_dilation.current = evt.target.value
         }}
         onBlur={() => {
-          Object.values(data.nodes).forEach( n=>n.x = n.x*horizontal_dilation.current)
+          Object.values(data.nodes).forEach( n=>n.x = n.x*+horizontal_dilation.current)
           set_data({ ...data })
         }}
       />
@@ -69,7 +69,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           type="text"
           value={vertical_dilation.current}
           onChange={evt => {
-            vertical_dilation.current = +evt.target.value
+            vertical_dilation.current = evt.target.value
           }}
           onBlur={() => {
             Object.values(data.nodes).forEach( n=>n.y = n.y*+vertical_dilation.current)

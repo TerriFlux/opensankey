@@ -177,8 +177,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
-  let vertical_dilation = useRef(1)
-  let horizontal_dilation = useRef(1)
+  let vertical_dilation = useRef('1')
+  let horizontal_dilation = useRef('1')
   const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux,node_hspace,set_node_hspace,node_vspace,set_node_vspace,vertical_dilation,horizontal_dilation)
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
