@@ -372,7 +372,7 @@ export const OpenSankeyDrawLinks = (
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 5')
           }
         }
-        if (!event.shiftKey && !static_sankey) {
+        if (!event.shiftKey) {
           return
         }
         sankeyTooltip
@@ -386,7 +386,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
       .on('mousemove', (event) => {
-        if (!event.shiftKey && !static_sankey) {
+        if (!event.shiftKey) {
           return
         }
         sankeyTooltip

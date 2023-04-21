@@ -1961,7 +1961,7 @@ const drawCurve = (
         is_structure = true
       }
     } else if ( data.show_structure === 'reconciled' ) {
-      is_structure = theLinkValue.extension?.free_mini !== undefined && +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
+      is_structure = theLinkValue.extension?.free_mini !== undefined //&& +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
     }
   }
   if (link.orientation === 'vh' && !link.recycling) {
@@ -2347,7 +2347,7 @@ export const node_label_text=(
   if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange' && (data as unknown as {trade_label:string}).trade_label) {
     return d.name.split(' - ')[1]
   }
-  return d.name.split(' - ')[0].replace('-', ' ')
+  return d.name//.split(' - ')[0].replace('-', ' ')
 }
 
 export const value_selected_parameter = (data:SankeyData,
