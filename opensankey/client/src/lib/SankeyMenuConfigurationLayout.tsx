@@ -15,10 +15,10 @@ export const OpenSankeyMenuConfigurationLayout = (
   node_hspace:number,
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
-  set_node_vspace:(n:number)=>void
+  set_node_vspace:(n:number)=>void,
+  vertical_dilation: {current:number},
+  horizontal_dilation: {current:number}
 ) => {
-  let vertical_dilation = 1
-  let horizontal_dilation = 1
   return [
     /* Couleur du fond de la page */
     <Form.Group as={Row}>
@@ -49,12 +49,12 @@ export const OpenSankeyMenuConfigurationLayout = (
     <Col>
       <FormControl
         type="text"
-        value={horizontal_dilation}
+        value={horizontal_dilation.current}
         onChange={evt => {
-          horizontal_dilation = +evt.target.value
+          horizontal_dilation.current = +evt.target.value
         }}
         onBlur={() => {
-          Object.values(data.nodes).forEach( n=>n.x = n.x*horizontal_dilation)
+          Object.values(data.nodes).forEach( n=>n.x = n.x*horizontal_dilation.current)
           set_data({ ...data })
         }}
       />
@@ -67,12 +67,12 @@ export const OpenSankeyMenuConfigurationLayout = (
       <Col>
         <FormControl
           type="text"
-          value={vertical_dilation}
+          value={vertical_dilation.current}
           onChange={evt => {
-            vertical_dilation = +evt.target.value
+            vertical_dilation.current = +evt.target.value
           }}
           onBlur={() => {
-            Object.values(data.nodes).forEach( n=>n.y = n.y*+vertical_dilation)
+            Object.values(data.nodes).forEach( n=>n.y = n.y*+vertical_dilation.current)
             set_data({ ...data })
           }}
         />
