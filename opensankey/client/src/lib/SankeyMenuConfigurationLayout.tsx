@@ -16,8 +16,8 @@ export const OpenSankeyMenuConfigurationLayout = (
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
-  vertical_dilation: {current:string},
-  horizontal_dilation: {current:string}
+  vertical_dilation: React.RefObject<HTMLInputElement>,
+  horizontal_dilation: React.RefObject<HTMLInputElement>
 ) => {
   return [
     /* Couleur du fond de la page */
@@ -49,12 +49,18 @@ export const OpenSankeyMenuConfigurationLayout = (
     <Col>
       <FormControl
         type="text"
-        value={horizontal_dilation.current}
-        onChange={evt => {
-          horizontal_dilation.current = evt.target.value
-        }}
+        ref={horizontal_dilation}
         onBlur={() => {
-          Object.values(data.nodes).forEach( n=>n.x = n.x*+horizontal_dilation.current)
+          if (!horizontal_dilation.current || isNaN(parseFloat(horizontal_dilation.current!.value)) ) {
+            return
+          }
+          const visible_nodes = Object.values(data.nodes).filter(n=>n.node_visible)
+          if (visible_nodes.length == 0) {
+            return
+          }
+          let min_x = visible_nodes[0].x
+          Object.values(visible_nodes).forEach(n=> min_x = Math.min(n.x,min_x) )
+          Object.values(data.nodes).forEach( n=>n.x = min_x + (n.x-min_x)*+horizontal_dilation.current!.value)
           set_data({ ...data })
         }}
       />
@@ -67,12 +73,18 @@ export const OpenSankeyMenuConfigurationLayout = (
       <Col>
         <FormControl
           type="text"
-          value={vertical_dilation.current}
-          onChange={evt => {
-            vertical_dilation.current = evt.target.value
-          }}
+          ref={vertical_dilation}
           onBlur={() => {
-            Object.values(data.nodes).forEach( n=>n.y = n.y*+vertical_dilation.current)
+            if (!vertical_dilation.current || isNaN(parseFloat(vertical_dilation.current!.value)) ) {
+              return
+            }
+            const visible_nodes = Object.values(data.nodes).filter(n=>n.node_visible)
+            if (visible_nodes.length == 0) {
+              return
+            }
+            let min_y = visible_nodes[0].y
+            Object.values(visible_nodes).forEach(n=> min_y = Math.min(n.y,min_y) )
+            Object.values(data.nodes).forEach( n=>n.y = min_y + (n.y-min_y)*+vertical_dilation.current!.value)
             set_data({ ...data })
           }}
         />
