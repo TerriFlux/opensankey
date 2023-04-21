@@ -317,7 +317,7 @@ const node_mouse_click=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
   event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
-  if (!data.static_sankey && event.shiftKey || data.static_sankey) {
+  if (event.shiftKey) {
     event.preventDefault()
     set_animating(true)
     // Animation des flux du Sankey
@@ -482,7 +482,7 @@ export const SankeyPlusDrawNodesIcon = (
   
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
     d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
-    if ((d as SankeyPlusNode).shape_visible && (static_sankey || event.shiftKey)) {
+    if ((d as SankeyPlusNode).shape_visible && event.shiftKey) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyPlusNode))
@@ -490,7 +490,7 @@ export const SankeyPlusDrawNodesIcon = (
   }
         
   const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>,over_icon:boolean)=>{
-    if (((d as SankeyPlusNode).shape_visible ||over_icon) && (static_sankey || event.shiftKey)) {
+    if (((d as SankeyPlusNode).shape_visible ||over_icon) && event.shiftKey) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
