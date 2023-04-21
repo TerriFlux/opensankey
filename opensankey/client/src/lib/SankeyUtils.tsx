@@ -704,14 +704,14 @@ export const link_color = (l: SankeyLink,data_s:SankeyData,
           } else {
             return l.color
           }
-        } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'secteur')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
+        } else if ((!source_node.tags['Type de noeud'] || (source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] !== 'produit')) && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
           selected_tag = source_node.tags[source_node.colorTag][0]
           if (selected_tag in data_s.nodeTags[source_node.colorTag].tags) {
             return data_s.nodeTags[source_node.colorTag].tags[selected_tag].color
           } else {
             return l.color
           }
-        } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'secteur')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
+        } else if ((!target_node.tags['Type de noeud'] || (target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] !== 'produit')) && target_node.colorParameter !== 'local' && target_node.colorTag in target_node.tags && target_node.tags[target_node.colorTag].length === 1) {
           selected_tag = target_node.tags[target_node.colorTag][0]
           if (data_s.nodeTags[target_node.colorTag].tags[selected_tag]) {
             return data_s.nodeTags[target_node.colorTag].tags[selected_tag].color
