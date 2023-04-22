@@ -1,17 +1,14 @@
 import { InferProps} from 'prop-types'
-import React, { Requireable } from 'react'
-import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsCatalog, TagsGroup} from 'open-sankey/src/lib/types'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
+import React, { ChangeEvent, Requireable } from 'react'
+import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
+import { FaArrowDown, FaArrowUp, FaMinus, FaPlus, FaSave, FaUpload} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
-import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup } from 'react-bootstrap'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
 import {  node_color } from 'open-sankey/dist/SankeyUtils'
 import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
-import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
   data: SankeyPlusData,
@@ -1449,9 +1446,10 @@ export const viewsAccordion = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
+  _load_json:{current:HTMLInputElement}
   
 ) => {
-  return <Accordion.Item
+  return <><Accordion.Item
     id='Visualisation'
     eventKey="Visualisation"
     style={{ 'display': 'block' }}
@@ -1534,7 +1532,7 @@ export const viewsAccordion = (
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = data.view[ind]
+                          const toShift = master_data.view[ind]
                           master_data.view.splice(ind, 1)
                           master_data.view.splice(ind - 1, 0, toShift)
                           set_master_data({...master_data})
@@ -1551,7 +1549,7 @@ export const viewsAccordion = (
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = data.view[ind]
+                          const toShift = master_data.view[ind]
                           master_data.view.splice(ind, 1)
                           master_data.view.splice(ind + 1, 0, toShift)
                           set_master_data({...master_data})
@@ -1578,6 +1576,51 @@ export const viewsAccordion = (
                     }
                   }
                 ><FaMinus /></Button></td>
+                <td><Button
+                  size="sm"
+                  variant='success'
+                  onClick={
+                    () => {
+                      let ind = -1
+                      master_data.view.map((v, i) => {
+                        ind = (v.id == d.id) ? i : ind
+                      })
+                      const cur_view = master_data.view[ind]
+                      const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+                      const new_ind = 'view_' + String(new Date().getTime())
+
+                      if (!copy_view_data.accordeonToShow.includes('Vis')) {
+                        copy_view_data.accordeonToShow.push('Vis')
+                        data.accordeonToShow.push('Vis')
+                      }
+                
+                      copy_view_data.view = []
+                      set_data(copy_view_data)
+                      //copy.view = []
+                      master_data.view.push({
+                        id: new_ind,
+                        view_data: copy_view_data,
+                        nom: 'copy of ' + cur_view.nom,
+                        details: ''
+                      })
+                      set_view(new_ind)
+                      set_master_data({...master_data})
+                    }
+                  }
+                ><FaPlus /></Button></td>
+                <td><Button
+                  size="sm"
+                  variant='secondary'
+                  onClick={
+                    () => {
+                      if (_load_json.current) {
+                        _load_json.current!.name = ''
+                        _load_json.current.click()
+                        _load_json.current.id = d.id
+                      }
+                    }
+                  }
+                ><FaUpload /></Button></td>
               </tr>
             )
           }) : <></>}
@@ -1585,6 +1628,45 @@ export const viewsAccordion = (
       </Table>
     </Accordion.Body>
   </Accordion.Item>
+      <Form.Control
+        type="file"
+        ref={_load_json}
+        style={{ display: 'none' }}
+        onChange={(evt: ChangeEvent) => {
+          const files = (evt.target as HTMLFormElement).files
+          const reader = new FileReader()
+          reader.onload = (() => {
+            return (e: ProgressEvent<FileReader>) => {
+              let result = String((e.target as FileReader).result)
+              const result_data = JSON.parse(result)
+              let ind = -1
+              master_data.view.map((v, i) => {
+                ind = (v.id == _load_json.current!.id) ? i : ind
+              })
+              const cur_view = master_data.view[ind]
+              cur_view.view_data = JSON.parse(JSON.stringify(result_data)) 
+              cur_view.nom = files[0].name
+              set_data(cur_view.view_data as SankeyPlusData)
+              set_master_data({...master_data})
+              // Object.assign(new_data, result_data)
+              // if (result_data.version === undefined) {
+              //   (new_data.version as unknown as undefined) = undefined
+              // }
+              // convert_data(new_data)
+              // set_nodes_level(data)
+              // set_data(new_data)
+              // const test = document.getElementsByClassName('navbar')
+              // let margin_top = 0
+              // if (test && test.length > 0) {
+              //   margin_top = test[0].getBoundingClientRect().height
+              //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+              // }
+            }
+          })()
+          reader.readAsText(files[0])
+        }}
+      />
+  </>
 }
 declare const window: Window &
   typeof globalThis & {
