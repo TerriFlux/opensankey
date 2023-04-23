@@ -496,26 +496,6 @@ export const addAllDropDownFlux = (
   return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
 }
 
-
-/**
- * Define SankeyMenuBanner element
- *
- * @type {{ data: any; set_data: any; additional_selector: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }}
- */
-// const SankeyMenuBannerPropTypes = {
-//   t:PropTypes.func.isRequired,
-//   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-//   set_data: PropTypes.func.isRequired,
-//   additional_selector: PropTypes.element,
-//   mode_selection: PropTypes.string.isRequired,
-//   set_mode_selection: PropTypes.func.isRequired,
-//   set_current_filter: PropTypes.func.isRequired,
-//   url_prefix: PropTypes.string.isRequired,
-//   view:PropTypes.string.isRequired
-
-// }
-// type SankeyMenuBannerTypes = InferProps<typeof SankeyMenuBannerPropTypes>
-
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -533,8 +513,7 @@ export const toolbar_builder = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,
-  mode_selection:string,
-  set_mode_selection:(s:string)=>void,
+  mode_selection:{current:string},
   user_scale:number,
   set_user_scale:(n:number)=>void,
   filter:number,
@@ -554,7 +533,11 @@ export const toolbar_builder = (
    * @param {string} val
    */
   const setSelectionMode = (val: string) => {
-    set_mode_selection(val)
+    mode_selection.current = val
+    //- trigger update
+    const tutu = filter
+    set_current_filter(filter+1)
+    set_current_filter(tutu)
   }
   let max_link_value = 0
 
@@ -957,7 +940,7 @@ export const toolbar_builder = (
             placement={'bottom'}
             delay={500}
             overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
-            <Button  variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+            <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
               <FontAwesomeIcon icon={faArrowPointer} />
             </Button>
           </OverlayTrigger>
@@ -966,7 +949,7 @@ export const toolbar_builder = (
             placement={'right'}
             delay={500}
             overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
-            <Button variant={(!(mode_selection == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+            <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
               {/* Ajout liaison entre noeud */}
               <FontAwesomeIcon icon={faShareNodes}/>
             </Button>
@@ -1228,7 +1211,7 @@ export const SankeyBannerRows = (
 /**
  * Variable containing the edition row that handle filter and the mouse behavior on the sankey draw zone
  *
- * @param {{ data: any; set_data: any; mode_selection: any; set_mode_selection: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }} { data, set_data, additional_selector, mode_selection, set_mode_selection,mode_visualisation,set_current_filter,url_prefix }
+ * @param {{ data: any; set_data: any; mode_visualisation: any; set_current_filter: any; url_prefix: any; }}
  * @returns
  */
 export const OpenSankeyMenuBanner = (
@@ -1459,11 +1442,4 @@ export const OpenSankeyMenuBanner = (
 
   return ui
 }
-// const SankeyMenuBanner: FunctionComponent<SankeyMenuBannerTypes> = ({  t,data, set_data, mode_selection, set_mode_selection,set_current_filter,url_prefix,view }) => {
-
-// }
-
-// SankeyMenuBanner.propTypes = SankeyMenuBannerPropTypes
-
-// export default SankeyMenuBanner
 

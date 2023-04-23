@@ -569,7 +569,6 @@ export const default_sankey_data = (): SankeyData => {
 
     accordeonToShow: ['MEP'],
 
-    //show_banner:false,
     width: window.innerWidth - 40,
     height: window.innerHeight - 40,
 
@@ -1024,9 +1023,12 @@ export const setSelectedTags = (
 
   const { nodeTags } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
-
+  const has_level_tags = Object.keys(nodeTags).filter(tag => nodeTags[tag].banner === 'level').length > 0;
   display_nodes.forEach(node => {
-    node.node_visible = node.display
+    if (!has_level_tags) {
+      node.display = true
+    }
+    node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {

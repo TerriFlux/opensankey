@@ -17,7 +17,6 @@ export const OpenSankeyDefaultModalePreferenceContent=(
   t:TFunction,
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  set_mode_selection:React.Dispatch<React.SetStateAction<string>>,
   trad:i18n
 )=>{
   const ui={

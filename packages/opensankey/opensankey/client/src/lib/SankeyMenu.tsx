@@ -57,8 +57,7 @@ const MenuPropTypes = {
 
   nav_item_active: PropTypes.string.isRequired,
 
-  mode_selection: PropTypes.string.isRequired,
-  set_mode_selection: PropTypes.func.isRequired,
+  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
 
   style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
@@ -530,16 +529,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
       }
-      {/* <SankeyMenuBanner
-        t={t}
-        data={data}
-        set_data={set_data}
-        mode_selection={mode_selection}
-        set_mode_selection={set_mode_selection}
-        set_current_filter={set_current_filter}
-        url_prefix={url_prefix}
-        view={view}
-      />  */}
       {(show_nav && !data.static_sankey) ?
         <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>

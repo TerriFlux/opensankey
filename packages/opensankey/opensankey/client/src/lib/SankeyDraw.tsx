@@ -19,8 +19,7 @@ const SankeyDrawPropTypes = {
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
 
 
-  mode_selection: PropTypes.string.isRequired,
-  set_mode_selection: PropTypes.func.isRequired,
+  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
 
   first_selected_node:PropTypes.object.isRequired,
   set_first_selected_node:PropTypes.func.isRequired,
@@ -46,8 +45,7 @@ export const SankeyDrawDefaultProps = {
   multi_selected_nodes: {current : []},
   multi_selected_links: {current : []},
   multi_selected_label: {current : []},
-  mode_selection: '',
-  set_mode_selection: () => null,
+  mode_selection: {current:'s'},
 
   first_selected_node:{},
   set_first_selected_node:()=>null,
@@ -72,14 +70,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   animation,
   multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
   multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
-  mode_selection,set_mode_selection,first_selected_node,set_first_selected_node,
+  mode_selection,first_selected_node,set_first_selected_node,
   show_agregation, set_show_agregation,
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
   getLinkValue,token,set_show_toast_limit_node
 }) => {
-  set_mode_selection
 
   // const [first_selected_node,set_first_selected_node] = useState({})
   // const diff=require('deep-diff')
@@ -167,11 +164,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select('body').style('background-color',data.couleur_fond_sankey)
     // let isDown = false
     // Permet d'affecter une class au svg selon le mode
-    if (mode_selection=='s') {
+    if (mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
     }
     
-    if (mode_selection=='ln') {
+    if (mode_selection.current=='ln') {
       d3.select(' .opensankey #svg').attr('class','mode_add_flux')
     }
 
@@ -338,7 +335,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <svg id='svg' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
+            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
               multi_selected_links.current = []
@@ -385,7 +382,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
-  set_mode_selection:React.Dispatch<React.SetStateAction<string>>
+  mode_selection:{current : string}
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
     e.preventDefault()
@@ -484,7 +481,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
     set_data({ ...data })
   } else if (e.key == 'Escape') {
-    set_mode_selection('s')
+    mode_selection.current = 's'
     set_show_nav(false)
 
   } /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {

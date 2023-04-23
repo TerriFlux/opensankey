@@ -12,7 +12,7 @@ export const OpenSankeyDrawLinks = (
   data:SankeyData,
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_links:{current: SankeyLink[] },
-  mode_selection:string,
+  mode_selection:{current:string},
 
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
@@ -275,7 +275,7 @@ export const OpenSankeyDrawLinks = (
         return display
       })
       .attr('pointer-events', 'auto')
-      .attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
+      .attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
       .attr('stroke-dasharray', d => {
         return strokeDasharray(d,data,getLinkValue)
       })
