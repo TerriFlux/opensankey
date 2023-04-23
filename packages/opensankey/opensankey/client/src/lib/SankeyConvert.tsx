@@ -91,6 +91,7 @@ interface ConvertSankeyData {
   agregated_level?: number
   show_structure: boolean | string
   show_data?: boolean
+  view:{id: string,view_data: object,nom:string,details:string}[]
 }
 
 interface ConvertSankeyValue {
@@ -1285,4 +1286,12 @@ export const convert_data = (
   convert_tags(data)
   convert_nodes(data)
   convert_links(data)
+  if (!data_to_convert.view) {
+    return
+  }
+  data_to_convert.view.forEach(v=>{
+    convert_tags(v.view_data as unknown as SankeyData)
+    convert_nodes(v.view_data as unknown as SankeyData)
+    convert_links(v.view_data as unknown as SankeyData)    
+  })
 }
