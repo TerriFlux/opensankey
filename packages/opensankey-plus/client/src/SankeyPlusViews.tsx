@@ -49,8 +49,7 @@ export const sankey_draw_view = (
   nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
   linkTooltipsContent:(data : SankeyPlusData,d : SankeyPlusLink) => string,
   set_show_toast:(b:boolean)=>void,
-  mode_selection:string,
-  set_mode_selection:(s:string)=>void,
+  mode_selection:{current : string},
   draw_nodes:JSX.Element,
   draw_links:JSX.Element,
   draw_labels:JSX.Element,
@@ -70,7 +69,6 @@ export const sankey_draw_view = (
     multi_selected_label={multi_selected_label}
     multi_selected_links={multi_selected_links}
     mode_selection={mode_selection}
-    set_mode_selection={set_mode_selection}
     first_selected_node={{}}
     set_first_selected_node={set_first_selected_node}
     show_agregation={false} 
