@@ -53,7 +53,8 @@ export const SankeyNodePropTypes = {
   outputLinksId: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
 
   // semantic
-  shape: PropTypes.oneOf(['ellipse', 'rect']).isRequired,
+  shape: PropTypes.oneOf(['ellipse', 'rect', 'image']).isRequired,
+  image: PropTypes.string,
   tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
   style:PropTypes.string.isRequired,
   //display

@@ -432,7 +432,15 @@ export const OpenSankeyDrawNodes = (
         .attr('cy', d => d.node_height / 2)
         .attr('rx', d => d.node_width / 2)
         .attr('ry', d => d.node_height / 2)
-            
+
+      ggg_nodes
+        .filter(d=>d.shape === 'image')
+        .append('foreignObject')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('id', d=>d.idNode + '_image')
+        .append('xhtml:div')
+        .html(d=>d.image!)            
             
     }
 

@@ -40,6 +40,16 @@ export const OpenSankeyConfigurationNodesAttributes = (
     return circle
   }
 
+  const isAllNodeImage = () => {
+    let image = true
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => image = (d.shape !== 'image') ? false : image)
+    } else {
+      image = false
+    }
+    return image
+  }
+
   const isAllNodeColorSustainable = () => {
     let colorS = true
     if (selected_parameter.length > 0) {
@@ -190,6 +200,43 @@ export const OpenSankeyConfigurationNodesAttributes = (
             }}/>
         </OverlayTrigger>
       </Col>
+      <Col xs={2}>
+        <OverlayTrigger
+          key={'noeud.apparence.tooltips.4'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+          <FormCheck
+            value="image"
+            type='radio'
+            label={'Image'}
+            disabled={!isAllNodeVisible()}
+            checked={isAllNodeImage()}
+            onChange={evt => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              set_data({ ...data })
+            }}/>
+        </OverlayTrigger>
+      </Col>
+    </Form.Group>,
+    <Form.Group as={Row}>
+      <Row>
+        <FormLabel column sm={1}>Text:</FormLabel>
+        <Col sm={11}>
+          <Form.Control
+            as="textarea"
+            rows={5}
+            disabled={selected_parameter.length != 1}
+            value={selected_parameter.length > 0 ? selected_parameter[0].image! : ''}
+            onChange={
+              (evt) => {
+                selected_parameter.map(n => n.image = evt.target.value)
+                set_data({ ...data })
+              }
+            }
+          />
+        </Col>
+      </Row>
     </Form.Group>,
 
     /* Largeur minimale du noeud */
