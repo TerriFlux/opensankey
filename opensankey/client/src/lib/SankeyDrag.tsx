@@ -242,7 +242,7 @@ export const dragGNodeEvent=(
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   min_thickness:number,
   drawCurveFunction : SankeyDrawCurve,
-  mode_selection:string,
+  mode_selection:{current:string},
   alt_key_pressed:boolean,
   static_sankey:boolean,
   multi_selected_links:{current: SankeyLink[] },
@@ -255,7 +255,7 @@ export const dragGNodeEvent=(
 )=>{
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object).on('drag', function (event,node) {
-      if(mode_selection=='s'){
+      if(mode_selection.current=='s'){
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !static_sankey){
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){

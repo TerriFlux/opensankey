@@ -810,7 +810,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  set_mode_selection:React.Dispatch<React.SetStateAction<string>>
+  mode_selection:{ current : string}
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
     e.preventDefault()
@@ -1030,7 +1030,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
 // - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
 // until the mouse is released wich add a second node and add a link between these 2 nodes
 export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
-  mode_selection:string,
+  mode_selection:{current:string},
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_nodes:{current:SankeyNode[]},
@@ -1046,7 +1046,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     
     if(d3.select(evt.target).attr('class')!='node node_shape'){
       
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
+      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln') {
         if(!token && Object.keys(data.nodes).length>15){
           set_show_toast_limit_node(true)
           setTimeout(function () {
@@ -1079,7 +1079,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
       window.event?.stopPropagation()
       window.event?.preventDefault()
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
@@ -1122,7 +1122,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // si le token de connexion est à false alors ne crée pas de second noeud
       //si le mode de souris est noeud+flux alors crée un second noeud au relachement 
       //et crée un lien entre le premier noeud crée lors du click et ce dernier
-      if(!token && Object.keys(data.nodes).length>15 && mode_selection == 'ln'){
+      if(!token && Object.keys(data.nodes).length>15 && mode_selection.current == 'ln'){
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
         d3.selectAll(' .opensankey #svg #path-flux').remove()
         set_first_selected_node({})
@@ -1130,7 +1130,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         setTimeout(function () {
           set_show_toast_limit_node(false)
         }, 3000)
-      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
         // isDown = false
         d3.selectAll(' .opensankey #svg #path-flux').remove()
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
@@ -1167,7 +1167,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)  
         set_first_selected_node({})
         set_data({...data})    
-      }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
+      }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
         
       
         const n_link = default_link(data)

@@ -12,11 +12,12 @@ const SankeySettingsEditionTagsPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   elementTagNameProp: PropTypes.oneOf(['nodeTags','fluxTags','dataTags']).isRequired,
-  elementNameProp: PropTypes.oneOf(['nodes','links','none']).isRequired
+  elementNameProp: PropTypes.oneOf(['nodes','links','none']).isRequired,
+  show_level: PropTypes.bool.isRequired
 }
 type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ t,data, set_data,elementTagNameProp,elementNameProp }) => {
+const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ t,data, set_data,elementTagNameProp,elementNameProp,show_level }) => {
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
@@ -540,7 +541,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                           {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Tags.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
-                          {/* {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>} */}
+                          { (show_level && elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>}
                         </Form.Select>
                       </OverlayTrigger>
                     </td>
