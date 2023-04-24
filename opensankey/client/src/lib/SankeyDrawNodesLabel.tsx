@@ -33,9 +33,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('x',n => node_label_posX(n as SankeyNode))
       .attr('y', n => node_label_posY((n as SankeyNode),data))
       .attr('text-anchor', n => {
-        if ((n as SankeyNode).x_label !== undefined && data.show_structure !== 'structure') {
-          return 'left'
-        } else if ((n as SankeyNode).display_style.label_horiz == 'middle') {
+        if ((n as SankeyNode).display_style.label_horiz == 'middle') {
           return 'middle'
         } else if ((n as SankeyNode).display_style.label_horiz == 'left') {
           return 'end'
@@ -76,6 +74,7 @@ export const OpenSankeyDrawNodesLabel = (
     // Drag zone for changing label box width
     // (if the label length exceed a certian length the text is wrapped, the box visually represent the length to not exceed)
     ggg_nodes
+      .filter(n=>n.x_label==undefined)
       .append('rect')
       .attr('class','box_width_threshold')
       .attr('x',n=>{
