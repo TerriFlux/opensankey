@@ -544,6 +544,7 @@ export const toolbar_builder = (
   set_show_readme:(b:boolean)=>void,
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
+  min_width_and_height:(d:SankeyData)=>number[]
 ) => {
   const default_horiz_shift = 50
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
@@ -816,46 +817,7 @@ export const toolbar_builder = (
     })
     return allDD
   }
-  /**
-   * Search the lowest visual element of the sankey to reajust the draw zone
-   *
-   * @returns {number[]}
-   */
-  const min_width_and_height = () => {
-    let height = 0
-    let width = 0
 
-    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
-      // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
-      let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width
-      if(n.display_style.label_horiz=='left'){
-        width_label/=2
-      }
-      else if(n.display_style.label_horiz=='middle'){
-        width_label=0
-      }
-
-      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
-      width = (n.x && n.node_visible) ? Math.max(width, n.x+width_label) : width
-    })
-
-    height = height + 100
-    width = width + 100
-
-    Object.values(data.links).forEach(l => {
-      if (l.recycling) {
-        height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
-      }
-    })
-
-    Object.values(data.links).forEach(l => {
-      if (l.recycling) {
-        width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
-      }
-    })
-
-    return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
-  }
   const struc_data_reconciled=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
@@ -1066,9 +1028,10 @@ export const toolbar_builder = (
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
             <Button variant='dark' onClick={() => {
+              [data.width, data.height] = min_width_and_height(data)
+              const scale=window.innerWidth/data.width
               const zoomed=()=> {
-                [data.width, data.height] = min_width_and_height()
-                d3.select(' .opensankey #svg').attr('transform', 'scale(1) translate("0px","0px")')
+                d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+') translate(0,0)')
                 d3.select(' .opensankey #svg')
                   .style('border', Math.round(2 ) + 'px solid #78c2ad')
                   .style('width', data.width + 'px')
@@ -1076,7 +1039,7 @@ export const toolbar_builder = (
               const zoom = d3.zoom()
                 .scaleExtent([1, 40])
                 .on('zoom', zoomed)
-              zoom.scaleTo(d3.select(' .opensankey #svg'),1)
+              zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
               set_data({ ...data })
             }} >
               <FontAwesomeIcon icon={faMaximize} />
