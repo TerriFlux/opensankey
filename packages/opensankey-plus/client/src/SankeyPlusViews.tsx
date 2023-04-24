@@ -4,7 +4,8 @@ import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsCatalog, T
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup } from 'react-bootstrap'
+import { TFunction } from 'i18next'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
@@ -1446,6 +1447,8 @@ export const viewsAccordion = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
+  t:TFunction,
+  is_activated:boolean
   
 ) => {
   return <Accordion.Item
@@ -1463,9 +1466,16 @@ export const viewsAccordion = (
     }>
     <Accordion.Header>Storytelling</Accordion.Header>
     <Accordion.Body>
+    <OverlayTrigger
+        key={'textZoneDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        >
+      <Form>
       <Row>
         <Col xs={3}>
-          <FormLabel>Sélection Vue</FormLabel>
+          <FormLabel>{t('view.select')}</FormLabel>
         </Col>
         <Col xs={9}>
           <Form.Select id="selectionNode"
@@ -1493,7 +1503,7 @@ export const viewsAccordion = (
               }
             }
           >
-            <option selected={view == 'none'} value={'none'}>Données actuelles</option>
+            <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
             {master_data ? master_data.view.map(d => {
               return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
             }) : <></>}
@@ -1504,7 +1514,7 @@ export const viewsAccordion = (
       <Table bordered size='sm'>
         <thead>
           <tr>
-            <th>Nom</th>
+            <th>{t('view.name')}</th>
             <th>Position</th>
             <th></th>
           </tr>
@@ -1515,6 +1525,7 @@ export const viewsAccordion = (
               <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
                 <td><FormControl size='sm'
                   value={d.nom}
+                  disabled={!is_activated}
                   onChange={evt => {
                     master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
                     set_data({ ...data })
@@ -1525,6 +1536,7 @@ export const viewsAccordion = (
                     <Button
                       size="sm"
                       variant="success"
+                      disabled={!is_activated}
                       onClick={
                         () => {
                           let ind = -1
@@ -1542,6 +1554,7 @@ export const viewsAccordion = (
                     ><FaArrowUp /></Button><Button
                       size="sm"
                       variant="success"
+                      disabled={!is_activated}
                       onClick={
                         () => {
                           let ind = -1
@@ -1562,6 +1575,7 @@ export const viewsAccordion = (
                 <td><Button
                   size="sm"
                   variant='danger'
+                  disabled={!is_activated}
                   onClick={
                     () => {
                       let ind = -1
@@ -1580,6 +1594,7 @@ export const viewsAccordion = (
           }) : <></>}
         </tbody>
       </Table>
+      </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
 }

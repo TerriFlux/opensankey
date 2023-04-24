@@ -1,5 +1,5 @@
 import React,{useEffect} from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
@@ -10,7 +10,8 @@ export const SankeyPlusNodesAttributes = (
   t:TFunction,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]}
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  is_activated:boolean
 ) => {
   const isAllNodeVisible = () => {
     let visible = false
@@ -31,15 +32,16 @@ export const SankeyPlusNodesAttributes = (
     }
     return same_orientation
   }
-  return [
+  const form_elements= [
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel >{t('Noeud.apparence.toScale')}</FormLabel>
+        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')}</FormLabel>
       </Col>
       <Col xs={1}>
         <FormCheck inline
           type='switch'
           checked={isAllNodeToScale()}
+          disabled={!is_activated}
           onChange={evt => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
             set_data({ ...data })
@@ -49,7 +51,7 @@ export const SankeyPlusNodesAttributes = (
 
     </Form.Group>,
     <Col xs={5}>
-      <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
+      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
     </Col>,
     <Form.Group as={Row} >       
       <Col  xs={3}>
@@ -57,7 +59,7 @@ export const SankeyPlusNodesAttributes = (
           value="left"
           type='radio'
           label={t('Noeud.apparence.toScaleLeft')}
-          disabled={!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale()}
           checked={isAllNodeNotToScaleOrientation('left')}
           onChange={evt => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
@@ -70,7 +72,7 @@ export const SankeyPlusNodesAttributes = (
           value="right"
           type='radio'
           label={t('Noeud.apparence.toScaleRight')}
-          disabled={!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale()}
           checked={isAllNodeNotToScaleOrientation('right')}
           onChange={evt => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
@@ -83,7 +85,7 @@ export const SankeyPlusNodesAttributes = (
           value="top"
           type='radio'
           label={t('Noeud.apparence.toScaleTop')}
-          disabled={!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale()}
           checked={isAllNodeNotToScaleOrientation('top')}
           onChange={evt => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
@@ -96,7 +98,7 @@ export const SankeyPlusNodesAttributes = (
           value="bottom"
           type='radio'
           label={t('Noeud.apparence.toScaleBottom')}
-          disabled={!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale()}
           checked={isAllNodeNotToScaleOrientation('bottom')}
           onChange={evt => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
@@ -105,6 +107,19 @@ export const SankeyPlusNodesAttributes = (
         />
       </Col>
     </Form.Group>]
+
+  if(is_activated){
+    return form_elements
+  }else{
+    return form_elements.map((e,i)=>{
+      return <React.Fragment key={i}><OverlayTrigger
+      key={'SankeyPlusNodesAttributes'+i}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'SankeyPlusNodesAttributes'+i}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >{e}</OverlayTrigger></React.Fragment>
+    })
+  }
 }
 
 export const SankeyPlusNodeIcon = (
@@ -112,7 +127,8 @@ export const SankeyPlusNodeIcon = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  radio_selected:string
+  radio_selected:string,
+  is_activated:boolean
 )=> {
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
   const isAllIconSame = (param: string) => {
@@ -139,16 +155,24 @@ export const SankeyPlusNodeIcon = (
     multi_selected_nodes.current.map(d => visible = (d.iconVisible) ? true : visible)
     return visible
   }
+
   return <Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>
-    <Form >
+    <OverlayTrigger
+  key={'iconDisabled'}
+  placement={'top'}
+  delay={500}
+  overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+  >
+    <Form>
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
+          <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
         </Col>
         <Col xs={5}>
           <FormCheck inline
             type='switch'
             checked={isAllIconVisible()}
+            disabled={!is_activated}
             onChange={evt => {
 
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
@@ -161,11 +185,11 @@ export const SankeyPlusNodeIcon = (
 
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
         </Col>
         <Col xs={5}>
           <Form.Select
-            disabled={!isAllIconVisible()}
+            disabled={!is_activated?true:!isAllIconVisible()}
             onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                 d.iconName = evt.target.value
@@ -184,12 +208,12 @@ export const SankeyPlusNodeIcon = (
       </Form.Group>
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
         </Col>
         <Col xs={3}>
           <Form.Control
             type='color'
-            disabled={radio_selected !== 'local' || !isAllIconVisible()}
+            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
             value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
             onChange={evt => {
               const color = evt.target.value
@@ -201,12 +225,12 @@ export const SankeyPlusNodeIcon = (
       </Form.Group>
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
         </Col>
         <Col xs={3}>
           <Form.Control
             type='number'
-            disabled={radio_selected !== 'local' || !isAllIconVisible()}
+            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
             value={valueAllIconRatio()}
             onChange={evt => {
               let ratio = +evt.target.value
@@ -218,10 +242,10 @@ export const SankeyPlusNodeIcon = (
           />
         </Col>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllIconVisible())?'#555555':'#DADADA'}} >%</FormLabel>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
         </Col>
       </Form.Group>
-    </Form>
+    </Form></OverlayTrigger>
   </Tab>
 }
 
