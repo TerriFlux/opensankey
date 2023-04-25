@@ -90,7 +90,12 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
         }
         ) : Object.keys(exemple_menu).map(
           (key, index) => {
-            const title = key
+            const tmp_title = key.replaceAll('_','__').split('__')
+            if(tmp_title.length>1){
+              tmp_title.shift()
+            }
+            const title=tmp_title.join(' ')
+            
             if (key === 'artefacts') {
               return <></> 
             }
