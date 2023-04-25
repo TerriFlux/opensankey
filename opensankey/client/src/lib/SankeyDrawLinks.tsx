@@ -294,7 +294,7 @@ export const OpenSankeyDrawLinks = (
       .append('text')
       .attr('pointer-events', 'none')
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('style',d=> 'font-weight: bold; font-size:' + d.label_font_size + 'px;')
+      .attr('style',d=> 'font-weight: bold; font-size:' + d.label_font_size + 'px;'+'font-family:'+data.display_style.link_font_family_selected)
       .attr('fill', l => {
         if (l.text_color === l.color) {
           return link_color(l,data,getLinkValue) as string
@@ -319,7 +319,7 @@ export const OpenSankeyDrawLinks = (
       .attr('id', d => d.idLink + '_text')
       .attr('pointer-events',d=>(d.label_position!=='frozen')?'none':'auto')
       .attr('class', 'link_value')
-      .attr('style',d=> 'font-weight: bold;font-size:' + d.label_font_size + 'px;')
+      .attr('style',d=> 'font-weight: bold;font-size:' + d.label_font_size + 'px;'+'font-family'+data.display_style.link_font_family_selected)
       .attr('fill', l => {
         if (l.text_color === l.color && l.orthogonal_label_position === 'middle') {
           return 'white'

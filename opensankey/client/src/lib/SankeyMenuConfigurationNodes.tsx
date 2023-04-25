@@ -173,6 +173,36 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
 
   return (<>
+
+    <FormLabel style={{ justifyContent: 'center', marginBottom: '5px' }} ><b>{t('Flux.pg')}</b></FormLabel>
+
+    {/* Police des labels de noeud  */}
+    <Form.Group as={Row} >
+      <Col xs={4}>
+        <FormLabel>{t('Flux.pdl')}</FormLabel>
+      </Col>
+      <Col xs={8}>
+        <Form.Select
+          value={data.display_style.link_font_family_selected}
+          onChange={
+            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+              data.display_style.node_font_family_selected = evt.target.value
+              set_data({ ...data })
+            }}>
+          {data.display_style.font_family.map((d) => {
+            return <option
+              style={{fontFamily:d}}
+              key={'ff-' + d}
+              value={d}
+              // selected={d == data.display_style.link_font_family_selected}
+            >{d}</option>
+          })}
+        </Form.Select>
+      </Col>
+    </Form.Group>
+
+    <FormLabel style={{ justifyContent: 'center', marginTop: '20px', marginBottom: '5px' }} ><b>{t('Noeud.plns')}</b></FormLabel>
+
     {
       (token==false && Object.keys(data.nodes).length>15)?
         <>
