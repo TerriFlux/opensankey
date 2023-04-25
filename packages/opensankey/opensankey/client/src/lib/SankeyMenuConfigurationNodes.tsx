@@ -183,7 +183,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </Col>
       <Col xs={8}>
         <Form.Select
-          value={data.display_style.link_font_family_selected}
+          value={data.display_style.node_font_family_selected}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               data.display_style.node_font_family_selected = evt.target.value
