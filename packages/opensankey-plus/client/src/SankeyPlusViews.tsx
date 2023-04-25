@@ -3,6 +3,7 @@ import React, { ChangeEvent, Requireable } from 'react'
 import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaPlus, FaSave, FaUpload} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
+import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
@@ -1642,7 +1643,8 @@ export const viewsAccordion = (
                 ind = (v.id == _load_json.current!.id) ? i : ind
               })
               const cur_view = master_data.view[ind]
-              cur_view.view_data = JSON.parse(JSON.stringify(result_data)) 
+              cur_view.view_data = JSON.parse(JSON.stringify(result_data))
+              convert_data(cur_view.view_data)
               cur_view.nom = files[0].name
               set_data(cur_view.view_data as SankeyPlusData)
               set_master_data({...master_data})
