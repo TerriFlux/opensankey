@@ -89,7 +89,7 @@ export const SankeyPlusDrawNodesFO = (
   
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
     d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
-    if ((d as SankeyPlusNode).shape_visible && event.shiftKey) {
+    if ((d as SankeyPlusNode).display && event.shiftKey) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyPlusNode))
@@ -97,7 +97,7 @@ export const SankeyPlusDrawNodesFO = (
   }
         
   const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
-    if (((d as SankeyPlusNode).shape_visible) && event.shiftKey) {
+    if (((d as SankeyPlusNode).display) && event.shiftKey) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
@@ -138,6 +138,7 @@ export const SankeyPlusDrawNodesFO = (
         .attr('height',(n)=>+d3.select(' .opensankey #' + n.idNode).attr('height'))
         .attr('id',(d)=> d.idNode + '_fo')
         .on('mouseover', function (event, d) {
+            console.log('hello')
             node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
           })
           .on('mousemove', function (event,d) {
