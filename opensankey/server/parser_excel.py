@@ -535,14 +535,17 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     activated = 0
                     if j == 0:
                         activated = 1
-                    nodeTags[tag_group_name] = {
-                        'group_name': tag_group_name,
-                        'show_legend': 0,
-                        'tags': tags,
-                        'banner': banner,
-                        'activated': activated,
-                        'siblings': [n for n in tag_group_names if n != tag_group_name]
-                    }
+                    if tag_group_name in nodeTags:
+                        nodeTags[tag_group_name]['siblings'] += [n for n in tag_group_names if n != tag_group_name]
+                    else:
+                        nodeTags[tag_group_name] = {
+                            'group_name': tag_group_name,
+                            'show_legend': 0,
+                            'tags': tags,
+                            'banner': banner,
+                            'activated': activated,
+                            'siblings': [n for n in tag_group_names if n != tag_group_name]
+                        }
             elif mfa_input[TAG_SHEET].iat[i, 1] == 'fluxTags':
                 tmp = mfa_input[TAG_SHEET].iat[i, 2].split(':')
                 tmp = [s.strip() for s in tmp]
