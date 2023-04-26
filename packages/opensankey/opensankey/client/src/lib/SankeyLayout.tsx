@@ -454,6 +454,9 @@ export const updateLayout = (
       node.position = node_layout.position
       node.node_width = node_layout.node_width
       node.node_height = node_layout.node_height
+      node.show_value = node_layout.show_value
+      node.image = node_layout.image
+      node.shape = node_layout.shape
       if (node_layout.x !== 0 && node_layout.y != 0) { 
         node.x = node_layout.x
         node.y = node_layout.y
@@ -481,11 +484,43 @@ export const updateLayout = (
       node.node_visible = node_layout.node_visible
       node.label_visible = node_layout.label_visible
     }
-    if(mode.includes('tagNode')){
-      for (const node_tag_key in node_layout.tags) {
-        node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-      }
-    }    
+    // if(mode.includes('tagNode')){
+    //   for (const node_tag_key in node_layout.tags) {
+    //     node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
+    //   }
+    // }    
+  }
+
+  interface SankeyPlusLabel {
+    // identification
+    idLabel: string,
+    name: string,
+    transparent:boolean,
+    color:string,
+    color_border:string,
+    transparent_border:boolean,
+    position_vert:string,
+    position_horiz:string,
+    isTextHTML:boolean,
+  
+    font_size:number,
+    font_weight:boolean,
+    font_style:boolean,
+    font_uppercase:boolean,
+  
+    label_width: number,
+    label_height: number,
+   
+    x: number,
+    y: number,
+    x_label: number,
+    y_label: number,
+  }
+
+  (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
+  for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
+    (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
+      (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
   }
 
   if (mode.includes('attrFlux')){
@@ -509,13 +544,14 @@ export const updateLayout = (
       }
       const link = links[0]
   
-      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position } = link_layout
+      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
       link.curvature = curvature
       link.curved = curved
       link.arrow = arrow
       link.text_color = link_layout.text_color
       link.label_position = label_position
       link.label_visible = label_visible
+      link.label_font_size = label_font_size
       link.x_label = x_label
       link.y_label = y_label
       link.left_horiz_shift = link_layout.left_horiz_shift
@@ -591,7 +627,7 @@ export const updateLayout = (
     }
   }
   
-
+  
 
 
   // data.agregation.level = new_layout.agregation.level
