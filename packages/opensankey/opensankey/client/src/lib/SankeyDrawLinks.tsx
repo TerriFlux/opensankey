@@ -223,8 +223,7 @@ export const OpenSankeyDrawLinks = (
       return '0.3em'
     } else if (l.orthogonal_label_position === 'below') {
       const tmp=getLinkValue(data, l.idLink).value
-
-      return scale((tmp)?tmp:0) / 2 + 10 + 'px'
+      return scale((tmp)?tmp:0) / 2 + l.label_font_size + 'px'
     } else if (l.orthogonal_label_position === 'above') {
       const tmp=getLinkValue(data, l.idLink).value
 
