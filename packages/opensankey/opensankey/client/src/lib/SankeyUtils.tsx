@@ -486,6 +486,68 @@ export const link_text = (
   return the_link_value
 }
 
+const is_data = (
+  data: SankeyData,
+  l:SankeyLink,
+  link_value: SankeyLinkValue,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+) => {
+  if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {   
+    return true
+  }
+  const source_node = data.nodes[l.idSource]
+  const target_node = data.nodes[l.idTarget]
+  const desagregate_source_nodes = Object.values(data.nodes).filter( 
+    n => {
+      for (const dim in n.dimensions) {
+        if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
+          if (n.dimensions[dim].parent_name === source_node.idNode) {
+            return true
+          }
+        }
+        return false
+      }
+    }
+  )
+  const desagregate_target_nodes = Object.values(data.nodes).filter( n => {
+    for (const dim in n.dimensions) {
+      if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
+        const parent_name = n.dimensions[dim].parent_name
+        if ( parent_name === target_node.idNode) {
+          return true
+        }
+      }
+    }
+    return false
+  })
+  if ( desagregate_source_nodes.length == 0 && desagregate_target_nodes.length == 0 ) {
+    return false
+  }
+  let isdata = true
+  desagregate_source_nodes.forEach(n1 => {
+    if (!isdata) {
+      return
+    }
+    desagregate_target_nodes.forEach(
+      n2 => {
+        if (!isdata) {
+          return
+        }
+        
+        const desagregated_links = Object.values(data.links).filter(l => l.idSource === n1.idNode && l.idTarget === n2.idNode)
+        if (desagregated_links.length === 0) {
+          return
+        }
+        const desagregated_link = desagregated_links[0]
+        const desagregated_link_info = getLinkValue(data,desagregated_link.idLink) as unknown as SankeyLinkValue
+        if ((desagregated_link_info as SankeyLinkValue & {extension: {data_value : string}}).extension.data_value) {
+          isdata = is_data(data,data.links[desagregated_link.idLink],desagregated_link_info,getLinkValue)
+        }
+      }
+    )
+  })
+  return isdata
+}
 
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
@@ -1023,11 +1085,9 @@ export const setSelectedTags = (
 
   const { nodeTags } = sankey_data
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
-  const has_level_tags = Object.keys(nodeTags).filter(tag => nodeTags[tag].banner === 'level').length > 0;
+
   display_nodes.forEach(node => {
-    if (!has_level_tags) {
-      node.display = true
-    }
+
     node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
