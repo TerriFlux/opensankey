@@ -5,6 +5,7 @@ import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
+import { set_nodes_level } from './SankeyUtils'
 
 
 const SankeySettingsEditionTagsPropTypes = {
@@ -33,7 +34,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   const elementTagName = type_tag_name
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const level = data[type_tag_name][tags_group_key].banner === 'level'
     data[type_tag_name][tags_group_key].banner = evt.target.value
+    if (level) {
+      set_nodes_level(data)
+    }
     set_data({ ...data })
   }
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
