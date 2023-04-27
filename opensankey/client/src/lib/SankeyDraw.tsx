@@ -176,12 +176,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     }
 
     const svgSankey = d3.select(' .opensankey #svg')
-    if (data.fit_screen) {
-      svgSankey.style('width', window.screen.width*0.975)
-    } else {
-      svgSankey.attr('viewBox', null)
-      svgSankey.style('width', data.width + 'px')
-    }
+  
+    svgSankey.attr('viewBox', null)
+    svgSankey.style('width', data.width + 'px')
+    
     svgSankey.style('height', data.height + 'px');
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.zoom()
@@ -192,20 +190,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
         })
         .on('zoom', function (evt) {
-          data.fit_screen = false
           evt.transform.x = 0
           evt.transform.y = 0
           d3.select(' .opensankey #svg')
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
           svgSankey.attr('viewBox', null)
-          if (evt.transform.k < 1 && !data.fit_screen) {
-            d3.select(' .opensankey #svg')
-              .style('border', Math.round(2 / evt.transform.k) + 'px solid #78c2ad')
-              .style('width', data.width + 'px')
-          } else {
-            d3.select(' .opensankey #svg')
-              .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #78c2ad')        
-          }
+        
+          d3.select(' .opensankey #svg')
+            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #78c2ad')        
+        
         }))
       .on('dblclick.zoom', null);
 
@@ -334,11 +327,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   //   alt_key_pressed,
   //   data.static_sankey,position,node_arrow_visible
   // )
+
+  const width_to_display=((data.width) ? data.width : window.innerWidth*0.975)
   return (
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
-          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': data.fit_screen ? '98.5%' : data.width, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
