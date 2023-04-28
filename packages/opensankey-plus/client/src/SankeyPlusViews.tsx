@@ -1166,7 +1166,9 @@ export const keyHandler = (
 
 
   if (master) {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+      // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+      // (exemples : le input de la largeur minimal d'un noeud)
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
           if (d != undefined) {
@@ -1250,7 +1252,7 @@ export const keyHandler = (
             d.x = d.x + data.grid_square_size
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
-            d.x = (n_pos + 1) * data.grid_square_size
+            d.x = (n_pos + 2) * data.grid_square_size
             const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
             d.x+=(data.grid_square_size/2)-width/2
           }
