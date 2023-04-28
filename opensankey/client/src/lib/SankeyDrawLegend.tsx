@@ -1,5 +1,5 @@
 import { SankeyData,SankeyLinkValue } from './types'
-import React, { useEffect} from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
@@ -96,8 +96,8 @@ export const OpenSankeyDrawLegend = (
           }).forEach(el=>{
             d3.selectAll(' .opensankey #'+el.idLink).attr('stroke-opacity',0.1)
             d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',0.1)
-            d3.selectAll(' .opensankey #arrow_'+el.idLink+' path').attr('stroke-opacity',0.1)
-            d3.selectAll(' .opensankey #arrow_'+el.idLink+' path').attr('opacity',0.1)
+            d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('stroke-opacity',0.1)
+            d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('opacity',0.1)
           })
 
           //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
@@ -122,8 +122,8 @@ export const OpenSankeyDrawLegend = (
               return link_tied_to_node_hovered.includes(l.idLink)
             }).forEach(el=>{
               d3.selectAll(' .opensankey #'+el.idLink).attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #arrow_'+el.idLink+' path').attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #arrow_'+el.idLink+' path').attr('opacity',0.85)
+              d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
+              d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('opacity',0.85)
               d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',1)
 
             })
@@ -147,8 +147,8 @@ export const OpenSankeyDrawLegend = (
         })
         .on('mouseout',()=>{
           d3.selectAll(' .opensankey .link').attr('stroke-opacity',0.85)
-          d3.selectAll(' .opensankey .defsArrow path').attr('stroke-opacity',0.85)
-          d3.selectAll(' .opensankey .defsArrow path').attr('opacity',0.85)
+          d3.selectAll(' .opensankey .arrow').attr('stroke-opacity',0.85)
+          d3.selectAll(' .opensankey .arrow').attr('opacity',0.85)
           d3.selectAll(' .opensankey .gg_links text').style('opacity',1)
           d3.selectAll(' .opensankey .ggg_nodes').attr('opacity',1)
         })

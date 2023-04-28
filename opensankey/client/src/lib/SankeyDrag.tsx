@@ -542,7 +542,9 @@ export const dragging=(node:SankeyNode,
           })
         const target_node = nodes[link.idTarget]
         if (link.arrow) {
-          drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
+          //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+          drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+          //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
         }
         for (let i = 0; i < target_node.inputLinksId.length; i++) {
           d3.select(' .opensankey #' + target_node.inputLinksId[i])
@@ -800,7 +802,9 @@ const drag_link = (
         }
       }
     }
-    drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
+    //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
+    drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+    //drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
   }
 }
 
