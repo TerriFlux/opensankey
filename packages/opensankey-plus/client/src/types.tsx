@@ -79,6 +79,6 @@ export type plusDrawArrowsType = (
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number,
     getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-    display_style: { filter: number },
-    selection: d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
+    display_style: { filter: number }
+    //selection: d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
   ) => void

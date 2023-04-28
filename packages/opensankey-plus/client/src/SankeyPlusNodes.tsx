@@ -767,8 +767,8 @@ export  const SankeyPlusDrag_nodes = (
               })
             const target_node = nodes[link.idTarget]
             if (link.arrow) {
-              const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
-              drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style,node_select)
+              //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
+              drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
               //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
             }
             for (let i = 0; i < target_node.inputLinksId.length; i++) {
@@ -1150,8 +1150,8 @@ export  const SankeyPlusDrag_nodes = (
           const target_node = nodes[link.idTarget]
           if (link.arrow) {
             //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
-            const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
-            drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style,node_select)
+            //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
+            drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
           }
           for (let i = 0; i < target_node.inputLinksId.length; i++) {
             d3.select(' .opensankey #' + target_node.inputLinksId[i])
