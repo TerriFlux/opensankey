@@ -382,7 +382,10 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>
 ) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
+  console.log(document.activeElement)
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+    // (exemples : le input de la largeur minimal d'un noeud)
     if (e.key == 'ArrowUp') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
@@ -465,10 +468,12 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (e.shiftKey) {
           d.x = d.x + data.grid_square_size
         } else {
+
           const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos + 1) * data.grid_square_size
+          d.x = (n_pos + 2) * data.grid_square_size
           const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
           d.x+=(data.grid_square_size/2)-width/2
+
         }
         //Augumente largeur svg si le noeud est près du bord
         if (d.x > data.width - 100) {
