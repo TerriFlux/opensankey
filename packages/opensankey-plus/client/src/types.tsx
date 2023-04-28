@@ -73,14 +73,12 @@ export type PlusDrawCurveType = (
 
 // Recration du type drawArrowsType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus
 export type plusDrawArrowsType = (
-    data: SankeyPlusData,
     n: SankeyPlusNode,
-    nodes: { [node_id: string]: SankeyPlusNode },
-    links: { [link_id: string]: SankeyPlusLink },
-    display_style: { filter?: number; filter_label?: number; },
-    nodeTags: TagsCatalog,
+    selected_tags: { [tag_group: string]: string[] },
+    data:SankeyPlusData,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number,
-    min_thickness:number,
-    getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+    getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+    display_style: { filter: number },
+    selection: d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
   ) => void
