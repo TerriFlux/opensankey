@@ -1086,7 +1086,15 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
         set_first_selected_node({})
       }
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+        if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
+          d3.selectAll(' .opensankey #svg #path-flux').remove()
+        }
+      if( mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
+        // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris 
+        // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
+        set_first_selected_node({})
+        Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
