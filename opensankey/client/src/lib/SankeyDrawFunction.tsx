@@ -694,6 +694,16 @@ export const drawArrows = (
     if (!link_visible(l, data,getLinkValue)) {
       continue
     }
+    const extension = getLinkValue(data, n.inputLinksId[i]).extension
+    if (extension) {
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
+                      data.show_structure !== 'free_value' &&
+                      !extension.free_visible
+      if ( is_free ) {
+        continue
+      }
+    }
     const link_value = test_link_value(data,data.nodes, l, getLinkValue)
     if (link_value === undefined) {
       continue
