@@ -43,29 +43,29 @@ export const OpenSankeyMenuConfigurationLayout = (
       </Col>
     </Form.Group>,
     <Form.Group as={Row} >
-    <Col xs={3}>
-      <FormLabel >Horizontal dilation</FormLabel>
-    </Col>
-    <Col>
-      <FormControl
-        type="text"
-        ref={horizontal_dilation}
-        onBlur={() => {
-          if (!horizontal_dilation.current || isNaN(parseFloat(horizontal_dilation.current!.value)) ) {
-            return
-          }
-          const visible_nodes = Object.values(data.nodes).filter(n=>n.node_visible)
-          if (visible_nodes.length == 0) {
-            return
-          }
-          let min_x = visible_nodes[0].x
-          Object.values(visible_nodes).forEach(n=> min_x = Math.min(n.x,min_x) )
-          Object.values(data.nodes).forEach( n=>n.x = min_x + (n.x-min_x)*+horizontal_dilation.current!.value)
-          set_data({ ...data })
-        }}
-      />
-    </Col>
-  </Form.Group>,
+      <Col xs={3}>
+        <FormLabel >Horizontal dilation</FormLabel>
+      </Col>
+      <Col>
+        <FormControl
+          type="text"
+          ref={horizontal_dilation}
+          onBlur={() => {
+            if (!horizontal_dilation.current || isNaN(parseFloat(horizontal_dilation.current!.value)) ) {
+              return
+            }
+            const visible_nodes = Object.values(data.nodes).filter(n=>n.node_visible)
+            if (visible_nodes.length == 0) {
+              return
+            }
+            let min_x = visible_nodes[0].x
+            Object.values(visible_nodes).forEach(n=> min_x = Math.min(n.x,min_x) )
+            Object.values(data.nodes).forEach( n=>n.x = min_x + (n.x-min_x)*+horizontal_dilation.current!.value)
+            set_data({ ...data })
+          }}
+        />
+      </Col>
+    </Form.Group>,
     <Form.Group as={Row} >
       <Col xs={3}>
         <FormLabel >Vertical dilation</FormLabel>
