@@ -357,7 +357,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           </svg>
         </div>
       </div>
-      { agregation_node !== '' ?
+      { agregation_node !== '' && data.nodes[agregation_node] ?
         <AgregationModal
           show_agregation={show_agregation}
           data={data}
