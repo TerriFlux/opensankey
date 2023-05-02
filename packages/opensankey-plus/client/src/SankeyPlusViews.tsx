@@ -1118,11 +1118,21 @@ export const keyHandler = (
       // data is view data
       const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
       Object.values(data.links).forEach(l=> {
-        if (dataTagsArray.length == 0) {
-          l.value = master_data.links[l.idLink].value
+        const master_links = Object.values(master_data.links).filter(
+          l_master=> {
+            return data.nodes[l.idSource].name === master_data.nodes[l_master.idSource].name && 
+            data.nodes[l.idTarget].name === master_data.nodes[l_master.idTarget].name
+          }
+        )
+        if (master_links.length === 0) {
           return
         }
-        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_data.links[l.idLink].value as { [key: string]: SankeyLinkValue },0)
+        const master_link = master_links[0]
+        if (dataTagsArray.length == 0) {
+          l.value = master_link.value
+          return
+        }
+        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_link.value as { [key: string]: SankeyLinkValue },0)
       })
       master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
       set_master_data({...master_data})
