@@ -1,5 +1,5 @@
 import { SankeyData,SankeyLinkValue } from './types'
-import React, { useEffect} from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 

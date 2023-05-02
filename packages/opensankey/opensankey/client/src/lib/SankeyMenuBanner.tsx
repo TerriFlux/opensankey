@@ -546,7 +546,6 @@ export const toolbar_builder = (
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[]
 ) => {
-  const default_horiz_shift = 50
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -856,7 +855,7 @@ export const toolbar_builder = (
     </Popover.Body>
   </Popover>
   //Popover element to handle the display of link tags
-    const filter_color_link=
+  const filter_color_link=
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
@@ -864,7 +863,7 @@ export const toolbar_builder = (
     </Popover.Body>
   </Popover>
   //Popover element to handle the display of data tags
-    const filter_data=
+  const filter_data=
   <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>

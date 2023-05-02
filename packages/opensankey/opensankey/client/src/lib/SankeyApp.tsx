@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown, Popover, Form,Pagination,FormCheck} from 'react-bootstrap'
+import { Modal,Button, NavDropdown, Popover, Form,Pagination} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
@@ -147,7 +147,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const showStyleEditionLink = () => {
     setShowStyleLink(true)
   }
-  const [showShortcut, setshowShortcut] = useState(false)
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
 
@@ -197,7 +196,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   
   const pagination_intro=<Pagination.Item active={active_page==='intro'} key={'intro'} onClick={()=>{
     set_active_page('intro')
-    }}>Introduction
+  }}>Introduction
   </Pagination.Item>
 
   const external_pagination=[pagination_intro]
