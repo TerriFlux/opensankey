@@ -180,7 +180,11 @@ def save_excel():
         wb = openpyxl.load_workbook(excel_file)
         layout_sheet = wb.create_sheet()
         layout_sheet.title = 'layout'
-        layout_sheet['A1'].value = sankey_data
+        splitted_layout = cut_layout(sankey_data)
+        cpt = 1
+        for i in splitted_layout:
+            layout_sheet['A'+str(cpt)].value = i
+            cpt = cpt + 1
         wb.save('tutu.xlsx')
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
@@ -189,6 +193,20 @@ def save_excel():
             status=402
         )
         return response
+
+
+def cut_layout(layout):
+    '''
+    Split the layout string to substring in an array, each substring is as long as 32767 character maximum wich
+      is the maximum number of character a cell in excel can contains
+
+    Input :
+        - layout (String) : json_data of the sankey as string
+
+    Output :
+        - tab_layout (Array of string) : Array of the json_data splitted
+    '''
+    return [layout[i: i + 32767] for i in range(0, len(layout), 32767)]
 
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
