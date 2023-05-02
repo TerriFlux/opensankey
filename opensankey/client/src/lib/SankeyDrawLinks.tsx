@@ -1,6 +1,6 @@
 import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue,drawArrowsType} from './types'
-import React, { useEffect,Requireable } from 'react'
+import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  test_link_value,link_color,link_visible} from './SankeyUtils'
 import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'

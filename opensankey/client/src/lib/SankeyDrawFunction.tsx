@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,delete_node,delete_link,default_node,default_link,link_visible,node_color} from './SankeyUtils'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
@@ -859,9 +859,9 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
         set_first_selected_node({})
       }
-        if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
-          d3.selectAll(' .opensankey #svg #path-flux').remove()
-        }
+      if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
+      }
       if( mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
         // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris 
         // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison

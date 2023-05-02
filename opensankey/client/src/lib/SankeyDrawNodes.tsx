@@ -1,6 +1,6 @@
 import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
-import React, { useEffect,Requireable } from 'react'
+import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
 import {node_color} from './SankeyUtils'
