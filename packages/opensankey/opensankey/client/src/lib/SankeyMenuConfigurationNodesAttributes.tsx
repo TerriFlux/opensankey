@@ -29,6 +29,24 @@ export const OpenSankeyConfigurationNodesAttributes = (
     }
     return rect
   }
+  const getBrowserName = () => {
+    let browserInfo = navigator.userAgent;
+    let browser;
+    if (browserInfo.includes('Opera') || browserInfo.includes('Opr')) {
+      browser = 'Opera';
+    } else if (browserInfo.includes('Edg')) {
+      browser = 'Edge';
+    } else if (browserInfo.includes('Chrome')) {
+      browser = 'Chrome';
+    } else if (browserInfo.includes('Safari')) {
+      browser = 'Safari';
+    } else if (browserInfo.includes('Firefox')) {
+      browser = 'Firefox'
+    } else {
+      browser = 'unknown'
+    }
+      return browser;
+  }
 
   const isAllNodeCircle = () => {
     let circle = true
@@ -109,18 +127,27 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
-          <Form.Control
+          {(getBrowserName()==='Firefox')?<Form.Control
             type='color'
             disabled={ !isAllNodeVisible()}
             value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
             onChange={evt=>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
-              // set_data({ ...data })
+              set_data({ ...data })
+              
             }}
-          onBlurCapture={()=>{
-            set_data({ ...data })
-          }}
-        />  
+        />:<Form.Control
+        type='color'
+        disabled={ !isAllNodeVisible()}
+        value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
+        onChange={evt=>{
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
+          // set_data({ ...data })
+        }}
+      onBlurCapture={()=>{
+        set_data({ ...data })
+      }}
+    />}  
         </OverlayTrigger>
       </Col>
     </Form.Group>,

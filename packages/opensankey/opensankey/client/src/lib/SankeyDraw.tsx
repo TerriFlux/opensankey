@@ -382,7 +382,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_mode_selection:React.Dispatch<React.SetStateAction<string>>
 ) => {
-  console.log(document.activeElement)
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
     // (exemples : le input de la largeur minimal d'un noeud)
