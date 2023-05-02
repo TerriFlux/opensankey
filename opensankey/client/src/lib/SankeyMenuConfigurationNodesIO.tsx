@@ -51,6 +51,9 @@ const getIOLink=(
     if(pos=='left'){
       //Recherche tous les flux entrant a gauche
       link_io=Object.values(n.outputLinksId).filter(k=>{
+        if (!data.links[k] ) {
+          return false
+        }
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !data.links[k].recycling)
         const cond_recy=(data.links[k].recycling && n_t.x>n.x)
@@ -59,6 +62,9 @@ const getIOLink=(
     }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
       link_io=Object.values(n.outputLinksId).filter(k=>{
+        if (!data.links[k] ) {
+          return false
+        }
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !data.links[k].recycling)
         const cond_recy=(data.links[k].recycling && n_t.x<n.x)
@@ -67,12 +73,18 @@ const getIOLink=(
     }else if(pos=='top'){
       //Recherche tous les flux entrant en haut
       link_io=Object.values(n.outputLinksId).filter(k=>{
+        if (!data.links[k] ) {
+          return false
+        }
         const n_t=data.nodes[data.links[k].idTarget]
         return n_t.y<n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data,getLinkValue)
       })
     }else if(pos=='bottom'){
       //Recherche tous les flux entrant en haut
       link_io=Object.values(n.outputLinksId).filter(k=>{
+        if (!data.links[k] ) {
+          return false
+        }
         const n_t=data.nodes[data.links[k].idTarget]
         return n_t.y>=n.y && (data.links[k].orientation=='vv' ||data.links[k].orientation=='vh')&& link_visible(data.links[k],data,getLinkValue)
       })

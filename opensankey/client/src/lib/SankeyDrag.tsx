@@ -860,6 +860,18 @@ export const drag_handle = (
   let u_center_new = -1
   const source_node = nodes[d.idSource]
   const target_node = nodes[d.idTarget]  
+  if (isNaN(source_node.x)) {
+    source_node.x = 100
+  }
+  if (isNaN(source_node.y)) {
+    source_node.y = 100
+  }
+  if (isNaN(target_node.x)) {
+    target_node.x = 100
+  }
+  if (isNaN(target_node.y)) {
+    target_node.y = 100
+  }
   const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, selected_tags,data,scale,inv_scale,getLinkValue)  
   if (!d.recycling) {
     if (d.orientation === 'hh') {
@@ -1079,6 +1091,18 @@ export const add_drag_link_zone=(
     
     const source_node=nodes[link.idSource]
     const target_node=nodes[link.idTarget]
+    if (isNaN(source_node.x)) {
+      source_node.x = 100
+    }
+    if (isNaN(source_node.y)) {
+      source_node.y = 100
+    }
+    if (isNaN(target_node.x)) {
+      target_node.x = 100
+    }
+    if (isNaN(target_node.y)) {
+      target_node.y = 100
+    }
     const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
     const pos_d=drag_zone_position(link,xs,ys,xt,yt,data,display_nodes,default_handle_size,default_horiz_shift,scale,getLinkValue)
     d3.select(' .opensankey #gg_' + link.idLink)

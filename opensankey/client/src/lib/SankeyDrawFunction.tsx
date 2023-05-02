@@ -17,6 +17,68 @@ const default_horiz_shift = 50
 const min_thickness = 2
 
 
+// const is_data = (
+//   data: SankeyData,
+//   l:SankeyLink,
+//   link_value: SankeyLinkValue,
+//   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+// ) => {
+//   if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {   
+//     return true
+//   }
+//   const source_node = data.nodes[l.idSource]
+//   const target_node = data.nodes[l.idTarget]
+//   const desagregate_source_nodes = Object.values(data.nodes).filter( 
+//     n => {
+//       for (const dim in n.dimensions) {
+//         if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
+//           if (n.dimensions[dim].parent_name === source_node.idNode) {
+//             return true
+//           }
+//         }
+//         return false
+//       }
+//     }
+//   )
+//   const desagregate_target_nodes = Object.values(data.nodes).filter( n => {
+//     for (const dim in n.dimensions) {
+//       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
+//         const parent_name = n.dimensions[dim].parent_name
+//         if ( parent_name === target_node.idNode) {
+//           return true
+//         }
+//       }
+//     }
+//     return false
+//   })
+//   if ( desagregate_source_nodes.length == 0 && desagregate_target_nodes.length == 0 ) {
+//     return false
+//   }
+//   let isdata = true
+//   desagregate_source_nodes.forEach(n1 => {
+//     if (!isdata) {
+//       return
+//     }
+//     desagregate_target_nodes.forEach(
+//       n2 => {
+//         if (!isdata) {
+//           return
+//         }
+//         const desagregated_links = Object.values(data.links).filter(l => l.idSource === n1.idNode && l.idTarget === n2.idNode)
+//         if (desagregated_links.length === 0) {
+//           return
+//         }
+//         const desagregated_link = desagregated_links[0]
+//         const desagregated_link_info = getLinkValue(data,desagregated_link.idLink) as unknown as SankeyLinkValue
+//         if ((desagregated_link_info as SankeyLinkValue & {extension: {data_value : string}}).extension.data_value) {
+//           isdata = is_data(data,data.links[desagregated_link.idLink],desagregated_link_info,getLinkValue)
+//         }
+//       }
+//     )
+//   })
+//   return isdata
+// }
+
 export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
@@ -1732,6 +1794,18 @@ const add_center_handle=(
   
     const source_node=data.nodes[link.idSource]
     const target_node=data.nodes[link.idTarget]
+    if (isNaN(source_node.x)) {
+      source_node.x = 100
+    }
+    if (isNaN(source_node.y)) {
+      source_node.y = 100
+    }
+    if (isNaN(target_node.x)) {
+      target_node.x = 100
+    }
+    if (isNaN(target_node.y)) {
+      target_node.y = 100
+    }
     const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
 
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
@@ -1915,6 +1989,18 @@ const drawCurve = (
 
   const source_node = nodes[link.idSource]
   const target_node = nodes[link.idTarget]
+  if (isNaN(source_node.x)) {
+    source_node.x = 100
+  }
+  if (isNaN(source_node.y)) {
+    source_node.y = 100
+  }
+  if (isNaN(target_node.x)) {
+    target_node.x = 100
+  }
+  if (isNaN(target_node.y)) {
+    target_node.y = 100
+  }
 
   const inputLinksId = target_node.inputLinksId
   const outputLinksId = source_node.outputLinksId
