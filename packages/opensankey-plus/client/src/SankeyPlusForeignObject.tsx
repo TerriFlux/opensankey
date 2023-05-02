@@ -1,5 +1,5 @@
 import React,{useEffect} from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
@@ -21,7 +21,7 @@ export const SankeyPlusNodeFO = (
     return visible
   }
 
-  return <Tab eventKey="node_fo" title={t('Noeud.FO.FO')}>
+  return <Tab eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info">Beta</Badge></>} >
     <OverlayTrigger
   key={'foDisabled'}
   placement={'top'}
