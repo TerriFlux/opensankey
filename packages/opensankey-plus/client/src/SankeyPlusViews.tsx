@@ -5,7 +5,7 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
 import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
@@ -1466,7 +1466,7 @@ export const viewsAccordion = (
         }
       }
     }>
-    <Accordion.Header>Storytelling</Accordion.Header>
+    <Accordion.Header>Storytelling <Badge pill bg='info'>Beta</Badge></Accordion.Header>
     <Accordion.Body>
     <OverlayTrigger
         key={'textZoneDisabled'}
