@@ -5,8 +5,10 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaPlus, FaSave, FaUpload} from 'react-
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
+import { TFunction } from 'i18next'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
+import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
 import {  node_color } from 'open-sankey/dist/SankeyUtils'
 import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
@@ -1181,7 +1183,9 @@ export const keyHandler = (
 
 
   if (master) {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+      // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+      // (exemples : le input de la largeur minimal d'un noeud)
       if (e.key == 'ArrowUp') {
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
           if (d != undefined) {
@@ -1265,7 +1269,7 @@ export const keyHandler = (
             d.x = d.x + data.grid_square_size
           } else {
             const n_pos = Math.trunc(d.x / data.grid_square_size)
-            d.x = (n_pos + 1) * data.grid_square_size
+            d.x = (n_pos + 2) * data.grid_square_size
             const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
             d.x+=(data.grid_square_size/2)-width/2
           }
@@ -1408,9 +1412,6 @@ export const keyHandler = (
     }
   } 
   if (['ArrowUp', 'ArrowDown', , 'F8', 'F9'].includes(e.key)) {
-    if(e.preventDefault){
-      e.preventDefault()
-    }
     if (!master && e.key == 'ArrowUp' || e.key == 'F8') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
@@ -1465,7 +1466,9 @@ export const viewsAccordion = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
-  _load_json:{current:HTMLInputElement}
+  _load_json:{current:HTMLInputElement},
+  t:TFunction,
+  is_activated:boolean
   
 ) => {
   return <><Accordion.Item
@@ -1481,11 +1484,18 @@ export const viewsAccordion = (
         }
       }
     }>
-    <Accordion.Header>Storytelling</Accordion.Header>
+    <Accordion.Header>Storytelling <Badge pill bg='info'>Beta</Badge></Accordion.Header>
     <Accordion.Body>
+    <OverlayTrigger
+        key={'textZoneDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        >
+      <Form>
       <Row>
         <Col xs={3}>
-          <FormLabel>Sélection Vue</FormLabel>
+          <FormLabel>{t('view.select')}</FormLabel>
         </Col>
         <Col xs={9}>
           <Form.Select id="selectionNode"
@@ -1513,7 +1523,7 @@ export const viewsAccordion = (
               }
             }
           >
-            <option selected={view == 'none'} value={'none'}>Données actuelles</option>
+            <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
             {master_data ? master_data.view.map(d => {
               return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
             }) : <></>}
@@ -1524,7 +1534,7 @@ export const viewsAccordion = (
       <Table bordered size='sm'>
         <thead>
           <tr>
-            <th>Nom</th>
+            <th>{t('view.name')}</th>
             <th>Position</th>
             <th></th>
           </tr>
@@ -1535,6 +1545,7 @@ export const viewsAccordion = (
               <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
                 <td><FormControl size='sm'
                   value={d.nom}
+                  disabled={!is_activated}
                   onChange={evt => {
                     master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
                     set_data({ ...data })
@@ -1545,6 +1556,7 @@ export const viewsAccordion = (
                     <Button
                       size="sm"
                       variant="success"
+                      disabled={!is_activated}
                       onClick={
                         () => {
                           let ind = -1
@@ -1562,6 +1574,7 @@ export const viewsAccordion = (
                     ><FaArrowUp /></Button><Button
                       size="sm"
                       variant="success"
+                      disabled={!is_activated}
                       onClick={
                         () => {
                           let ind = -1
@@ -1582,6 +1595,7 @@ export const viewsAccordion = (
                 <td><Button
                   size="sm"
                   variant='danger'
+                  disabled={!is_activated}
                   onClick={
                     () => {
                       let ind = -1
@@ -1645,6 +1659,7 @@ export const viewsAccordion = (
           }) : <></>}
         </tbody>
       </Table>
+      </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
       <Form.Control

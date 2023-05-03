@@ -20,6 +20,9 @@ export interface SankeyPlusNode extends SankeyNode{
     iconColor: string,
     iconRatio: number,
     iconVisible: boolean,
+
+    has_FO:boolean,
+    FO_content:string,
 }
 
 export interface SankeyPlusLink extends SankeyLink{
