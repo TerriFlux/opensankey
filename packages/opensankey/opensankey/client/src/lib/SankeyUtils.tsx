@@ -1422,5 +1422,4 @@ export const adjust_sankey_zone=(data:SankeyData,set_data:(d:SankeyData)=>void,m
   const zoom = d3.zoom()
     .on('zoom', zoomed)
   zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
-  set_data({ ...data })
 }
