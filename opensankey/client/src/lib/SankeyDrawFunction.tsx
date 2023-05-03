@@ -2415,6 +2415,9 @@ export const node_label_text=(
   if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange' && (data as unknown as {trade_label:string}).trade_label) {
     return d.name.split(' - ')[1]
   }
+  if (typeof parseInt(d.name.split(' - ')[0]) == 'number') {
+    return d.name
+  }
   return d.name.split(' - ')[0].replace('-', ' ')
 }
 
