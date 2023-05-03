@@ -218,8 +218,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data={data}
     set_data={set_data}
     elementTagNameProp='nodeTags'
-    elementNameProp='nodes'
-    show_level={false} />
+    elementNameProp='nodes'/>
 
   //- 1.3 Builds Configuration Menus Links
   //- 1.3.1 Builds Configuration Menus Link Attributes
@@ -230,16 +229,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data={data}
     set_data={set_data}
     elementTagNameProp='fluxTags'
-    elementNameProp='links'
-    show_level={false} />
+    elementNameProp='links'/>
   //- 1.4 Builds Configuration Menus DataTags
   const  menu_configuration_data_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='dataTags'
-    elementNameProp='links'
-    show_level={false} />
+    elementNameProp='links' />
   //- 1.5 Builds Configuration Menus FreeLabel
   // const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
   //- 1.6 Builds Configuration Menus Legend
