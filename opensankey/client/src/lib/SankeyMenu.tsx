@@ -8,7 +8,7 @@ import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
-import {downloadExamples} from './SankeyUtils'
+import {downloadExamples,adjust_sankey_zone} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import ModalPreference from './SankeyMenuPreferences'
@@ -103,7 +103,8 @@ const MenuPropTypes = {
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
-  set_user_scale:PropTypes.func.isRequired
+  min_width_and_height :PropTypes.func.isRequired
+  
 
 }
 
@@ -391,6 +392,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     menu_banner,
     loginOut,
     unsetTokens,
+    min_width_and_height
   }
 ) => {
   let max_link_value = 0
@@ -494,7 +496,9 @@ const Menu: FunctionComponent<MenuTypes> = (
                     type="checkbox"
                     variant="outline-primary"
                     checked={show_nav}
-                    onChange={(e) => { setChecked(e.currentTarget.checked) }}
+                    onChange={(e) => { setChecked(e.currentTarget.checked)
+                      adjust_sankey_zone(data,set_data,min_width_and_height)
+                      }}
                     onClick={toggleShow}
                     value="menuConfigButton">{menuButton()}
                   </ToggleButton>
