@@ -65,7 +65,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- All
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [style_to_apply, set_style_to_apply] = useState('default')
-  const [mode_selection, set_mode_selection] = useState('s')
+  const mode_selection= useRef('s')
   const selected_link = useRef(default_link(initial_sankey_data))
   const selected_node = useRef(default_node(initial_sankey_data))
   const multi_selected_nodes = useRef([])
@@ -218,7 +218,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data={data}
     set_data={set_data}
     elementTagNameProp='nodeTags'
-    elementNameProp='nodes' />
+    elementNameProp='nodes'
+    show_level={false} />
 
   //- 1.3 Builds Configuration Menus Links
   //- 1.3.1 Builds Configuration Menus Link Attributes
@@ -229,14 +230,16 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data={data}
     set_data={set_data}
     elementTagNameProp='fluxTags'
-    elementNameProp='links' />
+    elementNameProp='links'
+    show_level={false} />
   //- 1.4 Builds Configuration Menus DataTags
   const  menu_configuration_data_tags=<SankeySettingsEditionElementTags
     t={t}
     data={data}
     set_data={set_data}
     elementTagNameProp='dataTags'
-    elementNameProp='links' />
+    elementNameProp='links'
+    show_level={false} />
   //- 1.5 Builds Configuration Menus FreeLabel
   // const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
   //- 1.6 Builds Configuration Menus Legend
@@ -277,7 +280,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   )
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
-  const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,set_mode_selection,i18next)
+  const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
 
   const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
   const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
@@ -322,7 +325,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const {filter}=data.display_style
   const menu_banner=OpenSankeyMenuBanner(
     t,data,set_data,show_readme,set_show_readme,
-    toolbar_builder(  t,data,set_data,mode_selection,set_mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',set_show_readme,first_selected_node,set_first_selected_node,min_width_and_height)
+    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',set_show_readme,first_selected_node,set_first_selected_node,min_width_and_height)
   )
 
   //-3. Sankey Draws
@@ -344,7 +347,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // let alt_key_pressed = false
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_mode_selection)
+    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,mode_selection)
   }
 
   // Call the function that add nodes to the sankey
@@ -450,7 +453,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
           app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
           mode_selection={mode_selection}
-          set_mode_selection={set_mode_selection}
           style_to_apply={style_to_apply}
           set_style_to_apply={set_style_to_apply}
 
@@ -508,7 +510,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             multi_selected_nodes={multi_selected_nodes}
             multi_selected_links={multi_selected_links}
             mode_selection={mode_selection}
-            set_mode_selection={set_mode_selection}
             first_selected_node={first_selected_node}
             set_first_selected_node={set_first_selected_node}
             show_agregation={show_agregation}

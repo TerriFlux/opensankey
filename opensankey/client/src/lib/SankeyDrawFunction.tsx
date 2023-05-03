@@ -668,133 +668,111 @@ export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
 
 // Function that add marker at the end of links, those marker are arrow
 export const drawArrows = (
-  data: SankeyData,
   n: SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter?: number; filter_label?: number;},
-  nodeTags: TagsCatalog,
+  selected_tags: { [tag_group: string]: string[] },
+  data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  min_thickness:number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  display_style: {filter: number}
 ) => {
-  //Cette version de drawArrows ne calcul plus les formes de morceau de flêche mais utilise l'algorithme de 
-  //Sutherland-Hodgman pour couper les morceau de flêche
+  let cum_v_left = 0
+  let cum_h_top = 0
+  let cum_v_right = 0
+  let cum_h_bottom = 0
+  let is_v = true
 
+  // a quoi ca sert ?
+  // const tmp = selection.selectAll('path')
+  // tmp.remove()
+  const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
+  //const res = compute_total_offsets(n, nodes, links, tags_catalog, test_link_value)
+  const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
-  Object.values(links).filter(l=>n.inputLinksId.includes(l.idLink)).map(l=>{
-    d3.selectAll(' .opensankey .defsArrow marker#arrow_'+l.idLink).remove()
-  })
-
-
-  const res = compute_total_offsets(inv_scale,n, data, nodeTags, test_link_value,undefined,getLinkValue)
-  // const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
-
-  const arr = d3.select(' .opensankey #svg .defsArrow')
-  const left_height = res[0] / (data.user_scale / 100)
-  const right_height = res[1] / (data.user_scale / 100)
-  const top_height = res[2] / (data.user_scale / 100)
-  const bottom_height = res[3] / (data.user_scale / 100)
-
-
-  const nb_input_tot = n.inputLinksId.length
-
-  let start_point_left = 0
-  let start_point_right = 0
-  let start_point_top = 0
-  let start_point_bottom = 0
-
-  for (let i = 0; i < nb_input_tot; i++) {
-    const l = links[n.inputLinksId[i]]
-    if (!data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) {
+  for (let i = 0; i < n.inputLinksId.length; i++) {
+    const l = data.links[n.inputLinksId[i]]
+    if (!link_visible(l, data,getLinkValue)) {
       continue
     }
-    if (!data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
+    const extension = getLinkValue(data, n.inputLinksId[i]).extension
+    if (extension) {
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
+                      data.show_structure !== 'free_value' &&
+                      !extension.free_visible
+      if ( is_free ) {
+        continue
+      }
+    }
+    const link_value = test_link_value(data,data.nodes, l, getLinkValue)
+    if (link_value === undefined) {
       continue
     }
-    const link_value = test_link_value(data,nodes, l,getLinkValue)
-    if (link_value === undefined || link_value == '') {
-      continue
+    const source_node = data.nodes[l.idSource]
+    if (l.orientation === 'hh' || l.orientation === 'vh') {
+      is_v = true
+    } else {
+      is_v = false
     }
-
-    const source_node = nodes[l.idSource]
-    const source_node_x = source_node.position === 'absolute' ? source_node.x : +n.x + +source_node.x
-    const source_node_y = source_node.position === 'absolute' ? source_node.y : +n.y + +source_node.y
-    if ( d3.select(' .opensankey #' + source_node.idNode).empty() ) {
-      continue
-    }
-    const node_x = n.position === 'absolute' ? n.x : +source_node.x + +n.x + +d3.select(' .opensankey #' + source_node.idNode).attr('width')
-    const node_y = n.position === 'absolute' ? n.y : +source_node.y + +n.y + +d3.select(' .opensankey #' + source_node.idNode).attr('height')
-    let refX = 0
-    let orient = 'auto-start-reverse'
-
-    //Épaisseur du flux déssiné selon l'échelle de data
-    const thickness_link = scale(Math.max(inv_scale(min_thickness), link_value))
-
-    let clipped = [] as number[][]
-    if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x <= source_node_x && l.recycling || node_x > source_node_x && !l.recycling)) {
-      const arrow_int_left = [[0, 0], [0, left_height], [10, left_height / 2]].map(d1=>d1.map(d2=>d2*10))
-      //Si le lien entre à gauche
-      const zone_arrow = [[0, start_point_left], [10, start_point_left], [10, start_point_left + thickness_link], [0, start_point_left + thickness_link]].map(d1=>d1.map(d2=>d2*10))
-      clipped = clip(JSON.parse(JSON.stringify(arrow_int_left)), zone_arrow)
-      clipped.map(d => d[1] = d[1] - start_point_left*10)
-      start_point_left += thickness_link
-    } else if ((l.orientation === 'hh' || l.orientation === 'vh') && (node_x >= source_node_x && l.recycling || node_x < source_node_x && !l.recycling)) {
-      const arrow_int_right = [[1, 0], [1, right_height], [-9, right_height / 2]].map(d1=>d1.map(d2=>d2*10))
-      const zone_arrow = [[0, start_point_right], [10, start_point_right], [10, start_point_right + thickness_link], [0, start_point_right + thickness_link]].map(d1=>d1.map(d2=>d2*10))
-      clipped = clip(arrow_int_right, zone_arrow)
-      clipped.map(d => {
-        d[1] = d[1] - start_point_right*10
-        return d
-      })
-      refX = 10
-      orient = '0'
-      start_point_right += thickness_link
-    } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y > source_node_y)) {
-      const arrow_int_top = [[10, 0], [10, top_height], [0, top_height / 2]].map(d1=>d1.map(d2=>d2*10))
-      //Si le lien entre en haut
-      const zone_arrow = [[0, start_point_top], [10, start_point_top], [10, start_point_top + thickness_link], [0, start_point_top + thickness_link]].map(d1=>d1.map(d2=>d2*10))
-
-      clipped = clip(arrow_int_top, zone_arrow)
-      clipped.map(d => d[1] = d[1] - start_point_top*10)
-      start_point_top += (thickness_link)
-      refX = 100
-      orient = '270'
-        
-    } else if ((l.orientation === 'vv' || l.orientation === 'hv') && (node_y < source_node_y)) {
-      const arrow_int_bottom = [[0, 0], [0, bottom_height], [10, bottom_height / 2]].map(d1=>d1.map(d2=>d2*10))
-      //Si le lien entre en bas
-      const zone_arrow = [[0, start_point_bottom], [10, start_point_bottom], [10, start_point_bottom + thickness_link], [0, start_point_bottom + thickness_link]].map(d1=>d1.map(d2=>d2*10))
-      clipped = clip(JSON.parse(JSON.stringify(arrow_int_bottom)), zone_arrow)
-      clipped.map(d => d[1] = d[1] - start_point_bottom*10)
-      start_point_bottom += thickness_link
-
-    }
-
     if (!display_style.filter || link_value >= display_style.filter) {
-      const n = JSON.parse(JSON.stringify(clipped))
-      const point = d3.line()(n)
-      arr.append('marker').attr('id', 'arrow_' + l.idLink)
-        .attr('viewBox', [-thickness_link*5, 0, thickness_link*10, thickness_link*10])
-        .attr('refY', (thickness_link*10) / 2)
-        .attr('refX', refX)
-        .attr('markerWidth', (thickness_link*10<0.5)?5:2000)
-        .attr('markerHeight', 1)
-        .attr('orient', orient)
+      //selection
+      d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
+      //setNodeHeight(n, nodes, links, tags_catalog)
+      setNodeHeight(n, data.nodes, data.links, data.nodeTags,data,scale,inv_scale,getLinkValue)
+      d3.select('#gg_' + l.idLink)
         .append('path')
-        .attr('d', point)
-        .attr('stroke', 'black')
-        .attr('fill', () => { 
-          return link_color(l,data,getLinkValue) as string
+        .attr('class', 'arrow')
+        .attr('id', l.idLink + '_arrow')
+        .attr('d', () => {
+          let xt
+          let yt
+          let p5
+          if (l.orientation === 'hh' || l.orientation === 'vh') {
+            if (n.x <= source_node.x && l.recycling || n.x > source_node.x && !l.recycling) {
+              xt = +n.x
+              yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+              p5 = [xt, yt]
+              is_v = true
+              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
+            } else {
+              xt = +n.x + +d3.select('#' + n.idNode).attr('width')
+              yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+              p5 = [xt, yt]
+              is_v = true
+              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
+            }
+          } else if (l.orientation === 'vv' || l.orientation === 'hv') {
+            if (n.y > source_node.y) {
+              xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
+              yt = +n.y
+              p5 = [xt, yt]
+              is_v = false
+              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false)
+            } else {
+              xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
+              yt = +n.y + +d3.select('#' + n.idNode).attr('height')
+              p5 = [xt, yt]
+              is_v = false
+              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true)
+            }
+          }
+          return ''
         })
-        .attr('stroke-width', '0px')
-        .attr('stroke-opacity', 0.85)
-        .attr('opacity', 0.85)
-
-      d3.select(' .opensankey #' + l.idLink)
-        .attr('marker-end', () => 'url(#arrow_' + l.idLink + ')')
+        // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
+        .attr('fill', () => link_color(l, data,getLinkValue)!)
+        .attr('fill-opacity', () => {
+          //const opacity = String(l.display_value[value_index]).includes('[') ? 0.3 : 0.95
+          return 0.85 //opacity
+        })
+    }
+    if (is_v && n.x > source_node.x) {
+      cum_v_left += link_value
+    } else if (is_v && n.x < source_node.x) {
+      cum_v_right += link_value
+    } else if (!is_v && n.y > source_node.y) {
+      cum_h_top += link_value
+    } else if (!is_v && n.y < source_node.y) {
+      cum_h_bottom += link_value
     }
   }
 }
@@ -806,7 +784,7 @@ export const drawArrows = (
 // - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
 // until the mouse is released wich add a second node and add a link between these 2 nodes
 export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
-  mode_selection:string,
+  mode_selection:{current:string},
   data:SankeyData,
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   multi_selected_nodes:{current:SankeyNode[]},
@@ -822,7 +800,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
     
     if(d3.select(evt.target).attr('class')!='node node_shape'){
       
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln') {
+      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln') {
         if(!token && Object.keys(data.nodes).length>15){
           set_show_toast_limit_node(true)
           setTimeout(function () {
@@ -855,19 +833,20 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
       window.event?.stopPropagation()
       window.event?.preventDefault()
-      if(mode_selection=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+
+      if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
         data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
         set_first_selected_node({})
       }
       if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
         d3.selectAll(' .opensankey #svg #path-flux').remove()
       }
-      if( mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
+      if( mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
         // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris 
         // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
         set_first_selected_node({})
         Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
-      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
@@ -910,7 +889,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // si le token de connexion est à false alors ne crée pas de second noeud
       //si le mode de souris est noeud+flux alors crée un second noeud au relachement 
       //et crée un lien entre le premier noeud crée lors du click et ce dernier
-      if(!token && Object.keys(data.nodes).length>15 && mode_selection == 'ln'){
+      if(!token && Object.keys(data.nodes).length>15 && mode_selection.current == 'ln'){
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
         d3.selectAll(' .opensankey #svg #path-flux').remove()
         set_first_selected_node({})
@@ -918,7 +897,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         setTimeout(function () {
           set_show_toast_limit_node(false)
         }, 3000)
-      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
         // isDown = false
         d3.selectAll(' .opensankey #svg #path-flux').remove()
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)    
@@ -955,8 +934,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)  
         set_first_selected_node({})
         set_data({...data})    
-      }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
-        d3.selectAll(' .opensankey #svg #path-flux').remove()
+      }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
         
       
         const n_link = default_link(data)
@@ -1539,6 +1517,18 @@ const add_center_handle=(
   
     const source_node=data.nodes[link.idSource]
     const target_node=data.nodes[link.idTarget]
+    if (isNaN(source_node.x)) {
+      source_node.x = 100
+    }
+    if (isNaN(source_node.y)) {
+      source_node.y = 100
+    }
+    if (isNaN(target_node.x)) {
+      target_node.x = 100
+    }
+    if (isNaN(target_node.y)) {
+      target_node.y = 100
+    }
     const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
 
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
@@ -1722,6 +1712,18 @@ const drawCurve = (
 
   const source_node = nodes[link.idSource]
   const target_node = nodes[link.idTarget]
+  if (isNaN(source_node.x)) {
+    source_node.x = 100
+  }
+  if (isNaN(source_node.y)) {
+    source_node.y = 100
+  }
+  if (isNaN(target_node.x)) {
+    target_node.x = 100
+  }
+  if (isNaN(target_node.y)) {
+    target_node.y = 100
+  }
 
   const inputLinksId = target_node.inputLinksId
   const outputLinksId = source_node.outputLinksId
@@ -1750,7 +1752,7 @@ const drawCurve = (
         is_structure = true
       }
     } else if ( data.show_structure === 'reconciled' ) {
-      is_structure = theLinkValue.extension?.free_mini !== undefined && +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
+      is_structure = theLinkValue.extension?.free_mini !== undefined //&& +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
     }
   }
   if (link.orientation === 'vh' && !link.recycling) {
@@ -2129,10 +2131,16 @@ const node_value_and_text_same_pos=(node :SankeyNode)=>{
 
 
     
-export const node_label_text=(d:SankeyNode)=>{
-  // if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange') {
-  //   return d.name.split(' - ')[1]
-  // }
+export const node_label_text=(
+  data:SankeyData,
+  d:SankeyNode
+)=>{
+  if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange' && (data as unknown as {trade_label:string}).trade_label) {
+    return d.name.split(' - ')[1]
+  }
+  if (!isNaN(parseInt(d.name.split(' - ')[0]))) {
+    return d.name
+  }
   return d.name.split(' - ')[0].replace('-', ' ')
 }
 
