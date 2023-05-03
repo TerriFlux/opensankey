@@ -21,7 +21,7 @@ export const SankeyPlusNodeFO = (
     return visible
   }
 
-  return <Tab eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info">Beta</Badge></>} >
+  return <Tab eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info" style={{marginLeft:'auto'}}>Beta</Badge></>} >
     <OverlayTrigger
   key={'foDisabled'}
   placement={'top'}

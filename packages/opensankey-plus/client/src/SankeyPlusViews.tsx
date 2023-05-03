@@ -1466,7 +1466,7 @@ export const viewsAccordion = (
         }
       }
     }>
-    <Accordion.Header>Storytelling <Badge pill bg='info'>Beta</Badge></Accordion.Header>
+    <Accordion.Header>Storytelling <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge></Accordion.Header>
     <Accordion.Body>
     <OverlayTrigger
         key={'textZoneDisabled'}
