@@ -492,7 +492,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           loginOut={()=>null}
           unsetTokens={()=>null}
           // modalShortcut={shortcut_modale}
-          set_user_scale={set_user_scale}
+          min_width_and_height={min_width_and_height}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
