@@ -5,7 +5,8 @@ import webcolors
 import math
 import copy
 from collections import OrderedDict
-from SankeyExcelParser.io_excel import DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
+from SankeyExcelParser.io_excel import \
+    DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
     DATA_SHEET, DATA_TYPE_LABEL, RESULTS_SHEET,\
     NODES_SHEET, FLUX_SHEET, NODES_SANKEY, NODES_COLOR, NODES_NODE, NODES_DEFINITIONS, NODES_LEVEL, NODE_TYPE,\
     TER_SHEET, IO_SHEET, \
@@ -577,8 +578,22 @@ def save_excel(
     sankey_data: dict,
     save_all: bool
 ):
+    '''
+    Save sankey data in Excel file
+
+    Parameters
+    ----------
+    sankey_data : dict
+        Formatted data
+    save_all : bool
+        TODO description
+
+    Returns
+    -------
+    mfa_output, nodes_names
+        TODO description
+    '''
     nodes_cols = [NODES_LEVEL, NODES_NODE]
-    # nodes_cols = mfa_input[NODES_SHEET][0]
     #  tag_names are disposed between the column Dimensions and the column Définition
     tag_key_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags']) + list(sankey_data['fluxTags'])
 
