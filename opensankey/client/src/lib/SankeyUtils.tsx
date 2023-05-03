@@ -1402,3 +1402,23 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
   }  
   return colorNode
 }
+export const adjust_sankey_zone=(data:SankeyData,set_data:(d:SankeyData)=>void,min_width_and_height:(data:SankeyData)=>number[])=>{
+  [data.width, data.height] = min_width_and_height(data)
+  let size_menu=0
+  if(d3.select('.sankey-menu.offcanvas').nodes().length>0){
+    size_menu=+d3.select('.sankey-menu.offcanvas').style('width').replace('px','')
+  }
+  // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
+  const visible_size=((window.innerWidth-(+d3.select(' .opensankey #svg').style('margin').replace('px',''))*2)*0.985)-size_menu
+  
+  const scale=(visible_size/data.width)
+  const zoomed=()=> {
+    d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+') translate(0,0)')
+    d3.select(' .opensankey #svg')
+      .style('border', Math.round(2 ) + 'px solid #78c2ad')
+      .style('width', data.width + 'px')
+  }
+  const zoom = d3.zoom()
+    .on('zoom', zoomed)
+  zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
+}

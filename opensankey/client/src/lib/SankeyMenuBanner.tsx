@@ -5,7 +5,7 @@ import { MultiSelect } from 'react-multi-select-component'
 import parse, { DOMNode } from 'html-react-parser'
 import { Element } from 'domhandler/lib/node'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue, set_nodes_level } from './SankeyUtils'
+import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -1010,20 +1010,7 @@ export const toolbar_builder = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-            <Button variant='dark' onClick={() => {
-              [data.width, data.height] = min_width_and_height(data)
-              const scale=(((window.innerWidth-(+d3.select(' .opensankey #svg').style('margin').replace('px',''))*2)*0.985)/data.width)
-              const zoomed=()=> {
-                d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+') translate(0,0)')
-                d3.select(' .opensankey #svg')
-                  .style('border', Math.round(2 ) + 'px solid #78c2ad')
-                  .style('width', data.width + 'px')
-              }
-              const zoom = d3.zoom()
-                .on('zoom', zoomed)
-              zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
-              set_data({ ...data })
-            }} >
+            <Button variant='dark' onClick={() => {adjust_sankey_zone(data,set_data,min_width_and_height)}} >
               <FontAwesomeIcon icon={faMaximize} />
             </Button>
           </OverlayTrigger>
