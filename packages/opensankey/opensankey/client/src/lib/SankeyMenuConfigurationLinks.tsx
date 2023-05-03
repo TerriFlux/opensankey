@@ -295,10 +295,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     {/* Police des labels de flux  */}
     <Form.Group as={Row} >
-      <Col xs={7}>
+      <Col xs={4}>
         <FormLabel>{t('Flux.pdl')}</FormLabel>
       </Col>
-      <Col xs={5}>
+      <Col xs={8}>
         <Form.Select
           value={data.display_style.link_font_family_selected}
           onChange={
@@ -308,6 +308,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             }}>
           {data.display_style.font_family.map((d) => {
             return <option
+              style={{fontFamily:d}}
+
               key={'ff-' + d}
               value={d}
               // selected={d == data.display_style.link_font_family_selected}

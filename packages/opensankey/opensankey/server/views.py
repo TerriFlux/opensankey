@@ -163,24 +163,39 @@ def clean_file(filename, fctname):
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])
 def save_excel():
+    '''
+    HTTP POST request to save Sankey as Excel
+
+    Request :
+        - Sankey data as JSON
+
+    Response :
+        - 200 : OK
+        - 401 : Error when saving sankey data
+        - 402 : Error when saving mfa data
+    '''
+    # Save Sankey diagram
     try:
         cwd = os.getcwd()
         excel_file = os.path.join(cwd, "tutu.xlsx")
         sankey_data = request.get_data().decode("utf-8")
         mfa_output, _ = parser_excel.save_excel(json.loads(sankey_data), False)
     except Exception as excpt:
-        response = Response(
+        return Response(
             response='save_excel: ' + str(excpt),
-            status=401
-        )
-        return response
+            status=401)
+    # Save MFA data
     try:
         io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
         # AJoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_file)
         layout_sheet = wb.create_sheet()
         layout_sheet.title = 'layout'
-        layout_sheet['A1'].value = sankey_data
+        splitted_layout = cut_layout(sankey_data)
+        cpt = 1
+        for i in splitted_layout:
+            layout_sheet['A'+str(cpt)].value = i
+            cpt = cpt + 1
         wb.save('tutu.xlsx')
         return send_file(excel_file, as_attachment=True)
     except Exception as excpt:
@@ -189,6 +204,21 @@ def save_excel():
             status=402
         )
         return response
+    return Response(status=200)
+
+
+def cut_layout(layout):
+    '''
+    Split the layout string to substring in an array, each substring is as long as 32767 character maximum wich
+      is the maximum number of character a cell in excel can contains
+
+    Input :
+        - layout (String) : json_data of the sankey as string
+
+    Output :
+        - tab_layout (Array of string) : Array of the json_data splitted
+    '''
+    return [layout[i: i + 32767] for i in range(0, len(layout), 32767)]
 
 
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
@@ -204,27 +234,42 @@ def clean_excel():
 
 @opensankey.route('/sankey/upload_excel', methods=['POST'])
 def upload_excel():
+    '''
+    HTTP POST request to upload Sankey from Excel file
+
+    Request :
+        - file (string) : file to load
+
+    Response :
+        - 200 : Always
+    '''
+    # Inform about starting
     session['load_started'] = True
-    tmp_dir = tempfile.mkdtemp()
-    logname = tmp_dir + os.path.sep + "rollover.log"
-    session['logname'] = logname
-    trace.logger_init(logname, "w")
+    # Create logfile for debug
+    log_dir = tempfile.mkdtemp()  # Temporary dir
+    log_filename = log_dir + os.path.sep + "rollover.log"
+    session['logname'] = log_filename
+    # Init trace for user
+    trace.logger_init(log_filename, "w")
     session['base_filename'] = trace.base_filename()
-    trace.logger.debug(session['base_filename'])
+    # trace.logger.debug(session['base_filename'])
+    # Get input Excel filename
     excel_input_file = request.files['file']
-    output_directory = tempfile.mkdtemp()
-    input_file_name = os.path.join(output_directory,  'tutu.xlsx')
-    excel_input_file.save(input_file_name)
-    session['output_file_name'] = os.path.join(output_directory,  'tutu.json')
-    trace.logger.debug(session['output_file_name'])
-    file_stats = os.stat(input_file_name)
-    if file_stats.st_size > 1000000:
+    # Create conversion files
+    tmp_dir = tempfile.mkdtemp()  # Tempory dir for conversion
+    excel_input_filename = os.path.join(tmp_dir,  'tutu.xlsx')
+    excel_input_file.save(excel_input_filename)
+    session['output_file_name'] = os.path.join(tmp_dir,  'tutu.json')
+    # trace.logger.debug(session['output_file_name'])
+    # Use threads depending on input Excel file size
+    file_stats = os.stat(excel_input_filename)
+    if file_stats.st_size > 1000000:  # Excel > 1mo
         thread = Thread(
             target=upload_excel_thread,
             args=(
-                input_file_name,
+                excel_input_filename,
                 session['base_filename'],
-                logname,
+                log_filename,
                 session['output_file_name'],
                 False
             )
@@ -232,72 +277,103 @@ def upload_excel():
         thread.daemon = True
         thread.start()
         trace.logger.debug('thread launched')
-    else:
+    else:  # Excel <= 1mo
         try:
             upload_excel_thread(
-                input_file_name,
+                excel_input_filename,
                 session['base_filename'],
-                logname,
+                log_filename,
                 session['output_file_name'],
                 False
             )
         except Exception as excpt:
             trace.logger.debug('upload_excel_thread failed: ' + str(excpt))
+    # response
     response = Response(
         response='{}',
         status=200,
         mimetype='application/json'
     )
-
     return response
 
 
 def upload_excel_thread(
-    exemple_file_path,
-    base_file_name,
-    log_name,
-    output_file_name,
+    excel_input_filename,
+    trace_filename,
+    log_filename,
+    json_output_filename,
     use_layout
 ):
-    trace.logger_init(log_name,  'a')
-    trace.logger.info('Loading Excel.')
-    trace.logger.debug(exemple_file_path)
-    try:
-        mfa_input, _ = io_excel.load_mfa_excel(exemple_file_path)
-        trace.logger.info('Loading Excel Succeeded: ')
-    except Exception as expt:
-        trace.logger.error('Loading Excel Failed: ' + str(expt))
-        trace.logger.error('Construct Diagram Failed: ' + str(expt))
-        trace.logger.error('-- FAILED --')
+    '''
+    Excel convertion thread function.
+
+    Parameters
+    ----------
+    excel_input_filename : string
+        input excel file name (with full path)
+    trace_filename : string
+        user trace file name (with full path).
+    log_filename: string
+        debug logs file name (with full path)
+    json_output_filename : string
+        output json file name (with full path)
+    use_layout: bool
+        read layout from input file or not.
+
+    Returns
+    -------
+    None
+    '''
+    # Init trace for user
+    trace.logger_init(log_filename,  'a')
+    max_line_length = 50
+    # Step 1 : Open and read Excel
+    trace.logger.info('{:-<{w}}'.format('Loading excel ', w=max_line_length))
+    trace.logger.debug("File to load : {}".format(excel_input_filename.split('/')[-1]))
+    mfa_input = {}
+    ok_load, log_load = io_excel.load_mfa_excel(excel_input_filename, mfa_input)
+    if (ok_load):
+        trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
+    else:
+        for _ in log_load.split('\n'):
+            trace.logger.error(_)
+        trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
         return
-    trace.logger.info('Construct Diagram.')
+    # Step 2 : Extract sankey data
+    trace.logger.info('{:-<{w}}'.format('Extract diagram structure ', w=max_line_length))
     try:
         sankey_data = parser_excel.parse_excel(mfa_input)
-        trace.logger.info('Construct Diagram Succeeded: ')
+        trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     except Exception as expt:
-        trace.logger.error('Construct Diagram Failed: ' + str(expt))
-        trace.logger.error('-- FAILED --')
+        trace.logger.error('Extract Diagram Structure Failed: ' + str(expt))
+        trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
         return
-    if '_reconciled' in base_file_name:
-        layout_file_name = os.path.splitext(base_file_name)[0].replace('_reconciled',  '_layout')+'.json'
+    # Step 3 : Extract layout
+    if '_reconciled' in trace_filename:
+        layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '_layout')+'.json'
     else:
-        layout_file_name = os.path.splitext(base_file_name)[0] + '_layout.json'
+        layout_filename = os.path.splitext(trace_filename)[0] + '_layout.json'
     if use_layout:
-        sankey_folder = os.path.join(os.path.dirname(exemple_file_path),  'sankey')
-        layout_file_name = os.path.join(sankey_folder, layout_file_name)
-        if os.path.exists(layout_file_name):
-            layout_file = open(layout_file_name, encoding="utf-8", mode="r")
+        trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
+        sankey_folder = os.path.join(os.path.dirname(excel_input_filename),  'sankey')
+        layout_filename = os.path.join(sankey_folder, layout_filename)
+        if os.path.exists(layout_filename):
+            layout_file = open(layout_filename, encoding="utf-8", mode="r")
             layout_data = json.load(layout_file)
             sankey_data['layout'] = layout_data
-        sankey_data['file_name'] = layout_file_name
+        sankey_data['file_name'] = layout_filename
+    # Step 4 : Dump everything in local json for display
+    trace.logger.info('{:-<{w}}'.format('Loading diagram display ', w=max_line_length))
     try:
         json_data = json.dumps(sankey_data)
-        with open(output_file_name, "w") as outfile:
+        with open(json_output_filename, "w") as outfile:
             outfile.write(json_data)
-        trace.logger.info('-- FINISHED --')
+        trace.logger.info('{:->{w}}'.format(' FINISHED', w=max_line_length))
+        return
     except Exception as expt:
-        trace.logger.error('Writing JSON failed: ' + str(expt))
-        trace.logger.info('-- FAILED --')
+        trace.logger.error('Loading diagram display: ' + str(expt))
+        trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
+        return
 
 
 @opensankey.route('/sankey/upload_examples', methods=['POST'])
@@ -317,9 +393,9 @@ def upload_exemple():
     # error=''
     extension = os.path.splitext(exemple_file_path)[1]
     output_directory = tempfile.mkdtemp()
-    trace.logger.debug(exemple_file_path)
+    # trace.logger.debug(exemple_file_path)
     session['output_file_name'] = os.path.join(output_directory,  'tutu.json')
-    trace.logger.debug(session['output_file_name'])
+    # trace.logger.debug(session['output_file_name'])
     if extension == ".xlsx":
         file_stats = os.stat(exemple_file_path)
         if file_stats.st_size > 1000000:
@@ -465,7 +541,26 @@ def parse_folder(current_dir, menus, key=None):
                     # blob=send_file(file_name,mimetype='image/png')
                     menus[key]['Image'].append(file_name)
                     menus[key]['Image'].sort()
+            # Save template sorted in difficulty
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'easy_template' in folder_content):
+                file_names = os.listdir(os.path.join(current_dir, 'easy_template'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'easy_template' not in menus[key]:
+                        menus[key]['easy_template'] = []
+                    menus[key]['easy_template'].append(file_name)
+                    menus[key]['easy_template'].sort()
 
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'expert_template' in folder_content):
+                file_names = os.listdir(os.path.join(current_dir, 'expert_template'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'expert_template' not in menus[key]:
+                        menus[key]['expert_template'] = []
+                    menus[key]['expert_template'].append(file_name)
+                    menus[key]['expert_template'].sort()
     if not exemple_found and key in menus:
         del menus[key]
     #  if not artefact_found and key in artefacts:

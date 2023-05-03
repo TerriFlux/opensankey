@@ -413,12 +413,7 @@ export const dragging=(node:SankeyNode,
 
 
   [data.width, data.height] = min_width_and_height(data)
-  if (data.fit_screen) {
-    const svgSankey = d3.select(' .opensankey #svg')
-    svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-  } else {
-    d3.select(' .opensankey #svg').style('width', data.width + 'px')
-  }
+  d3.select(' .opensankey #svg').style('width', data.width + 'px')
 
 
 

@@ -520,9 +520,11 @@ export const toolbar_builder = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  set_show_readme:(b:boolean)=>void
+  set_show_readme:(b:boolean)=>void,
+  first_selected_node:object,
+  set_first_selected_node:(o:object)=>void,
+  min_width_and_height:(d:SankeyData)=>number[]
 ) => {
-  const default_horiz_shift = 50
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -538,6 +540,12 @@ export const toolbar_builder = (
     const tutu = filter
     set_current_filter(filter+1)
     set_current_filter(tutu)
+    d3.selectAll(' .opensankey #svg #path-flux').remove()
+    if(val=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+      data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
+      set_first_selected_node({})
+    }
+    // set_mode_selection(val)
   }
   let max_link_value = 0
 
@@ -792,46 +800,7 @@ export const toolbar_builder = (
     })
     return allDD
   }
-  /**
-   * Search the lowest visual element of the sankey to reajust the draw zone
-   *
-   * @returns {number[]}
-   */
-  const min_width_and_height = () => {
-    let height = 0
-    let width = 0
 
-    Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
-      // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
-      let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width
-      if(n.display_style.label_horiz=='left'){
-        width_label/=2
-      }
-      else if(n.display_style.label_horiz=='middle'){
-        width_label=0
-      }
-
-      height = (n.y && n.node_visible) ? Math.max(height, n.y) : height
-      width = (n.x && n.node_visible) ? Math.max(width, n.x+width_label) : width
-    })
-
-    height = height + 100
-    width = width + 100
-
-    Object.values(data.links).forEach(l => {
-      if (l.recycling) {
-        height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
-      }
-    })
-
-    Object.values(data.links).forEach(l => {
-      if (l.recycling) {
-        width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
-      }
-    })
-
-    return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
-  }
   const struc_data_reconciled=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
@@ -859,77 +828,77 @@ export const toolbar_builder = (
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=
-<Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
-  <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-    <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-      {addAllDropDownNode(t,data,set_data,false)}</>
-    ) : (<>
-      <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-    }</table>
-  </Popover.Body>
-</Popover>
-//Popover element to handle the display of link tags
+  <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+        {addAllDropDownNode(t,data,set_data,false)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+      }</table>
+    </Popover.Body>
+  </Popover>
+  //Popover element to handle the display of link tags
   const filter_color_link=
-<Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
-  <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-    {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
-  </Popover.Body>
-</Popover>
-//Popover element to handle the display of data tags
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
+    </Popover.Body>
+  </Popover>
+  //Popover element to handle the display of data tags
   const filter_data=
-<Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
-  <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
-  <Popover.Body>
-    <FormGroup as={Row}>
-      <Col xs={10}>
-        {addAllDropDownLinks()}
-      </Col>
-      <Col xs={2}>
-        <FormCheck
-          type='switch'
-          style={{marginLeft: '-2em'}}
-          checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
-          onChange={evt=> {
-            //Déselecitonne tous les type de tag
-            Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-            Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-            Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+  <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
+    <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          {addAllDropDownLinks()}
+        </Col>
+        <Col xs={2}>
+          <FormCheck
+            type='switch'
+            style={{marginLeft: '-2em'}}
+            checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
+            onChange={evt=> {
+              //Déselecitonne tous les type de tag
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
 
-            Object.values(data.nodes).forEach(el => {
-              el.colorParameter = 'local'
-              el.colorTag = 'no_colormap'
-            })
-
-            Object.values(data.links).forEach(el => {
-              el.colorParameter = 'local'
-              el.colorTag = 'no_colormap'
-            })
-
-            data.colorMap = 'no_colormap'
-
-            //Met le dernier dataTag en tant que couleur a suivre pour les flux
-            if(evt.target.checked){
               Object.values(data.nodes).forEach(el => {
-                el.colorParameter = 'groupTag'
+                el.colorParameter = 'local'
                 el.colorTag = 'no_colormap'
               })
-              Object.values(data.links).forEach(el => {
-                el.colorParameter = 'groupTag'
-                el.colorTag = 'no_colormap'
-              })
-              data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
-              Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
-            }
 
-            set_data({...data})
-          }}
-        />
-      </Col>
-    </FormGroup>
-  </Popover.Body>
-</Popover>
+              Object.values(data.links).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              data.colorMap = 'no_colormap'
+
+              //Met le dernier dataTag en tant que couleur a suivre pour les flux
+              if(evt.target.checked){
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                Object.values(data.links).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
+                Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
+              }
+
+              set_data({...data})
+            }}
+          />
+        </Col>
+      </FormGroup>
+    </Popover.Body>
+  </Popover>
   return [
     <Col>
       <FormGroup as={Col} lg='auto'>
@@ -1042,18 +1011,17 @@ export const toolbar_builder = (
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
             <Button variant='dark' onClick={() => {
-              data.fit_screen = true
-              const zoomed=(transform:{transform:string})=> {
-                [data.width, data.height] = min_width_and_height()
-                d3.select(' .opensankey #svg').attr('transform', transform['transform'])
+              [data.width, data.height] = min_width_and_height(data)
+              const scale=(((window.innerWidth-(+d3.select(' .opensankey #svg').style('margin').replace('px',''))*2)*0.985)/data.width)
+              const zoomed=()=> {
+                d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+') translate(0,0)')
                 d3.select(' .opensankey #svg')
                   .style('border', Math.round(2 ) + 'px solid #78c2ad')
                   .style('width', data.width + 'px')
               }
               const zoom = d3.zoom()
-                .scaleExtent([1, 40])
                 .on('zoom', zoomed)
-              zoom.scaleTo(d3.select(' .opensankey #svg'),1)
+              zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
               set_data({ ...data })
             }} >
               <FontAwesomeIcon icon={faMaximize} />
@@ -1156,7 +1124,7 @@ export const SankeyBannerRows = (
       node.display = true
     })
     set_nodes_level(data)
-    new_data.fit_screen = true
+    // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
     set_data({ ...new_data })
   }
@@ -1321,7 +1289,7 @@ export const OpenSankeyMenuBanner = (
       }
     </div>,
 
-    'toolbar': <Row className='sankey-toolbar' style={{'marginTop':height_navbarAndHerowrap}}>
+    'toolbar': <Row className='sankey-toolbar bg-light' style={{'marginTop':height_navbarAndHerowrap,position:'fixed',width:'100%',zIndex:'10'}}>
       {/* {(view!=='none')? <Col>
       <FormGroup as={Col} lg='auto'>
           <ButtonGroup >

@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,delete_node,delete_link,default_node,default_link,link_visible,node_color} from './SankeyUtils'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
@@ -841,234 +841,6 @@ export const drawArrows = (
 
 
 
-// Function used to handle event when some key are pressed
-// If the keyboard arrows are pressed it shift the selected nodes according to the arrow direction and the grid square
-// Escape key open and close configuration sankey menu
-// ctrl + s save a view of the data
-// Delete key allow us to delete selected elments (nodes,links, free label)
-export const keyHandler = (
-  e: KeyboardEvent,
-  data:SankeyData,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null
-  // button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  // mode_selection:{ current : string}
-) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && (document.activeElement?.tagName!=='INPUT' ||accordion_ref?.current==null)) {
-    e.preventDefault()
-    if (e.key == 'ArrowUp') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.name
-        }
-      }).includes(f.name)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
-        if (e.shiftKey) {
-          d.y = d.y - data.grid_square_size
-        } else {
-          const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-          const n_pos = Math.trunc((d.y+height/2)/ data.grid_square_size)
-          d.y =  (n_pos - 1) * data.grid_square_size 
-          d.y+=(data.grid_square_size/2)-height/2
-        }
-        let y_max = 0
-        Object.values(data.nodes).map(d => {
-          y_max = (d.y > y_max) ? d.y : y_max
-        })
-        //Diminue hauteur svg si le noeud est près du bord
-        if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
-          data.height -= 90
-        }
-      })
-    } else if (e.key == 'ArrowDown') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.name
-        }
-      }).includes(f.name)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
-        if (e.shiftKey) {
-          d.y = d.y + data.grid_square_size
-        } else {
-          const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-          const n_pos = Math.trunc((d.y+height/2) / data.grid_square_size)
-          d.y = (n_pos + 2) * data.grid_square_size
-          d.y-=(data.grid_square_size/2)+height/2
-        }
-        //Augumente hauteur svg si le noeud est près du bord
-        if (d.y > data.height - 100) {
-          data.height += 100
-        }
-      })
-    } else if (e.key == 'ArrowLeft') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.name
-        }
-      }).includes(f.name)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
-        if (e.shiftKey) {
-          d.x = d.x - data.grid_square_size
-        } else {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-          const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-          d.x-=(data.grid_square_size/2)+width/2
-        }
-        //Diminue largeur svg si le noeud est près du bord
-        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
-          data.width -= 50
-        }
-      })
-    } else if (e.key == 'ArrowRight') {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-        if (d != undefined) {
-          return d.name
-        }
-      }).includes(f.name)).map(d => {
-        if (d.position === 'relative') {
-          return
-        }
-        if (e.shiftKey) {
-          d.x = d.x + data.grid_square_size
-        } else {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos + 1) * data.grid_square_size
-          const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-          d.x+=(data.grid_square_size/2)-width/2
-        }
-        //Augumente largeur svg si le noeud est près du bord
-        if (d.x > data.width - 100) {
-          data.width += 100
-        }
-      })
-    }
-    set_data({ ...data })
-  } 
-  /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
-    e.preventDefault()
-    //va chercher les différences sauvegardées dans le localStorage
-    // const differences = JSON.parse(localStorage.getItem('diff') as string)
-    const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-    const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
-    //Si il y a des différences, prend la dernière effectuée
-    if (differences !== undefined && differences.length != 0) {
-      type difference_type = {
-        kind: string,
-        path: string[],
-        item: {
-          rhs: string,
-          kind: string
-        },
-        rhs: string,
-        index: string
-      }
-      const difference = differences.pop() as difference_type[]
-      //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
-      //La copie nous permet de reffecter une variable avec d'autre type d'objet
-      //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
-      //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
-      let dt = JSON.parse(JSON.stringify(data))
-      //Parcours les dernières modifications à effectuer
-      //D : Supprime un objet qui a été ajouté
-      //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
-      //A : Annule des moddification faites à des array
-      //E : Annule des modifications faites à des propriétées de l'objet
-      //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
-      // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
-      difference.map(d => {
-        let element_to_delete = dt
-        if (d['kind'] == 'D') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              delete element_to_delete[dd]
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'N') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              element_to_delete[dd] = d['rhs']
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'A') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              if (d['item']['kind'] == 'N') {
-                element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
-              } else if (d['item']['kind'] == 'D') {
-                element_to_delete[dd].splice(d['index'], 1)
-              }
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'E') {
-          let cpt = 0
-          if (d.path !== null && d.path !== undefined) {
-            d.path.map(dd => {
-              cpt++
-              if (cpt == d['path'].length) {
-                element_to_delete[dd] = d['rhs']
-              } else {
-                element_to_delete = element_to_delete[dd]
-              }
-            })
-          } else {
-            dt = d['rhs']
-          }
-        }
-      })
-      data = dt
-      localStorage.setItem('diff', JSON.stringify(differences))
-      try {
-        //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
-        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      } catch (e) {
-        localStorage.clear()
-      }
-      set_data({ ...data })
-    } else {
-      console.log('Aucune action en mémoire pour un retour en arrière')
-    }
-  }*/ 
-  else if(e.key=='Delete'){
-    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
-    {   
-      multi_selected_links.current.forEach(el=>{
-        delete_link(data,el)
-      })
-      multi_selected_nodes.current.forEach(el=>{
-        delete_node(data,el)
-      })
-      multi_selected_nodes.current=[]
-      multi_selected_links.current=[]
-      set_data({...data})
-    }
-  }else if(e.key=='a' && e.ctrlKey){
-    e.preventDefault()
-    multi_selected_nodes.current=Object.values(data.nodes)
-    set_data({...data})
-
-  }
-}
 // Function that is triggered when some event occure on the sankey zone like :
 // - a simple click on the sankey zone (not on link or node) deselect all elements
 // - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
@@ -1123,7 +895,20 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
       window.event?.stopPropagation()
       window.event?.preventDefault()
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+
+      if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+        data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
+        set_first_selected_node({})
+      }
+      if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
+        d3.selectAll(' .opensankey #svg #path-flux').remove()
+      }
+      if( mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
+        // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris 
+        // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
+        set_first_selected_node({})
+        Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
+      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const pos = d3.pointer(event)    
         const node_keys = Object.keys(data.nodes)
         const last_node = data.nodes[node_keys[node_keys.length - 1]]
@@ -1749,7 +1534,7 @@ const drawLinkText = (
     (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
     // .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
-      .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
+      .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label : y_pos)
       .text(d => link_text(data, d,getLinkValue ))
       .attr('visibility', link.label_visible ? 'visible' : 'hidden');
     (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
