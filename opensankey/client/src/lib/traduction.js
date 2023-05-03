@@ -394,7 +394,26 @@ const resources = {
         'tooltipHelp':'Additional informations about Sankey diagrams',
         'tooltipAjoutNode':'Adds a node to the mouse click',
         'tooltipLiason':'Allows to create links between two existing nodes, from an existing node or to an existing node'
-      }
+      },
+      welcome:{
+        'welcome':'Welcome to OpenSankey web application',
+        'exemple1':'Exemple of a sankey diagram with gradient links (functionality from Opensankey+) ',
+        'exemple2':'Exemple of a sankey diagram realised with Opensankey',
+
+        'introduction':'Introduction to OpenSankey web application',
+        1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant de sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds aux cliques de la souris',
+        2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
+        3:'Bouton permettant de filtrer les noeuds en fonction de leur niveau d\'agrégation',
+        4:'Bouton permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce bouton permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
+        5:'Bouton permettant de réajuster la taille de la zone de dessin pour que tous les éléments soient visibles',
+        6:'Bouton permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
+        7:'Bouton permettant d`\'afficher de l\'aide supplémentaire',
+        8:'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys ',
+        9:'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
+        10:'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
+      },
+      'DisplayWelcome':'Display Bienvenue',
+      'dontSeeAgain':'Don\'t show again',
     }
   },
   //=======================================================
@@ -788,7 +807,26 @@ const resources = {
         'tooltipSelection':'Permet de sélectionner ou de déplacer les noeuds',
         'tooltipHelp':'Informations supplémentaires sur la représentation avec les diagrammes de Sankey',
         'tooltipLiason':'Permet de créer des flux entre deux noeuds existants, depuis un noeud existant ou vers un noeud existant'
-      }
+      },
+      welcome:{
+        'welcome':'Bienvenue sur l\'applicaion web OpenSankey',
+        'exemple1':'Exemple d\'un diagramme de sankey comme des dégradés comme couleur de flux  (fonctionnalité d\'Opensankey+) ',
+        'exemple2':'Exemple d\'un diagramme de sankey pouvant être réaliser avec Opensankey',
+        'introduction':'Introduction à l\'application web OpenSankey',
+        1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant des sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds au clique de la souris',
+        2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
+        3:'Boutons permettant de filtrer les noeuds en fonction de leur niveau d\'aggrégation',
+        4:'Boutons permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce boutons permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
+        5:'Boutons permettant de réajuster la taille de la zone de dessin pour que tous les éléments soit visible',
+        6:'Boutons permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
+        7:'Boutons permettant d`\'afficher de l\'aide supplémentaire',
+        8:'Menu de navigation permettant d\'ouvrir,enregistrer, éditer des sankeys ',
+        9:'Boutons permetttant de ce connecter avec un compte opensankey et activer des modules supplémentaires',
+        10:'Boutons permetttant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
+      },
+      'DisplayWelcome':'Afficher Bienvenue',
+      'dontSeeAgain':'Ne plus montrer',
+
     }
   }
 }

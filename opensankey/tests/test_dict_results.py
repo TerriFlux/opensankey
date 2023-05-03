@@ -148,7 +148,8 @@ class DictResultTest(unittest.TestCase):
         file_name: str,
         expected_results: dict
     ):
-        mfa_input, _ = io_excel.load_mfa_excel(os.path.join(mfa_data_dir, file_name))
+        mfa_input = {}
+        io_excel.load_mfa_excel(os.path.join(mfa_data_dir, file_name), mfa_input)
         sankey_data = parser_excel.parse_excel(
             mfa_input
         )

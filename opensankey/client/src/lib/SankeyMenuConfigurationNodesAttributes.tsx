@@ -13,7 +13,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
 ) => {
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
-  let colorOnBlur='grey'
   const isAllNodeVisible = () => {
     let visible = false
     selected_parameter.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
@@ -28,6 +27,24 @@ export const OpenSankeyConfigurationNodesAttributes = (
       rect = false
     }
     return rect
+  }
+  const getBrowserName = () => {
+    const browserInfo = navigator.userAgent
+    let browser
+    if (browserInfo.includes('Opera') || browserInfo.includes('Opr')) {
+      browser = 'Opera'
+    } else if (browserInfo.includes('Edg')) {
+      browser = 'Edge'
+    } else if (browserInfo.includes('Chrome')) {
+      browser = 'Chrome'
+    } else if (browserInfo.includes('Safari')) {
+      browser = 'Safari'
+    } else if (browserInfo.includes('Firefox')) {
+      browser = 'Firefox'
+    } else {
+      browser = 'unknown'
+    }
+    return browser
   }
 
   const isAllNodeCircle = () => {
@@ -119,18 +136,27 @@ export const OpenSankeyConfigurationNodesAttributes = (
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
-          <Form.Control
+          {(getBrowserName()==='Firefox')?<Form.Control
             type='color'
             disabled={ !isAllNodeVisible()}
             value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
             onChange={evt=>{
-              colorOnBlur=evt.target.value
-            }}
-            onBlur={() => {
-              const color = colorOnBlur
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = color)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
               set_data({ ...data })
-            }}/>
+              
+            }}
+          />:<Form.Control
+            type='color'
+            disabled={ !isAllNodeVisible()}
+            value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
+            onChange={evt=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
+              // set_data({ ...data })
+            }}
+            onBlurCapture={()=>{
+              set_data({ ...data })
+            }}
+          />}  
         </OverlayTrigger>
       </Col>
     </Form.Group>,

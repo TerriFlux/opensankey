@@ -2,11 +2,11 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row } from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
-import { convert_data } from './SankeyConvert'
+import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample } from './SankeyUtils'
+import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
 import {downloadExamples} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -101,7 +101,8 @@ const MenuPropTypes = {
   menu_banner:PropTypes.object.isRequired,
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
-  modalShortcut:PropTypes.element.isRequired,
+  // modalShortcut:PropTypes.element.isRequired,
+  set_user_scale:PropTypes.func.isRequired
 
 }
 
@@ -113,32 +114,7 @@ const clickSaveDiagram = (data:SankeyData) => {
   FileSaver.saveAs(blob, 'sankey_diagram.json')
 }
 
-const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
-  const root = window.location.href
-  let url = root + url_prefix + 'sankey/save_excel'
-  const fetchData = {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }
 
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, 'sankey.xlsx')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = root + url_prefix + 'sankey/clean_excel'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
 
 
 const clickSaveSVG = () => {
@@ -267,13 +243,15 @@ export const OpenSankeyMenus = (
   set_show_save_json:(b:boolean)=>void,
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
-  setshowShortcut:(b:boolean)=>void,
+  set_show_welcome:(b:boolean)=>void,
+  set_never_see_again:(b:boolean)=>void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   externale_save_item:JSX.Element[],
+  set_user_scale:(n:number)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   return  [
@@ -304,7 +282,9 @@ export const OpenSankeyMenus = (
                   (new_data.version as unknown as undefined) = undefined
                 }
                 convert_data(new_data)
+                complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
                 set_nodes_level(data)
+                set_user_scale(new_data.user_scale)
                 set_data(new_data)
                 const test = document.getElementsByClassName('navbar')
                 let margin_top = 0
@@ -346,7 +326,12 @@ export const OpenSankeyMenus = (
       {external_edition_item}
     </NavDropdown >,
     <NavDropdown key={'Aide'} id={'Aide'} title={t('Menu.Aide')} >
-      <Dropdown.Item onClick={() => setshowShortcut(true)} >{t('Menu.rc')}</Dropdown.Item>
+      <Dropdown.Item onClick={() =>{ 
+        set_show_welcome(true)
+        set_never_see_again(false)
+        localStorage.setItem('dontSeeAggainWelcome','0')
+      }}>
+        {t('DisplayWelcome')}</Dropdown.Item>
       <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
     </NavDropdown >,
   ]
@@ -361,6 +346,8 @@ export const OpenSankeyMenus = (
  * @typedef {MenuTypes}
  */
 type MenuTypes = InferProps<typeof MenuPropTypes>
+
+
 
 
 /**
@@ -403,7 +390,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     menu_banner,
     loginOut,
     unsetTokens,
-    modalShortcut
   }
 ) => {
   let max_link_value = 0
@@ -432,10 +418,11 @@ const Menu: FunctionComponent<MenuTypes> = (
           if ((data as SankeyData & { layout?: SankeyData }).layout ) {
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
-          Object.assign(data,processExample(server_data))
-          callback(data)
-          delete (data as SankeyData & { layout?: SankeyData }).layout
-          set_data({ ...data })
+          
+          const new_data=Object.assign(default_sankey_data(),processExample(server_data))
+          callback(new_data)
+          delete (new_data as SankeyData & { layout?: SankeyData }).layout
+          set_data({ ...new_data })
           //set_show_load(false)
         } catch(err) {
           alert(err)
@@ -487,10 +474,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-
-      { !data.static_sankey ? (
-        modalShortcut
-      ): (<></>)}
 
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
@@ -630,7 +613,9 @@ const OpenSankeyModalShortcut = (t:TFunction,
       <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
       <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
       <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
-      <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
+      <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
+      <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
+      <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
       
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
       
@@ -659,4 +644,99 @@ const OpenSankeyModalShortcut = (t:TFunction,
   </Modal>
 }
   
+export const OpenSankeyModalWelcome=(t:TFunction,
+  active_page:string,
+  set_active_page:(s:string)=>void,
+  show_modal_welcome:boolean,
+  set_show_modal_welcome:(b:boolean)=>void,
+  never_see_again:boolean,
+  set_never_see_again:(b:boolean)=>void,
+  additional_shortcut_item:JSX.Element[],
+  external_pagination:JSX.Element[],
+  external_content:{[s:string]:JSX.Element},
+)=>{
+    
 
+
+  const content_rc=<>
+    <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
+          
+    <h5>Avec la souris en mode sélection :</h5>
+    <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
+    <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
+    <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
+    <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
+    <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
+    <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
+    <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
+    <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
+      
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+      
+    <h5>Avec la souris en mode édition :</h5>
+    <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
+    <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux à partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin</p>
+    <p><b>Drag (à partir d'un noeud) :</b> Créer un flux à partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin  </p>
+      
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+      
+    <h5>Autres raccourcis :</h5>
+    <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
+    <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
+    <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
+
+    <p><b>Echap :</b> Ferme le Menu quand il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
+      
+    {additional_shortcut_item}
+
+  </>
+  external_content['rc']=content_rc
+
+
+  const content_carousel=<Carousel variant='dark'>
+    <Carousel.Item>
+      <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_1.png'   style={{'objectFit':'contain','width':'100%'}}   />
+      <Carousel.Caption><p>{t('welcome.exemple1')}</p></Carousel.Caption>
+    </Carousel.Item>
+
+    <Carousel.Item>
+      <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_2.png'   style={{'objectFit':'contain','width':'100%'}}   />
+      <Carousel.Caption><p>{t('welcome.exemple2')}</p></Carousel.Caption>
+    </Carousel.Item>
+  </Carousel>
+  external_content['carousel']=content_carousel
+    
+  
+  
+  return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
+    set_show_modal_welcome(false)
+  }}>
+    <Modal.Header closeButton>
+      <Modal.Title>{t('welcome.welcome')}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      {external_content[active_page]}
+    </Modal.Body>
+
+    <Modal.Footer style={{justifyContent:'center'}}>
+      <Pagination >
+        {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
+        <Pagination.Item active={active_page==='carousel'} key={'carousel'} onClick={()=>{
+          set_active_page('carousel')
+        }}>
+            Exemples
+        </Pagination.Item>
+
+        <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
+          set_active_page('rc')
+        }}>
+          {t('Menu.rc')}
+        </Pagination.Item>
+      </Pagination>
+      <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
+        set_never_see_again(evt.target.checked)
+        localStorage.setItem('dontSeeAggainWelcome','1')
+      }}/>
+    </Modal.Footer>
+  </Modal>
+}

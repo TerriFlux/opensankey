@@ -643,7 +643,7 @@ export const convert_nodes = (
         n.display_style.label_horiz = 'left'
       }
       if (n.display_style.font_family === undefined) {
-        n.display_style.font_family = 'Cormorant'
+        n.display_style.font_family = 'Arial,serif'
       }
       if (n.node_width === undefined) {
         if ( data_to_convert.node_width) {
@@ -1255,6 +1255,12 @@ export const convert_data = (
     display_style.node_font_family_selected = display_style.font_family_selected
     display_style.link_font_family_selected = display_style.font_family_selected
   } 
+
+  display_style.font_family=['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
+    'Times New Roman,serif','Big Caslon,serif','Bodoni MT,serif','Book Antiqua,serif','Bookman,serif','New Century Schoolbook,serif','Calisto MT,serif','Cambria,serif','Didot,serif','Garamond,serif','Georgia,serif','Goudy Old Style,serif','Hoefler Text,serif','Lucida Bright,serif','Palatino,serif','Perpetua,serif','Rockwell,serif','Rockwell Extra Bold,serif','Baskerville,serif', 
+    'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
+    'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
+  ] 
 
   if (display_style.trade_close === undefined && (data.version === '0.2' || data.version === '0.3')) {
     display_style.trade_close = true

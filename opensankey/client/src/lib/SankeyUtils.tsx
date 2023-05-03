@@ -651,9 +651,13 @@ export const default_sankey_data = (): SankeyData => {
       filter: 0,
       filter_label: 0,
       null_flux: false,
-      font_family: ['Arial', 'Roboto', 'Cormorant', 'Cantarell'],
-      node_font_family_selected: 'Cormorant',
-      link_font_family_selected: 'Cormorant'
+      font_family: ['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
+        'Times New Roman,serif','Big Caslon,serif','Bodoni MT,serif','Book Antiqua,serif','Bookman,serif','New Century Schoolbook,serif','Calisto MT,serif','Cambria,serif','Didot,serif','Garamond,serif','Georgia,serif','Goudy Old Style,serif','Hoefler Text,serif','Lucida Bright,serif','Palatino,serif','Perpetua,serif','Rockwell,serif','Rockwell Extra Bold,serif','Baskerville,serif', 
+        'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
+        'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
+      ],
+      node_font_family_selected: 'Arial,serif',
+      link_font_family_selected: 'Arial,serif'
     },
     grid_square_size: 50,
     grid_visible: true,
@@ -1223,7 +1227,9 @@ export const uploadExemple = (
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  reinitialization: ()=>void
+  reinitialization: ()=>void,
+  set_user_scale:(n:number)=>void
+
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
@@ -1255,10 +1261,69 @@ export const uploadExemple = (
         Object.assign(data,server_data)
         convert_data(data)
         complete_sankey_data(data,default_sankey_data,default_node,default_link)
+        set_user_scale(data.user_scale)
         set_data({ ...data})
       }
     })
   })
+}
+
+export const downloadExempleExcel = (
+  file_name: string,
+) => {
+  let root = window.location.href
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
+  
+  const url = root + '/opensankey/sankey/upload_examples'
+  const fetchData = {
+    method: 'POST',
+    body: file_name
+  }
+  fetch(url, fetchData).then((response) => {
+    response.text().then((text) => {
+      const server_data = JSON.parse(text)
+      const error = server_data['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
+      }
+      clickSaveExcel('/opensankey/',server_data)
+
+      
+    })
+  })
+}
+export const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
+  let root = window.location.href
+  if (root.includes('dashboard')) {
+    root = root.replace('dashboard', '')
+  }
+  let url = root + url_prefix + 'sankey/save_excel'
+  
+  const fetchData = {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = root + url_prefix + 'sankey/clean_excel'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
 }
 
 /**
