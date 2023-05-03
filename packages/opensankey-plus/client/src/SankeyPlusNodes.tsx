@@ -289,13 +289,13 @@ const branchAnimate = (
       const idLink = d3.select(this).attr('id')
       const idTarget = data.links[idLink].idTarget
       // Modification des arrows après l'animation
-      const arrow=d3.select(' .opensankey #arrow_'+idLink)
+      const arrow=d3.select(' .opensankey #'+idLink+'_arrow')
       if(arrow!==undefined && arrow!= null){        
         // const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
         if(t){
-          arrow.select('path').style('fill',t)
+          arrow.attr('fill',t)
         }
       }
       // reaffichage des link value après l'animation
@@ -347,7 +347,7 @@ const node_mouse_click=(
     // Animation des flux du Sankey
     sankeyTooltip.style('opacity', 0)
     // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey       
-    d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
+    d3.select(' .opensankey #svg').selectAll('.arrow').attr('fill', '#dddddd')
   
     d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
     d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
@@ -478,12 +478,12 @@ export const SankeyPlusDrawNodesIcon = (
         const idLink = d3.select(this).attr('id')
         const idTarget = data.links[idLink].idTarget
         // Modification des arrows après l'animation
-        const arrow=d3.select(' .opensankey #arrow_'+idLink)
+        const arrow=d3.select(' .opensankey #'+idLink+'_arrow')
         if(arrow!==undefined && arrow!= null){        
           const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
           const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
           if(t){
-            arrow.select('path').style('fill',t)
+            arrow.attr('fill',t)
           }
         }
         // reaffichage des link value après l'animation
@@ -791,7 +791,9 @@ export  const SankeyPlusDrag_nodes = (
               })
             const target_node = nodes[link.idTarget]
             if (link.arrow) {
-              drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+              //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
+              drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+              //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
             }
             for (let i = 0; i < target_node.inputLinksId.length; i++) {
               d3.select(' .opensankey #' + target_node.inputLinksId[i])
@@ -1171,7 +1173,9 @@ export  const SankeyPlusDrag_nodes = (
             })
           const target_node = nodes[link.idTarget]
           if (link.arrow) {
-            drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+            //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+            //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
+            drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
           }
           for (let i = 0; i < target_node.inputLinksId.length; i++) {
             d3.select(' .opensankey #' + target_node.inputLinksId[i])

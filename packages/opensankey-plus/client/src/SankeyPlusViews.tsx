@@ -1,8 +1,9 @@
 import { InferProps} from 'prop-types'
-import React, { Requireable } from 'react'
-import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsCatalog, TagsGroup} from 'open-sankey/src/lib/types'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave} from 'react-icons/fa'
+import React, { ChangeEvent, Requireable } from 'react'
+import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
+import { FaArrowDown, FaArrowUp, FaMinus, FaPlus, FaSave, FaUpload} from 'react-icons/fa'
 import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
+import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
@@ -11,8 +12,6 @@ import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
 import {  node_color } from 'open-sankey/dist/SankeyUtils'
 import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
-import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-import { node_icon_fill_color,node_icon_path } from './SankeyPlusNodes'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
   data: SankeyPlusData,
@@ -53,8 +52,7 @@ export const sankey_draw_view = (
   nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
   linkTooltipsContent:(data : SankeyPlusData,d : SankeyPlusLink) => string,
   set_show_toast:(b:boolean)=>void,
-  mode_selection:string,
-  set_mode_selection:(s:string)=>void,
+  mode_selection:{current : string},
   draw_nodes:JSX.Element,
   draw_links:JSX.Element,
   draw_labels:JSX.Element,
@@ -74,7 +72,6 @@ export const sankey_draw_view = (
     multi_selected_label={multi_selected_label}
     multi_selected_links={multi_selected_links}
     mode_selection={mode_selection}
-    set_mode_selection={set_mode_selection}
     first_selected_node={{}}
     set_first_selected_node={set_first_selected_node}
     show_agregation={false} 
@@ -1120,16 +1117,36 @@ export const keyHandler = (
         set_show_toast(false)
       }, 3000)
     } else {
+      interface AFMSankeyLink extends SankeyPlusLink { 
+        natural_unit         : string,
+        conv                 : number[],
+        tooltips             : string[]
+      }
       // data is view data
       const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
       Object.values(data.links).forEach(l=> {
-        if (dataTagsArray.length == 0) {
-          l.value = master_data.links[l.idLink].value
+        const master_links = Object.values(master_data.links).filter(
+          l_master=> {
+            return data.nodes[l.idSource].name === master_data.nodes[l_master.idSource].name && 
+            data.nodes[l.idTarget].name === master_data.nodes[l_master.idTarget].name
+          }
+        )
+        if (master_links.length === 0) {
           return
         }
-        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_data.links[l.idLink].value as { [key: string]: SankeyLinkValue },0)
+        const master_link = master_links[0];
+        (l as AFMSankeyLink).conv = (master_link as AFMSankeyLink).conv;
+        (l as AFMSankeyLink).natural_unit = (master_link as AFMSankeyLink).natural_unit
+        if (dataTagsArray.length == 0) {
+          l.value = master_link.value
+
+          return
+        }
+        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_link.value as { [key: string]: SankeyLinkValue },0)
       })
       master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
+      const {units_names} = master_data as unknown as {units_names:[string]}
+      (data as unknown as {units_names:[string]}).units_names = units_names
       set_master_data({...master_data})
       set_data({...data})
       set_show_toast(true)
@@ -1449,11 +1466,12 @@ export const viewsAccordion = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
+  _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean
   
 ) => {
-  return <Accordion.Item
+  return <><Accordion.Item
     id='Visualisation'
     eventKey="Visualisation"
     style={{ 'display': 'block' }}
@@ -1545,7 +1563,7 @@ export const viewsAccordion = (
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = data.view[ind]
+                          const toShift = master_data.view[ind]
                           master_data.view.splice(ind, 1)
                           master_data.view.splice(ind - 1, 0, toShift)
                           set_master_data({...master_data})
@@ -1563,7 +1581,7 @@ export const viewsAccordion = (
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = data.view[ind]
+                          const toShift = master_data.view[ind]
                           master_data.view.splice(ind, 1)
                           master_data.view.splice(ind + 1, 0, toShift)
                           set_master_data({...master_data})
@@ -1591,6 +1609,51 @@ export const viewsAccordion = (
                     }
                   }
                 ><FaMinus /></Button></td>
+                <td><Button
+                  size="sm"
+                  variant='success'
+                  onClick={
+                    () => {
+                      let ind = -1
+                      master_data.view.map((v, i) => {
+                        ind = (v.id == d.id) ? i : ind
+                      })
+                      const cur_view = master_data.view[ind]
+                      const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+                      const new_ind = 'view_' + String(new Date().getTime())
+
+                      if (!copy_view_data.accordeonToShow.includes('Vis')) {
+                        copy_view_data.accordeonToShow.push('Vis')
+                        data.accordeonToShow.push('Vis')
+                      }
+                
+                      copy_view_data.view = []
+                      set_data(copy_view_data)
+                      //copy.view = []
+                      master_data.view.push({
+                        id: new_ind,
+                        view_data: copy_view_data,
+                        nom: 'copy of ' + cur_view.nom,
+                        details: ''
+                      })
+                      set_view(new_ind)
+                      set_master_data({...master_data})
+                    }
+                  }
+                ><FaPlus /></Button></td>
+                <td><Button
+                  size="sm"
+                  variant='secondary'
+                  onClick={
+                    () => {
+                      if (_load_json.current) {
+                        _load_json.current!.name = ''
+                        _load_json.current.click()
+                        _load_json.current.id = d.id
+                      }
+                    }
+                  }
+                ><FaUpload /></Button></td>
               </tr>
             )
           }) : <></>}
@@ -1599,6 +1662,46 @@ export const viewsAccordion = (
       </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
+      <Form.Control
+        type="file"
+        ref={_load_json}
+        style={{ display: 'none' }}
+        onChange={(evt: ChangeEvent) => {
+          const files = (evt.target as HTMLFormElement).files
+          const reader = new FileReader()
+          reader.onload = (() => {
+            return (e: ProgressEvent<FileReader>) => {
+              let result = String((e.target as FileReader).result)
+              const result_data = JSON.parse(result)
+              let ind = -1
+              master_data.view.map((v, i) => {
+                ind = (v.id == _load_json.current!.id) ? i : ind
+              })
+              const cur_view = master_data.view[ind]
+              cur_view.view_data = JSON.parse(JSON.stringify(result_data))
+              convert_data(cur_view.view_data)
+              cur_view.nom = files[0].name
+              set_data(cur_view.view_data as SankeyPlusData)
+              set_master_data({...master_data})
+              // Object.assign(new_data, result_data)
+              // if (result_data.version === undefined) {
+              //   (new_data.version as unknown as undefined) = undefined
+              // }
+              // convert_data(new_data)
+              // set_nodes_level(data)
+              // set_data(new_data)
+              // const test = document.getElementsByClassName('navbar')
+              // let margin_top = 0
+              // if (test && test.length > 0) {
+              //   margin_top = test[0].getBoundingClientRect().height
+              //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+              // }
+            }
+          })()
+          reader.readAsText(files[0])
+        }}
+      />
+  </>
 }
 declare const window: Window &
   typeof globalThis & {
