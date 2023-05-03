@@ -190,8 +190,6 @@ export const SankeyDataPropTypes = {
   max_shift: PropTypes.number.isRequired,
   legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
 
-  //show_banner:PropTypes.bool.isRequired,
-
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
   display_style: PropTypes.shape({
@@ -261,14 +259,12 @@ export type drawCurveType = (
 
 
 export type drawArrowsType = (
-  data: SankeyData,
   n: SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter?: number; filter_label?: number; },
-  nodeTags: TagsCatalog,
+  selected_tags: { [tag_group: string]: string[] },
+  data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  min_thickness:number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  display_style: { filter: number }
+  //selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
 ) => void

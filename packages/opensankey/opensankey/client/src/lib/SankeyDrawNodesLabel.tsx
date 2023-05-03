@@ -50,7 +50,7 @@ export const OpenSankeyDrawNodesLabel = (
       .style('font-size', n => (n as SankeyNode).display_style.font_size + 'px')
       .style('font-family', () => data.display_style.node_font_family_selected)
       .style('text-transform', n => ((n as SankeyNode).display_style.uppercase) ? 'uppercase' : 'none')
-      .text(n => node_label_text((n as SankeyNode)))
+      .text(n => node_label_text(data,n as SankeyNode))
       .each(n => textNodeWrap((n as SankeyNode),data))
 
     // Display value of nodes

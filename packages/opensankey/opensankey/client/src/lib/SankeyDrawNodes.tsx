@@ -16,7 +16,7 @@ export const OpenSankeyDrawNodes = (
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
-  mode_selection:string,
+  mode_selection:{current:string},
   first_selected_node:object,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
@@ -310,9 +310,9 @@ export const OpenSankeyDrawNodes = (
     
  
     
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
-    d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
-    if ((d as SankeyNode).shape_visible && (static_sankey || event.shiftKey)) {
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+    d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
+    if ((d as SankeyNode).shape_visible && (event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
@@ -320,7 +320,7 @@ export const OpenSankeyDrawNodes = (
   }
     
   const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
-    if (((d as SankeyNode).shape_visible ||over_icon) && (static_sankey || event.shiftKey)) {
+    if (((d as SankeyNode).shape_visible ||over_icon) && (event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
@@ -382,7 +382,7 @@ export const OpenSankeyDrawNodes = (
       // When we Ctrl + click a node, it select it and open a menu 
       ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey,data,set_data))
 
-      if (mode_selection == 'ln') {
+      if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
           if (!event.ctrlKey && !event.metaKey) {
             set_first_selected_node(d)
@@ -394,7 +394,7 @@ export const OpenSankeyDrawNodes = (
 
 
       // When the mouse is in mode selection, it allow nodes to be dragged
-      if(mode_selection=='s'){
+      if(mode_selection.current=='s'){
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text,getLinkValue,drawArrows,dragging))
       }
     }

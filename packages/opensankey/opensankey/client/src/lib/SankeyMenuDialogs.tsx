@@ -73,7 +73,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
                         (e: ProgressEvent<FileReader>) => {
                           let result = (e.target as FileReader).result
                           if (result) {
-                            result = String(result).split('<br>').join('\\\\n')
+                            result = String(result)//.split('<br>').join('\\\\n')
                             const new_layout = JSON.parse(result)
                             convert_data(new_layout)
                             complete_sankey_data(new_layout,default_sankey_data,default_node,default_link)
@@ -310,7 +310,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
                     (e: ProgressEvent<FileReader>) => {
                       let result = (e.target as FileReader).result
                       if (result) {
-                        result = String(result).split('<br>').join('\\\\n')
+                        result = String(result)//.split('<br>').join('\\\\n')
                         const layout : SankeyData = JSON.parse(result);
                         (data as SankeyData & { layout?: SankeyData }).layout = layout
                         launch('')
