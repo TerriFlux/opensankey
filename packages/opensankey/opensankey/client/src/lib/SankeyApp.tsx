@@ -178,8 +178,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   }
   const [active_page,set_active_page]=useState('intro')
   const intro=<div>
-    <h2>{t('welcome.introduction')}</h2>
     <img src='/fm/userfiles/OpenSankey/image_carousel/intro.png'   style={{'objectFit':'contain','width':'100%'}}/>
+    <p>{t('Banner.hlp_1_txt_1')}</p>
     <ol>
       <li>{t('welcome.1')}</li>
       <li>{t('welcome.2')}</li>
@@ -318,11 +318,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
       </Popover.Body>
     </Popover>
-  const [show_readme, set_show_readme] = useState(false)
   const {filter}=data.display_style
   const menu_banner=OpenSankeyMenuBanner(
-    t,data,set_data,show_readme,set_show_readme,
-    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',set_show_readme,first_selected_node,set_first_selected_node,min_width_and_height)
+    t,data,set_data,
+    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height)
   )
 
   //-3. Sankey Draws

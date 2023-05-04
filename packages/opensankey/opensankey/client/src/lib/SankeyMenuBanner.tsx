@@ -520,7 +520,6 @@ export const toolbar_builder = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  set_show_readme:(b:boolean)=>void,
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[]
@@ -1040,16 +1039,6 @@ export const toolbar_builder = (
                 <FontAwesomeIcon icon={faCodeBranch} />
               </Button>
             </OverlayTrigger>}
-          <OverlayTrigger
-            key={'tooltip-help'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>}>
-            <Button variant='info' onClick={() => { set_show_readme(true) }} >
-            ?
-            </Button>
-          </OverlayTrigger>
-
         </ButtonGroup>
       </FormGroup>
     </Col>]
@@ -1173,8 +1162,6 @@ export const OpenSankeyMenuBanner = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  show_readme:boolean,
-  set_show_readme:(b:boolean)=>void,
   toolbar:JSX.Element[]
 )=>{
   const { nodeTags} = data
@@ -1313,86 +1300,7 @@ export const OpenSankeyMenuBanner = (
       {toolbar.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
-    </Row>,
-
-    'modal_help': (window.sankey && window.sankey.help && Object.keys(window.sankey.help).length > 0) ? (
-      <Modal
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          'color': 'black'
-        }}
-        size="lg"
-        show={show_readme}
-        onHide={() => set_show_readme(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Banner.hlp')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            <Col>
-              <Tabs defaultActiveKey={Object.keys(window.sankey.help)[0]} id="diagram">
-                {Object.keys(window.sankey.help).map(
-                  (key, i) => (<Tab title={key} eventKey={key} key={i}>{
-                    parse(window.sankey.help[key], {
-                      replace: (domNode:DOMNode  ) => {
-                        interface AFMSankeyData extends SankeyData {
-                          units_names : string[][],
-                        }
-                        const domElement: Element = domNode as unknown as Element
-                        if (domElement.attribs && domElement.attribs.id === 'units') {
-                          return <div>
-                            {(data as AFMSankeyData).units_names.slice(2).map(
-                              (units_desc, i) => { return (<p key={i} > <b>{units_desc[0]}</b> : {units_desc[1]} </p>) }
-                            )}</div>
-                        } else if (domElement.attribs && domElement.attribs.id === 'selectors') {
-                          return <ul>
-                            {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return (<li key={i} >{tags_group[1].group_name}</li>) })}
-                          </ul>
-                        }
-                      }
-                    })
-                  }</Tab>))
-                }
-              </Tabs>
-            </Col>
-          </Row>
-        </Modal.Body>
-      </Modal>) :
-      (<Modal
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          'color': 'black'
-        }}
-        size="lg"
-        show={show_readme}
-        onHide={() => set_show_readme(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Banner.hlp')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            <Col>
-              <Tabs defaultActiveKey="diagram" id="diagram">
-                <Tab eventKey="diagram" title={t('Banner.hlp_1')}>
-                  <br></br>
-                  <p>{t('Banner.hlp_1_txt_1')}</p>
-                  <p>{t('Banner.hlp_1_txt_2')}</p>
-                  <p>{t('Banner.hlp_1_txt_3')}<b>
-                    {Object.entries(nodeTags).filter(tags_group => tags_group[1].banner === 'multi' && tags_group[0] !== 'flux_types' && tags_group[0] !== 'Uncert').map(tags_group => { return ' ' + tags_group[1].group_name })}</b></p>
-                  <p>{t('Banner.hlp_1_txt_4')}</p>
-                  <p>{t('Banner.hlp_1_txt_5')}</p>
-                  <p>{t('Banner.hlp_1_txt_6')}</p>
-                  <p>{t('Banner.hlp_1_txt_7')}</p>
-                </Tab>
-              </Tabs>
-            </Col>
-          </Row>
-        </Modal.Body>
-      </Modal>)
+    </Row>
   }
 
   return ui
