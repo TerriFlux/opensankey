@@ -171,7 +171,7 @@ const resources = {
           tooltips: {
             Visibilité: 'Makes the selected node(s) visible or invisible',
             Couleur: 'Choose the color of the selected node(s)',
-            CouleurPérenne: 'Keep the color of the node(s) if any filter is activated',
+            CouleurPérenne: 'Keep the color of the node(s) if any flux or data filter is activated, otherwise node turns grey (default color)',
             Forme: 'Choose a shape between rectangle or circle for the selected node(s)',
             TML: 'Minimum width in pixels of the selected node(s)',
             TMH: 'Minimum height in pixels of the selected node(s)'
@@ -585,7 +585,7 @@ const resources = {
           tooltips: {
             Visibilité: 'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)',
             Couleur: 'Choisir la couleur du/des noeud(s) selectionné(s)',
-            CouleurPérenne: 'Garder la couleur du/des noeud(s) en cas de filtrage',
+            CouleurPérenne: 'Garder la couleur du/des noeud(s) en cas de filtrage des flux ou données. Sinon le noeud reste en gris (couleur par defaut).',
             Forme: 'Choisir une Forme entre rectangle ou cercle pour le/les noeud(s) selectionné(s)',
             TML: 'Largeur minimale en pixel du/des noeud(s) selectionné(s)',
             TMH: 'Hauteur minimale en pixel du/des noeud(s) selectionné(s)'
