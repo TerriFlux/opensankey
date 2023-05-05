@@ -442,8 +442,42 @@ const Menu: FunctionComponent<MenuTypes> = (
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
-    if (button_ref && button_ref.current ) {
-      button_ref.current.click()
+
+    
+    if(!show_nav){
+      // Lors de l'ouverture du menu, enregistre l'échelle de la zone de sankey 
+      // et la position des scroll bar 
+
+      const scaleOfSVG=d3.select(' .opensankey #svg').attr('transform').split(' ').filter(s=>s.includes('scale'))[0].replace('scale(','').replace(')','')
+      sessionStorage.setItem('scale',scaleOfSVG)
+
+      const SL=document.getElementsByTagName ('html')[0]?.scrollLeft
+      const string_SL=(SL!==undefined)?SL.toString():'none'
+      sessionStorage.setItem('scrollLeft',string_SL)
+
+      const ST=document.getElementsByTagName ('html')[0]?.scrollTop
+      const string_ST=(ST!==undefined)?ST.toString():'none'
+      sessionStorage.setItem('scrollTop',string_ST)
+
+      adjust_sankey_zone(data,min_width_and_height,true)
+    }else{
+      // Lors de la fermeture du menu, remet l'échelle de la zone de sankey avant l'ouverture du menu
+      // et replace la position des scroll bar comme elles etaient avant
+      const scaleToUse=sessionStorage.getItem('scale')
+      const SlToUse=sessionStorage.getItem('scrollLeft')
+      const StToUse=sessionStorage.getItem('scrollTop')
+      
+      if(scaleToUse){
+        d3.select(' .opensankey #svg').attr('transform','translate(0,0) scale('+scaleToUse+')')
+      }else{
+        adjust_sankey_zone(data,min_width_and_height)
+      }
+      if(SlToUse && StToUse){
+        document.getElementsByTagName ('html')[0]?.scrollTo(+SlToUse,+StToUse)
+      }
+      sessionStorage.removeItem('scale')
+      sessionStorage.removeItem('scrollLeft')
+      sessionStorage.removeItem('scrollTop')
     }
   }
   const setChecked = useState(false)[1]
@@ -498,9 +532,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     type="checkbox"
                     variant="outline-primary"
                     checked={show_nav}
-                    onChange={(e) => { setChecked(e.currentTarget.checked)
-                      adjust_sankey_zone(data,set_data,min_width_and_height)
-                      }}
+                    onChange={(e) => { setChecked(e.currentTarget.checked)}}
                     onClick={toggleShow}
                     value="menuConfigButton">{menuButton()}
                   </ToggleButton>
