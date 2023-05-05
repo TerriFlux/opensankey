@@ -1,7 +1,7 @@
-cairosvg
-flaskfilemanager
-sphinx
-sphinx_rtd_theme
-sphinx-multibuild
-webcolors
-wheel
+CairoSVG==2.7.0
+flaskfilemanager==0.0.6
+sphinx==7.0.0
+sphinx-rtd-theme==1.2.0
+sphinx-multibuild==1.2.1
+webcolors==1.13
+wheel==0.34.2
