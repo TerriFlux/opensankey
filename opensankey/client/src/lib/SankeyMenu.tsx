@@ -102,7 +102,8 @@ const MenuPropTypes = {
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
-  min_width_and_height :PropTypes.func.isRequired
+  min_width_and_height :PropTypes.func.isRequired,
+  set_user_scale:PropTypes.func.isRequired
   
 
 }
@@ -391,7 +392,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     menu_banner,
     loginOut,
     unsetTokens,
-    min_width_and_height
+    min_width_and_height,
+    set_user_scale
   }
 ) => {
   let max_link_value = 0
@@ -424,6 +426,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           const new_data=Object.assign(default_sankey_data(),processExample(server_data))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
+          set_user_scale(new_data.user_scale)
           set_data({ ...new_data })
           //set_show_load(false)
         } catch(err) {

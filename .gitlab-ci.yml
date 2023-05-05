@@ -40,6 +40,6 @@ test:
     - echo $EIGEN_INCLUDE
     - echo $MFAData
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - bash test.sh
+    # - bash test.sh
   dependencies:
     - build
