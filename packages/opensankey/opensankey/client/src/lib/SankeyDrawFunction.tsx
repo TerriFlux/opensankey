@@ -39,8 +39,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   }
   const is_free = link_values.extension?.free_mini !== undefined &&
                  data.show_structure !== 'free_value' && 
-                 data.show_structure !== 'free_interval' &&
-                 !link_values.extension!.free_visible
+                 data.show_structure !== 'free_interval' 
   if (d.dashed || is_free ) {
     return '5, 5'
   } else {
@@ -1704,7 +1703,7 @@ const drawCurve = (
   }
   // const link_value = test_link_value(data, nodes, link)
   const link_value = test_link_value(data, nodes, link,getLinkValue)
-  // const val=getLinkValue(data,link.idLink)
+  const val=getLinkValue(data,link.idLink)
   // if(val.is_percent){
   //   const total=getTotalInputLink(data,data.nodes[link.idSource])
   //   link_value=total*(val.percent/100)
@@ -1740,7 +1739,7 @@ const drawCurve = (
   add_center_handle(data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 
 
-  if (link_value > display_style.filter_label) {
+  if (link_value > display_style.filter_label || val.extension!.free_visible) {
     drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
   }
 
