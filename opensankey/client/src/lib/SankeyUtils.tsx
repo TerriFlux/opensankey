@@ -812,10 +812,13 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
                   data_s.show_structure !== 'free_interval' &&
                   data_s.show_structure !== 'free_value' &&
                   !link_values.extension!.free_visible
+  if (link_values.extension!.free_visible) {
+    return true
+  }
   if (!is_free && test_link_value(data_s, data_s.nodes, l,getLinkValue) === 0) {
     if (data_s.display_style.null_flux) {
       return true
-    }
+    } 
     return false
   }
   return true
@@ -1029,7 +1032,8 @@ export const setSelectedTags = (
   const display_nodes: SankeyNode[] = Object.values(sankey_data.nodes)
 
   display_nodes.forEach(node => {
-    node.node_visible = node.display
+
+    node.node_visible = node.display && true
     let break_loop = false
     let no_tag = true
     Object.keys(nodeTags).filter(tag=>nodeTags[tag].banner !== 'level').forEach(tags_group_key => {
@@ -1333,6 +1337,10 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
+          if (val.extension!.free_visible) {
+            total_input +=1
+            continue
+          }
           if (val && val.value!=undefined) {
             total_input += val.value
           } else {
@@ -1351,7 +1359,10 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          
+          if (val.extension!.free_visible) {
+            total_input +=1
+            continue
+          }
           if (val && val.value!=undefined ) {
             total_output += val.value
           } else {
