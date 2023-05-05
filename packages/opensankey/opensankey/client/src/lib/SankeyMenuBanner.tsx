@@ -1009,7 +1009,7 @@ export const toolbar_builder = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-            <Button variant='dark' onClick={() => {adjust_sankey_zone(data,set_data,min_width_and_height)}} >
+            <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
               <FontAwesomeIcon icon={faMaximize} />
             </Button>
           </OverlayTrigger>
