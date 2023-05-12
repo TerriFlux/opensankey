@@ -764,13 +764,13 @@ export const drawArrows = (
           return 0.85 //opacity
         })
     }
-    if (is_v && n.x > source_node.x) {
+    if ((is_v && !l.recycling && n.x > source_node.x ) || (is_v && l.recycling && n.x < source_node.x) ) {
       cum_v_left += link_value
-    } else if (is_v && n.x < source_node.x) {
+    } else if ((is_v && !l.recycling &&n.x < source_node.x) || (is_v && l.recycling && n.x > source_node.x)) {
       cum_v_right += link_value
-    } else if (!is_v && n.y > source_node.y) {
+    } else if ((!is_v && !l.recycling && n.y > source_node.y) || (!is_v && l.recycling && n.y < source_node.y)) {
       cum_h_top += link_value
-    } else if (!is_v && n.y < source_node.y) {
+    } else if ((!is_v && !l.recycling && n.y < source_node.y) || (!is_v && l.recycling && n.y > source_node.y)) {
       cum_h_bottom += link_value
     }
   }
