@@ -2,7 +2,10 @@ import React,{useEffect} from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate} from 'open-sankey/dist/SankeyDrawFunction'
+import { SankeyPlusDrawArrows,dragNodeRedrawGradient } from './SankeyPlusGradient'
+
+
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import {  getLinkValue,test_link_value,node_color } from 'open-sankey/dist/SankeyUtils'
@@ -138,7 +141,6 @@ export const SankeyPlusDrawNodesFO = (
         .attr('height',(n)=>+d3.select(' .opensankey #' + n.idNode).attr('height'))
         .attr('id',(d)=> d.idNode + '_fo')
         .on('mouseover', function (event, d) {
-            console.log('hello')
             node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
           })
           .on('mousemove', function (event,d) {
@@ -339,7 +341,7 @@ export  const SankeyPlusDrag_nodes = (
               })
             const target_node = nodes[link.idTarget]
             if (link.arrow) {
-              drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+              SankeyPlusDrawArrows(target_node,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
             }
             for (let i = 0; i < target_node.inputLinksId.length; i++) {
               d3.select(' .opensankey #' + target_node.inputLinksId[i])
@@ -719,7 +721,7 @@ export  const SankeyPlusDrag_nodes = (
             })
           const target_node = nodes[link.idTarget]
           if (link.arrow) {
-            drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+            SankeyPlusDrawArrows(target_node,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
           }
           for (let i = 0; i < target_node.inputLinksId.length; i++) {
             d3.select(' .opensankey #' + target_node.inputLinksId[i])
