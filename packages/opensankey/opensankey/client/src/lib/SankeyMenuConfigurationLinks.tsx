@@ -60,7 +60,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable}
 ) => {
   const { fluxTags, dataTags } = data
-  const [forceUpdate, setForceUpdate] = useState(false)
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const set_show_link = useState(true)[1]
@@ -124,7 +123,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               sel.attr('fill-opacity', '1')
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
             })
-            setForceUpdate(!forceUpdate)
+            set_data({...data})
           }}
           labelledBy={'hello'}
         />
