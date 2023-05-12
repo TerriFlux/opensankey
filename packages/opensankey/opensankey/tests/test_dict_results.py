@@ -20,7 +20,7 @@ sys.path.insert(0, os.getcwd())
 #     import sankeytools.server.parser_excel as parser_excel
 # except Exception:
 
-MAXSIZE = 200000
+MAXSIZE = 10000000000000000
 
 mfa_data_dir = os.environ.get('MFAData')
 expected_results = {}
