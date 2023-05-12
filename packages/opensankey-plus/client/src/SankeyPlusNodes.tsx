@@ -2,10 +2,12 @@ import React,{useEffect} from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate,dragNodeRedrawGradient,drawArrows} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate} from 'open-sankey/dist/SankeyDrawFunction'
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
-import {  getLinkValue,test_link_value,node_color } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,test_link_value,node_color,link_color } from 'open-sankey/dist/SankeyUtils'
+import { SankeyPlusDrawArrows,dragNodeRedrawGradient } from './SankeyPlusGradient'
+
 export const SankeyPlusNodesAttributes = (
   t:TFunction,
   data:SankeyPlusData,
@@ -249,71 +251,7 @@ export const SankeyPlusNodeIcon = (
   </Tab>
 }
 
-const branchAnimate = (
-  data:SankeyPlusData,
-  nodeData: SankeyPlusNode,
-  nodeDisplay: string[]
-) => {
-  
-  // Permet la progation de l'animation sur l'ensemble du Sankey
-  const nodeStart = nodeData.idNode
-  
-  // on pourrait aussi evnetuellement faire un clone des noeuds
-  d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-  d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-  
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-    .filter(function (d) {
-      return d.idSource == nodeStart
-    })
-  
-  // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-  const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-  tmpLinks.selectAll('.link')
-    .each(function (this) {
-      const totalLength = (this as SVGGeometryElement).getTotalLength()
-  
-      d3.select(this)
-        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-        .attr('stroke-dashoffset', totalLength)
-        .style('stroke', function (this) {
-          // on recupere les paramêtres initiaux du stroke
-          return d3.select(this).attr('stroke')
-        })
-  
-    })
-    .transition()
-    .duration(2000)
-    .attr('stroke-dashoffset', 0)
-    .on('end', function (this) {
-      const idLink = d3.select(this).attr('id')
-      const idTarget = data.links[idLink].idTarget
-      // Modification des arrows après l'animation
-      const arrow=d3.select(' .opensankey #'+idLink+'_arrow')
-      if(arrow!==undefined && arrow!= null){        
-        // const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-        const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-        const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-        if(t){
-          arrow.attr('fill',t)
-        }
-      }
-      // reaffichage des link value après l'animation
-      d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-        .style('display', 'inline')
-      //Propagration de l'animation sur les flux sortant du target_node
-      // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-      if (!nodeDisplay.includes(idTarget)) {
-        nodeDisplay.push(idTarget)
-        let max=0
-        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
-        max=(tmp>max)?tmp:max
-        setTimeout(()=>{
-          branchAnimate(data,data.nodes[idTarget], nodeDisplay)
-        },max*2000)
-      } 
-    })
-}
+
 
 const calcPath = (
   data: SankeyPlusData,
@@ -371,6 +309,73 @@ const node_mouse_click=(
       set_animating(false)
     }, time_to_animate)
   }
+}
+
+const branchAnimate = (
+  data:SankeyPlusData,
+  nodeData: SankeyPlusNode,
+  nodeDisplay: string[]
+) => {
+      
+  // Permet la progation de l'animation sur l'ensemble du Sankey
+  const nodeStart = nodeData.idNode
+      
+  // on pourrait aussi evnetuellement faire un clone des noeuds
+  d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+  d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+      
+  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    .filter(function (d) {
+      return d.idSource == nodeStart
+    })
+      
+  // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
+  const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+  tmpLinks.selectAll('.link')
+    .each(function () {
+      const totalLength = (this as SVGGeometryElement).getTotalLength()
+      
+      d3.select(this)
+        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+        .attr('stroke-dashoffset', totalLength)
+        .style('stroke', function (this) {
+          // on recupere les paramêtres initiaux du stroke
+          return d3.select(this).attr('stroke')
+        })
+  
+    })
+    .transition()
+    .duration(2000)
+    .attr('stroke-dashoffset', 0)
+    .on('end', function (this) {
+      const idLink = d3.select(this).attr('id')
+      const idTarget = data.links[idLink].idTarget
+      // Modification des arrows après l'animation
+      const arrow=d3.selectAll(' .opensankey #'+idLink+'_arrow')
+      if(arrow!==undefined && arrow!= null){        
+        const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+        // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
+        const t=(data.links[idLink].gradient)?colorTarget:link_color(data.links[idLink],getLinkValue)
+        if(t){
+          arrow.attr('fill',t)
+          arrow.attr('opacity',0.85)
+        }
+      }
+      // reaffichage des link value après l'animation
+      d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
+        .style('display', 'inline')
+      //Propagration de l'animation sur les flux sortant du target_node
+      // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+      if (!nodeDisplay.includes(idTarget)) {
+        nodeDisplay.push(idTarget)
+        let max=0
+        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
+        max=(tmp>max)?tmp:max
+        setTimeout(()=>{
+          branchAnimate(data,data.nodes[idTarget], nodeDisplay)
+        },max*2000)
+      } 
+    })
 }
 
 const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
@@ -438,70 +443,7 @@ export const SankeyPlusDrawNodesIcon = (
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
   
 ) => {
-  const branchAnimate = (
-    data:SankeyPlusData,
-    nodeData: SankeyPlusNode,
-    nodeDisplay: string[]
-  ) => {
-        
-    // Permet la progation de l'animation sur l'ensemble du Sankey
-    const nodeStart = nodeData.idNode
-        
-    // on pourrait aussi evnetuellement faire un clone des noeuds
-    d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-    d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-        
-    const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
-      .filter(function (d) {
-        return d.idSource == nodeStart
-      })
-        
-    // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-    const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
-    tmpLinks.selectAll('.link')
-      .each(function () {
-        const totalLength = (this as SVGGeometryElement).getTotalLength()
-        
-        d3.select(this)
-          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-          .attr('stroke-dashoffset', totalLength)
-          .style('stroke', function (this) {
-            // on recupere les paramêtres initiaux du stroke
-            return d3.select(this).attr('stroke')
-          })
-    
-      })
-      .transition()
-      .duration(2000)
-      .attr('stroke-dashoffset', 0)
-      .on('end', function (this) {
-        const idLink = d3.select(this).attr('id')
-        const idTarget = data.links[idLink].idTarget
-        // Modification des arrows après l'animation
-        const arrow=d3.select(' .opensankey #'+idLink+'_arrow')
-        if(arrow!==undefined && arrow!= null){        
-          const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-          const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-          if(t){
-            arrow.attr('fill',t)
-          }
-        }
-        // reaffichage des link value après l'animation
-        d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-          .style('display', 'inline')
-        //Propagration de l'animation sur les flux sortant du target_node
-        // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-        if (!nodeDisplay.includes(idTarget)) {
-          nodeDisplay.push(idTarget)
-          let max=0
-          const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
-          max=(tmp>max)?tmp:max
-          setTimeout(()=>{
-            branchAnimate(data,data.nodes[idTarget], nodeDisplay)
-          },max*2000)
-        } 
-      })
-  }
+
 
   
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
@@ -624,7 +566,7 @@ export  const SankeyPlusDrag_nodes = (
   min_thickness:number,
   drawCurveFunction : SankeyDrawCurve,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyPlusData, d: SankeyLink) => any
+  link_text:(data: SankeyPlusData, d: SankeyLink) => any,
 
 
 ) => {
@@ -792,8 +734,8 @@ export  const SankeyPlusDrag_nodes = (
             const target_node = nodes[link.idTarget]
             if (link.arrow) {
               //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
-              drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
-              //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+              SankeyPlusDrawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+              //SankeyPlusDrawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
             }
             for (let i = 0; i < target_node.inputLinksId.length; i++) {
               d3.select(' .opensankey #' + target_node.inputLinksId[i])
@@ -1173,9 +1115,9 @@ export  const SankeyPlusDrag_nodes = (
             })
           const target_node = nodes[link.idTarget]
           if (link.arrow) {
-            //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
+            //SankeyPlusDrawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness)
             //const node_select = d3.select('#ggg_' + target_node.idNode) as d3.Selection<d3.BaseType, SankeyPlusNode, HTMLElement, SankeyPlusNode>
-            drawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+            SankeyPlusDrawArrows(target_node as SankeyPlusNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
           }
           for (let i = 0; i < target_node.inputLinksId.length; i++) {
             d3.select(' .opensankey #' + target_node.inputLinksId[i])
