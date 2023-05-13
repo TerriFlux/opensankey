@@ -341,6 +341,10 @@ export const compute_total_offsets = (
       if (v === undefined || v=='' || is_free) {
         return
       }
+      if (extension.display_thin) {
+        // if flux is displayed thin
+        return
+      }
       offset_width_top += +v
     }
   )
@@ -362,11 +366,15 @@ export const compute_total_offsets = (
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
       if (v === undefined || v=='' || is_free) {
+        return
+      }
+      if (extension.display_thin) {
+        // if flux is displayed thin
         return
       }
       offset_width_bottom += +v
@@ -391,11 +399,15 @@ export const compute_total_offsets = (
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
       if (v === undefined || v=='' || is_free) {
+        return
+      }
+      if (extension.display_thin) {
+        // if flux is displayed thin
         return
       }
       offset_height_left += +v
@@ -420,11 +432,15 @@ export const compute_total_offsets = (
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
       if (v === undefined || v=='' || is_free) {
+        return
+      }
+      if (extension.display_thin) {
+        // if flux is displayed thin
         return
       }
       offset_height_right += +v
@@ -1013,7 +1029,22 @@ export const delete_node = (
     })
     delete data.links[idLink]
   })
-
+  // The case below is not expected. The target and the source of the Links should have the link in inputLinksId  or outputLinksIdµ.
+  // However this code avoids the crash
+  let links_to_delete = Object.values(data.links).filter(l=>l.idSource === node.idNode || l.idTarget === node.idNode).map(l=>l.idLink)
+  for (let id in  links_to_delete) {
+      delete data.links[links_to_delete[id]]
+      Object.values(data.nodes).map((k) => {
+          k.inputLinksId = k.inputLinksId.filter(function (value) {
+              return value != links_to_delete[id]
+          })
+      })
+      Object.values(data.nodes).map((k) => {
+          k.outputLinksId = k.outputLinksId.filter(function (value) {
+              return value != links_to_delete[id]
+          })
+      })
+  }
 
   delete data.nodes[node.idNode]
 }
