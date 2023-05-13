@@ -330,6 +330,9 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -338,14 +341,12 @@ export const compute_total_offsets = (
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
-      }
-      if (extension.display_thin) {
+      if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        return
+        offset_width_top += inv_scale(5)
+      } else {
+        offset_width_top += +v
       }
-      offset_width_top += +v
     }
   )
   let bottom_order = -1
@@ -362,6 +363,9 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -370,14 +374,12 @@ export const compute_total_offsets = (
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
-      }
-      if (extension.display_thin) {
+      if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        return
+        offset_width_bottom += inv_scale(5)
+      } else {
+        offset_width_bottom += +v
       }
-      offset_width_bottom += +v
     }
   )
 
@@ -395,6 +397,9 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -403,14 +408,12 @@ export const compute_total_offsets = (
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
-      }
-      if (extension.display_thin) {
+      if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        return
+        offset_height_left += inv_scale(5)
+      } else {
+        offset_height_left += +v
       }
-      offset_height_left += +v
     }
   )
 
@@ -428,6 +431,9 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -436,14 +442,12 @@ export const compute_total_offsets = (
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
-      }
-      if (extension.display_thin) {
+      if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        return
+        offset_height_right += inv_scale(5)
+      } else {
+        offset_height_right += +v
       }
-      offset_height_right += +v
     }
   )
 
