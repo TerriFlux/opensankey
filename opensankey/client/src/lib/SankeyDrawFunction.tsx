@@ -41,7 +41,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
                  data.show_structure !== 'free_value' && 
                  data.show_structure !== 'free_interval'  &&
                  !link_values.extension!.free_visible
-  if (d.dashed || is_free ) {
+  if (d.dashed || is_free || link_values.extension!.display_thin) {
     return '5, 5'
   } else {
     return ''
@@ -1700,6 +1700,9 @@ const drawCurve = (
       }
     } else if ( data.show_structure === 'reconciled' ) {
       is_structure = theLinkValue.extension?.free_mini !== undefined //&& +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
+    } 
+    if (theLinkValue.extension?.display_thin) {
+      is_structure = true
     }
   }
   if (link.orientation === 'vh' && !link.recycling) {
