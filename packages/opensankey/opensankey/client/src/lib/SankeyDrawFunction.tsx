@@ -39,7 +39,8 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   }
   const is_free = link_values.extension?.free_mini !== undefined &&
                  data.show_structure !== 'free_value' && 
-                 data.show_structure !== 'free_interval' 
+                 data.show_structure !== 'free_interval'  &&
+                 !link_values.extension!.free_visible
   if (d.dashed || is_free ) {
     return '5, 5'
   } else {
@@ -82,69 +83,7 @@ export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
     return 'left'
   }
 }
-// Function that compute the link width
-export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number,min_thickness:number,display_nodes:{ [node_id: string]: SankeyNode },
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-)=>{
 
-
-  const node = data.nodes[l.idSource]
-  // const links = data.links
-  const nodes = data.nodes
-  // const stream_io = node.inputLinksId.concat(node.outputLinksId)
-  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs  
-  //position noeud source ou target
-  let pos_x_src, pos_y_src
-  if (node.idNode == nodes[l.idSource].idNode) {
-    pos_x_src = nodes[l.idTarget].x
-    pos_y_src = nodes[l.idTarget].y
-  } else {
-    pos_x_src = nodes[l.idSource].x
-    pos_y_src = nodes[l.idSource].y
-  }
-  const link_values = getLinkValue(data, l.idLink)
-  const is_free = link_values.extension!.free_mini !== undefined 
-                  && data.show_structure !== 'free_interval'
-                  && data.show_structure !== 'free_value'
-                  && !link_values.extension!.free_visible
-  if (is_free) {
-    return 5
-  }  
-  let link_value = test_link_value(data, nodes, l,getLinkValue)
-  link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)  
-  //Zones limite à ne pas êtres
-  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
-  const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]  
-  let draw_warning = false  
-  //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
-  //si partie gauche du noeud ne se situe pas dans les coord du noeud source
-  const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
-  //si partie droite du noeud ne se situe pas dans le noeud source
-  const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-  //si partie haute du noeud ne se situe pas dans le noeud source
-  const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-  // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]  
-  if (l.orientation == 'hh') {
-    //orientation hh
-    draw_warning = left_in_src || right_in_src
-  } else if (l.orientation == 'vv') {
-    //orientation vv
-    draw_warning = top_in_src
-  } else if (l.orientation == 'vh') {
-    draw_warning = left_in_src || right_in_src || top_in_src
-  } else {
-    //orientation hv 
-    //draw_warning = node_in_src_hh || node_in_src_vv
-    draw_warning = left_in_src || right_in_src || top_in_src
-  }  
-  if (draw_warning && !l.recycling) {
-    return '1px'
-  } else {  
-    const link_value = test_link_value(data, display_nodes, l,getLinkValue)
-    const tmp =(link_value=='')?1:link_value
-    return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))  
-  }
-}
 // Function that return the link color
 // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags)
 export const linkStroke=(l:SankeyLink,data:SankeyData,
@@ -695,11 +634,20 @@ export const drawArrows = (
     }
     const extension = getLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
-      const is_free = extension.free_mini !== undefined && 
-                      data.show_structure !== 'free_interval' && 
-                      data.show_structure !== 'free_value' &&
-                      !extension.free_visible
-      if ( is_free ) {
+      const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+      if (display_free_as_dashed) {
+        // Generale settings: free link value are displayed dashed without text without witdh
+        const link_value_is_free = extension!.free_mini !== undefined
+        if (link_value_is_free) {
+          // Link value is free should be displayed dashed without text
+          if (extension!.free_visible) {
+            //treated as not free
+          } else {
+            continue
+          }
+        }
+      }
+      if (extension.display_thin) {
         continue
       }
     }

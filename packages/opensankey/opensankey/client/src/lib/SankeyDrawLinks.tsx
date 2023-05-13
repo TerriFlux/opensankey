@@ -155,11 +155,24 @@ export const OpenSankeyDrawLinks = (
       pos_y_src = nodes[l.idSource].y
     }
     const link_values = getLinkValue(data, l.idLink)
-    const is_free = link_values.extension!.free_mini !== undefined &&
-                    data.show_structure !== 'free_interval' &&
-                    data.show_structure !== 'free_value' &&
-                    !link_values.extension!.free_visible
-    if (is_free) {
+    const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+    if (display_free_as_dashed) {
+      // Generale settings: free link value are displayed dashed without text without witdh
+      const link_value_is_free = link_values.extension && link_values.extension!.free_mini !== undefined
+      if (link_value_is_free) {
+        if (link_values.extension!.free_visible && link_values.value === 0 ) {
+          // zero value of free variables are displayed when free_visible is set to true
+          return 5
+        } else if (link_values.extension!.free_visible && link_values.value !== 0 ) {
+          // Not treated as free
+        } else if (!link_values.extension!.free_visible) {
+          // Link value is free should be displayed dashed without text without witdh
+          return 5
+        }
+      }
+    }
+    if (link_values.extension && link_values.extension!.display_thin) {
+      // if flux is displayed thin
       return 5
     }
     let link_value = test_link_value(data, nodes, l,getLinkValue)
