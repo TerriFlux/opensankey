@@ -1143,7 +1143,6 @@ export const SankeyBannerRows = (
           </Form.Select>) :(<React.Fragment></React.Fragment>)
         }
       </Form.Group>) : (<React.Fragment key={'2'}></React.Fragment>),
-    //data.static_sankey && sous_filieres && additional_selector ? (<React.Fragment></React.Fragment>) : (<Col></Col>),
     window.sankey && window.sankey.excel ? (
       <Form.Group key={'3'} as={Col} lg="auto" >
         <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
