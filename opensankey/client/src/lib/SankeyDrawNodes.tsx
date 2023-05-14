@@ -402,13 +402,13 @@ export const OpenSankeyDrawNodes = (
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
         ggg_nodes
-          .filter(d =>d.tags['Type de noeud'].includes(key))
+          .filter(d =>d.tags['Type de noeud'] && d.tags['Type de noeud'].includes(key))
           .append(tag.shape as string)
           .classed('node', true)
           .classed('node_shape', true)
       })
       ggg_nodes
-        .filter(d =>d.tags['Type de noeud'].length === 0)
+        .filter(d =>d.tags['Type de noeud'] === undefined || d.tags['Type de noeud'].length === 0)
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
