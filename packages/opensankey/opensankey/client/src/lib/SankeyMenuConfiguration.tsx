@@ -37,7 +37,11 @@ export const OpenSankeyConfigurationsMenus = (
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
   style_editable:boolean,
-  token:boolean
+  token:boolean,
+  set_displayed_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+
 
 ) => {
   return [
@@ -207,6 +211,9 @@ export const OpenSankeyConfigurationsMenus = (
                 multi_selected_links={multi_selected_links}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 style_editable={style_editable}
+                set_displayed_value={set_displayed_value}
+                tags_selected={tags_selected}
+                set_tags_selected={set_tags_selected}
               />
             </Accordion.Body>
           </Accordion.Item>
