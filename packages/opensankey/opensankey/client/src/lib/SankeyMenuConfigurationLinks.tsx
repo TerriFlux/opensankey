@@ -13,6 +13,8 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
 import {SankeyMenuConfigurationLinksTags} from './SankeyMenuConfigurationLinksTags'
 import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLinksTooltip'
+import {value_selected_parameter} from './SankeyDrawFunction'
+
 import { TFunction } from 'i18next'
 
 const SankeyMenuConfigurationLinksPropTypes = {
@@ -22,7 +24,10 @@ const SankeyMenuConfigurationLinksPropTypes = {
   selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  style_editable:PropTypes.bool.isRequired
+  style_editable:PropTypes.bool.isRequired,
+  set_displayed_value:PropTypes.func.isRequired,
+  tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
+  set_tags_selected:PropTypes.func.isRequired
 }
 
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
@@ -57,7 +62,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable}
+  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected}
 ) => {
   const { fluxTags, dataTags } = data
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
@@ -84,7 +89,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
   delete dataTagsSelected['n']
-  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
 
   if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_tags_selected(dataTagsSelected)
@@ -123,6 +127,40 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               sel.attr('fill-opacity', '1')
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
             })
+
+            if(multi_selected_links.current.length>0){
+              let new_tags_selected=tags_selected
+
+              if(multi_selected_links.current[0].idLink.includes('_')){
+                const index_grp_tag=multi_selected_links.current[0].idLink.split('_')
+                // Supprime le première élément du tableau qui ne contient que l'id du flux
+                index_grp_tag.shift()
+                new_tags_selected={}
+                // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+                for(const i in index_grp_tag){
+                  const key=Object.keys(data.dataTags)[Number(i)]
+                  new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+                }
+                set_tags_selected(new_tags_selected)
+                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+
+              }else if(Object.values(data.dataTags).length>0){
+                // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
+                const tmp=[] as string[]
+                Object.values(data.dataTags).forEach(dt=>{
+                  tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
+                })
+                const n_t_s={} as {[x:string]:string}
+                Object.keys(data.dataTags).forEach((dt,i)=>{
+                  n_t_s[dt]=tmp[i]
+                })
+                set_displayed_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+              }else{
+                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+              }
+            }
+           
+
             set_data({...data})
           }}
           labelledBy={'hello'}

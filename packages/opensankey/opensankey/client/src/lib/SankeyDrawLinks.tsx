@@ -111,6 +111,7 @@ export const OpenSankeyDrawLinks = (
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
           set_tags_selected(new_tags_selected)
+          set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
           const tmp=[] as string[]
