@@ -330,6 +330,9 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -338,10 +341,12 @@ export const compute_total_offsets = (
                       data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
+      if (extension.display_thin || is_free) {
+        // if flux is displayed thin
+        offset_width_top += inv_scale(5)
+      } else {
+        offset_width_top += +v
       }
-      offset_width_top += +v
     }
   )
   let bottom_order = -1
@@ -358,18 +363,23 @@ export const compute_total_offsets = (
         the_id = bottom_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
+      if (extension.display_thin || is_free) {
+        // if flux is displayed thin
+        offset_width_bottom += inv_scale(5)
+      } else {
+        offset_width_bottom += +v
       }
-      offset_width_bottom += +v
     }
   )
 
@@ -387,18 +397,23 @@ export const compute_total_offsets = (
         the_id = left_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
+      if (extension.display_thin || is_free) {
+        // if flux is displayed thin
+        offset_height_left += inv_scale(5)
+      } else {
+        offset_height_left += +v
       }
-      offset_height_left += +v
     }
   )
 
@@ -416,18 +431,23 @@ export const compute_total_offsets = (
         the_id = right_flux[i - 1]
       }
       const v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined || v=='') {
+        return
+      }
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
-      const is_free = extension.free_mini !== undefined &&
-                      data.show_structure !== 'free_interval' &&
+      const is_free = extension.free_mini !== undefined && 
+                      data.show_structure !== 'free_interval' && 
                       data.show_structure !== 'free_value' &&
                       !extension.free_visible
-      if (v === undefined || v=='' || is_free) {
-        return
+      if (extension.display_thin || is_free) {
+        // if flux is displayed thin
+        offset_height_right += inv_scale(5)
+      } else {
+        offset_height_right += +v
       }
-      offset_height_right += +v
     }
   )
 
@@ -1013,7 +1033,22 @@ export const delete_node = (
     })
     delete data.links[idLink]
   })
-
+  // The case below is not expected. The target and the source of the Links should have the link in inputLinksId  or outputLinksIdµ.
+  // However this code avoids the crash
+  let links_to_delete = Object.values(data.links).filter(l=>l.idSource === node.idNode || l.idTarget === node.idNode).map(l=>l.idLink)
+  for (let id in  links_to_delete) {
+      delete data.links[links_to_delete[id]]
+      Object.values(data.nodes).map((k) => {
+          k.inputLinksId = k.inputLinksId.filter(function (value) {
+              return value != links_to_delete[id]
+          })
+      })
+      Object.values(data.nodes).map((k) => {
+          k.outputLinksId = k.outputLinksId.filter(function (value) {
+              return value != links_to_delete[id]
+          })
+      })
+  }
 
   delete data.nodes[node.idNode]
 }

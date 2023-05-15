@@ -39,8 +39,9 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   }
   const is_free = link_values.extension?.free_mini !== undefined &&
                  data.show_structure !== 'free_value' && 
-                 data.show_structure !== 'free_interval' 
-  if (d.dashed || is_free ) {
+                 data.show_structure !== 'free_interval'  &&
+                 !link_values.extension!.free_visible
+  if (d.dashed || is_free || link_values.extension!.display_thin) {
     return '5, 5'
   } else {
     return ''
@@ -82,69 +83,7 @@ export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
     return 'left'
   }
 }
-// Function that compute the link width
-export const linkStrokeWidth=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,inv_scale:(t:number)=>number,min_thickness:number,display_nodes:{ [node_id: string]: SankeyNode },
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-)=>{
 
-
-  const node = data.nodes[l.idSource]
-  // const links = data.links
-  const nodes = data.nodes
-  // const stream_io = node.inputLinksId.concat(node.outputLinksId)
-  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs  
-  //position noeud source ou target
-  let pos_x_src, pos_y_src
-  if (node.idNode == nodes[l.idSource].idNode) {
-    pos_x_src = nodes[l.idTarget].x
-    pos_y_src = nodes[l.idTarget].y
-  } else {
-    pos_x_src = nodes[l.idSource].x
-    pos_y_src = nodes[l.idSource].y
-  }
-  const link_values = getLinkValue(data, l.idLink)
-  const is_free = link_values.extension!.free_mini !== undefined 
-                  && data.show_structure !== 'free_interval'
-                  && data.show_structure !== 'free_value'
-                  && !link_values.extension!.free_visible
-  if (is_free) {
-    return 5
-  }  
-  let link_value = test_link_value(data, nodes, l,getLinkValue)
-  link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)  
-  //Zones limite à ne pas êtres
-  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
-  const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]  
-  let draw_warning = false  
-  //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
-  //si partie gauche du noeud ne se situe pas dans les coord du noeud source
-  const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
-  //si partie droite du noeud ne se situe pas dans le noeud source
-  const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-  //si partie haute du noeud ne se situe pas dans le noeud source
-  const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-  // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]  
-  if (l.orientation == 'hh') {
-    //orientation hh
-    draw_warning = left_in_src || right_in_src
-  } else if (l.orientation == 'vv') {
-    //orientation vv
-    draw_warning = top_in_src
-  } else if (l.orientation == 'vh') {
-    draw_warning = left_in_src || right_in_src || top_in_src
-  } else {
-    //orientation hv 
-    //draw_warning = node_in_src_hh || node_in_src_vv
-    draw_warning = left_in_src || right_in_src || top_in_src
-  }  
-  if (draw_warning && !l.recycling) {
-    return '1px'
-  } else {  
-    const link_value = test_link_value(data, display_nodes, l,getLinkValue)
-    const tmp =(link_value=='')?1:link_value
-    return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))  
-  }
-}
 // Function that return the link color
 // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags)
 export const linkStroke=(l:SankeyLink,data:SankeyData,
@@ -216,6 +155,25 @@ export const compute_end_points = (
   }
   //inv_scale(2) = epaisseur minimum d'un flux
   link_value=(link_value==0 || (+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+
+  const theLinkValue = getLinkValue(data, link.idLink)
+  let is_structure = false
+  if (source_node.position !== 'relative' && target_node.position !== 'relative' ) {
+    if (data.show_structure === 'data' ) {
+      if (!(theLinkValue as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+        is_structure = true
+      }
+    } else if ( data.show_structure === 'reconciled' ) {
+      is_structure = theLinkValue.extension?.free_mini !== undefined //&& +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
+    } 
+    if (theLinkValue.extension?.display_thin) {
+      is_structure = true
+    }
+  }
+  if (is_structure) {
+    link_value = inv_scale(5)
+  }
+
   let res = compute_total_offsets(inv_scale,source_node, data, selected_tags, test_link_value,undefined,getLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
   res = compute_total_offsets(inv_scale,target_node, data, selected_tags, test_link_value,undefined,getLinkValue)
@@ -230,8 +188,8 @@ export const compute_end_points = (
       inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
     )
   }
-  let node_size_s_height = inv_scale(source_node.node_width)
-  let node_size_t_height = inv_scale(target_node.node_width)
+  let node_size_s_height = inv_scale(source_node.node_height)
+  let node_size_t_height = inv_scale(target_node.node_height)
   if (data.show_structure !== 'structure') {
     node_size_s_height = Math.max(
       inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
@@ -694,20 +652,30 @@ export const drawArrows = (
     if (!link_visible(l, data,getLinkValue)) {
       continue
     }
-    const extension = getLinkValue(data, n.inputLinksId[i]).extension
-    if (extension) {
-      const is_free = extension.free_mini !== undefined && 
-                      data.show_structure !== 'free_interval' && 
-                      data.show_structure !== 'free_value' &&
-                      !extension.free_visible
-      if ( is_free ) {
-        continue
-      }
-    }
-    const link_value = test_link_value(data,data.nodes, l, getLinkValue)
+    let link_value = test_link_value(data,data.nodes, l, getLinkValue)
     if (link_value === undefined) {
       continue
     }
+    const extension = getLinkValue(data, n.inputLinksId[i]).extension
+    if (extension) {
+      const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+      if (display_free_as_dashed) {
+        // Generale settings: free link value are displayed dashed without text without witdh
+        const link_value_is_free = extension!.free_mini !== undefined
+        if (link_value_is_free) {
+          // Link value is free should be displayed dashed without text
+          if (extension!.free_visible) {
+            //treated as not free
+          } else {
+            link_value = inv_scale(5)
+          }
+        }
+      }
+      if (extension.display_thin) {
+        link_value = inv_scale(5)
+      }
+    }
+
     const source_node = data.nodes[l.idSource]
     if (l.orientation === 'hh' || l.orientation === 'vh') {
       is_v = true
@@ -1529,8 +1497,10 @@ const add_center_handle=(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
-
+    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    if (data.show_structure == 'structure') {
+      [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
+    }
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
     d3.select(' .opensankey #gg_' + link.idLink)
       .append('circle')
@@ -1744,19 +1714,8 @@ const drawCurve = (
     drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
   }
 
-  const theLinkValue = getLinkValue(data, link.idLink)
-  let is_structure = false
-  if (source_node.position !== 'relative' && target_node.position !== 'relative' ) {
-    if (data.show_structure === 'data' ) {
-      if (!(theLinkValue as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-        is_structure = true
-      }
-    } else if ( data.show_structure === 'reconciled' ) {
-      is_structure = theLinkValue.extension?.free_mini !== undefined //&& +(getLinkValue(data, link.idLink).extension?.free_mini ??false) == 0 
-    }
-  }
   if (link.orientation === 'vh' && !link.recycling) {
-    if (data.show_structure == 'structure' || is_structure) {
+    if (data.show_structure == 'structure') {
       [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
       if (source_node.x > target_node.x) {
         xt = xt + 30
@@ -1771,7 +1730,7 @@ const drawCurve = (
     )
   }
   if (link.orientation === 'hv' && !link.recycling) {
-    if (data.show_structure == 'structure' || is_structure) {
+    if (data.show_structure == 'structure') {
       [ys, xt] = [source_node.y + 5, target_node.x + 5]
       if (source_node.y > target_node.y) {
         yt = yt + 30
@@ -1786,7 +1745,7 @@ const drawCurve = (
     )
   }
   if (link.orientation === 'hh' && !link.recycling) {
-    if (data.show_structure == 'structure' || is_structure ) {
+    if (data.show_structure == 'structure' ) {
       [ys, yt] = [source_node.y + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
       if (source_node.x > target_node.x) {
         xt = xt + target_node.node_width
@@ -1806,7 +1765,7 @@ const drawCurve = (
     )
   }
   if (link.orientation === 'vv' && !link.recycling) {
-    if (data.show_structure == 'structure' || is_structure) {
+    if (data.show_structure == 'structure' ) {
       [xs, xt] = [source_node.x + source_node.node_width / 2, target_node.x + target_node.node_width / 2]
       if (source_node.y > target_node.y) {
         yt = yt + 30
@@ -1828,7 +1787,7 @@ const drawCurve = (
     const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
     const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
     const vert_shift = link.vert_shift ? link.vert_shift : 0
-    if (data.show_structure == 'structure' || is_structure) {
+    if (data.show_structure == 'structure' ) {
       [ys, yt] = [source_node.y + 5, target_node.y + 5]
     }
     return SankeyShapes.bezier_link_classic_recycling(
