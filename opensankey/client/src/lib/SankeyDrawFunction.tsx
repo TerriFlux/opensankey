@@ -560,11 +560,12 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     }
   })
   //Nombre de tspan dans la balise text
+  const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   if (d.display_style.label_vert == 'middle') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
   } else if (d.display_style.label_vert == 'bottom') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,1em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,'+(1-ts_span_void)+'em)')
   } else if (d.display_style.label_vert == 'top') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (-(nb_tspan - 1)) + 'em)')
   }
@@ -2140,6 +2141,7 @@ export const node_label_text=(
   if (!isNaN(parseInt(d.name.split(' - ')[0]))) {
     return d.name
   }
+  // console.log((d.name.split(' - ')[0].replace('-', ' '))[0])
   return d.name.split(' - ')[0].replace('-', ' ')
 }
 
