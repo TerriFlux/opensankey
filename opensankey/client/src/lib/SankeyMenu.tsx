@@ -6,7 +6,7 @@ import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, C
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_sankey_data, default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
+import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
 import {downloadExamples,adjust_sankey_zone} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -41,6 +41,7 @@ const MenuPropTypes = {
   t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
+  default_sankey_data:PropTypes.func.isRequired,
   logo: PropTypes.string.isRequired,
   logo_width: PropTypes.number,
   app_name: PropTypes.string.isRequired,
@@ -239,6 +240,7 @@ export const OpenSankeyMenus = (
   t:TFunction,
   setShowPreference:(b:boolean)=>void,
   reinitialization:()=>void,
+  default_sankey_data:()=>SankeyData,
   set_show_publish_dialog:(b:boolean)=>void,
   set_show_apply_layout:(b:boolean)=>void,
   set_show_excel_dialog:(b:boolean)=>void,
@@ -361,6 +363,7 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
  */
 const Menu: FunctionComponent<MenuTypes> = (
   { t,data, set_data,
+    default_sankey_data,
     nav_item_active,
     show_nav,
     set_show_nav,
