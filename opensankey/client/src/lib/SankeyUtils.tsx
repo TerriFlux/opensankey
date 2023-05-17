@@ -1059,8 +1059,8 @@ export const delete_node = (
  */
 export const setSelectedTags = (
   sankey_data: SankeyData,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  extended: boolean
 ) => {
 
   const { nodeTags } = sankey_data
@@ -1083,7 +1083,34 @@ export const setSelectedTags = (
       no_tag = false
       const visible = Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected && node.tags[tags_group_key].includes(String(tag_key))).length > 0
       if (!visible) {
-        node.node_visible = false
+        if (!extended) {
+          node.node_visible = false
+        } else if (node.display) {
+          let visible = false
+          Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected).forEach(tag_key => {
+            node.inputLinksId.forEach(linkId=> {
+              const input_node = sankey_data.nodes[sankey_data.links[linkId].idSource]
+              if (input_node.tags['Type de noeud'] && input_node.tags['Type de noeud'][0]==='échange') {
+                return
+              }
+              if (input_node.display && input_node.tags[tags_group_key] && input_node.tags[tags_group_key].includes(String(tag_key))) {
+                visible = true
+              }
+            })
+          })
+          Object.keys(tags_group.tags).filter(tag_key => tags_group.tags[tag_key].selected).forEach(tag_key => {
+            node.outputLinksId.forEach(linkId=> {
+              const output_node = sankey_data.nodes[sankey_data.links[linkId].idTarget]
+              if (output_node.tags['Type de noeud'] && output_node.tags['Type de noeud'][0]==='échange') {
+                return
+              }
+              if (output_node.display && output_node.tags[tags_group_key] && output_node.tags[tags_group_key].includes(String(tag_key))) {
+                visible = true
+              }
+            })
+          })
+          node.node_visible = visible       
+        }
         break_loop = true
       }
     })
