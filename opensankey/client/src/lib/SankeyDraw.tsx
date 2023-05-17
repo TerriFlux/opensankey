@@ -90,7 +90,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .attr('class', 'sankey-tooltip')
 
 
-  setSelectedTags(data,getLinkValue)
+  setSelectedTags(data,getLinkValue,false)
  
   
   sankeyTooltip
@@ -271,8 +271,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
     update_scale(data.user_scale)
-    const shift_top=document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().y+document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().height
-    d3.select('#svg-container').style('margin-top',shift_top+'px')
+    //const shift_top=document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().y+document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().height
+    //d3.select('#svg-container').style('margin-top',shift_top+'px')
 
 
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
