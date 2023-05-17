@@ -15,8 +15,9 @@ cache:
 # only cache local items.
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  MFAData: /home/ubuntu/dev_opensankey/sankeysuitemanager/MFAData
   EIGEN_INCLUDE: /home/ubuntu/dev_opensankey/sankeysuitemanager/eigen
+  MFAData: /home/ubuntu/dev_opensankey/MFAData
+  SankeyExcelParser: /home/ubuntu/dev_opensankey/SankeyExcelParser
 
 build:
   stage: build
@@ -26,7 +27,9 @@ build:
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - echo $MFAData
+    - echo $SankeyExcelParser
     - source /home/gitlab-runner/gitlab_dev/bin/activate
+    - bash $SankeyExcelParser/build.sh
     - bash build.sh
   except:
     - schedules
