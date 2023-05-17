@@ -90,7 +90,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .attr('class', 'sankey-tooltip')
 
 
-  setSelectedTags(data,getLinkValue)
+  setSelectedTags(data,getLinkValue,false)
  
   
   sankeyTooltip
