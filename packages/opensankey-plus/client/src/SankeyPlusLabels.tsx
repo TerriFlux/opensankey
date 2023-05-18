@@ -1,6 +1,6 @@
 import  { InferProps } from 'prop-types'
 import {  SankeyPlusData, SankeyPlusLabel } from './types'
-import React, { useEffect,Requireable } from 'react'
+import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 

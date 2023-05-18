@@ -6,11 +6,11 @@ import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
 import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
-import {nodeTransform,node_stroke_width,textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap,strokeDasharray} from 'open-sankey/dist/SankeyDrawFunction'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,} from './types'
+import {min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
-import {  node_color } from 'open-sankey/dist/SankeyUtils'
+import {  node_color, adjust_sankey_zone } from 'open-sankey/dist/SankeyUtils'
 import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
@@ -914,10 +914,10 @@ const animate_view_changement = (views_data:SankeyPlusData) => {
     nb_animation = (nb_animation !== undefined) ? nb_animation : 0
     time_to_animate += nb_animation * 2000
   }
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
-    .filter(function (d) {
-      return visible_linksId.includes(d.idLink)
-    })
+  // const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
+  //   .filter(function (d) {
+  //     return visible_linksId.includes(d.idLink)
+  //   })
 
   // glinks.selectAll('.link').style('stroke-opacity', 0)
   // glinks.selectAll('text').style('opacity', 0)
@@ -1411,7 +1411,7 @@ export const keyHandler = (
       }
     }
   } 
-  if (['ArrowUp', 'ArrowDown', , 'F8', 'F9'].includes(e.key)) {
+  if (['ArrowUp', 'ArrowDown', 'F8', 'F9'].includes(e.key)) {
     if (!master && e.key == 'ArrowUp' || e.key == 'F8') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
@@ -1429,6 +1429,7 @@ export const keyHandler = (
       // setTimeout(function () {
       set_view(master_data.view[ind-1].id)
       set_data({...master_data.view[ind-1].view_data as SankeyPlusData})
+      adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
       // }, time_to_set_view)
     } else if (!master && e.key == 'ArrowDown' || e.key == 'F9') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
@@ -1447,6 +1448,7 @@ export const keyHandler = (
       // setTimeout(function () {
       set_view(master_data.view[ind+1].id)
       set_data({...master_data.view[ind+1].view_data as SankeyPlusData})
+      adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
       // }, time_to_set_view)
       //}
     } 
@@ -1486,76 +1488,115 @@ export const viewsAccordion = (
     }>
     <Accordion.Header>Storytelling <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge></Accordion.Header>
     <Accordion.Body>
-    <OverlayTrigger
+      <OverlayTrigger
         key={'textZoneDisabled'}
         placement={'top'}
         delay={500}
         overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-        >
-      <Form>
-      <Row>
-        <Col xs={3}>
-          <FormLabel>{t('view.select')}</FormLabel>
-        </Col>
-        <Col xs={9}>
-          <Form.Select id="selectionNode"
-            onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                multi_selected_nodes.current = []
-                multi_selected_links.current = []
-                multi_selected_label.current = []
+      >
+        <Form>
+          <Row>
+            <Col xs={3}>
+              <FormLabel>{t('view.select')}</FormLabel>
+            </Col>
+            <Col xs={9}>
+              <Form.Select id="selectionNode"
+                onChange={
+                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    multi_selected_nodes.current = []
+                    multi_selected_links.current = []
+                    multi_selected_label.current = []
                 
-                if (evt.target.value === '') {
-                  return
-                }else if(evt.target.value!=='none' && view === 'none'){
-                  set_view(evt.target.value)
-                  set_master_data({...JSON.parse(JSON.stringify(data))})
+                    if (evt.target.value === '') {
+                      return
+                    }else if(evt.target.value!=='none' && view === 'none'){
+                      set_view(evt.target.value)
+                      set_master_data({...JSON.parse(JSON.stringify(data))})
 
-                  set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
+                      set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
 
-                } else if(evt.target.value=='none'){
-                  set_view(evt.target.value)
-                  set_data({...master_data})
-                }else{
-                  set_view(evt.target.value)
-                  set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
-                }               
-              }
-            }
-          >
-            <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
-            {master_data ? master_data.view.map(d => {
-              return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-            }) : <></>}
-          </Form.Select>
-        </Col>
-      </Row>
+                    } else if(evt.target.value=='none'){
+                      set_view(evt.target.value)
+                      set_data({...master_data})
+                    }else{
+                      set_view(evt.target.value)
+                      set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
+                    }               
+                  }
+                }
+              >
+                <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
+                {master_data ? master_data.view.map(d => {
+                  return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+                }) : <></>}
+              </Form.Select>
+            </Col>
+          </Row>
 
-      <Table bordered size='sm'>
-        <thead>
-          <tr>
-            <th>{t('view.name')}</th>
-            <th>Position</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {master_data ? Object.values(master_data.view).map(d => {
-            return (
-              <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
-                <td><FormControl size='sm'
-                  value={d.nom}
-                  disabled={!is_activated}
-                  onChange={evt => {
-                    master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
-                    set_data({ ...data })
-                  }}
-                /></td>
-                <td>
-                  <ButtonGroup className="button_position" size="sm">
-                    <Button
+          <Table bordered size='sm'>
+            <thead>
+              <tr>
+                <th>{t('view.name')}</th>
+                <th>Position</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {master_data ? Object.values(master_data.view).map(d => {
+                return (
+                  <tr style={{ 'border': (d.id == view) ? '2px solid red' : 'none' }}>
+                    <td><FormControl size='sm'
+                      value={d.nom}
+                      disabled={!is_activated}
+                      onChange={evt => {
+                        master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
+                        set_data({ ...data })
+                      }}
+                    /></td>
+                    <td>
+                      <ButtonGroup className="button_position" size="sm">
+                        <Button
+                          size="sm"
+                          variant="success"
+                          disabled={!is_activated}
+                          onClick={
+                            () => {
+                              let ind = -1
+                              master_data.view.map((v, i) => {
+                                ind = (v.id == d.id) ? i : ind
+                              })
+                              const toShift = master_data.view[ind]
+                              master_data.view.splice(ind, 1)
+                              master_data.view.splice(ind - 1, 0, toShift)
+                              set_master_data({...master_data})
+                              set_data({ ...data })
+
+                            }
+                          }
+                        ><FaArrowUp /></Button><Button
+                          size="sm"
+                          variant="success"
+                          disabled={!is_activated}
+                          onClick={
+                            () => {
+                              let ind = -1
+                              master_data.view.map((v, i) => {
+                                ind = (v.id == d.id) ? i : ind
+                              })
+                              const toShift = master_data.view[ind]
+                              master_data.view.splice(ind, 1)
+                              master_data.view.splice(ind + 1, 0, toShift)
+                              set_master_data({...master_data})
+                              set_data({ ...data })
+                            }
+                          }
+                        ><FaArrowDown /></Button>
+                      </ButtonGroup>
+
+                    </td>
+                    <td><Button
                       size="sm"
-                      variant="success"
+                      variant='danger'
                       disabled={!is_activated}
                       onClick={
                         () => {
@@ -1563,144 +1604,105 @@ export const viewsAccordion = (
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = master_data.view[ind]
                           master_data.view.splice(ind, 1)
-                          master_data.view.splice(ind - 1, 0, toShift)
+                          set_view('none')
                           set_master_data({...master_data})
                           set_data({ ...data })
-
                         }
                       }
-                    ><FaArrowUp /></Button><Button
+                    ><FaMinus /></Button></td>
+                    <td><Button
                       size="sm"
-                      variant="success"
-                      disabled={!is_activated}
+                      variant='success'
                       onClick={
                         () => {
                           let ind = -1
                           master_data.view.map((v, i) => {
                             ind = (v.id == d.id) ? i : ind
                           })
-                          const toShift = master_data.view[ind]
-                          master_data.view.splice(ind, 1)
-                          master_data.view.splice(ind + 1, 0, toShift)
+                          const cur_view = master_data.view[ind]
+                          const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+                          const new_ind = 'view_' + String(new Date().getTime())
+
+                          if (!copy_view_data.accordeonToShow.includes('Vis')) {
+                            copy_view_data.accordeonToShow.push('Vis')
+                            data.accordeonToShow.push('Vis')
+                          }
+                
+                          copy_view_data.view = []
+                          set_data(copy_view_data)
+                          //copy.view = []
+                          master_data.view.push({
+                            id: new_ind,
+                            view_data: copy_view_data,
+                            nom: 'copy of ' + cur_view.nom,
+                            details: ''
+                          })
+                          set_view(new_ind)
                           set_master_data({...master_data})
-                          set_data({ ...data })
                         }
                       }
-                    ><FaArrowDown /></Button>
-                  </ButtonGroup>
-
-                </td>
-                <td><Button
-                  size="sm"
-                  variant='danger'
-                  disabled={!is_activated}
-                  onClick={
-                    () => {
-                      let ind = -1
-                      master_data.view.map((v, i) => {
-                        ind = (v.id == d.id) ? i : ind
-                      })
-                      master_data.view.splice(ind, 1)
-                      set_view('none')
-                      set_master_data({...master_data})
-                      set_data({ ...data })
-                    }
-                  }
-                ><FaMinus /></Button></td>
-                <td><Button
-                  size="sm"
-                  variant='success'
-                  onClick={
-                    () => {
-                      let ind = -1
-                      master_data.view.map((v, i) => {
-                        ind = (v.id == d.id) ? i : ind
-                      })
-                      const cur_view = master_data.view[ind]
-                      const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
-                      const new_ind = 'view_' + String(new Date().getTime())
-
-                      if (!copy_view_data.accordeonToShow.includes('Vis')) {
-                        copy_view_data.accordeonToShow.push('Vis')
-                        data.accordeonToShow.push('Vis')
-                      }
-                
-                      copy_view_data.view = []
-                      set_data(copy_view_data)
-                      //copy.view = []
-                      master_data.view.push({
-                        id: new_ind,
-                        view_data: copy_view_data,
-                        nom: 'copy of ' + cur_view.nom,
-                        details: ''
-                      })
-                      set_view(new_ind)
-                      set_master_data({...master_data})
-                    }
-                  }
-                ><FaPlus /></Button></td>
-                <td><Button
-                  size="sm"
-                  variant='secondary'
-                  onClick={
-                    () => {
-                      if (_load_json.current) {
+                    ><FaPlus /></Button></td>
+                    <td><Button
+                      size="sm"
+                      variant='secondary'
+                      onClick={
+                        () => {
+                          if (_load_json.current) {
                         _load_json.current!.name = ''
                         _load_json.current.click()
                         _load_json.current.id = d.id
+                          }
+                        }
                       }
-                    }
-                  }
-                ><FaUpload /></Button></td>
-              </tr>
-            )
-          }) : <></>}
-        </tbody>
-      </Table>
-      </Form></OverlayTrigger>
+                    ><FaUpload /></Button></td>
+                  </tr>
+                )
+              }) : <></>}
+            </tbody>
+          </Table>
+        </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
-      <Form.Control
-        type="file"
-        ref={_load_json}
-        style={{ display: 'none' }}
-        onChange={(evt: ChangeEvent) => {
-          const files = (evt.target as HTMLFormElement).files
-          const reader = new FileReader()
-          reader.onload = (() => {
-            return (e: ProgressEvent<FileReader>) => {
-              let result = String((e.target as FileReader).result)
-              const result_data = JSON.parse(result)
-              let ind = -1
-              master_data.view.map((v, i) => {
-                ind = (v.id == _load_json.current!.id) ? i : ind
-              })
-              const cur_view = master_data.view[ind]
-              cur_view.view_data = JSON.parse(JSON.stringify(result_data))
-              convert_data(cur_view.view_data)
-              cur_view.nom = files[0].name
-              set_data(cur_view.view_data as SankeyPlusData)
-              set_master_data({...master_data})
-              // Object.assign(new_data, result_data)
-              // if (result_data.version === undefined) {
-              //   (new_data.version as unknown as undefined) = undefined
-              // }
-              // convert_data(new_data)
-              // set_nodes_level(data)
-              // set_data(new_data)
-              // const test = document.getElementsByClassName('navbar')
-              // let margin_top = 0
-              // if (test && test.length > 0) {
-              //   margin_top = test[0].getBoundingClientRect().height
-              //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-              // }
-            }
-          })()
-          reader.readAsText(files[0])
-        }}
-      />
+  <Form.Control
+    type="file"
+    ref={_load_json}
+    style={{ display: 'none' }}
+    onChange={(evt: ChangeEvent) => {
+      const files = (evt.target as HTMLFormElement).files
+      const reader = new FileReader()
+      reader.onload = (() => {
+        return (e: ProgressEvent<FileReader>) => {
+          const result = String((e.target as FileReader).result)
+          const result_data = JSON.parse(result)
+          let ind = -1
+          master_data.view.map((v, i) => {
+            ind = (v.id == _load_json.current!.id) ? i : ind
+          })
+          const cur_view = master_data.view[ind]
+          cur_view.view_data = JSON.parse(JSON.stringify(result_data))
+          convert_data(cur_view.view_data)
+          cur_view.nom = files[0].name
+          set_data(cur_view.view_data as SankeyPlusData)
+          set_master_data({...master_data})
+          // Object.assign(new_data, result_data)
+          // if (result_data.version === undefined) {
+          //   (new_data.version as unknown as undefined) = undefined
+          // }
+          // convert_data(new_data)
+          // set_nodes_level(data)
+          // set_data(new_data)
+          // const test = document.getElementsByClassName('navbar')
+          // let margin_top = 0
+          // if (test && test.length > 0) {
+          //   margin_top = test[0].getBoundingClientRect().height
+          //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+          // }
+        }
+      })()
+      reader.readAsText(files[0])
+    }}
+  />
   </>
 }
 declare const window: Window &
@@ -1720,16 +1722,16 @@ export const SankeyPlusBannerView=(
   view: string
 )=>{
 
-  const elementNavBar=document.getElementsByClassName('bg-light')[0]
-  const elementHerowrap=document.getElementsByClassName('herowrap')[0]
+  // const elementNavBar=document.getElementsByClassName('bg-light')[0]
+  //const elementHerowrap=document.getElementsByClassName('herowrap')[0]
 
-  const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
+  // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
-  const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
-  if ( window.SankeyToolsStatic) {
-    height_navbarAndHerowrap = 0
-  }
+  // const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
+  // let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
+  // if ( window.SankeyToolsStatic) {
+  //   height_navbarAndHerowrap = 0
+  // }
   return [
     <Col>
       <FormGroup  as={Col} lg='auto'>

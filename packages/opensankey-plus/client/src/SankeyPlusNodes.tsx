@@ -1,4 +1,4 @@
-import React,{useEffect} from 'react'
+import React from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
@@ -115,10 +115,10 @@ export const SankeyPlusNodesAttributes = (
   }else{
     return form_elements.map((e,i)=>{
       return <React.Fragment key={i}><OverlayTrigger
-      key={'SankeyPlusNodesAttributes'+i}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'SankeyPlusNodesAttributes'+i}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        key={'SankeyPlusNodesAttributes'+i}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'SankeyPlusNodesAttributes'+i}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >{e}</OverlayTrigger></React.Fragment>
     })
   }
@@ -160,94 +160,94 @@ export const SankeyPlusNodeIcon = (
 
   return <Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>
     <OverlayTrigger
-  key={'iconDisabled'}
-  placement={'top'}
-  delay={500}
-  overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-  >
-    <Form>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
-        </Col>
-        <Col xs={5}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllIconVisible()}
-            disabled={!is_activated}
-            onChange={evt => {
+      key={'iconDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <Form>
+        <Form.Group as={Row}>
+          <Col xs={4}>
+            <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
+          </Col>
+          <Col xs={5}>
+            <FormCheck inline
+              type='switch'
+              checked={isAllIconVisible()}
+              disabled={!is_activated}
+              onChange={evt => {
 
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
-              set_data({ ...data })
-            }}
-          />
-        </Col>
-      </Form.Group>
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+        </Form.Group>
 
 
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
-        </Col>
-        <Col xs={5}>
-          <Form.Select
-            disabled={!is_activated?true:!isAllIconVisible()}
-            onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.iconName = evt.target.value
-              })
-              set_data({ ...data })
-            }}
-          >
-            <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
+        <Form.Group as={Row}>
+          <Col xs={4}>
+            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
+          </Col>
+          <Col xs={5}>
+            <Form.Select
+              disabled={!is_activated?true:!isAllIconVisible()}
+              onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  d.iconName = evt.target.value
+                })
+                set_data({ ...data })
+              }}
+            >
+              <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
 
-            {Object.keys(data.icon_catalog).map((n, i) => {
+              {Object.keys(data.icon_catalog).map((n, i) => {
 
-              return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
-            })}
-          </Form.Select>
-        </Col>
-      </Form.Group>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
-        </Col>
-        <Col xs={3}>
-          <Form.Control
-            type='color'
-            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
-            value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
-            onChange={evt => {
-              const color = evt.target.value
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
-              set_data({ ...data })
-            }}
-          />
-        </Col>
-      </Form.Group>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
-        </Col>
-        <Col xs={3}>
-          <Form.Control
-            type='number'
-            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
-            value={valueAllIconRatio()}
-            onChange={evt => {
-              let ratio = +evt.target.value
-              ratio = (ratio > 100) ? 100 : ratio
-              ratio = (ratio < 0) ? 0 : ratio
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconRatio = ratio)
-              set_data({ ...data })
-            }}
-          />
-        </Col>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
-        </Col>
-      </Form.Group>
-    </Form></OverlayTrigger>
+                return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
+              })}
+            </Form.Select>
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
+          <Col xs={4}>
+            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
+          </Col>
+          <Col xs={3}>
+            <Form.Control
+              type='color'
+              disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+              value={(multi_selected_nodes.current.length == 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
+              onChange={evt => {
+                const color = evt.target.value
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row}>
+          <Col xs={4}>
+            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
+          </Col>
+          <Col xs={3}>
+            <Form.Control
+              type='number'
+              disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+              value={valueAllIconRatio()}
+              onChange={evt => {
+                let ratio = +evt.target.value
+                ratio = (ratio > 100) ? 100 : ratio
+                ratio = (ratio < 0) ? 0 : ratio
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconRatio = ratio)
+                set_data({ ...data })
+              }}
+            />
+          </Col>
+          <Col xs={4}>
+            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
+          </Col>
+        </Form.Group>
+      </Form></OverlayTrigger>
   </Tab>
 }
 
@@ -278,7 +278,7 @@ const calcPath = (
 const node_mouse_click=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
-  event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+  event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
   if (event.shiftKey) {
     event.preventDefault()
     set_animating(true)
@@ -405,7 +405,7 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
 export const SankeyPlusNodeClickEvent=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
-  sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>
+  sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>
 )=>{
   d3.selectAll(' .opensankey .node')
     .on('click', (event, d) => {
@@ -446,7 +446,7 @@ export const SankeyPlusDrawNodesIcon = (
 
 
   
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>)=>{
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection == 's')? 'pointer' : 'unset')
     if ((d as SankeyPlusNode).shape_visible && event.shiftKey) {
       sankeyTooltip
@@ -455,7 +455,7 @@ export const SankeyPlusDrawNodesIcon = (
     }
   }
         
-  const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, any>,over_icon:boolean)=>{
+  const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
     if (((d as SankeyPlusNode).shape_visible ||over_icon) && event.shiftKey) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
@@ -475,29 +475,29 @@ export const SankeyPlusDrawNodesIcon = (
         
 
 
-  const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
-    //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
-    //exemple : n0 -> n1  et n0 -> n2 -> n1
-    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-    const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
-    let max=0
+  // const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
+  //   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud 
+  //   //exemple : n0 -> n1  et n0 -> n2 -> n1
+  //   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
+  //   const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+  //   let max=0
         
-    if(n.idNode==target.idNode){
-      return deep-1
-    }else if(next_link.length>0) {
-      next_link.map(id=>{
-        const next_node=data.nodes[data.links[id].idTarget]
-        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
-        const to_avoid=link_to_avoid.concat([id])
-        const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
-        max=(tmp>max)?tmp:max
-      })
-    }
+  //   if(n.idNode==target.idNode){
+  //     return deep-1
+  //   }else if(next_link.length>0) {
+  //     next_link.map(id=>{
+  //       const next_node=data.nodes[data.links[id].idTarget]
+  //       //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+  //       const to_avoid=link_to_avoid.concat([id])
+  //       const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
+  //       max=(tmp>max)?tmp:max
+  //     })
+  //   }
         
-    return max
+  //   return max
         
         
-  }
+  // }
 
     
 
@@ -566,7 +566,7 @@ export  const SankeyPlusDrag_nodes = (
   min_thickness:number,
   drawCurveFunction : SankeyDrawCurve,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyPlusData, d: SankeyLink) => any,
+  link_text:(data: SankeyPlusData, d: SankeyLink) => unknown,
 
 
 ) => {

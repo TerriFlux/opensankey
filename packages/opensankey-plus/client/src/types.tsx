@@ -1,5 +1,4 @@
-import {SankeyData,SankeyLink,SankeyNode, SankeyLinkValue,SankeyLinkValueDict,TagsGroup,TagsCatalog,drawArrowsType} from 'open-sankey/src/lib/types'
-import { InferProps } from 'prop-types'
+import {SankeyData,SankeyLink,SankeyNode, SankeyLinkValue,SankeyLinkValueDict,TagsGroup,TagsCatalog} from 'open-sankey/src/lib/types'
 
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 

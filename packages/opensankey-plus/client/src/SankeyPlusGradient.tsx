@@ -21,33 +21,33 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
     return gradChecked
   }
   return <OverlayTrigger
-            key={'gradiantDisabled'}
-            placement={'top'}
-            delay={500}
-            overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-            >
-            <Form.Group as={Row} >
-              <Col>
-                <FormLabel style={{color:(!is_activated)?'grey':'#555555'}} >{t('Flux.apparence.grad')}:</FormLabel>
-              </Col>
-              <Col>
-                <Form.Check
-                  inline
-                  disabled={!is_activated}
-                  type="checkbox"
-                  checked={
-                    gradChecked()
-                  }
-                  onChange={
-                    evt => {
-                      // selected_link.gradient = evt.target.checked
-                      Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-            </Form.Group></OverlayTrigger>
+    key={'gradiantDisabled'}
+    placement={'top'}
+    delay={500}
+    overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+  >
+    <Form.Group as={Row} >
+      <Col>
+        <FormLabel style={{color:(!is_activated)?'grey':'#555555'}} >{t('Flux.apparence.grad')}:</FormLabel>
+      </Col>
+      <Col>
+        <Form.Check
+          inline
+          disabled={!is_activated}
+          type="checkbox"
+          checked={
+            gradChecked()
+          }
+          onChange={
+            evt => {
+              // selected_link.gradient = evt.target.checked
+              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
+              set_data({ ...data })
+            }
+          }
+        />
+      </Col>
+    </Form.Group></OverlayTrigger>
 }
 
 export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{
@@ -485,7 +485,7 @@ export const dragging=(node:SankeyPlusNode,
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,
     getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-  )=>{
+)=>{
   const old_x = +node.x
   const old_y = +node.y
   const new_x = old_x + event.dx

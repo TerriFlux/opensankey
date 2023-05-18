@@ -1,9 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { FunctionComponent} from 'react'
-import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, Tabs, Tab, FormCheck } from 'react-bootstrap'
+import React from 'react'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, Tabs } from 'react-bootstrap'
 // import { SankeyLink } from 'open-sankey/src/lib/types'
-import {SankeyPlusNode,SankeyPlusData,SankeyPlusLink} from './types'
+import {SankeyPlusData,SankeyPlusLink} from './types'
 import { default_node, default_link,cut_name } from 'open-sankey/dist/SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
