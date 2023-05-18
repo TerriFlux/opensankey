@@ -16,6 +16,10 @@ const default_handle_size = 10
 const default_horiz_shift = 50
 const min_thickness = 2
 
+declare const window: Window &
+   typeof globalThis & {
+    SankeyToolsStatic: boolean
+   }
 
 export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
@@ -1497,7 +1501,9 @@ const add_center_handle=(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    const res = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    const [, ys, xt, ] = res
+    let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
       [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
     }
@@ -1943,7 +1949,7 @@ export const min_width_and_height = (data:SankeyData) => {
 export const drawGrid = (data:SankeyData) => {
 
   d3.select(' .opensankey #svg #grid').selectAll('.line').remove()
-  if (data.grid_visible && !data.static_sankey ) {
+  if (data.grid_visible && !window.SankeyToolsStatic ) {
     const numberLineH = data.height / data.grid_square_size
     for (let row = 0; row < numberLineH; row++) {
       d3.select(' .opensankey #svg #grid').append('line')

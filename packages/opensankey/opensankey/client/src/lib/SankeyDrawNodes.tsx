@@ -9,6 +9,11 @@ import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight
   eventNodeContextMenu,nodeTransform,node_stroke_width, drawArrows } from './SankeyDrawFunction'
 import { dragging_type, dragGNodeEvent } from './SankeyDrag'
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 export const OpenSankeyDrawNodes = (
   data:SankeyData, 
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
@@ -312,7 +317,7 @@ export const OpenSankeyDrawNodes = (
     
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
-    if ((d as SankeyNode).shape_visible && (event.shiftKey)) {
+    if ((d as SankeyNode).shape_visible && (window.SankeyToolsStatic ||event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
@@ -320,7 +325,7 @@ export const OpenSankeyDrawNodes = (
   }
     
   const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
-    if (((d as SankeyNode).shape_visible ||over_icon) && (event.shiftKey)) {
+    if (((d as SankeyNode).shape_visible ||over_icon) && (window.SankeyToolsStatic ||event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 

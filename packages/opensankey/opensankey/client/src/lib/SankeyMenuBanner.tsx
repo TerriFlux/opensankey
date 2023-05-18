@@ -1,15 +1,13 @@
 import React, {  useState } from 'react'
-import { Row, Col, Form, FormLabel, Modal, Button, ButtonGroup, Tabs, Tab, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl } from 'react-bootstrap'
 import {  SankeyData, TagsGroup, TagsCatalog,SankeyLink } from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import parse, { DOMNode } from 'html-react-parser'
-import { Element } from 'domhandler/lib/node'
 import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faAngleDoubleUp,faAngleDoubleDown } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
@@ -546,6 +544,62 @@ export const toolbar_builder = (
     }
     // set_mode_selection(val)
   }
+  let sous_filieres = undefined
+
+  if (window.sankey && window.sankey.sous_filieres) {
+    sous_filieres = window.sankey.sous_filieres
+  }
+
+  let is_split = false
+  const diagrams : { [keys :string] : string[] } = {}
+
+  if ( sous_filieres ) {
+    is_split = Object.keys(sous_filieres)[0].includes('/')
+    if (is_split ) {
+      Object.keys(sous_filieres).forEach(s=> {
+        const path = s.split('/')
+        if ( !(path[0] in diagrams)) {
+          diagrams[path[0]] = [path[1]]
+        } else {
+          diagrams[path[0]].push(path[1])
+        }
+      })
+    } else {
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+    }
+  }
+
+  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+
+
+  const diagram_label = 'Diagrammes'
+
+  const setDiagram = (the_diagram : string) => {
+    //const the_diagram = evt.target.value as string
+    const sous_filieres = window.sankey.sous_filieres
+
+    const new_data = JSON.parse(
+      JSON.stringify(
+        window.sankey[sous_filieres[the_diagram]]
+      )
+    ) as SankeyData
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
+    // }
+
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true
+    })
+    set_nodes_level(data)
+    // new_data.fit_screen = true
+    d3.select(' .opensankey #svg').on('.zoom', null)
+    set_data({ ...new_data })
+  }
   let max_link_value = 0
 
   Object.values(data.links).forEach(link => {
@@ -800,6 +854,53 @@ export const toolbar_builder = (
     return allDD
   }
 
+  let diagrams_element = <React.Fragment key={'1'}></React.Fragment>
+  if (data.static_sankey && sous_filieres && !is_split) {
+    diagrams_element = <Col><Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+      <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+      <Form.Select style={{ width: '200px', color:'black' }}
+        onChange={evt=> {
+          set_diagram(evt.target.value)
+          setDiagram(evt.target.value)
+        }}
+        value={diagram}>
+        {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+      </Form.Select>
+    </Form.Group></Col>
+  }
+  if (data.static_sankey && sous_filieres && is_split) {
+    diagrams_element =
+      <Col><Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+        <Form.Select style={{ width: '200px', color:'black' }}
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+            set_diagram(evt.target.value)
+            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            setDiagram(diagram_path)
+          }}
+          value={diagram}>
+          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Form.Select>
+        {is_split ?
+          (<Form.Select style={{ width: '200px', color:'black' }}
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+              set_diagram2(evt.target.value)
+              const diagram_path = diagram+'/'+evt.target.value
+              setDiagram(diagram_path)
+
+            }}
+            value={diagram2}>
+            {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+          </Form.Select>) :(<React.Fragment></React.Fragment>)
+        }
+      </Form.Group></Col>
+  }
+
+  const excel_element = window.sankey && window.sankey.excel ? (
+    <Form.Group key={'3'} as={Col} lg="auto" >
+      <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
+    </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
+
   const struc_data_reconciled=
   <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
@@ -925,6 +1026,8 @@ export const toolbar_builder = (
         </ButtonGroup>
       </FormGroup>
     </Col>,
+    diagrams_element,
+    excel_element,
     <Col className='text-end'>
       <FormGroup as={Col} lg='auto'>
         <ButtonGroup >
@@ -1044,113 +1147,6 @@ export const toolbar_builder = (
     </Col>]
 }
 
-export const SankeyBannerRows = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  diagram:string,
-  set_diagram:(s:string)=>void,
-  diagram2:string,
-  set_diagram2:(s:string)=>void,
-  sous_filieres:{ [key: string]: string } | undefined,
-  is_split:boolean,diagrams:{ [keys :string] : string[] }
-) => {
-  // let sous_filieres = undefined
-  // if (window.sankey && window.sankey.sous_filieres) {
-  //   sous_filieres = window.sankey.sous_filieres
-  // }
-  // let is_split = false
-  // const diagrams : { [keys :string] : string[] } = {}
-  // if ( sous_filieres ) {
-  //   is_split = Object.keys(sous_filieres)[0].includes('/')
-  //   if (is_split ) {
-  //     Object.keys(sous_filieres).forEach(s=> {
-  //       const path = s.split('/')
-  //       if ( !(path[0] in diagrams)) {
-  //         diagrams[path[0]] = [path[1]]
-  //       } else {
-  //         diagrams[path[0]].push(path[1])
-  //       }
-  //     })
-  //   } else {
-  //     Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
-  //   }
-  // }
-
-  const diagram_label = 'Diagrammes'
-
-  const setDiagram = (the_diagram : string) => {
-    //const the_diagram = evt.target.value as string
-    const sous_filieres = window.sankey.sous_filieres
-
-    const new_data = JSON.parse(
-      JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
-      )
-    ) as SankeyData
-    //Object.assign(sankey_data, new_data)
-    convert_data(new_data)
-    new_data.static_sankey = true
-    // if (!is_split) {
-    //   set_diagram(the_diagram)
-    // }
-
-    Object.values(data.nodes).forEach(node => {
-      node.node_visible = true
-      node.display = true
-    })
-    set_nodes_level(data)
-    // new_data.fit_screen = true
-    d3.select(' .opensankey #svg').on('.zoom', null)
-    set_data({ ...new_data })
-  }
-  return[
-    (data.static_sankey && sous_filieres && !is_split) ? (
-      <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-        <Form.Select style={{ width: '200px', color:'black' }}
-          onChange={evt=> {
-            set_diagram(evt.target.value)
-            setDiagram(evt.target.value)
-          }}
-          value={diagram}>
-          {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-        </Form.Select>
-      </Form.Group>) : (<React.Fragment key={'1'}></React.Fragment>)
-    ,
-    (data.static_sankey && sous_filieres && is_split) ? (
-      <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-        <Form.Select style={{ width: '200px', color:'black' }}
-          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-            set_diagram(evt.target.value)
-            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path)
-          }}
-          value={diagram}>
-          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
-        </Form.Select>
-        {is_split ?
-          (<Form.Select style={{ width: '200px', color:'black' }}
-            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-              set_diagram2(evt.target.value)
-              const diagram_path = diagram+'/'+evt.target.value
-              setDiagram(diagram_path)
-
-            }}
-            value={diagram2}>
-            {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
-          </Form.Select>) :(<React.Fragment></React.Fragment>)
-        }
-      </Form.Group>) : (<React.Fragment key={'2'}></React.Fragment>),
-    window.sankey && window.sankey.excel ? (
-      <Form.Group key={'3'} as={Col} lg="auto" >
-        <FormLabel className="text-center" >{t('Banner.tl')}</FormLabel>
-        <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
-      </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
-  ]
-}
-
 /**
  * Variable containing the edition row that handle filter and the mouse behavior on the sankey draw zone
  *
@@ -1163,145 +1159,21 @@ export const OpenSankeyMenuBanner = (
   set_data:(d:SankeyData)=>void,
   toolbar:JSX.Element[]
 )=>{
-  const { nodeTags} = data
-
-  let sous_filieres = undefined
-
-  if (window.sankey && window.sankey.sous_filieres) {
-    sous_filieres = window.sankey.sous_filieres
-  }
-
-  let is_split = false
-  const diagrams : { [keys :string] : string[] } = {}
-
-  if ( sous_filieres ) {
-    is_split = Object.keys(sous_filieres)[0].includes('/')
-    if (is_split ) {
-      Object.keys(sous_filieres).forEach(s=> {
-        const path = s.split('/')
-        if ( !(path[0] in diagrams)) {
-          diagrams[path[0]] = [path[1]]
-        } else {
-          diagrams[path[0]].push(path[1])
-        }
-      })
-    } else {
-      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
-    }
-  }
-
-  const [diagram, set_diagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
-
-  const [show_banner, set_show_banner] = useState(true)
-
-  const marginTop = data.static_sankey ? '0px' : '0px'
-  //const display_banner=Object.values(data.dataTags).filter(d=>d.banner!='none').length==0 &&Object.values(data.nodeTags).filter(d=>d.banner!='none').length==0
-  // const banner_grouptag = Object.entries(dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi' ) })
-  const color = 'black'
-  const backgroundColor = 'gainsboro'
-
   // Compute height of edition element to shift the sankey draw zone below
   const elementNavBar=document.getElementsByClassName('bg-light')[0]
-  const elementHerowrap=document.getElementsByClassName('herowrap')[0]
-
-  const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
-
+  // const elementHerowrap=document.getElementsByClassName('herowrap')[0]
+  // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
   const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
-  if ( window.SankeyToolsStatic) {
-    height_navbarAndHerowrap = 0
-  }
-
-  // let sous_filieres = undefined
-  // if (window.sankey && window.sankey.sous_filieres) {
-  //   sous_filieres = window.sankey.sous_filieres
+  // if ( window.SankeyToolsStatic) {
+  //   height_navbarAndHerowrap = 0
   // }
-  const ui={
-    'herowrap': <div className='herowrap'
-      style={{
-        color: color,
-        backgroundColor: backgroundColor,
-        marginLeft: '0',
-        marginTop: height_navbar,
-        paddingBottom: '3px',
-        alignItems: 'baseline',
-        display: ((!(sous_filieres)) && !(window.sankey && window.sankey.excel))?'none':'block'
-      }}>
-      {/* This div contain a dropdown for selecting a diagram */}
-      {
-        show_banner?
-          (<><Row style={{ marginTop: marginTop, paddingBottom: '5px', paddingTop: '5px', alignItems: 'baseline' }}>
-            {SankeyBannerRows(t,data,set_data,diagram,set_diagram,diagram2,set_diagram2,sous_filieres,is_split,diagrams)}
-          </Row>
-          <Row>
-            <Col className='text-end'>
-              <Button variant='success' size='sm'
-                onClick={()=>{
-                  set_show_banner(false)
-                }}
-              >
-                <FontAwesomeIcon icon={faAngleDoubleUp} />
-              </Button>
-            </Col>
-          </Row></>)
-          :
-          <Row>
-            <Col className='text-end'>
-              <FormGroup as={Col}>
-                <Button variant='outline-success' size='sm'
-                  onClick={()=>{
-                    set_show_banner(true)
-                  }}
-                >
-                  <FontAwesomeIcon icon={faAngleDoubleDown} />
-                </Button>
-              </FormGroup>
-            </Col>
-          </Row>
-      }
-    </div>,
-
-    'toolbar': <Row className='sankey-toolbar bg-light' style={{'marginTop':height_navbarAndHerowrap,position:'fixed',width:'100%',zIndex:'10'}}>
-      {/* {(view!=='none')? <Col>
-      <FormGroup as={Col} lg='auto'>
-          <ButtonGroup >
-            <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'F6' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaPlay />
-            </Button>
-            <Button variant={'outline-success'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'F8' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaBackward />
-            </Button>
-            <Button variant={'outline-warning'} onClick={() => {
-              const ev = document
-              const tmp = { key: 'F9' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaForward />
-            </Button>
-          </ButtonGroup>
-        </FormGroup>
-          </Col>: }*/}
+  const ui ={
+    'toolbar': <Row className='sankey-toolbar bg-light' style={{'marginTop':height_navbar,position:'fixed',width:'100%',zIndex:'10'}}>
       {toolbar.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
     </Row>
   }
-
   return ui
 }
 

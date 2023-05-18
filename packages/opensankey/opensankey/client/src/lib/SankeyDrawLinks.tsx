@@ -7,6 +7,10 @@ import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_w
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter} from './SankeyDrawFunction'
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
 
 export const OpenSankeyDrawLinks = (
   data:SankeyData,
@@ -385,7 +389,7 @@ export const OpenSankeyDrawLinks = (
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 5')
           }
         }
-        if (!event.shiftKey) {
+        if (!window.SankeyToolsStatic && !event.shiftKey) {
           return
         }
         sankeyTooltip
@@ -399,7 +403,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
       .on('mousemove', (event) => {
-        if (!event.shiftKey) {
+        if (!window.SankeyToolsStatic && !event.shiftKey) {
           return
         }
         sankeyTooltip
