@@ -8,7 +8,10 @@ import { AgregationModal } from './SankeyLayout'
 import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale} from './SankeyDrawFunction'
 
 window.d3 = d3
-
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
 
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
@@ -269,11 +272,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     drawGrid(data)
 
-
     update_scale(data.user_scale)
     const shift_top=document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().y+document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().height
+    // if (window.SankeyToolsStatic) {
+    //   shift_top = 0
+    // }
     d3.select('#svg-container').style('margin-top',shift_top+'px')
-
 
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')

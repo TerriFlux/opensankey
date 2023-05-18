@@ -1035,19 +1035,19 @@ export const delete_node = (
   })
   // The case below is not expected. The target and the source of the Links should have the link in inputLinksId  or outputLinksIdµ.
   // However this code avoids the crash
-  let links_to_delete = Object.values(data.links).filter(l=>l.idSource === node.idNode || l.idTarget === node.idNode).map(l=>l.idLink)
-  for (let id in  links_to_delete) {
-      delete data.links[links_to_delete[id]]
-      Object.values(data.nodes).map((k) => {
-          k.inputLinksId = k.inputLinksId.filter(function (value) {
-              return value != links_to_delete[id]
-          })
+  const links_to_delete = Object.values(data.links).filter(l=>l.idSource === node.idNode || l.idTarget === node.idNode).map(l=>l.idLink)
+  for (const id in  links_to_delete) {
+    delete data.links[links_to_delete[id]]
+    Object.values(data.nodes).map((k) => {
+      k.inputLinksId = k.inputLinksId.filter(function (value) {
+        return value != links_to_delete[id]
       })
-      Object.values(data.nodes).map((k) => {
-          k.outputLinksId = k.outputLinksId.filter(function (value) {
-              return value != links_to_delete[id]
-          })
+    })
+    Object.values(data.nodes).map((k) => {
+      k.outputLinksId = k.outputLinksId.filter(function (value) {
+        return value != links_to_delete[id]
       })
+    })
   }
 
   delete data.nodes[node.idNode]
