@@ -67,10 +67,12 @@ export const setDiagram = (
     set_nodes_level(data)
     // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
-    set_data({ ...new_data })
     set_current_data({...new_data })
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_view(new_data.view[0].id)
+      set_data({...new_data.view[0].view_data as SankeyPlusData})
+    } else {
+      set_data({ ...new_data })
     }
   }
 }
