@@ -1045,7 +1045,7 @@ export const toolbar_builder = (
           rootClose
           overlay={diagrams_element}>
           <Button variant='dark' id='button-diagrams' >
-            {diagram_label + ': ' + diagram}
+            {'Diagramme: ' + diagram}
           </Button>
         </OverlayTrigger> : <></>}
     </Col>,
