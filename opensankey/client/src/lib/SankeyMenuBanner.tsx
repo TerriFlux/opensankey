@@ -506,6 +506,35 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
+export const setDiagram = (
+  the_diagram : string,
+  data : SankeyData,
+  set_data : (d:SankeyData)=>void
+) => {
+  //const the_diagram = evt.target.value as string
+  const sous_filieres = window.sankey.sous_filieres
+
+  const new_data = JSON.parse(
+    JSON.stringify(
+      window.sankey[sous_filieres[the_diagram]]
+    )
+  ) as SankeyData
+  //Object.assign(sankey_data, new_data)
+  convert_data(new_data)
+  new_data.static_sankey = true
+  // if (!is_split) {
+  //   set_diagram(the_diagram)
+  // }
+
+  Object.values(data.nodes).forEach(node => {
+    node.node_visible = true
+    node.display = true
+  })
+  set_nodes_level(data)
+  // new_data.fit_screen = true
+  d3.select(' .opensankey #svg').on('.zoom', null)
+  set_data({ ...new_data })
+}
 
 export const toolbar_builder = (
   t:TFunction,
@@ -520,7 +549,8 @@ export const toolbar_builder = (
   url_prefix: string,
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
-  min_width_and_height:(d:SankeyData)=>number[]
+  min_width_and_height:(d:SankeyData)=>number[],
+  setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void
 ) => {
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
@@ -575,31 +605,7 @@ export const toolbar_builder = (
 
   const diagram_label = 'Diagrammes'
 
-  const setDiagram = (the_diagram : string) => {
-    //const the_diagram = evt.target.value as string
-    const sous_filieres = window.sankey.sous_filieres
 
-    const new_data = JSON.parse(
-      JSON.stringify(
-        window.sankey[sous_filieres[the_diagram]]
-      )
-    ) as SankeyData
-    //Object.assign(sankey_data, new_data)
-    convert_data(new_data)
-    new_data.static_sankey = true
-    // if (!is_split) {
-    //   set_diagram(the_diagram)
-    // }
-
-    Object.values(data.nodes).forEach(node => {
-      node.node_visible = true
-      node.display = true
-    })
-    set_nodes_level(data)
-    // new_data.fit_screen = true
-    d3.select(' .opensankey #svg').on('.zoom', null)
-    set_data({ ...new_data })
-  }
   let max_link_value = 0
 
   Object.values(data.links).forEach(link => {
@@ -855,28 +861,33 @@ export const toolbar_builder = (
   }
 
   let diagrams_element = <React.Fragment key={'1'}></React.Fragment>
-  if (data.static_sankey && sous_filieres && !is_split) {
-    diagrams_element = <Col><Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-      <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
-      <Form.Select style={{ width: '200px', color:'black' }}
-        onChange={evt=> {
-          set_diagram(evt.target.value)
-          setDiagram(evt.target.value)
-        }}
-        value={diagram}>
-        {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-      </Form.Select>
-    </Form.Group></Col>
+  if (window.SankeyToolsStatic && sous_filieres && !is_split) {
+    diagrams_element = 
+    <Popover id='popover-diagram' style={{maxWidth:'100%'}}>
+      <Popover.Header as="h3">{diagram_label}</Popover.Header>
+      <Popover.Body>
+        <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+          <Form.Select style={{ width: '200px', color:'black' }}
+            onChange={evt=> {
+              set_diagram(evt.target.value)
+              setDiagram(evt.target.value, data, set_data)
+            }}
+            value={diagram}>
+            {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+          </Form.Select>
+        </Form.Group>
+      </Popover.Body>
+    </Popover>
   }
-  if (data.static_sankey && sous_filieres && is_split) {
+  if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =
-      <Col><Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+      <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
         <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path)
+            setDiagram(diagram_path, data, set_data)
           }}
           value={diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -886,14 +897,13 @@ export const toolbar_builder = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               set_diagram2(evt.target.value)
               const diagram_path = diagram+'/'+evt.target.value
-              setDiagram(diagram_path)
-
+              setDiagram(diagram_path, data, set_data)
             }}
             value={diagram2}>
             {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
           </Form.Select>) :(<React.Fragment></React.Fragment>)
         }
-      </Form.Group></Col>
+      </Form.Group>
   }
 
   const excel_element = window.sankey && window.sankey.excel ? (
@@ -1026,7 +1036,19 @@ export const toolbar_builder = (
         </ButtonGroup>
       </FormGroup>
     </Col>,
-    diagrams_element,
+    <Col>
+      {(Object.keys(diagrams).length > 0)?
+        <OverlayTrigger
+          key={'tooltip-diagrams'}
+          placement={'left'}
+          trigger={'click'}
+          rootClose
+          overlay={diagrams_element}>
+          <Button variant='dark' id='button-diagrams' >
+            {diagram_label + ': ' + diagram}
+          </Button>
+        </OverlayTrigger> : <></>}
+    </Col>,
     excel_element,
     <Col className='text-end'>
       <FormGroup as={Col} lg='auto'>
