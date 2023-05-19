@@ -10,7 +10,7 @@ import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row,
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,} from './types'
 import {min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
 import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
-import {  node_color, adjust_sankey_zone } from 'open-sankey/dist/SankeyUtils'
+import {  node_color, adjust_sankey_zone, set_nodes_level } from 'open-sankey/dist/SankeyUtils'
 import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
@@ -34,6 +34,45 @@ const calcPath = (
     return long
   }
   return NaN
+}
+
+export const setDiagram = (
+  set_current_data: (d:SankeyPlusData)=>void,
+  set_view: (s:string)=>void
+) => {
+  return (
+    the_diagram : string,
+    data : SankeyPlusData,
+    set_data : (d:SankeyPlusData)=>void
+  ) => {
+  //const the_diagram = evt.target.value as string
+    const sous_filieres = window.sankey.sous_filieres
+
+    const new_data = JSON.parse(
+      JSON.stringify(
+        window.sankey[sous_filieres[the_diagram]]
+      )
+    ) as SankeyPlusData
+    //Object.assign(sankey_data, new_data)
+    convert_data(new_data)
+    new_data.static_sankey = true
+    // if (!is_split) {
+    //   set_diagram(the_diagram)
+    // }
+
+    Object.values(data.nodes).forEach(node => {
+      node.node_visible = true
+      node.display = true
+    })
+    set_nodes_level(data)
+    // new_data.fit_screen = true
+    d3.select(' .opensankey #svg').on('.zoom', null)
+    set_data({ ...new_data })
+    set_current_data({...new_data })
+    if (window.SankeyToolsStatic && new_data.view.length > 0) {
+      set_view(new_data.view[0].id)
+    }
+  }
 }
 
 export const view_toast = (<Toast bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
