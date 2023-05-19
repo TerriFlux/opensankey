@@ -26,7 +26,7 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
-import {addSimpleLevelDropDown, OpenSankeyMenuBanner, toolbar_builder} from './SankeyMenuBanner'
+import {addSimpleLevelDropDown, OpenSankeyMenuBanner, setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
 import {dragging} from './SankeyDrag'
@@ -321,7 +321,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const {filter}=data.display_style
   const menu_banner=OpenSankeyMenuBanner(
     t,data,set_data,
-    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height)
+    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram)
   )
 
   //-3. Sankey Draws
