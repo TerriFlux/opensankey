@@ -1009,7 +1009,7 @@ export const toolbar_builder = (
       </FormGroup>
     </Popover.Body>
   </Popover>
-  return [
+  const ui = [
     <Col>
       <FormGroup as={Col} lg='auto'>
         <ButtonGroup >
@@ -1035,9 +1035,10 @@ export const toolbar_builder = (
           </OverlayTrigger>
         </ButtonGroup>
       </FormGroup>
-    </Col>,
-    <Col>
-      {(Object.keys(diagrams).length > 0)?
+    </Col> ]
+  if ((Object.keys(diagrams).length > 0)) {
+    ui.push(
+      <Col>
         <OverlayTrigger
           key={'tooltip-diagrams'}
           placement={'left'}
@@ -1047,9 +1048,12 @@ export const toolbar_builder = (
           <Button variant='dark' id='button-diagrams' >
             {'Diagramme: ' + diagram}
           </Button>
-        </OverlayTrigger> : <></>}
-    </Col>,
-    excel_element,
+        </OverlayTrigger>
+      </Col>)}
+  if (window.sankey && window.sankey.excel) {
+    ui.push(excel_element)
+  }
+  ui.push(
     <Col className='text-end'>
       <FormGroup as={Col} lg='auto'>
         <ButtonGroup >
@@ -1166,7 +1170,8 @@ export const toolbar_builder = (
             </OverlayTrigger>}
         </ButtonGroup>
       </FormGroup>
-    </Col>]
+    </Col>)
+  return ui
 }
 
 /**
