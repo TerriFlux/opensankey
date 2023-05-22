@@ -776,6 +776,18 @@ export const convert_nodes = (
         }
       }
       delete n.tags['Exchanges'] 
+
+
+      if(n.shape=='image'){
+        n.shape='rect'
+      }
+      // Convert image to ForeignObject
+      if((n as unknown as {image:string}).image){
+        console.log((n as unknown as {image:string}).image);
+        (n as unknown as {has_FO:boolean}).has_FO=true;
+        (n as unknown as {FO_content:string}).FO_content=(n as unknown as {image:string}).image;
+        
+      }
     }
   )
 }
