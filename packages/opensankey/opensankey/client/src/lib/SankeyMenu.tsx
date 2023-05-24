@@ -760,7 +760,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
       {external_content[active_page]}
     </Modal.Body>
 
-    <Modal.Footer style={{justifyContent:'center'}}>
+    {window.SankeyToolsStatic ? <></> : <Modal.Footer style={{justifyContent:'center'}}>
       <Pagination >
         {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
         <Pagination.Item active={active_page==='carousel'} key={'carousel'} onClick={()=>{
@@ -779,6 +779,6 @@ export const OpenSankeyModalWelcome=(t:TFunction,
         set_never_see_again(evt.target.checked)
         localStorage.setItem('dontSeeAggainWelcome','1')
       }}/>
-    </Modal.Footer>
+    </Modal.Footer>}
   </Modal>
 }
