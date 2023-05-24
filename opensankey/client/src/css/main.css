@@ -732,9 +732,9 @@ hr {
 
 /* COPYRIGHT WRAP*/
 #copyright {
-	background-color:#151515;
-	color:#f2f2f2;
-	padding-top:15px;
+	background-color:lightgrey;
+	color:black;
+	padding-top:0px;
 }
 
 #copyright p {
@@ -743,7 +743,7 @@ hr {
 }
 
 #copyright a {
-	color:white;
+	color:black;
 }
 
 
