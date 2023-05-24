@@ -1009,7 +1009,9 @@ export const toolbar_builder = (
       </FormGroup>
     </Popover.Body>
   </Popover>
-  const ui = [
+  const ui = []
+  if (!window.SankeyToolsStatic) {
+    ui.push(
     <Col>
       <FormGroup as={Col} lg='auto'>
         <ButtonGroup >
@@ -1035,7 +1037,8 @@ export const toolbar_builder = (
           </OverlayTrigger>
         </ButtonGroup>
       </FormGroup>
-    </Col> ]
+    </Col>)
+  }
   if ((Object.keys(diagrams).length > 0)) {
     ui.push(
       <Col>
