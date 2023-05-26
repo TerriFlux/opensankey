@@ -1,5 +1,5 @@
 import React, {  useState } from 'react'
-import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Dropdown, DropdownButton } from 'react-bootstrap'
 import {  SankeyData, TagsGroup, TagsCatalog,SankeyLink } from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
@@ -7,7 +7,7 @@ import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUt
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
@@ -70,7 +70,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.5'}
-              placement={'top'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -89,7 +89,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.5'}
-                placement={'top'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -143,7 +143,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.4'}
-              placement={'top'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -164,7 +164,7 @@ export const addAllDropDownNode = (
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
-                  placement={'top'}
+                  placement={'bottom'}
                   delay={500}
                   overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
                   <FormCheck inline
@@ -198,7 +198,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.3'}
-              placement={'top'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -224,7 +224,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.3'}
-                placement={'top'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -342,7 +342,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.1'}
-              placement={'top'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -360,7 +360,7 @@ export const addAllDropDownFlux = (
             <Col xs={2} >
               <OverlayTrigger
                 key={'Banner.ndd_chk.1'}
-                placement={'top'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -420,7 +420,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.2'}
-              placement={'top'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -448,7 +448,7 @@ export const addAllDropDownFlux = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.2'}
-                placement={'top'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -1009,36 +1009,8 @@ export const toolbar_builder = (
       </FormGroup>
     </Popover.Body>
   </Popover>
-  const ui = []
-  if (!window.SankeyToolsStatic) {
-    ui.push(
-    <Col>
-      <FormGroup as={Col} lg='auto'>
-        <ButtonGroup >
-          {/* Boutons Sélection classique des éléments */}
-          <OverlayTrigger
-            key={'tooltip-selection'}
-            placement={'bottom'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
-            <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-              <FontAwesomeIcon icon={faArrowPointer} />
-            </Button>
-          </OverlayTrigger>
-          <OverlayTrigger
-            key={'tooltip-liaison'}
-            placement={'right'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
-            <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-              {/* Ajout liaison entre noeud */}
-              <FontAwesomeIcon icon={faShareNodes}/>
-            </Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </FormGroup>
-    </Col>)
-  }
+  const ui = [
+     ]
   if ((Object.keys(diagrams).length > 0)) {
     ui.push(
       <Col>
@@ -1056,124 +1028,167 @@ export const toolbar_builder = (
   if (window.sankey && window.sankey.excel) {
     ui.push(excel_element)
   }
-  ui.push(
-    <Col className='text-end'>
-      <FormGroup as={Col} lg='auto'>
-        <ButtonGroup >
-          {(node_filter)?
-            <OverlayTrigger
+  
+  let mouse_mode_edition=<></>
+
+// Add button for the edition of the sankey
+if(!window.SankeyToolsStatic){
+  mouse_mode_edition=
+    <ButtonGroup as={Col} lg='auto'>
+        {/* Boutons Sélection classique des éléments */}
+        <OverlayTrigger
+        key={'tooltip-selection'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
+        <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+          <FontAwesomeIcon icon={faArrowPointer} />
+        </Button>
+      </OverlayTrigger>
+      <OverlayTrigger
+        key={'tooltip-liaison'}
+        placement={'right'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
+        <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+          {/* Ajout liaison entre noeud */}
+          <FontAwesomeIcon icon={faShareNodes}/>
+        </Button>
+      </OverlayTrigger>
+    </ButtonGroup>
+
+  }
+
+  const item_dropdown_filter=<>
+    {(node_filter)?
+           <OverlayTrigger
               key={'tooltip-link-color-filter'}
               placement={'left'}
               trigger={'click'}
               rootClose
               overlay={filter_color_node}>
-              <Button variant='primary' id='button-link-color-filter' >
-        Filtre Noeuds
-              </Button>
-            </OverlayTrigger>
+              <Dropdown.Item >
+                {t('Menu.Noeuds')}
+              </Dropdown.Item>
+           </OverlayTrigger>
+           :
+           <></>
+         }
+  
+  {(flux_filter)?
+      <OverlayTrigger
+          key={'tooltip-node-color-filter'}
+          placement={'left'}
+          trigger={'click'}
+          rootClose
+          overlay={filter_color_link}>
+        <Dropdown.Item >{t('Menu.flux')}</Dropdown.Item>
+      </OverlayTrigger>
+    
             :
             <></>
           }
+  {(Object.values(data.dataTags).length>0)?
+      <OverlayTrigger
+        key={'tooltip-data-filter'}
+        placement={'left'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_data}>
+        <Dropdown.Item>
+          <>{t('Banner.data')}</>
+        </Dropdown.Item>
+      </OverlayTrigger>
+      
+        :
+        <></>
+  }
+</>
 
-          {(flux_filter)?
-            <OverlayTrigger
-              key={'tooltip-node-color-filter'}
-              placement={'left'}
-              trigger={'click'}
-              rootClose
-              overlay={filter_color_link}>
-              <Button variant='secondary' id='button-node-color-filter' >
-        Filtre Flux
-              </Button>
-            </OverlayTrigger>
-            :
-            <></>
-          }
-          {(Object.values(data.dataTags).length>0)?
-            <OverlayTrigger
-              key={'tooltip-data-filter'}
-              placement={'left'}
-              trigger={'click'}
-              rootClose
-              overlay={filter_data}>
-              <Button variant='dark' id='button-data-filter' >
-                {Object.entries(data.dataTags).map(v=>{
-                  if(Object.values(v[1].tags).filter(vv=>vv.selected).length==1){
-                    return v[1].group_name+' : '+Object.values(v[1].tags).filter(vv=>vv.selected)[0].name
-                  }else{
-                    return v[1].group_name+' ['+Object.values(v[1].tags).filter(vv=>vv.selected).length+']'
-                  }
-                }).join('/')}
-              </Button>
-            </OverlayTrigger>
-            :
-            <></>
-          }
 
-          {(level_filter)?
-            <OverlayTrigger
-              key={'tooltip-details-level'}
-              placement={'left'}
-              trigger={'click'}
-              rootClose
-              overlay={detail_level}>
-              <Button variant='warning' id='button-details-level' >
-                <FontAwesomeIcon icon={faFolderTree} />
-              </Button>
-            </OverlayTrigger>
-            :
-            <></>
-          }
+  ui.push(
+    <FormGroup as={Col} lg='auto'>
+      {mouse_mode_edition}
+      {(node_filter || flux_filter || (Object.values(data.dataTags).length>0))?
+      <DropdownButton autoClose={false} as={ButtonGroup} lg='auto' title={t('Banner.filter')}>
+        {item_dropdown_filter}
+      </DropdownButton>
+      :<></>}
+        
+      <ButtonGroup as={Col} lg='auto' >
 
-          <OverlayTrigger
-            key={'tooltip-link-filter'}
+      {(level_filter)?<OverlayTrigger
+            key={'tooltip-details-level'}
             placement={'left'}
             trigger={'click'}
             rootClose
-            overlay={link_filter}>
-            <Button variant='danger' id='button-filter-link' >
-              <FontAwesomeIcon icon={faFilter} />
+            overlay={detail_level}>
+            <Button variant='warning' id='button-details-level' >
+              <FontAwesomeIcon icon={faFolderTree} />
             </Button>
           </OverlayTrigger>
+          :
+          <></>
+  }
+        <OverlayTrigger
+          key={'tooltip-link-filter'}
+          placement={'left'}
+          trigger={'click'}
+          rootClose
+          overlay={link_filter}>
+          <Button variant='danger' id='button-filter-link' >
+            <FontAwesomeIcon icon={faFilter} />
+          </Button>
+        </OverlayTrigger>
 
+        <OverlayTrigger
+          key={'tooltip-adjust-h'}
+          placement={'bottom'}
+          delay={500}
+          overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+          <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+            <FontAwesomeIcon icon={faArrowsLeftRight} />
+          </Button>
+        </OverlayTrigger>
+        <OverlayTrigger
+          key={'tooltip-adjust-v'}
+          placement={'bottom'}
+          delay={500}
+          overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+          <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+            <FontAwesomeIcon icon={faArrowsUpDown} />
+          </Button>
+        </OverlayTrigger>
+
+        { url_prefix !== '' ?
           <OverlayTrigger
-            key={'tooltip-adjust'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-            <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
-              <FontAwesomeIcon icon={faMaximize} />
+            key={'tooltip-structur'}
+            placement={'left'}
+            trigger={'click'}
+            rootClose
+            overlay={struc_data_reconciled}>
+            <Button variant='success'>
+              <FontAwesomeIcon icon={faDiagramProject} />
             </Button>
           </OverlayTrigger>
+          :
+          <OverlayTrigger
+            key={'tooltip-structur'}
+            placement={'bottom'}
+            delay={500}
+            overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
+            <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
+              data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+              //data.show_data = false
+              set_data({ ...data })
+            }} >
+              <FontAwesomeIcon icon={faCodeBranch} />
+            </Button>
+          </OverlayTrigger>}
+      </ButtonGroup>
+    </FormGroup>
+  )
 
-          { url_prefix !== '' ?
-            <OverlayTrigger
-              key={'tooltip-structur'}
-              placement={'left'}
-              trigger={'click'}
-              rootClose
-              overlay={struc_data_reconciled}>
-              <Button variant='success'>
-                <FontAwesomeIcon icon={faDiagramProject} />
-              </Button>
-            </OverlayTrigger>
-            :
-            <OverlayTrigger
-              key={'tooltip-structur'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
-              <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
-                data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-                //data.show_data = false
-                set_data({ ...data })
-              }} >
-                <FontAwesomeIcon icon={faCodeBranch} />
-              </Button>
-            </OverlayTrigger>}
-        </ButtonGroup>
-      </FormGroup>
-    </Col>)
   return ui
 }
 
@@ -1198,11 +1213,11 @@ export const OpenSankeyMenuBanner = (
   //   height_navbarAndHerowrap = 0
   // }
   const ui ={
-    'toolbar': <Row className='sankey-toolbar bg-light' style={{'marginTop':height_navbar,position:'fixed',width:'100%',zIndex:'10'}}>
+    'toolbar': <>
       {toolbar.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
-    </Row>
+    </>
   }
   return ui
 }

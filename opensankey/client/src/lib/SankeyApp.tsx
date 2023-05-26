@@ -37,6 +37,8 @@ type SankeyAppTypes = {
   exemple_menu        : object
   formations_menu      : object
   logo: string,
+  logo_terriflux: string,
+
 }
 
 declare const window: Window &
@@ -59,7 +61,7 @@ typeof globalThis & {
   }
 }
 
-export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo} : SankeyAppTypes) => {
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,logo_terriflux} : SankeyAppTypes) => {
   exemple_menu
 
   //- All
@@ -202,7 +204,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_pagination=[pagination_intro]
   const external_content={'intro':intro} 
 
-  const intro_modal=OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content)
+  const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content):<></>
 
 
   //- 1. Builds Configuration Menus
@@ -447,6 +449,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           launch={launch}
           url_prefix={ ''}
           logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
+          logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux.replace('static/', 'static/opensankey/') : ''}
           logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
           app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
           mode_selection={mode_selection}
@@ -491,6 +494,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           // modalShortcut={shortcut_modale}
           min_width_and_height={min_width_and_height}
           set_user_scale={set_user_scale}
+          name_user={''}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }

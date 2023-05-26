@@ -11470,12 +11470,13 @@ fieldset:disabled .btn {
 }
 
 .bg-dark {
-  background-color: #f3969a !important;
+  /* background-color: #f3969a !important; */
+  color:#ffffff
 }
 
-.border-dark {
+/* .border-dark {
   border-color: #f3969a !important;
-}
+} */
 
 .btn {
   font-family: Montserrat, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

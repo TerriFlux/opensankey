@@ -2,12 +2,12 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
-import { FaAngleDoubleLeft,FaUser,FaPowerOff} from 'react-icons/fa'
+import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link,get_vertical_marfin_for_sankey_zone } from './SankeyUtils'
+import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
 import {downloadExamples,adjust_sankey_zone} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
@@ -43,6 +43,7 @@ const MenuPropTypes = {
   set_data: PropTypes.func.isRequired,
   default_sankey_data:PropTypes.func.isRequired,
   logo: PropTypes.string.isRequired,
+  logo_terriflux: PropTypes.string.isRequired,
   logo_width: PropTypes.number,
   app_name: PropTypes.string.isRequired,
 
@@ -104,18 +105,12 @@ const MenuPropTypes = {
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
-  set_user_scale:PropTypes.func.isRequired
+  set_user_scale:PropTypes.func.isRequired,
+  name_user:PropTypes.string.isRequired
   
 
 }
 
-const clickSaveDiagram = (data:SankeyData) => {
-  const data_to_save = { ...data }
-  const str_data = JSON.stringify(data_to_save, null, 2)
-
-  const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-  FileSaver.saveAs(blob, 'sankey_diagram.json')
-}
 
 
 
@@ -133,7 +128,7 @@ const clickSaveSVG = () => {
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   FileSaver.saveAs(blob, 'sankey_diagram.svg')
-  svg.style('border','2px solid #78c2ad')
+  svg.style('border','2px solid #d3d3d3')
   svg.select('#grid').style('opacity','1')
 }
 
@@ -148,7 +143,7 @@ const clickSavePDF = (data:SankeyData) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-  svg.style('border','2px solid #78c2ad')
+  svg.style('border','2px solid #d3d3d3')
   svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
@@ -191,7 +186,7 @@ const clickSavePNG = (data:SankeyData) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-  svg.style('border','2px solid #78c2ad')
+  svg.style('border','2px solid #d3d3d3')
   svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
@@ -260,7 +255,7 @@ export const OpenSankeyMenus = (
   const _load_json = useRef<HTMLInputElement>(null)
   return  [
     <NavDropdown key={'files'}  title={t('Menu.Fichiers')} id={'files'} >
-      <NavDropdown drop='start' id='ouvrir' title={t('Menu.ouvrir')}  >
+      <NavDropdown drop='end' id='ouvrir' title={t('Menu.ouvrir')}  >
         <Dropdown.Item
           onClick={() => {
             if (_load_json.current) {
@@ -277,6 +272,7 @@ export const OpenSankeyMenus = (
             const reader = new FileReader()
             reader.onload = (() => {
               return (e: ProgressEvent<FileReader>) => {
+                reinitialization()
                 let result = String((e.target as FileReader).result)
                 const new_data = default_sankey_data()
                 result = result.split('<br>').join('\\\\n')
@@ -305,7 +301,7 @@ export const OpenSankeyMenus = (
           onClick={() => set_show_excel_dialog(true)}
         >Excel</Dropdown.Item>
       </NavDropdown>
-      <NavDropdown  drop='start' id='enregistrer' title={t('Menu.enregistrer')} >
+      <NavDropdown  drop='end' id='enregistrer' title={t('Menu.enregistrer')} >
         <Dropdown.Item onClick={()=>{
           set_show_save_json(true)
         }} >JSON</Dropdown.Item>
@@ -313,7 +309,7 @@ export const OpenSankeyMenus = (
         <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
         {externale_save_item}
       </NavDropdown>
-      <NavDropdown drop='start' id='exporter' title={t('Menu.exporter')} >
+      <NavDropdown drop='end' id='exporter' title={t('Menu.exporter')} >
         <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
         <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
         <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
@@ -367,7 +363,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     nav_item_active,
     show_nav,
     set_show_nav,
-    logo, logo_width,app_name,
+    logo,logo_terriflux, logo_width,app_name,
     button_ref,
     accordion_ref,
     selected_node,
@@ -396,7 +392,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     loginOut,
     unsetTokens,
     min_width_and_height,
-    set_user_scale
+    set_user_scale,
+    name_user
   }
 ) => {
   let max_link_value = 0
@@ -497,15 +494,15 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const menuButton = () => {
     if (show_nav) {
-      return t('Menu.confSankey')
+      return <FaAngleDoubleRight style={{marginTop:'50px'}} />
     } else {
-      return <FaAngleDoubleLeft />
+      return <FaAngleDoubleLeft style={{marginTop:'50px'}} />
     }
 
   }
 
 
-
+  const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
   
 
   const navigate=useNavigate()
@@ -513,49 +510,63 @@ const Menu: FunctionComponent<MenuTypes> = (
     navigate('/')
     set_data({...data})
   }
+  const toolbar=Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
+  
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-
+      {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
         <Container className='MenuNavigation'>
-          <Navbar.Brand href="#"><img src={logo} width={logo_width ? logo_width : 200} /> {app_name} </Navbar.Brand>
+          {!window.SankeyToolsStatic?<>
+            <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={logo_terriflux} width={100} /> </Navbar.Brand>
+          <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
+          </>:<></>
+          }
+          
+          <Navbar.Brand href="#"><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
-            <Nav>
+            <Nav className='me-auto'>
               {menus.map((c,i)=>{
                 return <React.Fragment key={i}>{c}</React.Fragment>
               })}
-              <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
-              {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
-              {!data.static_sankey ? (
-                <ButtonGroup className="mb-2" style={{ 'width': (show_nav) ? '537px' : '80px' }}>
-                  <ToggleButton
-                    ref={button_ref as Ref<HTMLLabelElement>}
-                    id="toggle-check"
-                    type="checkbox"
-                    variant="outline-primary"
-                    checked={show_nav}
-                    onChange={(e) => { setChecked(e.currentTarget.checked)}}
-                    onClick={toggleShow}
-                    value="menuConfigButton">{menuButton()}
-                  </ToggleButton>
-                </ButtonGroup>) : (<></>)
-              }
-            </Nav></>
+            </Nav>
+            {toolbar}
+
+            <Nav>
+              <Col>
+                <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
+                <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
+                {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
+               
+              </Col>
+            </Nav>
+            </>
           ) : (<><br />
             <h2>{window.sankey.header}</h2>
+            {toolbar}
             <br /></>)}
         </Container>
       </Navbar>
-      {// Si nous travaillons sur les données actuelle alors on affiche le bandeau de filtrage
-        //si on affiche une vue, fait apparaitre des boutons pour changer de vue avec des animations
-      }
-      {
+      {/* Bottom Navbar with some more info */}
+      <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em'}} >
+        <Container className='sankeyFooter' >
 
-        Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
-      }
-      {(show_nav && !data.static_sankey) ?
-        <Offcanvas className='sankey-menu' show={true} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop': '71px', 'marginRight': '15px'}}>
+        <span style={{display:'inline'}}>
+        ©<a  href="https://terriflux.com/" ><img width={75} src={logo_terriflux} /></a> - Tous droits réservés
+        </span>
+        <span style={{display:'inline'}}>
+          {app_name}
+        </span>
+        <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>Mention légales</a></span>
+        <span style={{display:'inline'}}>
+          9 rue du Rocher de Lorzier,38430 Moirans  +33 (0)6 21 83 56 76
+        </span>
+
+        </Container>
+      </Navbar>
+      
+      {(!data.static_sankey) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
           <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
             <SankeyConfigurationMenu
               nav_item_active={nav_item_active}
@@ -564,6 +575,20 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Offcanvas.Body>
         </Offcanvas>
         : <></>}
+
+      {!data.static_sankey ? (
+          <ToggleButton style={{ 'width':'40px',height:'120px', position:'fixed',top:window.innerHeight/2,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift),zIndex:100 }}
+            ref={button_ref as Ref<HTMLLabelElement>}
+            id="toggle-check"
+            type="checkbox"
+            variant="outline-primary"
+            checked={show_nav}
+            onChange={(e) => { setChecked(e.currentTarget.checked)}}
+            onClick={toggleShow}
+            value="menuConfigButton">{menuButton()}
+          </ToggleButton>
+        ) : (<></>)
+      }
 
       {
         processing ? (
@@ -578,7 +603,6 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_show_save_json={set_show_save_json}
         sankey_data={data}
         set_sankey_data={set_data}
-        clickSaveDiagram={clickSaveDiagram}
       />
       <ApplyLayoutDialog
         t={t}
