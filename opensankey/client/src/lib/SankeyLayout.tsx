@@ -763,9 +763,10 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
   {data, set_data, agregation_node, set_show_agregation,show_agregation,is_agregation}
 ) => {
   const n = data.nodes[agregation_node]
+  const [dim_name,set_dim_name] = useState('')
+  const [child_names,set_child_names] = useState<string[]>([])
+  const dim_names: string[] = []
   if ( is_agregation ) {
-    //const parent_names: string[] = []
-    const dim_names: string[] = []
     Object.keys(n.dimensions).forEach(
       dim => {
         if (Object.keys(n.dimensions).length > 1 && dim === 'Primaire') {
@@ -777,14 +778,19 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         }
       }
     )
-    if (dim_names.length === 0) {
-      return <></>
+    if (dim_name === '') {
+      if (dim_names.length === 0) {
+        return <></>
+      }
+      set_dim_name(dim_names[0])
     }
-    const [dim_name,set_dim_name] = useState(dim_names[0])
     return (
       <Modal 
         show={show_agregation} 
-        onHide={ () => set_show_agregation(false) } >
+        onHide={ () => {
+          set_show_agregation(false)
+          set_dim_name('')
+        } } >
         <Modal.Header closeButton>
           <Modal.Title>Dimension d'agrégation</Modal.Title>
         </Modal.Header>
@@ -800,7 +806,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                       (cur_dir_name, i) => <option key={i} value={cur_dir_name} selected={dim_name === cur_dir_name} >{cur_dir_name}</option>
                     )}
                   </Form.Select>
-                  <Form.Label>{data.nodes[n.dimensions[dim_name].parent_name!].name}</Form.Label>
+                  <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name!] ? data.nodes[n.dimensions[dim_name].parent_name!].name : ''}</Form.Label>
                 </Col>
               </Row>      
             </Form.Group>
@@ -813,14 +819,17 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
               agregation(data,agregation_node,dim_name)
               set_data({...data})
               set_show_agregation(false)
+              set_dim_name('')
             }}
           >Agrégation</Button>
-          <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
+          <Button variant="secondary" onClick={() => {
+            set_show_agregation(false)
+            set_dim_name('')
+          }}>Annuler</Button>
         </Modal.Footer>
       </Modal>
     )
   } else {
-    const dim_names: string[] = []
     Object.values(data.nodes).forEach(n2 => {
       for (const dim in n2.dimensions) {
         if (Object.keys(n2.dimensions).length > 1 && dim === 'Primaire') {
@@ -834,19 +843,24 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       }
       return false
     })
-    const the_child_names: string[] = []
-    Object.values(data.nodes).forEach(n2 => {
-        if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
-            the_child_names.push(n2.name)
+    if ( dim_name === '') {
+      const the_child_names: string[] = []
+      Object.values(data.nodes).forEach(n2 => {
+          if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
+              the_child_names.push(n2.name)
+          }
         }
-      }
-    )
-    const [dim_name,set_dim_name] = useState(dim_names[0])
-    const [child_names,set_child_names] = useState(the_child_names)
+      )
+      set_dim_name(dim_names[0])
+      set_child_names(the_child_names)
+    }
     return (
       <Modal 
         show={show_agregation} 
-        onHide={ () => set_show_agregation(false) } >
+        onHide={ () => {
+          set_show_agregation(false)
+          set_dim_name('')
+        }} >
         <Modal.Header closeButton>
           <Modal.Title>Dimension desagrégation</Modal.Title>
         </Modal.Header>
@@ -885,9 +899,13 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
               desagregation(data,agregation_node,dim_name)
               set_data({...data})
               set_show_agregation(false)
+              set_dim_name('')
             }}
           >Désagrégation</Button>
-          <Button variant="secondary" onClick={() => set_show_agregation(false)}>Annuler</Button>
+          <Button variant="secondary" onClick={() => {
+            set_show_agregation(false)
+            set_dim_name('')
+          }}>Annuler</Button>
         </Modal.Footer>
       </Modal>
     )
