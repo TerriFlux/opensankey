@@ -542,10 +542,10 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Col>
             </Nav>
             </>
-          ) : (<><br />
-            <h2>{window.sankey.header}</h2>
+          ) : (<>
+            <Col><h4>{window.sankey.header}</h4></Col>
             {toolbar}
-            <br /></>)}
+            </>)}
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
