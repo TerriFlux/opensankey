@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
 import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
-import React,{ FunctionComponent } from 'react'
+import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
@@ -708,28 +708,15 @@ export const agregation = (
   if (!parent_node) {
     return
   }
-  const dim_desagregated_nodes = Object.values(data.nodes).filter( 
-    n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === desagregated_node.dimensions[cur_dimension].parent_name 
-  )
-  // const all_desagregated_source_nodes = Object.values(data.nodes).filter( 
-  //   n => {
-  //     for (const dim in n.dimensions) {
-  //       const cur_parent_node = data.nodes[desagregated_node.dimensions[dim].parent_name!]
-  //       if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
-  //         if (n.dimensions[dim].parent_name === cur_parent_node.idNode) {
-  //           return true
-  //         }
-  //       }
-  //       return false
-  //     }
-  //   }
-  // )
-  // all_desagregated_source_nodes.forEach(n => {
-  //   if (control_display) {
-  //     data.nodes[n.idNode].display = false
-  //     data.nodes[n.idNode].node_visible = false
-  //   }
-  // })
+  const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
+  const dim_desagregated_nodes = Object.values(data.nodes).filter( n => {
+    const cur_n_dim = n.dimensions[cur_dimension]
+    return cur_n_dim && (
+        cur_n_dim.parent_name === cur_parentId ||
+        (cur_n_dim.parent_name && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension] && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension].parent_name === cur_parentId)
+    )
+    })
+
 
   if (control_display) {
     // show agregated node
@@ -777,26 +764,29 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
 ) => {
   const n = data.nodes[agregation_node]
   if ( is_agregation ) {
-    const parent_names: string[] = []
+    //const parent_names: string[] = []
     const dim_names: string[] = []
     Object.keys(n.dimensions).forEach(
       dim => {
+        if (Object.keys(n.dimensions).length > 1 && dim === 'Primaire') {
+          return
+        }
         if (n.dimensions[dim].parent_name) {
-          parent_names.push(n.dimensions[dim].parent_name as string)
+          //parent_names.push(n.dimensions[dim].parent_name as string)
           dim_names.push(dim)
         }
       }
     )
-    if (parent_names.length === 0) {
+    if (dim_names.length === 0) {
       return <></>
     }
-    let idParent = parent_names[0]
+    const [dim_name,set_dim_name] = useState(dim_names[0])
     return (
       <Modal 
         show={show_agregation} 
         onHide={ () => set_show_agregation(false) } >
         <Modal.Header closeButton>
-          <Modal.Title>Noeuds agrégation</Modal.Title>
+          <Modal.Title>Dimension d'agrégation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -804,12 +794,13 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
               <Row>
                 <Col>    
                   <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idParent = evt.target.value}
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
                   >
-                    {parent_names.map(
-                      (curIdParent, i) => <option key={i} value={curIdParent} selected={idParent === curIdParent} >{data.nodes[curIdParent].name}</option>
+                    {dim_names.map(
+                      (cur_dir_name, i) => <option key={i} value={cur_dir_name} selected={dim_name === cur_dir_name} >{cur_dir_name}</option>
                     )}
                   </Form.Select>
+                  <Form.Label>{data.nodes[n.dimensions[dim_name].parent_name!].name}</Form.Label>
                 </Col>
               </Row>      
             </Form.Group>
@@ -819,7 +810,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button 
             variant="secondary" 
             onClick={()=> {
-              agregation(data,agregation_node,dim_names[parent_names.indexOf(idParent)])
+              agregation(data,agregation_node,dim_name)
               set_data({...data})
               set_show_agregation(false)
             }}
@@ -829,26 +820,35 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       </Modal>
     )
   } else {
-    const child_names: string[] = []
     const dim_names: string[] = []
     Object.values(data.nodes).forEach(n2 => {
       for (const dim in n2.dimensions) {
+        if (Object.keys(n2.dimensions).length > 1 && dim === 'Primaire') {
+          continue
+        }
         if (dim in n2.dimensions && n2.dimensions[dim].parent_name == n.idNode) {
           if (dim_names.indexOf(dim) === -1) {
-            child_names.push(n2.idNode)
             dim_names.push(dim)
           }
         }
       }
       return false
     })
-    let idChild = child_names[0]
+    const the_child_names: string[] = []
+    Object.values(data.nodes).forEach(n2 => {
+        if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
+            the_child_names.push(n2.name)
+        }
+      }
+    )
+    const [dim_name,set_dim_name] = useState(dim_names[0])
+    const [child_names,set_child_names] = useState(the_child_names)
     return (
       <Modal 
         show={show_agregation} 
         onHide={ () => set_show_agregation(false) } >
         <Modal.Header closeButton>
-          <Modal.Title>Noeuds desagrégation</Modal.Title>
+          <Modal.Title>Dimension desagrégation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -856,12 +856,23 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
               <Row>
                 <Col>    
                   <Form.Select
-                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> idChild = evt.target.value}
+                    onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+                      set_dim_name(evt.target.value)
+                      const the_child_names: string[] = []
+                      Object.values(data.nodes).forEach(n2 => {
+                          if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
+                              the_child_names.push(n2.name)
+                          }
+                        }
+                      )
+                      set_child_names(the_child_names)
+                    }}
                   >
-                    {child_names.map(
-                      (curIdParent, i) => <option key={i} value={curIdParent} selected={idChild === curIdParent} >{data.nodes[curIdParent].name}</option>
+                    {dim_names.map(
+                      (cur_dim_name, i) => <option key={i} value={cur_dim_name} selected={dim_name === cur_dim_name} >{cur_dim_name}</option>
                     )}
                   </Form.Select>
+                  {child_names.map(child_name=><Form.Label>{child_name}</Form.Label>)}
                 </Col>
               </Row>      
             </Form.Group>
@@ -871,7 +882,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button 
             variant="secondary" 
             onClick={()=> {
-              desagregation(data,agregation_node,dim_names[child_names.indexOf(idChild)])
+              desagregation(data,agregation_node,dim_name)
               set_data({...data})
               set_show_agregation(false)
             }}
