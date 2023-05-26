@@ -338,7 +338,7 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             if sankey_visible == 0:
                 continue
 
-        name = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_NODE)]
+        name = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_NODE)].strip()
         if name not in nodes:
             if not has_sankey_col or mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_SANKEY)] == 1:
                 #  if sankey column is present and value is 1 node is displayed
