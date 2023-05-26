@@ -1,17 +1,19 @@
 import { InferProps} from 'prop-types'
 import React, { ChangeEvent, Requireable } from 'react'
-import {/*SankeyPlusNode,*/ SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { FaArrowDown, FaArrowUp, FaMinus, FaPlus, FaSave, FaUpload} from 'react-icons/fa'
-import {SankeyDraw} from 'open-sankey/dist/SankeyDraw'
+import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup,differenceType} from 'open-sankey/src/lib/types'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy,FaRegSave, FaDownload, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,} from './types'
-import {min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
-import { FaPlay, FaForward, FaBackward, FaHome} from 'react-icons/fa'
-import {  node_color, adjust_sankey_zone, set_nodes_level } from 'open-sankey/dist/SankeyUtils'
-import {  apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Tab, Table, Tabs, Toast,FormGroup,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
+import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
+import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
+import { updateLayout } from 'open-sankey/dist/SankeyLayout'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileCirclePlus,faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
+
+
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
   data: SankeyPlusData,
@@ -70,7 +72,8 @@ export const setDiagram = (
     set_current_data({...new_data })
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_view(new_data.view[0].id)
-      set_data({...new_data.view[0].view_data as SankeyPlusData})
+      // set_data({...new_data.view[0].view_data as SankeyPlusData})
+      set_data({...get_data_from_view(new_data,new_data.view[0].id)})
     } else {
       set_data({ ...new_data })
     }
@@ -82,50 +85,12 @@ export const view_toast = (<Toast bg='success' className='toastView' style={{ 'p
   <Toast.Body>Vue sauvegardée</Toast.Body>
 </Toast>)
 
+export const view_toast_update_view = (<Toast bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
+  <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
+  <Toast.Body>Vue mise à jour</Toast.Body>
+</Toast>)
+
 // }
-export const sankey_draw_view = (
-  data:SankeyPlusData,
-  view:string,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  nodeTooltipsContent:(data : SankeyPlusData,d : SankeyPlusNode) => string,
-  linkTooltipsContent:(data : SankeyPlusData,d : SankeyPlusLink) => string,
-  set_show_toast:(b:boolean)=>void,
-  mode_selection:{current : string},
-  draw_nodes:JSX.Element,
-  draw_links:JSX.Element,
-  draw_labels:JSX.Element,
-  draw_legend:JSX.Element,
-  set_alt_key_pressed:(b:boolean)=>void,
-  set_first_selected_node:(o:object)=>void,
-  set_show_agregation:(b:boolean)=>void,
-
-  
-) => {
-
-  return <SankeyDraw
-    data={data}
-    set_data={()=>null}
-    animation={false}
-    multi_selected_nodes={multi_selected_nodes}
-    multi_selected_label={multi_selected_label}
-    multi_selected_links={multi_selected_links}
-    mode_selection={mode_selection}
-    first_selected_node={{}}
-    set_first_selected_node={set_first_selected_node}
-    show_agregation={false} 
-    set_show_agregation={set_show_agregation}
-    agregation_node={''}
-    is_agregation={false}
-    draw_nodes={draw_nodes}
-    draw_links={draw_links}
-    draw_labels={draw_labels}
-    draw_legend={draw_legend}
-    set_alt_key_pressed={set_alt_key_pressed}
-  />
-}
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'F6')
 export const nextView = (
@@ -141,7 +106,8 @@ export const nextView = (
     ind = (v.id === new_view) ? i : ind
   })
   set_animating(true)
-  const view_data = master_data.view[ind].view_data as SankeyPlusData
+  // const view_data = master_data.view[ind].view_data as SankeyPlusData
+  const view_data = get_data_from_view(master_data,master_data.view[ind].id)
   const time_to_set_view = animate_view_changement(view_data)
   if (ind === master_data.view.length -1) {
     set_animating(false)
@@ -149,7 +115,8 @@ export const nextView = (
   }
   setTimeout(function () {
     set_view(master_data.view[ind + 1].id)
-    set_data({ ...master_data.view[ind+1].view_data as SankeyPlusData })
+    // set_data({ ...master_data.view[ind+1].view_data as SankeyPlusData })
+    set_data({ ...get_data_from_view(master_data,master_data.view[ind+1].id)})
     setTimeout(function () {
       nextView(master_data,set_data,master_data.view[ind+1].id,set_view,set_animating)
       set_animating(false)
@@ -1098,6 +1065,19 @@ export const setValue = (
   }
 }
 
+
+export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:string)=>{
+  const applyChange = require('deep-diff').applyChange;
+  // Copy master data
+  let data_init=JSON.parse(JSON.stringify(master_data))
+  // Get the difference from the view
+  const diff_view=master_data.view.filter(v=>v.id==id_view_to_see)[0].view_data.diff
+
+  // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
+  diff_view.forEach((d : object)=>applyChange(data_init,{},d))
+  return data_init
+}
+
 export const keyHandler = (
   e: KeyboardEvent,
   master:boolean,
@@ -1111,88 +1091,70 @@ export const keyHandler = (
   multi_selected_nodes:{current:SankeyPlusNode[]},multi_selected_links:{current:SankeyPlusLink[]},
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  set_show_toast:React.Dispatch<React.SetStateAction<boolean>>,
-  nextView : (
-    data: SankeyPlusData,
-    set_data:(d:SankeyPlusData)=>void,
-    new_view: string,
-    set_view:(s:string)=>void,
-    set_animating:(b:boolean)=>void
-  )=>void,
-  delete_link : (data: SankeyPlusData,link: SankeyPlusLink) => void,
-  delete_node : (data: SankeyPlusData,node: SankeyPlusNode) => void,
+  set_show_toast_new_view:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_toast_updated_view:React.Dispatch<React.SetStateAction<boolean>>,
+  mode_selection:{current : string},
+  OpenSankey_keyHandler:Function,
+  connected:boolean,
+  min_width_and_height:(data:SankeyPlusData)=>number[],
+  set_view_not_saved:(s:string)=>void
 ) => {
-  if (e.key == 's' && (e.ctrlKey||e.metaKey)) {
+  // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
+  // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
+  OpenSankey_keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,mode_selection)
+  
+  // if we have opensankey+ then we can save and modify view with CTRL+S
+  if (connected && e.key == 's' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
+    const deep_diff = require('deep-diff')
 
     if (master) {
+      // If we do a control+S while we are on master data, we create view empty
       // data is master data and master_data might not be  set
       const new_ind = 'view_' + String(new Date().getTime())
-      const copy_data : SankeyPlusData = JSON.parse(JSON.stringify(data))
-      if (!copy_data.accordeonToShow.includes('Vis')) {
-        copy_data.accordeonToShow.push('Vis')
-        data.accordeonToShow.push('Vis')
-      }
-      const new_nodes = Object.values(copy_data.nodes).filter(n=>n.node_visible)
-      const new_links = Object.values(copy_data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible)
-
-      copy_data.nodes = Object.assign({}, ...new_nodes.map(n => ({ [n.idNode]: { ...n } })))
-      copy_data.links = Object.assign({}, ...new_links.map(l => ({ [l.idLink]: { ...l } })))
-      apply_input_outputLinksId(data.nodes,data.links,copy_data)
-
-      copy_data.view = []
-      set_data(copy_data)
-      //copy.view = []
+      const copy_data = {diff:[]}
       data.view.push({
         id: new_ind,
         view_data: copy_data,
         nom: 'data_' + new_ind,
         details: ''
       })
-      set_view(new_ind)
       // master data is now set
       set_master_data({...JSON.parse(JSON.stringify(data))})
       // at this stage data is a view and is equal with master data
-      set_show_toast(true)
+      set_show_toast_new_view(true)
       setTimeout(function () {
-        set_show_toast(false)
+        set_show_toast_new_view(false)
       }, 3000)
     } else {
-      interface AFMSankeyLink extends SankeyPlusLink { 
-        natural_unit         : string,
-        conv                 : number[],
-        tooltips             : string[]
-      }
-      // data is view data
-      const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
-      Object.values(data.links).forEach(l=> {
-        const master_links = Object.values(master_data.links).filter(
-          l_master=> {
-            return data.nodes[l.idSource].name === master_data.nodes[l_master.idSource].name && 
-            data.nodes[l.idTarget].name === master_data.nodes[l_master.idTarget].name
-          }
-        )
-        if (master_links.length === 0) {
-          return
-        }
-        const master_link = master_links[0];
-        (l as AFMSankeyLink).conv = (master_link as AFMSankeyLink).conv;
-        (l as AFMSankeyLink).natural_unit = (master_link as AFMSankeyLink).natural_unit
-        if (dataTagsArray.length == 0) {
-          l.value = master_link.value
+      // If we do a control+S while we are on a view, we save the difference between the data we are handling
+      // and the master data. These difference are the saved the view we are currently on
 
-          return
+      // Get difference between master_data and the current data then save it in view
+      let difference = deep_diff.diff(master_data, data)
+      difference=(difference!==undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
+        if(d.kind=='D'){
+          delete ((d as unknown) as differenceType).lhs
         }
-        setValue(dataTagsArray,l.value as { [key: string]: SankeyLinkValue },master_link.value as { [key: string]: SankeyLinkValue },0)
+        if(d.kind=='A' && d.item.kind=='D'){
+          delete ((d as unknown) as differenceType).item.lhs
+        }
+        if(d.kind=='E'){
+          delete ((d as unknown) as differenceType).lhs
+        }
+        return d
       })
-      master_data.view.filter(v => v.id == view)[0].view_data = JSON.parse(JSON.stringify(data))
-      const {units_names} = master_data as unknown as {units_names:[string]}
-      (data as unknown as {units_names:[string]}).units_names = units_names
+      master_data.view.filter(v => v.id == view)[0].view_data = {diff:difference}
+
+      // Save master data with the view we are currently working on updated
       set_master_data({...master_data})
-      set_data({...data})
-      set_show_toast(true)
+
+      // set_data({...data})
+      set_show_toast_updated_view(true)
       setTimeout(function () {
-        set_show_toast(false)
+        set_show_toast_updated_view(false)
       }, 3000)
     }
   }
@@ -1203,7 +1165,8 @@ export const keyHandler = (
       //data is master data
       set_master_data({...master_data})
       set_view(master_data.view[ind].id)
-      set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
+      // set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
+      set_data(get_data_from_view(master_data,master_data.view[ind].id))
 
       setTimeout(function () {
         nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
@@ -1218,242 +1181,28 @@ export const keyHandler = (
     } 
   }
   if (!master && e.key == 'F7') {
-    set_view('none')
-    set_data({ ...master_data })    
-  }
 
-
-  if (master) {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
-      // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
-      // (exemples : le input de la largeur minimal d'un noeud)
-      if (e.key == 'ArrowUp') {
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-          if (d != undefined) {
-            return d.name
-          }
-        }).includes(f.name)).map(d => {
-          if (d.position === 'relative') {
-            return
-          }
-          if (e.shiftKey) {
-            d.y = d.y - data.grid_square_size
-          } else {
-            const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-            const n_pos = Math.trunc((d.y+height/2)/ data.grid_square_size)
-            d.y =  (n_pos - 1) * data.grid_square_size 
-            d.y+=(data.grid_square_size/2)-height/2
-          }
-          let y_max = 0
-          Object.values(data.nodes).map(d => {
-            y_max = (d.y > y_max) ? d.y : y_max
-          })
-          //Diminue hauteur svg si le noeud est près du bord
-          if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
-            data.height -= 90
-          }
-        })
-      } else if (e.key == 'ArrowDown') {
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-          if (d != undefined) {
-            return d.name
-          }
-        }).includes(f.name)).map(d => {
-          if (d.position === 'relative') {
-            return
-          }
-          if (e.shiftKey) {
-            d.y = d.y + data.grid_square_size
-          } else {
-            const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-            const n_pos = Math.trunc((d.y+height/2) / data.grid_square_size)
-            d.y = (n_pos + 2) * data.grid_square_size
-            d.y-=(data.grid_square_size/2)+height/2
-          }
-          //Augumente hauteur svg si le noeud est près du bord
-          if (d.y > data.height - 100) {
-            data.height += 100
-          }
-        })
-      } else if (e.key == 'ArrowLeft') {
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-          if (d != undefined) {
-            return d.name
-          }
-        }).includes(f.name)).map(d => {
-          if (d.position === 'relative') {
-            return
-          }
-          if (e.shiftKey) {
-            d.x = d.x - data.grid_square_size
-          } else {
-            const n_pos = Math.trunc(d.x / data.grid_square_size)
-            d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-            const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-            d.x-=(data.grid_square_size/2)+width/2
-          }
-          //Diminue largeur svg si le noeud est près du bord
-          if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
-            data.width -= 50
-          }
-        })
-      } else if (e.key == 'ArrowRight') {
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
-          if (d != undefined) {
-            return d.name
-          }
-        }).includes(f.name)).map(d => {
-          if (d.position === 'relative') {
-            return
-          }
-          if (e.shiftKey) {
-            d.x = d.x + data.grid_square_size
-          } else {
-            const n_pos = Math.trunc(d.x / data.grid_square_size)
-            d.x = (n_pos + 2) * data.grid_square_size
-            const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-            d.x+=(data.grid_square_size/2)-width/2
-          }
-          //Augumente largeur svg si le noeud est près du bord
-          if (d.x > data.width - 100) {
-            data.width += 100
-          }
-        })
-      }
-      set_data({ ...data })
-    } else if (e.key == 'Escape') {
-      if ( button_ref && button_ref.current && accordion_ref ) {
-        button_ref.current.click()
-      }
-      //set_show_nav(false)
-    } 
-    // } else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
-    //   e.preventDefault()
-    //   //va chercher les différences sauvegardées dans le localStorage
-    //   // const differences = JSON.parse(localStorage.getItem('diff') as string)
-    //   const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-    //   const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
-    //   //Si il y a des différences, prend la dernière effectuée
-    //   if (differences !== undefined && differences.length != 0) {
-    //     type difference_type = {
-    //       kind: string,
-    //       path: string[],
-    //       item: {
-    //         rhs: string,
-    //         kind: string
-    //       },
-    //       rhs: string,
-    //       index: string
-    //     }
-    //     const difference = differences.pop() as difference_type[]
-    //     //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
-    //     //La copie nous permet de reffecter une variable avec d'autre type d'objet
-    //     //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
-    //     //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
-    //     let dt = JSON.parse(JSON.stringify(data))
-    //     //Parcours les dernières modifications à effectuer
-    //     //D : Supprime un objet qui a été ajouté
-    //     //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
-    //     //A : Annule des moddification faites à des array
-    //     //E : Annule des modifications faites à des propriétées de l'objet
-    //     //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
-    //     // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
-    //     difference.map(d => {
-    //       let element_to_delete = dt
-    //       if (d['kind'] == 'D') {
-    //         let cpt = 0
-    //         d.path.map(dd => {
-    //           cpt++
-    //           if (cpt == d['path'].length) {
-    //             delete element_to_delete[dd]
-    //           } else {
-    //             element_to_delete = element_to_delete[dd]
-    //           }
-    //         })
-    //       } else if (d['kind'] == 'N') {
-    //         let cpt = 0
-    //         d.path.map(dd => {
-    //           cpt++
-    //           if (cpt == d['path'].length) {
-    //             element_to_delete[dd] = d['rhs']
-    //           } else {
-    //             element_to_delete = element_to_delete[dd]
-    //           }
-    //         })
-    //       } else if (d['kind'] == 'A') {
-    //         let cpt = 0
-    //         d.path.map(dd => {
-    //           cpt++
-    //           if (cpt == d['path'].length) {
-    //             if (d['item']['kind'] == 'N') {
-    //               element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
-    //             } else if (d['item']['kind'] == 'D') {
-    //               element_to_delete[dd].splice(d['index'], 1)
-    //             }
-    //           } else {
-    //             element_to_delete = element_to_delete[dd]
-    //           }
-    //         })
-    //       } else if (d['kind'] == 'E') {
-    //         let cpt = 0
-    //         if (d.path !== null && d.path !== undefined) {
-    //           d.path.map(dd => {
-    //             cpt++
-    //             if (cpt == d['path'].length) {
-    //               element_to_delete[dd] = d['rhs']
-    //             } else {
-    //               element_to_delete = element_to_delete[dd]
-    //             }
-    //           })
-    //         } else {
-    //           dt = d['rhs']
-    //         }
-    //       }
-    //     })
-    //     data = dt
-    //     localStorage.setItem('diff', JSON.stringify(differences))
-    //     try {
-    //       //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
-    //       if (current) {
-    //         localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-    //       }
-    //     } catch (e) {
-    //       localStorage.clear()
-    //     }
-    //     set_data({ ...data })
-    //   } else {
-    //     console.log('Aucune action en mémoire pour un retour en arrière')
-    //   }
-    else if(e.key as string=='Delete'){
-      e.preventDefault()
-      if(document.activeElement?.tagName!=='INPUT')
-      {   
-        multi_selected_links.current.forEach(el=>{
-          delete_link(data,el)
-        })
-        multi_selected_nodes.current.forEach(el=>{
-          delete_node(data,el)
-        })
-        multi_selected_nodes.current=[]
-        multi_selected_links.current=[]
-        set_data({...data})
-      }
-    }else if(e.key=='a' && e.ctrlKey){
-      e.preventDefault()
-
-      multi_selected_nodes.current=Object.values(data.nodes)
-      set_data({...data})
-    
-    }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
-      for(const item of document.getElementsByTagName('input')){
-        if(item.className.includes('form-control') && item.type=='text'){
-          item.blur()
-        }
+    // Check if there is unsaved change before we switch view
+    // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+    let saved=true
+    if(view!=='none' && connected){
+      const diff=check_current_view_saved(master_data,data,view)
+      if(diff.length>0){
+        saved=false
+        set_view_not_saved(view)
+        set_view('none')
       }
     }
-  } 
-  if (['ArrowUp', 'ArrowDown', 'F8', 'F9'].includes(e.key)) {
-    if (!master && e.key == 'ArrowUp' || e.key == 'F8') {
+
+    if(saved){
+      set_view('none')
+      set_data({ ...master_data })   
+    }
+  }
+
+  
+  if ([ 'F8', 'F9'].includes(e.key)) {
+    if (e.key == 'F8') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
       master_data.view.map((v, i) => {
@@ -1464,15 +1213,28 @@ export const keyHandler = (
       } else if (ind===0) {
         ind = Object.keys(master_data.view).length
       }
-      //si la vue est trouvé alors on lance l'animation entre cette vue et la précédente
-      //const copy = master_data.view[ind].view_data as SankeyPlusData
-      // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-      // setTimeout(function () {
-      set_view(master_data.view[ind-1].id)
-      set_data({...master_data.view[ind-1].view_data as SankeyPlusData})
-      adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
-      // }, time_to_set_view)
-    } else if (!master && e.key == 'ArrowDown' || e.key == 'F9') {
+
+
+    // Check if there is unsaved change before we switch view 
+    // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+      let saved=true
+      if(view!=='none' &&  connected){
+        const diff=check_current_view_saved(master_data,data,view)
+        if(diff.length>0){
+          saved=false
+          set_view_not_saved(view)
+          set_view(master_data.view[ind-1].id)
+        }
+      }
+      if(saved){
+        set_view(master_data.view[ind-1].id)
+        const data_view=get_data_from_view(master_data,master_data.view[ind-1].id)
+        set_data(data_view as SankeyPlusData) 
+        // adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
+        adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind-1].id),min_width_and_height)
+      }
+      
+    } else if (e.key == 'F9') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
       master_data.view.map((v, i) => {
@@ -1485,18 +1247,90 @@ export const keyHandler = (
         ind = -1
       }
 
-      // const time_to_set_view = animate_view_changement(data,(data.view[ind].view_data as SankeyPlusData), copy,node_color,link_color,scale,inv_scale,getLinkValue,multi_selected_nodes,setNodeHeight,setNodesHeight,link_visible,test_link_value,min_thickness,drawArrows,drawCurve,link_text)
-      // setTimeout(function () {
-      set_view(master_data.view[ind+1].id)
-      set_data({...master_data.view[ind+1].view_data as SankeyPlusData})
-      adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
-      // }, time_to_set_view)
+      // Check if there is unsaved change before we switch view
+      // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+      let saved=true
+      if(view!=='none' && connected){
+        const diff=check_current_view_saved(master_data,data,view)
+        if(diff.length>0){
+          saved=false
+          set_view_not_saved(view)
+          set_view(master_data.view[ind+1].id)
+        }
+      }
+      if(saved){
+        set_view(master_data.view[ind+1].id)
+        const data_view=get_data_from_view(master_data,master_data.view[ind+1].id)
+        set_data(data_view as SankeyPlusData) 
+        // adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
+        adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind+1].id),min_width_and_height)
+      }
       //}
     } 
-    // set_data({ ...data })
   }
-}   
+}  
 
+const selecteur_view=(data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  view:string,
+  set_view:(s:string)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  t:TFunction,
+  set_view_not_saved:(s:string)=>void
+)=>{
+  return <Form.Select id="selectionNode"
+  onChange={
+    (evt: React.ChangeEvent<HTMLSelectElement>) => {
+      multi_selected_nodes.current = []
+      multi_selected_links.current = []
+      multi_selected_label.current = []
+    // Depending on the value selected we :
+    //  - If we select a view :Get a modified version of master data according to the modifications saved in the view selected  
+    //      and save original master data in a variable that the view can't modify 
+    //  - If we select master('none'): Get the data we are workinkg on to be the master data
+
+    // Verify if we saved the view before changing the view
+    // If not, we display a modal that will warn the user with the possibility to save before exit
+    let saved=true
+    if(view!=='none'){
+      const difference=check_current_view_saved(master_data,data,view)
+      if(difference.length!=0){
+        saved=false
+        set_view_not_saved(view)
+        set_view(evt.target.value)
+      }
+    }
+
+    if(saved){
+      if (evt.target.value === '') {
+        return
+      }else if(evt.target.value!=='none'){
+        set_view(evt.target.value)
+        
+        const data_view=get_data_from_view(master_data,evt.target.value)
+        if(view==='none'){
+          set_master_data({...JSON.parse(JSON.stringify(data))})
+        }
+        set_data(data_view as SankeyPlusData)
+
+      } else if(evt.target.value=='none'){
+        set_view(evt.target.value)
+        set_data({...master_data})
+      }  
+    }           
+    }
+}
+> 
+  <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
+  {master_data ? master_data.view.map(d => {
+    return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+  }) : <></>}
+  </Form.Select>
+}
 export const viewsAccordion = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
@@ -1511,9 +1345,49 @@ export const viewsAccordion = (
   set_master_data:(d:SankeyPlusData)=>void,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
-  is_activated:boolean
+  is_activated:boolean,
+  set_view_not_saved:(s:string)=>void
+
   
 ) => {
+  const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)
+  // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)  
+  const popover_for_apply_display_from_view=<Popover id="popover-apply_display" style={{maxWidth:'100%'}}>
+  <Popover.Header as="h3">{t('view.applyDisplayFromView')}</Popover.Header>
+  <Popover.Body >
+  <Form.Select id="selectionNode"
+    onChange={
+      (evt: React.ChangeEvent<HTMLSelectElement>) => {
+        multi_selected_nodes.current = []
+        multi_selected_links.current = []
+        multi_selected_label.current = []
+
+        const paramerters=['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral']
+
+        if (evt.target.value === '') {
+          return
+        }else if(evt.target.value!=='none'){
+          const data_view=get_data_from_view(master_data,evt.target.value)
+          data_view.view=[]
+          updateLayout(data,data_view,paramerters)
+          set_data({...data})
+        } else if(evt.target.value=='none'){
+          const copy_master=JSON.parse(JSON.stringify(master_data))
+          copy_master.view=[]
+          updateLayout(data,copy_master,paramerters)
+          set_data({...data})
+        }              
+      }
+  }
+  > 
+  {view!='none'}<option disabled={view=='none'} selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
+  {master_data ? master_data.view.map(d => {
+    return <option key={d.id} disabled={view == d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
+  }) : <></>}
+  </Form.Select>
+  </Popover.Body>
+</Popover> 
+  
   return <><Accordion.Item
     id='Visualisation'
     eventKey="Visualisation"
@@ -1534,52 +1408,39 @@ export const viewsAccordion = (
         placement={'top'}
         delay={500}
         overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >
-        <Form>
-          <Row>
-            <Col xs={3}>
-              <FormLabel>{t('view.select')}</FormLabel>
-            </Col>
-            <Col xs={9}>
-              <Form.Select id="selectionNode"
-                onChange={
-                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    multi_selected_nodes.current = []
-                    multi_selected_links.current = []
-                    multi_selected_label.current = []
-                
-                    if (evt.target.value === '') {
-                      return
-                    }else if(evt.target.value!=='none' && view === 'none'){
-                      set_view(evt.target.value)
-                      set_master_data({...JSON.parse(JSON.stringify(data))})
+        >
+      <Form>
+      <Row>
+        <Col xs={3}>
+          <FormLabel>{t('view.select')}</FormLabel>
+        </Col>
+        <Col xs={7}>
+          <>{selector}</>
+        </Col>
+        <Col xs={2}>
+          <OverlayTrigger
+              key={'tooltip-apply_display'}
+              placement={'left'}
+              trigger={'click'}
+              rootClose
+              overlay={popover_for_apply_display_from_view}>
+              <Button variant='danger' id='button-apply_display' >
+                <FaFileInvoice/>
+              </Button>
+            </OverlayTrigger>
+        </Col>
 
-                      set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
-
-                    } else if(evt.target.value=='none'){
-                      set_view(evt.target.value)
-                      set_data({...master_data})
-                    }else{
-                      set_view(evt.target.value)
-                      set_data(data.view.filter(v=>v.id=evt.target.value)[0].view_data as SankeyPlusData)
-                    }               
-                  }
-                }
-              >
-                <option selected={view == 'none'} value={'none'}>{t('view.actual')}</option>
-                {master_data ? master_data.view.map(d => {
-                  return <option key={d.id} selected={view == d.id} value={d.id}>{d.nom}</option>
-                }) : <></>}
-              </Form.Select>
-            </Col>
-          </Row>
+      </Row>
 
           <Table bordered size='sm'>
             <thead>
               <tr>
                 <th>{t('view.name')}</th>
                 <th>Position</th>
-                <th></th>
+            <th>{t('view.delete')}</th>
+            <th>{t('view.copy')}</th>
+            <th>{t('view.import')}</th>
+                <th>{t('view.export')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1590,11 +1451,14 @@ export const viewsAccordion = (
                       value={d.nom}
                       disabled={!is_activated}
                       onChange={evt => {
+                    // Change the name of the view
                         master_data.view.filter(v => v.id == d.id)[0].nom = evt.target.value
-                        set_data({ ...data })
+                        set_master_data({...master_data})
+
                       }}
                     /></td>
                     <td>
+                  {/* Change the position of the view in the liste of view from master data */}
                       <ButtonGroup className="button_position" size="sm">
                         <Button
                           size="sm"
@@ -1634,118 +1498,140 @@ export const viewsAccordion = (
                         ><FaArrowDown /></Button>
                       </ButtonGroup>
 
-                    </td>
-                    <td><Button
-                      size="sm"
-                      variant='danger'
-                      disabled={!is_activated}
-                      onClick={
-                        () => {
-                          let ind = -1
-                          master_data.view.map((v, i) => {
-                            ind = (v.id == d.id) ? i : ind
-                          })
-                          master_data.view.splice(ind, 1)
-                          set_view('none')
-                          set_master_data({...master_data})
-                          set_data({ ...data })
-                        }
-                      }
-                    ><FaMinus /></Button></td>
-                    <td><Button
-                      size="sm"
-                      variant='success'
-                      onClick={
-                        () => {
-                          let ind = -1
-                          master_data.view.map((v, i) => {
-                            ind = (v.id == d.id) ? i : ind
-                          })
-                          const cur_view = master_data.view[ind]
-                          const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
-                          const new_ind = 'view_' + String(new Date().getTime())
-
-                          if (!copy_view_data.accordeonToShow.includes('Vis')) {
-                            copy_view_data.accordeonToShow.push('Vis')
-                            data.accordeonToShow.push('Vis')
-                          }
+                </td>
+                <td><Button
+                  size="sm"
+                  variant='danger'
+                  disabled={!is_activated}
+                  onClick={
+                    // Delete the view
+                    () => {
+                      let ind = -1
+                      master_data.view.map((v, i) => {
+                        ind = (v.id == d.id) ? i : ind
+                      })
+                      master_data.view.splice(ind, 1)
+                      set_view('none')
+                      set_master_data({...master_data})
+                      set_data({ ...master_data })
+                    }
+                  }
+                ><FaMinus /></Button></td>
+                <td><Button
+                  disabled={!is_activated}
+                  size="sm"
+                  variant='success'
+                  onClick={
+                    () => {
+                      // Create a copy of the view
+                      const cur_view = d
+                      const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+                      const new_ind = 'view_' + String(new Date().getTime())
                 
-                          copy_view_data.view = []
-                          set_data(copy_view_data)
-                          //copy.view = []
-                          master_data.view.push({
-                            id: new_ind,
-                            view_data: copy_view_data,
-                            nom: 'copy of ' + cur_view.nom,
-                            details: ''
-                          })
-                          set_view(new_ind)
-                          set_master_data({...master_data})
-                        }
-                      }
-                    ><FaPlus /></Button></td>
-                    <td><Button
-                      size="sm"
-                      variant='secondary'
-                      onClick={
-                        () => {
-                          if (_load_json.current) {
+                      copy_view_data.view = []
+                      master_data.view.push({
+                        id: new_ind,
+                        view_data: copy_view_data,
+                        nom: 'copy of ' + cur_view.nom,
+                        details: ''
+                      })
+                      set_view(new_ind)
+                      set_master_data({...master_data})
+                      set_data(get_data_from_view(master_data,new_ind))
+                    }
+                  }
+                ><FaCopy /></Button></td>
+                <td><Button
+                  size="sm"
+                  variant='secondary'
+                  onClick={
+                    () => {
+                      // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S 
+                      if (_load_json.current) {
                         _load_json.current!.name = ''
                         _load_json.current.click()
                         _load_json.current.id = d.id
-                          }
-                        }
                       }
-                    ><FaUpload /></Button></td>
-                  </tr>
-                )
-              }) : <></>}
-            </tbody>
-          </Table>
-        </Form></OverlayTrigger>
+                    }
+                  }
+                ><FaFileImport /></Button></td>
+                <td>
+                  <Button variant='warning'
+                  onClick={()=>{
+                    const to_download=get_data_from_view(master_data,d.id)
+                    to_download.view=[]
+                    clickSaveDiagram(to_download)
+                  }}
+                  ><FaFileExport/></Button>
+                </td>
+
+              </tr>
+            )
+          }) : <></>}
+        </tbody>
+      </Table>
+      </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
   <Form.Control
-    type="file"
-    ref={_load_json}
-    style={{ display: 'none' }}
-    onChange={(evt: ChangeEvent) => {
-      const files = (evt.target as HTMLFormElement).files
-      const reader = new FileReader()
-      reader.onload = (() => {
-        return (e: ProgressEvent<FileReader>) => {
-          const result = String((e.target as FileReader).result)
-          const result_data = JSON.parse(result)
-          let ind = -1
-          master_data.view.map((v, i) => {
-            ind = (v.id == _load_json.current!.id) ? i : ind
-          })
-          const cur_view = master_data.view[ind]
-          cur_view.view_data = JSON.parse(JSON.stringify(result_data))
-          convert_data(cur_view.view_data)
-          cur_view.nom = files[0].name
-          set_data(cur_view.view_data as SankeyPlusData)
-          set_master_data({...master_data})
-          // Object.assign(new_data, result_data)
-          // if (result_data.version === undefined) {
-          //   (new_data.version as unknown as undefined) = undefined
-          // }
-          // convert_data(new_data)
-          // set_nodes_level(data)
-          // set_data(new_data)
-          // const test = document.getElementsByClassName('navbar')
-          // let margin_top = 0
-          // if (test && test.length > 0) {
-          //   margin_top = test[0].getBoundingClientRect().height
-          //   d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-          // }
-        }
-      })()
-      reader.readAsText(files[0])
-    }}
-  />
+        type="file"
+        ref={_load_json}
+        style={{ display: 'none' }}
+        onChange={(evt: ChangeEvent) => {
+          const files = (evt.target as HTMLFormElement).files
+          const reader = new FileReader()
+          const deep_diff = require('deep-diff')
+
+          reader.onload = (() => {
+            return (e: ProgressEvent<FileReader>) => {
+              let result = String((e.target as FileReader).result)
+              const result_data = JSON.parse(result)
+              let ind = -1
+              master_data.view.map((v, i) => {
+                ind = (v.id == _load_json.current!.id) ? i : ind
+              })
+              const cur_view = master_data.view[ind]
+              const imported_data=JSON.parse(JSON.stringify(result_data))
+              imported_data.view=[]
+              convert_data(imported_data)
+              let difference = deep_diff.diff(master_data,imported_data)
+              difference=JSON.parse(JSON.stringify((difference!==undefined)?difference:[]))
+              difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+              cur_view.view_data = {diff:difference}
+
+              cur_view.nom = (files[0].name).replace('.json','')
+
+              set_master_data({...master_data})
+              set_data({...imported_data})
+              set_view(cur_view.id)
+
+            }
+          })()
+          reader.readAsText(files[0])
+        }}
+      />
+
   </>
 }
+
+// Function to check if the current data of the view is unsaved
+// We compare the differences saved in the master_data with the current changement of the view 
+const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
+
+  const deep_diff = require('deep-diff')
+  const original_diff=get_data_from_view(master_data,view)
+  let difference = deep_diff.diff(original_diff, data)
+  difference=(difference!==undefined)?difference:[]
+  difference=difference.filter((d:{path:string[],kind:string,item:{kind:string}})=>{
+    // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
+    return d.path[0]!=='view'  && (d.kind=='E' && d.path[0]!=='width') && (d.kind=='E' && d.path[0]!=='height')
+  })
+
+  return difference
+}
+
+
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1758,9 +1644,24 @@ declare const window: Window &
     } & { [key: string]: SankeyPlusData }
   }
 
-export const SankeyPlusBannerView=(
-  mode_selection:string,
-  view: string
+  // Fucntion that return a toolbar to navigate,create or modify view, it contain :
+  // - a button to return to master data
+  // - a button to create a view if we are currently on master data
+  // - 2 button to navigate in the list of view
+  // - a dropdown to directly select the view we want to display (or select master data)
+export const SankeyPlusBannerView=(data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  view:string,
+  set_view:(s:string)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  t:TFunction,
+  connected:boolean,
+  set_view_not_saved:(s:string)=>void
+  
 )=>{
 
   // const elementNavBar=document.getElementsByClassName('bg-light')[0]
@@ -1768,55 +1669,85 @@ export const SankeyPlusBannerView=(
 
   // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
-  // const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
-  // let height_navbarAndHerowrap=(elementNavBar )?(elementNavBar.getBoundingClientRect().height+height_Herowrap):0
-  // if ( window.SankeyToolsStatic) {
-  //   height_navbarAndHerowrap = 0
-  // }
+  const m_d=master_data?master_data:data
+
+  
+
+  // Boolean used to change the logo of the button to save the current view :
+  //  - if there is no differences between the the saved view and the current view, then the logo has a check
+  //  - else if it contain difference, the logo contain an exclamation point 
+  let is_different=false
+  if(view!=='none' && connected){
+    const diff=check_current_view_saved(master_data,data,view)
+    if(diff.length>0){
+      is_different=true
+    }
+  }
+  
+
+
   return [
     <Col>
-      <FormGroup  as={Col} lg='auto'>
-        <ButtonGroup >
-          <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-            const ev = document
-            const tmp = { key: 'F7' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-            <FaHome />
-          </Button>
-          <Button variant={(!(mode_selection == 's')) ? 'outline-info' : 'info'} onClick={() => {
-            const ev = document
-            const tmp = { key: 'F6' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-            <FaPlay />
-          </Button>
-          <Button variant={'outline-success'} onClick={() => {
-            const ev = document
-            const tmp = { key: 'F8' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-            <FaBackward />
-          </Button>
-          <Button variant={'outline-warning'} onClick={() => {
-            const ev = document
-            const tmp = { key: 'F9' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-            <FaForward />
-          </Button>
-        </ButtonGroup>
-        <Form.Label>{view}</Form.Label>
-      </FormGroup>
-    </Col>]
+      <Row>
+        <FormGroup  as={Col} lg='auto'>
+          <ButtonGroup >
+            <Button variant= 'secondary' onClick={() => {
+              const ev = document
+              const tmp = { key: 'F7' }
+              if (ev.onkeydown) {
+                ev.onkeydown(tmp as KeyboardEvent)
+              }
+            }}>
+              <FaHome />
+            </Button>
+
+            {!window.SankeyToolsStatic?<OverlayTrigger
+            key={'buttonSaveViewDisabled'}
+            placement={'bottom'}
+            delay={500}
+            overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+            >
+              <FormGroup>
+                <Button disabled={!connected} variant={'info'}
+                onClick={() => {
+                  const ev = document
+                  const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+                  if (ev.onkeydown) {
+                    ev.onkeydown(t)
+                  }
+                }}
+                >{view==='none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
+              </FormGroup>
+            </OverlayTrigger>:<></>}
+            
+            <Button variant={'success'}
+              disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view)==0 || view=='none')}
+              onClick={() => {
+                const ev = document
+                const tmp = { key: 'F8' }
+                if (ev.onkeydown) {
+                  ev.onkeydown(tmp as KeyboardEvent)
+                }
+            }}>
+              <FaCaretSquareLeft />
+            </Button>
+            <Button variant={'success'} 
+            disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view)==m_d.view.length-1)}
+            onClick={() => {
+              const ev = document
+              const tmp = { key: 'F9'}
+              if (ev.onkeydown) {
+                ev.onkeydown(tmp as KeyboardEvent)
+              }
+            }}>
+              <FaCaretSquareRight />
+            </Button>
+          </ButtonGroup>
+        </FormGroup>
+        {(master_data?master_data:{view:[] as string[]}).view.length>0?<Col>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</Col>:<></>}
+      </Row>
+    </Col>
+      ]
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
@@ -1824,4 +1755,64 @@ export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Di
     preferenceCheck('Vis',data)
     set_data({ ...data })
   }} />
+}
+
+
+// Modal used when we want to switch to master or a view without saving some changements we made on the current view
+// It give the option save or not the changements made
+export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+master_data:SankeyPlusData,
+set_master_data:(d:SankeyPlusData)=>void,
+data:SankeyPlusData,
+set_data:(d:SankeyPlusData)=>void,
+view:string
+
+)=>{
+  return (
+    <Modal
+      size="lg"
+      show={view_not_saved!=''}
+      backdrop={'static'}
+      centered>
+      <Modal.Header>
+        <Modal.Title>{t('view.ns')}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {t('view.warn_ns')}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant='danger'
+          onClick={()=>{
+            // Don't save the view before changing to the selected one
+            if(view!=='none'){
+              const data_view=get_data_from_view(master_data,view)
+              set_data(data_view as SankeyPlusData)
+            } else if(view=='none'){
+              set_data({...master_data})
+            }
+            set_view_not_saved('')
+          }}
+        >{t('view.dont_save')}</Button>
+        <Button variant='success'
+          onClick={()=>{
+            // Save the view before changing to the selected one
+            const deep_diff = require('deep-diff')
+            let difference = deep_diff.diff(master_data, data)
+            difference=(difference!==undefined)?difference:[]
+            difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+            master_data.view.filter(v => v.id == view_not_saved)[0].view_data = {diff:difference}
+
+            if(view!=='none'){
+              const data_view=get_data_from_view(master_data,view)
+              set_master_data({...JSON.parse(JSON.stringify(data))})
+              set_data(data_view as SankeyPlusData)
+      
+            } else if(view=='none'){
+              set_data({...master_data})
+            }
+            set_view_not_saved('')
+          }}
+        >{t('view.save')}</Button>
+      </Modal.Footer>
+    </Modal>)
 }
