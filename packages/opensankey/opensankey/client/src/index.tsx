@@ -21,6 +21,16 @@ try {
   console.log('opensankey.png not found')
 }
 
+let logo_terriflux = ''
+try {
+   /* eslint-disable */
+  // @ts-ignore
+  logo_terriflux = require('./css/terriflux.png')
+  /* eslint-enable */
+} catch (expt) {
+  console.log('terriflux.png not found')
+}
+
 window.React = React
 
 declare const window: Window &
@@ -83,6 +93,7 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={exemple_menu}
             formations_menu={formations_menu}
             logo={logo}
+            logo_terriflux={logo_terriflux}
           />
         </>,
         document.getElementById('react-container')
@@ -95,6 +106,8 @@ if (!window.SankeyToolsStatic) {
             exemple_menu={{}}
             formations_menu={{}}
             logo={logo}
+            logo_terriflux={logo_terriflux}
+
           />
         </>,
         document.getElementById('react-container')
@@ -123,6 +136,8 @@ if (!window.SankeyToolsStatic) {
         exemple_menu={{}}
         formations_menu={{}}
         logo={logo}
+        logo_terriflux={logo_terriflux}
+
       />
       {window.sankey.footer ? (
         <div id="copyright">

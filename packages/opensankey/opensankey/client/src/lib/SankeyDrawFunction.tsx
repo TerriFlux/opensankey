@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color} from './SankeyUtils'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
@@ -1941,7 +1941,11 @@ export const min_width_and_height = (data:SankeyData) => {
       width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
     }
   })
-  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
+  const vertical_shift=  get_vertical_marfin_for_sankey_zone()
+
+
+  
+  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40 - (vertical_shift))]
 }
 
 // Function that draw the grid in the background of the sankey zone

@@ -364,6 +364,8 @@ const resources = {
         'textAsHTML':'foreignObject label'
       },
       Banner:{
+        'data':'Data',
+        'filter':'Filter',
         'fdf':'Link filtering',
         'fdn':'Node Filtering',
         'ndd':'Levels of detail',
@@ -778,6 +780,8 @@ const resources = {
         'textAsHTML':'Label foreignObject'
       },
       Banner:{
+        'data':'Données',
+        'filter':'Filtres',
         'fdf':'Filtrage des flux',
         'fdn':'Filtrage des noeuds',
         'ndd':'Niveaux de détail',

@@ -5,7 +5,7 @@ import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-boots
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { updateLayout } from './SankeyLayout'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
-import { default_link, default_node, default_sankey_data } from './SankeyUtils'
+import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
 
 /**
  * Define ApplyLayoutDialog
@@ -173,7 +173,6 @@ const ApplySaveJSONPropTypes = {
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data:SankeyDataPropTypes,
   set_sankey_data:PropTypes.func.isRequired,
-  clickSaveDiagram:PropTypes.func.isRequired
 }
 
 
@@ -184,7 +183,7 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
  * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }: ApplySaveJSONTypes) => {
+export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
   return (
     <Modal

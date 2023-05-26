@@ -125,6 +125,7 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 ------------------------------------------------ */
 .navbar {
 	padding-bottom: 0px;
+	padding-top: 0px;
 }
 .btn {
 	border-radius: 0rem;
@@ -156,11 +157,11 @@ primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled
 /* ------------------------------------------------
  MENU
 ------------------------------------------------ */
-.MenuNavigation {
+/* .MenuNavigation {
 	padding-bottom: 5px;
-}
+} */
 
-.sankey-toolbar.row {
+/* .sankey-toolbar.row {
 	background: #f2f2f2;
 	padding-top: 10px;
 	padding-bottom: 15px;
@@ -168,7 +169,7 @@ primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled
 .sankey-toolbar.row .col-lg-auto {
 	padding-left: 0;
 	padding-right: 0;
-}
+} */
 
 .sankey-menu .accordion-item {
 	border-radius : 0px

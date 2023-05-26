@@ -1475,7 +1475,14 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
   }  
   return colorNode
 }
-export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:SankeyData)=>number[],show_nav=false)=>{
+
+export const get_vertical_marfin_for_sankey_zone=()=>{
+  // Get height of elements ahead and below the sankeydraw zone 
+  const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+  const footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
+  return shift_top+footer_size
+}
+export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:SankeyData)=>number[],show_nav=false,vertical=false)=>{
   [data.width, data.height] = min_width_and_height(data)
   let size_menu=0
   if(show_nav){
@@ -1484,15 +1491,26 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
   const visible_size=((window.innerWidth-(+d3.select(' .opensankey #svg').style('margin').replace('px',''))*2)*0.985)-size_menu
   
-  const scale=(visible_size/data.width)
+  const vertical_margin=get_vertical_marfin_for_sankey_zone()
+  const vertical_visible_size=window.innerHeight - 40 - (vertical_margin)
+
+  const scale=vertical?(vertical_visible_size/data.height):(visible_size/data.width)
   const zoomed=()=> {
     d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+')')
     d3.select(' .opensankey #svg')
-      .style('border', Math.round(2 ) + 'px solid #78c2ad')
+      .style('border', Math.round(2 ) + 'px solid #d3d3d3')
       .style('width', data.width + 'px')
   }
   const zoom = d3.zoom()
     .on('zoom', zoomed)
   zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
   document.getElementsByTagName ('html')[0]?.scrollTo(0,0)
+}
+
+export const clickSaveDiagram = (data:SankeyData) => {
+  const data_to_save = { ...data }
+  const str_data = JSON.stringify(data_to_save, null, 2)
+
+  const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
+  FileSaver.saveAs(blob, 'sankey_diagram.json')
 }

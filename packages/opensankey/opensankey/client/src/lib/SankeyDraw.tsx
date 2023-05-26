@@ -197,7 +197,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           svgSankey.attr('viewBox', null)
         
           d3.select(' .opensankey #svg')
-            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #78c2ad')        
+            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')        
         
         }))
       .on('dblclick.zoom', null);
@@ -273,10 +273,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     drawGrid(data)
 
     update_scale(data.user_scale)
-    const shift_top=document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().y+document.getElementsByClassName('sankey-toolbar')[0]?.getBoundingClientRect().height
-    // if (window.SankeyToolsStatic) {
-    //   shift_top = 0
-    // }
+    const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+
     d3.select('#svg-container').style('margin-top',shift_top+'px')
 
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
@@ -300,7 +298,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
   let border = '0px'
   if (!data.static_sankey) {
-    border = '2px solid #78c2ad'
+    border = '2px solid #d3d3d3'
   }
 
   // // Call the function that add nodes to the sankey
@@ -334,7 +332,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
-          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
               removeAnimate()
               multi_selected_nodes.current = []

@@ -268,3 +268,11 @@ export type drawArrowsType = (
   display_style: { filter: number }
   //selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
 ) => void
+
+
+export interface differenceType{
+  kind:string,
+  path:string[],
+  lhs?:object,
+  item:{kind:string,lhs?:object}
+}
