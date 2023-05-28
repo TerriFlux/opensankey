@@ -395,14 +395,12 @@ export const OpenSankeyDrawNodes = (
         })
           .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
       }
-      ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-
-
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,display_style,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,mode_selection,alt_key_pressed,static_sankey,multi_selected_links,link_text,getLinkValue,drawArrows,dragging))
       }
     }
+    ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
     // if node have a unique groupTag then it control the shape of the node
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {

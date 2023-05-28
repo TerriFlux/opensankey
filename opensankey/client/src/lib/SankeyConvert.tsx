@@ -785,7 +785,7 @@ export const convert_nodes = (
       if((n as unknown as {image:string}).image){
         console.log((n as unknown as {image:string}).image);
         (n as unknown as {has_FO:boolean}).has_FO=true;
-        (n as unknown as {FO_content:string}).FO_content=(n as unknown as {image:string}).image;
+        (n as unknown as {FO_content:string}).FO_content=(n as unknown as {image:string}).image
         
       }
     }
@@ -1308,32 +1308,32 @@ export const convert_data = (
     return
   }
   
-    const deep_diff = require('deep-diff')
-    data_to_convert.view.forEach(v=>{
-      if((v.view_data as unknown as SankeyData ).version){
-        convert_tags(v.view_data as unknown as SankeyData)
-        convert_nodes(v.view_data as unknown as SankeyData)
-        convert_links(v.view_data as unknown as SankeyData) 
+  const deep_diff = require('deep-diff')
+  data_to_convert.view.forEach(v=>{
+    if((v.view_data as unknown as SankeyData ).version){
+      convert_tags(v.view_data as unknown as SankeyData)
+      convert_nodes(v.view_data as unknown as SankeyData)
+      convert_links(v.view_data as unknown as SankeyData) 
 
-        let difference = deep_diff.diff(data, v.view_data)
-        difference=(difference!==undefined)?difference:[]
-        difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
-          if(d.kind=='D'){
-            delete ((d as unknown) as differenceType).lhs
-          }
-          if(d.kind=='A' && d.item.kind=='D'){
-            delete ((d as unknown) as differenceType).item.lhs
-          }
-          if(d.kind=='E'){
-            delete ((d as unknown) as differenceType).lhs
-          }
-          return d
-        })
-        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'));
-        v.view_data={} as object
-        (v.view_data as {diff:object[]}).diff=difference
-      }
-    })
+      let difference = deep_diff.diff(data, v.view_data)
+      difference=(difference!==undefined)?difference:[]
+      difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
+        if(d.kind=='D'){
+          delete ((d as unknown) as differenceType).lhs
+        }
+        if(d.kind=='A' && d.item.kind=='D'){
+          delete ((d as unknown) as differenceType).item.lhs
+        }
+        if(d.kind=='E'){
+          delete ((d as unknown) as differenceType).lhs
+        }
+        return d
+      })
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      v.view_data={} as object
+      (v.view_data as {diff:object[]}).diff=difference
+    }
+  })
   
   // data_to_convert.view.forEach(v=>{
   //   convert_tags(v.view_data as unknown as SankeyData)

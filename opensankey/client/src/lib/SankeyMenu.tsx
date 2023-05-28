@@ -2,11 +2,11 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, ButtonGroup, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link,get_vertical_marfin_for_sankey_zone } from './SankeyUtils'
+import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
 import {downloadExamples,adjust_sankey_zone} from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -520,7 +520,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
             <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={logo_terriflux} width={100} /> </Navbar.Brand>
-          <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
+            <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
           </>:<></>
           }
           
@@ -541,53 +541,53 @@ const Menu: FunctionComponent<MenuTypes> = (
                
               </Col>
             </Nav>
-            </>
+          </>
           ) : (<>
             <Col><h4>{window.sankey.header}</h4></Col>
             {toolbar}
-            </>)}
+          </>)}
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
       <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em'}} >
         <Container className='sankeyFooter' >
 
-        <span style={{display:'inline'}}>
+          <span style={{display:'inline'}}>
         ©<a  href="https://terriflux.com/" ><img width={75} src={logo_terriflux} /></a> - Tous droits réservés
-        </span>
-        <span style={{display:'inline'}}>
-          {app_name}
-        </span>
-        <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>Mention légales</a></span>
-        <span style={{display:'inline'}}>
-          9 rue du Rocher de Lorzier,38430 Moirans  +33 (0)6 21 83 56 76
-        </span>
+          </span>
+          <span style={{display:'inline'}}>
+            {app_name}
+          </span>
+          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>Mention légales</a></span>
+          <span style={{display:'inline'}}>
+          9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)6 21 83 56 76
+          </span>
 
         </Container>
       </Navbar>
       
       {(!data.static_sankey) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
-          <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
-            <SankeyConfigurationMenu
-              nav_item_active={nav_item_active}
-              accordion_ref={accordion_ref}
-              configuration_menus={configurations_menus} />
-          </Offcanvas.Body>
-        </Offcanvas>
+        <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
+          <SankeyConfigurationMenu
+            nav_item_active={nav_item_active}
+            accordion_ref={accordion_ref}
+            configuration_menus={configurations_menus} />
+        </Offcanvas.Body>
+      </Offcanvas>
         : <></>}
 
       {!data.static_sankey ? (
-          <ToggleButton style={{ 'width':'40px',height:'120px', position:'fixed',top:window.innerHeight/2,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift),zIndex:100 }}
-            ref={button_ref as Ref<HTMLLabelElement>}
-            id="toggle-check"
-            type="checkbox"
-            variant="outline-primary"
-            checked={show_nav}
-            onChange={(e) => { setChecked(e.currentTarget.checked)}}
-            onClick={toggleShow}
-            value="menuConfigButton">{menuButton()}
-          </ToggleButton>
-        ) : (<></>)
+        <ToggleButton style={{ 'width':'40px',height:'120px', position:'fixed',top:window.innerHeight/2,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift),zIndex:100 }}
+          ref={button_ref as Ref<HTMLLabelElement>}
+          id="toggle-check"
+          type="checkbox"
+          variant="outline-primary"
+          checked={show_nav}
+          onChange={(e) => { setChecked(e.currentTarget.checked)}}
+          onClick={toggleShow}
+          value="menuConfigButton">{menuButton()}
+        </ToggleButton>
+      ) : (<></>)
       }
 
       {

@@ -7,7 +7,7 @@ import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUt
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faMaximize,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
@@ -907,8 +907,8 @@ export const toolbar_builder = (
   }
 
   const excel_element = window.sankey && window.sankey.excel ? (
-    <Form.Group key={'3'} as={Col} lg="auto" >
-      <Button href={window.sankey.excel}>{t('Banner.rslt')}</Button>
+    <Form.Group key={'3'} as={Col} lg="auto" style={{marginRight:'10px'}} >
+      <Button variant='link' href={window.sankey.excel}>{t('Banner.tl')}</Button>
     </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
 
   const struc_data_reconciled=
@@ -1010,7 +1010,7 @@ export const toolbar_builder = (
     </Popover.Body>
   </Popover>
   const ui = [
-     ]
+  ]
   if ((Object.keys(diagrams).length > 0)) {
     ui.push(
       <Col>
@@ -1031,12 +1031,12 @@ export const toolbar_builder = (
   
   let mouse_mode_edition=<></>
 
-// Add button for the edition of the sankey
-if(!window.SankeyToolsStatic){
-  mouse_mode_edition=
+  // Add button for the edition of the sankey
+  if(!window.SankeyToolsStatic){
+    mouse_mode_edition=
     <ButtonGroup as={Col} lg='auto'>
-        {/* Boutons Sélection classique des éléments */}
-        <OverlayTrigger
+      {/* Boutons Sélection classique des éléments */}
+      <OverlayTrigger
         key={'tooltip-selection'}
         placement={'bottom'}
         delay={500}
@@ -1061,34 +1061,34 @@ if(!window.SankeyToolsStatic){
 
   const item_dropdown_filter=<>
     {(node_filter)?
-           <OverlayTrigger
-              key={'tooltip-link-color-filter'}
-              placement={'left'}
-              trigger={'click'}
-              rootClose
-              overlay={filter_color_node}>
-              <Dropdown.Item >
-                {t('Menu.Noeuds')}
-              </Dropdown.Item>
-           </OverlayTrigger>
-           :
-           <></>
-         }
-  
-  {(flux_filter)?
       <OverlayTrigger
-          key={'tooltip-node-color-filter'}
-          placement={'left'}
-          trigger={'click'}
-          rootClose
-          overlay={filter_color_link}>
+        key={'tooltip-link-color-filter'}
+        placement={'left'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_color_node}>
+        <Dropdown.Item >
+          {t('Menu.Noeuds')}
+        </Dropdown.Item>
+      </OverlayTrigger>
+      :
+      <></>
+    }
+  
+    {(flux_filter)?
+      <OverlayTrigger
+        key={'tooltip-node-color-filter'}
+        placement={'left'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_color_link}>
         <Dropdown.Item >{t('Menu.flux')}</Dropdown.Item>
       </OverlayTrigger>
     
-            :
-            <></>
-          }
-  {(Object.values(data.dataTags).length>0)?
+      :
+      <></>
+    }
+    {(Object.values(data.dataTags).length>0)?
       <OverlayTrigger
         key={'tooltip-data-filter'}
         placement={'left'}
@@ -1100,36 +1100,36 @@ if(!window.SankeyToolsStatic){
         </Dropdown.Item>
       </OverlayTrigger>
       
-        :
-        <></>
-  }
-</>
+      :
+      <></>
+    }
+  </>
 
 
   ui.push(
     <FormGroup as={Col} lg='auto'>
       {mouse_mode_edition}
       {(node_filter || flux_filter || (Object.values(data.dataTags).length>0))?
-      <DropdownButton autoClose={false} as={ButtonGroup} lg='auto' title={t('Banner.filter')}>
-        {item_dropdown_filter}
-      </DropdownButton>
-      :<></>}
+        <DropdownButton autoClose={false} as={ButtonGroup} lg='auto' title={t('Banner.filter')}>
+          {item_dropdown_filter}
+        </DropdownButton>
+        :<></>}
         
       <ButtonGroup as={Col} lg='auto' >
 
-      {(level_filter)?<OverlayTrigger
-            key={'tooltip-details-level'}
-            placement={'left'}
-            trigger={'click'}
-            rootClose
-            overlay={detail_level}>
-            <Button variant='warning' id='button-details-level' >
-              <FontAwesomeIcon icon={faFolderTree} />
-            </Button>
-          </OverlayTrigger>
+        {(level_filter)?<OverlayTrigger
+          key={'tooltip-details-level'}
+          placement={'left'}
+          trigger={'click'}
+          rootClose
+          overlay={detail_level}>
+          <Button variant='warning' id='button-details-level' >
+            <FontAwesomeIcon icon={faFolderTree} />
+          </Button>
+        </OverlayTrigger>
           :
           <></>
-  }
+        }
         <OverlayTrigger
           key={'tooltip-link-filter'}
           placement={'left'}
@@ -1205,10 +1205,10 @@ export const OpenSankeyMenuBanner = (
   toolbar:JSX.Element[]
 )=>{
   // Compute height of edition element to shift the sankey draw zone below
-  const elementNavBar=document.getElementsByClassName('bg-light')[0]
+  //const elementNavBar=document.getElementsByClassName('bg-light')[0]
   // const elementHerowrap=document.getElementsByClassName('herowrap')[0]
   // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
-  const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
+  //const height_navbar=(elementNavBar)?elementNavBar.getBoundingClientRect().height:0
   // if ( window.SankeyToolsStatic) {
   //   height_navbarAndHerowrap = 0
   // }
