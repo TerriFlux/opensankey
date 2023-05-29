@@ -21,6 +21,7 @@ declare const window: Window &
     SankeyToolsStatic: boolean
     sankey: {
       header?: string
+      welcome_text: string
     }
   }
 /**
@@ -94,6 +95,7 @@ const MenuPropTypes = {
   set_show_publish_dialog: PropTypes.func.isRequired,
 
   menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  set_welcome_text: PropTypes.func.isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
   set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
@@ -382,6 +384,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
     menus,
+    set_welcome_text,
     show_modalTemplate,
     set_show_modalTemplate,
     cardsTemplate,
@@ -524,7 +527,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           </>:<></>
           }
           
-          <Navbar.Brand href="#"><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
+          <Navbar.Brand href="#" onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
           {!window.SankeyToolsStatic ? (<>
             <Nav className='me-auto'>
               {menus.map((c,i)=>{
@@ -543,9 +546,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Nav>
           </>
           ) : (<>
-            <Col><h4>{window.sankey.header}</h4></Col>
+            <Col><h4 onClick={()=>set_welcome_text(window.sankey.welcome_text)}><a href="#" style={{color:"#666"}}>{window.sankey.header}</a></h4></Col>
             {toolbar}
-          </>)}
+          </>)} 
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
