@@ -1186,7 +1186,7 @@ export const toolbar_builder = (
               <FontAwesomeIcon icon={faCodeBranch} />
             </Button>
           </OverlayTrigger>}
-          <OverlayTrigger
+          {window.SankeyToolsStatic ? <OverlayTrigger
                 key={'tooltip-help'}
                 placement={'bottom'}
                 delay={500}
@@ -1196,7 +1196,7 @@ export const toolbar_builder = (
                 <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
                     ?
                 </Button>
-              </OverlayTrigger>
+              </OverlayTrigger> : <></>}
       </ButtonGroup>
     </FormGroup>
   )
