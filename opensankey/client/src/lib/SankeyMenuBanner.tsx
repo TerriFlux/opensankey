@@ -550,7 +550,8 @@ export const toolbar_builder = (
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
-  setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void
+  setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void,
+  set_show_modal_welcome:(b:boolean)=>void
 ) => {
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
@@ -1185,6 +1186,17 @@ export const toolbar_builder = (
               <FontAwesomeIcon icon={faCodeBranch} />
             </Button>
           </OverlayTrigger>}
+          <OverlayTrigger
+                key={'tooltip-help'}
+                placement={'bottom'}
+                delay={500}
+                overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
+                }
+              >
+                <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
+                    ?
+                </Button>
+              </OverlayTrigger>
       </ButtonGroup>
     </FormGroup>
   )

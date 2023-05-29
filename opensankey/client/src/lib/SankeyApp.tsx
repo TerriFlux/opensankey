@@ -323,7 +323,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const {filter}=data.display_style
   const menu_banner=OpenSankeyMenuBanner(
     t,data,set_data,
-    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram)
+    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate)
   )
 
   //-3. Sankey Draws
