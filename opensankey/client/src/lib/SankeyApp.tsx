@@ -483,6 +483,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           setShowPreference={setShowPreference}
           set_show_publish_dialog={set_show_publish_dialog}
           cardsTemplate={cardsTemplate}
+          set_welcome_text={set_welcome_text}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}
           token={false}
