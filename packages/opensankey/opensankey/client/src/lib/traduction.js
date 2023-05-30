@@ -395,7 +395,7 @@ const resources = {
         'tooltipStructure':'Allows to display the structure of the diagram without proportion of the flows according to their value',
         'tooltipData':'Allows to display the data of the diagram',
         'tooltipSelection':'Allows to drag the nodes',
-        'tooltipHelp':'Additional informations about Sankey diagrams',
+        'tooltipHelp':'Show the help dialog',
         'tooltipAjoutNode':'Adds a node to the mouse click',
         'tooltipLiason':'Allows to create links between two existing nodes, from an existing node or to an existing node'
       },
@@ -813,7 +813,7 @@ const resources = {
         'tooltipStructure':'Permet d\'afficher la structure du diagramme sans proportion des flux selon leur valeur',
         'tooltipData':'Permet d\'afficher les données du diagramme',
         'tooltipSelection':'Permet de sélectionner ou de déplacer les noeuds',
-        'tooltipHelp':'Informations supplémentaires sur la représentation avec les diagrammes de Sankey',
+        'tooltipHelp':'Affiche le dialogue d\'aide',
         'tooltipLiason':'Permet de créer des flux entre deux noeuds existants, depuis un noeud existant ou vers un noeud existant'
       },
       welcome:{

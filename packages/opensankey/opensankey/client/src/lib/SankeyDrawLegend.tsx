@@ -43,7 +43,7 @@ export const OpenSankeyDrawLegend = (
         .attr('x', 0)
         .attr('y', 20)
         .text(tag_group[1].group_name)
-        .attr('style', 'font-weight:bold')
+        .attr('style', 'font-weight:bold;font-size:25px')
         .call(wrap)
 
       const legendElements = legend.append('g')
@@ -166,7 +166,8 @@ export const OpenSankeyDrawLegend = (
         // Ajout du label
       legendElements.append('text')
         .attr('x', 35)
-        .attr('y', 20)
+        .attr('y', 26)
+        .attr('font-size','20px')
         .text(function (d) { return d[1].name })
         .call(wrap)
 
