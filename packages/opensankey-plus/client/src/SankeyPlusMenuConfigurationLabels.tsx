@@ -5,9 +5,10 @@ import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
-
-
-
+import ReactQuill,{Quill} from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import ImageResize from 'quill-image-resize-module-react';
+Quill.register('modules/imageResize', ImageResize);
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
@@ -240,6 +241,66 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       }
     })
   }
+
+  const isAllEditRaw = () => {
+    let visible = false
+    multi_selected_label.current.map(d => visible = (d.is_edit_raw) ? true : visible)
+    return visible
+  }
+
+  const modules = {
+    toolbar: [
+      [{ 'font': [] }],
+      [{ 'header': [1, 2, 3, 4, 5, false] }],
+      ['bold', 'italic', 'underline','strike'],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      [{"align":[]}],
+      
+      ['image'],
+      ['clean'],
+    ],
+    imageResize: {
+      parchment: Quill.import('parchment'),
+      modules: ['Resize', 'DisplaySize']
+    }
+  }
+  
+  const formats = ['font',
+    'header','size',
+    'bold', 'italic', 'underline', 'strike','color','background',
+    'list', 'bullet','image','align'
+  ]
+  //Create 2 editor : 
+  // - one in an editor when we can apply layout width buttons
+  // - one with raw html in case the editor can't do exactly what we want 
+  const editor_fo=<ReactQuill
+                    value={multi_selected_label.current.length>0?multi_selected_label.current[0].name:''}
+                    onChange={(evt) => {
+                      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+                        d.name =evt
+                      })
+                    }}
+                    onBlur={()=>{set_data({ ...data })}}
+                    theme="snow"
+                    modules={modules}
+                    formats={formats}
+                    readOnly={!is_activated}
+                  />
+  const editor_fo_raw=<Form.Control
+                        as="textarea"
+                        rows={5}
+                        disabled={is_activated?multi_selected_label.current.length != 1:true}
+                        value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
+                        onChange={
+                          (evt) => {
+                            multi_selected_label.current.map(label => label.name = evt.target.value)
+                            set_data({ ...data })
+                          }
+                        }
+                      />
+
   
    
   return <Accordion.Item
@@ -289,6 +350,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                     y: 50,
                     x_label: 50,
                     y_label: 12,
+                    is_edit_raw:false
                   }
                   data.labels[new_label.idLabel] = new_label
                   multi_selected_label.current = [new_label]
@@ -334,23 +396,24 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Row>
-              <FormLabel style={{color:is_activated?'#555555':'#DADADA'}} column sm={1}>Text:</FormLabel>
-              <Col sm={11}>
-                <Form.Control
-                  as="textarea"
-                  rows={5}
-                  disabled={is_activated?multi_selected_label.current.length != 1:true}
-                  value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
-                  onChange={
-                    (evt) => {
-                      multi_selected_label.current.map(label => label.name = evt.target.value)
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-            </Row>
+            {isAllEditRaw()?editor_fo_raw:editor_fo}
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col xs={4}>
+              <FormLabel style={{color:is_activated?'#555555':'#DADADA'}}>{t('LL.editorRaw')}</FormLabel>
+            </Col>
+            <Col xs={8}>
+              <Form.Check
+                inline
+                type='switch'
+                disabled={!is_activated}
+                checked={is_activated?isAllEditRaw():true}
+                onChange={evt => {
+                  multi_selected_label.current.map(d => d.is_edit_raw = evt.target.checked)
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
           </Form.Group>
           <Form.Group as={Row}>
             <Col xs={4}>

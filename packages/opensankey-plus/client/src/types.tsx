@@ -21,6 +21,7 @@ export interface SankeyPlusNode extends SankeyNode{
     iconVisible: boolean,
 
     has_FO:boolean,
+    is_FO_raw:boolean,
     FO_content:string,
 }
 
@@ -48,6 +49,8 @@ export interface SankeyPlusLabel {
   
     label_width: number,
     label_height: number,
+
+    is_edit_raw:boolean,
    
     x: number,
     y: number,

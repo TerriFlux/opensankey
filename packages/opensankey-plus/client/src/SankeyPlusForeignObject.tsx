@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState} from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
 import {  SankeyLink,TagsCatalog,SankeyDrawCurve} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
@@ -10,6 +10,10 @@ import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import {  getLinkValue,test_link_value } from 'open-sankey/dist/SankeyUtils'
 
+import ReactQuill,{Quill} from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import ImageResize from 'quill-image-resize-module-react';
+Quill.register('modules/imageResize', ImageResize);
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -22,12 +26,73 @@ export const SankeyPlusNodeFO = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean
 )=> {
+  const [value, setValue] = useState('');
 
   const isAllFOVisible = () => {
     let visible = false
     multi_selected_nodes.current.map(d => visible = (d.has_FO) ? true : visible)
     return visible
   }
+
+  const isAllFORaw = () => {
+    let visible = false
+    multi_selected_nodes.current.map(d => visible = (d.is_FO_raw) ? true : visible)
+    return visible
+  }
+
+  const modules = {
+    toolbar: [
+      [{ 'font': [] }],
+      [{ 'header': [1, 2, 3, 4, 5, false] }],
+      ['bold', 'italic', 'underline','strike'],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      [{"align":[]}],
+      
+      ['image'],
+      ['clean'],
+    ],
+    imageResize: {
+      parchment: Quill.import('parchment'),
+      modules: ['Resize', 'DisplaySize']
+    }
+  }
+  
+  const formats = ['font',
+    'header','size',
+    'bold', 'italic', 'underline', 'strike','color','background',
+    'list', 'bullet','image','align'
+  ]
+  //Create 2 editor : 
+  // - one in an editor when we can apply layout width buttons
+  // - one with raw html in case the editor can't do exactly what we want 
+  const editor_fo=<ReactQuill
+                    value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
+                    onChange={(evt) => {
+                      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                        d.FO_content =evt
+                      })
+                    }}
+                    onBlur={()=>{set_data({ ...data })}}
+                    theme="snow"
+                    modules={modules}
+                    formats={formats}
+                    readOnly={!is_activated?true:!isAllFOVisible()}
+                  />
+  const editor_fo_raw=<Form.Control
+                      as="textarea"
+                      rows={5}
+                      disabled={!is_activated?true:!isAllFOVisible()}
+                      value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
+                      onChange={(evt) => {
+                        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                          d.FO_content = evt.target.value
+                        })
+                        set_data({ ...data })
+                      }}
+                    />
+
 
   return <Tab eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info" style={{marginLeft:'auto'}}>Beta</Badge></>} >
     <OverlayTrigger
@@ -55,27 +120,27 @@ export const SankeyPlusNodeFO = (
           </Col>
         </Form.Group>
 
-
         <Form.Group as={Row}>
           <Col xs={4}>
-            <FormLabel style={{color:((is_activated)?isAllFOVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.FO.content')}</FormLabel>
+            <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.raw')}</FormLabel>
           </Col>
           <Col xs={8}>
-            <Form.Control
-              as="textarea"
-              rows={5}
-              disabled={!is_activated?true:!isAllFOVisible()}
-              value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
-              onChange={(evt) => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.FO_content = evt.target.value
-                })
+            <FormCheck inline
+              type='switch'
+              checked={isAllFORaw()}
+              disabled={!is_activated}
+              onChange={evt => {
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.is_FO_raw = evt.target.checked)
                 set_data({ ...data })
               }}
             />
-          
           </Col>
         </Form.Group>
+        {multi_selected_nodes.current.length>0?<Form.Group as={Row}>
+          {multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}
+        </Form.Group>:<></>}
+        
+        
      
       </Form></OverlayTrigger>
   </Tab>
