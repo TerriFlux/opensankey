@@ -712,10 +712,10 @@ export const agregation = (
   const dim_desagregated_nodes = Object.values(data.nodes).filter( n => {
     const cur_n_dim = n.dimensions[cur_dimension]
     return cur_n_dim && (
-        cur_n_dim.parent_name === cur_parentId ||
+      cur_n_dim.parent_name === cur_parentId ||
         (cur_n_dim.parent_name && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension] && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension].parent_name === cur_parentId)
     )
-    })
+  })
 
 
   if (control_display) {
@@ -846,10 +846,10 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
     if ( dim_name === '') {
       const the_child_names: string[] = []
       Object.values(data.nodes).forEach(n2 => {
-          if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
-              the_child_names.push(n2.name)
-          }
+        if (dim_names[0] in n2.dimensions && n2.dimensions[dim_names[0]].parent_name == n.idNode) {
+          the_child_names.push(n2.name)
         }
+      }
       )
       set_dim_name(dim_names[0])
       set_child_names(the_child_names)
@@ -874,10 +874,10 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                       set_dim_name(evt.target.value)
                       const the_child_names: string[] = []
                       Object.values(data.nodes).forEach(n2 => {
-                          if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
-                              the_child_names.push(n2.name)
-                          }
+                        if (evt.target.value in n2.dimensions && n2.dimensions[evt.target.value].parent_name == n.idNode) {
+                          the_child_names.push(n2.name)
                         }
+                      }
                       )
                       set_child_names(the_child_names)
                     }}
