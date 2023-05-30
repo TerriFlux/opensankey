@@ -204,7 +204,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_pagination=[pagination_intro]
   const external_content={'intro':intro} 
 
-  const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content):<></>
+  const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu):<></>
 
 
   //- 1. Builds Configuration Menus
