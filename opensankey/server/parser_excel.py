@@ -268,19 +268,22 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         for fluxTag in fluxTags:
             if fluxTag == 'flux_types':
                 fluxTag = DATA_TYPE_LABEL
-                if fluxTag not in columns:
-                    # row_flux_tags.append('Donnée collectée')
-                    row_flux_tags.append('')
-                    continue
+            if fluxTag not in columns:
+                # row_flux_tags.append('Donnée collectée')
+                row_flux_tags.append('')
+                continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row, columns.index(fluxTag)])
 
         existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
                           == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        val = mfa_input[sheet_name].iat[row, columns.index(DATA_VALUE)]
-        if val is None:
-            val = ''
+        if DATA_VALUE in columns:
+            val = mfa_input[sheet_name].iat[row, columns.index(DATA_VALUE)]
+            if val is None:
+                val = ''
+            else:
+                val = float(val)
         else:
-            val = float(val)
+            val = ''
         display_val = ''
         is_existing_link = len(existing_links) > 0
         if is_existing_link:
@@ -503,7 +506,11 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     continue
                 tag_group_names = mfa_input[TAG_SHEET].iat[i, 0].split('/')
                 tag_names = mfa_input[TAG_SHEET].iat[i, 2].split('/')
-                colors = mfa_input[TAG_SHEET].iat[i, 5].split('/')
+                colors = mfa_input[TAG_SHEET].iat[i, 5]
+                if colors is not None:
+                    colors = mfa_input[TAG_SHEET].iat[i, 5].split('/')
+                else:
+                    colors = ['']
                 for j, tag_group_name in enumerate(tag_group_names):
                     tmp2 = tag_names[j].split(':')
                     tmp2 = [s.strip() for s in tmp2]
