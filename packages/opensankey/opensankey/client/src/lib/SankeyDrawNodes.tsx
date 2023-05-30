@@ -453,7 +453,10 @@ export const OpenSankeyDrawNodes = (
         return node_stroke_width(dd,multi_selected_nodes)
       }
       )
-    // Gestion de la tooltip
+
+    // Add tooltip when mouse hover the <g> element that contains shape/label/icon (everything that compose a node)
+    d3.selectAll(' .opensankey .gg_nodes')
+      // Gestion de la tooltip
       .on('mouseover', function (event, d) {
         node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
       })
