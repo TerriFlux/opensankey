@@ -783,8 +783,8 @@ export const convert_nodes = (
       }
       // Convert image to ForeignObject
       if((n as unknown as {image:string}).image){
-        console.log((n as unknown as {image:string}).image);
         (n as unknown as {has_FO:boolean}).has_FO=true;
+        (n as unknown as {is_FO_raw:boolean}).is_FO_raw=false;
         (n as unknown as {FO_content:string}).FO_content=(n as unknown as {image:string}).image;
         
       }

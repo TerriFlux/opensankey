@@ -361,7 +361,9 @@ const resources = {
         'maj':'Uppercase',
         'ita':'Italic',
         'centre':'Centre',
-        'textAsHTML':'foreignObject label'
+        'textAsHTML':'foreignObject label',
+        'editorRaw':'Editeur brut'
+
       },
       Banner:{
         'data':'Data',
@@ -777,7 +779,9 @@ const resources = {
         'maj':'Majuscule',
         'ita':'Italique',
         'centre':'Centre',
-        'textAsHTML':'Label foreignObject'
+        'textAsHTML':'Label foreignObject',
+        'editorRaw':'Editeur brut'
+
       },
       Banner:{
         'data':'Données',
