@@ -378,7 +378,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   )
 
 
-  OpenSankeyDrawLegend(data,getLinkValue)
+  OpenSankeyDrawLegend(data,getLinkValue,t)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
