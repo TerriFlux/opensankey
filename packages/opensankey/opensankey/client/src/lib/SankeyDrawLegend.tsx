@@ -4,11 +4,12 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { link_visible} from './SankeyUtils'
+import { TFunction } from 'i18next'
 
 export const OpenSankeyDrawLegend = (
   data:SankeyData, 
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  t:TFunction
 ) => {
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
@@ -18,6 +19,7 @@ export const OpenSankeyDrawLegend = (
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
     let dx = 0
+    let dy = 0
     const pas = data.legend_width
     if (pas < 50) {
       // prevent crash at the line .bounds({ height: 100, width: pas - 40 }) below
@@ -32,7 +34,7 @@ export const OpenSankeyDrawLegend = (
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.assign({},data.nodeTags,data.fluxTags,data.dataTags)
+    const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
         
       // Ajout du tagGroup.name  
@@ -76,7 +78,8 @@ export const OpenSankeyDrawLegend = (
           return 'tag_'+d[1].name.replaceAll(' ','__')
         })
         .attr('transform', function (d, i) {
-          return 'translate(' + dx + ',' + (i * 30 + 30) + ')'
+          dy=(i * 30 + 30)
+          return 'translate(' + dx + ',' + dy + ')'
         })
         .on('mouseover',(event,d)=>{
 
@@ -174,6 +177,95 @@ export const OpenSankeyDrawLegend = (
       dx = dx + pas
 
     })
+
+    if(Object.values(data.dataTags).length>0){
+      dy+=(dy>0?30:0)
+      legend.append('text')
+      .attr('transform', function () {
+        dy+=30
+        return 'translate(' + 0 + ', '+dy+' )'
+      })
+      .attr('x', 0)
+      .attr('y', 20)
+      .text(t('data_filter'))
+      .attr('style', 'font-weight:bold;font-size:25px')
+    }
+    
+    
+    const data_tags = Object.assign({},data.dataTags)
+    const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
+    Object.entries(data_tags).forEach(tag_group => {
+        
+      // Ajout du tagGroup.name  
+      legend.append('text')
+        .attr('transform', function () {
+          dy+=30
+          return 'translate(' + 0 + ', '+dy+' )'
+        })
+        .attr('x', 0)
+        .attr('y', 20)
+        .text(tag_group[1].group_name+':')
+        .attr('style', 'font-size:25px')
+        .call(wrap)
+      
+
+
+      const legendElements = legend.append('g')
+        .selectAll('g')
+        // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
+        .data(Object.entries(tag_group[1].tags)
+        .filter(tag=>{
+          return tag[1].selected
+        }))
+        .enter()
+        .append('svg:g')
+        // on filtre les tags avec selected à true (Visible)
+        .attr('id',d=>{
+          return 'tag_'+d[1].name.replaceAll(' ','__')
+        })
+        .attr('transform', function (d, i) {
+          dy+=(i * 30 + 30)
+          return 'translate(' + 0 + ',' +dy + ')'
+        })
+
+
+      if(show_data){// Ajout du shape  
+      legendElements.append('rect')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('x', 0)
+        .attr('y', 10)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
+        .style('fill-opacity', 1)
+        }
+        // Ajout du label
+      legendElements.append('text')
+        .attr('x', show_data?35:0)
+        .attr('y', 26)
+        .attr('font-size','20px')
+        .text(function (d) { return (show_data?'':'- ')+d[1].name })
+        .call(wrap)
+
+      dx = dx + pas
+
+    })
+
+    d3.selectAll(' .opensankey #svg .g_scale').remove()
+    // Draw Scale
+    const g_scale=d3.select(' .opensankey #svg').append('g').attr('class','g_scale').style('transform', 'translate(5px,' + (data.height-80) + 'px)')
+    g_scale.append('text').text(t('scale')+':').style('font-size','20px')
+
+    const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(5px, 5px)')
+    g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+    g_draggable.append('text').style('transform','translate(4px,25px)').text(data.user_scale/2+' unitées')
+
+    g_draggable.call(d3.drag<SVGGElement,unknown>()
+    .subject(Object).on('drag', function (event) {
+      d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+    }))
+
   }
 
   drawLegend()
