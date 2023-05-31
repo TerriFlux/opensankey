@@ -418,7 +418,8 @@ const resources = {
       },
       'DisplayWelcome':'Display Bienvenue',
       'dontSeeAgain':'Don\'t show again',
-      'data_filter':'Data selected'
+      'data_filter':'Data selected',
+      'scale':'Link value scale'
 
     }
   },
@@ -836,7 +837,9 @@ const resources = {
       },
       'DisplayWelcome':'Afficher Bienvenue',
       'dontSeeAgain':'Ne plus montrer',
-      'data_filter':'Filtre données'
+      'data_filter':'Filtre données',
+      'scale':'Échelle de valeur pour la valeur des flux'
+
 
 
     }

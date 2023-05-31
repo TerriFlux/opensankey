@@ -252,6 +252,20 @@ export const OpenSankeyDrawLegend = (
 
     })
 
+    d3.selectAll(' .opensankey #svg .g_scale').remove()
+    // Draw Scale
+    const g_scale=d3.select(' .opensankey #svg').append('g').attr('class','g_scale').style('transform', 'translate(5px,' + (data.height-80) + 'px)')
+    g_scale.append('text').text(t('scale')+':').style('font-size','20px')
+
+    const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(5px, 5px)')
+    g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+    g_draggable.append('text').style('transform','translate(4px,25px)').text(data.user_scale/2+' unitées')
+
+    g_draggable.call(d3.drag<SVGGElement,unknown>()
+    .subject(Object).on('drag', function (event) {
+      d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+    }))
+
   }
 
   drawLegend()
