@@ -1055,3 +1055,6 @@ textarea {
 .carousel-control-next:hover, .carousel-control-prev:hover{
 	opacity: 0.8;
 }
+.MenuNavigation.container .col-lg-auto{
+	padding: 0px;
+}
