@@ -226,7 +226,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     'node_visible': 1,
                     'label_visible': 1,
                     'shape_visible': 1,
-                    'color': 'grey',
+                    'color': '#808080',  # grey
                     'tags': {}
                 }
                 node_index = node_index+1
@@ -243,7 +243,7 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                     'node_visible': 1,
                     'label_visible': 1,
                     'shape_visible': 1,
-                    'color': 'grey',
+                    'color': '#808080',  # grey
                     'tags': {}
                 }
                 node_index = node_index+1
@@ -348,11 +348,11 @@ def parse_nodes(mfa_input, nodes, nodeTags):
                 node_visible = 1
             else:
                 node_visible = 0
-            color = 'grey'
-            if NODES_SANKEY in nodes_cols:
+            color = '#808080'  # grey
+            if NODES_COLOR in nodes_cols:
                 color = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_COLOR)]
                 if color is None or type(color) != str and math.isnan(color) or color == '':
-                    color = 'grey'
+                    color = '#808080'  # grey
                 if not is_hex(color):
                     try:
                         color = webcolors.name_to_hex(color)
@@ -379,7 +379,10 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             new_node = nodes[name]
 
         for _, node_tag_name in enumerate(nodeTags.keys()):
-            tag_value = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(node_tag_name)]
+            try:
+                tag_value = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(node_tag_name)]
+            except Exception:
+                continue
             if tag_value is None or tag_value == '':
                 continue
             if type(tag_value) != str and math.isnan(tag_value):
@@ -506,10 +509,9 @@ def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
                     continue
                 tag_group_names = mfa_input[TAG_SHEET].iat[i, 0].split('/')
                 tag_names = mfa_input[TAG_SHEET].iat[i, 2].split('/')
-                colors = mfa_input[TAG_SHEET].iat[i, 5]
-                if colors is not None:
+                try:
                     colors = mfa_input[TAG_SHEET].iat[i, 5].split('/')
-                else:
+                except Exception:
                     colors = ['']
                 for j, tag_group_name in enumerate(tag_group_names):
                     tmp2 = tag_names[j].split(':')
