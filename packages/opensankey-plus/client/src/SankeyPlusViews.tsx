@@ -1707,7 +1707,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
             delay={500}
             overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
             >
-              <FormGroup>
                 <Button disabled={!connected} variant={'info'}
                 onClick={() => {
                   const ev = document
@@ -1717,7 +1716,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
                   }
                 }}
                 >{view==='none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
-              </FormGroup>
             </OverlayTrigger>:<></>}
             
             <Button variant={'success'}
@@ -1742,9 +1740,10 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
             }}>
               <FaCaretSquareRight />
             </Button>
+            {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
           </ButtonGroup>
         </FormGroup>
-        {(master_data?master_data:{view:[] as string[]}).view.length>0?<Col>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</Col>:<></>}
+            
       </Row>
     </Col>
       ]
