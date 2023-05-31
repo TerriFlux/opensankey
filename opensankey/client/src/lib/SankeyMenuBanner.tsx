@@ -1,5 +1,5 @@
-import React, {  useState } from 'react'
-import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Dropdown, DropdownButton } from 'react-bootstrap'
+import React, {  useRef, useState } from 'react'
+import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Dropdown, DropdownButton,Overlay } from 'react-bootstrap'
 import {  SankeyData, TagsGroup, TagsCatalog,SankeyLink } from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
@@ -557,6 +557,10 @@ export const toolbar_builder = (
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
+  const [show_link_threshold,set_show_link_threshold]=useState(false)
+  const target_link_threshold=useRef(null)
+  const [show_detail_level,set_show_detail_level]=useState(false)
+  const target_detail_level=useRef(null)
   /**
    * Change the mouse behavior
    *
@@ -1110,37 +1114,74 @@ export const toolbar_builder = (
   ui.push(
     <FormGroup as={Col} lg='auto'>
       {mouse_mode_edition}
-      {(node_filter || flux_filter || (Object.values(data.dataTags).length>0))?
+      {(node_filter || flux_filter || (Object.values(data.dataTags).length>0))?<>
+      <OverlayTrigger
+        key={'tooltip-filter'}
+        placement={'right'}
+        rootClose
+        overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
+      
         <DropdownButton autoClose={false} as={ButtonGroup} lg='auto' title={t('Banner.filter')}>
           {item_dropdown_filter}
         </DropdownButton>
+      </OverlayTrigger>
+        </>
         :<></>}
         
       <ButtonGroup as={Col} lg='auto' >
 
-        {(level_filter)?<OverlayTrigger
-          key={'tooltip-details-level'}
-          placement={'left'}
-          trigger={'click'}
+        {/* Add the button to choose the aggregation level  */}
+        {(level_filter)?<>
+        <OverlayTrigger
+          key={'tooltip-nodes-level'}
+          placement={'bottom'}
           rootClose
-          overlay={detail_level}>
-          <Button variant='warning' id='button-details-level' >
+          overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
+          <Button ref={target_detail_level} variant='warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
             <FontAwesomeIcon icon={faFolderTree} />
           </Button>
         </OverlayTrigger>
+        <Overlay
+            key={'popover-nodes-level'}
+            placement={'left'}
+            target={target_detail_level}
+            rootClose
+            show={show_detail_level}
+            onHide={()=>{set_show_detail_level(false)}}
+            >
+            {detail_level}
+        </Overlay></>
           :
           <></>
         }
+        {/* Tooltip for level filter */}
         <OverlayTrigger
-          key={'tooltip-link-filter'}
-          placement={'left'}
-          trigger={'click'}
-          rootClose
-          overlay={link_filter}>
-          <Button variant='danger' id='button-filter-link' >
+          key={'tooltip-link-filter2'}
+          placement={'bottom'}
+          delay={500}
+          overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
+        >
+          <Button ref={target_link_threshold} variant='danger' id='button-filter-link'
+              onClick={()=>{
+                set_show_link_threshold(!show_link_threshold)
+              }}
+            >
             <FontAwesomeIcon icon={faFilter} />
           </Button>
         </OverlayTrigger>
+
+        {/* Popover to display the link-filter */}
+        <Overlay
+            key={'popover-link-filter'}
+            placement={'left'}
+            target={target_link_threshold}
+            rootClose
+            show={show_link_threshold}
+            onHide={()=>{set_show_link_threshold(false)}}
+            >
+            {link_filter}
+        </Overlay>
+
 
         <OverlayTrigger
           key={'tooltip-adjust-h'}
