@@ -418,6 +418,8 @@ const resources = {
       },
       'DisplayWelcome':'Display Bienvenue',
       'dontSeeAgain':'Don\'t show again',
+      'data_filter':'Data selected'
+
     }
   },
   //=======================================================
@@ -834,6 +836,8 @@ const resources = {
       },
       'DisplayWelcome':'Afficher Bienvenue',
       'dontSeeAgain':'Ne plus montrer',
+      'data_filter':'Filtre données'
+
 
     }
   }
