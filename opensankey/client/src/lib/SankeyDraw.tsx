@@ -281,7 +281,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
     
-    d3.select(' .opensankey #svg').selectAll('.g_label').remove()
   
     // try {
     //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
@@ -349,9 +348,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             }
           }}>
             <g className='grid' id='grid'></g>
-            <g className='g_legend' id='g_legend'></g>
             <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
             <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+            <g className='g_legend' id='g_legend'></g>
           </svg>
         </div>
       </div>
