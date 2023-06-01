@@ -360,7 +360,7 @@ const branchAnimate = (
       if(arrow!==undefined && arrow!= null){        
         const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-        const t=(data.links[idLink].gradient)?colorTarget:link_color(data.links[idLink],getLinkValue)
+        const t=(data.links[idLink].gradient)?colorTarget:link_color(data.links[idLink],data,getLinkValue)
         if(t){
           arrow.attr('fill',t)
           arrow.attr('opacity',0.85)
