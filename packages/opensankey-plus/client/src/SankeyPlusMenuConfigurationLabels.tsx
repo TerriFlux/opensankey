@@ -141,12 +141,15 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     return isHTML
   }
   const allLabelTransparent = () => {
-    let transparent = false
-
+    let display_size = true
+    let opa = 100
+    if (multi_selected_label.current.length != 0) {
+      opa = multi_selected_label.current[0].opacity
+    }
     multi_selected_label.current.map((d) => {
-      transparent = (d.transparent) ? true : transparent
+      display_size = (d.opacity == opa) ? display_size : false
     })
-    return transparent
+    return (display_size) ? opa : 0
   }
   const allLabelBorderTransparent = () => {
     let transparent = false
@@ -337,7 +340,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                     label_height: 25,
                     color: 'white',
                     color_border: 'black',
-                    transparent: false,
+                    opacity: 100,
                     transparent_border: false,
                     position_vert: 'middle',
                     position_horiz: 'left',
@@ -475,14 +478,34 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             <Col xs={4}>
               <FormLabel style={{color:is_activated?'#555555':'#DADADA'}}>{t('LL.ft')}</FormLabel>
             </Col>
-            <Col xs={8}>
-              <Form.Check
-                inline
-                type='switch'
+            <Col xs={5}>
+              <Form.Range
+                max={100}
+                min={0}
+                step={1}
                 disabled={!is_activated}
-                checked={allLabelTransparent()}
+                value={allLabelTransparent()}
                 onChange={evt => {
-                  multi_selected_label.current.map(d => d.transparent = evt.target.checked)
+                  let value=+evt.target.value
+                  multi_selected_label.current.map(d => d.opacity = value)
+                  set_data({ ...data })
+              
+                  
+                }}
+              />
+            </Col>
+            <Col xs={3}>
+              <Form.Control
+                type='number'
+                max={100}
+                min={0}
+                step={1}
+                disabled={!is_activated}
+                value={allLabelTransparent()}
+                
+                onChange={evt => {
+                  let value=+evt.target.value
+                  multi_selected_label.current.map(d => d.opacity = value)
                   set_data({ ...data })
                 }}
               />

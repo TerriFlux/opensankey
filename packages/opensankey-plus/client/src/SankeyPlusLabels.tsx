@@ -30,7 +30,7 @@ export const SankeyPlusDrawLabels = (
       gg_label.append('rect')
         .attr('width', d.label_width).attr('height', d.label_height)
         .attr('fill', d.color)
-        .style('fill-opacity', d.transparent ? 0 : 1)
+        .style('fill-opacity', +(d.opacity/100))
         .attr('stroke', d.color_border)
         .attr('stroke-opacity', (d.transparent_border && !multi_selected_label.current.includes(d)) ? 0 : 1)
         .attr('stroke-width', (multi_selected_label.current.includes(d))?3:1)

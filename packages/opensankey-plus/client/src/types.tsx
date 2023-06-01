@@ -34,7 +34,7 @@ export interface SankeyPlusLabel {
     // identification
     idLabel: string,
     name: string,
-    transparent:boolean,
+    opacity:number,
     color:string,
     color_border:string,
     transparent_border:boolean,
