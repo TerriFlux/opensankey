@@ -17,7 +17,6 @@ export const SankeyPlusDrawLabels = (
   min_width_and_height:(data:SankeyPlusData)=>number[]
 ) => {
   const add_labels = () => {
-    d3.selectAll(' .opensankey #svg #g_label g').remove()
     const g_label = d3.select(' .opensankey #svg #g_label')
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
@@ -141,6 +140,7 @@ export const SankeyPlusDrawLabels = (
         .call(dragLabelWidthHeightEvent(d,data,set_data))
     })
   }
+  d3.selectAll(' .opensankey #svg #g_label').remove()
     
   // Insert la balise qui contient tous les lables libres avant la balise de la légende
   d3.select('.opensankey #svg').insert('g','#g_nodes').attr('class','g_label').attr('id','g_label')     
