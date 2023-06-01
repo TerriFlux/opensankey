@@ -350,7 +350,7 @@ const resources = {
       LL:{
         'hl':'Label Height',
         'll':'Label Width',
-        'ft':'Transparent Background',
+        'ft':'Background opacity',
         'cfl':'Background Color',
         'bt':'Transparent border',
         'cbl':'Border Color',
@@ -772,7 +772,7 @@ const resources = {
       LL:{
         'hl':'Hauteur label',
         'll':'Largeur label',
-        'ft':'Fond transparent',
+        'ft':'Opacité du fond',
         'cfl':'Couleur fond label',
         'bt':'Bordure transparent',
         'cbl':'Couleur bordure label',
