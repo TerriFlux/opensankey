@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,differenceType } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,differenceType,SankeyPlusLabel } from './types'
 import colormap from 'colormap'
 
 interface ConvertSankeyNode {
@@ -92,6 +92,7 @@ interface ConvertSankeyData {
   show_structure: boolean | string
   show_data?: boolean
   view:{id: string,view_data: object,nom:string,details:string}[]
+  labels:{[x: string]:SankeyPlusLabel}
 }
 
 interface ConvertSankeyValue {
@@ -1304,6 +1305,17 @@ export const convert_data = (
   convert_tags(data)
   convert_nodes(data)
   convert_links(data)
+
+
+// CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
+Object.values(data_to_convert.labels).forEach(l=>{
+  if(l.transparent!==undefined){
+    l.opacity=l.transparent?0:100;
+    delete ((l as unknown) as SankeyPlusLabel).transparent
+  }
+})
+
+
   if (!data_to_convert.view) {
     return
   }
