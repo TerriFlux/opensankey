@@ -197,7 +197,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           svgSankey.attr('viewBox', null)
         
           d3.select(' .opensankey #svg')
-            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')        
+            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
+          d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(1/((evt.transform.k<1)?evt.transform.k:1))+')')
+          
         
         }))
       .on('dblclick.zoom', null);
