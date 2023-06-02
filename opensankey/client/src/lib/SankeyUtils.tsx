@@ -220,7 +220,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
         let target_node
         try {
           target_node = nodes[link.idTarget]
@@ -268,7 +268,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
         let source_node
         try {
           source_node = nodes[link.idSource]
@@ -1397,7 +1397,7 @@ export const hideNullFluxNodes = (
           //alert('Corruption du diagramme')
           return ''
         }
-        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+        if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val.extension!.free_visible) {
             total_input +=1
@@ -1419,7 +1419,7 @@ export const hideNullFluxNodes = (
           //alert('Corruption du diagramme')
           return ''
         }
-        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+        if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val.extension!.free_visible) {
             total_input +=1
@@ -1497,6 +1497,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   const scale=vertical?(vertical_visible_size/data.height):(visible_size/data.width)
   const zoomed=()=> {
     d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+')')
+    d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(1/((scale<1)?scale:1))+')')
     d3.select(' .opensankey #svg')
       .style('border', Math.round(2 ) + 'px solid #d3d3d3')
       .style('width', data.width + 'px')
