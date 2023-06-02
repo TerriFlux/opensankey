@@ -28,7 +28,12 @@ export const OpenSankeyDrawLegend = (
 
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
 
-    const legend = d3.select(' .opensankey #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px)').append('g')
+    const transform_svg=d3.select('.opensankey #svg').attr('transform')
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+
+    const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+
+    const legend = d3.select(' .opensankey #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_for_legend)+')').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -249,7 +254,8 @@ export const OpenSankeyDrawLegend = (
 
     const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
     g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-    g_draggable.append('text').style('transform','translate(5px,25px)').text(data.user_scale/2)
+    g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
+
 
     g_draggable.call(d3.drag<SVGGElement,unknown>()
     .subject(Object).on('drag', function (event) {
