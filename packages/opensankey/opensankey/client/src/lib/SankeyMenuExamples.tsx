@@ -34,7 +34,6 @@ const ExempleItemPropTypes = {
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   launch: PropTypes.func.isRequired,
   reinitialization: PropTypes.func.isRequired,
-  set_user_scale:PropTypes.func.isRequired
 }
 
 /**
@@ -50,7 +49,7 @@ type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
  * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
  * @returns {*}
  */
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,reinitialization,set_user_scale}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,reinitialization}: ExempleItemTypes) => {
   return (
     <>
       { ('Files' in exemple_menu) 
@@ -80,7 +79,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                   launch(path, url_prefix)
                 } 
                 uploadExemple(
-                  path, url_prefix, data, set_data,reinitialization,set_user_scale
+                  path, url_prefix, data, set_data,reinitialization
                 )} 
               }
             >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
@@ -121,7 +120,6 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_nodes={multi_selected_nodes}
                     launch={launch}
                     reinitialization={reinitialization}
-                    set_user_scale={set_user_scale}
                   />
                 </NavDropdown>
               </>

@@ -641,6 +641,8 @@ export const toolbar_builder = (
             <FormControl
               type="text"
               value={user_scale}
+              isInvalid={user_scale!=data.user_scale}
+
               onChange={evt => {
                 set_user_scale(+evt.target.value)
               }}
@@ -649,7 +651,7 @@ export const toolbar_builder = (
                 set_data({ ...data })
               }}
             />
-            <FormControl.Feedback />
+            <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
             <Form.Text>    ({t('MEP.vp100')})</Form.Text>
           </Col>
         </Form.Group>
