@@ -280,7 +280,7 @@ export const OpenSankeyDrawLinks = (
     const gg_links = d3
       .select('.opensankey #g_links')
       .selectAll('.gg_links')
-      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display))
+      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource] && data.nodes[l.idSource].display && data.nodes[l.idTarget] && data.nodes[l.idTarget].display))
       .enter()
       .append('g')
       .attr('id', d => 'gg_' + d.idLink)
