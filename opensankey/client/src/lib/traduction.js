@@ -79,6 +79,7 @@ const resources = {
         }
       },
       MEP:{
+        'onBlur':'Value is applied when we leave the input',
         'Echelle':'Scale of diagram',
         'MaxFlux':'Maximal value for links (px)',
         'vp100':'value for 100px',
@@ -501,6 +502,7 @@ const resources = {
         }
       },
       MEP:{
+        'onBlur':'La valeur sera appliqué dès que l\'on quitte l\'input',
         'Echelle': 'Echelle du diagramme',
         'MaxFlux': 'Taille maximale des flux (px)',
         'vp100':'valeur pour 100px',

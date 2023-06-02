@@ -107,7 +107,6 @@ const MenuPropTypes = {
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
-  set_user_scale:PropTypes.func.isRequired,
   name_user:PropTypes.string.isRequired
   
 
@@ -252,7 +251,6 @@ export const OpenSankeyMenus = (
   set_show_modalTemplate:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   externale_save_item:JSX.Element[],
-  set_user_scale:(n:number)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   return  [
@@ -286,7 +284,6 @@ export const OpenSankeyMenus = (
                 convert_data(new_data)
                 complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
                 set_nodes_level(data)
-                set_user_scale(new_data.user_scale)
                 set_data(new_data)
                 const test = document.getElementsByClassName('navbar')
                 let margin_top = 0
@@ -395,7 +392,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     loginOut,
     unsetTokens,
     min_width_and_height,
-    set_user_scale,
     name_user
   }
 ) => {
@@ -429,7 +425,6 @@ const Menu: FunctionComponent<MenuTypes> = (
           const new_data=Object.assign(default_sankey_data(),processExample(server_data))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
-          set_user_scale(new_data.user_scale)
           set_data({ ...new_data })
           //set_show_load(false)
         } catch(err) {
