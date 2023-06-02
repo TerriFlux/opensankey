@@ -195,11 +195,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select(' .opensankey #svg')
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
           svgSankey.attr('viewBox', null)
-        
+        const scale_legend=1/((evt.transform.k<1)?evt.transform.k:1)
           d3.select(' .opensankey #svg')
             .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
-          d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(1/((evt.transform.k<1)?evt.transform.k:1))+')')
-          
+          d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_legend)+')')
+          d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
+
         
         }))
       .on('dblclick.zoom', null);
