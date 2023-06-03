@@ -276,3 +276,30 @@ export interface differenceType{
   lhs?:object,
   item:{kind:string,lhs?:object}
 }
+
+export interface SankeyPlusLabel {
+  // identification
+  idLabel: string,
+  name: string,
+  opacity:number,
+  transparent?:boolean, //depreciated, use opacity
+  color:string,
+  color_border:string,
+  transparent_border:boolean,
+  position_vert:string,
+  position_horiz:string,
+  isTextHTML:boolean,
+
+  font_size:number,
+  font_weight:boolean,
+  font_style:boolean,
+  font_uppercase:boolean,
+
+  label_width: number,
+  label_height: number,
+ 
+  x: number,
+  y: number,
+  x_label: number,
+  y_label: number,
+}

@@ -1,4 +1,4 @@
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes } from './types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes,SankeyPlusLabel} from './types'
 import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
@@ -490,31 +490,7 @@ export const updateLayout = (
     // }    
   }
 
-  interface SankeyPlusLabel {
-    // identification
-    idLabel: string,
-    name: string,
-    transparent:boolean,
-    color:string,
-    color_border:string,
-    transparent_border:boolean,
-    position_vert:string,
-    position_horiz:string,
-    isTextHTML:boolean,
   
-    font_size:number,
-    font_weight:boolean,
-    font_style:boolean,
-    font_uppercase:boolean,
-  
-    label_width: number,
-    label_height: number,
-   
-    x: number,
-    y: number,
-    x_label: number,
-    y_label: number,
-  }
 
   (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
   for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {

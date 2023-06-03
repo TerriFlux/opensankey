@@ -1048,3 +1048,13 @@ textarea {
 .multidropdown_filter_node_link{
 	max-width: 250px;
 }
+
+.carousel-control-next, .carousel-control-prev,.carousel-control-next:active, .carousel-control-prev:active,.carousel-control-next:focus, .carousel-control-prev:focus{
+	opacity: 0;
+}
+.carousel-control-next:hover, .carousel-control-prev:hover{
+	opacity: 0.8;
+}
+.MenuNavigation.container .col-lg-auto{
+	padding: 0px;
+}
