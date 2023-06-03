@@ -781,7 +781,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
       return false
     }
   }
-  if (!data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget].node_visible) {
+  if (!data_s.nodes[l.idSource] || !data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget] || !data_s.nodes[l.idTarget].node_visible) {
     return false
   }
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
@@ -1498,6 +1498,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   const zoomed=()=> {
     d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+')')
     d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(1/((scale<1)?scale:1))+')')
+    d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)/((scale<1)?scale:1))))
     d3.select(' .opensankey #svg')
       .style('border', Math.round(2 ) + 'px solid #d3d3d3')
       .style('width', data.width + 'px')

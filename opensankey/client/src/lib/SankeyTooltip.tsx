@@ -225,12 +225,12 @@ export const nodeTooltipsContent = (
       } 
       if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
-        t += '<tr><td>' + source_name + '</td>'
+        t += '<tr><td style="white-space: nowrap;">' + source_name + '</td>'
         t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
         if (n.inputLinksId.length>1) {
           const percent = Math.round(((the_value)?the_value:0)*100/total)
           t += '<td>'+ percent + '%</td>'
-          Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
+          Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td style="white-space: nowrap;">'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
         } else {
           t += '<td></td></tr>'          
         }
@@ -288,12 +288,12 @@ export const nodeTooltipsContent = (
         }
         if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
-          t += '<tr><td>' + target_name + '</td>'
+          t += '<tr><td style="white-space: nowrap;">' + target_name + '</td>'
           t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value:0)*100/total)
             t += '<td>'+ percent + '%</td>'
-            Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td>'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
+            Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td style="white-space: nowrap;">'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
           } else {
             t += '<td></td></tr>'          
           }
@@ -317,7 +317,7 @@ export const nodeTooltipsContent = (
         header_written = true        
       }
       has_parent = true
-      t += '<td>' + data.nodes[n.dimensions[dim].parent_name as string].name +'</td>'
+      t += '<td style="white-space: nowrap;">' + data.nodes[n.dimensions[dim].parent_name as string].name +'</td>'
     }
     const desagregate_nodes = Object.values(data.nodes).filter( node => node.dimensions[dim] && node.dimensions[dim].parent_name === n.idNode )
     if (desagregate_nodes.length>0) {
@@ -329,7 +329,7 @@ export const nodeTooltipsContent = (
       if (!has_parent) {
         t += '<td></td>'        
       }
-      t += '<td>'
+      t += '<td style="white-space: nowrap;">'
       desagregate_nodes.forEach(n=> t+=n.name+'<br>')
       t += '</td>'
     } else {

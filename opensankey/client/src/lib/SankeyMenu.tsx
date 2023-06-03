@@ -723,6 +723,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   additional_shortcut_item:JSX.Element[],
   external_pagination:JSX.Element[],
   external_content:{[s:string]:JSX.Element},
+  exemple_menu: object,
 )=>{
     
 
@@ -761,17 +762,30 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   </>
   external_content['rc']=content_rc
 
+  const tmp=JSON.parse(JSON.stringify(exemple_menu))
+    let list_template_data=[] as string[]
+    // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
+    if(Object.keys(tmp).length!==0 && Object.keys(tmp).includes('OpenSankey') && Object.keys(tmp['OpenSankey']).includes('easy_template') ){
+        list_template_data=tmp['OpenSankey']['easy_template'].filter((f:string)=>!f.includes('.xlsx'))
+    // Si l'un des sous dossier d'OpenSankey dans exemple_menu est expert_template alors ajoute les modèles expert à la liste des modèles
+        if( Object.keys(tmp['OpenSankey']).includes('expert_template') ){
+          list_template_data.push(tmp['OpenSankey']['expert_template'])
+          list_template_data=list_template_data.flat()
+        }
+    }
 
-  const content_carousel=<Carousel variant='dark'>
-    <Carousel.Item>
-      <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_1.png'   style={{'objectFit':'contain','width':'100%'}}   />
-      <Carousel.Caption><p>{t('welcome.exemple1')}</p></Carousel.Caption>
-    </Carousel.Item>
+   
+  const content_carousel=<Carousel variant='dark' >
+    {list_template_data.map((_,idx) =>
+        {
+        const title=_.split('.').splice(0,1).join('')
+        return (<Carousel.Item>
+          <img src={'/fm/userfiles/OpenSankey/image_preview/'+title+'.png'}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
+          <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption>
+        </Carousel.Item>)
+      })
+    }
 
-    <Carousel.Item>
-      <img src='/fm/userfiles/OpenSankey/image_carousel/exemple_2.png'   style={{'objectFit':'contain','width':'100%'}}   />
-      <Carousel.Caption><p>{t('welcome.exemple2')}</p></Carousel.Caption>
-    </Carousel.Item>
   </Carousel>
   external_content['carousel']=content_carousel
     

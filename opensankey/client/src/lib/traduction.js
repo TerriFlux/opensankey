@@ -350,7 +350,7 @@ const resources = {
       LL:{
         'hl':'Label Height',
         'll':'Label Width',
-        'ft':'Transparent Background',
+        'ft':'Background opacity',
         'cfl':'Background Color',
         'bt':'Transparent border',
         'cbl':'Border Color',
@@ -361,7 +361,9 @@ const resources = {
         'maj':'Uppercase',
         'ita':'Italic',
         'centre':'Centre',
-        'textAsHTML':'foreignObject label'
+        'textAsHTML':'foreignObject label',
+        'editorRaw':'Editeur brut'
+
       },
       Banner:{
         'data':'Data',
@@ -389,6 +391,8 @@ const resources = {
         'hlp_1_txt_5':'The diagram structure (without link thickness) can be displayed by checking Diagram structure',
         'hlp_1_txt_6':'The diagram can be adjusted on screen by checking Adjust on screen',
         'hlp_1_txt_7':'To get information about each link, press shift and move the mouse over the link',
+        'hlp_1_txt_8':'To hide link/link\'s label when their value is under a threshold.',
+        'hlp_1_txt_9':'Dropdown to filter node/link/data according to their group tag or to choose to display the diagram with color palette from a tag group.',
         'tooltipAdjust':'Readjust the drawing area to the screen size',
         'tooltipStructure':'Allows to display the structure of the diagram without proportion of the flows according to their value',
         'tooltipData':'Allows to display the data of the diagram',
@@ -416,6 +420,8 @@ const resources = {
       },
       'DisplayWelcome':'Display Bienvenue',
       'dontSeeAgain':'Don\'t show again',
+      'scale':'Scale'
+
     }
   },
   //=======================================================
@@ -766,7 +772,7 @@ const resources = {
       LL:{
         'hl':'Hauteur label',
         'll':'Largeur label',
-        'ft':'Fond transparent',
+        'ft':'Opacité du fond',
         'cfl':'Couleur fond label',
         'bt':'Bordure transparent',
         'cbl':'Couleur bordure label',
@@ -777,7 +783,9 @@ const resources = {
         'maj':'Majuscule',
         'ita':'Italique',
         'centre':'Centre',
-        'textAsHTML':'Label foreignObject'
+        'textAsHTML':'Label foreignObject',
+        'editorRaw':'Editeur brut'
+
       },
       Banner:{
         'data':'Données',
@@ -805,6 +813,8 @@ const resources = {
         'hlp_1_txt_5':'La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant Structure du diagramme',
         'hlp_1_txt_6':'Le diagramme peut être ajusté à l\'écran en cochant Ajuster à l\'écran',
         'hlp_1_txt_7':'Pour obtenir des informations sur chaque flux, appuyer sur shift et passer la souris sur le flux.',
+        'hlp_1_txt_8':'Pour masquer les flux/label de flux  qui sont en dessous d\'un seuil.',
+        'hlp_1_txt_9':'Menu déroulant pour filtrer les noeuds/flux/données selon leur groupe d\'étiquette associée ou bien pour appliquer des couleurs au diagramme avec la palette de couleurs du groupe d\'étiquette.',
         'tooltipAdjust':'Permet de réajuster la zone de dessin à la taille de l\'écran',
         'tooltipStructure':'Permet d\'afficher la structure du diagramme sans proportion des flux selon leur valeur',
         'tooltipData':'Permet d\'afficher les données du diagramme',
@@ -830,6 +840,10 @@ const resources = {
       },
       'DisplayWelcome':'Afficher Bienvenue',
       'dontSeeAgain':'Ne plus montrer',
+      
+      'scale':'Échelle'
+
+
 
     }
   }
