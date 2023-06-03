@@ -3,6 +3,7 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, OverlayTrigg
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
+import * as d3 from 'd3'
 
 export const OpenSankeyMenuConfigurationLayout = (
   t:TFunction,
@@ -98,6 +99,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           <FormControl
             type="text"
             value={user_scale}
+            isInvalid={user_scale!=data.user_scale}
             onChange={evt => {
               set_user_scale(+evt.target.value)
             }}
@@ -106,7 +108,7 @@ export const OpenSankeyMenuConfigurationLayout = (
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
-        <FormControl.Feedback />
+        <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
         <Form.Text>({t('MEP.vp100')})</Form.Text>
       </Col>
     </Form.Group>,
