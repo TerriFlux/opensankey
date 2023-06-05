@@ -220,7 +220,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
         let target_node
         try {
           target_node = nodes[link.idTarget]
@@ -268,7 +268,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
         let source_node
         try {
           source_node = nodes[link.idSource]
@@ -781,7 +781,7 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
       return false
     }
   }
-  if (!data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget].node_visible) {
+  if (!data_s.nodes[l.idSource] || !data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget] || !data_s.nodes[l.idTarget].node_visible) {
     return false
   }
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
@@ -1396,7 +1396,7 @@ export const hideNullFluxNodes = (
           //alert('Corruption du diagramme')
           return ''
         }
-        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+        if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val.extension!.free_visible) {
             total_input +=1
@@ -1418,7 +1418,7 @@ export const hideNullFluxNodes = (
           //alert('Corruption du diagramme')
           return ''
         }
-        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+        if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
           if (val.extension!.free_visible) {
             total_input +=1
