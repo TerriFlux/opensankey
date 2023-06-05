@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState} from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tab, FormControl, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
 
@@ -13,7 +13,9 @@ export const SankeyMenuConfigurationLinksAppearence = (
   t:TFunction,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  selected_style_link:string
+  selected_style_link:string,
+  display_link_opacity:string,
+  set_display_link_opacity:(s:string)=>void,
 )=>{
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
@@ -139,6 +141,39 @@ export const SankeyMenuConfigurationLinksAppearence = (
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.color = color)
                   set_data({ ...data })
                 }}/>
+          </OverlayTrigger>
+        </Col>
+      </Form.Group>
+
+      {/* Opacité */}
+      <Form.Group as={Row} >
+        <Col xs={5}>
+          <FormLabel >{t('Flux.apparence.opacity')}:</FormLabel>
+        </Col>
+        <Col xs={7}>
+          <OverlayTrigger
+            key={'Flux.apparence.tooltips.1'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.opacity')} </Tooltip>}><>
+            <Form.Control
+              type="number"
+              max={1}
+              min={0}
+              step={0.1}
+              value={display_link_opacity}
+              isInvalid={+display_link_opacity!=selected_parameter[0]?.opacity}
+              onChange={
+                evt => {
+                  set_display_link_opacity(evt.target.value)
+                }}
+                onBlur={(evt)=>{
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.opacity = +evt.target.value)
+                  set_data({...data})
+                }}
+                />
+            <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
+            </>
           </OverlayTrigger>
         </Col>
       </Form.Group>

@@ -1238,6 +1238,9 @@ export const convert_links = (
   Object.values(data.links).forEach(
     l=> {
       convert_display(dataTagsArray,l.value as SankeyLinkValue,0)
+      if(!l.opacity){
+        l.opacity=0.85
+      }
     }
   )
 }

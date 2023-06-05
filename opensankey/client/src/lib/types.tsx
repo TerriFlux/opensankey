@@ -115,6 +115,7 @@ export const SankeyLinkPropTypes = {
   color: PropTypes.string.isRequired,
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
+  opacity:PropTypes.number.isRequired,
 
   // Ajout
   dashed:PropTypes.bool.isRequired,

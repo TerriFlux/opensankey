@@ -27,7 +27,8 @@ const SankeyNodeEditionPropTypes = {
   set_style_to_apply: PropTypes.func.isRequired,
   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   style_editable:PropTypes.bool.isRequired,
-  token:PropTypes.bool.isRequired
+  token:PropTypes.bool.isRequired,
+  set_display_link_opacity:PropTypes.func.isRequired,
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
@@ -61,7 +62,7 @@ export const OpenSankeyMenuConfigurationNodes = (
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable,token }
+  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable,token,set_display_link_opacity }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
 
@@ -458,6 +459,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current = []
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+                      set_display_link_opacity(String(multi_selected_links.current[0].opacity))
                     })
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }}>
@@ -478,6 +480,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current = []
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+                      set_display_link_opacity(String(multi_selected_links.current[0].opacity))
                     })
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }}>

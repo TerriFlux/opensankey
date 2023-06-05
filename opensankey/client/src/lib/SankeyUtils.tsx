@@ -980,6 +980,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     style:'default',
     dashed:true,
     to_precision:true,
+    opacity:0.85
   }
 }
 /**

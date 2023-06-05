@@ -27,7 +27,8 @@ const SankeyMenuConfigurationLinksPropTypes = {
   style_editable:PropTypes.bool.isRequired,
   set_displayed_value:PropTypes.func.isRequired,
   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
-  set_tags_selected:PropTypes.func.isRequired
+  set_tags_selected:PropTypes.func.isRequired,
+  set_display_link_opacity:PropTypes.func.isRequired,
 }
 
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
@@ -44,12 +45,14 @@ export const OpenSankeyMenuConfigurationLinks = (
   additional_data_element:JSX.Element[],
   displayed_value:string,
   set_displayed_value:(s:string)=>void,
-  additional_link_appearence_items:JSX.Element[]
+  additional_link_appearence_items:JSX.Element[],
+  display_link_opacity:string,
+  set_display_link_opacity:(s:string)=>void,
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_value,set_displayed_value),
-    'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default'),
+    'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
     'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default'),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
   }
@@ -62,7 +65,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected}
+  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
   const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
@@ -118,6 +121,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
+            set_display_link_opacity(m_s[0].opacity)
             Object.values(data.links).forEach( l => {
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
@@ -229,6 +233,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     selected_link.current = link
     multi_selected_links.current = [link]
+    set_display_link_opacity(link.opacity)
     set_data({ ...data })
     set_show_link(true)
   }
