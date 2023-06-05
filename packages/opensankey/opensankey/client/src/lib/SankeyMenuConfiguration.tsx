@@ -41,6 +41,7 @@ export const OpenSankeyConfigurationsMenus = (
   set_displayed_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+  set_display_link_opacity:(s:string)=>void,
 
 
 ) => {
@@ -144,6 +145,7 @@ export const OpenSankeyConfigurationsMenus = (
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 style_editable={style_editable}
                 token={token}
+                set_display_link_opacity={set_display_link_opacity}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -214,6 +216,7 @@ export const OpenSankeyConfigurationsMenus = (
                 set_displayed_value={set_displayed_value}
                 tags_selected={tags_selected}
                 set_tags_selected={set_tags_selected}
+                set_display_link_opacity={set_display_link_opacity}
               />
             </Accordion.Body>
           </Accordion.Item>
@@ -268,7 +271,7 @@ export const OpenSankeyConfigurationsMenus = (
 const ConfigurationMenuPropTypes = {
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   nav_item_active: PropTypes.string.isRequired,
-  configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired
+  configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 }
 /**
  * Description placeholder

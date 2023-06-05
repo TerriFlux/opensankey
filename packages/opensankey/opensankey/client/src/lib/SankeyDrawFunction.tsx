@@ -95,47 +95,6 @@ export const linkStroke=(l:SankeyLink,data:SankeyData,
 )=>{
   return link_color(l,data,getLinkValue) as string
 }   
-// Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
-export const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_links:{current: SankeyLink[] },links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,select_link:(n: SankeyLink) => void,
-)=>{
-  if ((event.ctrlKey || event.metaKey) && !mode_visualisation) {
-    sankeyTooltip.style('opacity', 0)
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-      button_ref.current.click()
-    }
-    multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
-    if (multi_selected_links.current.includes(d)) {
-      multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
-    } else {
-      multi_selected_links.current.push(d)
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-      d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
-    }
-    if ( accordion_ref && accordion_ref.current) {
-      for ( const child in accordion_ref.current.children) {
-        if (accordion_ref.current.children[child].id === 'Flux') {
-          (accordion_ref.current.children[0] as HTMLLabelElement).click();
-          (accordion_ref.current.children[child] as HTMLLabelElement).click()
-        }
-      }
-    }
-    if ( links_accordion_ref && links_accordion_ref.current) {
-      (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-      (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
-    }
-    select_link(d)
-  }
-} 
 // Function that compute th position of the begining of the link and the position of where it end 
 export const compute_end_points = (
   source_node: SankeyNode,
@@ -734,7 +693,7 @@ export const drawArrows = (
         .attr('fill', () => link_color(l, data,getLinkValue)!)
         .attr('fill-opacity', () => {
           //const opacity = String(l.display_value[value_index]).includes('[') ? 0.3 : 0.95
-          return 0.85 //opacity
+          return l.opacity //opacity
         })
     }
     if ((is_v && !l.recycling && n.x > source_node.x ) || (is_v && l.recycling && n.x < source_node.x) ) {
