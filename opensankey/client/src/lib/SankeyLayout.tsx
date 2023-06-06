@@ -434,7 +434,16 @@ export const updateLayout = (
   let maxIdLink = listId.length > 0 ? Math.max(...listId) : 0
   //- Stores a mapping between idLink of initial data and layout idLinks
   const idLinksMap: {[s:string]:string} = {}
+  const links_with_no_match : SankeyLink [] = []
   Object.values(data.links).forEach( l => {
+    const layout_link = new_layout.links[l.idLink]
+    if (!layout_link || layout_link.idSource !== l.idSource || layout_link.idTarget !== l.idTarget) {
+      links_with_no_match.push(l)
+      return
+    }
+    idLinksMap[l.idLink] = layout_link.idLink
+  })
+  links_with_no_match.forEach( l => {       
     const layout_links = Object.values(new_layout.links).filter(link_layout => 
       l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
     )
@@ -569,9 +578,11 @@ export const updateLayout = (
     if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
       (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
     }
-    (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
-      v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
-    )
+    if ((data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.length == 0) {
+      (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
+        v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
+      )
+    }
   }
 
   if(mode.includes('tagNode')){
