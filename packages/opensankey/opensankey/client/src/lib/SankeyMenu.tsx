@@ -693,7 +693,6 @@ export const OpenSankeyMenus = (
   setShowPreference:(b:boolean)=>void,
   reinitialization:()=>void,
   default_sankey_data:()=>SankeyData,
-  set_show_publish_dialog:(b:boolean)=>void,
   set_show_apply_layout:(b:boolean)=>void,
   set_show_excel_dialog:(b:boolean)=>void,
   set_show_save_json:(b:boolean)=>void,
@@ -709,7 +708,6 @@ export const OpenSankeyMenus = (
   externale_save_item:JSX.Element[],
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'

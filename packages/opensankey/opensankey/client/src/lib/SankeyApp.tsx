@@ -259,7 +259,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 2. Build Menus
   const sankey_menus = OpenSankeyMenus(
-    t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
+    t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
   )

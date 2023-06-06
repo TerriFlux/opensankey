@@ -373,10 +373,7 @@ export const toolbar_builder = (
   setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void,
   set_show_modal_welcome:(b:boolean)=>void
 ) => {
-  const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
-  const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
-  const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
   const target_link_threshold=useRef(null)
   const [show_detail_level,set_show_detail_level]=useState(false)
