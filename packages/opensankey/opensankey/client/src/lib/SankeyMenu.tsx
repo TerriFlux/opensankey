@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -927,50 +927,50 @@ export const OpenSankeyMenus = (
 
 
   const item_dropdown_filter=<>
-  {(node_filter)?
-    <OverlayTrigger
-      key={'tooltip-link-color-filter'}
-      placement={'bottom'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_color_node}>
-      <Button size='sm' variant='light' >
-        {t('Menu.Noeuds')}
-      </Button>
-    </OverlayTrigger>
-    :
-    <></>
-  }
+    {(node_filter)?
+      <OverlayTrigger
+        key={'tooltip-link-color-filter'}
+        placement={'bottom'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_color_node}>
+        <Button size='sm' variant='light' >
+          {t('Menu.Noeuds')}
+        </Button>
+      </OverlayTrigger>
+      :
+      <></>
+    }
 
-  {(flux_filter)?
-    <OverlayTrigger
-      key={'tooltip-node-color-filter'}
-      placement={'bottom'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_color_link}>
-      <Button size='sm' variant='light' >{t('Menu.flux')}</Button>
-    </OverlayTrigger>
-  
-    :
-    <></>
-  }
-  {(Object.values(data.dataTags).length>0)?
-    <OverlayTrigger
-      key={'tooltip-data-filter'}
-      placement={'bottom'}
-      trigger={'click'}
-      rootClose
-      overlay={filter_data}>
-      <Button size='sm' variant='light'>
-        <>{t('Banner.data')}</>
-      </Button>
-    </OverlayTrigger>
-    
-    :
-    <></>
-  }
-</>
+    {(flux_filter)?
+      <OverlayTrigger
+        key={'tooltip-node-color-filter'}
+        placement={'bottom'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_color_link}>
+        <Button size='sm' variant='light' >{t('Menu.flux')}</Button>
+      </OverlayTrigger>
+
+      :
+      <></>
+    }
+    {(Object.values(data.dataTags).length>0)?
+      <OverlayTrigger
+        key={'tooltip-data-filter'}
+        placement={'bottom'}
+        trigger={'click'}
+        rootClose
+        overlay={filter_data}>
+        <Button size='sm' variant='light'>
+          <>{t('Banner.data')}</>
+        </Button>
+      </OverlayTrigger>
+
+      :
+      <></>
+    }
+  </>
 
 
 
@@ -979,80 +979,80 @@ export const OpenSankeyMenus = (
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui :{[s:string] : JSX.Element}=  {}
-  
+
   if(!window.SankeyToolsStatic){
     ui['file']=<>
-    <DropdownButton size='sm' variant='light' drop='down' id='ouvrir' title={t('Menu.ouvrir')}  >
-      <Dropdown.Item
-        onClick={() => {
-          if (_load_json.current) {
-            _load_json.current.name = ''
-            _load_json.current.click()
-          }
-        }} >JSON</Dropdown.Item>
-      <Form.Control
-        type="file"
-        ref={_load_json}
-        style={{ display: 'none' }}
-        onChange={(evt: ChangeEvent) => {
-          const files = (evt.target as HTMLFormElement).files
-          const reader = new FileReader()
-          reader.onload = (() => {
-            return (e: ProgressEvent<FileReader>) => {
-              reinitialization()
-              let result = String((e.target as FileReader).result)
-              const new_data = default_sankey_data()
-              result = result.split('<br>').join('\\\\n')
-              const result_data = JSON.parse(result)
-              Object.assign(new_data, result_data)
-              if (result_data.version === undefined) {
-                (new_data.version as unknown as undefined) = undefined
-              }
-              convert_data(new_data)
-              complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
-              set_nodes_level(data)
-              set_data(new_data)
-              const test = document.getElementsByClassName('navbar')
-              let margin_top = 0
-              if (test && test.length > 0) {
-                margin_top = test[0].getBoundingClientRect().height
-                d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-              }
+      <DropdownButton size='sm' variant='light' drop='down' id='ouvrir' title={t('Menu.ouvrir')}  >
+        <Dropdown.Item
+          onClick={() => {
+            if (_load_json.current) {
+              _load_json.current.name = ''
+              _load_json.current.click()
             }
-          })()
-          reader.readAsText(files[0])
-        }}
-      />
-      <Dropdown.Item
-        onClick={() => set_show_excel_dialog(true)}
-      >Excel</Dropdown.Item>
-    </DropdownButton>
-    <DropdownButton size='sm' variant='light'  drop='down' id='enregistrer' title={t('Menu.enregistrer')} >
-      <Dropdown.Item onClick={()=>{
-        set_show_save_json(true)
-      }} >JSON</Dropdown.Item>
-      {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
-      <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
-      {externale_save_item}
-    </DropdownButton>
-    <DropdownButton size='sm' variant='light' drop='down' id='exporter' title={t('Menu.exporter')} >
-      <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-      <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-      <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
-    </DropdownButton>
-    <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Button>
-    <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Button>
-  </>
+          }} >JSON</Dropdown.Item>
+        <Form.Control
+          type="file"
+          ref={_load_json}
+          style={{ display: 'none' }}
+          onChange={(evt: ChangeEvent) => {
+            const files = (evt.target as HTMLFormElement).files
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (e: ProgressEvent<FileReader>) => {
+                reinitialization()
+                let result = String((e.target as FileReader).result)
+                const new_data = default_sankey_data()
+                result = result.split('<br>').join('\\\\n')
+                const result_data = JSON.parse(result)
+                Object.assign(new_data, result_data)
+                if (result_data.version === undefined) {
+                  (new_data.version as unknown as undefined) = undefined
+                }
+                convert_data(new_data)
+                complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
+                set_nodes_level(data)
+                set_data(new_data)
+                const test = document.getElementsByClassName('navbar')
+                let margin_top = 0
+                if (test && test.length > 0) {
+                  margin_top = test[0].getBoundingClientRect().height
+                  d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+                }
+              }
+            })()
+            reader.readAsText(files[0])
+          }}
+        />
+        <Dropdown.Item
+          onClick={() => set_show_excel_dialog(true)}
+        >Excel</Dropdown.Item>
+      </DropdownButton>
+      <DropdownButton size='sm' variant='light'  drop='down' id='enregistrer' title={t('Menu.enregistrer')} >
+        <Dropdown.Item onClick={()=>{
+          set_show_save_json(true)
+        }} >JSON</Dropdown.Item>
+        {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
+        <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
+        {externale_save_item}
+      </DropdownButton>
+      <DropdownButton size='sm' variant='light' drop='down' id='exporter' title={t('Menu.exporter')} >
+        <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+        <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
+      </DropdownButton>
+      <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Button>
+      <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Button>
+    </>
 
-  ui['edition']=<>
-    <Button size='sm' variant='light' onClick={reinitialization} >{t('Menu.reinit')}</Button>
-    {/* <Button size='sm' variant='light' onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Button>     */}
-    <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Button>
-    <Button size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Button>
-    <Button size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Button>
-    {external_edition_item}
-  </>
-  ui['aide']=<><Button size='sm' variant='light' onClick={() =>{ 
+    ui['edition']=<>
+      <Button size='sm' variant='light' onClick={reinitialization} >{t('Menu.reinit')}</Button>
+      {/* <Button size='sm' variant='light' onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Button>     */}
+      <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Button>
+      <Button size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Button>
+      <Button size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Button>
+      {external_edition_item}
+    </>
+    ui['aide']=<><Button size='sm' variant='light' onClick={() =>{
       set_show_welcome(true)
       set_never_see_again(false)
       localStorage.setItem('dontSeeAggainWelcome','0')
@@ -1069,13 +1069,13 @@ export const OpenSankeyMenus = (
       placement={'right'}
       rootClose
       overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
-    
-        {item_dropdown_filter}
+
+      {item_dropdown_filter}
     </OverlayTrigger>
   }
 
-  
-return ui
+
+  return ui
 
 
 }
@@ -1136,7 +1136,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     name_user
   }
 ) => {
-    const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
+  const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -1284,21 +1284,21 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Nav>
           </>
           ) : (<>
-            
+
             <Col><h4 onClick={()=>set_welcome_text(window.sankey.welcome_text)}><a href="#" style={{color:"#666"}}>{window.sankey.header}</a></h4></Col>
             {toolbar}
           </>)}  */}
           <Col>
             <Row>
-            <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
-              {Object.keys(menus).map(m=>{
+              <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
+                {Object.keys(menus).map(m=>{
 
-                return <Nav.Item>
-                <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-                {t('Menu.'+m)}
-                </Nav.Link>
-              </Nav.Item>
-              })}
+                  return <Nav.Item>
+                    <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
+                      {t('Menu.'+m)}
+                    </Nav.Link>
+                  </Nav.Item>
+                })}
               </Nav>
             </Row>
             <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
@@ -1309,9 +1309,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
           {!window.SankeyToolsStatic ?<Nav>
             <Col>
-                <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
-                <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
-                {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}     
+              <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
+              <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
+              {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
             </Col>
           </Nav>:<></>}
         </Container>

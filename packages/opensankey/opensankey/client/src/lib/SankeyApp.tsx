@@ -321,10 +321,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     </Popover>
   const {filter}=data.display_style
   const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate
-)
-Object.keys(toolbar).forEach(k=>{
+  )
+  Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=toolbar[k]
-})
+  })
 
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {

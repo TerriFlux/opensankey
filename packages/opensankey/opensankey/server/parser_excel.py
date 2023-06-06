@@ -277,7 +277,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
 
         # existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
         #                   == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        #existing_link = existing_links_dict[nodes[links[key]['idSource']]['name']+'->'+nodes[links[key]['idTarget']]['name']]
+        # existing_link =
+        # existing_links_dict[nodes[links[key]['idSource']]['name']+'->'+nodes[links[key]['idTarget']]['name']]
         if DATA_VALUE in columns:
             val = mfa_input[sheet_name].iat[row, columns.index(DATA_VALUE)]
             if val is None:
