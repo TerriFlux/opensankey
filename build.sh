@@ -11,6 +11,7 @@ exit_if_error() {
 
 # Front-end build
 cd opensankey/client
+npm install
 npm run build || exit_if_error $?
 cd ../..
 
