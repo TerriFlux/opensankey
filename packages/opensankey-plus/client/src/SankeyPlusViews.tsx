@@ -1072,9 +1072,9 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   // Get the difference from the view
   const diff_view=master_data.view.filter(v=>v.id === id_view_to_see)[0].view_data.diff
 
-  const del_views = diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] == 'nodes' || d.path[0] == 'links') && d.kind != 'D'))
+  //const del_views = diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] == 'nodes' || d.path[0] == 'links') && d.kind != 'D'))
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
-  diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] != 'nodes' && d.path[0] != 'links') || d.kind != 'D')).forEach((d : object)=>applyChange(data_init,{},d))
+  //diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] != 'nodes' && d.path[0] != 'links') || d.kind != 'D')).forEach((d : object)=>applyChange(data_init,{},d))
   return data_init
 }
 
