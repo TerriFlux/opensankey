@@ -9,7 +9,7 @@ import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row,
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
 import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
-import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { updateLayout, compute_default_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCirclePlus,faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
@@ -1243,9 +1243,9 @@ export const keyHandler = (
         data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
       }
       if (update) {
-        apply_input_outputLinksId(
+        compute_default_input_outputLinksId(
           data_view.nodes,
-          data_view
+          data_view.links
         )      
         const deep_diff = require('deep-diff')
         let difference = deep_diff.diff(master_data, data_view)
@@ -1310,9 +1310,9 @@ export const keyHandler = (
         data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
       }
       if (update) {
-        apply_input_outputLinksId(
+        compute_default_input_outputLinksId(
           data_view.nodes,
-          data_view
+          data_view.links
         )      
         const deep_diff = require('deep-diff')
         let difference = deep_diff.diff(master_data, data_view)
