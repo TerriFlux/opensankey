@@ -207,9 +207,9 @@ export const OpenSankeyDrawLegend = (
           .selectAll('g')
           // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
           .data(Object.entries(tag_group[1].tags)
-          .filter(tag=>{
-            return tag[1].selected
-          }))
+            .filter(tag=>{
+              return tag[1].selected
+            }))
           .enter()
           .append('svg:g')
           // on filtre les tags avec selected à true (Visible)
@@ -233,7 +233,7 @@ export const OpenSankeyDrawLegend = (
           .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
           .style('fill-opacity', 1)
           
-          // Ajout du label
+        // Ajout du label
         legendElements.append('text')
           .attr('x', show_data?35:0)
           .attr('y', 26)
@@ -258,9 +258,9 @@ export const OpenSankeyDrawLegend = (
 
 
     g_draggable.call(d3.drag<SVGGElement,unknown>()
-    .subject(Object).on('drag', function (event) {
-      d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
-    }))
+      .subject(Object).on('drag', function (event) {
+        d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+      }))
 
   }
 
