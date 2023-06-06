@@ -1072,10 +1072,22 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   // Get the difference from the view
   const diff_view=master_data.view.filter(v=>v.id === id_view_to_see)[0].view_data.diff
 
-  //const del_views = diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] == 'nodes' || d.path[0] == 'links') && d.kind != 'D'))
+  const del_node_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'nodes' && d.kind === 'D'))
+  del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean})=>{
+    d.kind = 'E'
+    d.path.push('display')
+    d.rhs = false
+  })
+  // const del_link_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'links' && d.kind === 'D'))
+  // del_link_views.forEach((d:{path:string[],kind:string,rhs:boolean})=>{
+  //   d.kind = 'E'
+  //   d.path.push('link_visible')
+  //   d.rhs = false
+  // })
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
-  //diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] != 'nodes' && d.path[0] != 'links') || d.kind != 'D')).forEach((d : object)=>applyChange(data_init,{},d))
-  diff_view.forEach((d : object)=>applyChange(data_init,{},d))
+  diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D')).forEach((d : object)=>applyChange(data_init,{},d))
+  //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
+  //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   return data_init
 }
 
@@ -1183,7 +1195,7 @@ export const keyHandler = (
       set_master_data({...master_data})
       set_view(master_data.view[ind].id)
       // set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
-      set_data(get_data_from_view(master_data,master_data.view[ind].id))
+      set_data({...get_data_from_view(master_data,master_data.view[ind].id)})
 
       setTimeout(function () {
         nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
@@ -1378,7 +1390,7 @@ const selecteur_view=(data:SankeyPlusData,
             if(view === 'none'){
               set_master_data({...JSON.parse(JSON.stringify(data))})
             }
-            set_data(data_view as SankeyPlusData)
+            set_data({...data_view as SankeyPlusData})
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
@@ -1600,7 +1612,7 @@ export const viewsAccordion = (
                           })
                           set_view(new_ind)
                           set_master_data({...master_data})
-                          set_data(get_data_from_view(master_data,new_ind))
+                          set_data({...get_data_from_view(master_data,new_ind)})
                         }
                       }
                     ><FaCopy /></Button></td>
@@ -1839,9 +1851,9 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
             // Don't save the view before changing to the selected one
             if(view !== 'none'){
               const data_view=get_data_from_view(master_data,view)
-              set_data(data_view as SankeyPlusData)
+              set_data({...data_view as SankeyPlusData})
             } else if(view === 'none'){
-              set_data({...master_data})
+              set_data({...JSON.parse(JSON.stringify(master_data))})
             }
             set_view_not_saved('')
           }}
@@ -1857,11 +1869,11 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
 
             if(view !== 'none'){
               const data_view=get_data_from_view(master_data,view)
-              set_master_data({...JSON.parse(JSON.stringify(data))})
-              set_data(data_view as SankeyPlusData)
+              set_master_data({...JSON.parse(JSON.stringify(master_data))})
+              set_data({...data_view as SankeyPlusData})
 
             } else if(view === 'none'){
-              set_data({...master_data})
+              set_data({...JSON.parse(JSON.stringify(master_data))})
             }
             set_view_not_saved('')
           }}
