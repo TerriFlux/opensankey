@@ -164,60 +164,33 @@ const normalize_name = (name: string) => {
 
 export const apply_input_outputLinksId = (
   ref_nodes: { [node_id : string]:SankeyNode},
-  ref_links: { [link_id : string]:SankeyLink},
   data: SankeyData
 ) => {
-  const display_nodes = data.nodes
-  const display_links = data.links
-
   Object.values(ref_nodes).forEach(
     (ref_node) => {
-      const nodes_found = Object.values(display_nodes).filter(
-        n=> {
-          return normalize_name(ref_node.name) === normalize_name(n.name) 
-        }
-      )
-      if (nodes_found.length === 0) {
+      const node = data.nodes[ref_node.idNode]
+      if (!node) {
         return
       }
-      const node = nodes_found[0]
       const new_inputLinksId: string[] = []
       ref_node.inputLinksId.forEach(
         (idLink) => {
-          const ref_link = ref_links[idLink]
+          const ref_link = data.links[idLink]
           if (ref_link === undefined) {
             return
           }
-          const links = Object.values(display_links).filter(
-            l=> {
-              return normalize_name(data.nodes[l.idSource].name) === normalize_name(ref_nodes[ref_link.idSource].name) && 
-                     normalize_name(data.nodes[l.idTarget].name) === normalize_name(ref_nodes[ref_link.idTarget].name)
-            }
-          )
-          if (links.length === 0) {
-            return
-          }
-          new_inputLinksId.push(links[0].idLink)
+          new_inputLinksId.push(idLink)
         }
       )
       node.inputLinksId = new_inputLinksId //result_inputLinksId.filter(function (item, pos) {return node.inputLinksId.indexOf(item) == pos})
       const new_outputLinksId: string[] = []
       ref_node.outputLinksId.forEach(
         (idLink) => {
-          const ref_link = ref_links[idLink]
+          const ref_link = data.links[idLink]
           if (ref_link === undefined) {
             return
           }
-          const links = Object.values(display_links).filter(
-            l => {
-              return normalize_name(data.nodes[l.idSource].name) === normalize_name(ref_nodes[ref_link.idSource].name) && 
-                     normalize_name(data.nodes[l.idTarget].name) === normalize_name(ref_nodes[ref_link.idTarget].name)
-            }
-          )
-          if (links.length === 0) {
-            return
-          }
-          new_outputLinksId.push(links[0].idLink)
+          new_outputLinksId.push(idLink)
         }
       )
       node.outputLinksId = new_outputLinksId//result_outputLinksId.filter(function (item, pos) {return node.outputLinksId.indexOf(item) == pos})
@@ -424,32 +397,87 @@ export const updateLayout = (
   Object.values(data.nodes).forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
+  let listId = [] as number[]
+  Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+  Object.keys(new_layout.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+  let maxIdNode = listId.length > 0 ? Math.max(...listId) : 0
+
+  //- Stores a mapping between idNode of initial data and layout idNodes
+  let idNodesMap: {[s:string]:string} = {}
+  Object.values(data.nodes).forEach( n => {
+    const layout_nodes = Object.values(new_layout.nodes).filter(node_layout=>normalize_name(n.name) === normalize_name(node_layout.name))
+    if (layout_nodes.length === 0) {
+      maxIdNode = maxIdNode+1
+      idNodesMap[n.idNode] = 'node'+maxIdNode
+      return
+    }
+    const layout_node = layout_nodes[0]
+    idNodesMap[n.idNode] = layout_node.idNode
+  })
+  Object.values(data.nodes).forEach(n=>{
+    n.idNode=idNodesMap[n.idNode]
+    Object.keys(n.dimensions).forEach(dim => {
+      if (n.dimensions[dim].parent_name) {
+          //parent_names.push(n.dimensions[dim].parent_name as string)
+          n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name!]
+      }
+  })})
+  data.nodes = Object.assign({}, ...Object.values(data.nodes).map(n => ({ [n.idNode]: { ...n } })))
+  Object.values(data.links).forEach(l=>{
+    l.idSource=idNodesMap[l.idSource]
+    l.idTarget=idNodesMap[l.idTarget]    
+  })
+
+  listId = []
+  Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
+  Object.keys(new_layout.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
+  let maxIdLink = listId.length > 0 ? Math.max(...listId) : 0
+  //- Stores a mapping between idLink of initial data and layout idLinks
+  let idLinksMap: {[s:string]:string} = {}
+  Object.values(data.links).forEach( l => {
+    const layout_links = Object.values(new_layout.links).filter(link_layout => 
+      l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
+    )
+    if (layout_links.length === 0) {
+      maxIdLink = maxIdLink+1
+      idLinksMap[l.idLink] = 'link'+maxIdLink
+      return
+    }
+    const layout_link = layout_links[0]
+    idLinksMap[l.idLink] = layout_link.idLink
+  })
+  Object.values(data.links).forEach(l=>l.idLink=idLinksMap[l.idLink]);
+  data.links = Object.assign({}, ...Object.values(data.links).map(l => ({ [l.idLink]: { ...l } })))
+
+  compute_default_input_outputLinksId(data.nodes, data.links)
+
+
   //data.node_width = new_layout.node_width
   // Apply nodes layout
   for (const node_layout_key in new_layout.nodes) {
-    const node_layout = new_layout.nodes[node_layout_key]
-    const nodes = Object.values(data.nodes).filter(n=>normalize_name(n.name) === normalize_name(node_layout.name) )
-    let node : SankeyNode | undefined
-    if (nodes.length === 0) {
-      if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
-        // Case of not a label
-        node = {...node_layout}
-        // Méthode pour incrementer idNode
-        const listId : number[] = []
-        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-        node.idNode = 'idNode'+idNode
-        data.nodes[node.idNode]
-      } else {
-        continue
-      }
-    }
-    node = nodes[0]
+    const node = data.nodes[node_layout_key]
+    //const nodes = Object.values(data.nodes).filter(n=>normalize_name(n.name) === normalize_name(node_layout.name) )
+    //let node : SankeyNode | undefined
+    // if (nodes.length === 0) {
+    //   if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
+    //     // Case of not a label
+    //     node = {...node_layout}
+    //     // Méthode pour incrementer idNode
+    //     const listId : number[] = []
+    //     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
+    //     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    //     node.idNode = 'idNode'+idNode
+    //     data.nodes[node.idNode]
+    //   } else {
+    //     continue
+    //   }
+    // }
+    //node = nodes[0]
     if (!node) {
       continue
     }
+    const node_layout = new_layout.nodes[node_layout_key]
     if(mode.includes('posNode')){
-
       node.name = node_layout.name
       node.position = node_layout.position
       node.node_width = node_layout.node_width
@@ -489,9 +517,7 @@ export const updateLayout = (
     //   }
     // }    
   }
-
   
-
   (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
   for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
     (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
@@ -501,23 +527,14 @@ export const updateLayout = (
   if (mode.includes('attrFlux')){
     apply_input_outputLinksId(
       new_layout.nodes,
-      new_layout.links,
       data
     )
     for (const link_layout_key in new_layout.links) {
       const link_layout = new_layout.links[link_layout_key]
-      const links = Object.values(data.links).filter(
-        l=> {
-          return normalize_name(data.nodes[l.idSource].name) === normalize_name(new_layout.nodes[link_layout.idSource].name) && 
-          normalize_name(data.nodes[l.idTarget].name) === normalize_name(new_layout.nodes[link_layout.idTarget].name)
-        }
-      )
-  
-  
-      if (links.length === 0) {
+      const link = data.links[link_layout_key]  
+      if (!link) {
         continue
       }
-      const link = links[0]
   
       const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
       link.curvature = curvature
@@ -548,14 +565,14 @@ export const updateLayout = (
     
   }
 
-  if ((new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-    if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-      (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
-    }
-    (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
-      v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
-    )
-  }
+  // if ((new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
+  //   if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
+  //     (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
+  //   }
+  //   (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
+  //     v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
+  //   )
+  // }
 
   if(mode.includes('tagNode')){
     for (const tag_group_key in new_layout.nodeTags) {
