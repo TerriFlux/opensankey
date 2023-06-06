@@ -2,8 +2,8 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData } from './types'
+import { Form, Modal, Navbar, Nav, NavDropdown, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
@@ -15,6 +15,7 @@ import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
+import { MultiSelect } from 'react-multi-select-component'
 
 declare const window: Window &
   typeof globalThis & {
@@ -94,7 +95,7 @@ const MenuPropTypes = {
   show_publish_dialog:PropTypes.bool.isRequired,
   set_show_publish_dialog: PropTypes.func.isRequired,
 
-  menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  menus: PropTypes.objectOf(PropTypes.element.isRequired).isRequired,
   set_welcome_text: PropTypes.func.isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
   set_show_modalTemplate:PropTypes.func.isRequired,
@@ -102,14 +103,12 @@ const MenuPropTypes = {
   token:PropTypes.bool.isRequired,
   useNavigate:PropTypes.func.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  menu_banner:PropTypes.object.isRequired,
+  // menu_banner:PropTypes.object.isRequired,
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
   name_user:PropTypes.string.isRequired
-  
-
 }
 
 
@@ -231,6 +230,463 @@ const goToUserDoc = () => {
     }
   }).then( win => win?.focus() )
 }
+export const addAllDropDownNode = (
+  t:TFunction,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  level:boolean
+) => {
+  const color = 'black'
+  const {nodeTags} = data
+  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
+  if (level) {
+    const nb_level_tag = Object.values(nodeTags).filter(tags_group=>tags_group.banner === 'level' && (Object.keys(tags_group.tags).length > 0 )).length
+    if (nb_level_tag > 1) {
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
+    } else {
+      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+    }
+  }
+  const allDD = banner_grouptag.map(([, tags_group]) => {
+    const tags_selected=Object.entries(data['nodeTags']).filter((k)=>{return k[1]==tags_group})[0]
+
+    if (tags_group.banner == 'one' ) {
+      return (
+        <FormGroup as={Row}>
+          <Row>
+            <Col xs={10}>
+              <FormLabel style={{ color: color }}>
+                {tags_group.group_name}
+              </FormLabel>
+            </Col>
+          </Row>
+          <Row>
+            <OverlayTrigger
+              key={'Banner.ndd_lst.5'}
+              placement={'bottom'}
+              delay={500}
+              overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
+              <Col xs={10}>
+                {<Form.Select
+                  style={{ width: '200px', color: 'black' }}
+                  key={tags_group.group_name}
+                  placeholder='all'
+                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                </Form.Select>}
+              </Col>
+            </OverlayTrigger>
+            <Col xs={2}>
+              <OverlayTrigger
+                key={'Banner.ndd_chk.5'}
+                placement={'bottom'}
+                delay={500}
+                overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.colorMap==tags_selected[0]}
+                  onChange={evt => {
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = 'no_colormap'
+                    if(evt.target.checked){
+                      Object.values(data.nodes).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      Object.values(data.links).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = 'no_colormap'
+                      })
+                      data.colorMap = tags_selected[0]
+                      data['nodeTags'][tags_selected[0]].show_legend = true
+                    }
+                    set_data({ ...data })
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+          </Row>
+        </FormGroup>)
+    }
+    else if (tags_group.banner === 'level' && Object.values(tags_group.tags).length > 0) {
+      if (Object.keys(tags_group.tags).length < 1 ) {
+        return <></>
+      }
+      const tmp = Object.entries(tags_group.tags).filter(tag=>tag[1].selected)
+      const selected = tmp.length > 0 ? tmp[0][0] : ''
+      return (
+        <FormGroup as={Row}>
+          <Row>
+            {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
+          </Row>
+          <Row>
+            <OverlayTrigger
+              key={'Banner.ndd_lst.4'}
+              placement={'bottom'}
+              delay={500}
+              overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
+              <Col xs={10}>
+                <Form.Select
+                  style={{ width: '200px', color: 'black' }}
+                  key={tags_group.group_name}
+                  value={selected}
+                  placeholder='all'
+                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                </Form.Select>
+              </Col>
+            </OverlayTrigger>
+            {tags_group.siblings !== undefined && tags_group.siblings.length > 0 ?
+              <Col xs={2}>
+                <OverlayTrigger
+                  key={'Banner.ndd_chk.4'}
+                  placement={'bottom'}
+                  delay={500}
+                  overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
+                  <FormCheck inline
+                    type='switch'
+                    checked={tags_group.activated}
+                    onChange={evt => {
+                      tags_group.activated = evt.target.checked
+                      tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
+                      set_nodes_level(data)
+                      set_data({ ...data })
+                    }}
+                  />
+                </OverlayTrigger>
+              </Col> : <></>
+            }
+          </Row>
+        </FormGroup>)
+    }
+    else if (tags_group.banner == 'multi') {
+      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+
+      return (
+        <FormGroup as={Row}>
+          <Row>
+            <Col xs={10}>
+              <FormLabel style={{ color: color }}>{tags_group.group_name}
+              </FormLabel>
+            </Col>
+          </Row>
+          <Row>
+            <OverlayTrigger
+              key={'Banner.ndd_lst.3'}
+              placement={'bottom'}
+              delay={500}
+              overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
+              <Col xs={10}>
+                <MultiSelect
+                  className={'multidropdown_filter_node_link'}
+                  style={{widthMax:'200px', color: 'black' }}
+                  valueRenderer={(selected:selected_type[]) => {
+                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
+                  }}
+                  labelledBy={'dropdown_node_filter'}
+                  overrideStrings={{
+                    'selectAll': 'Tout sélectionner',
+                  }}
+                  // hasSelectAll={false}
+                  value={selected}
+                  options={options}
+                  onChange={(selected: [{ label: string, value: string }]) => {
+                    handleMultiDropdown(selected, tags_group, data, set_data)
+                  }}
+                />
+              </Col>
+            </OverlayTrigger>
+            <Col xs={2}>
+              <OverlayTrigger
+                key={'Banner.ndd_chk.3'}
+                placement={'bottom'}
+                delay={500}
+                overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.colorMap==tags_selected[0]}
+                  onChange={evt => {
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = 'no_colormap'
+                    if(evt.target.checked){
+                      Object.values(data.nodes).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      Object.values(data.links).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = 'no_colormap'
+                      })
+                      data.colorMap = tags_selected[0]
+                      data['nodeTags'][tags_selected[0]].show_legend = true
+                    }
+                    set_data({ ...data })
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+          </Row>
+        </FormGroup>)
+    }
+  })
+  // if (!level) {
+  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
+  // } else {
+  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th></th></tr>{allDD}</>)
+  // }
+  return (<>{allDD}</>)
+}
+
+/**
+ *
+ *
+ * @param {React.ChangeEvent<HTMLSelectElement>} evt
+ * @param {TagsGroup} tags_group
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => void}
+ */
+const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+  const val = evt.target.value
+  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
+  if (tags_group.banner === 'level' ) {
+    set_nodes_level(data)
+  }
+  set_data({ ...data })
+}
+
+/**
+ *
+ *
+ * @param {[{ label: string, value: string }]} selected
+ * @param {TagsGroup} tags_group
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => void}
+ */
+const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+  const tab_sel = selected.map((d) => {
+    return d.value
+  })
+  Object.entries(tags_group.tags).forEach(tag => tag[1].selected = tab_sel.includes(tag[1].name))
+  // Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
+  if(tab_sel.length==0 && Object.values(data.dataTags).map(dt=>dt.group_name).includes(tags_group.group_name)){
+    Object.entries(tags_group.tags)[0][1].selected=true
+  }
+  set_data({ ...data })
+}
+
+/**
+ * Function that generate dropdown for each groupTag of linkTags
+ *
+ * @param {TagsCatalog} fluxTags
+ * @param {SankeyData} data
+ * @param {(data: SankeyData) => void} set_data
+ * @returns {(void) => any}
+ */
+export const addAllDropDownFlux = (
+  t:TFunction,
+  fluxTags: TagsCatalog,
+  data: SankeyData,
+  set_data: (data: SankeyData) => void) =>
+{
+  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
+  const allDD = banner_grouptag.map(tags_group => {
+    const the_tags_group = tags_group as TagsGroup
+    const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
+
+    if (the_tags_group.banner == 'one') {
+      return (
+        <FormGroup as={Row}>
+          <Row>
+            <Col xs={10}>
+              <FormLabel>{the_tags_group.group_name}</FormLabel>
+            </Col>
+          </Row>
+          <Row>
+            <OverlayTrigger
+              key={'Banner.ndd_lst.1'}
+              placement={'bottom'}
+              delay={500}
+              overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
+              <Col xs={10}>
+                {<Form.Select
+                  key={the_tags_group.group_name}
+                  placeholder='all'
+                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
+                    Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key}>{tag.name}</option>)
+                    })}
+                </Form.Select>}
+              </Col>
+            </OverlayTrigger>
+            <Col xs={2} >
+              <OverlayTrigger
+                key={'Banner.ndd_chk.1'}
+                placement={'bottom'}
+                delay={500}
+                overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.colorMap==tags_selected[0]}
+                  onChange={evt => {
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = 'no_colormap'
+
+                    if(evt.target.checked){
+                      Object.values(data.nodes).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      Object.values(data.links).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      data.colorMap = tags_selected[0]
+                      data.fluxTags[tags_selected[0]].show_legend = true
+                    }
+
+                    set_data({ ...data })
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+          </Row>
+        </FormGroup>)
+    }
+    else if (the_tags_group.banner == 'multi') {
+      const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      return (
+        <FormGroup as={Row}>
+
+          <Row>
+            <Col xs={10}>
+              <FormLabel>{the_tags_group.group_name}</FormLabel>
+            </Col>
+          </Row>
+
+          {/* Liste déroulante des groupe de filtre  */}
+          <Row>
+            <OverlayTrigger
+              key={'Banner.ndd_lst.2'}
+              placement={'bottom'}
+              delay={500}
+              overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
+              <Col xs={10}>
+                <MultiSelect
+                  className={'multidropdown_filter_node_link'}
+                  style={{ color: 'black',width:'200px' }}
+                  valueRenderer={(selected: selected_type[]) => {
+                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
+                  }}
+                  labelledBy={'dropdown_node_filter'}
+                  overrideStrings={{
+                    'selectAll': 'Tout sélectionner',
+                  }}
+                  // hasSelectAll={false}
+                  value={selected}
+                  options={options}
+                  onChange={(selected: [{ label: string, value: string }]) => {
+                    handleMultiDropdown(selected, the_tags_group, data, set_data)
+                  }}
+                />
+              </Col>
+            </OverlayTrigger>
+
+            {/* Appliquer le filtrage  */}
+            <Col xs={2}>
+              <OverlayTrigger
+                key={'Banner.ndd_chk.2'}
+                placement={'bottom'}
+                delay={500}
+                overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
+                <FormCheck
+                  inline
+                  type='switch'
+                  checked={data.colorMap==tags_selected[0]}
+                  onChange={evt => {
+                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+                    Object.values(data.nodes).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+
+                    Object.values(data.links).forEach(el => {
+                      el.colorParameter = 'local'
+                      el.colorTag = 'no_colormap'
+                    })
+                    data.colorMap = 'no_colormap'
+                    if(evt.target.checked){
+                      Object.values(data.nodes).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      Object.values(data['links']).forEach(el => {
+                        el.colorParameter = 'groupTag'
+                        el.colorTag = tags_selected[0]
+                      })
+                      data.colorMap = tags_selected[0]
+                      data['fluxTags'][tags_selected[0]].show_legend = true
+                    }
+                    set_data({ ...data })
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+          </Row>
+        </FormGroup>)
+    }
+  })
+  return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
+}
+
 
 export const OpenSankeyMenus = (
   t:TFunction,
@@ -253,88 +709,375 @@ export const OpenSankeyMenus = (
   externale_save_item:JSX.Element[],
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  return  [
-    <NavDropdown key={'files'}  title={t('Menu.Fichiers')} id={'files'} >
-      <NavDropdown drop='end' id='ouvrir' title={t('Menu.ouvrir')}  >
-        <Dropdown.Item
-          onClick={() => {
-            if (_load_json.current) {
-              _load_json.current.name = ''
-              _load_json.current.click()
-            }
-          }} >JSON</Dropdown.Item>
-        <Form.Control
-          type="file"
-          ref={_load_json}
-          style={{ display: 'none' }}
-          onChange={(evt: ChangeEvent) => {
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                reinitialization()
-                let result = String((e.target as FileReader).result)
-                const new_data = default_sankey_data()
-                result = result.split('<br>').join('\\\\n')
-                const result_data = JSON.parse(result)
-                Object.assign(new_data, result_data)
-                if (result_data.version === undefined) {
-                  (new_data.version as unknown as undefined) = undefined
-                }
-                convert_data(new_data)
-                complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
-                set_nodes_level(data)
-                set_data(new_data)
-                const test = document.getElementsByClassName('navbar')
-                let margin_top = 0
-                if (test && test.length > 0) {
-                  margin_top = test[0].getBoundingClientRect().height
-                  d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-                }
-              }
-            })()
-            reader.readAsText(files[0])
-          }}
-        />
-        <Dropdown.Item
-          onClick={() => set_show_excel_dialog(true)}
-        >Excel</Dropdown.Item>
-      </NavDropdown>
-      <NavDropdown  drop='end' id='enregistrer' title={t('Menu.enregistrer')} >
-        <Dropdown.Item onClick={()=>{
-          set_show_save_json(true)
-        }} >JSON</Dropdown.Item>
-        {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
-        <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
-        {externale_save_item}
-      </NavDropdown>
-      <NavDropdown drop='end' id='exporter' title={t('Menu.exporter')} >
-        <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-        <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
-      </NavDropdown>
-      <Dropdown.Item onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Dropdown.Item>
-      <Dropdown.Item onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Dropdown.Item>
-    </NavDropdown>,
-    <NavDropdown key={'edition'} id={'edition'} title={t('Menu.Edition')} >
-      <Dropdown.Item onClick={reinitialization} >{t('Menu.reinit')}</Dropdown.Item>
-      {/* <Dropdown.Item onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Dropdown.Item>     */}
-      <Dropdown.Item onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Dropdown.Item>
-      <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
-      <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
-      {external_edition_item}
-    </NavDropdown >,
-    <NavDropdown key={'Aide'} id={'Aide'} title={t('Menu.Aide')} >
-      <Dropdown.Item onClick={() =>{ 
-        set_show_welcome(true)
-        set_never_see_again(false)
-        localStorage.setItem('dontSeeAggainWelcome','0')
-      }}>
-        {t('DisplayWelcome')}</Dropdown.Item>
-      <Dropdown.Item onClick={() => goToUserDoc()} >{t('Menu.doc')}</Dropdown.Item>
-    </NavDropdown >,
-  ]
+  const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
+  const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
+  const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
+  const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
+  const DT_length=Object.keys(data.dataTags).length
 
+
+
+  // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
+  const recursionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
+    const DT_l=Object.values(DT).length
+    Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
+      .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
+        const n_suffix= suffix+'_'+i
+        // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in getLinkValue
+        // (Deepest= last group_dataTag )
+        if(ind==DT_l-1){
+          const n_l=JSON.parse(JSON.stringify(link_to_copy))
+          n_l.idLink=n_l.idLink+n_suffix
+          new_links[n_l.idLink]=n_l
+
+          //Ajoute dans les noeuds source/target les id de flux
+          const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
+          if(ind_in_src>=0){
+            data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)
+          }
+          const ind_in_trgt=data.nodes[link_to_copy.idTarget].inputLinksId.indexOf(link_to_copy.idLink)
+          if(ind_in_trgt>=0){
+            data.nodes[link_to_copy.idTarget].inputLinksId.splice(ind_in_trgt,1)
+          }
+          data.nodes[link_to_copy.idSource].outputLinksId.push(n_l.idLink)
+          data.nodes[link_to_copy.idTarget].inputLinksId.push(n_l.idLink)
+        }
+        else {
+          recursionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
+        }
+
+      })
+  }
+  // Function that return a simple or multiple dropdown of groupTag of data and links
+  // This allow us to choose wich grouptag to select and wich tag of these group to display
+  const addAllDropDownLinks = () => {
+    const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+    const allDD = banner_grouptag.map(([, tags_group]) => {
+      if (tags_group.banner == 'one') {
+        let selected = ''
+        if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
+          selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+        }
+        return (
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            <FormGroup as={Row}>
+              <Col xs={10}>
+                {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  const pl=Object.entries(data.links).map(l=>{
+                    const suffixeStart= l[0].indexOf('_')
+                    if(suffixeStart>=0){
+                      l[0]=l[0].slice(0,suffixeStart)
+                      l[1].idLink=l[0]
+                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+
+                      //Ajoute dans les noeuds source/target les id de flux
+                      const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+                      if(ind_in_src==-1){
+                        data.nodes[l[1].idSource].outputLinksId.push(l[0])
+                      }
+                      const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+                      if(ind_in_trgt==-1){
+                        data.nodes[l[1].idTarget].inputLinksId.push(l[0])
+                      }
+                    }
+                    return l
+                  })
+                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+                  const pureLinks=Object.fromEntries(pl)
+                  data.links=pureLinks
+                  handleSimpleDropdown(evt, tags_group,data,set_data)
+                }}>
+                  {
+                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                      return (<option key={i} value={tag_key} >{tag.name}</option>)
+                    })}
+                </Form.Select>}
+              </Col>
+            </FormGroup>
+          </>)
+      }
+      else if (tags_group.banner == 'multi') {
+        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name ,'disabled':((selected.length<2 && tag[1].name==selected[0].label))} })
+        return (
+          <>
+            <FormLabel>{tags_group.group_name}</FormLabel>
+            <MultiSelect
+              className={'multidropdown_filter_node_link'}
+              style={{ color: 'black',width:'200px' }}
+              labelledBy={'dropdown_link_filter'}
+              overrideStrings={{
+                'selectAll': 'Tout sélectionner',
+              }}
+              value={selected}
+              options={options}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                handleMultiDropdown(selected, tags_group, data, set_data)
+
+                //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
+                if(Object.keys(data.dataTags).length>0){
+
+                  const pl=Object.entries(data.links).map(l=>{
+                    const suffixeStart= l[0].indexOf('_')
+                    if(suffixeStart>=0){
+                      l[0]=l[0].slice(0,suffixeStart)
+                      l[1].idLink=l[0]
+                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                    }
+                    return l
+                  })
+                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+                  const pureLinks=Object.fromEntries(pl)
+
+                  const new_links={} as { [link_id: string]: SankeyLink }
+
+                  Object.values(pureLinks).forEach(l=>{
+                    const suffix=''
+                    recursionDataTag(data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                  })
+                  data.links=new_links
+                  set_data({...data})
+                }
+              }} />
+          </>)
+      }
+    })
+    return allDD
+  }
+
+
+
+  //Popover element to handle node tags
+  // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
+  const filter_color_node=
+  <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+        {addAllDropDownNode(t,data,set_data,false)}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
+      }</table>
+    </Popover.Body>
+  </Popover>
+
+  //Popover element to handle the display of link tags
+  const filter_color_link=
+  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
+    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+      {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
+    </Popover.Body>
+  </Popover>
+
+  //Popover element to handle the display of data tags
+  const filter_data=
+  <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
+    <Popover.Body>
+      <FormGroup as={Row}>
+        <Col xs={10}>
+          {addAllDropDownLinks()}
+        </Col>
+        <Col xs={2}>
+          <FormCheck
+            type='switch'
+            style={{marginLeft: '-2em'}}
+            checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
+            onChange={evt=> {
+              //Déselecitonne tous les type de tag
+              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
+
+              Object.values(data.nodes).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              Object.values(data.links).forEach(el => {
+                el.colorParameter = 'local'
+                el.colorTag = 'no_colormap'
+              })
+
+              data.colorMap = 'no_colormap'
+
+              //Met le dernier dataTag en tant que couleur a suivre pour les flux
+              if(evt.target.checked){
+                Object.values(data.nodes).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                Object.values(data.links).forEach(el => {
+                  el.colorParameter = 'groupTag'
+                  el.colorTag = 'no_colormap'
+                })
+                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
+                Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
+              }
+
+              set_data({...data})
+            }}
+          />
+        </Col>
+      </FormGroup>
+    </Popover.Body>
+  </Popover>
+
+
+  const item_dropdown_filter=<>
+  {(node_filter)?
+    <OverlayTrigger
+      key={'tooltip-link-color-filter'}
+      placement={'bottom'}
+      trigger={'click'}
+      rootClose
+      overlay={filter_color_node}>
+      <Button size='sm' variant='light' >
+        {t('Menu.Noeuds')}
+      </Button>
+    </OverlayTrigger>
+    :
+    <></>
+  }
+
+  {(flux_filter)?
+    <OverlayTrigger
+      key={'tooltip-node-color-filter'}
+      placement={'bottom'}
+      trigger={'click'}
+      rootClose
+      overlay={filter_color_link}>
+      <Button size='sm' variant='light' >{t('Menu.flux')}</Button>
+    </OverlayTrigger>
+  
+    :
+    <></>
+  }
+  {(Object.values(data.dataTags).length>0)?
+    <OverlayTrigger
+      key={'tooltip-data-filter'}
+      placement={'bottom'}
+      trigger={'click'}
+      rootClose
+      overlay={filter_data}>
+      <Button size='sm' variant='light'>
+        <>{t('Banner.data')}</>
+      </Button>
+    </OverlayTrigger>
+    
+    :
+    <></>
+  }
+</>
+
+
+
+
+
+
+  // OBJECT THAT CONTAIN DIFFERENT MENUS
+  const ui :{[s:string] : JSX.Element}=  {}
+  
+  if(!window.SankeyToolsStatic){
+    ui['file']=<>
+    <DropdownButton size='sm' variant='light' drop='down' id='ouvrir' title={t('Menu.ouvrir')}  >
+      <Dropdown.Item
+        onClick={() => {
+          if (_load_json.current) {
+            _load_json.current.name = ''
+            _load_json.current.click()
+          }
+        }} >JSON</Dropdown.Item>
+      <Form.Control
+        type="file"
+        ref={_load_json}
+        style={{ display: 'none' }}
+        onChange={(evt: ChangeEvent) => {
+          const files = (evt.target as HTMLFormElement).files
+          const reader = new FileReader()
+          reader.onload = (() => {
+            return (e: ProgressEvent<FileReader>) => {
+              reinitialization()
+              let result = String((e.target as FileReader).result)
+              const new_data = default_sankey_data()
+              result = result.split('<br>').join('\\\\n')
+              const result_data = JSON.parse(result)
+              Object.assign(new_data, result_data)
+              if (result_data.version === undefined) {
+                (new_data.version as unknown as undefined) = undefined
+              }
+              convert_data(new_data)
+              complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
+              set_nodes_level(data)
+              set_data(new_data)
+              const test = document.getElementsByClassName('navbar')
+              let margin_top = 0
+              if (test && test.length > 0) {
+                margin_top = test[0].getBoundingClientRect().height
+                d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+              }
+            }
+          })()
+          reader.readAsText(files[0])
+        }}
+      />
+      <Dropdown.Item
+        onClick={() => set_show_excel_dialog(true)}
+      >Excel</Dropdown.Item>
+    </DropdownButton>
+    <DropdownButton size='sm' variant='light'  drop='down' id='enregistrer' title={t('Menu.enregistrer')} >
+      <Dropdown.Item onClick={()=>{
+        set_show_save_json(true)
+      }} >JSON</Dropdown.Item>
+      {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
+      <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
+      {externale_save_item}
+    </DropdownButton>
+    <DropdownButton size='sm' variant='light' drop='down' id='exporter' title={t('Menu.exporter')} >
+      <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
+      <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
+      <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
+    </DropdownButton>
+    <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Button>
+    <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Button>
+  </>
+
+  ui['edition']=<>
+    <Button size='sm' variant='light' onClick={reinitialization} >{t('Menu.reinit')}</Button>
+    {/* <Button size='sm' variant='light' onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Button>     */}
+    <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}>{t('Menu.amp')}</Button>
+    <Button size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Button>
+    <Button size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Button>
+    {external_edition_item}
+  </>
+  ui['aide']=<><Button size='sm' variant='light' onClick={() =>{ 
+      set_show_welcome(true)
+      set_never_see_again(false)
+      localStorage.setItem('dontSeeAggainWelcome','0')
+    }}>
+      {t('DisplayWelcome')}</Button>
+    <Button size='sm' variant='light' onClick={() => goToUserDoc()} >{t('Menu.doc')}</Button></>
+
+  }
+
+  if(node_filter || flux_filter || (Object.values(data.dataTags).length>0)){
+    ui['filter']=
+    <OverlayTrigger
+      key={'tooltip-filter'}
+      placement={'right'}
+      rootClose
+      overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
+    
+        {item_dropdown_filter}
+    </OverlayTrigger>
+  }
+
+  
+return ui
 
 
 }
@@ -388,13 +1131,15 @@ const Menu: FunctionComponent<MenuTypes> = (
     token,
     useNavigate,
     external_modal,
-    menu_banner,
+    // menu_banner,
     loginOut,
     unsetTokens,
     min_width_and_height,
     name_user
   }
 ) => {
+    const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
+
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = findMaxLinkValue(
@@ -508,8 +1253,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     navigate('/')
     set_data({...data})
   }
-  const toolbar=Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
-  
+  // const toolbar=Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
+  // menus['toolbar']=(menu_banner as {[x:string]:JSX.Element})['toolbar']
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -523,7 +1268,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           }
           
           <Navbar.Brand href="#" onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
-          {!window.SankeyToolsStatic ? (<>
+          {/* {!window.SankeyToolsStatic ? (<>
             <Nav className='me-auto'>
               {menus.map((c,i)=>{
                 return <React.Fragment key={i}>{c}</React.Fragment>
@@ -541,9 +1286,36 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Nav>
           </>
           ) : (<>
+            
             <Col><h4 onClick={()=>set_welcome_text(window.sankey.welcome_text)}><a href="#" style={{color:"#666"}}>{window.sankey.header}</a></h4></Col>
             {toolbar}
-          </>)} 
+          </>)}  */}
+          <Col>
+            <Row>
+            <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
+              {Object.keys(menus).map(m=>{
+
+                return <Nav.Item>
+                <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
+                {t('Menu.'+m)}
+                </Nav.Link>
+              </Nav.Item>
+              })}
+              </Nav>
+            </Row>
+            <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
+              <ButtonGroup>
+                {menus[menu_acivated]}
+              </ButtonGroup>
+            </Row>
+          </Col>
+          {!window.SankeyToolsStatic ?<Nav>
+            <Col>
+                <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
+                <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
+                {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}     
+            </Col>
+          </Nav>:<></>}
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
