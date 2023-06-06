@@ -11,18 +11,21 @@ exit_if_error() {
 
 # Front-end build
 cd opensankey/client
-npm install
+npm install --legacy-peer-deps
+npm link --legacy-peer-deps sankeyanimation
+npm run lint || exit_if_error $?
 npm run build || exit_if_error $?
 cd ../..
 
 # Back-end build
 pip install -r requirements.txt  || exit_if_error $?
 pip install -r conda_requirements.txt  || exit_if_error $?
+cd opensankey/server
 flake8  || exit_if_error $?
+cd ../..
 pip install .  || exit_if_error $?
 
 # Doc build
 cd opensankey/doc
 sphinx-multibuild -i ./sources/index -i ./sources/pages -i ./sources/subpages -s ./build/tmp -o ./build/html -b html -c ./sources/  || exit_if_error $?
 cd ../..
-

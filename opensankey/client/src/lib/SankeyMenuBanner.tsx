@@ -1,6 +1,6 @@
 import React, {  useRef, useState } from 'react'
-import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Dropdown, DropdownButton,Overlay } from 'react-bootstrap'
-import {  SankeyData, TagsGroup, TagsCatalog,SankeyLink } from './types'
+import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Overlay } from 'react-bootstrap'
+import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUtils'
@@ -554,7 +554,7 @@ export const toolbar_builder = (
 
   let diagrams_element = <React.Fragment key={'1'}></React.Fragment>
   if (window.SankeyToolsStatic && sous_filieres && !is_split) {
-    diagrams_element = 
+    diagrams_element =
     <Popover id='popover-diagram' style={{maxWidth:'100%'}}>
       <Popover.Header as="h3">{diagram_label}</Popover.Header>
       <Popover.Body>
@@ -646,7 +646,7 @@ export const toolbar_builder = (
   if (window.sankey && window.sankey.excel) {
     ui['excel']=(excel_element)
   }
-  
+
   let mouse_mode_edition=<></>
 
   // Add button for the edition of the sankey
@@ -677,15 +677,15 @@ export const toolbar_builder = (
 
   }
 
- 
-  
+
+
 
 
   ui['toolbar']=(
     <FormGroup as={Col} lg='auto'>
       {mouse_mode_edition}
-      
-        
+
+
       <ButtonGroup as={Col} lg='auto' >
 
         {/* Add the button to choose the aggregation level  */}
