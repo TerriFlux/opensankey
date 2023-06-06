@@ -1,13 +1,12 @@
-import {SankeyData,SankeyLink,SankeyNode, SankeyLinkValue,SankeyLinkValueDict,TagsGroup,TagsCatalog} from 'open-sankey/src/lib/types'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog} from 'open-sankey/src/lib/types'
 
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 
-
-export interface SankeyPlusData extends SankeyData { 
+export interface SankeyPlusData extends SankeyData {
     icon_catalog: { [x: string]: string | null | undefined},
     nodes:{[x: string]:SankeyPlusNode}
     links:{[x: string]:SankeyPlusLink}
-    view:{id: string,view_data: {diff:any},nom:string,details:string}[],
+    view:{id: string, view_data: {diff:any},nom:string,details:string}[],
     labels:{[x: string]:SankeyPlusLabel}
     style_node:{[x: string]:SankeyPlusNode},
     style_link:{[x: string]:SankeyPlusLink},
@@ -41,17 +40,17 @@ export interface SankeyPlusLabel {
     position_vert:string,
     position_horiz:string,
     isTextHTML:boolean,
-  
+
     font_size:number,
     font_weight:boolean,
     font_style:boolean,
     font_uppercase:boolean,
-  
+
     label_width: number,
     label_height: number,
 
     is_edit_raw:boolean,
-   
+
     x: number,
     y: number,
     x_label: number,

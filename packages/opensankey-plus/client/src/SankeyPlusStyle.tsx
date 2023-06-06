@@ -40,9 +40,9 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
   selected_style_node:string,
   set_selected_style_node:React.Dispatch<React.SetStateAction<string>>,
   editable:boolean
-) => { 
+) => {
 
-  if(selected_style_node!='default' && !editable){
+  if(selected_style_node !== 'default' && !editable){
     set_selected_style_node('default')
   }
 
@@ -53,7 +53,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
   const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node)
   const applyStyleToNodes = () => {
     const style = data.style_node[selected_style_node]
-    Object.values(data.nodes).filter(d => d.style != '' && d.style == selected_style_node).map(d => {
+    Object.values(data.nodes).filter(d => d.style !== '' && d.style === selected_style_node).map(d => {
       //Style Noeud
       d.shape_visible = style.shape_visible
       d.color = style.color
@@ -80,7 +80,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
     set_data({ ...data })
   }
 
-  
+
 
   return(
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
@@ -106,7 +106,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
           }
           {(editable)?<Col xs={5}>
             <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node != '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node !== '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_node).map((d,i) => {
                   return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
@@ -120,7 +120,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
             <Button
               size="sm"
               variant='danger'
-              disabled={selected_style_node == 'default'}
+              disabled={selected_style_node === 'default'}
               onClick={
                 () => {
                   delete data.style_node[selected_style_node]
@@ -142,9 +142,9 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
           <Col xs={10} >
 
             <FormControl
-              disabled={(selected_style_node=='default')?true:false}
+              disabled={(selected_style_node === 'default')?true:false}
               value={
-                (selected_style_node != '') ? data.style_node[selected_style_node].name : ''
+                (selected_style_node !== '') ? data.style_node[selected_style_node].name : ''
               }
 
               onChange={evt => {
@@ -184,9 +184,9 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
   set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
   editable:boolean,
   additional_link_appearence_items:JSX.Element[]
-) => { 
+) => {
 
-  if(selected_style_link!='default' && !editable){
+  if(selected_style_link !== 'default' && !editable){
     set_selected_style_link('default')
   }
   const closeStyleEditionLink = () => {
@@ -194,7 +194,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
   }
   const applyStyleToLinks = () => {
     const style = data.style_link[selected_style_link]
-    Object.values(data.links).filter(d => d.style != '' && d.style == selected_style_link).map(d => {
+    Object.values(data.links).filter(d => d.style !== '' && d.style === selected_style_link).map(d => {
       d.recycling = style.recycling
       d.orientation = style.orientation
       d.arrow = style.arrow
@@ -224,7 +224,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
       <Modal.Body>
 
         <Row >
-          
+
           {(editable)?<Col xs={1}>
             <Button size="sm" onClick={() => {
               const new_style = default_link(data)
@@ -235,10 +235,10 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
 
             }}><FaPlus /></Button>
           </Col>:<></>}
-          
+
           {(editable)?<Col xs={5}>
             <Dropdown>
-              <Dropdown.Toggle disabled={!editable} variant="success" id="dropdown-basic">{(selected_style_link != '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Toggle disabled={!editable} variant="success" id="dropdown-basic">{(selected_style_link !== '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map((d,i) => {
                   return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
@@ -246,13 +246,13 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
               </Dropdown.Menu>
             </Dropdown>
           </Col>:<></>}
-          
+
 
           {(editable)?<Col xs={1}>
             <Button
               size="sm"
               variant='danger'
-              disabled={selected_style_link == 'default'}
+              disabled={selected_style_link === 'default'}
               onClick={
                 () => {
                   delete data.style_link[selected_style_link]
@@ -277,7 +277,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
             <FormControl
               disabled={!editable}
               value={
-                (selected_style_link != '') ? data.style_link[selected_style_link].idLink : ''
+                (selected_style_link !== '') ? data.style_link[selected_style_link].idLink : ''
               }
 
               onChange={evt => {
@@ -293,10 +293,10 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
         <Row>
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
-              
+
               {SankeyMenuConfigurationLinksAppearence(data,selected_link,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link)}
               {SankeyMenuConfigurationLinksLabel(data,{current:[]},set_data,t,true,selected_style_link)}
-              
+
             </Tabs>
           </Col>
         </Row>
