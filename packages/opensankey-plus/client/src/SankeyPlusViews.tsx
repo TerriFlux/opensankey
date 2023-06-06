@@ -1612,6 +1612,15 @@ export const viewsAccordion = (
               }) : <></>}
             </tbody>
           </Table>
+          <Button onClick={()=>{
+            master_data.view.forEach(v=>{
+              const to_download=get_data_from_view(master_data,v.id)
+              to_download.view=[]
+              clickSaveDiagram(to_download)
+            })
+            }}>
+              {t('view.exportAll')}
+          </Button>
         </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
