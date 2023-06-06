@@ -5,9 +5,10 @@ import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
-
-
-
+import ReactQuill,{Quill} from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
+import ImageResize from 'quill-image-resize-module-react'
+Quill.register('modules/imageResize', ImageResize)
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
@@ -44,9 +45,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.name, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.name, 'value': d.idLabel } })
-  
+
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
-  //Permet donc de les déssiner après 
+  //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
     const { labels } = data
     const listElmt = Object.keys(labels)
@@ -64,7 +65,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 
 
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
-  //Permet donc de les déssiner après 
+  //Permet donc de les déssiner après
   const handleDownlabel = (i: string) => {
     const { labels } = data
     const listElmt = Object.keys(labels)
@@ -99,7 +100,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
             multi_selected_label.current = m_s
-            setForceUpdate(!forceUpdate) 
+            setForceUpdate(!forceUpdate)
           }}
           labelledBy={'hello'}
         />
@@ -111,11 +112,11 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const allLabelHeight = () => {
     let display_size = true
     let size = 25
-    if (multi_selected_label.current.length != 0) {
+    if (multi_selected_label.current.length !== 0) {
       size = multi_selected_label.current[0].label_height
     }
     multi_selected_label.current.map((d) => {
-      display_size = (d.label_height == size) ? display_size : false
+      display_size = (d.label_height === size) ? display_size : false
     })
     return (display_size) ? size : -1
   }
@@ -123,11 +124,11 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const allLabelWidth = () => {
     let display_size = true
     let size = 25
-    if (multi_selected_label.current.length != 0) {
+    if (multi_selected_label.current.length !== 0) {
       size = multi_selected_label.current[0].label_width
     }
     multi_selected_label.current.map((d) => {
-      display_size = (d.label_width == size) ? display_size : false
+      display_size = (d.label_width === size) ? display_size : false
     })
     return (display_size) ? size : -1
   }
@@ -140,12 +141,15 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     return isHTML
   }
   const allLabelTransparent = () => {
-    let transparent = false
-
+    let display_size = true
+    let opa = 100
+    if (multi_selected_label.current.length !== 0) {
+      opa = multi_selected_label.current[0].opacity
+    }
     multi_selected_label.current.map((d) => {
-      transparent = (d.transparent) ? true : transparent
+      display_size = (d.opacity === opa) ? display_size : false
     })
-    return transparent
+    return (display_size) ? opa : 0
   }
   const allLabelBorderTransparent = () => {
     let transparent = false
@@ -159,9 +163,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const allNodeLabelVert = (arg: string, pos: string) => {
     let all_same = true
     if (multi_selected_label.current.length > 0) {
-      if (arg == 'vert') {
+      if (arg === 'vert') {
         multi_selected_label.current.map(d => all_same = (d.position_vert !== pos) ? false : all_same)
-      } else if (arg == 'horiz') {
+      } else if (arg === 'horiz') {
         multi_selected_label.current.map(d => all_same = (d.position_horiz !== pos) ? false : all_same)
       }
     } else {
@@ -174,11 +178,11 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const allLabelFontSize = () => {
     let display_size = true
     let size = 1
-    if (multi_selected_label.current.length != 0) {
+    if (multi_selected_label.current.length !== 0) {
       size = multi_selected_label.current[0].font_size
     }
     multi_selected_label.current.map((d) => {
-      display_size = (d.font_size == size) ? display_size : false
+      display_size = (d.font_size === size) ? display_size : false
     })
     return (display_size) ? size : -1
   }
@@ -240,8 +244,68 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       }
     })
   }
-  
-   
+
+  const isAllEditRaw = () => {
+    let visible = false
+    multi_selected_label.current.map(d => visible = (d.is_edit_raw) ? true : visible)
+    return visible
+  }
+
+  const modules = {
+    toolbar: [
+      [{ 'font': [] }],
+      [{ 'header': [1, 2, 3, 4, 5, false] }],
+      ['bold', 'italic', 'underline','strike'],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      [{'align':[]}],
+
+      ['image'],
+      ['clean'],
+    ],
+    imageResize: {
+      parchment: Quill.import('parchment'),
+      modules: ['Resize', 'DisplaySize']
+    }
+  }
+
+  const formats = ['font',
+    'header','size',
+    'bold', 'italic', 'underline', 'strike','color','background',
+    'list', 'bullet','image','align'
+  ]
+  //Create 2 editor :
+  // - one in an editor when we can apply layout width buttons
+  // - one with raw html in case the editor can't do exactly what we want
+  const editor_fo=<ReactQuill
+    value={multi_selected_label.current.length>0?multi_selected_label.current[0].name:''}
+    onChange={(evt) => {
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+        d.name =evt
+      })
+    }}
+    onBlur={()=>{set_data({ ...data })}}
+    theme="snow"
+    modules={modules}
+    formats={formats}
+    readOnly={!is_activated}
+  />
+  const editor_fo_raw=<Form.Control
+    as="textarea"
+    rows={5}
+    disabled={is_activated?multi_selected_label.current.length !== 1:true}
+    value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
+    onChange={
+      (evt) => {
+        multi_selected_label.current.map(label => label.name = evt.target.value)
+        set_data({ ...data })
+      }
+    }
+  />
+
+
+
   return <Accordion.Item
     key='9'
     id="LL"
@@ -276,7 +340,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                     label_height: 25,
                     color: 'white',
                     color_border: 'black',
-                    transparent: false,
+                    opacity: 100,
                     transparent_border: false,
                     position_vert: 'middle',
                     position_horiz: 'left',
@@ -289,6 +353,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                     y: 50,
                     x_label: 50,
                     y_label: 12,
+                    is_edit_raw:false
                   }
                   data.labels[new_label.idLabel] = new_label
                   multi_selected_label.current = [new_label]
@@ -300,7 +365,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             <Col xs={1}>
               <Button size="sm" variant='danger'
                 disabled={!is_activated}
-            
+
                 onClick={() => {
                   data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
                   multi_selected_label.current = []
@@ -312,7 +377,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               {//Boutton pour monter le label sélctionné
               }
               <ButtonGroup>
-                <Button variant='info' disabled={is_activated?multi_selected_label.current.length != 1:true}
+                <Button variant='info' disabled={is_activated?multi_selected_label.current.length !== 1:true}
 
                   onClick={() => {
                     multi_selected_label.current.map(l => {
@@ -322,7 +387,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 
                   }}><FaAngleUp /></Button>
 
-                <Button variant='warning' disabled={is_activated?multi_selected_label.current.length != 1:true}
+                <Button variant='warning' disabled={is_activated?multi_selected_label.current.length !== 1:true}
                   onClick={() => {
                     multi_selected_label.current.map(l => {
                       handleUplabel(l.idLabel)
@@ -334,23 +399,24 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             </Col>
           </Form.Group>
           <Form.Group as={Row}>
-            <Row>
-              <FormLabel style={{color:is_activated?'#555555':'#DADADA'}} column sm={1}>Text:</FormLabel>
-              <Col sm={11}>
-                <Form.Control
-                  as="textarea"
-                  rows={5}
-                  disabled={is_activated?multi_selected_label.current.length != 1:true}
-                  value={multi_selected_label.current.length > 0 ? multi_selected_label.current[0].name : ''}
-                  onChange={
-                    (evt) => {
-                      multi_selected_label.current.map(label => label.name = evt.target.value)
-                      set_data({ ...data })
-                    }
-                  }
-                />
-              </Col>
-            </Row>
+            {isAllEditRaw()?editor_fo_raw:editor_fo}
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col xs={4}>
+              <FormLabel style={{color:is_activated?'#555555':'#DADADA'}}>{t('LL.editorRaw')}</FormLabel>
+            </Col>
+            <Col xs={8}>
+              <Form.Check
+                inline
+                type='switch'
+                disabled={!is_activated}
+                checked={is_activated?isAllEditRaw():true}
+                onChange={evt => {
+                  multi_selected_label.current.map(d => d.is_edit_raw = evt.target.checked)
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
           </Form.Group>
           <Form.Group as={Row}>
             <Col xs={4}>
@@ -412,14 +478,34 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             <Col xs={4}>
               <FormLabel style={{color:is_activated?'#555555':'#DADADA'}}>{t('LL.ft')}</FormLabel>
             </Col>
-            <Col xs={8}>
-              <Form.Check
-                inline
-                type='switch'
+            <Col xs={5}>
+              <Form.Range
+                max={100}
+                min={0}
+                step={1}
                 disabled={!is_activated}
-                checked={allLabelTransparent()}
+                value={allLabelTransparent()}
                 onChange={evt => {
-                  multi_selected_label.current.map(d => d.transparent = evt.target.checked)
+                  const value=+evt.target.value
+                  multi_selected_label.current.map(d => d.opacity = value)
+                  set_data({ ...data })
+
+
+                }}
+              />
+            </Col>
+            <Col xs={3}>
+              <Form.Control
+                type='number'
+                max={100}
+                min={0}
+                step={1}
+                disabled={!is_activated}
+                value={allLabelTransparent()}
+
+                onChange={evt => {
+                  const value=+evt.target.value
+                  multi_selected_label.current.map(d => d.opacity = value)
                   set_data({ ...data })
                 }}
               />
@@ -433,7 +519,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormControl size='sm'
                 type='color'
                 disabled={!is_activated}
-                value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color : '#ffffff'}
+                value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
                 onChange={evt => {
                   const val = evt.target.value
                   multi_selected_label.current.map(d => d.color = val)
@@ -467,7 +553,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormControl size='sm'
                 type='color'
                 disabled={!is_activated}
-                value={(multi_selected_label.current.length == 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
+                value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
                 onChange={evt => {
                   const val = evt.target.value
                   multi_selected_label.current.map(d => d.color_border = val)
@@ -663,6 +749,5 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     </Accordion.Body>
   </Accordion.Item>
 
-      
+
 }
-  

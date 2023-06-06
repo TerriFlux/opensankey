@@ -8,7 +8,7 @@ import {drawGrid,min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction
 
 
 export const SankeyPlusDrawLabels = (
-  data:SankeyPlusData, 
+  data:SankeyPlusData,
   set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   multi_selected_label:{current: SankeyPlusLabel[] },
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
@@ -17,9 +17,11 @@ export const SankeyPlusDrawLabels = (
   min_width_and_height:(data:SankeyPlusData)=>number[]
 ) => {
   const add_labels = () => {
-    d3.selectAll(' .opensankey #svg #g_label g').remove()
     const g_label = d3.select(' .opensankey #svg #g_label')
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
+    const transform_svg=d3.select('.opensankey #svg').attr('transform')
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+    const scale_for_label= (scale_svg<1?(1/scale_svg):1)
 
     Object.values(data.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
@@ -30,10 +32,10 @@ export const SankeyPlusDrawLabels = (
       gg_label.append('rect')
         .attr('width', d.label_width).attr('height', d.label_height)
         .attr('fill', d.color)
-        .style('fill-opacity', d.transparent ? 0 : 1)
+        .style('fill-opacity', +(d.opacity/100))
         .attr('stroke', d.color_border)
         .attr('stroke-opacity', (d.transparent_border && !multi_selected_label.current.includes(d)) ? 0 : 1)
-        .attr('stroke-width', (multi_selected_label.current.includes(d))?3:1)
+        .attr('stroke-width', ((multi_selected_label.current.includes(d))?(3*scale_for_label):1))
         .attr('rx', 5)
 
 
@@ -48,6 +50,7 @@ export const SankeyPlusDrawLabels = (
         .attr('height',d.label_height)
         .attr('id', d.idLabel + '_text')
         .append('xhtml:div')
+        .attr('class','ql-editor')
         .html(d.name)
 
       // Traite les labels qui sont simplementdu text
@@ -73,18 +76,18 @@ export const SankeyPlusDrawLabels = (
         .bounds({ height: 100, width: d.label_width })
         .method('tspans')
 
-      if(d.position_horiz!==''&&d.position_vert!==''){
-        //Appel wrap seulement si le label n'a pas été drag 
+      if(d.position_horiz! === ''&&d.position_vert! === ''){
+        //Appel wrap seulement si le label n'a pas été drag
         //pour éviter que cela cause quelques probleme de position de label drag
         d3.select(' .opensankey #' + d.idLabel + ' text').call(wrap)
       }
 
       d3.select(' .opensankey #' + d.idLabel + ' text').select('tspan')
         .attr('dy',()=>{
-          if((d.position_vert=='bottom') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+          if((d.position_vert === 'bottom') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
             const tmp=d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
             return -tmp+'em'
-          }else if((d.position_vert=='middle') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
+          }else if((d.position_vert === 'middle') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
             const tmp=d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
             return -tmp/2+'em'
           }
@@ -134,22 +137,23 @@ export const SankeyPlusDrawLabels = (
         .style('fill-opacity', 0)
         .attr('stroke', d.color_border)
         .attr('stroke-opacity', 0)
-        .attr('stroke-width', 2)
+        .attr('stroke-width', (2*scale_for_label))
         .attr('rx', 5)
         .attr('cursor','all-scroll')
         .call(dragLabelWidthHeightEvent(d,data,set_data))
     })
   }
-    
+  d3.selectAll(' .opensankey #svg #g_label').remove()
+
   // Insert la balise qui contient tous les lables libres avant la balise de la légende
-  d3.select('.opensankey #svg').insert('g','#g_legend').attr('class','g_label').attr('id','g_label')     
+  d3.select('.opensankey #svg').insert('g','#g_nodes').attr('class','g_label').attr('id','g_label')
   // Ajoute l'event au click sur la zone du dessin qui désélectionne tous les labels libres sélectionné
   d3.select('.opensankey #svg').on('click',evt=>{
-    if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id')=='svg'){
+    if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id') === 'svg'){
       multi_selected_label.current = []
     }
 
-  })   
+  })
   add_labels()
 }
 
@@ -158,7 +162,7 @@ export const SankeyPlusDrawLabels = (
 export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
   if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
     sankeyTooltip.style('opacity', 0)
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
     }
     d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
@@ -168,14 +172,14 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
       multi_selected_label.current.push(d)
     }
     set_data({ ...data })
-  
+
     if ( accordion_ref && accordion_ref.current) {
       let index_LL=-1
       //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
       for (let i = 0; i < accordion_ref.current.children.length; i++) {
-        index_LL=(accordion_ref.current.children[i]==(accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
+        index_LL=(accordion_ref.current.children[i] === (accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
       }
-      if(index_LL!=-1){
+      if(index_LL !== -1){
         (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
       }
     }
@@ -199,26 +203,26 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
         d.position_horiz = ''
         const new_x=event.x,new_y=event.y
         d3.select(' .opensankey #' + d.idLabel + '_text').attr('x', new_x)
-        d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)  
+        d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)
         d.x_label = new_x
-        d.y_label = new_y  
+        d.y_label = new_y
         d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
       }
     })
 }
 // Function used to drag the free label
 // To be dragged you need to select the free label
-  
+
 const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   d:SankeyPlusLabel,
   data:SankeyPlusData,
   min_width_and_height:(d:SankeyPlusData)=>number[],
   drawGrid:(d:SankeyPlusData)=>void,
-    
+
 )=>{
   return (d3.drag<SVGGElement, unknown>()
     .subject(Object).on('drag', function (event) {
-      if(multi_selected_label.current.length!=0 && multi_selected_label.current.includes(d)){
+      if(multi_selected_label.current.length !== 0 && multi_selected_label.current.includes(d)){
 
         multi_selected_label.current.map(l=>{
           const new_pos_x = l.x + event.dx
@@ -233,9 +237,9 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
           } else {
             d3.select(' .opensankey #svg').style('width', data.width + 'px')
           }
-        
+
           d3.select(' .opensankey #svg').style('height', data.height + 'px')
-            
+
         })
       }else{
         const new_pos_x = d.x + event.dx
@@ -250,11 +254,12 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
         } else {
           d3.select(' .opensankey #svg').style('width', data.width + 'px')
         }
-      
+
         d3.select(' .opensankey #svg').style('height', data.height + 'px')
         drawGrid(data)
       }
-    }))
+    })
+  )
 }
 /**
    * Function to change the width and height of free label
@@ -274,22 +279,26 @@ export const dragLabelWidthHeightEvent=(d:SankeyPlusLabel,
       if(event.dx<100 && event.dy<100){
         data.labels[d.idLabel].label_width+=event.dx
         data.labels[d.idLabel].label_height+=event.dy
-        set_data({...data})
+
+        d3.select('.opensankey #svg #'+d.idLabel+' rect').attr('width',data.labels[d.idLabel].label_width)
+        d3.select('.opensankey #svg #'+d.idLabel+' rect').attr('height',data.labels[d.idLabel].label_height)
       }
+    }).on('end',()=>{
+      set_data({...data})
     })
 }
-  
+
 export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
   let [width,height]=min_width_and_height(data)
 
 
   Object.values(data.labels).forEach(n => {
-    height =  Math.max(height, n.y+n.label_height) 
+    height =  Math.max(height, n.y+n.label_height)
     width = Math.max(width, (n.x+n.label_width))
   })
-  
+
   height = height + (data.grid_square_size * 2 )
   width = width + (data.grid_square_size * 2 )
-  
+
   return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
 }
