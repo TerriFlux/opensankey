@@ -565,14 +565,14 @@ export const updateLayout = (
     
   }
 
-  // if ((new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-  //   if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-  //     (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
-  //   }
-  //   (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
-  //     v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
-  //   )
-  // }
+  if ((new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
+    if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
+      (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
+    }
+    (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
+      v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
+    )
+  }
 
   if(mode.includes('tagNode')){
     for (const tag_group_key in new_layout.nodeTags) {
