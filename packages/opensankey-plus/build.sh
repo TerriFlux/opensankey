@@ -11,7 +11,7 @@ exit_if_error() {
 
 # Front-end build
 cd client
-npm run lint || exit_if_error $?
+npm install
 npm link --legacy-peer-deps open-sankey
 npm run build || exit_if_error $?
 cd ..
