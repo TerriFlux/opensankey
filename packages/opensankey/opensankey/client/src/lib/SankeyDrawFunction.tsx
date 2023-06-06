@@ -312,12 +312,24 @@ export const compute_end_points = (
 export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyNode},display_links:{[ink_id:string]:SankeyLink})=>{
   if (d.position === 'relative') {
     if (d.inputLinksId.length > 0) {
+      if ( !display_links[d.inputLinksId[0]]) {
+        return 'translate(0,0)'
+      }
       const source_node = display_nodes[display_links[d.inputLinksId[0]].idSource]
+      if ( !source_node) {
+        return 'translate(0,0)'
+      }
       const x = source_node.x + d.x
       const y = source_node.y + d.y
       return 'translate(' + x + ', ' + y + ')'
     } else if (d.outputLinksId.length > 0) {
+      if ( !display_links[d.outputLinksId[0]]) {
+        return 'translate(0,0)'
+      }
       const target_node = display_nodes[display_links[d.outputLinksId[0]].idTarget]
+      if ( !target_node) {
+        return 'translate(0,0)'
+      }
       const x = target_node.x + d.x
       const y = target_node.y + d.y
       return 'translate(' + x + ', ' + y + ')'
