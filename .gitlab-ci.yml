@@ -29,7 +29,7 @@ build:
     - echo $MFAData
     - echo $SankeyExcelParser
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - bash $SankeyExcelParser/build.sh
+    - pip install $SankeyExcelParser
     - bash build.sh
   except:
     - schedules
