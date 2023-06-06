@@ -614,7 +614,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_vert = 'bottom'
-                      // d.x_label = d.label_width / 2
+                      
                       d.y_label = d.label_height - 3
                     })
                     set_data({ ...data })
@@ -637,6 +637,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'left'
+                      d.x_label=d.label_width-3
                     })
 
                     set_data({ ...data })
@@ -654,6 +655,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'centre'
+                      d.x_label=d.label_width/2
                     })
                     set_data({ ...data })
                   }
@@ -671,6 +673,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'right'
+                      d.x_label=d.label_width-3
                     })
                     set_data({ ...data })
                   }
