@@ -23,7 +23,7 @@ try {
 
 let logo_terriflux = ''
 try {
-   /* eslint-disable */
+  /* eslint-disable */
   // @ts-ignore
   logo_terriflux = require('./css/terriflux.png')
   /* eslint-enable */
@@ -71,7 +71,7 @@ if (!window.SankeyToolsStatic) {
     complete_sankey_data(data,default_sankey_data,default_node,default_link)
   }
   data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
-  
+
   const fetchData = {
     method: 'POST'
   }
@@ -116,7 +116,7 @@ if (!window.SankeyToolsStatic) {
   })
 
 } else {
-  if (window.sankey.filiere) { 
+  if (window.sankey.filiere) {
     localStorage.setItem('data', LZString.compress(JSON.stringify(window.sankey.filiere)))
   }
 

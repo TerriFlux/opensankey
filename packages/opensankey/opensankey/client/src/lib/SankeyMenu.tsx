@@ -1166,7 +1166,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           if ((data as SankeyData & { layout?: SankeyData }).layout ) {
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
-          
+
           const new_data=Object.assign(default_sankey_data(),processExample(server_data))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
@@ -1186,10 +1186,10 @@ const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
 
-    
+
     if(!show_nav){
-      // Lors de l'ouverture du menu, enregistre l'échelle de la zone de sankey 
-      // et la position des scroll bar 
+      // Lors de l'ouverture du menu, enregistre l'échelle de la zone de sankey
+      // et la position des scroll bar
 
       const scaleOfSVG=d3.select(' .opensankey #svg').attr('transform').split(' ').filter(s=>s.includes('scale'))[0].replace('scale(','').replace(')','')
       sessionStorage.setItem('scale',scaleOfSVG)
@@ -1209,7 +1209,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       const scaleToUse=sessionStorage.getItem('scale')
       const SlToUse=sessionStorage.getItem('scrollLeft')
       const StToUse=sessionStorage.getItem('scrollTop')
-      
+
       if(scaleToUse){
         d3.select(' .opensankey #svg').attr('transform','translate(0,0) scale('+scaleToUse+')')
       }else{
@@ -1246,7 +1246,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
-  
+
 
   const navigate=useNavigate()
   const returnToApp=()=>{
@@ -1266,7 +1266,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
           </>:<></>
           }
-          
+
           <Navbar.Brand href="#" onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
           {/* {!window.SankeyToolsStatic ? (<>
             <Nav className='me-auto'>
@@ -1281,7 +1281,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
                 <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
                 {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
-               
+
               </Col>
             </Nav>
           </>
@@ -1335,7 +1335,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
         </Container>
       </Navbar>
-      
+
       {(!data.static_sankey) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
@@ -1440,7 +1440,7 @@ const OpenSankeyModalShortcut = (t:TFunction,
     </Modal.Header>
     <Modal.Body >
       <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
-      
+
       <h5>Avec la souris en mode sélection :</h5>
       <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
       <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
@@ -1452,16 +1452,16 @@ const OpenSankeyModalShortcut = (t:TFunction,
       <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
       <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
       <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
-      
+
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      
+
       <h5>Avec la souris en mode édition :</h5>
       <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
       <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
       <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
-      
+
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      
+
       <h5>Autres raccourcis :</h5>
       <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
       <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
@@ -1479,7 +1479,7 @@ const OpenSankeyModalShortcut = (t:TFunction,
     </Modal.Footer>
   </Modal>
 }
-  
+
 export const OpenSankeyModalWelcome=(t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
@@ -1492,12 +1492,12 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   external_content:{[s:string]:JSX.Element},
   exemple_menu: object,
 )=>{
-    
+
 
 
   const content_rc=<>
     <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
-          
+
     <h5>Avec la souris en mode sélection :</h5>
     <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
     <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
@@ -1507,57 +1507,57 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
     <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
     <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
-      
+
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      
+
     <h5>Avec la souris en mode édition :</h5>
     <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
     <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux à partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin</p>
     <p><b>Drag (à partir d'un noeud) :</b> Créer un flux à partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin  </p>
-      
+
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      
+
     <h5>Autres raccourcis :</h5>
     <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
     <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
     <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
 
     <p><b>Echap :</b> Ferme le Menu quand il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
-      
+
     {additional_shortcut_item}
 
   </>
   external_content['rc']=content_rc
 
   const tmp=JSON.parse(JSON.stringify(exemple_menu))
-    let list_template_data=[] as string[]
-    // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
-    if(Object.keys(tmp).length!==0 && Object.keys(tmp).includes('OpenSankey') && Object.keys(tmp['OpenSankey']).includes('easy_template') ){
-        list_template_data=tmp['OpenSankey']['easy_template'].filter((f:string)=>!f.includes('.xlsx'))
+  let list_template_data=[] as string[]
+  // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
+  if(Object.keys(tmp).length!==0 && Object.keys(tmp).includes('OpenSankey') && Object.keys(tmp['OpenSankey']).includes('easy_template') ){
+    list_template_data=tmp['OpenSankey']['easy_template'].filter((f:string)=>!f.includes('.xlsx'))
     // Si l'un des sous dossier d'OpenSankey dans exemple_menu est expert_template alors ajoute les modèles expert à la liste des modèles
-        if( Object.keys(tmp['OpenSankey']).includes('expert_template') ){
-          list_template_data.push(tmp['OpenSankey']['expert_template'])
-          list_template_data=list_template_data.flat()
-        }
+    if( Object.keys(tmp['OpenSankey']).includes('expert_template') ){
+      list_template_data.push(tmp['OpenSankey']['expert_template'])
+      list_template_data=list_template_data.flat()
     }
+  }
 
-   
+
   const content_carousel=<Carousel variant='dark' >
-    {list_template_data.map((_,idx) =>
-        {
-        const title=_.split('.').splice(0,1).join('')
-        return (<Carousel.Item>
-          <img src={'/fm/userfiles/OpenSankey/image_preview/'+title+'.png'}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
-          <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption>
-        </Carousel.Item>)
-      })
+    {list_template_data.map((_) =>
+    {
+      const title=_.split('.').splice(0,1).join('')
+      return (<Carousel.Item>
+        <img src={'/fm/userfiles/OpenSankey/image_preview/'+title+'.png'}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
+        <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption>
+      </Carousel.Item>)
+    })
     }
 
   </Carousel>
   external_content['carousel']=content_carousel
-    
-  
-  
+
+
+
   return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
     set_show_modal_welcome(false)
   }}>
