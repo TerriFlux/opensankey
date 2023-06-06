@@ -33,7 +33,8 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
  */
 export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
-  const [elementToDispose, set_elementToDispose] = useState([''])
+  const [elementToDispose, ] = useState([''])
+  const [forceUpdate,setForceUpdate] = useState(true)
   return (
     <Modal
       size="xl"
@@ -91,48 +92,46 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
           </Form.Group>
         </Form>
         <Form.Label>{t('Menu.textDisposition')}</Form.Label>
-        <FormGroup as={Row} onClick={()=>{
-          set_sankey_data({...sankey_data})
-        }}>
+        <FormGroup as={Row}>
           <Col xs={2}>
             <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
               if(evt.target.checked){
                 elementToDispose.push('posNode')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }}}/>
           </Col>
           <Col xs={2}>
             <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
               if(evt.target.checked){
                 elementToDispose.push('attrNode')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
 
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }}}/>
           </Col>
           <Col xs={2}>
             <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{
               if(evt.target.checked){
                 elementToDispose.push('attrFlux')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }}}/>
           </Col>
           <Col xs={2}>
             <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
               if(evt.target.checked){
                 elementToDispose.push('tagNode')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
 
               }}}/>
           </Col>
@@ -140,21 +139,21 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
             <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
               if(evt.target.checked){
                 elementToDispose.push('tagFlux')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }}}/>
           </Col>
           <Col xs={2}>
             <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
               if(evt.target.checked){
                 elementToDispose.push('attrGeneral')
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
 
               }else{
                 elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
-                set_elementToDispose(elementToDispose)
+                setForceUpdate(!forceUpdate)
               }}}/>
           </Col>
         </FormGroup>
