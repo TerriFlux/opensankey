@@ -403,7 +403,7 @@ export const updateLayout = (
   let maxIdNode = listId.length > 0 ? Math.max(...listId) : 0
 
   //- Stores a mapping between idNode of initial data and layout idNodes
-  let idNodesMap: {[s:string]:string} = {}
+  const idNodesMap: {[s:string]:string} = {}
   Object.values(data.nodes).forEach( n => {
     const layout_nodes = Object.values(new_layout.nodes).filter(node_layout=>normalize_name(n.name) === normalize_name(node_layout.name))
     if (layout_nodes.length === 0) {
@@ -418,10 +418,10 @@ export const updateLayout = (
     n.idNode=idNodesMap[n.idNode]
     Object.keys(n.dimensions).forEach(dim => {
       if (n.dimensions[dim].parent_name) {
-          //parent_names.push(n.dimensions[dim].parent_name as string)
-          n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name!]
+        //parent_names.push(n.dimensions[dim].parent_name as string)
+        n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name!]
       }
-  })})
+    })})
   data.nodes = Object.assign({}, ...Object.values(data.nodes).map(n => ({ [n.idNode]: { ...n } })))
   Object.values(data.links).forEach(l=>{
     l.idSource=idNodesMap[l.idSource]
@@ -433,7 +433,7 @@ export const updateLayout = (
   Object.keys(new_layout.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
   let maxIdLink = listId.length > 0 ? Math.max(...listId) : 0
   //- Stores a mapping between idLink of initial data and layout idLinks
-  let idLinksMap: {[s:string]:string} = {}
+  const idLinksMap: {[s:string]:string} = {}
   Object.values(data.links).forEach( l => {
     const layout_links = Object.values(new_layout.links).filter(link_layout => 
       l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
@@ -446,7 +446,7 @@ export const updateLayout = (
     const layout_link = layout_links[0]
     idLinksMap[l.idLink] = layout_link.idLink
   })
-  Object.values(data.links).forEach(l=>l.idLink=idLinksMap[l.idLink]);
+  Object.values(data.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
   data.links = Object.assign({}, ...Object.values(data.links).map(l => ({ [l.idLink]: { ...l } })))
 
   compute_default_input_outputLinksId(data.nodes, data.links)

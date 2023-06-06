@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Validator } from 'react'
 import { ReactElementLike } from 'prop-types'
-import { Modal,Button, NavDropdown, Popover, Form,Pagination} from 'react-bootstrap'
+import { Modal,Button, DropdownButton, Popover, Form,Pagination} from 'react-bootstrap'
 import parse from 'html-react-parser'
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
@@ -26,7 +26,7 @@ import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
-import {addSimpleLevelDropDown, OpenSankeyMenuBanner, setDiagram, toolbar_builder} from './SankeyMenuBanner'
+import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
 import {dragging} from './SankeyDrag'
@@ -259,11 +259,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 2. Build Menus
   const sankey_menus = OpenSankeyMenus(
-    t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_publish_dialog,set_show_apply_layout,set_show_excel_dialog,
+    t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
   )
-  sankey_menus.splice(2,0,<NavDropdown title={t('Menu.Formations')} id="formation" >
+  sankey_menus['formation']=<DropdownButton title={t('Menu.Formations')} id="formation" >
     <ExempleItem
       exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
       data={data}
@@ -274,8 +274,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       multi_selected_nodes={multi_selected_nodes}
       launch={launch}
       reinitialization={reinitialization}
-    /></NavDropdown >
-  )
+    /></DropdownButton >
+  
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
@@ -320,10 +320,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const menu_banner=OpenSankeyMenuBanner(
-    t,data,set_data,
-    toolbar_builder(  t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate)
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate
   )
+  Object.keys(toolbar).forEach(k=>{
+    sankey_menus[k]=toolbar[k]
+  })
 
   //-3. Sankey Draws
   useBeforeunload((event : BeforeUnloadEvent) => {
@@ -488,7 +489,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           token={false}
           useNavigate={()=>''}
           external_modal={external_menu_modal}
-          menu_banner={menu_banner}
           loginOut={()=>null}
           unsetTokens={()=>null}
           // modalShortcut={shortcut_modale}
