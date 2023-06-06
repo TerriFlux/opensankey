@@ -9,7 +9,7 @@ import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row,
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,PlusDrawCurveType,plusDrawArrowsType} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
 import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
-import { updateLayout } from 'open-sankey/dist/SankeyLayout'
+import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCirclePlus,faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
@@ -1073,8 +1073,9 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   // Get the difference from the view
   const diff_view=master_data.view.filter(v=>v.id==id_view_to_see)[0].view_data.diff
 
+  const del_views = diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] == 'nodes' || d.path[0] == 'links') && d.kind != 'D'))
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
-  diff_view.forEach((d : object)=>applyChange(data_init,{},d))
+  diff_view.filter((d : {path:string[],kind:string})=>((d.path[0] != 'nodes' && d.path[0] != 'links') || d.kind != 'D')).forEach((d : object)=>applyChange(data_init,{},d))
   return data_init
 }
 
@@ -1213,7 +1214,22 @@ export const keyHandler = (
       } else if (ind===0) {
         ind = Object.keys(master_data.view).length
       }
-
+      const data_view=get_data_from_view(master_data,master_data.view[ind-1].id) as SankeyPlusData
+      const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined)
+      data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
+      const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
+      data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
+      apply_input_outputLinksId(
+        data_view.nodes,
+        data_view
+      )
+      const deep_diff = require('deep-diff')
+      let difference = deep_diff.diff(master_data, data_view)
+      difference=(difference!==undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      master_data.view[ind+1].view_data = {diff:difference}
+      set_data(data_view as SankeyPlusData)
+      set_master_data(master_data as SankeyPlusData)
 
     // Check if there is unsaved change before we switch view 
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
@@ -1228,8 +1244,6 @@ export const keyHandler = (
       }
       if(saved){
         set_view(master_data.view[ind-1].id)
-        const data_view=get_data_from_view(master_data,master_data.view[ind-1].id)
-        set_data(data_view as SankeyPlusData) 
         // adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
         adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind-1].id),min_width_and_height)
       }
@@ -1246,7 +1260,22 @@ export const keyHandler = (
       } else if (ind === -1) {
         ind = -1
       }
-
+      const data_view=get_data_from_view(master_data,master_data.view[ind+1].id) as SankeyPlusData
+      const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
+      data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
+      const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
+      data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
+      apply_input_outputLinksId(
+        data_view.nodes,
+        data_view
+      )      
+      set_data({...data_view as SankeyPlusData})
+      const deep_diff = require('deep-diff')
+      let difference = deep_diff.diff(master_data, data_view)
+      difference=(difference!==undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      master_data.view[ind+1].view_data = {diff:difference}
+      set_master_data({...master_data as SankeyPlusData})
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
@@ -1259,11 +1288,9 @@ export const keyHandler = (
         }
       }
       if(saved){
-        set_view(master_data.view[ind+1].id)
-        const data_view=get_data_from_view(master_data,master_data.view[ind+1].id)
-        set_data(data_view as SankeyPlusData) 
         // adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
         adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind+1].id),min_width_and_height)
+        set_view(master_data.view[ind+1].id)
       }
       //}
     } 
