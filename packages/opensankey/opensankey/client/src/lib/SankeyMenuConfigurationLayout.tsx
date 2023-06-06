@@ -3,7 +3,6 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, OverlayTrigg
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
-import * as d3 from 'd3'
 
 export const OpenSankeyMenuConfigurationLayout = (
   t:TFunction,

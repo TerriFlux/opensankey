@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tab, FormControl, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
 
@@ -156,23 +156,23 @@ export const SankeyMenuConfigurationLinksAppearence = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.opacity')} </Tooltip>}><>
-            <Form.Control
-              type="number"
-              max={1}
-              min={0}
-              step={0.1}
-              value={display_link_opacity}
-              isInvalid={+display_link_opacity!=selected_parameter[0]?.opacity}
-              onChange={
-                evt => {
-                  set_display_link_opacity(evt.target.value)
-                }}
+              <Form.Control
+                type="number"
+                max={1}
+                min={0}
+                step={0.1}
+                value={display_link_opacity}
+                isInvalid={+display_link_opacity!=selected_parameter[0]?.opacity}
+                onChange={
+                  evt => {
+                    set_display_link_opacity(evt.target.value)
+                  }}
                 onBlur={(evt)=>{
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.opacity = +evt.target.value)
                   set_data({...data})
                 }}
-                />
-            <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
+              />
+              <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
             </>
           </OverlayTrigger>
         </Col>

@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React from 'react'
 import { render } from '@testing-library/react'
 //import renderer from 'react-test-renderer';
@@ -49,7 +50,7 @@ const parse_folder = (current_dir : string) => {
 parse_folder(mfadata)
 
 test.each(the_tests)( 'tyty',(full_path) => {
-  const x = jest.spyOn(window, 'focus') 
+  const x = jest.spyOn(window, 'focus')
   x.mockImplementation(() => {
     'nothing'
   })
@@ -69,7 +70,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
   )
 
   const component = render(
-    <SankeyDraw 
+    <SankeyDraw
       data={(new_data as unknown) as SankeyData}
       // test_link_value= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => 10}
       {...SankeyDrawDefaultProps}
