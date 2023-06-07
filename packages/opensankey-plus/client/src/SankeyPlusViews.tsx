@@ -1,5 +1,5 @@
 import { InferProps} from 'prop-types'
-import React, { ChangeEvent, Requireable } from 'react'
+import React, { ChangeEvent, Requireable,useRef } from 'react'
 import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup,differenceType} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import { convert_data } from 'open-sankey/dist/SankeyConvert'
@@ -1105,6 +1105,25 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   return data_init
 }
 
+const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
+  return JSON.parse(JSON.stringify(pre_diff))
+    .filter((d:{path:string[]})=>{
+      return !d.path.includes('view')
+    })
+    .map((d:{path:string[],kind:string,item:{kind:string}})=>{
+      if(d.kind === 'D'){
+        delete ((d as unknown) as differenceType).lhs
+      }
+      if(d.kind === 'A' && d.item.kind === 'D'){
+        delete ((d as unknown) as differenceType).item.lhs
+      }
+      if(d.kind === 'E'){
+        delete ((d as unknown) as differenceType).lhs
+      }
+      return d
+  })
+}
+
 export const keyHandler = (
   e: KeyboardEvent,
   master:boolean,
@@ -1177,18 +1196,7 @@ export const keyHandler = (
       let difference = deep_diff.diff(master_data, data)
       difference=(difference !== undefined)?difference:[]
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
-        if(d.kind === 'D'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        if(d.kind === 'A' && d.item.kind === 'D'){
-          delete ((d as unknown) as differenceType).item.lhs
-        }
-        if(d.kind === 'E'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        return d
-      })
+      difference=filter_view(difference)
       master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
 
       // Save master data with the view we are currently working on updated
@@ -1439,6 +1447,9 @@ export const viewsAccordion = (
 
 
 ) => {
+
+  const _load_multiple_json = useRef<HTMLInputElement>(null)
+
   const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
   const popover_for_apply_display_from_view=<Popover id="popover-apply_display" style={{maxWidth:'100%'}}>
@@ -1668,6 +1679,18 @@ export const viewsAccordion = (
             }}>
               {t('view.exportAll')}
           </Button>
+          <Button
+                      variant='info'
+                      onClick={
+                        () => {
+                          // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+                          if (_load_multiple_json.current) {
+                        _load_multiple_json.current!.name = ''
+                        _load_multiple_json.current.click()
+                          }
+                        }
+                      }
+                    >{t('view.importMultiple')}</Button>
         </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
@@ -1679,7 +1702,6 @@ export const viewsAccordion = (
       const files = (evt.target as HTMLFormElement).files
       const reader = new FileReader()
       const deep_diff = require('deep-diff')
-
       reader.onload = (() => {
         return (e: ProgressEvent<FileReader>) => {
           const result = String((e.target as FileReader).result)
@@ -1706,6 +1728,54 @@ export const viewsAccordion = (
         }
       })()
       reader.readAsText(files[0])
+    }}
+  />
+  <Form.Control
+    multiple
+    className='multipleImport'
+    type="file"
+    ref={_load_multiple_json}
+    style={{ display: 'none' }}
+    onChange={(evt: ChangeEvent) => {
+      const files = (evt.target as HTMLFormElement).files
+      const deep_diff = require('deep-diff')
+      master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
+      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
+      for(const i in files){
+        const reader = new FileReader()
+        reader.onload = (() => {
+          return (e: ProgressEvent<FileReader>) => {
+            const result = String((e.target as FileReader).result)
+            const result_data = JSON.parse(result)
+  
+            const imported_data=JSON.parse(JSON.stringify(result_data))
+            imported_data.view=[]
+            convert_data(imported_data)
+            let difference = deep_diff.diff(master_data,imported_data)
+            difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
+            difference=filter_view(difference)
+  
+            const new_ind = 'view_' + String(new Date().getTime())
+            const copy_data = {diff:difference}
+            master_data.view.push({
+              id: new_ind,
+              view_data: copy_data,
+              nom: (files[i].name).replace('.json',''),
+              details: ''
+            })
+
+          }
+        })()
+        // Permet d'executer la transformation des blob en vues tout en evitant la var length
+        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
+        if(!isNaN(+i)){
+          reader.readAsText(files[i])
+        }
+      }
+      set_data({...master_data})
+      set_master_data({...master_data})
+      set_view('none')
+
     }}
   />
 
@@ -1768,7 +1838,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const m_d=master_data?master_data:data
-
 
 
   // Boolean used to change the logo of the button to save the current view :
