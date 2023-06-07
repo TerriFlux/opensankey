@@ -141,21 +141,15 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const [showStyle,setShowStyle] = useState(false)
-  const showStyleEdition = () => {
-    setShowStyle(true)
-  }
+  // const [showStyle,setShowStyle] = useState(false)
+  const showStyleEdition = () => null
   //Modal et fonctions pour l'edition et affectation des style de flux
-  const [showStyleLink,setShowStyleLink] = useState(false)
-  const showStyleEditionLink = () => {
-    setShowStyleLink(true)
-  }
+  const showStyleEditionLink = () => null
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
 
   //- Styles
-  const [selected_style_link, set_selected_style_link] = useState('default')
-  const [selected_style_node, set_selected_style_node] = useState('default')
+  const selected_style_node = useState('default')[0]
 
 
   const {t} =useTranslation()
