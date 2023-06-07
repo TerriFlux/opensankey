@@ -69,11 +69,11 @@ export const SankeyPlusNodeFO = (
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
     value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
-    onChange={(evt) => {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-        d.FO_content =evt
-      })
-    }}
+    // onChange={(evt) => {
+    //   Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+    //     d.FO_content =evt
+    //   })
+    // }}
     onBlur={()=>{set_data({ ...data })}}
     theme="snow"
     modules={modules}
