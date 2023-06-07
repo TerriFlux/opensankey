@@ -92,36 +92,36 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 // }
 
 //Fonction appelé lorsque les vue s'enchaien automatiquement (via le bouton play ou lorsqu'on appuye sur la touche 'F6')
-export const nextView = (
-  master_data: SankeyPlusData,
-  set_data:(s:SankeyPlusData)=>void,
-  new_view: string,
-  set_view:(s:string)=>void,
-  set_animating: (b:boolean)=>void
-) => {
-  //const v1 = data.view[].filter(d => d.id === new_view)[0].id
-  let ind = -1
-  master_data.view.forEach((v, i) => {
-    ind = (v.id === new_view) ? i : ind
-  })
-  set_animating(true)
-  // const view_data = master_data.view[ind].view_data as SankeyPlusData
-  const view_data = get_data_from_view(master_data,master_data.view[ind].id)
-  const time_to_set_view = animate_view_changement(view_data)
-  if (ind === master_data.view.length -1) {
-    set_animating(false)
-    return
-  }
-  setTimeout(function () {
-    set_view(master_data.view[ind + 1].id)
-    // set_data({ ...master_data.view[ind+1].view_data as SankeyPlusData })
-    set_data({ ...get_data_from_view(master_data,master_data.view[ind+1].id)})
-    setTimeout(function () {
-      nextView(master_data,set_data,master_data.view[ind+1].id,set_view,set_animating)
-      set_animating(false)
-    }, 500)
-  }, time_to_set_view)
-}
+// export const nextView = (
+//   master_data: SankeyPlusData,
+//   set_data:(s:SankeyPlusData)=>void,
+//   new_view: string,
+//   set_view:(s:string)=>void,
+//   set_animating: (b:boolean)=>void
+// ) => {
+//   //const v1 = data.view[].filter(d => d.id === new_view)[0].id
+//   let ind = -1
+//   master_data.view.forEach((v, i) => {
+//     ind = (v.id === new_view) ? i : ind
+//   })
+//   set_animating(true)
+//   // const view_data = master_data.view[ind].view_data as SankeyPlusData
+//   const view_data = get_data_from_view(set_data,master_data,set_master_data,master_data.view[ind].id)
+//   const time_to_set_view = animate_view_changement(view_data)
+//   if (ind === master_data.view.length -1) {
+//     set_animating(false)
+//     return
+//   }
+//   setTimeout(function () {
+//     set_view(master_data.view[ind + 1].id)
+//     // set_data({ ...master_data.view[ind+1].view_data as SankeyPlusData })
+//     set_data({ ...get_data_from_view(set_data,master_data,set_master_data,master_data.view[ind+1].id)})
+//     setTimeout(function () {
+//       nextView(master_data,set_data,master_data.view[ind+1].id,set_view,set_animating)
+//       set_animating(false)
+//     }, 500)
+//   }, time_to_set_view)
+// }
 
 // const animate_view_changement = (
 //   data   :SankeyPlusData,
@@ -1084,10 +1084,24 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   //   d.path.push('link_visible')
   //   d.rhs = false
   // })
+  const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
+  const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
+
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
-  diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D')).forEach((d : object)=>applyChange(data_init,{},d))
+  //diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D')).forEach((d : object)=>applyChange(data_init,{},d))
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
+  diff_view
+    .filter((d :{path:string[],kind:string})=>d.path[0]!=='nodes' || master_data.nodes[d.path[1]] !== undefined)
+    .filter((d :{path:string[],kind:string})=>d.path[0]!=='links' || master_data.links[d.path[1]] !== undefined)
+    .filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D'))
+    .forEach((d : object)=>applyChange(data_init,{},d))
+  if (ignore_changes.length > 0 || ignore_changes2.length > 0) {
+    compute_default_input_outputLinksId(
+      data_init.nodes,
+      data_init.links
+    )       
+  }
   return data_init
 }
 
@@ -1187,28 +1201,28 @@ export const keyHandler = (
       }, 3000)
     }
   }
-  if (!master && e.key === 'F6') {
-    //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-    let ind = 0
-    if (master) {
-      //data is master data
-      set_master_data({...master_data})
-      set_view(master_data.view[ind].id)
-      // set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
-      set_data({...get_data_from_view(master_data,master_data.view[ind].id)})
+  // if (!master && e.key === 'F6') {
+  //   //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
+  //   let ind = 0
+  //   if (master) {
+  //     //data is master data
+  //     set_master_data({...master_data})
+  //     set_view(master_data.view[ind].id)
+  //     // set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
+  //     set_data({...get_data_from_view(set_data,master_data,set_master_data,master_data.view[ind].id)})
 
-      setTimeout(function () {
-        nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
-      }, 500)
-    } else {
-      // data is view data
-      master_data.view.map((v, i) => {
-        ind = (v.id === view) ? i : ind
-      })
-      //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-      nextView(master_data, set_data,master_data.view[ind].id,set_view,set_animating)
-    }
-  }
+  //     setTimeout(function () {
+  //       nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
+  //     }, 500)
+  //   } else {
+  //     // data is view data
+  //     master_data.view.map((v, i) => {
+  //       ind = (v.id === view) ? i : ind
+  //     })
+  //     //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
+  //     nextView(master_data, set_data,master_data.view[ind].id,set_view,set_animating)
+  //   }
+  // }
   if (!master && e.key === 'F7') {
 
     // Check if there is unsaved change before we switch view
@@ -1243,30 +1257,30 @@ export const keyHandler = (
         ind = Object.keys(master_data.view).length
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind-1].id) as SankeyPlusData
-      let update = false
-      const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
-      if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
-        update = true
-        data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
-      }
-      const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
-      if ( filtered_links.length !== Object.keys(data_view.links).length ) {
-        update = true
-        data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
-      }
-      if (update) {
-        compute_default_input_outputLinksId(
-          data_view.nodes,
-          data_view.links
-        )      
-        const deep_diff = require('deep-diff')
-        let difference = deep_diff.diff(master_data, data_view)
-        difference=(difference!==undefined)?difference:[]
-        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-        master_data.view[ind-1].view_data = {diff:difference}
-        set_data({...data_view as SankeyPlusData})
-        set_master_data({...master_data as SankeyPlusData})
-      }
+      // let update = false
+      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
+      // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
+      //   update = true
+      //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
+      // }
+      // const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
+      // if ( filtered_links.length !== Object.keys(data_view.links).length ) {
+      //   update = true
+      //   data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
+      // }
+      // if (update) {
+      //   compute_default_input_outputLinksId(
+      //     data_view.nodes,
+      //     data_view.links
+      //   )      
+      //   const deep_diff = require('deep-diff')
+      //   let difference = deep_diff.diff(master_data, data_view)
+      //   difference=(difference!==undefined)?difference:[]
+      //   difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      //   master_data.view[ind-1].view_data = {diff:difference}
+      //   set_data({...data_view as SankeyPlusData})
+      //   set_master_data({...master_data as SankeyPlusData})
+      // }
 
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
@@ -1310,30 +1324,30 @@ export const keyHandler = (
         }
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind+1].id) as SankeyPlusData
-      let update = false
-      const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
-      if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
-        update = true
-        data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
-      }
-      const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
-      if ( filtered_links.length !== Object.keys(data_view.links).length ) {
-        update = true
-        data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
-      }
-      if (update) {
-        compute_default_input_outputLinksId(
-          data_view.nodes,
-          data_view.links
-        )      
-        const deep_diff = require('deep-diff')
-        let difference = deep_diff.diff(master_data, data_view)
-        difference=(difference!==undefined)?difference:[]
-        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-        master_data.view[ind+1].view_data = {diff:difference}
-        set_data({...data_view as SankeyPlusData})
-        set_master_data({...master_data as SankeyPlusData})
-      }
+      // let update = false
+      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
+      // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
+      //   update = true
+      //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
+      // }
+      // const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
+      // if ( filtered_links.length !== Object.keys(data_view.links).length ) {
+      //   update = true
+      //   data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
+      // }
+      // if (update) {
+      //   compute_default_input_outputLinksId(
+      //     data_view.nodes,
+      //     data_view.links
+      //   )      
+      //   const deep_diff = require('deep-diff')
+      //   let difference = deep_diff.diff(master_data, data_view)
+      //   difference=(difference!==undefined)?difference:[]
+      //   difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      //   master_data.view[ind+1].view_data = {diff:difference}
+      //   set_data({...data_view as SankeyPlusData})
+      //   set_master_data({...master_data as SankeyPlusData})
+      // }
       if(saved){
         set_data({...data_view as SankeyPlusData})
         // adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
