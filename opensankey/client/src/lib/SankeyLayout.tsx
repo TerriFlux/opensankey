@@ -1,8 +1,9 @@
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes,SankeyPlusLabel} from './types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes} from './types'
 import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
+import { SankeyPlusLabel } from 'sankeyanimation/src/types'
 
 export const reorganize_node_inputLinksId = (
   node: SankeyNode,
