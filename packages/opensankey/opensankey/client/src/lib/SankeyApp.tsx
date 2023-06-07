@@ -25,7 +25,7 @@ import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
-import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
+//import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
@@ -280,8 +280,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
 
-  const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
-  const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
+  //const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
+  //const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
 
   const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
     return d
@@ -291,8 +291,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setShowPreference={setShowPreference}
     ui={elments_of_modale_preference}
   />
-  external_menu_modal.push(modale_style_link)
-  external_menu_modal.push(modale_style_node)
+  // external_menu_modal.push(modale_style_link)
+  // external_menu_modal.push(modale_style_node)
   external_menu_modal.push(modale_preference)
   external_menu_modal.push(intro_modal)
 
