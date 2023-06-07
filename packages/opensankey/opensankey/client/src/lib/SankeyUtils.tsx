@@ -1077,6 +1077,9 @@ export const setSelectedTags = (
         return
       }
       const tags_group = nodeTags[tags_group_key]
+      if (!node.tags) {
+        return
+      }
       if (!node.tags[tags_group_key] || node.tags[tags_group_key].length === 0) {
         // tags do not apply to node
         return
