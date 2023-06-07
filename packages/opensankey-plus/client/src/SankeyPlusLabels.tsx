@@ -76,7 +76,7 @@ export const SankeyPlusDrawLabels = (
         .bounds({ height: 100, width: d.label_width })
         .method('tspans')
 
-      if(d.position_horiz! === ''&&d.position_vert! === ''){
+      if(d.position_horiz !== ''&&d.position_vert!== ''){
         //Appel wrap seulement si le label n'a pas été drag
         //pour éviter que cela cause quelques probleme de position de label drag
         d3.select(' .opensankey #' + d.idLabel + ' text').call(wrap)
