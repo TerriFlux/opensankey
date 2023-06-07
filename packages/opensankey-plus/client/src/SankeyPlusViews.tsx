@@ -1086,6 +1086,9 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   // })
   const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
   const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
+  const ignore_changes3 = diff_view.filter((d :{path:string[],kind:string,rhs:string})=>
+      d.kind == 'E' && d.path[0]=='nodes' && (d.path[2]=='outputLinksId' || d.path[2]=='inputLinksId') &&
+      master_data.links[d.rhs] == undefined)
 
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
   //diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D')).forEach((d : object)=>applyChange(data_init,{},d))
@@ -1096,7 +1099,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
     .filter((d :{path:string[],kind:string})=>d.path[0]!=='links' || master_data.links[d.path[1]] !== undefined)
     .filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D'))
     .forEach((d : object)=>applyChange(data_init,{},d))
-  if (ignore_changes.length > 0 || ignore_changes2.length > 0) {
+  if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
     compute_default_input_outputLinksId(
       data_init.nodes,
       data_init.links
