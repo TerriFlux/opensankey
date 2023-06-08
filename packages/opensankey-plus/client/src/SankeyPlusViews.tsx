@@ -1382,7 +1382,7 @@ const selecteur_view=(data:SankeyPlusData,
   t:TFunction,
   set_view_not_saved:(s:string)=>void
 )=>{
-  return <Form.Select id="selectionNode" size='sm'
+  return <Form.Select id="selectionNode"
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -1856,7 +1856,12 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 
 
 
-  return <><Button size='sm' variant= 'secondary' onClick={() => {
+  return [
+    <Col>
+      <Row>
+        <FormGroup  as={Col} lg='auto'>
+          <ButtonGroup >
+            <Button variant= 'secondary' onClick={() => {
               const ev = document
               const tmp = { key: 'F7' }
               if (ev.onkeydown) {
@@ -1872,7 +1877,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
               delay={500}
               overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
             >
-              <Button size='sm' disabled={!connected} variant={'info'}
+                <Button disabled={!connected} variant={'info'}
                 onClick={() => {
                   const ev = document
                   const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
@@ -1882,9 +1887,9 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
                 }}
               >{view === 'none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
             </OverlayTrigger>:<></>}
-
-            <Button size='sm' variant={'success'}
-              disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
+            
+            <Button variant={'success'}
+              disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view)==0 || view=='none')}
               onClick={() => {
                 const ev = document
                 const tmp = { key: 'F8' }
@@ -1894,20 +1899,24 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
               }}>
               <FaCaretSquareLeft />
             </Button>
-            <Button size='sm' variant={'success'}
-              disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
-              onClick={() => {
-                const ev = document
-                const tmp = { key: 'F9'}
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
+            <Button variant={'success'} 
+            disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view)==m_d.view.length-1)}
+            onClick={() => {
+              const ev = document
+              const tmp = { key: 'F9'}
+              if (ev.onkeydown) {
+                ev.onkeydown(tmp as KeyboardEvent)
+              }
+            }}>
               <FaCaretSquareRight />
             </Button>
             {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
-          
-            </>
+          </ButtonGroup>
+        </FormGroup>
+            
+      </Row>
+    </Col>
+      ]
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
