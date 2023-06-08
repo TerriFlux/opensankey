@@ -193,7 +193,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           evt.transform.x = 0
           evt.transform.y = 0
           d3.select(' .opensankey #svg')
-            .attr('transform', evt.transform)
+            .attr('transform', evt.transform).attr('transform-origin', '0 0')
           svgSankey.attr('viewBox', null)
           const scale_legend=1/((evt.transform.k<1)?evt.transform.k:1)
           d3.select(' .opensankey #svg')
@@ -334,7 +334,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     <>
       <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
-          <svg id='svg' transform-origin='center top' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
