@@ -1095,10 +1095,10 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   diff_view
-    .filter((d :{path:string[],kind:string})=>d.path[0]!=='nodes' || master_data.nodes[d.path[1]] !== undefined)
-    .filter((d :{path:string[],kind:string})=>d.path[0]!=='links' || master_data.links[d.path[1]] !== undefined)
-    .filter((d : {path:string[],kind:string})=>(d.path[0] !== 'links' || d.kind !== 'D'))
-    .forEach((d : object)=>applyChange(data_init,{},d))
+  .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
+  .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
+  .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
+  .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d));
   if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
     compute_default_input_outputLinksId(
       data_init.nodes,
