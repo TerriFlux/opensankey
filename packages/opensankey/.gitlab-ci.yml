@@ -30,7 +30,9 @@ build:
     - echo $SankeyExcelParser
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - pip install $SankeyExcelParser
-    - bash build.sh
+    - bash build_client.sh
+    - bash build_server.sh
+    - bash build_doc.sh
   except:
     - schedules
 
