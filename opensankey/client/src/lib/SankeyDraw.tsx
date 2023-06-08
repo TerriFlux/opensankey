@@ -430,7 +430,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
           return
         }
         
-          d.y = d.y - data.grid_square_size
+        d.y = d.y - data.grid_square_size
         
         let y_max = 0
         Object.values(data.nodes).map(d => {
@@ -451,7 +451,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
           return
         }
         
-          d.y = d.y + data.grid_square_size
+        d.y = d.y + data.grid_square_size
         
         //Augumente hauteur svg si le noeud est près du bord
         if (d.y > data.height - 100) {
@@ -468,7 +468,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
           return
         }
         
-          d.x = d.x - data.grid_square_size
+        d.x = d.x - data.grid_square_size
         
         //Diminue largeur svg si le noeud est près du bord
         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
@@ -485,7 +485,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
           return
         }
         
-          d.x = d.x + data.grid_square_size
+        d.x = d.x + data.grid_square_size
         
         //Augumente largeur svg si le noeud est près du bord
         if (d.x > data.width - 100) {

@@ -5,8 +5,8 @@ import * as d3 from 'd3'
 
 import {node_color} from './SankeyUtils'
 import { BaseType } from 'd3'
-import { scale,inv_scale,drawCurveFunction,drawGrid,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
-  eventNodeContextMenu,nodeTransform,node_stroke_width, drawArrows } from './SankeyDrawFunction'
+import { scale,inv_scale,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
+  eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
 
 declare const window: Window &
@@ -44,7 +44,6 @@ export const OpenSankeyDrawNodes = (
 ) => {
   const display_nodes=data.nodes
   const display_links=data.links
-  const min_thickness=2
   
         
   // Function to draw nodes with a particular shape
@@ -358,7 +357,6 @@ export const OpenSankeyDrawNodes = (
         
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
-    const { display_style } = data
     if (remove_previous_nodes) {
       d3.selectAll(' .opensankey .gg_nodes').remove()
     }
