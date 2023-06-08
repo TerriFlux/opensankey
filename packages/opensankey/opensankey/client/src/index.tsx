@@ -31,6 +31,50 @@ try {
   console.log('terriflux.png not found')
 }
 
+
+// Search for licence logo
+let logo_OS = ''
+try {
+    /* eslint-disable */
+  // @ts-ignore
+  logo_OS = require('./css/Open_Sankey_logo.jpg')
+  /* eslint-enable */
+  const path = window.location.href
+  if ( !path.includes('localhost') ) {
+    logo_OS = logo_OS.replace('static/', 'static/sankeysuite/')
+  }
+} catch (expt) {
+  console.log('logo_OS not found')
+}
+
+let logo_OSP = ''
+try {
+    /* eslint-disable */
+  // @ts-ignore
+  logo_OSP = require('./css/OSP.png')
+  /* eslint-enable */
+  const path = window.location.href
+  if ( !path.includes('localhost') ) {
+    logo_OSP = logo_OSP.replace('static/', 'static/sankeysuite/')
+  }
+} catch (expt) {
+  console.log('logo_OSP not found')
+}
+
+let logo_OSS = ''
+try {
+    /* eslint-disable */
+  // @ts-ignore
+  logo_OSS = require('./css/OSS.jpg')
+  /* eslint-enable */
+  const path = window.location.href
+  if ( !path.includes('localhost') ) {
+    logo_OSS = logo_OSS.replace('static/', 'static/sankeysuite/')
+  }
+} catch (expt) {
+  console.log('logo_OSS not found')
+}
+
 window.React = React
 
 declare const window: Window &
@@ -94,6 +138,10 @@ if (!window.SankeyToolsStatic) {
             formations_menu={formations_menu}
             logo={logo}
             logo_terriflux={logo_terriflux}
+            logo_OS={logo_OS}
+            logo_OSP={logo_OSP}
+            logo_OSS={logo_OSS}
+
           />
         </>,
         document.getElementById('react-container')
@@ -107,6 +155,10 @@ if (!window.SankeyToolsStatic) {
             formations_menu={{}}
             logo={logo}
             logo_terriflux={logo_terriflux}
+            logo_OS={logo_OS}
+            logo_OSP={logo_OSP}
+            logo_OSS={logo_OSS}
+
 
           />
         </>,
@@ -137,6 +189,10 @@ if (!window.SankeyToolsStatic) {
         formations_menu={{}}
         logo={logo}
         logo_terriflux={logo_terriflux}
+        logo_OS={logo_OS}
+        logo_OSP={logo_OSP}
+        logo_OSS={logo_OSS}
+
 
       />
       {window.sankey.footer ? (
