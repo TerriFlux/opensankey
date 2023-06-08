@@ -313,25 +313,25 @@ export  const drag_nodes = (
   removeAnimate()
   
 
-    d3.selectAll('.ggg_nodes').filter((d)=>{
-      const n=d as SankeyNode
-      const idNode = dragged.id.substring(4)
-      const node=nodes[idNode]
-      // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
-      // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changemetn au noeud draggé
-      if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
-        return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n)
-      }else if(node.position!=='relative'){
-        return node==n
-      }else{
-        return false
-      }
-    }).attr('transform',(d)=>{
-      const n=d as SankeyNode
-      n.x+=event.dx
-      n.y+=event.dy
-      return 'translate('+n.x+','+n.y+')'
-    })
+  d3.selectAll('.ggg_nodes').filter((d)=>{
+    const n=d as SankeyNode
+    const idNode = dragged.id.substring(4)
+    const node=nodes[idNode]
+    // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
+    // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changemetn au noeud draggé
+    if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
+      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n)
+    }else if(node.position!=='relative'){
+      return node==n
+    }else{
+      return false
+    }
+  }).attr('transform',(d)=>{
+    const n=d as SankeyNode
+    n.x+=event.dx
+    n.y+=event.dy
+    return 'translate('+n.x+','+n.y+')'
+  })
     
   
 
