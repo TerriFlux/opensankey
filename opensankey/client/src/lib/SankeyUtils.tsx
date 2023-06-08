@@ -781,6 +781,9 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
       return false
     }
   }
+  if (!l) {
+    return false
+  }
   if (!data_s.nodes[l.idSource] || !data_s.nodes[l.idSource].node_visible || !data_s.nodes[l.idTarget] || !data_s.nodes[l.idTarget].node_visible) {
     return false
   }

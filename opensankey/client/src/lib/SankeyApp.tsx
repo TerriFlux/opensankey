@@ -25,7 +25,7 @@ import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
-import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
+//import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
@@ -144,21 +144,15 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const [showStyle,setShowStyle] = useState(false)
-  const showStyleEdition = () => {
-    setShowStyle(true)
-  }
+  // const [showStyle,setShowStyle] = useState(false)
+  const showStyleEdition = () => null
   //Modal et fonctions pour l'edition et affectation des style de flux
-  const [showStyleLink,setShowStyleLink] = useState(false)
-  const showStyleEditionLink = () => {
-    setShowStyleLink(true)
-  }
+  const showStyleEditionLink = () => null
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
 
   //- Styles
-  const [selected_style_link, set_selected_style_link] = useState('default')
-  const [selected_style_node, set_selected_style_node] = useState('default')
+  const selected_style_node = useState('default')[0]
 
 
   const {t} =useTranslation()
@@ -283,8 +277,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
 
-  const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
-  const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
+  //const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
+  //const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
 
   const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
     return d
@@ -294,8 +288,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setShowPreference={setShowPreference}
     ui={elments_of_modale_preference}
   />
-  external_menu_modal.push(modale_style_link)
-  external_menu_modal.push(modale_style_node)
+  // external_menu_modal.push(modale_style_link)
+  // external_menu_modal.push(modale_style_node)
   external_menu_modal.push(modale_preference)
   external_menu_modal.push(intro_modal)
 

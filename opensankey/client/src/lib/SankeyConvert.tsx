@@ -1335,7 +1335,7 @@ export const convert_data = (
         l.position_horiz='right'
       }
     }
-  // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
+    // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
     if(l.transparent!==undefined){
       l.opacity=l.transparent?0:100
       delete ((l as unknown) as SankeyPlusLabelToConvcert).transparent
