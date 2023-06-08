@@ -226,7 +226,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.selectAll(' .opensankey .gg_links .center_handle').attr('fill-opacity', '0')
         })
         .on('drag', function (event) {
-          d3.selectAll('.ggg_nodes').attr('transform',(d)=>{
+          d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
             const n=d as SankeyNode
             n.x+=event.dx
             n.y+=event.dy
@@ -264,6 +264,39 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             })
             return new_path.join(' ')
           })
+          d3.selectAll('.arrow').attr('d',(d)=>{
+            const l=d as SankeyLink
+            // Get the path of each displayed link
+            const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
+
+            // Each path is splitted into small part of the path then depending on the small part :
+            //  - If it's a letter then do nothing
+            //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one, 
+            //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+            // 
+            // Then once the subpart of the path are modified, we join the array to reform the path
+            const new_path=path.map((p,i)=>{
+            // Case when it's a [x,y] coordinates
+              if(p.includes(',')){
+                const pos=p.split(',')
+                const newPosX=Number(pos[0])+event.dx
+                const newPosY=Number(pos[1])+event.dy
+                p=''+newPosX+','+newPosY
+              }
+              // Case when it's a number alone so we search the previous element to know wich shift
+              if(Number(p)){
+                if(path[i-1]=='H'){
+                  p=Number(p)+event.x
+                }else if(path[i-1]=='V'){
+                  p=Number(p)+event.y
+                }
+              }
+              return p
+            })
+            return new_path.join(' ')
+          })
+
         })
         .on('end',()=>{
           set_data({...data})
@@ -396,14 +429,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        if (e.shiftKey) {
+        
           d.y = d.y - data.grid_square_size
-        } else {
-          const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-          const n_pos = Math.trunc((d.y+height/2)/ data.grid_square_size)
-          d.y =  (n_pos - 1) * data.grid_square_size 
-          d.y+=(data.grid_square_size/2)-height/2
-        }
+        
         let y_max = 0
         Object.values(data.nodes).map(d => {
           y_max = (d.y > y_max) ? d.y : y_max
@@ -422,14 +450,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        if (e.shiftKey) {
+        
           d.y = d.y + data.grid_square_size
-        } else {
-          const height=+d3.select(' .opensankey #'+d.idNode).attr('height')
-          const n_pos = Math.trunc((d.y+height/2) / data.grid_square_size)
-          d.y = (n_pos + 2) * data.grid_square_size
-          d.y-=(data.grid_square_size/2)+height/2
-        }
+        
         //Augumente hauteur svg si le noeud est près du bord
         if (d.y > data.height - 100) {
           data.height += 100
@@ -444,14 +467,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        if (e.shiftKey) {
+        
           d.x = d.x - data.grid_square_size
-        } else {
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos * data.grid_square_size == d.x) ? (n_pos - 1) * data.grid_square_size : n_pos * data.grid_square_size
-          const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-          d.x-=(data.grid_square_size/2)+width/2
-        }
+        
         //Diminue largeur svg si le noeud est près du bord
         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
           data.width -= 50
@@ -466,16 +484,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        if (e.shiftKey) {
+        
           d.x = d.x + data.grid_square_size
-        } else {
-
-          const n_pos = Math.trunc(d.x / data.grid_square_size)
-          d.x = (n_pos + 2) * data.grid_square_size
-          const width=+d3.select(' .opensankey #'+d.idNode).attr('width')
-          d.x+=(data.grid_square_size/2)-width/2
-
-        }
+        
         //Augumente largeur svg si le noeud est près du bord
         if (d.x > data.width - 100) {
           data.width += 100
