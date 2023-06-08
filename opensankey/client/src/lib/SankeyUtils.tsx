@@ -1517,10 +1517,10 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   document.getElementsByTagName ('html')[0]?.scrollTo(0,0)
 }
 
-export const clickSaveDiagram = (data:SankeyData) => {
+export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
   const data_to_save = { ...data }
   const str_data = JSON.stringify(data_to_save, null, 2)
 
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-  FileSaver.saveAs(blob, 'sankey_diagram.json')
+  FileSaver.saveAs(blob, name+'.json')
 }
