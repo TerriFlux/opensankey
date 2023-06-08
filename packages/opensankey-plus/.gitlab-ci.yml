@@ -22,6 +22,6 @@ build:
   script:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # - bash build.sh
+    - bash build_client.sh
   except:
     - schedules
