@@ -13,5 +13,6 @@ exit_if_error() {
 cd client
 npm install --legacy-peer-deps || exit_if_error $?
 npm link --legacy-peer-deps open-sankey || exit_if_error $?
+# npm run lint || exit_if_error $?
 npm run build || exit_if_error $?
 cd ..

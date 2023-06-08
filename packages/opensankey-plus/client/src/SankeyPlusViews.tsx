@@ -1087,7 +1087,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
   const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
   const ignore_changes3 = diff_view.filter((d :{path:string[],kind:string,rhs:string})=>
-      d.kind == 'E' && d.path[0]=='nodes' && (d.path[2]=='outputLinksId' || d.path[2]=='inputLinksId') &&
+    d.kind == 'E' && d.path[0]=='nodes' && (d.path[2]=='outputLinksId' || d.path[2]=='inputLinksId') &&
       master_data.links[d.rhs] == undefined)
 
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
@@ -1095,15 +1095,15 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   //diff_view.forEach((d : object)=>applyChange(data_init,{},d))
   diff_view
-  .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
-  .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
-  .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
-  .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d));
+    .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
+    .filter((d :{path:string[],kind:string}) => d.kind === 'N' || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
+    .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
+    .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
   if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
     compute_default_input_outputLinksId(
       data_init.nodes,
       data_init.links
-    )       
+    )
   }
   return data_init
 }
@@ -1124,7 +1124,7 @@ const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
         delete ((d as unknown) as differenceType).lhs
       }
       return d
-  })
+    })
 }
 
 export const keyHandler = (
@@ -1269,7 +1269,7 @@ export const keyHandler = (
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind-1].id) as SankeyPlusData
       // let update = false
-      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
+      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined)
       // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
       //   update = true
       //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
@@ -1283,7 +1283,7 @@ export const keyHandler = (
       //   compute_default_input_outputLinksId(
       //     data_view.nodes,
       //     data_view.links
-      //   )      
+      //   )
       //   const deep_diff = require('deep-diff')
       //   let difference = deep_diff.diff(master_data, data_view)
       //   difference=(difference!==undefined)?difference:[]
@@ -1336,7 +1336,7 @@ export const keyHandler = (
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind+1].id) as SankeyPlusData
       // let update = false
-      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined) 
+      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined)
       // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
       //   update = true
       //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
@@ -1350,7 +1350,7 @@ export const keyHandler = (
       //   compute_default_input_outputLinksId(
       //     data_view.nodes,
       //     data_view.links
-      //   )      
+      //   )
       //   const deep_diff = require('deep-diff')
       //   let difference = deep_diff.diff(master_data, data_view)
       //   difference=(difference!==undefined)?difference:[]
@@ -1679,21 +1679,21 @@ export const viewsAccordion = (
               to_download.view=[]
               clickSaveDiagram(to_download,v.nom)
             })
-            }}>
-              {t('view.exportAll')}
+          }}>
+            {t('view.exportAll')}
           </Button>
           <Button
-                      variant='info'
-                      onClick={
-                        () => {
-                          // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-                          if (_load_multiple_json.current) {
+            variant='info'
+            onClick={
+              () => {
+                // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+                if (_load_multiple_json.current) {
                         _load_multiple_json.current!.name = ''
                         _load_multiple_json.current.click()
-                          }
-                        }
-                      }
-                    >{t('view.importMultiple')}</Button>
+                }
+              }
+            }
+          >{t('view.importMultiple')}</Button>
         </Form></OverlayTrigger>
     </Accordion.Body>
   </Accordion.Item>
@@ -1750,14 +1750,14 @@ export const viewsAccordion = (
           return (e: ProgressEvent<FileReader>) => {
             const result = String((e.target as FileReader).result)
             const result_data = JSON.parse(result)
-  
+
             const imported_data=JSON.parse(JSON.stringify(result_data))
             imported_data.view=[]
             convert_data(imported_data)
             let difference = deep_diff.diff(master_data,imported_data)
             difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
             difference=filter_view(difference)
-  
+
             const new_ind = 'view_' + String(new Date().getTime())
             const copy_data = {diff:difference}
             master_data.view.push({
@@ -1857,57 +1857,57 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 
 
   return <><Button size='sm' variant= 'secondary' onClick={() => {
-              const ev = document
-              const tmp = { key: 'F7' }
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}>
-              <FaHome />
-            </Button>
+    const ev = document
+    const tmp = { key: 'F7' }
+    if (ev.onkeydown) {
+      ev.onkeydown(tmp as KeyboardEvent)
+    }
+  }}>
+    <FaHome />
+  </Button>
 
-            {!window.SankeyToolsStatic?<OverlayTrigger
-              key={'buttonSaveViewDisabled'}
-              placement={'bottom'}
-              delay={500}
-              overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-            >
-              <Button size='sm' disabled={!connected} variant={'info'}
-                onClick={() => {
-                  const ev = document
-                  const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-                  if (ev.onkeydown) {
-                    ev.onkeydown(t)
-                  }
-                }}
-              >{view === 'none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
-            </OverlayTrigger>:<></>}
+  {!window.SankeyToolsStatic?<OverlayTrigger
+    key={'buttonSaveViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+  >
+    <Button size='sm' disabled={!connected} variant={'info'}
+      onClick={() => {
+        const ev = document
+        const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+        if (ev.onkeydown) {
+          ev.onkeydown(t)
+        }
+      }}
+    >{view === 'none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
+  </OverlayTrigger>:<></>}
 
-            <Button size='sm' variant={'success'}
-              disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
-              onClick={() => {
-                const ev = document
-                const tmp = { key: 'F8' }
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
-              <FaCaretSquareLeft />
-            </Button>
-            <Button size='sm' variant={'success'}
-              disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
-              onClick={() => {
-                const ev = document
-                const tmp = { key: 'F9'}
-                if (ev.onkeydown) {
-                  ev.onkeydown(tmp as KeyboardEvent)
-                }
-              }}>
-              <FaCaretSquareRight />
-            </Button>
-            {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
-          
-            </>
+  <Button size='sm' variant={'success'}
+    disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
+    onClick={() => {
+      const ev = document
+      const tmp = { key: 'F8' }
+      if (ev.onkeydown) {
+        ev.onkeydown(tmp as KeyboardEvent)
+      }
+    }}>
+    <FaCaretSquareLeft />
+  </Button>
+  <Button size='sm' variant={'success'}
+    disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
+    onClick={() => {
+      const ev = document
+      const tmp = { key: 'F9'}
+      if (ev.onkeydown) {
+        ev.onkeydown(tmp as KeyboardEvent)
+      }
+    }}>
+    <FaCaretSquareRight />
+  </Button>
+  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+
+  </>
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
