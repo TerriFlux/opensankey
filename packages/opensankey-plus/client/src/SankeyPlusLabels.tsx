@@ -50,7 +50,7 @@ export const SankeyPlusDrawLabels = (
         .attr('height',d.label_height)
         .attr('id', d.idLabel + '_text')
         .append('xhtml:div')
-        .attr('class','ql-editor')
+        .attr('class',d.is_edit_raw?'':'ql-editor')
         .html(d.name)
 
       // Traite les labels qui sont simplementdu text
