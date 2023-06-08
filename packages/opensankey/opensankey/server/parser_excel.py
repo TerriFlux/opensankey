@@ -108,7 +108,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         node_index = 0
 
     nb_links = 0
-    existing_links_dict = {}
     if FLUX_SHEET in mfa_input:
         for row in range(len(mfa_input[FLUX_SHEET])):
             source_name = mfa_input[FLUX_SHEET].iat[row, 0]
@@ -275,10 +274,8 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
                 continue
             row_flux_tags.append(mfa_input[sheet_name].iat[row, columns.index(fluxTag)])
 
-        # existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
-        #                   == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        # existing_link =
-        # existing_links_dict[nodes[links[key]['idSource']]['name']+'->'+nodes[links[key]['idTarget']]['name']]
+        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
+                          == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
         if DATA_VALUE in columns:
             val = mfa_input[sheet_name].iat[row, columns.index(DATA_VALUE)]
             if val is None:
@@ -288,9 +285,9 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
         else:
             val = ''
         display_val = ''
-        is_existing_link = source_name+'->'+target_name in existing_links_dict
+        is_existing_link = len(existing_links) > 0
         if is_existing_link:
-            existing_link = existing_links_dict[source_name+'->'+target_name]
+            existing_link = existing_links[0]
             existing_v = existing_link['value']
 
             for row_data_tag in row_data_tags:
@@ -316,10 +313,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             dashed = 1
             if val != '':
                 dashed = 0
-            if source_node['idNode'] is None:
-                continue
-            if target_node['idNode'] is None:
-                continue
             new_link = {
                 'idLink': 'link'+str(nb_links),
                 'idSource': source_node['idNode'],
@@ -330,7 +323,6 @@ def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
             }
             nb_links = nb_links+1
             links[new_link['idLink']] = new_link
-            existing_links_dict[source_name+'->'+target_name] = new_link
 
 
 def parse_nodes(mfa_input, nodes, nodeTags):

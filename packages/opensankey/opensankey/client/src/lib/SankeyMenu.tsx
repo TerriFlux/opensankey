@@ -1000,7 +1000,7 @@ export const OpenSankeyMenus = (
             reader.onload = (() => {
               return (e: ProgressEvent<FileReader>) => {
                 reinitialization()
-                let result = String((e.target as FileReader).result)
+                const result = String((e.target as FileReader).result)
                 const new_data = default_sankey_data()
                 //result = result.split('<br>').join('\\\\n')
                 const result_data = JSON.parse(result)
