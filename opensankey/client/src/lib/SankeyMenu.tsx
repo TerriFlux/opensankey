@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Image} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -1489,7 +1489,12 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   external_pagination:JSX.Element[],
   external_content:{[s:string]:JSX.Element},
   exemple_menu: object,
+  logo_OS:string,
+  logo_OSP:string,
+  logo_OSS:string,
 )=>{
+
+
 
 
 
@@ -1540,20 +1545,34 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   }
 
 
-  const content_carousel=<Carousel variant='dark' >
-    {list_template_data.map((_) =>
-    {
-      const title=_.split('.').splice(0,1).join('')
-      return (<Carousel.Item>
-        <img src={'/fm/userfiles/OpenSankey/image_preview/'+title+'.png'}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
-        <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption>
-      </Carousel.Item>)
-    })
-    }
+  
 
-  </Carousel>
-  external_content['carousel']=content_carousel
+  const content_licence=<>
+    <Row>
+      <Col xs={3}><img src={logo_OS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col>{t('Menu.presentation_OS')}<Button>{t('desire_to_know_more')}</Button></Col>
+    </Row>
 
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
+
+    <Row>
+      <Col>{t('Menu.presentation_OSP')}
+      <Button href="https://terriflux.com/downloads/open-sankey-plus/" target="_blank" rel="noopener noreferrer">
+        {t('desire_to_know_more')}
+      </Button></Col>
+      <Col xs={3}><img src={logo_OSP} style={{'objectFit':'contain','width':'250px'}} /></Col>
+    </Row>
+
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
+
+    <Row>
+      <Col xs={3}><img src={logo_OSS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col>{t('Menu.presentation_OSS')}
+      <Button href="https://terriflux.com/downloads/sankey-suite/" target="_blank" rel="noopener noreferrer">
+        {t('desire_to_know_more')}
+      </Button></Col>
+    </Row>
+  </>
+
+  external_content['licence']=content_licence
 
 
   return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
@@ -1569,16 +1588,16 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     {window.SankeyToolsStatic ? <></> : <Modal.Footer style={{justifyContent:'center'}}>
       <Pagination >
         {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-        <Pagination.Item active={active_page==='carousel'} key={'carousel'} onClick={()=>{
-          set_active_page('carousel')
-        }}>
-            Exemples
-        </Pagination.Item>
 
         <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
           set_active_page('rc')
         }}>
           {t('Menu.rc')}
+        </Pagination.Item>
+        <Pagination.Item active={active_page==='licence'} key={'licence'} onClick={()=>{
+          set_active_page('licence')
+        }}>
+          {t('Menu.licence')}
         </Pagination.Item>
       </Pagination>
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
