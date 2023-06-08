@@ -1139,6 +1139,7 @@ export const keyHandler = (
   set_animating:(b:boolean)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
+  multi_selected_labels:{current:SankeyPlusLabel[]},
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_toast_new_view:React.Dispatch<React.SetStateAction<boolean>>,
@@ -1167,9 +1168,12 @@ export const keyHandler = (
     accordion_ref,
     button_ref,
     mode_selection)
+  if(e.key=='a' && e.ctrlKey){
+    e.preventDefault()
+    multi_selected_labels.current=Object.values(data.labels)
+    set_data({...data})
 
-  // if we have opensankey+ then we can save and modify view with CTRL+S
-  if (connected && e.key === 's' && (e.ctrlKey||e.metaKey)) {
+  }else if (connected && e.key === 's' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
     const deep_diff = require('deep-diff')
 
@@ -1212,28 +1216,7 @@ export const keyHandler = (
       }, 3000)
     }
   }
-  // if (!master && e.key === 'F6') {
-  //   //appelle une fonction qui anime la vue suivante puis s'appelle recursivement jusqu'a ce qu'il n'y ai plus de vue
-  //   let ind = 0
-  //   if (master) {
-  //     //data is master data
-  //     set_master_data({...master_data})
-  //     set_view(master_data.view[ind].id)
-  //     // set_data({ ...master_data.view[ind].view_data as SankeyPlusData})
-  //     set_data({...get_data_from_view(set_data,master_data,set_master_data,master_data.view[ind].id)})
-
-  //     setTimeout(function () {
-  //       nextView(master_data,set_data,master_data.view[ind].id,set_view,set_animating)
-  //     }, 500)
-  //   } else {
-  //     // data is view data
-  //     master_data.view.map((v, i) => {
-  //       ind = (v.id === view) ? i : ind
-  //     })
-  //     //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-  //     nextView(master_data, set_data,master_data.view[ind].id,set_view,set_animating)
-  //   }
-  // }
+  // Changing view to master
   if (!master && e.key === 'F7') {
 
     // Check if there is unsaved change before we switch view
@@ -1253,8 +1236,7 @@ export const keyHandler = (
       set_data({ ...master_data })
     }
   }
-
-
+  // Changing view to next or previous
   if ([ 'F8', 'F9'].includes(e.key)) {
     if (e.key === 'F8') {
       //Cherche la position de la vue sélectionné dans le tableau de vue
@@ -1335,30 +1317,6 @@ export const keyHandler = (
         }
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind+1].id) as SankeyPlusData
-      // let update = false
-      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined)
-      // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
-      //   update = true
-      //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
-      // }
-      // const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
-      // if ( filtered_links.length !== Object.keys(data_view.links).length ) {
-      //   update = true
-      //   data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
-      // }
-      // if (update) {
-      //   compute_default_input_outputLinksId(
-      //     data_view.nodes,
-      //     data_view.links
-      //   )
-      //   const deep_diff = require('deep-diff')
-      //   let difference = deep_diff.diff(master_data, data_view)
-      //   difference=(difference!==undefined)?difference:[]
-      //   difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      //   master_data.view[ind+1].view_data = {diff:difference}
-      //   set_data({...data_view as SankeyPlusData})
-      //   set_master_data({...master_data as SankeyPlusData})
-      // }
       if(saved){
         set_data({...data_view as SankeyPlusData})
         // adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
@@ -1368,6 +1326,80 @@ export const keyHandler = (
       //}
     }
   }
+
+
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+    // (exemples : le input de la largeur minimal d'un noeud)
+    e.preventDefault()
+    if (e.key == 'ArrowUp') {
+      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+        if (d != undefined) {
+          return d.idLabel
+        }
+      }).includes(f.idLabel)).map(d => {
+        
+        d.y = d.y - data.grid_square_size
+        
+        let y_max = 0
+        Object.values(data.labels).map(d => {
+          y_max = (d.y > y_max) ? d.y : y_max
+        })
+        //Diminue hauteur svg si le noeud est près du bord
+        if (y_max < data.height - 100 && data.height - 100 >= window.innerHeight) {
+          data.height -= 90
+        }
+      })
+    } else if (e.key == 'ArrowDown') {
+      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+        if (d != undefined) {
+          return d.idLabel
+        }
+      }).includes(f.idLabel)).map(d => {
+        
+        
+        d.y = d.y + data.grid_square_size
+        
+        //Augumente hauteur svg si le noeud est près du bord
+        if (d.y > data.height - 100) {
+          data.height += 100
+        }
+      })
+    } else if (e.key == 'ArrowLeft') {
+      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+        if (d != undefined) {
+          return d.idLabel
+        }
+      }).includes(f.idLabel)).map(d => {
+        
+        
+        d.x = d.x - data.grid_square_size
+        
+        //Diminue largeur svg si le noeud est près du bord
+        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
+          data.width -= 50
+        }
+      })
+    } else if (e.key == 'ArrowRight') {
+      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+        if (d != undefined) {
+          return d.idLabel
+        }
+      }).includes(f.idLabel)).map(d => {
+        
+        
+        d.x = d.x + data.grid_square_size
+        
+        //Augumente largeur svg si le noeud est près du bord
+        if (d.x > data.width - 100) {
+          data.width += 100
+        }
+      })
+    }
+    set_data({ ...data })
+  }
+
+  
 }
 
 const selecteur_view=(data:SankeyPlusData,
