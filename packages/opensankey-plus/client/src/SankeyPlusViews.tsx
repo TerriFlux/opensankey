@@ -1663,7 +1663,7 @@ export const viewsAccordion = (
                         onClick={()=>{
                           const to_download=get_data_from_view(master_data,d.id)
                           to_download.view=[]
-                          clickSaveDiagram(to_download)
+                          clickSaveDiagram(to_download,d.nom)
                         }}
                       ><FaFileExport/></Button>
                     </td>
@@ -1677,7 +1677,7 @@ export const viewsAccordion = (
             master_data.view.forEach(v=>{
               const to_download=get_data_from_view(master_data,v.id)
               to_download.view=[]
-              clickSaveDiagram(to_download)
+              clickSaveDiagram(to_download,v.nom)
             })
             }}>
               {t('view.exportAll')}
