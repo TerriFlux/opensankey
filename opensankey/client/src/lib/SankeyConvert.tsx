@@ -1317,6 +1317,9 @@ export const convert_data = (
 
   // Convert Data labes
   Object.values(data_to_convert.labels).forEach(l=>{
+    if(l.is_edit_raw===undefined){
+      l.is_edit_raw=true
+    }
     if(l.isTextHTML===undefined){
       l.isTextHTML=false
       l.is_edit_raw=true

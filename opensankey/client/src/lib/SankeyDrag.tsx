@@ -232,26 +232,11 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
 export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number },
   multi_selected_nodes:{current: SankeyNode[] },
-  min_width_and_height:(d:SankeyData)=>number[],
-  drawGrid:(d:SankeyData)=>void,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  min_thickness:number,
-  drawCurveFunction : SankeyDrawCurve,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   static_sankey:boolean,
-  multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType,
-  dragging:dragging_type
-
+  set_data:(d:SankeyData)=>void
 )=>{
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object).on('drag', function (event,node) {
@@ -260,15 +245,17 @@ export const dragGNodeEvent=(
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
-            display_nodes, display_links,display_style,data.nodeTags,this,event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows,dragging
+            display_nodes,this,event,multi_selected_nodes
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(
-            display_nodes, display_links,display_style,data.nodeTags,this,event,data,multi_selected_nodes,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows,dragging
+            display_nodes,this,event,multi_selected_nodes
           )
         }
       }
+    }).on('end',()=>{
+      set_data({...data})
     })
 }
 /**
@@ -319,250 +306,40 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Di
  */
 export  const drag_nodes = (
   nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number },
-  nodeTags: TagsCatalog,
   dragged:Element,
   event: { dx: number; dy: number },
-  data:SankeyData,
   multi_selected_nodes:{current: SankeyNode[] },
-  min_width_and_height:(d:SankeyData)=>number[],
-  drawGrid:(d:SankeyData)=>void,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  min_thickness:number,
-  drawCurveFunction : SankeyDrawCurve,
-  multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType,
-  dragging:dragging_type
-
 ) => {
   removeAnimate()
   
-  
-  if(multi_selected_nodes.current.length>0){
-    multi_selected_nodes.current.map(node=>{
-      dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
-    })
-  }else{
+
+  d3.selectAll('.ggg_nodes').filter((d)=>{
+    const n=d as SankeyNode
     const idNode = dragged.id.substring(4)
     const node=nodes[idNode]
-    dragging(node,nodes,links,display_style,nodeTags,event,data,min_width_and_height,drawGrid,scale,inv_scale,sankeyTooltip,min_thickness,drawCurveFunction,multi_selected_links,link_text,getLinkValue,drawArrows)
-  }
+    // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
+    // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changemetn au noeud draggé
+    if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
+      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n)
+    }else if(node.position!=='relative'){
+      return node==n
+    }else{
+      return false
+    }
+  }).attr('transform',(d)=>{
+    const n=d as SankeyNode
+    n.x+=event.dx
+    n.y+=event.dy
+    return 'translate('+n.x+','+n.y+')'
+  })
+    
+  
 
 }
 
-export type dragging_type = (node:SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number },
-  nodeTags: TagsCatalog,
-  event: { dx: number; dy: number },
-  data:SankeyData,
-  min_width_and_height:(d:SankeyData)=>number[],
-  drawGrid:(d:SankeyData)=>void,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  min_thickness:number,
-  drawCurveFunction : SankeyDrawCurve,
-  multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType
-) => void
-
-export const dragging=(node:SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number },
-  nodeTags: TagsCatalog,
-  event: { dx: number; dy: number },
-  data:SankeyData,
-  min_width_and_height:(d:SankeyData)=>number[],
-  drawGrid:(d:SankeyData)=>void,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  min_thickness:number,
-  drawCurveFunction : SankeyDrawCurve,
-  multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType
-)=>{
-  const old_x = +node.x
-  const old_y = +node.y
-  const new_x = old_x + event.dx
-  const new_y = old_y + event.dy
-
-
-  if (new_x < 0 || new_x > (data.width - node.node_width) || new_y < 0 || new_y > (data.height - node.node_height)) {
-    return
-  }
-
-  node.x = new_x
-  node.y = new_y;
 
 
 
-  [data.width, data.height] = min_width_and_height(data)
-  d3.select(' .opensankey #svg').style('width', data.width + 'px')
-
-
-
-  d3.select(' .opensankey #svg').style('height', data.height + 'px')
-  drawGrid(data)
-
-  const stream_io = node.inputLinksId.concat(node.outputLinksId)
-  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
-  for (const i in stream_io) {
-    const l = links[stream_io[i]]
-    if ( !data.nodes[l.idSource].display && !data.nodes[l.idTarget].display) {
-      continue
-    }
-
-    //position noeud source ou target
-    let pos_x_src, pos_y_src
-    if (node.idNode == nodes[l.idSource].idNode) {
-      pos_x_src = nodes[l.idTarget].x
-      pos_y_src = nodes[l.idTarget].y
-    } else {
-      pos_x_src = nodes[l.idSource].x
-      pos_y_src = nodes[l.idSource].y
-    }
-
-
-    const link_value = test_link_value(data, nodes, l,getLinkValue)
-    //Zones limite à ne pas êtres
-    const limit_x = [pos_x_src - scale(link_value), pos_x_src + node.node_width + scale(link_value)]
-    const limit_y = [pos_y_src - scale(link_value), pos_y_src + scale(link_value)]
-
-    let draw_warning = false
-
-    //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
-    //si partie gauche du noeud ne se situe pas dans les coord du noeud source
-    const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
-    //si partie droite du noeud ne se situe pas dans le noeud source
-    const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-    //si partie haute du noeud ne se situe pas dans le noeud source
-    const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-    //const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
-
-    if (l.orientation == 'hh') {
-      //orientation hh
-      draw_warning = left_in_src || right_in_src
-    } else if (l.orientation == 'vv') {
-      //orientation vv
-      draw_warning = top_in_src
-    } else if (l.orientation == 'vh') {
-      draw_warning = left_in_src || right_in_src || top_in_src
-    } else {
-      //orientation hv 
-      draw_warning = left_in_src || right_in_src || top_in_src
-    }
-
-    if (draw_warning && !l.recycling) {
-      d3.select(' .opensankey #' + l.idLink).attr('stroke-width', '1px')
-    } else {
-      //retour à la normal
-      d3.select(' .opensankey #' + l.idLink).attr('stroke-width', d => {
-        const link_value = test_link_value(data, nodes, (d as SankeyLink),getLinkValue)
-        const tmp=(link_value=='')?1:link_value
-        return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
-      })
-    }
-  }
-
-  sankeyTooltip.style('opacity', 0) // Fermeture de la tooltip au click
-
-  d3.select(' .opensankey #ggg_'+node.idNode).attr('transform', 'translate(' + new_x + ',' + new_y + ')')
-  d3.select(' .opensankey #tooltip_node' + node.idNode).attr('transform', 'translate(' + (new_x + 50) + ',' + (new_y + 20) + ')')
-  const error_msg: { [text: string]: string } = {}
-  Object.values(links).filter(l=>data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(
-    link => {
-
-      if (link.label_on_path) {
-        if (link.recycling) {
-          if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-          } else if (link.label_position === 'middle' && link.orientation === 'hh') {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-          }   
-        } else {
-          if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'left')
-          } else if (link.label_position === 'middle' /*&& link.orientation === 'hh'*/) {
-            d3.select(' .opensankey #' + link.idLink + '_text').attr('side', 'right')
-          }
-        }
-        
-        if (link.orthogonal_label_position === 'middle') {
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy', '0.3em')
-        } else if (link.orthogonal_label_position === 'below') {
-          let tmp=getLinkValue(data, link.idLink).value
-          tmp=(tmp)?tmp:0
-          // return scale(getLinkValue(data, link.idLink).value) / 2 + 10 + 'px'
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 10 + 'px')
-
-        } else if (link.orthogonal_label_position === 'above') {
-          let tmp=getLinkValue(data, link.idLink).value
-          tmp=(tmp)?tmp:0
-          // return -scale(getLinkValue(data, link.idLink).value) / 2 + 'px'
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('dy',scale(tmp) / 2 + 'px')
-
-        }
-        
-      }
-
-      if (link.idSource === node.idNode || link.idTarget === node.idNode) {
-        // Redraw link
-        const old_x_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('x')
-        const old_y_pos = +d3.select(' .opensankey #' + link.idLink + '_text').attr('y')
-        if (!(link.label_position === 'frozen')) {
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('x', old_x_pos + 1 / 2 * (new_x - old_x))
-          d3.select(' .opensankey #' + link.idLink + '_text').attr('y', old_y_pos + 1 / 2 * (new_y - old_y))
-        }
-        // select allows to redraw directly without refreshing
-        d3.select(' .opensankey #' + link.idLink)
-          .attr('d', () => {
-            return drawCurveFunction.curve(data,nodes, links, display_style,data.nodeTags,link,error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue)
-          })
-        const target_node = nodes[link.idTarget]
-        if (link.arrow) {
-          //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-          drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
-          //drawArrows(data, target_node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
-        }
-        for (let i = 0; i < target_node.inputLinksId.length; i++) {
-          d3.select(' .opensankey #' + target_node.inputLinksId[i])
-            .attr('d', (link => {
-              return drawCurveFunction.curve(data,          nodes, links, display_style,          nodeTags,          link as SankeyLink,          error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-              )
-            }))
-        }
-        for (let i = 0; i < target_node.outputLinksId.length; i++) {
-          d3.select(' .opensankey #' + target_node.outputLinksId[i])
-            .attr('d', link => {
-              return drawCurveFunction.curve(data,          nodes, links, display_style,          nodeTags,          link as SankeyLink,          error_msg,          multi_selected_links,          link_text,min_width_and_height,getLinkValue
-              )
-            })
-
-        }
-      }
-    })
-
-  if (error_msg.text !== undefined) {
-    alert(error_msg)
-  }
-}
 
 /**
  * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two

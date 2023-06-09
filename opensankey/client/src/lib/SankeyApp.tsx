@@ -29,7 +29,6 @@ import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
-import {dragging} from './SankeyDrag'
 import i18next from './traduction'
 
 type SankeyAppTypes = {
@@ -356,7 +355,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue,dragging)
+    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue)
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
