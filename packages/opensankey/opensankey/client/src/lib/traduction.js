@@ -60,6 +60,9 @@ const resources = {
         'templates':'Templates',
         'warningLimitNode':'Warning : Limit of node reach for unconnected user',
         'licence':'Licences',
+        'display_scale':'Display link scale',
+        'fontSize':'Font size',
+
         tooltips:{
           noeud:{
             slct: 'Choose one / some / all nodes to select via a drop-down list',
@@ -484,6 +487,8 @@ const resources = {
         'templates':'Modèles',
         'warningLimitNode':'Attention :Nombre de noeuds limite atteint pour les utilisateurs non connecté',
         'licence':'Licences',
+        'display_scale':'Afficher l\'échelle',
+        'fontSize':'Taille police',
         tooltips:{
           noeud:{
             slct: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante',
