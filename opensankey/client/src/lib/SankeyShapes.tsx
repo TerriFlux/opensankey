@@ -20,8 +20,11 @@ export const draw_arrow = (
   vertical: boolean,
   revert: boolean
 ) => {
-  const ratio_cur = v / w
-  const ratio_cum = cum / w
+  
+  const pre_ratio_cum = cum / w
+  const pre_ratio_cur = v / w
+  const ratio_cum=(pre_ratio_cum)?pre_ratio_cum:0
+  const ratio_cur=(pre_ratio_cur)?pre_ratio_cur:0
   const coeff = revert ? -1 : 1
   let d
   if (vertical) {
