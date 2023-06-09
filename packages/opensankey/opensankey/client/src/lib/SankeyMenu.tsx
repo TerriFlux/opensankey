@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Carousel,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Image} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -1556,9 +1556,9 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
     <Row>
       <Col>{t('Menu.presentation_OSP')}
-      <Button href="https://terriflux.com/downloads/open-sankey-plus/" target="_blank" rel="noopener noreferrer">
-        {t('desire_to_know_more')}
-      </Button></Col>
+        <Button href="https://terriflux.com/downloads/open-sankey-plus/" target="_blank" rel="noopener noreferrer">
+          {t('desire_to_know_more')}
+        </Button></Col>
       <Col xs={3}><img src={logo_OSP} style={{'objectFit':'contain','width':'250px'}} /></Col>
     </Row>
 
@@ -1566,9 +1566,9 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
     <Row>
       <Col xs={3}><img src={logo_OSS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col>{t('Menu.presentation_OSS')}
-      <Button href="https://terriflux.com/downloads/sankey-suite/" target="_blank" rel="noopener noreferrer">
-        {t('desire_to_know_more')}
-      </Button></Col>
+        <Button href="https://terriflux.com/downloads/sankey-suite/" target="_blank" rel="noopener noreferrer">
+          {t('desire_to_know_more')}
+        </Button></Col>
     </Row>
   </>
 
