@@ -35,7 +35,7 @@ try {
 // Search for licence logo
 let logo_OS = ''
 try {
-    /* eslint-disable */
+  /* eslint-disable */
   // @ts-ignore
   logo_OS = require('./css/Open_Sankey_logo.jpg')
   /* eslint-enable */
@@ -49,7 +49,7 @@ try {
 
 let logo_OSP = ''
 try {
-    /* eslint-disable */
+  /* eslint-disable */
   // @ts-ignore
   logo_OSP = require('./css/OSP.png')
   /* eslint-enable */
@@ -63,7 +63,7 @@ try {
 
 let logo_OSS = ''
 try {
-    /* eslint-disable */
+  /* eslint-disable */
   // @ts-ignore
   logo_OSS = require('./css/OSS.jpg')
   /* eslint-enable */
