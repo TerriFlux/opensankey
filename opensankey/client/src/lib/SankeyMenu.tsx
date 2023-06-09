@@ -112,29 +112,34 @@ const MenuPropTypes = {
 }
 
 const pre_process_export_svg=()=>{
-  const svg = window.d3.select(' .opensankey#svg-container svg')
+  // Create a copy of the svg so we can alter it before exporting it 
+  // without having to revert our changerment after the export
+  window.d3.select(' .opensankey#svg-container').clone(true).attr('id','copy')
+  const svg =window.d3.select(' .opensankey#copy svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.style('border','0px')
+  svg.style('background-color','#fff')
   svg.select('#grid').style('opacity','0')
   svg.selectAll('.box_width_threshold').remove()
   return svg
 }
+const post_process_export_svg=()=>{
+  window.d3.select(' .opensankey#copy').remove()
+}
 
 
 
-
-const clickSaveSVG = () => {
+export const clickSaveSVG = () => {
   const svg = pre_process_export_svg()
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
+ 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   FileSaver.saveAs(blob, 'sankey_diagram.svg')
-  svg.style('border','2px solid #d3d3d3')
-  svg.select('#grid').style('opacity','1')
+  post_process_export_svg()
 }
 
 const clickSavePDF = (data:SankeyData) => {
@@ -144,9 +149,7 @@ const clickSavePDF = (data:SankeyData) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-  svg.style('border','2px solid #d3d3d3')
-  svg.select('#grid').style('opacity','1')
-
+  post_process_export_svg()
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('svg', blob)
@@ -183,8 +186,6 @@ const clickSavePNG = (data:SankeyData) => {
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-  svg.style('border','2px solid #d3d3d3')
-  svg.select('#grid').style('opacity','1')
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
