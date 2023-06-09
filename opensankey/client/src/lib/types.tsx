@@ -189,7 +189,10 @@ export const SankeyDataPropTypes = {
   left_shift: PropTypes.number.isRequired,
   right_shift: PropTypes.number.isRequired,
   max_shift: PropTypes.number.isRequired,
+
   legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  display_legend_scale:PropTypes.bool.isRequired,
+  legend_police:PropTypes.number.isRequired,
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,

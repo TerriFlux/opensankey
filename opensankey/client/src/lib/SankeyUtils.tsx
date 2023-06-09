@@ -594,7 +594,6 @@ export const default_sankey_data = (): SankeyData => {
 
     h_space: 200,
     v_space: 100,
-    legend_position: [0, 10],
 
     show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
@@ -629,6 +628,9 @@ export const default_sankey_data = (): SankeyData => {
     colorMap: 'no_colormap', 
 
     legend_width:180,
+    legend_position: [window.innerWidth-180, 10],
+    display_legend_scale:false,
+    legend_police:16,
     
     // view: []
   }

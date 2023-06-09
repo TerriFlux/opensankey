@@ -164,6 +164,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
+    set_legend_position(data.legend_position)
     set_data({ ...data })
   }
 
