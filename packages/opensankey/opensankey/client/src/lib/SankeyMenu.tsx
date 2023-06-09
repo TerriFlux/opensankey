@@ -111,16 +111,21 @@ const MenuPropTypes = {
   name_user:PropTypes.string.isRequired
 }
 
-
-
-
-
-const clickSaveSVG = () => {
+const pre_process_export_svg=()=>{
   const svg = window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.style('border','0px')
   svg.select('#grid').style('opacity','0')
+  svg.selectAll('.box_width_threshold').remove()
+  return svg
+}
+
+
+
+
+const clickSaveSVG = () => {
+  const svg = pre_process_export_svg()
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -133,11 +138,7 @@ const clickSaveSVG = () => {
 }
 
 const clickSavePDF = (data:SankeyData) => {
-  const svg = window.d3.select(' .opensankey#svg-container svg')
-  svg.selectAll('.sankey-tooltip').remove()
-  svg.selectAll('text[visibility=hidden]').remove()
-  svg.style('border','0px')
-  svg.select('#grid').style('opacity','0')
+  const svg = pre_process_export_svg()
   svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
@@ -176,11 +177,7 @@ const clickSavePDF = (data:SankeyData) => {
 }
 
 const clickSavePNG = (data:SankeyData) => {
-  const svg = window.d3.select(' .opensankey#svg-container svg')
-  svg.selectAll('.sankey-tooltip').remove()
-  svg.selectAll('text[visibility=hidden]').remove()
-  svg.style('border','0px')
-  svg.select('#grid').style('opacity','0')
+  const svg = pre_process_export_svg()
   svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)

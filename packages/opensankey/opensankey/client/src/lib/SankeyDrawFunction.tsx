@@ -496,11 +496,14 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
   if (d.display_style.label_vert == 'middle') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (0.25 - 0.5 * (nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> {
+      const size_text=(n as SankeyNode).display_style.font_size
+      const shift=(0.25 *(size_text))
+      return'translate(0,' +(shift+(nb_tspan-1)*(-size_text/2)) + ')'})
   } else if (d.display_style.label_vert == 'bottom') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,'+(1-ts_span_void)+'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((n as SankeyNode).display_style.font_size*(1-ts_span_void))+')')
   } else if (d.display_style.label_vert == 'top') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').style('transform', 'translate(0,' + (-(nb_tspan - 1)) + 'em)')
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,' + ((n as SankeyNode).display_style.font_size*(-(nb_tspan - 1))) + ')')
   }
 
 }
