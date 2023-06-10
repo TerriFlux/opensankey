@@ -9,7 +9,7 @@ import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row,
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
 import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
-import { updateLayout, compute_default_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { updateLayout, compute_default_input_outputLinksId, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCirclePlus,faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
@@ -1084,8 +1084,8 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   //   d.path.push('link_visible')
   //   d.rhs = false
   // })
-  const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
-  const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=>d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
+  const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
+  const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
   const ignore_changes3 = diff_view.filter((d :{path:string[],kind:string,rhs:string})=>
       d.kind == 'E' && d.path[0]=='nodes' && (d.path[2]=='outputLinksId' || d.path[2]=='inputLinksId') &&
       master_data.links[d.rhs] == undefined)
@@ -1748,8 +1748,20 @@ export const viewsAccordion = (
           return (e: ProgressEvent<FileReader>) => {
             const result = String((e.target as FileReader).result)
             const result_data = JSON.parse(result)
-  
-            const imported_data=JSON.parse(JSON.stringify(result_data))
+            const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
+
+            const keep_visible_nodes = true
+            if (keep_visible_nodes) {
+              const initial_nodes = JSON.parse(JSON.stringify(imported_data.nodes))
+              const visible_nodes = Object.values(imported_data.nodes).filter(n => n.node_visible)
+              const visible_links = Object.values(imported_data.links).filter(l => 
+                imported_data.nodes[l.idSource].node_visible && imported_data.nodes[l.idTarget].node_visible
+              )
+              imported_data.nodes = Object.assign({}, ...visible_nodes.map(n => ({ [n.idNode]: { ...n } })))
+              imported_data.links = Object.assign({}, ...visible_links.map(l => ({ [l.idLink]: { ...l } })))
+              apply_input_outputLinksId(initial_nodes,imported_data)
+            }
+
             imported_data.view=[]
             convert_data(imported_data)
             let difference = deep_diff.diff(master_data,imported_data)
