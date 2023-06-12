@@ -225,13 +225,13 @@ export const OpenSankeyMenuConfigurationLayout = (
         <Col xs={5}>
           <InputGroup>
             <Form.Control
-            type='number'
-            min={0}
-            step={0.1}
-            value={stretchFactorH}
-            onChange={evt=>{
-              set_stretchFactorH(+evt.target.value)
-            }}
+              type='number'
+              min={0}
+              step={0.1}
+              value={stretchFactorH}
+              onChange={evt=>{
+                set_stretchFactorH(+evt.target.value)
+              }}
             />
             <Button
               variant='outline-primary'
@@ -264,7 +264,7 @@ export const OpenSankeyMenuConfigurationLayout = (
               onChange={evt=>{
                 set_stretchFactorV(+evt.target.value)
               }}
-              />
+            />
             <Button
               variant='outline-primary'
               onClick={applyStretchV}>
@@ -272,8 +272,8 @@ export const OpenSankeyMenuConfigurationLayout = (
             </Button>
           </InputGroup>
         </Col>
-    </Form.Group>
-  </OverlayTrigger>,
+      </Form.Group>
+    </OverlayTrigger>,
 
     /* Positionnement des noeuds */
     <Form.Group as={Row}>
