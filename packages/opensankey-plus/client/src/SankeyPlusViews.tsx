@@ -1898,21 +1898,28 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 
 
 
-  return <><Button size='sm' variant= 'secondary' onClick={() => {
-    const ev = document
-    const tmp = { key: 'F7' }
-    if (ev.onkeydown) {
-      ev.onkeydown(tmp as KeyboardEvent)
-    }
-  }}>
-    <FaHome />
-  </Button>
-
+  return <>
+  <OverlayTrigger
+    key={'buttonSaveViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+    >
+    <Button size='sm' variant= 'secondary' onClick={() => {
+      const ev = document
+      const tmp = { key: 'F7' }
+      if (ev.onkeydown) {
+        ev.onkeydown(tmp as KeyboardEvent)
+      }
+    }}>
+      <FaHome />
+    </Button>
+  </OverlayTrigger>
   {!window.SankeyToolsStatic?<OverlayTrigger
     key={'buttonSaveViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
   >
     <Button size='sm' disabled={!connected} variant={'info'}
       onClick={() => {
@@ -1925,28 +1932,43 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     >{view === 'none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
   </OverlayTrigger>:<></>}
 
-  <Button size='sm' variant={'success'}
-    disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
-    onClick={() => {
-      const ev = document
-      const tmp = { key: 'F8' }
-      if (ev.onkeydown) {
-        ev.onkeydown(tmp as KeyboardEvent)
-      }
-    }}>
-    <FaCaretSquareLeft />
-  </Button>
-  <Button size='sm' variant={'success'}
-    disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
-    onClick={() => {
-      const ev = document
-      const tmp = { key: 'F9'}
-      if (ev.onkeydown) {
-        ev.onkeydown(tmp as KeyboardEvent)
-      }
-    }}>
-    <FaCaretSquareRight />
-  </Button>
+  <OverlayTrigger
+    key={'buttonSaveViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+  >
+    <Button size='sm' variant={'success'}
+      disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
+      onClick={() => {
+        const ev = document
+        const tmp = { key: 'F8' }
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}>
+      <FaCaretSquareLeft />
+    </Button>
+  </OverlayTrigger>
+
+  <OverlayTrigger
+    key={'buttonSaveViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+  >
+    <Button size='sm' variant={'success'}
+      disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
+      onClick={() => {
+        const ev = document
+        const tmp = { key: 'F9'}
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}>
+      <FaCaretSquareRight />
+    </Button>
+  </OverlayTrigger>
   {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
 
   </>
