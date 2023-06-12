@@ -81,43 +81,43 @@ export const OpenSankeyMenuConfigurationLegend= (
     </Form.Group>,
     // Afficher l'échelle sur le graphe
     <Form.Group as={Row}>
-    <Col xs={7}>
+      <Col xs={7}>
         <Form.Label>{t('Menu.display_scale')}</Form.Label>
-    </Col>
-    <Col xs={5}>
-    <FormCheck
-        inline
-        type='switch'
-        checked={data.display_legend_scale}
-        onChange={() => {
-          data.display_legend_scale = !data.display_legend_scale
-          set_data({ ...data })
-        }}/>
-    </Col>
-  </Form.Group>,
+      </Col>
+      <Col xs={5}>
+        <FormCheck
+          inline
+          type='switch'
+          checked={data.display_legend_scale}
+          onChange={() => {
+            data.display_legend_scale = !data.display_legend_scale
+            set_data({ ...data })
+          }}/>
+      </Col>
+    </Form.Group>,
 
-  /* Font size de la legende*/
-  <Form.Group as={Row} >
-  <Col xs={7}>
-    <FormLabel>{t('Menu.fontSize')}</FormLabel>
-  </Col>
-  <Col xs={5}>
-    <OverlayTrigger
-      key={'Menu.tooltips.fontSize'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.fontSize'}>{t('Menu.tooltips.fontSize')} </Tooltip>}>
-      <FormControl
-        type="number"
-        step={1}
-        value={data.legend_police}
-        onChange={evt =>{
-          data.legend_police=+evt.target.value
-          set_data({ ...data })
-        }}/>
-    </OverlayTrigger>
-  </Col>
-</Form.Group>,
+    /* Font size de la legende*/
+    <Form.Group as={Row} >
+      <Col xs={7}>
+        <FormLabel>{t('Menu.fontSize')}</FormLabel>
+      </Col>
+      <Col xs={5}>
+        <OverlayTrigger
+          key={'Menu.tooltips.fontSize'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.fontSize'}>{t('Menu.tooltips.fontSize')} </Tooltip>}>
+          <FormControl
+            type="number"
+            step={1}
+            value={data.legend_police}
+            onChange={evt =>{
+              data.legend_police=+evt.target.value
+              set_data({ ...data })
+            }}/>
+        </OverlayTrigger>
+      </Col>
+    </Form.Group>,
   ]
 
 }
