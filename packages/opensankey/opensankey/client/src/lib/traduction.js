@@ -92,6 +92,8 @@ const resources = {
         'Horizontal':'Horizontal spacing between nodes',
         'Vertical':'Vertical spacing between nodes',
         'PA':'Automatic positioning of nodes and links',
+        'factExpH':'Horizontal expansion factor',
+        'factExpV':'Vertical expansion factor',
         tooltips: {
           Echelle: 'Change the scale of the links and nodes',
           MaxFlux: 'Change the maximum size (in pixels) for the display of the links',
@@ -518,6 +520,8 @@ const resources = {
         'Horizontal':'Ecartement horizontal des noeuds',
         'Vertical':'Ecartement vertical des noeuds',
         'PA':'Positionnement automatique des noeuds et flux',
+        'factExpH':'Facteur d\'expansion horizontale',
+        'factExpV':'Facteur d\'expansion verticale',
         tooltips: {
           Echelle: 'Modifier l\'échelle des flux et noeuds',
           MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
@@ -526,7 +530,9 @@ const resources = {
           AN: 'Arrangement automatiquement les noeuds : ie venir coller le coin supérieur gauche des noeuds sur le coin de grille le plus proche',
           EEN_h: 'Ecart horizontal par défaut (en pixel) entre les noeuds pour un positionnement automatique',
           EEN_v: 'Ecart vertical par défaut (en pixel) entre les noeuds pour un positionnement automatique',
-          PA: 'Réaliser un positionnement automatique des noeuds en fonction des écarts par défaut spécifiés'
+          PA: 'Réaliser un positionnement automatique des noeuds en fonction des écarts par défaut spécifiés',
+          'factExpH':'Modifie le facteur d\'expansion horizontale : l\'application du facteur multplie l\'écart horizontale de chaque noeuds par rapport à celui le plus à gauche par le facteur de l\'input',
+          'factExpV':'Modifie le facteur d\'expansion verticale : l\'application du facteur multplie l\'écart verticale de chaque noeuds par rapport à celui le plus haut par le facteur de l\'input',
         }
       },
       Tags:{

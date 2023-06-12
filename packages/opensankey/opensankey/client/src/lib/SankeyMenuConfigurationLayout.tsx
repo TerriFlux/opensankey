@@ -1,5 +1,5 @@
-import React from 'react'
-import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import React, { useState } from 'react'
+import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, OverlayTrigger, Tooltip,  InputGroup } from 'react-bootstrap'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
@@ -17,7 +17,40 @@ export const OpenSankeyMenuConfigurationLayout = (
   node_vspace:number,
   set_node_vspace:(n:number)=>void
 ) => {
+  const [stretchFactorH,set_stretchFactorH]=useState(1)
+  const [stretchFactorV,set_stretchFactorV]=useState(1)
 
+  const applyStretchH=()=>{
+    let min=Object.values(data.nodes)[0].x
+    // Cheche la position en x du noeud le plus à gauche
+    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
+      min=(n.x<min)?n.x:min
+    })
+
+    // Parcours les noeuds --> calcule le delta des position en x entre ceux-ci --> multiplie le delta par le facteur du input -->
+    // applique le delta mutiplié par le facteur au neodu
+    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
+      const delta=n.x-min
+      n.x=min+(delta*stretchFactorH)
+    })
+    set_data({...data})
+  }
+
+  const applyStretchV=()=>{
+    let min=Object.values(data.nodes)[0].y
+    // Cheche la position en y du noeud le plus en haut
+    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
+      min=(n.y<min)?n.y:min
+    })
+
+    // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
+    // applique le delta mutiplié par le facteur au neodu
+    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
+      const delta=n.y-min
+      n.y=min+(delta*stretchFactorV)
+    })
+    set_data({...data})
+  }
   return [
     /* Couleur du fond de la page */
     <Form.Group as={Row}>
@@ -177,6 +210,71 @@ export const OpenSankeyMenuConfigurationLayout = (
         </OverlayTrigger>
       </Col>
     </Form.Group>,
+    <OverlayTrigger
+      key={'MEP.tooltips.factExpH'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
+      <Form.Group as={Row}>
+        <Col xs={7}>
+
+          <Form.Label>
+            {t('MEP.factExpH')}
+          </Form.Label>
+        </Col>
+        <Col xs={5}>
+          <InputGroup>
+            <Form.Control
+            type='number'
+            min={0}
+            step={0.1}
+            value={stretchFactorH}
+            onChange={evt=>{
+              set_stretchFactorH(+evt.target.value)
+            }}
+            />
+            <Button
+              variant='outline-primary'
+              onClick={applyStretchH}>
+              {t('MEP.stretchH')}
+            </Button>
+          </InputGroup>
+        </Col>
+      </Form.Group>
+    </OverlayTrigger>,
+    <OverlayTrigger
+      key={'MEP.tooltips.factExpV'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}>
+        
+      <Form.Group as={Row}>
+        <Col xs={7}>
+          <Form.Label>
+            {t('MEP.factExpV')}
+          </Form.Label>
+        </Col>
+        <Col xs={5}>
+          <InputGroup>
+            <Form.Control
+              type='number'
+              min={0}
+              step={0.1}
+              value={stretchFactorV}
+              onChange={evt=>{
+                set_stretchFactorV(+evt.target.value)
+              }}
+              />
+            <Button
+              variant='outline-primary'
+              onClick={applyStretchV}>
+              {t('MEP.stretchV')}
+            </Button>
+          </InputGroup>
+        </Col>
+    </Form.Group>
+  </OverlayTrigger>,
+
     /* Positionnement des noeuds */
     <Form.Group as={Row}>
       { /* Mise en forme automatique */}
@@ -213,6 +311,6 @@ export const OpenSankeyMenuConfigurationLayout = (
           </Button>
         </OverlayTrigger>
       </Col>
-    </Form.Group>
+    </Form.Group>,
   ]
 }
