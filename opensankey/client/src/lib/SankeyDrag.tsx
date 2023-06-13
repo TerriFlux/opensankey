@@ -342,7 +342,7 @@ export  const drag_nodes = (
     const new_pos_y = l.y + event.dy
     l.x = new_pos_x
     l.y = new_pos_y
-    d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
+    d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
     
   })
     
