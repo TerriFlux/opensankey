@@ -82,6 +82,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_nav,set_show_nav] = useState(false)
   const [show_modal_welcome,set_show_modal_welcome]=useState(true)
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
+  const multi_selected_label = useRef([])
 
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
@@ -356,7 +357,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue)
+    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue,multi_selected_label)
 
   OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
 
