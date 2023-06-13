@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import {  SankeyPlusData, SankeyPlusLabel } from './types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode } from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -14,7 +14,8 @@ export const SankeyPlusDrawLabels = (
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
   alt_key_pressed:boolean,
-  min_width_and_height:(data:SankeyPlusData)=>number[]
+  min_width_and_height:(data:SankeyPlusData)=>number[],
+  multi_selected_nodes:{current:SankeyPlusNode[]}
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -129,7 +130,7 @@ export const SankeyPlusDrawLabels = (
         })
 
 
-      gg_label.call(dragLabelEvent(multi_selected_label,d,data,min_width_and_height,drawGrid))
+      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes))
       gg_label.append('rect')
         .attr('id','drag_zone_'+d.idLabel)
         .attr('width', d.label_width).attr('height', d.label_height)
@@ -216,8 +217,10 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
 const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   d:SankeyPlusLabel,
   data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
   min_width_and_height:(d:SankeyPlusData)=>number[],
   drawGrid:(d:SankeyPlusData)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]}
 
 )=>{
   return (d3.drag<SVGGElement, unknown>()
@@ -258,7 +261,21 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
         d3.select(' .opensankey #svg').style('height', data.height + 'px')
         drawGrid(data)
       }
+
+      // Drag selected nodes too
+      d3.selectAll('.ggg_nodes').filter((d)=>{
+        const n=d as SankeyPlusNode
+        return n.position!=='relative' && multi_selected_nodes.current.map(nn=>nn.idNode).includes(n.idNode)
+      }).attr('transform',(d)=>{
+        const n=d as SankeyPlusNode
+        n.x+=event.dx
+        n.y+=event.dy
+        return 'translate('+n.x+','+n.y+')'
+      })
+
+
     })
+    .on('end',()=>set_data({...data}))
   )
 }
 /**
