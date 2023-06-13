@@ -18,7 +18,6 @@ import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
-import { default_link, default_node, link_text,getLinkValue } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
@@ -70,8 +69,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [style_to_apply, set_style_to_apply] = useState('default')
   const mode_selection= useRef('s')
-  const selected_link = useRef(default_link(initial_sankey_data))
-  const selected_node = useRef(default_node(initial_sankey_data))
+  const selected_link = useRef(SankeyUtils.default_link(initial_sankey_data))
+  const selected_node = useRef(SankeyUtils.default_node(initial_sankey_data))
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
   const button_ref = useRef<HTMLLabelElement>(null)
@@ -83,6 +82,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_modal_welcome,set_show_modal_welcome]=useState(true)
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const multi_selected_label = useRef([])
+  const [show_modale_tuto,set_show_modale_tuto]=useState(false)
+
 
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
@@ -211,7 +212,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node)
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue)
   //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -261,18 +262,20 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
   )
-  sankey_menus['formation']=<DropdownButton title={t('Menu.Formations')} id="formation" >
-    <ExempleItem
-      exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
-      data={data}
-      set_data={set_data}
-      current_path={'Formations'}
-      url_prefix=''
-      multi_selected_links={multi_selected_links}
-      multi_selected_nodes={multi_selected_nodes}
-      launch={launch}
-      reinitialization={reinitialization}
-    /></DropdownButton >
+  // sankey_menus['formation']=<DropdownButton title={t('Menu.Formations')} id="formation" >
+  //   <ExempleItem
+  //     exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
+  //     data={data}
+  //     set_data={set_data}
+  //     current_path={'Formations'}
+  //     url_prefix=''
+  //     multi_selected_links={multi_selected_links}
+  //     multi_selected_nodes={multi_selected_nodes}
+  //     launch={launch}
+  //     reinitialization={reinitialization}
+  //   /></DropdownButton >
+  sankey_menus['formation']=<Button variant='light' onClick={()=>set_show_modale_tuto(true)}>{t('menuTuto')}</Button>
+
   
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
@@ -357,9 +360,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     select_node,
     alt_key_pressed,
     data.static_sankey,
-    position,nodeTooltipsContent,link_text,min_width_and_height,getLinkValue,multi_selected_label)
+    position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label)
 
-  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,getLinkValue)
+  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
 
   // Call the function that add links to the sankey
   OpenSankeyDrawLinks(
@@ -372,11 +375,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     alt_key_pressed,
     data.static_sankey,position,node_arrow_visible,
     linkTooltipsContent,
-    link_text,getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity
+    SankeyUtils.link_text,SankeyUtils.getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity
   )
 
 
-  OpenSankeyDrawLegend(data,getLinkValue,t)
+  OpenSankeyDrawLegend(data,SankeyUtils.getLinkValue,t)
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
@@ -492,6 +495,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           // modalShortcut={shortcut_modale}
           min_width_and_height={min_width_and_height}
           name_user={''}
+          formations_menu={formations_menu}
+          reinitialization={reinitialization}
+          set_show_modale_tuto={set_show_modale_tuto}
+          show_modale_tuto={show_modale_tuto}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
@@ -517,7 +524,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             is_agregation={is_agregation}
             set_alt_key_pressed={set_alt_key_pressed}
             min_width_and_height={min_width_and_height}
-            getLinkValue={getLinkValue}
+            getLinkValue={SankeyUtils.getLinkValue}
             token={true}
             set_show_toast_limit_node={()=>false}
           />) : (<></>)}

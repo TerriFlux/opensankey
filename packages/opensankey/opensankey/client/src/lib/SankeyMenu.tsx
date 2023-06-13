@@ -2,13 +2,12 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { default_node, set_nodes_level, findMaxLinkValue,uploadExcelImpl, processExample,clickSaveExcel,default_link } from './SankeyUtils'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
-import {downloadExamples,adjust_sankey_zone} from './SankeyUtils'
+import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import ModalPreference from './SankeyMenuPreferences'
@@ -55,7 +54,7 @@ const MenuPropTypes = {
 
   example_menu: PropTypes.element,
   // portfolio_menu: PropTypes.element,
-  formations_menu: PropTypes.element,
+  formations_menu: PropTypes.object.isRequired,
   url_prefix: PropTypes.string.isRequired,
 
 
@@ -108,14 +107,17 @@ const MenuPropTypes = {
   unsetTokens:PropTypes.func.isRequired,
   // modalShortcut:PropTypes.element.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
-  name_user:PropTypes.string.isRequired
+  name_user:PropTypes.string.isRequired,
+  reinitialization:PropTypes.func.isRequired,
+  set_show_modale_tuto:PropTypes.func.isRequired,
+  show_modale_tuto:PropTypes.bool.isRequired,
+
 }
 
 const pre_process_export_svg=()=>{
   // Create a copy of the svg so we can alter it before exporting it 
   // without having to revert our changerment after the export
-  window.d3.select(' .opensankey#svg-container').clone(true).attr('id','copy')
-  const svg =window.d3.select(' .opensankey#copy svg')
+  const svg =window.d3.select(' .opensankey#svg-container svg')
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.style('border','0px')
@@ -125,7 +127,10 @@ const pre_process_export_svg=()=>{
   return svg
 }
 const post_process_export_svg=()=>{
-  window.d3.select(' .opensankey#copy').remove()
+  window.d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
+  window.d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
+  window.d3.select(' .opensankey#svg-container svg').style('border','2px')
+
 }
 
 
@@ -190,6 +195,7 @@ const clickSavePNG = (data:SankeyData) => {
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('svg', blob)
+  post_process_export_svg()
 
   const path = window.location.href
   let url = path + '/opensankey/sankey/save_png'
@@ -364,7 +370,7 @@ export const addAllDropDownNode = (
                     onChange={evt => {
                       tags_group.activated = evt.target.checked
                       tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
-                      set_nodes_level(data)
+                      SankeyUtils.set_nodes_level(data)
                       set_data({ ...data })
                     }}
                   />
@@ -477,7 +483,7 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
   if (tags_group.banner === 'level' ) {
-    set_nodes_level(data)
+    SankeyUtils.set_nodes_level(data)
   }
   set_data({ ...data })
 }
@@ -1007,8 +1013,8 @@ export const OpenSankeyMenus = (
                   (new_data.version as unknown as undefined) = undefined
                 }
                 convert_data(new_data)
-                complete_sankey_data(new_data,default_sankey_data,default_node,default_link)
-                set_nodes_level(data)
+                complete_sankey_data(new_data,default_sankey_data,SankeyUtils.default_node,SankeyUtils.default_link)
+                SankeyUtils.set_nodes_level(data)
                 set_data(new_data)
                 const test = document.getElementsByClassName('navbar')
                 let margin_top = 0
@@ -1029,8 +1035,8 @@ export const OpenSankeyMenus = (
         <Dropdown.Item onClick={()=>{
           set_show_save_json(true)
         }} >JSON</Dropdown.Item>
-        {/* <Dropdown.Item onClick={()=>clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
-        <Dropdown.Item onClick={()=>clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
+        {/* <Dropdown.Item onClick={()=>SankeyUtils.clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
+        <Dropdown.Item onClick={()=>SankeyUtils.clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
         {externale_save_item}
       </DropdownButton>
       <DropdownButton size='sm' variant='light' drop='down' id='exporter' title={t('Menu.exporter')} >
@@ -1131,14 +1137,15 @@ const Menu: FunctionComponent<MenuTypes> = (
     loginOut,
     unsetTokens,
     min_width_and_height,
-    name_user
+    name_user,formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
+  const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
 
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
-    const new_max_link_value = findMaxLinkValue(
+    const new_max_link_value = SankeyUtils.findMaxLinkValue(
       max_link_value,
       link.value
     )
@@ -1163,7 +1170,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
 
-          const new_data=Object.assign(default_sankey_data(),processExample(server_data))
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
           set_data({ ...new_data })
@@ -1198,7 +1205,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       const string_ST=(ST!==undefined)?ST.toString():'none'
       sessionStorage.setItem('scrollTop',string_ST)
 
-      adjust_sankey_zone(data,min_width_and_height,true)
+      SankeyUtils.adjust_sankey_zone(data,min_width_and_height,true)
     }else{
       // Lors de la fermeture du menu, remet l'échelle de la zone de sankey avant l'ouverture du menu
       // et replace la position des scroll bar comme elles etaient avant
@@ -1209,7 +1216,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       if(scaleToUse){
         d3.select(' .opensankey #svg').attr('transform','translate(0,0) scale('+scaleToUse+')')
       }else{
-        adjust_sankey_zone(data,min_width_and_height)
+        SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
       }
       if(SlToUse && StToUse){
         document.getElementsByTagName ('html')[0]?.scrollTo(+SlToUse,+StToUse)
@@ -1223,7 +1230,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   let node = data.nodes[selected_node.current.idNode]
   if (node === undefined) {
-    node = default_node(data)
+    node = SankeyUtils.default_node(data)
   }
 
   const props = {
@@ -1256,6 +1263,100 @@ const Menu: FunctionComponent<MenuTypes> = (
       ordered_menu[k]=menus[k]
     }
   })
+
+
+  // Pré-traitement du menu tuto pour trier les groupes
+  const n_a=new Array(50)
+
+  Object.keys(formations_menu).map(d=>{
+    return d.replace('_','__').split('__')
+  }).forEach(element => {
+    if(element.length>1){
+      n_a[Number(element[0])]=element[0]+'_'+element[1]
+    }else{
+      n_a[n_a.length-1]=element[0]
+    }
+  })
+  // Return l'objet formations_menu mais trier selon le numéro du groupe (quand il y en a un)
+  const new_array_for_exemple=Object.fromEntries(n_a.filter(f=>f).map((d)=>{
+    return [d,(formations_menu as {[k:string]:string})[d]]
+  }))
+  let modal_tuto=<></>
+  const tuto_sub_nav:{[s:string]:JSX.Element}={}
+  Object.entries(new_array_for_exemple).forEach(d=>{
+    tuto_sub_nav[d[0]]=<>
+      {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
+        return <Card>
+          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'/*,'minHeight':'350px','maxHeight':'500px'*/}} />
+          <Card.Body>
+            <Card.Title>{dd.replace('_layout.json','').replaceAll('_',' ')}</Card.Title>
+            <Card.Text>
+
+            </Card.Text>
+            <ButtonGroup>
+              <Button variant='primary'
+                onClick={() => {
+                  SankeyUtils.uploadExemple(
+                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,reinitialization
+                  )
+                  set_data({...data})
+                  set_show_modale_tuto(false)
+                }}
+              >{t('useTutoJSON')}</Button>
+              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
+                <Button variant='info'
+                  onClick={() => {
+
+                              
+                    launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
+                              
+                    SankeyUtils.uploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,reinitialization
+                    )
+                    set_show_modale_tuto(false)
+
+                  } 
+                  }
+                >{t('useTutoExcel')}</Button>
+                :<></>}
+                  
+            </ButtonGroup>
+          </Card.Body>
+        </Card>
+      })}
+      
+    </>
+
+  })
+
+  modal_tuto=<Modal size={'xl'} fullscreen={true}  show={show_modale_tuto} onHide={() => set_show_modale_tuto(false)}>
+    <Modal.Header closeButton>{t('Menu.formation')}</Modal.Header>
+    <Modal.Body>
+      <Row>
+        <Nav variant="tabs" className='sub_nav' activeKey={modale_sub_tuto}>
+          {Object.keys(tuto_sub_nav).map(m=>{
+            return <Nav.Item>
+              <Nav.Link eventKey={m} onClick={()=>set_modale_sub_tuto(m)}>
+                {/*FORMAT THE TITLE OF TUTO */}
+                {(m.split('_').length>1)?m.split('_').filter(s=>isNaN(+s)).join(' '):m}
+              </Nav.Link>
+            </Nav.Item>
+          })}
+        </Nav>
+      </Row>
+      <Row md={4}>
+        {tuto_sub_nav[modale_sub_tuto]}
+      </Row>
+    </Modal.Body>
+  </Modal>
+
+
+
+
+
+
+
+
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -1387,7 +1488,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         t={t}
         launch={launch}
         handleCloseDialog={() => set_show_excel_dialog(false)}
-        uploadExcelImpl={uploadExcelImpl}
+        uploadExcelImpl={SankeyUtils.uploadExcelImpl}
         set_data={set_data}
         data={data}
         show_excel_dialog={show_excel_dialog}
@@ -1397,7 +1498,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <SankeyLoad
         url_prefix={url_prefix}
-        successAction={()=>downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+        successAction={()=>SankeyUtils.downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={show_load}
         set_show_dialog={set_show_load}
         processing={processing}
@@ -1419,8 +1520,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Row>
           </Modal.Body>
         </Modal>
-
       }
+      {modal_tuto}
+
     </>
   )
 }

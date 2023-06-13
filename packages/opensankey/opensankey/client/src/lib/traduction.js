@@ -24,7 +24,7 @@ const resources = {
         'LegWidth':'Width',
         'Fichiers':'Files',
         'Edition':'Edition',
-        'Formations':'Tutorials',
+        'formation':'Tutorials',
         'Exemples':'Demos',
         'Aide':'Help',
         'ouvrir':'Open',
@@ -427,7 +427,10 @@ const resources = {
       },
       'DisplayWelcome':'Display Bienvenue',
       'dontSeeAgain':'Don\'t show again',
-      'scale':'Scale'
+      'scale':'Scale',
+      'useTutoJSON':'Open file',
+      'useTutoExcel':'Open file (Excel)',
+      'menuTuto':'Open tutorials menu'
 
     }
   },
@@ -453,7 +456,7 @@ const resources = {
         'LegWidth':'Largeur',
         'Fichiers':'Fichiers',
         'Edition':'Édition',
-        'Formations':'Tutoriels',
+        'formation':'Tutoriels',
         'Exemples':'Démos',
         'Aide':'Aide',
         'ouvrir':'Ouvrir',
@@ -855,8 +858,10 @@ const resources = {
       },
       'DisplayWelcome':'Afficher Bienvenue',
       'dontSeeAgain':'Ne plus montrer',
-      
-      'scale':'Échelle'
+      'scale':'Échelle',
+      'useTutoJSON':'Ouvrir ce fichier',
+      'useTutoExcel':'Ouvrir ce fichier (Excel)',
+      'menuTuto':'Ouvrir menu tutoriel'
 
 
 
