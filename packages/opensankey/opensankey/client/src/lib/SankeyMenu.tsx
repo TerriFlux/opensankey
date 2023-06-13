@@ -1249,8 +1249,13 @@ const Menu: FunctionComponent<MenuTypes> = (
     navigate('/')
     set_data({...data})
   }
-  // const toolbar=Object.values(menu_banner).map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})
-  // menus['toolbar']=(menu_banner as {[x:string]:JSX.Element})['toolbar']
+  const ordered_menu:{[s:string]:JSX.Element}={}
+  const oredred_key=['file','edition','toolbar','filter','view','afm','formation','demo','aide']
+  oredred_key.forEach((k:string)=>{
+    if(Object.keys(menus).includes(k)){
+      ordered_menu[k]=menus[k]
+    }
+  })
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -1289,7 +1294,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           <Col>
             <Row>
               <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
-                {Object.keys(menus).map(m=>{
+                {Object.keys(ordered_menu).map(m=>{
 
                   return <Nav.Item>
                     <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
@@ -1301,7 +1306,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             </Row>
             <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
               <ButtonGroup>
-                {menus[menu_acivated]}
+                {ordered_menu[menu_acivated]}
               </ButtonGroup>
             </Row>
           </Col>
