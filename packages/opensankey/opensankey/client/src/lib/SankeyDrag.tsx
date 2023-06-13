@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
 import {removeAnimate,compute_end_points, min_width_and_height} from './SankeyDrawFunction'
 import {   link_visible,test_link_value } from './SankeyUtils'
-
+import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 /**
  *  Function that allow us to change link position in target or source nodes
  *
@@ -233,6 +233,7 @@ export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   multi_selected_nodes:{current: SankeyNode[] },
+  multi_selected_label:{current:SankeyPlusLabel[]},
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   static_sankey:boolean,
@@ -245,12 +246,12 @@ export const dragGNodeEvent=(
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
-            display_nodes,this,event,multi_selected_nodes
+            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(
-            display_nodes,this,event,multi_selected_nodes
+            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label
           )
         }
       }
@@ -309,6 +310,8 @@ export  const drag_nodes = (
   dragged:Element,
   event: { dx: number; dy: number },
   multi_selected_nodes:{current: SankeyNode[] },
+  data:SankeyData,
+  multi_selected_label:{current:SankeyPlusLabel[]}
 ) => {
   removeAnimate()
   
@@ -331,6 +334,16 @@ export  const drag_nodes = (
     n.x+=event.dx
     n.y+=event.dy
     return 'translate('+n.x+','+n.y+')'
+  })
+
+  // Drag zdt too
+  multi_selected_label.current.map(l=>{
+    const new_pos_x = l.x + event.dx
+    const new_pos_y = l.y + event.dy
+    l.x = new_pos_x
+    l.y = new_pos_y
+    d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
+    
   })
     
   
