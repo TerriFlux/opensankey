@@ -20,34 +20,22 @@ export const OpenSankeyMenuConfigurationLayout = (
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
 
-  const applyStretchH=()=>{
-    let min=Object.values(data.nodes)[0].x
-    // Cheche la position en x du noeud le plus à gauche
-    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
-      min=(n.x<min)?n.x:min
-    })
 
-    // Parcours les noeuds --> calcule le delta des position en x entre ceux-ci --> multiplie le delta par le facteur du input -->
-    // applique le delta mutiplié par le facteur au neodu
-    Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
-      const delta=n.x-min
-      n.x=min+(delta*stretchFactorH)
-    })
-    set_data({...data})
-  }
 
-  const applyStretchV=()=>{
-    let min=Object.values(data.nodes)[0].y
-    // Cheche la position en y du noeud le plus en haut
+  const applyStretch=(param:string)=>{
+    const attr=param=='h'?'x':'y'
+    const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
+    let min=Object.values(data.nodes)[0][attr]
+    // Cheche la position en y du noeud le plus en haut à gauche
     Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
-      min=(n.y<min)?n.y:min
+      min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
-    // applique le delta mutiplié par le facteur au neodu
+    // applique le delta mutiplié par le facteur au noeud
     Object.values(data.nodes).filter(n=>n.display && n.position!='relative').forEach(n=>{
-      const delta=n.y-min
-      n.y=min+(delta*stretchFactorV)
+      const delta=n[attr]-min
+      n[attr]=min+(delta*stretchFactor)
     })
     set_data({...data})
   }
@@ -235,7 +223,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             />
             <Button
               variant='outline-primary'
-              onClick={applyStretchH}>
+              onClick={()=>applyStretch('h')}>
               {t('MEP.stretchH')}
             </Button>
           </InputGroup>
@@ -267,7 +255,7 @@ export const OpenSankeyMenuConfigurationLayout = (
             />
             <Button
               variant='outline-primary'
-              onClick={applyStretchV}>
+              onClick={()=>applyStretch('v')}>
               {t('MEP.stretchV')}
             </Button>
           </InputGroup>
