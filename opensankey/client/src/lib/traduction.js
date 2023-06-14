@@ -28,7 +28,7 @@ const resources = {
         'Exemples':'Demos',
         'Aide':'Help',
         'ouvrir':'Open',
-        'enregistrer':'Save',
+        'enregistrer':'Download',
         'exporter':'Export',
         'preference':'Preferences',
         'reinit':'Reset',
@@ -80,7 +80,9 @@ const resources = {
           LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth: 'Width (in px) for the legend space',
           BgC: 'Change the background color of the interactive graphic space',
-        }
+        },
+        'checkpoint':'Save the data in the browser to not lost it when you leave the application'
+
       },
       MEP:{
         'onBlur':'Value is applied when we leave the input',
@@ -460,7 +462,7 @@ const resources = {
         'Exemples':'Démos',
         'Aide':'Aide',
         'ouvrir':'Ouvrir',
-        'enregistrer':'Enregistrer',
+        'enregistrer':'Télécharger',
         'exporter':'Exporter',
         'preference':'Préférences',
         'reinit':'Réinitialiser',
@@ -511,7 +513,9 @@ const resources = {
           LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegWidth: 'Largeur (en px) de l\'espace de la légende',
           BgC: 'Changer la couleur fond de l\'espace graphique interactif',
-        }
+        },
+        'checkpoint':'Enregistre les données dans le navigateur pour ne pas les perdre les quand vous quittez l\'application'
+
       },
       MEP:{
         'onBlur':'La valeur sera appliqué dès que l\'on quitte l\'input',
