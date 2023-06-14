@@ -3,9 +3,10 @@ import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect,Requireable } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { setSelectedTags,  delete_link,delete_node} from './SankeyUtils'
+import { setSelectedTags,  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale} from './SankeyDrawFunction'
+import LZString from 'lz-string'
 
 window.d3 = d3
 declare const window: Window &
@@ -622,6 +623,13 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         item.blur()
       }
     }
+  }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
+    e.preventDefault()
+    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+  }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
+    e.preventDefault()
+    set_data({...data})
+    clickSaveDiagram(data)
   }
 }
 

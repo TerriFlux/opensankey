@@ -15,6 +15,8 @@ import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
+import { faFloppyDisk } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1046,6 +1048,18 @@ export const OpenSankeyMenus = (
       </DropdownButton>
       <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Button>
       <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Button>
+      <OverlayTrigger
+          key={'buttonCheckpoint'}
+          placement={'bottom'}
+          delay={500}
+          overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
+        >
+      <Button size='sm' variant='light' onClick={() => {
+        const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+         if (ev.onkeydown) {
+        ev.onkeydown(tmp)
+      }
+    }}  ><FontAwesomeIcon icon={faFloppyDisk} /></Button></OverlayTrigger>
     </>
 
     ui['edition']=<>
@@ -1396,7 +1410,6 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Row>
               <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
                 {Object.keys(ordered_menu).map(m=>{
-
                   return <Nav.Item>
                     <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
                       {t('Menu.'+m)}
