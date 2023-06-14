@@ -11,7 +11,9 @@ import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
 import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, compute_default_input_outputLinksId, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCirclePlus,faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import LZString from 'lz-string'
+import { FaPlus } from 'react-icons/fa'
 
 //Fonction permettant de calculer la profondeur max de nouveaux liens
 const calcPath = (
@@ -1171,9 +1173,10 @@ export const keyHandler = (
     multi_selected_labels.current=Object.values(data.labels)
     set_data({...data})
 
-  }else if (connected && e.key === 's' && (e.ctrlKey||e.metaKey)) {
+  }
+  // Clone current data,if its a view clone the view
+  if (connected && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
-    const deep_diff = require('deep-diff')
 
     if (master) {
       // If we do a control+S while we are on master data, we create view empty
@@ -1194,25 +1197,51 @@ export const keyHandler = (
         set_show_toast_new_view(false)
       }, 3000)
     } else {
-      // If we do a control+S while we are on a view, we save the difference between the data we are handling
-      // and the master data. These difference are the saved the view we are currently on
-
-      // Get difference between master_data and the current data then save it in view
-      let difference = deep_diff.diff(master_data, data)
-      difference=(difference !== undefined)?difference:[]
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=filter_view(difference)
-      master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
-
-      // Save master data with the view we are currently working on updated
-      set_master_data({...master_data})
-
-      // set_data({...data})
-      set_show_toast_updated_view(true)
-      setTimeout(function () {
-        set_show_toast_updated_view(false)
-      }, 3000)
+      const new_ind = 'view_' + String(new Date().getTime())
+      const copy_data = JSON.parse(JSON.stringify(master_data.view.filter(v=>v.id === view)[0].view_data))
+      master_data.view.push({
+        id: new_ind,
+        view_data: copy_data,
+        nom: 'copy of '+master_data.view.filter(v=>v.id === view)[0].nom,
+        details: ''
+      })
+       // master data is now set
+       set_master_data({...master_data})
+       set_view(new_ind)
     }
+  }
+
+  if(e.key=='s' && e.ctrlKey && !e.shiftKey){
+    e.preventDefault()
+      if(view!='none'){
+        // If we do a control+S while we are on a view, we save the difference between the data we are handling
+        // and the master data. These difference are the saved the view we are currently on
+        const deep_diff = require('deep-diff')
+
+        // Get difference between master_data and the current data then save it in view
+        let difference = deep_diff.diff(master_data, data)
+        difference=(difference !== undefined)?difference:[]
+        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+        difference=filter_view(difference)
+        master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
+
+        // Save master data with the view we are currently working on updated
+        set_master_data({...master_data})
+        // Save master_data data in localStorage
+        localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
+
+        // set_data({...data})
+        set_show_toast_updated_view(true)
+        setTimeout(function () {
+          set_show_toast_updated_view(false)
+        }, 3000)
+      }else{
+        // Save current data (wich is master_data)
+        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+      }
+      
+
+    
   }
   // Changing view to master
   if (!master && e.key === 'F7') {
@@ -1896,14 +1925,48 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     }
   }
 
+  const buttonCreateView=<OverlayTrigger
+    key={'buttonCreateViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
+  >
+  <Button size='sm' variant={'primary'} disabled={!connected}
+    onClick={() => {
+      const ev = document
+      const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
+      if (ev.onkeydown) {
+        ev.onkeydown(t)
+      }
+    }}
+  ><FaPlus/></Button>
+</OverlayTrigger>
+
+
+const buttonUpdateView=<OverlayTrigger
+    key={'buttonUpdateViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
+    >
+    <Button size='sm' disabled={!connected} variant={'info'}
+      onClick={() => {
+        const ev = document
+        const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+        if (ev.onkeydown) {
+          ev.onkeydown(t)
+        }
+      }}
+    >{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Button>
+  </OverlayTrigger>
 
 
   return <>
   <OverlayTrigger
-    key={'buttonSaveViewDisabled'}
+    key={'buttonHomeViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+    overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
     >
     <Button size='sm' variant= 'secondary' onClick={() => {
       const ev = document
@@ -1915,28 +1978,17 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       <FaHome />
     </Button>
   </OverlayTrigger>
-  {!window.SankeyToolsStatic?<OverlayTrigger
-    key={'buttonSaveViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonSaveViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
-  >
-    <Button size='sm' disabled={!connected} variant={'info'}
-      onClick={() => {
-        const ev = document
-        const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-        if (ev.onkeydown) {
-          ev.onkeydown(t)
-        }
-      }}
-    >{view === 'none'?<FontAwesomeIcon icon={faFileCirclePlus} />:(is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />)}</Button>
-  </OverlayTrigger>:<></>}
+  
+  <>{!window.SankeyToolsStatic?<>
+  {buttonCreateView}
+  {buttonUpdateView}
+  </>:<></>}</>
 
   <OverlayTrigger
-    key={'buttonSaveViewDisabled'}
+    key={'buttonPrevViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+    overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
   >
     <Button size='sm' variant={'success'}
       disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
@@ -1952,10 +2004,10 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
   <OverlayTrigger
-    key={'buttonSaveViewDisabled'}
+    key={'buttonNextViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+    overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
   >
     <Button size='sm' variant={'success'}
       disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
