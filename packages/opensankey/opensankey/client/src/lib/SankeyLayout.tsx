@@ -420,7 +420,7 @@ export const updateLayout = (
     Object.keys(n.dimensions).forEach(dim => {
       if (n.dimensions[dim].parent_name) {
         //parent_names.push(n.dimensions[dim].parent_name as string)
-        n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name!]
+        n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name??0]
       }
     })})
   data.nodes = Object.assign({}, ...Object.values(data.nodes).map(n => ({ [n.idNode]: { ...n } })))
@@ -811,7 +811,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                       (cur_dir_name, i) => <option key={i} value={cur_dir_name} selected={dim_name === cur_dir_name} >{cur_dir_name}</option>
                     )}
                   </Form.Select>
-                  <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name!] ? data.nodes[n.dimensions[dim_name].parent_name!].name : ''}</Form.Label>
+                  <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Form.Label>
                 </Col>
               </Row>      
             </Form.Group>
