@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, DropdownButton, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card,Alert} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -1426,8 +1426,8 @@ const Menu: FunctionComponent<MenuTypes> = (
           </Col>
           {!window.SankeyToolsStatic ?<Nav>
             <Col>
+              <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>} 
               <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
-              <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
               {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
             </Col>
           </Nav>:<></>}
