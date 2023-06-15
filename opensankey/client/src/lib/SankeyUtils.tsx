@@ -833,11 +833,11 @@ export const link_visible = (l: SankeyLink, data_s: SankeyData,
     return false
   }
   const link_values = getLinkValue(data_s,l.idLink)
-  const is_free = link_values.extension!.free_mini !== undefined &&
+  const is_free = link_values.extension?.free_mini !== undefined &&
                   data_s.show_structure !== 'free_interval' &&
                   data_s.show_structure !== 'free_value' &&
-                  !link_values.extension!.free_visible
-  if (link_values.extension!.free_visible) {
+                  !link_values.extension?.free_visible
+  if (link_values.extension?.free_visible) {
     return true
   }
   if (!is_free && test_link_value(data_s, data_s.nodes, l,getLinkValue) === 0) {
@@ -1406,7 +1406,7 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val.extension!.free_visible) {
+          if (val.extension?.free_visible) {
             total_input +=1
             continue
           }
@@ -1428,7 +1428,7 @@ export const hideNullFluxNodes = (
         }
         if (nodes[link.idSource] && nodes[link.idSource].node_visible && nodes[link.idTarget] && nodes[link.idTarget].node_visible) {
           const val = getLinkValue(sankey_data, link.idLink)
-          if (val.extension!.free_visible) {
+          if (val.extension?.free_visible) {
             total_input +=1
             continue
           }

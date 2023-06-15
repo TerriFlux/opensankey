@@ -44,8 +44,8 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   const is_free = link_values.extension?.free_mini !== undefined &&
                  data.show_structure !== 'free_value' &&
                  data.show_structure !== 'free_interval'  &&
-                 !link_values.extension!.free_visible
-  if (d.dashed || is_free || link_values.extension!.display_thin) {
+                 !link_values.extension?.free_visible
+  if (d.dashed || is_free || link_values.extension?.display_thin) {
     return '5, 5'
   } else {
     return ''
@@ -639,10 +639,10 @@ export const drawArrows = (
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
-        const link_value_is_free = extension!.free_mini !== undefined
+        const link_value_is_free = extension?.free_mini !== undefined ??false
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
-          if (extension!.free_visible) {
+          if (extension?.free_visible) {
             //treated as not free
           } else {
             link_value = inv_scale(5)
@@ -705,7 +705,7 @@ export const drawArrows = (
           return ''
         })
         // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
-        .attr('fill', () => link_color(l, data,getLinkValue)!)
+        .attr('fill', () => link_color(l, data,getLinkValue)??'none')
         .attr('fill-opacity', () => {
           //const opacity = String(l.display_value[value_index]).includes('[') ? 0.3 : 0.95
           return l.opacity //opacity
@@ -1690,7 +1690,7 @@ const drawCurve = (
   add_center_handle(data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 
 
-  if (link_value > display_style.filter_label || val.extension!.free_visible) {
+  if (link_value > display_style.filter_label || val.extension?.free_visible) {
     drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
   }
 

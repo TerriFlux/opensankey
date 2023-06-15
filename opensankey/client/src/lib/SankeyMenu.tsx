@@ -1049,17 +1049,17 @@ export const OpenSankeyMenus = (
       <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{t('Menu.preference')}</Button>
       <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{t('Menu.templates')}</Button>
       <OverlayTrigger
-          key={'buttonCheckpoint'}
-          placement={'bottom'}
-          delay={500}
-          overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
-        >
-      <Button size='sm' variant='light' onClick={() => {
-        const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-         if (ev.onkeydown) {
-        ev.onkeydown(tmp)
-      }
-    }}  ><FontAwesomeIcon icon={faFloppyDisk} /></Button></OverlayTrigger>
+        key={'buttonCheckpoint'}
+        placement={'bottom'}
+        delay={500}
+        overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
+      >
+        <Button size='sm' variant='light' onClick={() => {
+          const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp)
+          }
+        }}  ><FontAwesomeIcon icon={faFloppyDisk} /></Button></OverlayTrigger>
     </>
 
     ui['edition']=<>
