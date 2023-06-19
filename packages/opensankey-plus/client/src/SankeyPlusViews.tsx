@@ -1931,16 +1931,19 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
   >
-  <Button size='sm' variant={'primary'} disabled={!connected}
-    onClick={() => {
-      const ev = document
-      const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
-      if (ev.onkeydown) {
-        ev.onkeydown(t)
-      }
-    }}
-  ><FaPlus/></Button>
-</OverlayTrigger>
+    <Button size='sm' variant={'outline-primary'} disabled={!connected}
+      onClick={() => {
+        const ev = document
+        const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
+        if (ev.onkeydown) {
+          ev.onkeydown(t)
+        }
+      }}
+    >
+      <Col><FaPlus/></Col>
+      <Col style={{'fontSize':'9px'}}>{t('Menu.addView')}</Col>
+    </Button>
+  </OverlayTrigger>
 
 
 const buttonUpdateView=<OverlayTrigger
@@ -1949,7 +1952,7 @@ const buttonUpdateView=<OverlayTrigger
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
     >
-    <Button size='sm' disabled={!connected} variant={'info'}
+    <Button size='sm' disabled={!connected} variant={'outline-info'}
       onClick={() => {
         const ev = document
         const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
@@ -1957,7 +1960,10 @@ const buttonUpdateView=<OverlayTrigger
           ev.onkeydown(t)
         }
       }}
-    >{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Button>
+    >
+      <Col>{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Col>
+      <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
+      </Button>
   </OverlayTrigger>
 
 
@@ -1968,14 +1974,15 @@ const buttonUpdateView=<OverlayTrigger
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
     >
-    <Button size='sm' variant= 'secondary' onClick={() => {
+    <Button size='sm' variant= 'outline-secondary' onClick={() => {
       const ev = document
       const tmp = { key: 'F7' }
       if (ev.onkeydown) {
         ev.onkeydown(tmp as KeyboardEvent)
       }
     }}>
-      <FaHome />
+      <Col><FaHome /></Col>
+      <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
     </Button>
   </OverlayTrigger>
   
@@ -1990,7 +1997,7 @@ const buttonUpdateView=<OverlayTrigger
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
   >
-    <Button size='sm' variant={'success'}
+    <Button size='sm' variant={'outline-success'}
       disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
       onClick={() => {
         const ev = document
@@ -1999,7 +2006,8 @@ const buttonUpdateView=<OverlayTrigger
           ev.onkeydown(tmp as KeyboardEvent)
         }
       }}>
-      <FaCaretSquareLeft />
+      <Col><FaCaretSquareLeft /></Col>
+      <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
     </Button>
   </OverlayTrigger>
 
@@ -2009,7 +2017,7 @@ const buttonUpdateView=<OverlayTrigger
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
   >
-    <Button size='sm' variant={'success'}
+    <Button size='sm' variant={'outline-success'}
       disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
       onClick={() => {
         const ev = document
@@ -2018,7 +2026,8 @@ const buttonUpdateView=<OverlayTrigger
           ev.onkeydown(tmp as KeyboardEvent)
         }
       }}>
-      <FaCaretSquareRight />
+      <Col><FaCaretSquareRight /></Col>
+      <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
     </Button>
   </OverlayTrigger>
   {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
