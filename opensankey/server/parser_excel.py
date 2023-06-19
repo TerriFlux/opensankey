@@ -5,7 +5,7 @@ import webcolors
 import math
 import copy
 from collections import OrderedDict
-from SankeyExcelParser.io_excel import \
+from SankeyExcelParser.io_excel_constants import \
     DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
     DATA_SHEET, DATA_TYPE_LABEL, RESULTS_SHEET,\
     NODES_SHEET, FLUX_SHEET, NODES_SANKEY, NODES_COLOR, NODES_NODE, NODES_DEFINITIONS, NODES_LEVEL, NODE_TYPE,\
