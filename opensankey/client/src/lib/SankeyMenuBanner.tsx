@@ -1,5 +1,5 @@
 import React, {  useRef, useState } from 'react'
-import { Row, Col, Form, FormLabel, Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Overlay } from 'react-bootstrap'
+import { Row, Col, Form, FormLabel, Button,  FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Overlay } from 'react-bootstrap'
 import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
@@ -651,8 +651,7 @@ export const toolbar_builder = (
 
   // Add button for the edition of the sankey
   if(!window.SankeyToolsStatic){
-    mouse_mode_edition=
-    <ButtonGroup as={Col} lg='auto'>
+    mouse_mode_edition=<>
       {/* Boutons Sélection classique des éléments */}
       <OverlayTrigger
         key={'tooltip-selection'}
@@ -660,7 +659,8 @@ export const toolbar_builder = (
         delay={500}
         overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
         <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-          <FontAwesomeIcon icon={faArrowPointer} />
+          <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
+          <Col className='textIcon'>Select.</Col>
         </Button>
       </OverlayTrigger>
       <OverlayTrigger
@@ -670,134 +670,135 @@ export const toolbar_builder = (
         overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
         <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
           {/* Ajout liaison entre noeud */}
-          <FontAwesomeIcon icon={faShareNodes}/>
+          <Col><FontAwesomeIcon icon={faShareNodes}/></Col>
+          <Col className='textIcon'>Création</Col>
         </Button>
       </OverlayTrigger>
-    </ButtonGroup>
+    </>
 
   }
 
 
-
-
-
   ui['toolbar']=(
-    <FormGroup as={Col} lg='auto'>
+    <>
       {mouse_mode_edition}
 
-
-      <ButtonGroup as={Col} lg='auto' >
-
-        {/* Add the button to choose the aggregation level  */}
-        {(level_filter)?<>
-          <OverlayTrigger
-            key={'tooltip-nodes-level'}
-            placement={'bottom'}
-            rootClose
-            overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
-            <Button ref={target_detail_level} variant='warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
-              <FontAwesomeIcon icon={faFolderTree} />
-            </Button>
-          </OverlayTrigger>
-          <Overlay
-            key={'popover-nodes-level'}
-            placement={'left'}
-            target={target_detail_level}
-            rootClose
-            show={show_detail_level}
-            onHide={()=>{set_show_detail_level(false)}}
-          >
-            {detail_level}
-          </Overlay></>
-          :
-          <></>
-        }
-        {/* Tooltip for level filter */}
+      {/* Add the button to choose the aggregation level  */}
+      {(level_filter)?<>
         <OverlayTrigger
-          key={'tooltip-link-filter2'}
+          key={'tooltip-nodes-level'}
           placement={'bottom'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
-        >
-          <Button ref={target_link_threshold} variant='danger' id='button-filter-link'
-            onClick={()=>{
-              set_show_link_threshold(!show_link_threshold)
-            }}
-          >
-            <FontAwesomeIcon icon={faFilter} />
-          </Button>
-        </OverlayTrigger>
-
-        {/* Popover to display the link-filter */}
-        <Overlay
-          key={'popover-link-filter'}
-          placement={'left'}
-          target={target_link_threshold}
           rootClose
-          show={show_link_threshold}
-          onHide={()=>{set_show_link_threshold(false)}}
-        >
-          {link_filter}
-        </Overlay>
-
-
-        <OverlayTrigger
-          key={'tooltip-adjust-h'}
-          placement={'bottom'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-          <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
-            <FontAwesomeIcon icon={faArrowsLeftRight} />
+          overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
+          <Button ref={target_detail_level} variant='outline-warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
+            <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
+            <Col className='textIcon'>Agréga.</Col>
           </Button>
         </OverlayTrigger>
+        <Overlay
+          key={'popover-nodes-level'}
+          placement={'left'}
+          target={target_detail_level}
+          rootClose
+          show={show_detail_level}
+          onHide={()=>{set_show_detail_level(false)}}
+        >
+          {detail_level}
+        </Overlay></>
+        :
+        <></>
+      }
+      {/* Tooltip for level filter */}
+      <OverlayTrigger
+        key={'tooltip-link-filter2'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
+      >
+        <Button ref={target_link_threshold} variant='outline-danger' id='button-filter-link'
+          onClick={()=>{
+            set_show_link_threshold(!show_link_threshold)
+          }}
+        >
+          <Col><FontAwesomeIcon icon={faFilter} /></Col>
+          <Col className='textIcon'>{t('Menu.filter')}</Col>
+        </Button>
+      </OverlayTrigger>
+
+      {/* Popover to display the link-filter */}
+      <Overlay
+        key={'popover-link-filter'}
+        placement={'left'}
+        target={target_link_threshold}
+        rootClose
+        show={show_link_threshold}
+        onHide={()=>{set_show_link_threshold(false)}}
+      >
+        {link_filter}
+      </Overlay>
+
+
+      <OverlayTrigger
+        key={'tooltip-adjust-h'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+          <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
+          <Col className='textIcon'>{t('Menu.ajustH')}</Col>
+        </Button>
+      </OverlayTrigger>
+      <OverlayTrigger
+        key={'tooltip-adjust-v'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+          <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+          <Col className='textIcon'>{t('Menu.ajustV')}</Col>
+        </Button>
+      </OverlayTrigger>
+
+      { url_prefix !== '' ?
         <OverlayTrigger
-          key={'tooltip-adjust-v'}
-          placement={'bottom'}
-          delay={500}
-          overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-          <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
-            <FontAwesomeIcon icon={faArrowsUpDown} />
+          key={'tooltip-structur'}
+          placement={'left'}
+          trigger={'click'}
+          rootClose
+          overlay={struc_data_reconciled}>
+          <Button variant='success'>
+            <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
+            <Col className='textIcon'>Struct.</Col>
+
           </Button>
         </OverlayTrigger>
-
-        { url_prefix !== '' ?
-          <OverlayTrigger
-            key={'tooltip-structur'}
-            placement={'left'}
-            trigger={'click'}
-            rootClose
-            overlay={struc_data_reconciled}>
-            <Button variant='success'>
-              <FontAwesomeIcon icon={faDiagramProject} />
-            </Button>
-          </OverlayTrigger>
-          :
-          <OverlayTrigger
-            key={'tooltip-structur'}
-            placement={'bottom'}
-            delay={500}
-            overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
-            <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
-              data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-              //data.show_data = false
-              set_data({ ...data })
-            }} >
-              <FontAwesomeIcon icon={faCodeBranch} />
-            </Button>
-          </OverlayTrigger>}
-        {window.SankeyToolsStatic ? <OverlayTrigger
-          key={'tooltip-help'}
+        :
+        <OverlayTrigger
+          key={'tooltip-structur'}
           placement={'bottom'}
           delay={500}
-          overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
-          }
-        >
-          <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
+          overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
+          <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
+            data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+            //data.show_data = false
+            set_data({ ...data })
+          }} >
+            <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
+            <Col className='textIcon'>Struct.</Col>
+          </Button>
+        </OverlayTrigger>}
+      {window.SankeyToolsStatic ? <OverlayTrigger
+        key={'tooltip-help'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
+        }
+      >
+        <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
                     ?
-          </Button>
-        </OverlayTrigger> : <></>}
-      </ButtonGroup>
-    </FormGroup>
+        </Button>
+      </OverlayTrigger> : <></>}
+    </>
   )
 
   return ui

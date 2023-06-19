@@ -1419,7 +1419,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               </Nav>
             </Row>
             <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
-              <ButtonGroup>
+              <ButtonGroup className='subMenu'>
                 {ordered_menu[menu_acivated]}
               </ButtonGroup>
             </Row>
