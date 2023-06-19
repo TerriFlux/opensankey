@@ -1058,3 +1058,24 @@ textarea {
 .MenuNavigation.container .col-lg-auto{
 	padding: 0px;
 }
+.MenuNavigation.container .subMenu .col{
+	margin-right: 0px;
+	margin-left: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	width: 35px;
+}
+
+.MenuNavigation.container .subMenu{
+	height: 46px;
+}
+.MenuNavigation.container .subMenu .col.textIcon{
+	font-weight: bold;
+	font-size: 9px;
+}
+.MenuNavigation.container .subMenu .col svg{
+	font-size: 25px;
+}
+.MenuNavigation.container .subMenu .form-select{
+	border-radius: 0px;
+}
