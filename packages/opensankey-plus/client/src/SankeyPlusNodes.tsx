@@ -656,10 +656,10 @@ export  const SankeyPlusDrag_nodes = (
         //retour à la normal
           d3.select(' .opensankey #' + l.idLink).attr('stroke-width', d => {
             const link_values = getLinkValue(data, (d as SankeyLink).idLink)
-            const is_free = link_values.extension!.free_mini !== undefined &&
+            const is_free = link_values.extension?.free_mini !== undefined &&
                             data.show_structure !== 'free_interval' &&
                             data.show_structure !== 'free_value' &&
-                            !link_values.extension!.free_visible
+                            !link_values.extension?.free_visible
             if (is_free) {
               return 5
             }

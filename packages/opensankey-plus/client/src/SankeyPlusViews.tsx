@@ -5,39 +5,44 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImp
 import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,FormGroup,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
-import {  node_color,clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
+import {  clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, compute_default_input_outputLinksId, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
 import LZString from 'lz-string'
 import { FaPlus } from 'react-icons/fa'
 
+/* eslint-disable */
+// @ts-ignore
+const deep_diff = require('deep-diff')
+/* eslint-enable */
+
 //Fonction permettant de calculer la profondeur max de nouveaux liens
-const calcPath = (
-  data: SankeyPlusData,
-  nodes: { [node_id: string]: SankeyPlusNode },
-  node: SankeyPlusNode,
-  new_links: string[],
-) => {
-  // let number_new_path=0
-  let long = 0
-  const links_present = node.outputLinksId.filter(o => new_links.includes(o) )
-  if (links_present.length > 0) {
-    long += 1
-    let lng = 0
-    links_present.forEach(d => {
-      const n = nodes[data.links[d].idTarget]
-      const new_lng = calcPath(data, nodes, n, new_links)
-      lng = isNaN(new_lng) ? lng : Math.max(lng,new_lng)
-    })
-    long += lng
-    return long
-  }
-  return NaN
-}
+// const calcPath = (
+//   data: SankeyPlusData,
+//   nodes: { [node_id: string]: SankeyPlusNode },
+//   node: SankeyPlusNode,
+//   new_links: string[],
+// ) => {
+//   // let number_new_path=0
+//   let long = 0
+//   const links_present = node.outputLinksId.filter(o => new_links.includes(o) )
+//   if (links_present.length > 0) {
+//     long += 1
+//     let lng = 0
+//     links_present.forEach(d => {
+//       const n = nodes[data.links[d].idTarget]
+//       const new_lng = calcPath(data, nodes, n, new_links)
+//       lng = isNaN(new_lng) ? lng : Math.max(lng,new_lng)
+//     })
+//     long += lng
+//     return long
+//   }
+//   return NaN
+// }
 
 export const setDiagram = (
   set_current_data: (d:SankeyPlusData)=>void,
@@ -904,143 +909,143 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 // })
 
 
-const animate_view_changement = (views_data:SankeyPlusData) => {
-  //Récupère parmi les noeuds, tous ceux qui emettent un nouveau flux sans en recevoir de nouveau
-  const visible_links = Object.values(views_data.links).filter(l=>views_data.nodes[l.idSource].node_visible && views_data.nodes[l.idTarget].node_visible )
-  const visible_linksId = visible_links.map(l=>l.idLink)
-  const start_point = Object.values(views_data.nodes).filter(f =>
-    (f.inputLinksId.filter(i => visible_linksId.includes(i)).length === 0) &&
-    (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0) &&
-    (!('Type de noeud' in f.tags) || f.tags['Type de noeud'][0] !== 'échange')
-  )
-  let time_to_animate = 500
-  Object.values(views_data.nodes).filter(f => {
-    return (f.inputLinksId.filter(i => visible_linksId.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0)})
-  //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
-  if (start_point.length > 0) {
-    let nb_animation = calcPath(views_data,views_data.nodes, start_point[0], visible_linksId)
+// const animate_view_changement = (views_data:SankeyPlusData) => {
+//   //Récupère parmi les noeuds, tous ceux qui emettent un nouveau flux sans en recevoir de nouveau
+//   const visible_links = Object.values(views_data.links).filter(l=>views_data.nodes[l.idSource].node_visible && views_data.nodes[l.idTarget].node_visible )
+//   const visible_linksId = visible_links.map(l=>l.idLink)
+//   const start_point = Object.values(views_data.nodes).filter(f =>
+//     (f.inputLinksId.filter(i => visible_linksId.includes(i)).length === 0) &&
+//     (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0) &&
+//     (!('Type de noeud' in f.tags) || f.tags['Type de noeud'][0] !== 'échange')
+//   )
+//   let time_to_animate = 500
+//   Object.values(views_data.nodes).filter(f => {
+//     return (f.inputLinksId.filter(i => visible_linksId.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_linksId.includes(i)).length > 0)})
+//   //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
+//   if (start_point.length > 0) {
+//     let nb_animation = calcPath(views_data,views_data.nodes, start_point[0], visible_linksId)
 
-    nb_animation = (nb_animation !== undefined) ? nb_animation : 0
-    time_to_animate += nb_animation * 2000
-  }
-  // const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
-  //   .filter(function (d) {
-  //     return visible_linksId.includes(d.idLink)
-  //   })
+//     nb_animation = (nb_animation !== undefined) ? nb_animation : 0
+//     time_to_animate += nb_animation * 2000
+//   }
+//   // const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
+//   //   .filter(function (d) {
+//   //     return visible_linksId.includes(d.idLink)
+//   //   })
 
-  // glinks.selectAll('.link').style('stroke-opacity', 0)
-  // glinks.selectAll('text').style('opacity', 0)
-  // Animation des flux du Sankey
-  //sankeyTooltip.style('opacity', 0)
-  // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey
-  setTimeout(function () {
-    d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
-    d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
-    d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
-    d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
-    start_point.map(s => {
-      branchAnimateForView(views_data, s, [s.idNode], visible_linksId)
-    })
-  }, 100)
+//   // glinks.selectAll('.link').style('stroke-opacity', 0)
+//   // glinks.selectAll('text').style('opacity', 0)
+//   // Animation des flux du Sankey
+//   //sankeyTooltip.style('opacity', 0)
+//   // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey
+//   setTimeout(function () {
+//     d3.select(' .opensankey #svg').selectAll('.defsArrow path').style('fill', '#dddddd')
+//     d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
+//     d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
+//     d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
+//     start_point.map(s => {
+//       branchAnimateForView(views_data, s, [s.idNode], visible_linksId)
+//     })
+//   }, 100)
 
-  return time_to_animate
+//   return time_to_animate
 
-}
+// }
 
 //fonction pour animer que les nouveaux liens
-const branchAnimateForView = (
-  data: SankeyPlusData,
-  nodeData: SankeyPlusNode,
-  nodeDisplay: string[],
-  keys_links: string[]
-) => {
+// const branchAnimateForView = (
+//   data: SankeyPlusData,
+//   nodeData: SankeyPlusNode,
+//   nodeDisplay: string[],
+//   keys_links: string[]
+// ) => {
 
 
-  // Permet la progation de l'animation sur l'ensemble du Sankey
-  const nodeStart = nodeData.idNode
-  //const keys_links = Object.keys(new_links)
-  const selection = d3.select(' .opensankey #' + nodeData.idNode)
-  // on pourrait aussi evnetuellement faire un clone des noeuds
-  if (selection.empty()) {
-    return
-  }
-  d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-  d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
-  // Animation des flux du Sankey
-  //sankeyTooltip.style('opacity', 0)
-  // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey
+//   // Permet la progation de l'animation sur l'ensemble du Sankey
+//   const nodeStart = nodeData.idNode
+//   //const keys_links = Object.keys(new_links)
+//   const selection = d3.select(' .opensankey #' + nodeData.idNode)
+//   // on pourrait aussi evnetuellement faire un clone des noeuds
+//   if (selection.empty()) {
+//     return
+//   }
+//   d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+//   d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
+//   // Animation des flux du Sankey
+//   //sankeyTooltip.style('opacity', 0)
+//   // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey
 
 
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
-    .filter(function (d) {
-      return d.idSource === nodeStart && keys_links.includes(d.idLink)
-    })
-  // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
-  const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
+//   const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
+//     .filter(function (d) {
+//       return d.idSource === nodeStart && keys_links.includes(d.idLink)
+//     })
+//   // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
+//   const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
 
-  tmpLinks.selectAll('.link').style('stroke-opacity', 1)
-  tmpLinks.selectAll('text').style('opacity', 0)
+//   tmpLinks.selectAll('.link').style('stroke-opacity', 1)
+//   tmpLinks.selectAll('text').style('opacity', 0)
 
-  // console.log(tmpLinks.nodes().map(d=>d3.select(d).attr('id')))
+//   // console.log(tmpLinks.nodes().map(d=>d3.select(d).attr('id')))
 
-  // tmpLinks.selectAll('.link')
-  //   .each(function (this) {
-  //     const id=d3.select(this).attr('id')
-  //     d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
-  //   })
+//   // tmpLinks.selectAll('.link')
+//   //   .each(function (this) {
+//   //     const id=d3.select(this).attr('id')
+//   //     d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','0')
+//   //   })
 
-  tmpLinks.selectAll('.link')
-    .each(function (this) {
-      const totalLength = (this as SVGGeometryElement).getTotalLength()
+//   tmpLinks.selectAll('.link')
+//     .each(function (this) {
+//       const totalLength = (this as SVGGeometryElement).getTotalLength()
 
-      d3.select(this)
-        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
-        .attr('stroke-dashoffset', totalLength)
-        .style('stroke', function (this) {
-          // on recupere les paramêtres initiaux du stroke
-          return d3.select(this).attr('stroke')
-        })
-        .style('stroke-opacity', 0.8)
+//       d3.select(this)
+//         .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+//         .attr('stroke-dashoffset', totalLength)
+//         .style('stroke', function (this) {
+//           // on recupere les paramêtres initiaux du stroke
+//           return d3.select(this).attr('stroke')
+//         })
+//         .style('stroke-opacity', 0.8)
 
-      // const id=d3.select(this).attr('id')
-      // d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','1')
+//       // const id=d3.select(this).attr('id')
+//       // d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity','1')
 
-    })
-    .transition()
-    .duration(2000)
-    .attr('stroke-dashoffset', 0)
-    .on('end', function (this) {
-      const idLink = d3.select(this).attr('id')
-      const idTarget = data.links[idLink].idTarget
-      const id=d3.select(this).attr('id')
-      d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity',0.8)
-      // Modification des arrows après l'animation
-      // console.log(d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode))
-      // const arrowInitColor = d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow').attr('fill')
-      // d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow')
-      //   .style('fill', arrowInitColor)
-      //   .style('opacity', 1)
-      // Modification des arrows après l'animation
-      const arrow=d3.select(' .opensankey #arrow_'+idLink)
-      if(arrow !== undefined && arrow!= null){
-        const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
-        const t=(data.links[idLink].gradient && data.colorMap === 'no_colormap')?colorTarget:d3.select(this).attr('stroke')
-        if(t){
-          arrow.select('path').style('fill',t)
-        }
-      }
+//     })
+//     .transition()
+//     .duration(2000)
+//     .attr('stroke-dashoffset', 0)
+//     .on('end', function (this) {
+//       const idLink = d3.select(this).attr('id')
+//       const idTarget = data.links[idLink].idTarget
+//       const id=d3.select(this).attr('id')
+//       d3.select('.opensankey .defsArrow #arrow_'+id+' path').attr('opacity',0.8)
+//       // Modification des arrows après l'animation
+//       // console.log(d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode))
+//       // const arrowInitColor = d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow').attr('fill')
+//       // d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.arrow')
+//       //   .style('fill', arrowInitColor)
+//       //   .style('opacity', 1)
+//       // Modification des arrows après l'animation
+//       const arrow=d3.select(' .opensankey #arrow_'+idLink)
+//       if(arrow !== undefined && arrow!= null){
+//         const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+//         const t=(data.links[idLink].gradient && data.colorMap === 'no_colormap')?colorTarget:d3.select(this).attr('stroke')
+//         if(t){
+//           arrow.select('path').style('fill',t)
+//         }
+//       }
 
-      // reaffichage des link value après l'animation
-      d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
-        .style('display', 'inline')
-        //Propagration de l'animation sur les flux sortant du target_node
-        // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
-      if (!nodeDisplay.includes(idTarget)) {
-        nodeDisplay.push(idTarget)
-        branchAnimateForView(data, data.nodes[idTarget], nodeDisplay, keys_links)
-      }
-    })
-}
+//       // reaffichage des link value après l'animation
+//       d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
+//         .style('display', 'inline')
+//         //Propagration de l'animation sur les flux sortant du target_node
+//         // on teste si le noeud est déjà passé cela permet de régler le problème des links à 'recycling'
+//       if (!nodeDisplay.includes(idTarget)) {
+//         nodeDisplay.push(idTarget)
+//         branchAnimateForView(data, data.nodes[idTarget], nodeDisplay, keys_links)
+//       }
+//     })
+// }
 
 export const setValue = (
   dataTags: TagsGroup[],
@@ -1068,14 +1073,15 @@ export const setValue = (
 
 
 export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:string)=>{
-  const applyChange = require('deep-diff').applyChange
+  
+  const applyChange = deep_diff.applyChange
   // Copy master data
   const data_init=JSON.parse(JSON.stringify(master_data))
   // Get the difference from the view
   const diff_view=master_data.view.filter(v=>v.id === id_view_to_see)[0].view_data.diff
 
   const del_node_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'nodes' && d.kind === 'D' && d.path.length === 2))
-  del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean})=>{
+  del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean|string})=>{
     d.kind = 'E'
     d.path.push('display')
     d.rhs = false
@@ -1086,19 +1092,19 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   //   d.path.push('link_visible')
   //   d.rhs = false
   // })
-  const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0]=='nodes' && master_data.nodes[d.path[1]] == undefined)
-  const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0]=='links' && master_data.links[d.path[1]] == undefined)
+  const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0] === 'nodes' && master_data.nodes[d.path[1]] === undefined)
+  const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0] === 'links' && master_data.links[d.path[1]] === undefined)
   const ignore_changes3 = diff_view.filter((d :{path:string[],kind:string,rhs:string})=>
-    d.kind == 'E' && d.path[0]=='nodes' && (d.path[2]=='outputLinksId' || d.path[2]=='inputLinksId') &&
-      master_data.links[d.rhs] == undefined)
+    d.kind === 'E' && d.path[0] === 'nodes' && (d.path[2] === 'outputLinksId' || d.path[2] === 'inputLinksId') &&
+      master_data.links[d.rhs] === undefined)
 
   // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
   diff_view
-  .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length==2) || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
-  .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length==2) || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
-  .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
-  .filter((d :{path:string[],kind:string}) => !(d.kind === 'E' && d.path[0] ==='links' && d.path.length > 3 && d.path[2]=='value'))
-  .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d));
+    .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
+    .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
+    .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
+    .filter((d :{path:string[],kind:string}) => !(d.kind === 'E' && d.path[0] ==='links' && d.path.length > 3 && d.path[2]==='value'))
+    .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
   if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
     compute_default_input_outputLinksId(
       data_init.nodes,
@@ -1168,7 +1174,7 @@ export const keyHandler = (
     accordion_ref,
     button_ref,
     mode_selection)
-  if(e.key=='a' && e.ctrlKey){
+  if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_labels.current=Object.values(data.labels)
     set_data({...data})
@@ -1205,40 +1211,40 @@ export const keyHandler = (
         nom: 'copy of '+master_data.view.filter(v=>v.id === view)[0].nom,
         details: ''
       })
-       // master data is now set
-       set_master_data({...master_data})
-       set_view(new_ind)
+      // master data is now set
+      set_master_data({...master_data})
+      set_view(new_ind)
     }
   }
 
-  if(e.key=='s' && e.ctrlKey && !e.shiftKey){
+  if(e.key==='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
-      if(view!='none'){
-        // If we do a control+S while we are on a view, we save the difference between the data we are handling
-        // and the master data. These difference are the saved the view we are currently on
-        const deep_diff = require('deep-diff')
+    if(view!=='none'){
+      // If we do a control+S while we are on a view, we save the difference between the data we are handling
+      // and the master data. These difference are the saved the view we are currently on
+      
 
-        // Get difference between master_data and the current data then save it in view
-        let difference = deep_diff.diff(master_data, data)
-        difference=(difference !== undefined)?difference:[]
-        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-        difference=filter_view(difference)
-        master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
+      // Get difference between master_data and the current data then save it in view
+      let difference = deep_diff.diff(master_data, data)
+      difference=(difference !== undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      difference=filter_view(difference)
+      master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
 
-        // Save master data with the view we are currently working on updated
-        set_master_data({...master_data})
-        // Save master_data data in localStorage
-        localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
+      // Save master data with the view we are currently working on updated
+      set_master_data({...master_data})
+      // Save master_data data in localStorage
+      localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
-        // set_data({...data})
-        set_show_toast_updated_view(true)
-        setTimeout(function () {
-          set_show_toast_updated_view(false)
-        }, 3000)
-      }else{
-        // Save current data (wich is master_data)
-        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      }
+      // set_data({...data})
+      set_show_toast_updated_view(true)
+      setTimeout(function () {
+        set_show_toast_updated_view(false)
+      }, 3000)
+    }else{
+      // Save current data (wich is master_data)
+      localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+    }
       
 
     
@@ -1293,7 +1299,7 @@ export const keyHandler = (
       //     data_view.nodes,
       //     data_view.links
       //   )
-      //   const deep_diff = require('deep-diff')
+      //   
       //   let difference = deep_diff.diff(master_data, data_view)
       //   difference=(difference!==undefined)?difference:[]
       //   difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
@@ -1359,9 +1365,9 @@ export const keyHandler = (
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
     // (exemples : le input de la largeur minimal d'un noeud)
     e.preventDefault()
-    if (e.key == 'ArrowUp') {
+    if (e.key === 'ArrowUp') {
       Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
-        if (d != undefined) {
+        if (d !== undefined) {
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
@@ -1377,9 +1383,9 @@ export const keyHandler = (
           data.height -= 90
         }
       })
-    } else if (e.key == 'ArrowDown') {
+    } else if (e.key === 'ArrowDown') {
       Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
-        if (d != undefined) {
+        if (d !== undefined) {
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
@@ -1392,9 +1398,9 @@ export const keyHandler = (
           data.height += 100
         }
       })
-    } else if (e.key == 'ArrowLeft') {
+    } else if (e.key === 'ArrowLeft') {
       Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
-        if (d != undefined) {
+        if (d !== undefined) {
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
@@ -1407,9 +1413,9 @@ export const keyHandler = (
           data.width -= 50
         }
       })
-    } else if (e.key == 'ArrowRight') {
+    } else if (e.key === 'ArrowRight') {
       Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
-        if (d != undefined) {
+        if (d !== undefined) {
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
@@ -1710,9 +1716,9 @@ export const viewsAccordion = (
                         () => {
                           // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
                           if (_load_json.current) {
-                        _load_json.current!.name = ''
-                        _load_json.current.click()
-                        _load_json.current.id = d.id
+                            _load_json.current.name = ''
+                            _load_json.current.click()
+                            _load_json.current.id = d.id
                           }
                         }
                       }
@@ -1747,8 +1753,8 @@ export const viewsAccordion = (
               () => {
                 // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
                 if (_load_multiple_json.current) {
-                        _load_multiple_json.current!.name = ''
-                        _load_multiple_json.current.click()
+                  _load_multiple_json.current.name = ''
+                  _load_multiple_json.current.click()
                 }
               }
             }
@@ -1763,14 +1769,14 @@ export const viewsAccordion = (
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
       const reader = new FileReader()
-      const deep_diff = require('deep-diff')
+      
       reader.onload = (() => {
         return (e: ProgressEvent<FileReader>) => {
           const result = String((e.target as FileReader).result)
           const result_data = JSON.parse(result)
           let ind = -1
           master_data.view.map((v, i) => {
-            ind = (v.id === _load_json.current!.id) ? i : ind
+            ind = (v.id === _load_json.current?.id) ? i : ind
           })
           const cur_view = master_data.view[ind]
           const imported_data=JSON.parse(JSON.stringify(result_data))
@@ -1800,7 +1806,7 @@ export const viewsAccordion = (
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
-      const deep_diff = require('deep-diff')
+      
       master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
       // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
       for(const i in files){
@@ -1860,7 +1866,7 @@ export const viewsAccordion = (
 // We compare the differences saved in the master_data with the current changement of the view
 const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
 
-  const deep_diff = require('deep-diff')
+  
   const original_diff=get_data_from_view(master_data,view)
   let difference = deep_diff.diff(original_diff, data)
   difference=(difference !== undefined)?difference:[]
@@ -1946,12 +1952,12 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
 
-const buttonUpdateView=<OverlayTrigger
+  const buttonUpdateView=<OverlayTrigger
     key={'buttonUpdateViewDisabled'}
     placement={'bottom'}
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
-    >
+  >
     <Button size='sm' disabled={!connected} variant={'outline-info'}
       onClick={() => {
         const ev = document
@@ -1963,74 +1969,74 @@ const buttonUpdateView=<OverlayTrigger
     >
       <Col>{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Col>
       <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
-      </Button>
+    </Button>
   </OverlayTrigger>
 
 
   return <>
-  <OverlayTrigger
-    key={'buttonHomeViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+    <OverlayTrigger
+      key={'buttonHomeViewDisabled'}
+      placement={'bottom'}
+      delay={500}
+      overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
     >
-    <Button size='sm' variant= 'outline-secondary' onClick={() => {
-      const ev = document
-      const tmp = { key: 'F7' }
-      if (ev.onkeydown) {
-        ev.onkeydown(tmp as KeyboardEvent)
-      }
-    }}>
-      <Col><FaHome /></Col>
-      <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
-    </Button>
-  </OverlayTrigger>
+      <Button size='sm' variant= 'outline-secondary' onClick={() => {
+        const ev = document
+        const tmp = { key: 'F7' }
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}>
+        <Col><FaHome /></Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
+      </Button>
+    </OverlayTrigger>
   
-  <>{!window.SankeyToolsStatic?<>
-  {buttonCreateView}
-  {buttonUpdateView}
-  </>:<></>}</>
+    <>{!window.SankeyToolsStatic?<>
+      {buttonCreateView}
+      {buttonUpdateView}
+    </>:<></>}</>
 
-  <OverlayTrigger
-    key={'buttonPrevViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
-  >
-    <Button size='sm' variant={'outline-success'}
-      disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
-      onClick={() => {
-        const ev = document
-        const tmp = { key: 'F8' }
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}>
-      <Col><FaCaretSquareLeft /></Col>
-      <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
-    </Button>
-  </OverlayTrigger>
+    <OverlayTrigger
+      key={'buttonPrevViewDisabled'}
+      placement={'bottom'}
+      delay={500}
+      overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+    >
+      <Button size='sm' variant={'outline-success'}
+        disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
+        onClick={() => {
+          const ev = document
+          const tmp = { key: 'F8' }
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}>
+        <Col><FaCaretSquareLeft /></Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
+      </Button>
+    </OverlayTrigger>
 
-  <OverlayTrigger
-    key={'buttonNextViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
-  >
-    <Button size='sm' variant={'outline-success'}
-      disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
-      onClick={() => {
-        const ev = document
-        const tmp = { key: 'F9'}
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}>
-      <Col><FaCaretSquareRight /></Col>
-      <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
-    </Button>
-  </OverlayTrigger>
-  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+    <OverlayTrigger
+      key={'buttonNextViewDisabled'}
+      placement={'bottom'}
+      delay={500}
+      overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+    >
+      <Button size='sm' variant={'outline-success'}
+        disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
+        onClick={() => {
+          const ev = document
+          const tmp = { key: 'F9'}
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}>
+        <Col><FaCaretSquareRight /></Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
+      </Button>
+    </OverlayTrigger>
+    {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
 
   </>
 }
@@ -2081,7 +2087,7 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
         <Button variant='success'
           onClick={()=>{
             // Save the view before changing to the selected one
-            const deep_diff = require('deep-diff')
+            
             let difference = deep_diff.diff(master_data, data)
             difference=(difference !== undefined)?difference:[]
             difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
