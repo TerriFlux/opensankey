@@ -1070,12 +1070,35 @@ textarea {
 	height: 46px;
 }
 .MenuNavigation.container .subMenu .col.textIcon{
-	font-weight: bold;
 	font-size: 9px;
 }
-.MenuNavigation.container .subMenu .col svg{
+.MenuNavigation.container .subMenu svg{
 	font-size: 25px;
 }
 .MenuNavigation.container .subMenu .form-select{
 	border-radius: 0px;
+}
+
+.MenuNavigation.container .subMenu .dropend .btn{
+	margin-right: 0px;
+	margin-left: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	/* width: 45px; */
+	height: 45px;
+}
+.MenuNavigation.container .subMenu .buttonSubNav.dropend{
+	margin-right: 0px;
+	margin-left: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	width: 55px;
+}
+.MenuNavigation.container .subMenu .buttonSubNav.dropend .dropdown-toggle::after{
+	position: absolute;
+	top: 15px;
+	left: 35px;
+}
+.MenuNavigation.container .subMenu .buttonSubNav.dropend.textIcon{
+	font-size: 10px;
 }

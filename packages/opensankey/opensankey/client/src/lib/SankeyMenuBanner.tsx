@@ -634,7 +634,7 @@ export const toolbar_builder = (
       <Col>
         <OverlayTrigger
           key={'tooltip-diagrams'}
-          placement={'left'}
+          placement={'right'}
           trigger={'click'}
           rootClose
           overlay={diagrams_element}>
@@ -697,7 +697,7 @@ export const toolbar_builder = (
         </OverlayTrigger>
         <Overlay
           key={'popover-nodes-level'}
-          placement={'left'}
+          placement={'right'}
           target={target_detail_level}
           rootClose
           show={show_detail_level}
@@ -728,7 +728,7 @@ export const toolbar_builder = (
       {/* Popover to display the link-filter */}
       <Overlay
         key={'popover-link-filter'}
-        placement={'left'}
+        placement={'right'}
         target={target_link_threshold}
         rootClose
         show={show_link_threshold}
@@ -762,11 +762,11 @@ export const toolbar_builder = (
       { url_prefix !== '' ?
         <OverlayTrigger
           key={'tooltip-structur'}
-          placement={'left'}
+          placement={'right'}
           trigger={'click'}
           rootClose
           overlay={struc_data_reconciled}>
-          <Button variant='success'>
+          <Button variant='outline-success'>
             <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
             <Col className='textIcon'>Struct.</Col>
 
@@ -778,7 +778,7 @@ export const toolbar_builder = (
           placement={'bottom'}
           delay={500}
           overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
-          <Button variant={(data.show_structure?'outline-success':'success')} onClick={() => {
+          <Button variant={'outline-success'} onClick={() => {
             data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
             //data.show_data = false
             set_data({ ...data })
