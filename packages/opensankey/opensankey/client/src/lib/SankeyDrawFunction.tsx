@@ -2085,7 +2085,7 @@ export const node_label_text=(
     return d.name
   }
   // console.log((d.name.split(' - ')[0].replace('-', ' '))[0])
-  return d.name.split(' - ')[0].replace('-', ' ')
+  return d.name.split(' - ')[0]
 }
 
 export const value_selected_parameter = (data:SankeyData,
