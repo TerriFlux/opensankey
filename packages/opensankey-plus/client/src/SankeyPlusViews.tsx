@@ -1490,7 +1490,7 @@ const selecteur_view=(data:SankeyPlusData,
       }
     }
   >
-    <option selected={view === 'none'} value={'none'}>{t('view.actual')}</option>
+    <option hidden selected={view === 'none'} value={'none'}>{t('view.actual')}</option>
     {master_data ? master_data.view.map(d => {
       return <option key={d.id} selected={view === d.id} value={d.id}>{d.nom}</option>
     }) : <></>}
