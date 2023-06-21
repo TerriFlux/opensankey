@@ -1440,7 +1440,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           {!window.SankeyToolsStatic ?<Nav>
             <Col>
               <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>} 
-              <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
+              <Button style={{'marginRight':'10px','marginLeft':'10px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
               {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
             </Col>
           </Nav>:<></>}

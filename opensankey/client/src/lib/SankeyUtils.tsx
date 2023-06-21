@@ -628,7 +628,8 @@ export const default_sankey_data = (): SankeyData => {
     colorMap: 'no_colormap', 
 
     legend_width:180,
-    legend_position: [window.innerWidth-180, 10],
+    // legend_position initial : largeur ecran - legend_width - marge du svg - largeur bouton menu
+    legend_position: [window.innerWidth-240, 10],
     display_legend_scale:false,
     legend_police:16,
     
