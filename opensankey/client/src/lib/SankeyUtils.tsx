@@ -1466,7 +1466,7 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
       if (n.tags[tagGroup] === undefined) {
         colorNode = 'grey'
         colorNode=(n.colorSustainable)? n.color:colorNode
-      } else if (n.tags[tagGroup].length > 0) {  
+      } else if (n.tags[tagGroup].length == 1 ) {  
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
         } else {
