@@ -1257,7 +1257,7 @@ export const keyHandler = (
     let saved=true
     if(view !== 'none' && connected){
       const diff=check_current_view_saved(master_data,data,view)
-      if(diff.length>0){
+      if(diff.length>0 && !window.SankeyToolsStatic){
         saved=false
         set_view_not_saved(view)
         set_view('none')
@@ -1313,7 +1313,7 @@ export const keyHandler = (
       let saved=true
       if(view !== 'none' &&  connected){
         const diff=check_current_view_saved(master_data,data,view)
-        if(diff.length>0){
+        if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
           set_view(master_data.view[ind-1].id)
@@ -1343,7 +1343,7 @@ export const keyHandler = (
       let saved=true
       if(view !== 'none' && connected){
         const diff=check_current_view_saved(master_data,data,view)
-        if(diff.length>0){
+        if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
           set_view(master_data.view[ind+1].id)
@@ -1463,7 +1463,7 @@ const selecteur_view=(data:SankeyPlusData,
         let saved=true
         if(view !== 'none'){
           const difference=check_current_view_saved(master_data,data,view)
-          if(difference.length !== 0){
+          if(difference.length !== 0 && !window.SankeyToolsStatic){
             saved=false
             set_view_not_saved(view)
             set_view(evt.target.value)
