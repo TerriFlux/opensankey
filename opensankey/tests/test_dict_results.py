@@ -4,7 +4,10 @@ import os
 from os import listdir
 import json
 from parameterized import parameterized
+
 import SankeyExcelParser.io_excel as io_excel
+from SankeyExcelParser.sankey import Sankey
+
 from opensankey.server import parser_excel
 
 sys.path.insert(0, os.getcwd())
@@ -148,11 +151,9 @@ class DictResultTest(unittest.TestCase):
         file_name: str,
         expected_results: dict
     ):
-        mfa_input = {}
-        io_excel.load_mfa_excel(os.path.join(mfa_data_dir, file_name), mfa_input)
-        sankey_data = parser_excel.parse_excel(
-            mfa_input
-        )
+        sankey = Sankey()
+        io_excel.load_sankey_from_excel_file(os.path.join(mfa_data_dir, file_name), sankey)
+        sankey_data = parser_excel.parse_excel(sankey)
         if not self.generate_results:
             self.check_dict(sankey_data, expected_results)
         else:
@@ -184,9 +185,10 @@ class DictResultTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == '--generate_results':
-        DictResultTest.set_generate_results()
-        sys.argv.remove('--generate_results')
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '--generate_results':
+            DictResultTest.set_generate_results()
+            sys.argv.remove('--generate_results')
     # unittest.main()
     # unittest.main(argv=sys.argv)
     suite = unittest.TestSuite()

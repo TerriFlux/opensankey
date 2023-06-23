@@ -29,6 +29,8 @@ from threading import Thread
 import SankeyExcelParser.io_excel as io_excel
 import SankeyExcelParser.su_trace as trace
 
+from SankeyExcelParser.sankey import Sankey
+
 # Local imports
 from . import parser_excel
 
@@ -330,8 +332,9 @@ def upload_excel_thread(
     # Step 1 : Open and read Excel
     trace.logger.info('{:-<{w}}'.format('Loading excel ', w=max_line_length))
     trace.logger.debug("File to load : {}".format(excel_input_filename.split('/')[-1]))
-    mfa_input = {}
-    ok_load, log_load = io_excel.load_mfa_excel(excel_input_filename, mfa_input)
+    sankey = Sankey()
+    # TODO finir (importation)
+    ok_load, log_load = io_excel.load_sankey_from_excel_file(excel_input_filename, sankey)
     if (ok_load):
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     else:
@@ -342,7 +345,7 @@ def upload_excel_thread(
     # Step 2 : Extract sankey data
     trace.logger.info('{:-<{w}}'.format('Extract diagram structure ', w=max_line_length))
     try:
-        sankey_data = parser_excel.parse_excel(mfa_input)
+        sankey_data = parser_excel.parse_excel(sankey)
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     except Exception as expt:
         trace.logger.error('Extract Diagram Structure Failed: ' + str(expt))
