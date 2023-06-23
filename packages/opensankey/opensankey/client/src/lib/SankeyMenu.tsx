@@ -269,7 +269,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.5'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -288,7 +288,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.5'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -342,7 +342,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.4'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -363,7 +363,7 @@ export const addAllDropDownNode = (
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
-                  placement={'bottom'}
+                  placement={'left'}
                   delay={500}
                   overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
                   <FormCheck inline
@@ -397,7 +397,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.3'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -423,7 +423,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.3'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -541,7 +541,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.1'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -559,7 +559,7 @@ export const addAllDropDownFlux = (
             <Col xs={2} >
               <OverlayTrigger
                 key={'Banner.ndd_chk.1'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -619,7 +619,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.2'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -647,7 +647,7 @@ export const addAllDropDownFlux = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.2'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -936,7 +936,7 @@ export const OpenSankeyMenus = (
     {(node_filter)?
       <OverlayTrigger
         key={'tooltip-link-color-filter'}
-        placement={'bottom'}
+        placement={'left'}
         trigger={'click'}
         rootClose
         overlay={filter_color_node}>
@@ -951,7 +951,7 @@ export const OpenSankeyMenus = (
     {(flux_filter)?
       <OverlayTrigger
         key={'tooltip-node-color-filter'}
-        placement={'bottom'}
+        placement={'left'}
         trigger={'click'}
         rootClose
         overlay={filter_color_link}>
@@ -964,7 +964,7 @@ export const OpenSankeyMenus = (
     {(Object.values(data.dataTags).length>0)?
       <OverlayTrigger
         key={'tooltip-data-filter'}
-        placement={'bottom'}
+        placement={'left'}
         trigger={'click'}
         rootClose
         overlay={filter_data}>
@@ -1060,7 +1060,7 @@ export const OpenSankeyMenus = (
       <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{<><Col>{logo_tempalte}</Col><Col className='textIcon'>{t('Menu.templates')}</Col></>}</Button>
       <OverlayTrigger
         key={'buttonCheckpoint'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
       >
@@ -1077,10 +1077,10 @@ export const OpenSankeyMenus = (
       <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.amp_short')}</Col></></Button>
       <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
-            <Dropdown.Item size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
-      </Dropdown.Menu></Dropdown>
+        <Dropdown.Menu>
+          <Dropdown.Item size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
+          <Dropdown.Item size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
+        </Dropdown.Menu></Dropdown>
       {external_edition_item}
     </>
     ui['aide']=<><Button size='sm' variant='light' onClick={() =>{
@@ -1267,9 +1267,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const menuButton = () => {
     if (show_nav) {
-      return <FaAngleDoubleRight style={{marginTop:'50px'}} />
+      return <FaAngleDoubleRight />
     } else {
-      return <FaAngleDoubleLeft style={{marginTop:'50px'}} />
+      return <FaAngleDoubleLeft />
     }
 
   }
@@ -1284,7 +1284,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({...data})
   }
   const ordered_menu:{[s:string]:JSX.Element}={}
-  const oredred_key=['file','edition','toolbar','filter','view','afm','formation','demo','aide']
+  const oredred_key=['file','edition','filter','view','afm','formation','demo','aide']
   oredred_key.forEach((k:string)=>{
     if(Object.keys(menus).includes(k)){
       ordered_menu[k]=menus[k]
@@ -1423,16 +1423,30 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Row>
               <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
                 {Object.keys(ordered_menu).map(m=>{
-                  return <Nav.Item>
-                    <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-                      {t('Menu.'+m)}
-                    </Nav.Link>
-                  </Nav.Item>
+
+                  if(m=='formation'){
+
+                    // Special behavior for formation nav, instead of opening a subnav it open a modal with the tutos
+                    return <Nav.Item>
+                      <Nav.Link  eventKey={m} onClick={()=>set_show_modale_tuto(true)}>
+                        {t('Menu.'+m)}
+                      </Nav.Link>
+                    </Nav.Item>
+                  }else{
+
+                    // Nav item that aopen a subnav when clicked
+                    return <Nav.Item>
+                      <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
+                        {t('Menu.'+m)}
+                      </Nav.Link>
+                    </Nav.Item>
+                  }
+                  
                 })}
               </Nav>
             </Row>
             <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
-              <ButtonGroup className='subMenu'>
+              <ButtonGroup className={'subMenu '+menu_acivated}>
                 {ordered_menu[menu_acivated]}
               </ButtonGroup>
             </Row>
@@ -1474,19 +1488,26 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Offcanvas>
         : <></>}
 
-      {!data.static_sankey ? (
-        <ToggleButton style={{ 'width':'40px',height:'120px', position:'fixed',top:window.innerHeight/2,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift),zIndex:100 }}
-          ref={button_ref as Ref<HTMLLabelElement>}
-          id="toggle-check"
-          type="checkbox"
-          variant="outline-primary"
-          checked={show_nav}
-          onChange={(e) => { setChecked(e.currentTarget.checked)}}
-          onClick={toggleShow}
-          value="menuConfigButton">{menuButton()}
-        </ToggleButton>
-      ) : (<></>)
-      }
+      <ButtonGroup vertical
+        className='sideBar'
+        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift)}}
+      >
+        {menus['toolbar']}
+        {!data.static_sankey ? (
+          <ToggleButton 
+            ref={button_ref as Ref<HTMLLabelElement>}
+            id="toggle-check"
+            className='openMenu'
+            type="checkbox"
+            variant="outline-primary"
+            checked={show_nav}
+            onChange={(e) => { setChecked(e.currentTarget.checked)}}
+            onClick={toggleShow}
+            value="menuConfigButton">{menuButton()}
+          </ToggleButton>
+        ) : (<></>)}
+      </ButtonGroup>
+      
 
       {
         processing ? (
