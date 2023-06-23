@@ -936,7 +936,7 @@ export const OpenSankeyMenus = (
     {(node_filter)?
       <OverlayTrigger
         key={'tooltip-link-color-filter'}
-        placement={'left'}
+        placement={'right'}
         trigger={'click'}
         rootClose
         overlay={filter_color_node}>
@@ -951,7 +951,7 @@ export const OpenSankeyMenus = (
     {(flux_filter)?
       <OverlayTrigger
         key={'tooltip-node-color-filter'}
-        placement={'left'}
+        placement={'right'}
         trigger={'click'}
         rootClose
         overlay={filter_color_link}>
@@ -964,7 +964,7 @@ export const OpenSankeyMenus = (
     {(Object.values(data.dataTags).length>0)?
       <OverlayTrigger
         key={'tooltip-data-filter'}
-        placement={'left'}
+        placement={'right'}
         trigger={'click'}
         rootClose
         overlay={filter_data}>
