@@ -1,89 +1,49 @@
+"""
+Auteur : Julien ALAPETITE
+Date : /
+"""
+
+# External libs ---------------------------------------------------------------
 import pandas as pd
 import numpy as np
-import re
-import webcolors
-import math
 import copy
+
+# Local libs -------------------------------------------------------
+import SankeyExcelParser.io_excel_constants as CONST_IO_XL
+
+# External modules ------------------------------------------------------------
 from collections import OrderedDict
-from SankeyExcelParser.io_excel_constants import \
-    DATA_VALUE, DATA_DESTINATION, DATA_ORIGIN,\
-    DATA_SHEET, DATA_TYPE_LABEL, RESULTS_SHEET,\
-    NODES_SHEET, FLUX_SHEET, NODES_SANKEY, NODES_COLOR, NODES_NODE, NODES_DEFINITIONS, NODES_LEVEL, NODE_TYPE,\
-    TER_SHEET, IO_SHEET, \
-    TAG_SHEET, TAG_COLOR, TAG_NAME, TAG_TAGS, TAG_TYPE, TAG_COLORMAP, TAG_IS_PALETTE
 
+# Local modules ---------------------------------------------------------------
 from SankeyExcelParser import format_io
+from SankeyExcelParser.sankey import Sankey
 
 
-def is_hex(s):
-    return re.fullmatch(r"^\# ?[0-9a-fA-F]+$", s or "") is not None
+# Functions -------------------------------------------------------------------
+def parse_excel(sankey: Sankey):
+    """
+    Convert an input to a json format for OpenSankey App
 
+    Parameters
+    ----------
+    :param sankey: sankey struct to convert
+    :type sankey: Sankey
 
-def combine_data_tags(
-    dataTags: dict,
-    depth: int,
-    currentDataTag: dict,
-    combinaison: list,
-    row: list
-):
-    if depth == len(dataTags):
-        for tag in currentDataTag['tags']:
-            row_copy = copy.deepcopy(row)
-            row_copy[depth-1] = tag
-            combinaison.append(row_copy)
-    else:
-        for tag in currentDataTag['tags']:
-            row_copy = copy.deepcopy(row)
-            row_copy[depth-1] = tag
-            combine_data_tags(dataTags, depth+1, list(dataTags.values())[depth], combinaison, row_copy)
-
-
-def set_value(
-    row_data_tags: list,
-    row_flux_tags: list,
-    fluxTags: dict,
-    depth: int,
-    v: dict,
-    value: float,
-    display_value: str
-):
-    v_tags = {}
-    for i, key in enumerate(fluxTags.keys()):
-        tag_value = row_flux_tags[i]
-        if key == 'Type de donnée':
-            key = 'flux_types'
-        if key == 'flux_types':
-            if row_flux_tags[i] == 'Donnée calculée':
-                tag_value = 'computed_data'
-            else:
-                tag_value = 'initial_data'
-        v_tags[key] = tag_value
-    if depth == len(row_data_tags):
-        v['value'] = value
-        v['display_value'] = display_value
-        v['tags'] = v_tags
-        v['extension'] = {}
-    else:
-        data_tag = str(row_data_tags[depth])
-        if data_tag not in v:
-            v[data_tag] = {}
-        set_value(row_data_tags, row_flux_tags, fluxTags, depth+1, v[data_tag], value, display_value)
-
-
-def parse_excel(mfa_input):
-    #  if not NODES_SHEET in mfa_input:
-    #      return
+    Returns
+    -------
+    :return: Data as json format
+    :rtype: dict
+    """
+    # Parse all tags -> data struct
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
-    parse_tags(mfa_input, dataTags, nodeTags, fluxTags)
-    if NODE_TYPE in nodeTags and 'échange' in nodeTags[NODE_TYPE]['tags']:
-        nodeTags[NODE_TYPE]['tags']['échange']['selected'] = 0
+    parse_tags(sankey, dataTags, nodeTags, fluxTags)
+    # Parser all nodes -> data struct
     nodes = {}
-    parse_nodes(mfa_input, nodes, nodeTags)
-    nodes = {node['idNode']: node for node in nodes.values()}
+    parse_nodes(sankey, nodes, nodeTags)
     links = {}
-    parse_links(mfa_input, nodes, dataTags, fluxTags, links)
+    parse_links(sankey, links)
     return {
         'version': '0.8',
 
@@ -97,370 +57,323 @@ def parse_excel(mfa_input):
     }
 
 
-def parse_links(mfa_input, nodes, dataTags, fluxTags, links):
-    #  nb_data_tags = len(dataTags.keys())
-    #  nb_flux_tags = len(fluxTags.keys())
-    sheet_name = DATA_SHEET
-    if RESULTS_SHEET in mfa_input and len(mfa_input[RESULTS_SHEET]) > 1:
-        sheet_name = RESULTS_SHEET
+def parse_tags(
+    sankey: Sankey,
+    dataTags: dict,
+    nodeTags: dict,
+    fluxTags: dict
+):
+    """
+    Extract tags from sankey struct for json data format.
 
-    if NODES_SHEET not in mfa_input:
-        node_index = 0
+    Parameters
+    ----------
+    :param sankey: Input sankey struct
+    :type sankey: Sankey
 
-    nb_links = 0
-    if FLUX_SHEET in mfa_input:
-        for row in range(len(mfa_input[FLUX_SHEET])):
-            source_name = mfa_input[FLUX_SHEET].iat[row, 0]
-            target_name = mfa_input[FLUX_SHEET].iat[row, 1]
-            if NODES_SHEET in mfa_input:
-                source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-                target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-                if len(source_nodes) == 0:
-                    continue
-                if len(target_nodes) == 0:
-                    continue
-                source_node = source_nodes[0]
-                target_node = target_nodes[0]
-            else:
-                source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-                if len(source_nodes) == 0:
-                    source_node = {
-                        'idNode': 'node'+str(node_index),
-                        'name': source_name,
-                        'definition': '',
-                        'display': 1,
-                        'node_visible': 1,
-                        'label_visible': 1,
-                        'shape_visible': 1,
-                        'tags': {}
-                    }
-                    node_index = node_index+1
-                    nodes[source_name] = source_node
-                else:
-                    source_node = source_nodes[0]
-                target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-                if len(target_nodes) == 0:
-                    target_node = {
-                        'idNode': 'node'+str(node_index),
-                        'name': target_name,
-                        'definition': '',
-                        'display': 1,
-                        'node_visible': 1,
-                        'label_visible': 1,
-                        'shape_visible': 1,
-                        'tags': {}
-                    }
-                    node_index = node_index+1
-                    nodes[target_name] = target_node
-                else:
-                    target_node = target_nodes[0]
-            row_data_tags = []
+    :param dataTags: data tags
+    :type dataTags: dict
 
-            combinaison_row = [None] * len(dataTags)
-            combinaison = []
-            if len(dataTags) > 0:
-                combine_data_tags(dataTags, 1, list(dataTags.values())[0], combinaison, combinaison_row)
-            else:
-                combinaison = [[]]
-            for row_data_tags in combinaison:
-                row_flux_tags = []
-                for fluxTag in fluxTags:
-                    if fluxTag == 'flux_types':
-                        fluxTag = DATA_TYPE_LABEL
-                    row_flux_tags.append('')
-                existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
-                                  == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-                val = ''
-                display_val = ''
-                if len(existing_links) > 0:
-                    new_link = existing_links[0]
-                    set_value(row_data_tags, row_flux_tags, fluxTags, 0, new_link['value'], val, display_val)
-                else:
-                    value = {}
-                    set_value(row_data_tags, row_flux_tags, fluxTags, 0, value, val, display_val)
-                    new_link = {
-                        'idLink': 'link'+str(nb_links),
-                        'idSource': source_node['idNode'],
-                        'idTarget': target_node['idNode'],
-                        'value': value,
-                        'dashed': 1
-                    }
-                    nb_links = nb_links+1
-                    links[new_link['idLink']] = new_link
-    if sheet_name not in mfa_input:
-        return
-    columns = mfa_input[sheet_name].columns.tolist()
-    for row in range(len(mfa_input[sheet_name])):
-        source_name = mfa_input[sheet_name].iat[row, columns.index(DATA_ORIGIN)]
-        target_name = mfa_input[sheet_name].iat[row, columns.index(DATA_DESTINATION)]
-        if NODES_SHEET in mfa_input:
-            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-            if len(source_nodes) == 0:
-                continue
-            if len(target_nodes) == 0:
-                continue
-            #  if len(source_nodes) == 0:
-            #      source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name']
-            #               == (source_name + ' - Importations')]
-            #      target_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == target_name]
-            #      if len(source_nodes) == 0 or len(target_nodes) == 0:
-            #          continue
-            #  if len(target_nodes) == 0:
-            #      source_nodes = [nodes[key] for key in nodes.keys() if nodes[key]['name'] == source_name]
-            #      target_nodes = [nodes[key]
-            # for key in nodes.keys() if nodes[key]['name'] == (target_name + ' - Exportations')]
-            #      if len(source_nodes) == 0 or len(target_nodes) == 0:
-            #          continue
+    :param nodeTags: node tags
+    :type nodeTags: dict
 
-            source_node = source_nodes[0]
-            target_node = target_nodes[0]
-        else:
-            source_nodes = [node for node in nodes.values() if node['name'] == source_name]
-            if len(source_nodes) == 0:
-                source_node = {
-                    'idNode': 'node'+str(node_index),
-                    'name': source_name,
-                    'definition': '',
-                    'display': 1,
-                    'node_visible': 1,
-                    'label_visible': 1,
-                    'shape_visible': 1,
-                    'color': '#808080',  # grey
-                    'tags': {}
+    :param fluxTags: flux tags
+    :type fluxTags: dict
+    """
+    # Go trough all tags
+    for tagg_type, taggs in sankey.taggs.items():
+        # Data tags parsing
+        if (tagg_type == CONST_IO_XL.TAG_TYPE_DATA):
+            for tagg in taggs.values():
+                # tags dict
+                tags = {tag.name_unformatted: {
+                    'name': tag.name_unformatted,
+                    'selected': 0,
+                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
+                next(iter(tags.values()))['selected'] = 1  # by default select first tag
+                # tag group dict
+                dataTags[tagg.name_unformatted] = {
+                    'group_name': tagg.name_unformatted,
+                    'show_legend': 0,
+                    'tags': tags,
+                    'banner': 'one',
+                    'activated': 1
                 }
-                node_index = node_index+1
-                nodes[source_node['idNode']] = source_node
-            else:
-                source_node = source_nodes[0]
-            target_nodes = [node for node in nodes.values() if node['name'] == target_name]
-            if len(target_nodes) == 0:
-                target_node = {
-                    'idNode': 'node'+str(node_index),
-                    'name': target_name,
-                    'definition': '',
-                    'display': 1,
-                    'node_visible': 1,
-                    'label_visible': 1,
-                    'shape_visible': 1,
-                    'color': '#808080',  # grey
-                    'tags': {}
+            continue
+        if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) or (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
+            for tagg in taggs.values():
+                # tags dict
+                tags = {tag.name_unformatted: {
+                    'name': tag.name_unformatted,
+                    'selected': 1,
+                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
+                # case level tag
+                if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
+                    for tag in list(tags.values())[1:]:
+                        tag['selected'] = 0
+                # Banner type
+                banner = 'multi'
+                if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
+                    banner = 'none'
+                if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL) or \
+                   (tagg.name_unformatted == 'Primaire'):
+                    banner = 'level'
+                # tag group dict
+                nodeTags[tagg.name_unformatted] = {
+                    'group_name': tagg.name_unformatted,
+                    'show_legend': 0,
+                    'tags': tags,
+                    'banner': banner,
+                    'activated': 1,
+                    'siblings': [
+                        anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
                 }
-                node_index = node_index+1
-                nodes[target_node['idNode']] = target_node
-            else:
-                target_node = target_nodes[0]
-        color = source_node['color']
-        if 'Type de noeud' in source_node['tags'] and 'produit' in source_node['tags']['Type de noeud']:
-            color = source_node['color']
-        elif 'Type de noeud' in target_node['tags'] and 'produit' in target_node['tags']['Type de noeud']:
-            color = target_node['color']
-        if not is_hex(color):
-            try:
-                color = webcolors.name_to_hex(color)
-            except Exception:
-                pass
-        row_data_tags = []
-        for dataTag in dataTags:
-            if dataTag in columns:
-                row_data_tags.append(mfa_input[sheet_name].iat[row, columns.index(dataTag)])
-        row_flux_tags = []
-        for fluxTag in fluxTags:
-            if fluxTag == 'flux_types':
-                fluxTag = DATA_TYPE_LABEL
-            if fluxTag not in columns:
-                # row_flux_tags.append('Donnée collectée')
-                row_flux_tags.append('')
-                continue
-            row_flux_tags.append(mfa_input[sheet_name].iat[row, columns.index(fluxTag)])
+                # Specific case for tag 'échange'
+                if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
+                    if (CONST_IO_XL.NODE_TYPE_EXCHANGE in nodeTags[CONST_IO_XL.NODE_TYPE]['tags']):
+                        nodeTags[CONST_IO_XL.NODE_TYPE]['tags'][CONST_IO_XL.NODE_TYPE_EXCHANGE]['selected'] = 0
+            continue
+        if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX):
+            for tagg in taggs.values():
+                # tags dict
+                tags = {tag.name_unformatted: {
+                    'name': tag.name_unformatted,
+                    'selected': 1,
+                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
+                # Specific tags for reconcillation
+                # TODO remove ?
+                tagg_name = tagg.name_unformatted
+                if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                    tagg_name = 'flux_types'
+                    tags['initial_data'] = tags.pop(CONST_IO_XL.DATA_COLLECTED)
+                    tags['computed_data'] = tags.pop(CONST_IO_XL.DATA_COMPUTED)
+                # tag group dict
+                fluxTags[tagg_name] = {
+                    'group_name': tagg.name_unformatted,
+                    'show_legend': 0,
+                    'tags': tags,
+                    'banner': 'multi',
+                    'activated': 1
+                }
 
-        existing_links = [links[key] for key in links.keys() if nodes[links[key]['idSource']]['name']
-                          == source_name and nodes[links[key]['idTarget']]['name'] == target_name]
-        if DATA_VALUE in columns:
-            val = mfa_input[sheet_name].iat[row, columns.index(DATA_VALUE)]
-            if val is None:
-                val = ''
-            else:
-                val = float(val)
-        else:
-            val = ''
-        display_val = ''
-        is_existing_link = len(existing_links) > 0
-        if is_existing_link:
-            existing_link = existing_links[0]
-            existing_v = existing_link['value']
 
-            for row_data_tag in row_data_tags:
-                if row_data_tag not in existing_v:
-                    break
-                else:
-                    existing_v = existing_v[row_data_tag]
-            if 'tags' in existing_v:
-                for i, row_flux_tag in enumerate(row_flux_tags):
-                    if row_flux_tag == 'Donnée calculée' or row_flux_tag == 'Donnée collectée':
-                        continue
-                    if row_flux_tag != existing_v['tags'][list(fluxTags.keys())[i]]\
-                            and existing_v['tags'][list(fluxTags.keys())[i]] != '':
-                        is_existing_link = False
+def parse_links(
+    sankey: Sankey,
+    links: dict
+):
+    """
+    Extract links from sankey struct for json data format.
 
-        if is_existing_link:
-            if val != '':
-                existing_link['dashed'] = 0
-            set_value(row_data_tags, row_flux_tags, fluxTags, 0, existing_link['value'], val, display_val)
-        else:
-            value = {}
-            set_value(row_data_tags, row_flux_tags, fluxTags, 0, value, val, display_val)
-            dashed = 1
-            if val != '':
-                dashed = 0
-            new_link = {
-                'idLink': 'link'+str(nb_links),
-                'idSource': source_node['idNode'],
-                'idTarget': target_node['idNode'],
-                'value': value,
-                'color': color,
-                'dashed': dashed
+    Parameters
+    ----------
+    :param sankey: Input sankey object
+    :type sankey: Sankey
+
+    :param links: links data struct
+    :type links: dict (modified)
+    """
+    # First create default datas struct
+    default_data_strct = {
+        "value": "",
+        "display_value": "",
+        "tags": {},
+        "extension": {}
+    }
+    # Add flux tag groups to default data structure
+    for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
+        # Replace specific names
+        tagg_name = tagg.name_unformatted
+        if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+            tagg_name = "flux_types"
+        # Update fluxtags struct
+        default_data_strct['tags'][tagg_name] = None  # tag_name
+    # Go trough all tags
+    for flux in sankey.flux.values():
+        # Boolean that memorized if flux have at least one value
+        has_data = False
+        # Initilialize datas struct
+        datas_strct = copy.deepcopy(default_data_strct)
+        for tagg in reversed(sankey.taggs[CONST_IO_XL.TAG_TYPE_DATA].values()):
+            next_datas_strct = {}
+            for tag in tagg.tags.values():
+                next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_strct)
+            datas_strct = next_datas_strct
+        # We use result data if present instead of simple data
+        if flux.has_result():
+            for result in flux.results:
+                has_data |= result.value is not None
+                parse_data(
+                    sankey,
+                    result,
+                    default_data_strct,
+                    datas_strct)
+        elif flux.has_data():
+            for data in flux.datas:
+                has_data |= data.value is not None
+                parse_data(
+                    sankey,
+                    data,
+                    default_data_strct,
+                    datas_strct)
+        # Color of link : default = color of source node
+        color = flux.orig.color_in_hex
+        if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
+            color = flux.dest.color_in_hex
+        # Then create link struct
+        links[flux.id] = {
+            'idLink': flux.id,
+            'idSource': flux.orig.id,
+            'idTarget': flux.dest.id,
+            'value': datas_strct,
+            'color': color,
+            'dashed': 0 if has_data else 1
+        }
+
+
+def parse_data(
+    sankey: Sankey,
+    data,
+    default_data_strct: dict,
+    datas_strct: dict
+):
+    """
+    Extract datas from link struct for json data format.
+
+    Parameters
+    ----------
+    :param data: Input data object
+    :type data: Data
+
+    :param default_data_strct: Default data json struct
+    :type default_data_strct: dict
+
+    :param datas_strct: Output json struct that contains all datas
+    :type datas_strct: dict (modified)
+    """
+    # Reccurent function specific to this function
+    def add_data_to_datas(tags, datas_strct, data_strct):
+        # Check if we reached the last data tag
+        if len(tags) == 0:
+            datas_strct.update(data_strct)
+            return
+        # Otherwise we have a reccurence
+        for tag in tags:
+            if tag.name_unformatted in datas_strct.keys():
+                tags.remove(tag)
+                add_data_to_datas(
+                    tags,
+                    datas_strct[tag.name_unformatted],
+                    data_strct)
+                return
+        # TODO : Mettre gestion erreur aucun tag trouvé ?
+    # Create data structure
+    data_strct = copy.deepcopy(default_data_strct)
+    data_strct['value'] = data.value if (data.value is not None) else ''
+    data_strct['display_value'] = ''
+    # Update flux tags to data structure
+    for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
+        # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
+        tags = data.get_tags_from_taggroup(tagg)
+        if tags is not None:
+            # Replace specific names for tags and tagggroup
+            tagg_name = tagg.name_unformatted
+            tag_name = tags[0].name_unformatted
+            if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                tagg_name = "flux_types"
+                tag_name = tag_name \
+                    .replace(CONST_IO_XL.DATA_COLLECTED, "initial_data") \
+                    .replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
+            # Update fluxtags struct
+            data_strct['tags'][tagg_name] = tag_name
+    # Reference data struct from data tags
+    tags = [tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
+    add_data_to_datas(tags, datas_strct, data_strct)
+
+
+def parse_nodes(
+    sankey: Sankey,
+    nodes: dict,
+    nodeTags
+):
+    """
+    Extract nodes from sankey object for json data format.
+
+    Parameters
+    ----------
+    :param sankey: Input sankey object
+    :type sankey: Sankey
+
+    :param nodes: nodes json struct
+    :type nodes: dict (modified)
+
+    :param nodeTags: node tags json struct - Updated if necessary
+    :type nodeTags: dict (modified)
+    """
+    # Create nodes struct
+    for node in sankey.nodes.values():
+        # Create node struct
+        new_node = {
+            'idNode': node.id,
+            'name': node.name,
+            'definition': node.definition,
+            'display': 1,
+            'node_visible': 1,
+            'label_visible': 1,
+            'shape_visible': 1,
+            'color': node.color_in_hex,
+            'tags': {},
+            'dimensions': {
+                'Primaire': {}
             }
-            nb_links = nb_links+1
-            links[new_link['idLink']] = new_link
-
-
-def parse_nodes(mfa_input, nodes, nodeTags):
-    #  current_parent_level = 1
-    #  previous_level = 1
-    if NODES_SHEET not in mfa_input:
-        return
-    nodes_cols = mfa_input[NODES_SHEET].columns.tolist()
-    nodes_sheet = mfa_input[NODES_SHEET]
-    has_sankey_col = NODES_SANKEY in nodes_cols and nodes_sheet[NODES_SANKEY].unique().shape[0] > 1
-
-    node_index = 0
-    for i in range(len(mfa_input[NODES_SHEET])):
-        if NODES_SANKEY in nodes_cols:
-            sankey_visible = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_SANKEY)]
-            if sankey_visible == 0:
-                continue
-
-        name = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_NODE)].strip()
-        if name not in nodes:
-            if not has_sankey_col or mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_SANKEY)] == 1:
-                #  if sankey column is present and value is 1 node is displayed
-                node_visible = 1
-            else:
-                node_visible = 0
-            color = '#808080'  # grey
-            if NODES_COLOR in nodes_cols:
-                color = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_COLOR)]
-                if color is None or type(color) != str and math.isnan(color) or color == '':
-                    color = '#808080'  # grey
-                if not is_hex(color):
-                    try:
-                        color = webcolors.name_to_hex(color)
-                    except Exception:
-                        pass
-            node_definition = None
-            if NODES_DEFINITIONS in nodes_cols and\
-                    type(mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_DEFINITIONS)]) == str:
-                node_definition = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_DEFINITIONS)]
-            new_node = {
-                'idNode': 'node'+str(node_index),
-                'name': name,
-                'definition': node_definition,
-                'display': node_visible,
-                'node_visible': node_visible,
-                'label_visible': 1,
-                'shape_visible': 1,
-                'color': color,
-                'tags': {}
-            }
-            node_index = node_index+1
-            nodes[name] = new_node
+        }
+        nodes[node.id] = new_node
+        # Update tags
+        for tag in node.tags:
+            tag_group_name = tag.group.name_unformatted
+            # Create group entry if not already the case
+            if tag_group_name not in new_node['tags'].keys():
+                new_node['tags'][tag_group_name] = []
+            # Add the tag
+            new_node['tags'][tag_group_name].append(tag.name_unformatted)
+            new_node['tags'][tag_group_name].sort()
+        # Parents relations -> TODO duplicate node for each parent
+        if (node.has_parents()):
+            new_node['dimensions']['Primaire']['parent_name'] = node.parents[0].id
+        # Child relations
+        if (node.has_at_least_one_child()):
+            # The node has children : Primary tag is only the node's level
+            new_node['tags']['Primaire'] = [str(node.level)]
         else:
-            new_node = nodes[name]
-
-        for _, node_tag_name in enumerate(nodeTags.keys()):
-            try:
-                tag_value = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(node_tag_name)]
-            except Exception:
-                continue
-            if tag_value is None or tag_value == '':
-                continue
-            if type(tag_value) != str and math.isnan(tag_value):
-                continue
-
-            try:
-                tag_value = float(tag_value)
-                tag_value = str(int(tag_value))
-            except Exception:
-                pass
-            if node_tag_name not in new_node['tags']:
-                new_node['tags'][node_tag_name] = []
-            new_node['tags'][node_tag_name] = new_node['tags'][node_tag_name] + tag_value.split(':')
-            new_node['tags'][node_tag_name] = list(set(new_node['tags'][node_tag_name]))
-            new_node['tags'][node_tag_name].sort()
-
-        level = mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]
-        if 'dimensions' not in new_node:
-            new_node['dimensions'] = {}
-        levelTags = [tags for tags in nodeTags.keys() if nodeTags[tags]['banner'] == 'level']
-        # if len(levelTags) == 0:
-        new_node['dimensions']['Primaire'] = {}
-        # new_node['dimensions']['Primaire']['level'] = int(level)
-        new_node['tags']['Primaire'] = [str(int(level))]
-        if i != len(mfa_input[NODES_SHEET])-1 and mfa_input[NODES_SHEET].iat[i+1, nodes_cols.index(NODES_LEVEL)] <=\
-                mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]:
-            new_node['tags']['set_level'] = True
-        elif level == 1 and i == len(mfa_input[NODES_SHEET])-1:
-            new_node['tags']['set_level'] = True
-        if level == 1:
-            for dim in levelTags:
-                group_name = dim
-                if mfa_input[NODES_SHEET].iat[i, nodes_cols.index(group_name)] !=\
-                        '' and group_name not in new_node['dimensions']:
-                    new_node['dimensions'][group_name] = {}
-        else:
-            j = i
-            found = False
-            while not found:
-                j = j-1
-                if mfa_input[NODES_SHEET].iat[j, nodes_cols.index(NODES_LEVEL)] <\
-                        mfa_input[NODES_SHEET].iat[i, nodes_cols.index(NODES_LEVEL)]:
-                    parent_name = mfa_input[NODES_SHEET].iat[j, nodes_cols.index(NODES_NODE)].strip()
-                    if parent_name in nodes:
-                        # if len(levelTags) == 0:
-                        new_node['dimensions']['Primaire']['parent_name'] = nodes[parent_name]['idNode']
-                        for dim in levelTags:
-                            group_name = dim
-                            node_tags = new_node['tags']
-                            parent_tags = nodes[parent_name]['tags']
-                            if group_name not in parent_tags or group_name not in node_tags:
-                                continue
-                            keys_dict = {}
-                            for idx, v in enumerate(nodeTags[dim]['tags']):
-                                keys_dict[v] = idx+1
-                            if parent_tags[group_name][0] in keys_dict and node_tags[group_name][0] in keys_dict and\
-                                    keys_dict[parent_tags[group_name][0]] == keys_dict[node_tags[group_name][0]]-1:
-                                if group_name not in new_node['dimensions']:
-                                    new_node['dimensions'][group_name] = {}
-                                new_node['dimensions'][group_name]['parent_name'] = nodes[parent_name]['idNode']
-                                found = True
-                                break
-                if mfa_input[NODES_SHEET].iat[j, nodes_cols.index(NODES_LEVEL)] == 1:
-                    break
-    # if len(levelTags) == 0:
-    max_level = 0
-    for node in nodes.values():
-        if int(node['tags']['Primaire'][0]) > max_level:
-            max_level = int(node['tags']['Primaire'][0])
-    for node in nodes.values():
-        try:
-            if 'set_level' in node['tags'] and node['tags']['set_level']:
-                node['tags']['Primaire'] =\
-                    [str(lev) for lev in list(range(int(node['tags']['Primaire'][0]), max_level+1))]
-                del node['tags']['set_level']
-        except Exception:
-            pass
-    if max_level > 1:
+            # The node does not have child : Primary tags are all level
+            # starting from the nod's level
+            new_node['tags']['Primaire'] = \
+                [str(_) for _ in range(node.level, sankey.max_nodes_level+1)]
+        # Level tag parent relations
+        for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
+            # Check all current node level tags groups
+            if tagg in node.taggs:
+                new_node['dimensions'][tagg.name_unformatted] = {}
+                # For each node level tag group, get associated tags
+                tags = node.get_tags_from_taggroup(tagg)
+                if tags is not None:
+                    tag = tags[0]
+                    upper_tag = tagg.get_tag_from_name(
+                        str(int(tag.name) - 1),
+                        include_anti_tags=False)
+                    if upper_tag is not None:
+                        parent_nodes_for_leveltagg = upper_tag.references
+                        if len(parent_nodes_for_leveltagg) > 0:
+                            # Try to check parenthood consistency
+                            for parent_node_primary in node.parents:
+                                if parent_node_primary in parent_nodes_for_leveltagg:
+                                    new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
+                                        parent_node_primary.id
+                            # Otherwise we take the first parent node
+                            if 'parent_name' not in new_node['dimensions'][tagg.name_unformatted]:
+                                new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
+                                    parent_nodes_for_leveltagg[0].id
+    # Create primary level tag if necessary
+    if (sankey.max_nodes_level > 1):
         nodeTags['Primaire'] = {
             'group_name': 'Primaire',
             'show_legend': 0,
@@ -468,122 +381,12 @@ def parse_nodes(mfa_input, nodes, nodeTags):
             'banner': 'level',
             'activated': 1
         }
-        for tag in range(1, max_level+1):
-            selected = False
-            if tag == 1:
-                selected = True
+        for tag in range(1, sankey.max_nodes_level+1):
             nodeTags['Primaire']['tags'][str(tag)] = {
                 'name': str(tag),
-                'selected': selected,
+                'selected': (True if (tag == 1) else False),
                 'color': ''
             }
-
-
-def parse_tags(mfa_input, dataTags, nodeTags, fluxTags):
-    if TAG_SHEET in mfa_input and len(mfa_input[TAG_SHEET]) != 0:
-        for i in range(len(mfa_input[TAG_SHEET])):
-            if mfa_input[TAG_SHEET].iat[i, 1] == 'dataTags':
-                tmp = mfa_input[TAG_SHEET].iat[i, 2].split(':')
-                tmp = [s.strip() for s in tmp]
-                try:
-                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET].iat[i, 5].split(':')]
-                except Exception:
-                    color_tmp = ['']
-                tags = {s: {'name': s, 'selected': 0, 'color': ''} for i, s in enumerate(tmp)}
-                tags[tmp[0]]['selected'] = 1
-                if color_tmp[0] != '':
-                    for j, tag_key in enumerate(tags.keys()):
-                        color = color_tmp[j]
-                        if not is_hex(color):
-                            color = webcolors.name_to_hex(color)
-                        tags[tag_key]['color'] = color
-                dataTags[mfa_input[TAG_SHEET].iat[i, 0]] = {
-                    'group_name': mfa_input[TAG_SHEET].iat[i, 0],
-                    'show_legend': 0,
-                    'tags': tags,
-                    'banner': 'one',
-                    'activated': 1
-                }
-            elif mfa_input[TAG_SHEET].iat[i, 1] == 'nodeTags' or mfa_input[TAG_SHEET].iat[i, 1] == 'levelTags':
-                if mfa_input[TAG_SHEET].iat[i, 0] == 'Dimensions':
-                    continue
-                tag_group_names = mfa_input[TAG_SHEET].iat[i, 0].split('/')
-                tag_names = mfa_input[TAG_SHEET].iat[i, 2].split('/')
-                try:
-                    colors = mfa_input[TAG_SHEET].iat[i, 5].split('/')
-                except Exception:
-                    colors = ['']
-                for j, tag_group_name in enumerate(tag_group_names):
-                    tmp2 = tag_names[j].split(':')
-                    tmp2 = [s.strip() for s in tmp2]
-                    try:
-                        color_tmp = [s.strip() for s in colors[j].split(':')]
-                        if len(color_tmp) != len(tmp2):
-                            color_tmp = ['']
-                    except Exception:
-                        color_tmp = ['']
-                    selected = 1
-                    if mfa_input[TAG_SHEET].iat[i, 1] == 'levelTags':
-                        selected = 0
-                    tags = {s: {'name': s, 'selected': selected, 'color': ''} for i, s in enumerate(tmp2)}
-                    if mfa_input[TAG_SHEET].iat[i, 1] == 'levelTags':
-                        first_key = list(tags.keys())[0]
-                        tags[first_key]['selected'] = 1
-                    if color_tmp[0] != '':
-                        for k, tag_key in enumerate(tags.keys()):
-                            color = color_tmp[k]
-                            if not is_hex(color):
-                                color = webcolors.name_to_hex(color)
-                            tags[tag_key]['color'] = color
-                    banner = 'multi'
-                    if tag_group_name == NODE_TYPE:
-                        banner = 'none'
-                    if mfa_input[TAG_SHEET].iat[i, 1] == 'levelTags':
-                        banner = 'level'
-                    if tag_group_name == 'Primaire':
-                        banner = 'level'
-                    activated = 0
-                    if j == 0:
-                        activated = 1
-                    if tag_group_name in nodeTags:
-                        nodeTags[tag_group_name]['siblings'] += [n for n in tag_group_names if n != tag_group_name]
-                    else:
-                        nodeTags[tag_group_name] = {
-                            'group_name': tag_group_name,
-                            'show_legend': 0,
-                            'tags': tags,
-                            'banner': banner,
-                            'activated': activated,
-                            'siblings': [n for n in tag_group_names if n != tag_group_name]
-                        }
-            elif mfa_input[TAG_SHEET].iat[i, 1] == 'fluxTags':
-                tmp = mfa_input[TAG_SHEET].iat[i, 2].split(':')
-                tmp = [s.strip() for s in tmp]
-                try:
-                    color_tmp = [s.strip() for s in mfa_input[TAG_SHEET].iat[i, 5].split(':')]
-                except Exception:
-                    color_tmp = ['']
-                tags = {s: {'name': s, 'selected': 1, 'color': ''} for i, s in enumerate(tmp)}
-                if color_tmp[0] != '':
-                    for j, tag_key in enumerate(tags.keys()):
-                        color = color_tmp[j]
-                        if not is_hex(color):
-                            color = webcolors.name_to_hex(color)
-                        tags[tag_key]['color'] = color
-                key = mfa_input[TAG_SHEET].iat[i, 0]
-                banner = 'multi'
-                if key == 'Type de donnée':
-                    key = 'flux_types'
-                    tags['initial_data'] = tags.pop('Donnée collectée')
-                    tags['computed_data'] = tags.pop('Donnée calculée')
-                    banner = 'multi'
-                fluxTags[key] = {
-                    'group_name': mfa_input[TAG_SHEET].iat[i, 0],
-                    'show_legend': 0,
-                    'tags': tags,
-                    'banner': banner,
-                    'activated': 1
-                }
 
 
 def save_excel(
@@ -605,7 +408,7 @@ def save_excel(
     mfa_output, nodes_names
         TODO description
     '''
-    nodes_cols = [NODES_LEVEL, NODES_NODE]
+    nodes_cols = [CONST_IO_XL.NODES_LEVEL, CONST_IO_XL.NODES_NODE]
     #  tag_names are disposed between the column Dimensions and the column Définition
     tag_key_names = list(sankey_data['dataTags']) + list(sankey_data['nodeTags']) + list(sankey_data['fluxTags'])
 
@@ -613,7 +416,13 @@ def save_excel(
     tags_sheet = []
     if len(tag_key_names) != 0:
         tags_sheet = [[""] * 6] * (len(tag_key_names)+1)
-        tags_sheet[0] = [TAG_NAME, TAG_TYPE, TAG_TAGS, TAG_IS_PALETTE, TAG_COLORMAP, TAG_COLOR]
+        tags_sheet[0] = [
+            CONST_IO_XL.TAG_NAME,
+            CONST_IO_XL.TAG_TYPE,
+            CONST_IO_XL.TAG_TAGS,
+            CONST_IO_XL.TAG_IS_PALETTE,
+            CONST_IO_XL.TAG_COLORMAP,
+            CONST_IO_XL.TAG_COLOR]
 
     row = 1
     skip = False
@@ -648,19 +457,19 @@ def save_excel(
     # nodes = [ [""] * nb_cols_nodes for i in range(len(sankey_data['nodes'].keys())+1) ]
     nodeTags_group_names = [tags_group['group_name'] for tags_group in sankey_data['nodeTags'].values()]
     nb_cols_nodes = len(nodes_cols) + len(nodeTags_group_names)
-    nodes.append([NODES_LEVEL, NODES_NODE]+nodeTags_group_names)
+    nodes.append([CONST_IO_XL.NODES_LEVEL, CONST_IO_XL.NODES_NODE]+nodeTags_group_names)
     has_dimensions =\
         len([node for node in sankey_data['nodes'].values() if len(node['dimensions'].keys())]) > 0 and has_level
     for row, node in enumerate(sankey_data['nodes'].values()):
         if 'tooltip_text' in node and node['tooltip_text'] is not None and node['tooltip_text'] != '':
             nb_cols_nodes = nb_cols_nodes+1
-            nodes[0].append(NODES_DEFINITIONS)
+            nodes[0].append(CONST_IO_XL.NODES_DEFINITIONS)
             break
     if not has_dimensions:
         for row, node in enumerate(sankey_data['nodes'].values()):
             nodes.append([""] * nb_cols_nodes)
-            nodes[row+1][nodes_cols.index(NODES_LEVEL)] = 1
-            nodes[row+1][nodes_cols.index(NODES_NODE)] = node['name']
+            nodes[row+1][nodes_cols.index(CONST_IO_XL.NODES_LEVEL)] = 1
+            nodes[row+1][nodes_cols.index(CONST_IO_XL.NODES_NODE)] = node['name']
             if 'tooltip_text' in node and node['tooltip_text'] is not None and node['tooltip_text'] != '':
                 nodes[row+1][nb_cols_nodes-1] = node['tooltip_text']
             col_num = 0
@@ -688,8 +497,8 @@ def save_excel(
                 if skip:
                     continue
                 dim_nodes.append([""] * nb_cols_nodes)
-                dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
-                dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                dim_nodes[row][nodes_cols.index(CONST_IO_XL.NODES_LEVEL)] = 1
+                dim_nodes[row][nodes_cols.index(CONST_IO_XL.NODES_NODE)] = node['name']
                 if 'tooltip_text' in node and node['tooltip_text'] is not None:
                     dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
                 col_num = 0
@@ -700,7 +509,7 @@ def save_excel(
                             [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
                         dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                     col_num = col_num+1
-                # dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = 1
+                # dim_nodes[row][nodes_cols.index(CONST_IO_XL.NODES_LEVEL)] = 1
                 row = row+1
             for i, node in enumerate(sankey_data['nodes'].values()):
                 if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
@@ -713,8 +522,9 @@ def save_excel(
                     parent_name = parent_names[0]
                 else:
                     continue
-                parent_rows =\
-                    [j for j in range(len(dim_nodes)) if dim_nodes[j][nodes_cols.index(NODES_NODE)] == parent_name]
+                parent_rows = [
+                    j for j in range(len(dim_nodes))
+                    if dim_nodes[j][nodes_cols.index(CONST_IO_XL.NODES_NODE)] == parent_name]
                 if len(parent_rows) == 0:
                     continue
                 parent_row = parent_rows[0]
@@ -722,8 +532,8 @@ def save_excel(
                     continue
                 dim_nodes.insert(parent_row+1, [""] * nb_cols_nodes)
                 row = parent_row+1
-                dim_nodes[row][nodes_cols.index(NODES_LEVEL)] = dim_nodes[parent_row][0]+1
-                dim_nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                dim_nodes[row][nodes_cols.index(CONST_IO_XL.NODES_LEVEL)] = dim_nodes[parent_row][0]+1
+                dim_nodes[row][nodes_cols.index(CONST_IO_XL.NODES_NODE)] = node['name']
                 if 'tooltip_text' in node and node['tooltip_text'] is not None:
                     dim_nodes[row][nb_cols_nodes-1] = node['tooltip_text']
                 col_num = 0
@@ -733,8 +543,9 @@ def save_excel(
                     tags = sankey_data['nodeTags'][tag_name]['tags']
                     if tag_name in node['tags']:
                         try:
-                            tags_names = \
-                                [tags[node_tag]['name'] for node_tag in node['tags'][tag_name] if node_tag in tags]
+                            tags_names = [
+                                tags[node_tag]['name'] for node_tag in node['tags'][tag_name]
+                                if node_tag in tags]
                             dim_nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                         except Exception:
                             print('tutu')
@@ -743,17 +554,21 @@ def save_excel(
         for i, node in enumerate(sankey_data['nodes'].values()):
             for i in range(len(levelTags)):
                 levelTag = levelTags[i]
-                if levelTag in node['dimensions'] and 'parent_name' in node['dimensions'][levelTag]:
+                if (levelTag in node['dimensions']) and \
+                   ('parent_name' in node['dimensions'][levelTag]):
                     # level = node['dimensions'][levelTag]['level']
                     parent_id = node['dimensions'][levelTag]['parent_name']
-                    parent_names =\
-                        [node['name'] for node in sankey_data['nodes'].values() if node['idNode'] == parent_id]
+                    parent_names = [
+                        node['name'] for node in sankey_data['nodes'].values()
+                        if node['idNode'] == parent_id]
                     if len(parent_names) == 0:
                         continue
                     parent_name = parent_names[0]
                 else:
                     continue
-                parent_rows = [k for k in range(len(nodes)) if nodes[k][nodes_cols.index(NODES_NODE)] == parent_name]
+                parent_rows = [
+                    k for k in range(len(nodes))
+                    if nodes[k][nodes_cols.index(CONST_IO_XL.NODES_NODE)] == parent_name]
                 if len(parent_rows) == 0:
                     continue
                 parent_row = parent_rows[0]
@@ -763,8 +578,8 @@ def save_excel(
                 #      continue
                 nodes.insert(parent_row+1, [""] * nb_cols_nodes)
                 row = parent_row+1
-                nodes[row][nodes_cols.index(NODES_LEVEL)] = nodes[parent_row][0]+1
-                nodes[row][nodes_cols.index(NODES_NODE)] = node['name']
+                nodes[row][nodes_cols.index(CONST_IO_XL.NODES_LEVEL)] = nodes[parent_row][0]+1
+                nodes[row][nodes_cols.index(CONST_IO_XL.NODES_NODE)] = node['name']
                 if 'definition' in node:
                     nodes[row][nb_cols_nodes-1] = node['definition']
                 col_num = 0
@@ -776,7 +591,7 @@ def save_excel(
                         nodes[row][len(nodes_cols)+col_num] = (':').join(tags_names)
                     col_num = col_num+1
     flux_cols = [
-        DATA_ORIGIN, DATA_DESTINATION, DATA_VALUE
+        CONST_IO_XL.DATA_ORIGIN, CONST_IO_XL.DATA_DESTINATION, CONST_IO_XL.DATA_VALUE
     ]
 
     nb_cols_nodes = 3 + len(sankey_data['dataTags'].keys()) + len(sankey_data['fluxTags'].keys())
@@ -809,7 +624,7 @@ def save_excel(
     # param_sheet = pd.DataFrame([[VERSION_LABEL,0.8,VERSION_DOC]],columns=[PARAM_NAME,PARAM_VALUE,PARAM_DESC])
     nodes_names = list(OrderedDict.fromkeys([node[1] for node in nodes[1:]]))
     node_tag_keys = list(sankey_data['nodeTags'])
-    if NODE_TYPE in node_tag_keys:
+    if CONST_IO_XL.NODE_TYPE in node_tag_keys:
         mfa_output = {
             'nodes': pd.DataFrame(nodes[1:], columns=nodes[0])
         }
@@ -817,8 +632,8 @@ def save_excel(
         s_names2s_idx = {e: i for i, e in enumerate(sectors_names)}
         p_names2p_idx = {e: i for i, e in enumerate(products_names)}
         for row in range(1, len(links)):
-            origin = links[row][flux_cols.index(DATA_ORIGIN)]
-            destination = links[row][flux_cols.index(DATA_DESTINATION)]
+            origin = links[row][flux_cols.index(CONST_IO_XL.DATA_ORIGIN)]
+            destination = links[row][flux_cols.index(CONST_IO_XL.DATA_DESTINATION)]
             if origin in sectors_names:
                 sector_name = origin
                 product_name = destination
@@ -834,10 +649,10 @@ def save_excel(
             except Exception as excpt:
                 print('exception 1: '+str(excpt))
         mfa_output = {
-            TAG_SHEET: pd.DataFrame(tags_sheet[1:], columns=tags_sheet[0]),
-            NODES_SHEET: pd.DataFrame(nodes[1:], columns=nodes[0]),
-            DATA_SHEET: pd.DataFrame(links[1:], columns=links[0]),
-            TER_SHEET: ter
+            CONST_IO_XL.TAG_SHEET: pd.DataFrame(tags_sheet[1:], columns=tags_sheet[0]),
+            CONST_IO_XL.NODES_SHEET: pd.DataFrame(nodes[1:], columns=nodes[0]),
+            CONST_IO_XL.DATA_SHEET: pd.DataFrame(links[1:], columns=links[0]),
+            CONST_IO_XL.TER_SHEET: ter
         }
     else:
         io_table = [[None for x in range(len(nodes_names) + 1)] for y in range(len(nodes_names) + 1)]
@@ -860,13 +675,14 @@ def save_excel(
         io_table = np.array(io_table)
         mfa_output = {}
         if len(tags_sheet) > 0:
-            mfa_output[TAG_SHEET] = pd.DataFrame(tags_sheet[1:], columns=tags_sheet[0])
+            mfa_output[CONST_IO_XL.TAG_SHEET] = pd.DataFrame(tags_sheet[1:], columns=tags_sheet[0])
         if len(nodes) > 0:
-            mfa_output[NODES_SHEET] = pd.DataFrame(nodes[1:], columns=nodes[0])
+            mfa_output[CONST_IO_XL.NODES_SHEET] = pd.DataFrame(nodes[1:], columns=nodes[0])
         if len(links) > 0:
-            mfa_output[DATA_SHEET] = pd.DataFrame(links[1:], columns=links[0])
+            mfa_output[CONST_IO_XL.DATA_SHEET] = pd.DataFrame(links[1:], columns=links[0])
         if len(io_table) > 0:
-            mfa_output[IO_SHEET] = pd.DataFrame(data=io_table[1:, 1:], index=io_table[1:, 0], columns=io_table[0, 1:])
+            mfa_output[CONST_IO_XL.IO_SHEET] = \
+                pd.DataFrame(data=io_table[1:, 1:], index=io_table[1:, 0], columns=io_table[0, 1:])
 
     return mfa_output, nodes_names
 
@@ -874,10 +690,10 @@ def save_excel(
 def add_links(sankey_data, flux_cols, links, row, link, val, depth):
     if len(sankey_data['dataTags'].keys()) == depth:
         # display_val = val['display_value']
-        links[row][flux_cols.index(DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
-        links[row][flux_cols.index(DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
+        links[row][flux_cols.index(CONST_IO_XL.DATA_ORIGIN)] = sankey_data['nodes'][link['idSource']]['name']
+        links[row][flux_cols.index(CONST_IO_XL.DATA_DESTINATION)] = sankey_data['nodes'][link['idTarget']]['name']
         if val['value'] != '':
-            links[row][flux_cols.index(DATA_VALUE)] = float(val['value'])
+            links[row][flux_cols.index(CONST_IO_XL.DATA_VALUE)] = float(val['value'])
         for i, flux_tag_key in enumerate(sankey_data['fluxTags'].keys()):
             if flux_tag_key in val['tags']:
                 try:
