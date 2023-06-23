@@ -1937,7 +1937,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
   >
-    <Button size='sm' variant={'outline-primary'} disabled={!connected}
+    <Button size='sm' variant='light' disabled={!connected}
       onClick={() => {
         const ev = document
         const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
@@ -1958,7 +1958,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
   >
-    <Button size='sm' disabled={!connected} variant={'outline-info'}
+    <Button size='sm' disabled={!connected} variant='light'
       onClick={() => {
         const ev = document
         const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
@@ -1980,7 +1980,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       delay={500}
       overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
     >
-      <Button size='sm' variant= 'outline-secondary' onClick={() => {
+      <Button size='sm' variant= 'light' onClick={() => {
         const ev = document
         const tmp = { key: 'F7' }
         if (ev.onkeydown) {
@@ -2003,7 +2003,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       delay={500}
       overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
     >
-      <Button size='sm' variant={'outline-success'}
+      <Button size='sm' variant={'light'}
         disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
         onClick={() => {
           const ev = document
@@ -2023,7 +2023,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       delay={500}
       overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
     >
-      <Button size='sm' variant={'outline-success'}
+      <Button size='sm' variant={'light'}
         disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
         onClick={() => {
           const ev = document
