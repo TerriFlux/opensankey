@@ -1058,6 +1058,8 @@ textarea {
 .MenuNavigation.container .col-lg-auto{
 	padding: 0px;
 }
+
+/* General style of col and button in the subnav */
 .MenuNavigation.container .subMenu .col{
 	margin-right: 0px;
 	margin-left: 0px;
@@ -1066,7 +1068,6 @@ textarea {
 	width: 35px;
 	max-height: 24px;
 }
-
 .MenuNavigation.container .subMenu{
 	height: 46px;
 }
@@ -1079,13 +1080,14 @@ textarea {
 .MenuNavigation.container .subMenu .form-select{
 	border-radius: 0px;
 }
-
+.MenuNavigation.container .subMenu>button{
+	border: 0px;
+}
 .MenuNavigation.container .subMenu .dropend .btn{
 	margin-right: 0px;
 	margin-left: 0px;
 	padding-left: 0px;
 	padding-right: 0px;
-	/* width: 45px; */
 	height: 45px;
 }
 .MenuNavigation.container .subMenu .buttonSubNav.dropend{
@@ -1095,6 +1097,7 @@ textarea {
 	padding-right: 0px;
 	width: 55px;
 }
+/* Position of dropdown arrow */
 .MenuNavigation.container .subMenu .buttonSubNav.dropend .dropdown-toggle::after{
 	position: absolute;
 	top: 15px;
@@ -1102,4 +1105,39 @@ textarea {
 }
 .MenuNavigation.container .subMenu .buttonSubNav.dropend.textIcon{
 	font-size: 10px;
+}
+/* Width afm subnav button */
+.MenuNavigation.container .subMenu.afm .col{
+	width: 100px;
+}
+/* Button dropdown reconciliation */
+.MenuNavigation.container .subMenu.afm #reconciliation svg{
+	padding-left: 20px;
+}
+.MenuNavigation.container .subMenu .buttonSubNav.dropend#reconciliation .dropdown-toggle::after{
+	position: absolute;
+	top: 15px;
+	left: 55px;
+}
+
+/* Button toolbar */
+.sideBar{
+	width:40px;
+	height:120px;
+ 	position:fixed;
+	z-index:100;
+}
+.sideBar .btn .col{ 
+	margin: 0px;
+	padding: 0px;
+	width: 35px;
+	max-height: 24px;
+}
+.sideBar .openMenu {
+	position: relative;
+	top:25px
+}
+.sideBar .openMenu svg{
+	margin-top: 25px;
+	margin-bottom: 25px;
 }
