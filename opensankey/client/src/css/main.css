@@ -222,6 +222,7 @@ h1 small,h2 small,h3 small,h4 small,h5 small,h6 small{margin-left:12px;font-size
 .col {
 	margin-left : 10px;
 	margin-right : 10px;
+	max-width: 100%; /*attribut useful when sankey in static as the attribute is set in a stylesheet that is not called in static */
 }
 .form-label {
 	display : flex;
@@ -1132,6 +1133,7 @@ textarea {
 	padding: 0px;
 	width: 35px;
 	max-height: 24px;
+	max-width: 100%; /*attribut useful when sankey in static as the attribute is set in a stylesheet that is not called in static */
 }
 .sideBar .openMenu {
 	position: relative;

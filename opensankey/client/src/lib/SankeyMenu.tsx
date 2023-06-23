@@ -936,7 +936,7 @@ export const OpenSankeyMenus = (
     {(node_filter)?
       <OverlayTrigger
         key={'tooltip-link-color-filter'}
-        placement={'right'}
+        placement={'bottom'}
         trigger={'click'}
         rootClose
         overlay={filter_color_node}>
@@ -951,7 +951,7 @@ export const OpenSankeyMenus = (
     {(flux_filter)?
       <OverlayTrigger
         key={'tooltip-node-color-filter'}
-        placement={'right'}
+        placement={'bottom'}
         trigger={'click'}
         rootClose
         overlay={filter_color_link}>
@@ -964,7 +964,7 @@ export const OpenSankeyMenus = (
     {(Object.values(data.dataTags).length>0)?
       <OverlayTrigger
         key={'tooltip-data-filter'}
-        placement={'right'}
+        placement={'bottom'}
         trigger={'click'}
         rootClose
         overlay={filter_data}>
@@ -1377,8 +1377,38 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Body>
   </Modal>
 
+  // Create the menu nav that can be slightly different if it in static
+  const menu_nav=(!window.SankeyToolsStatic)?(<Col>
+    <Row>
+      <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
+        {Object.keys(ordered_menu).map(m=>{
 
+          if(m=='formation'){
 
+            // Special behavior for formation nav, instead of opening a subnav it open a modal with the tutos
+            return <Nav.Item>
+              <Nav.Link  eventKey={m} onClick={()=>set_show_modale_tuto(true)}>
+                {t('Menu.'+m)}
+              </Nav.Link>
+            </Nav.Item>
+          }else{
+
+            // Nav item that aopen a subnav when clicked
+            return <Nav.Item>
+              <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
+                {t('Menu.'+m)}
+              </Nav.Link>
+            </Nav.Item>
+          }
+        })}
+      </Nav>
+    </Row>
+    <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
+      <ButtonGroup className={'subMenu '+menu_acivated}>
+        {ordered_menu[menu_acivated]}
+      </ButtonGroup>
+    </Row>
+  </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
 
 
@@ -1396,7 +1426,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           </>:<></>
           }
 
-          <Navbar.Brand href="#" onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> </Navbar.Brand>
+          <Navbar.Brand onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
           {/* {!window.SankeyToolsStatic ? (<>
             <Nav className='me-auto'>
               {menus.map((c,i)=>{
@@ -1419,38 +1449,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             <Col><h4 onClick={()=>set_welcome_text(window.sankey.welcome_text)}><a href="#" style={{color:"#666"}}>{window.sankey.header}</a></h4></Col>
             {toolbar}
           </>)}  */}
-          <Col>
-            <Row>
-              <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
-                {Object.keys(ordered_menu).map(m=>{
-
-                  if(m=='formation'){
-
-                    // Special behavior for formation nav, instead of opening a subnav it open a modal with the tutos
-                    return <Nav.Item>
-                      <Nav.Link  eventKey={m} onClick={()=>set_show_modale_tuto(true)}>
-                        {t('Menu.'+m)}
-                      </Nav.Link>
-                    </Nav.Item>
-                  }else{
-
-                    // Nav item that aopen a subnav when clicked
-                    return <Nav.Item>
-                      <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-                        {t('Menu.'+m)}
-                      </Nav.Link>
-                    </Nav.Item>
-                  }
-                  
-                })}
-              </Nav>
-            </Row>
-            <Row lg={'auto'}  style={{whiteSpace:'nowrap'}}>
-              <ButtonGroup className={'subMenu '+menu_acivated}>
-                {ordered_menu[menu_acivated]}
-              </ButtonGroup>
-            </Row>
-          </Col>
+          {menu_nav}
           {!window.SankeyToolsStatic ?<Nav>
             <Col>
               <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>} 
