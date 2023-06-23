@@ -70,7 +70,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.5'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -89,7 +89,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.5'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -143,7 +143,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.4'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -164,7 +164,7 @@ export const addAllDropDownNode = (
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
-                  placement={'bottom'}
+                  placement={'left'}
                   delay={500}
                   overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
                   <FormCheck inline
@@ -198,7 +198,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.3'}
-              placement={'bottom'}
+              placement={'left'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -224,7 +224,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.3'}
-                placement={'bottom'}
+                placement={'left'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -634,7 +634,7 @@ export const toolbar_builder = (
       <Col>
         <OverlayTrigger
           key={'tooltip-diagrams'}
-          placement={'right'}
+          placement={'left'}
           trigger={'click'}
           rootClose
           overlay={diagrams_element}>
@@ -655,23 +655,23 @@ export const toolbar_builder = (
       {/* Boutons Sélection classique des éléments */}
       <OverlayTrigger
         key={'tooltip-selection'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
         <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
           <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
-          <Col className='textIcon'>Select.</Col>
+          {/* <Col className='textIcon'>Select.</Col> */}
         </Button>
       </OverlayTrigger>
       <OverlayTrigger
         key={'tooltip-liaison'}
-        placement={'right'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
         <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
           {/* Ajout liaison entre noeud */}
           <Col><FontAwesomeIcon icon={faShareNodes}/></Col>
-          <Col className='textIcon'>Création</Col>
+          {/* <Col className='textIcon'>Création</Col> */}
         </Button>
       </OverlayTrigger>
     </>
@@ -687,17 +687,17 @@ export const toolbar_builder = (
       {(level_filter)?<>
         <OverlayTrigger
           key={'tooltip-nodes-level'}
-          placement={'bottom'}
+          placement={'left'}
           rootClose
           overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
           <Button ref={target_detail_level} variant='outline-warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
             <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
-            <Col className='textIcon'>Agréga.</Col>
+            {/* <Col className='textIcon'>Agréga.</Col> */}
           </Button>
         </OverlayTrigger>
         <Overlay
           key={'popover-nodes-level'}
-          placement={'right'}
+          placement={'left'}
           target={target_detail_level}
           rootClose
           show={show_detail_level}
@@ -711,7 +711,7 @@ export const toolbar_builder = (
       {/* Tooltip for level filter */}
       <OverlayTrigger
         key={'tooltip-link-filter2'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
       >
@@ -721,14 +721,14 @@ export const toolbar_builder = (
           }}
         >
           <Col><FontAwesomeIcon icon={faFilter} /></Col>
-          <Col className='textIcon'>{t('Menu.filter')}</Col>
+          {/* <Col className='textIcon'>{t('Menu.filter')}</Col> */}
         </Button>
       </OverlayTrigger>
 
       {/* Popover to display the link-filter */}
       <Overlay
         key={'popover-link-filter'}
-        placement={'right'}
+        placement={'left'}
         target={target_link_threshold}
         rootClose
         show={show_link_threshold}
@@ -740,42 +740,42 @@ export const toolbar_builder = (
 
       <OverlayTrigger
         key={'tooltip-adjust-h'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
         <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
           <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
-          <Col className='textIcon'>{t('Menu.ajustH')}</Col>
+          {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
         </Button>
       </OverlayTrigger>
       <OverlayTrigger
         key={'tooltip-adjust-v'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
         <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
           <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-          <Col className='textIcon'>{t('Menu.ajustV')}</Col>
+          {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
         </Button>
       </OverlayTrigger>
 
       { url_prefix !== '' ?
         <OverlayTrigger
           key={'tooltip-structur'}
-          placement={'right'}
+          placement={'left'}
           trigger={'click'}
           rootClose
           overlay={struc_data_reconciled}>
           <Button variant='outline-success'>
             <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
-            <Col className='textIcon'>Struct.</Col>
+            {/* <Col className='textIcon'>Struct.</Col> */}
 
           </Button>
         </OverlayTrigger>
         :
         <OverlayTrigger
           key={'tooltip-structur'}
-          placement={'bottom'}
+          placement={'left'}
           delay={500}
           overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
           <Button variant={'outline-success'} onClick={() => {
@@ -784,12 +784,12 @@ export const toolbar_builder = (
             set_data({ ...data })
           }} >
             <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
-            <Col className='textIcon'>Struct.</Col>
+            {/* <Col className='textIcon'>Struct.</Col> */}
           </Button>
         </OverlayTrigger>}
       {window.SankeyToolsStatic ? <OverlayTrigger
         key={'tooltip-help'}
-        placement={'bottom'}
+        placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
         }

@@ -272,7 +272,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //     launch={launch}
   //     reinitialization={reinitialization}
   //   /></DropdownButton >
-  sankey_menus['formation']=<Button variant='light' onClick={()=>set_show_modale_tuto(true)}>{t('menuTuto')}</Button>
+  // sankey_menus['formation']=<Button variant='light' onClick={()=>set_show_modale_tuto(true)}>{t('menuTuto')}</Button>
+  sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
 
   
   // 2.4 Modal linked to menu item
