@@ -88,16 +88,17 @@ def parse_tags(
                 # tags dict
                 tags = {tag.name_unformatted: {
                     'name': tag.name_unformatted,
-                    'selected': 0,
+                    'selected': False,
                     'color': tag.color_in_hex} for tag in tagg.tags.values()}
-                next(iter(tags.values()))['selected'] = 1  # by default select first tag
+                next(iter(tags.values()))['selected'] = True  # by default select first tag
                 # tag group dict
                 dataTags[tagg.name_unformatted] = {
                     'group_name': tagg.name_unformatted,
-                    'show_legend': 0,
+                    'show_legend': False,
                     'tags': tags,
                     'banner': 'one',
-                    'activated': 1
+                    'activated': True,
+                    'siblings': []
                 }
             continue
         if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) or (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
@@ -105,12 +106,12 @@ def parse_tags(
                 # tags dict
                 tags = {tag.name_unformatted: {
                     'name': tag.name_unformatted,
-                    'selected': 1,
+                    'selected': True,
                     'color': tag.color_in_hex} for tag in tagg.tags.values()}
                 # case level tag
                 if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
                     for tag in list(tags.values())[1:]:
-                        tag['selected'] = 0
+                        tag['selected'] = False
                 # Banner type
                 banner = 'multi'
                 if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
@@ -121,10 +122,10 @@ def parse_tags(
                 # tag group dict
                 nodeTags[tagg.name_unformatted] = {
                     'group_name': tagg.name_unformatted,
-                    'show_legend': 0,
+                    'show_legend': False,
                     'tags': tags,
                     'banner': banner,
-                    'activated': 1,
+                    'activated': True,
                     'siblings': [
                         anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
                 }
@@ -138,7 +139,7 @@ def parse_tags(
                 # tags dict
                 tags = {tag.name_unformatted: {
                     'name': tag.name_unformatted,
-                    'selected': 1,
+                    'selected': True,
                     'color': tag.color_in_hex} for tag in tagg.tags.values()}
                 # Specific tags for reconcillation
                 # TODO remove ?
@@ -150,10 +151,11 @@ def parse_tags(
                 # tag group dict
                 fluxTags[tagg_name] = {
                     'group_name': tagg.name_unformatted,
-                    'show_legend': 0,
+                    'show_legend': False,
                     'tags': tags,
                     'banner': 'multi',
-                    'activated': 1
+                    'activated': True,
+                    'siblings': []
                 }
 
 
@@ -186,7 +188,7 @@ def parse_links(
         if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
             tagg_name = "flux_types"
         # Update fluxtags struct
-        default_data_strct['tags'][tagg_name] = None  # tag_name
+        default_data_strct['tags'][tagg_name] = ""  # tag_name
     # Go trough all tags
     for flux in sankey.flux.values():
         # Boolean that memorized if flux have at least one value
@@ -226,7 +228,7 @@ def parse_links(
             'idTarget': flux.dest.id,
             'value': datas_strct,
             'color': color,
-            'dashed': 0 if has_data else 1
+            'dashed': (not has_data)
         }
 
 
@@ -268,7 +270,7 @@ def parse_data(
         # TODO : Mettre gestion erreur aucun tag trouvé ?
     # Create data structure
     data_strct = copy.deepcopy(default_data_strct)
-    data_strct['value'] = data.value if (data.value is not None) else ''
+    data_strct['value'] = data.value if (data.value is not None) else ""
     data_strct['display_value'] = ''
     # Update flux tags to data structure
     for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
@@ -316,10 +318,10 @@ def parse_nodes(
             'idNode': node.id,
             'name': node.name,
             'definition': node.definition,
-            'display': 1,
-            'node_visible': 1,
-            'label_visible': 1,
-            'shape_visible': 1,
+            'display': True,
+            'node_visible': True,
+            'label_visible': True,
+            'shape_visible': True,
             'color': node.color_in_hex,
             'tags': {},
             'dimensions': {
@@ -376,15 +378,15 @@ def parse_nodes(
     if (sankey.max_nodes_level > 1):
         nodeTags['Primaire'] = {
             'group_name': 'Primaire',
-            'show_legend': 0,
+            'show_legend': False,
             'tags': {},
             'banner': 'level',
-            'activated': 1
+            'activated': True
         }
         for tag in range(1, sankey.max_nodes_level+1):
             nodeTags['Primaire']['tags'][str(tag)] = {
                 'name': str(tag),
-                'selected': (True if (tag == 1) else False),
+                'selected': (tag == 1),
                 'color': ''
             }
 
