@@ -1848,21 +1848,21 @@ const handles_positions = (
     const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
     return [vert, left, right]
   } else if (link.orientation === 'hh') {
-    if (!link.left_horiz_shift) {
-      link.left_horiz_shift = 1 / 3
+    if (link.left_horiz_shift === undefined) {
+      link.left_horiz_shift = 0
     }
     if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 2 / 3
+      link.right_horiz_shift = 1
     }
     const shift_left = 'translate(' + (xs + (xt - xs) * link.left_horiz_shift) + ', ' + (ys - default_handle_size / 2) + ')'
     const shift_right = 'translate(' + (xs + (xt - xs) * link.right_horiz_shift) + ', ' + (yt - default_handle_size / 2) + ')'
     return [shift_left, shift_right]
   } else if (link.orientation === 'vv') {
-    if (!link.left_horiz_shift) {
-      link.left_horiz_shift = 1 / 3
+    if (link.left_horiz_shift === undefined) {
+      link.left_horiz_shift = 0
     }
     if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 2 / 3
+      link.right_horiz_shift = 1
     }
     const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * link.left_horiz_shift) + ')'
     const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * link.right_horiz_shift) + ')'
