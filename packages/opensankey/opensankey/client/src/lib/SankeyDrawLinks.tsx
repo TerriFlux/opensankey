@@ -458,7 +458,7 @@ export const OpenSankeyDrawLinks = (
 
     paths.attr('d', d => {
       setNodesHeight(data,display_nodes, display_links, d, data.nodeTags,getLinkValue)
-      return drawCurveFunction.curve(data,
+      return drawCurveFunction.curve(data,set_data,
         display_nodes, display_links, display_style,
         data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
       )
@@ -470,7 +470,7 @@ export const OpenSankeyDrawLinks = (
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,set_data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
         }
       })
     if (error_msg && error_msg.text) {
@@ -512,7 +512,7 @@ export const OpenSankeyDrawLinks = (
             (link: SankeyLink) => {
               d3.select(' .opensankey #' + link.idLink).attr('d',
                 () => {
-                  return drawCurveFunction.curve(data,
+                  return drawCurveFunction.curve(data,set_data,
                     display_nodes, display_links, display_style,
                     data.nodeTags, link,
                     error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue

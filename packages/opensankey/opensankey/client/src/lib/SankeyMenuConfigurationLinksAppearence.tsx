@@ -314,7 +314,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             <FormControl
               min={0} max={100}
               type={'number'}
-              value={shiftCenter()*100}
+              value={Math.round(shiftCenter()*100)}
               disabled={(linkOrientation('hv')||linkOrientation('vh'))}
               onChange={
                 evt => {
@@ -349,9 +349,9 @@ export const SankeyMenuConfigurationLinksAppearence = (
             delay={500}
             overlay={<Tooltip id={'flux.apparence.tooltips.8'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
             <FormControl
-              min={0} max={5}
+              min={0} max={50}
               type={'number'}
-              value={shift()*100}
+              value={Math.round(shift()*100)}
               disabled={(linkOrientation('hv')||linkOrientation('vh'))}
               onChange={
                 evt => {

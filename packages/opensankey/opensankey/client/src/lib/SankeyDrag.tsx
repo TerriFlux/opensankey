@@ -20,6 +20,7 @@ import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
  */
 export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   error_msg: { text: string | undefined } | undefined,
@@ -41,7 +42,7 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
-              return drawCurveFunction.curve(data,            display_nodes, display_links, display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+              return drawCurveFunction.curve(data,set_data,            display_nodes, display_links, display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
               )
             }
             )
@@ -83,6 +84,7 @@ export const dragLinkTextEvent=(alt_key_pressed:boolean,
 export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   error_msg: { text: string | undefined } | undefined,
@@ -104,7 +106,7 @@ export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #' + link.idLink).attr('d',        () => {
-              return drawCurveFunction.curve(data,            display_nodes, display_links, data.display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+              return drawCurveFunction.curve(data,set_data,            display_nodes, display_links, data.display_style,            data.nodeTags, link,            error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
               )
             }
             )
@@ -134,6 +136,7 @@ export const dragLinkCenterHandleEvent=(
   multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   selected_tags:{[tag_group:string]:string[]},
   min_width_and_height:(d:SankeyData)=>number[],
   default_horiz_shift:number,
@@ -150,10 +153,10 @@ export const dragLinkCenterHandleEvent=(
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && (link.orientation=='hh' || link.orientation=='vv')){
         const shift_handle=d3.selectAll(' .opensankey #gg_'+link.idLink+' .handle').nodes()
-        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
-        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
+        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
+        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
       }            
-    })
+    }).on('end',()=>set_data({...data}))
 }
 /**
  * Function to drag a shift handle on selected links 
@@ -184,6 +187,7 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
   selected_tags: { [tag_group: string]: string[] },
   position: string,
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
   default_horiz_shift:number,
   drawGrid:(d:SankeyData)=>void,
@@ -198,11 +202,11 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !mode_visualisation){
         drag_handle(
-          link, nodes, links, display_style,    selected_tags,    this, position, event,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,    link_text,getLinkValue
+          link, nodes, links, display_style,    selected_tags,    this, position, event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,    link_text,getLinkValue
         )
       }
         
-    })
+    }).on('end',()=>set_data({...data}))
 }
 
 
@@ -623,6 +627,7 @@ export const drag_handle = (
   handle_type: string,
   the_event: d3.D3DragEvent<Element, unknown, unknown>,
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
   default_horiz_shift:number,
   drawGrid:(d:SankeyData)=>void,
@@ -725,7 +730,7 @@ export const drag_handle = (
   }
   d3.select(' .opensankey #' + d.idLink).attr('d', () => {
     let error_msg
-    return drawCurveFunction.curve(data,nodes, links, display_style,data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+    return drawCurveFunction.curve(data,set_data,nodes, links, display_style,data.nodeTags, d, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
     )
   })
 }
@@ -854,6 +859,7 @@ export const add_drag_link_zone=(
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
   mode_visualisation:boolean,
   display_nodes:{[node_id:string]:SankeyNode},
@@ -903,7 +909,7 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows)
+      .call(dragLinkEvent2(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows)
       )  
     d3.select(' .opensankey #gg_' + link.idLink)
       .append('rect')
@@ -918,7 +924,7 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows))  
+      .call(dragLinkEvent2(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows))  
   }
 }
 /**
