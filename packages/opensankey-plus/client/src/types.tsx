@@ -55,6 +55,7 @@ export interface SankeyPlusLabel {
     y: number,
     x_label: number,
     y_label: number,
+    underline:boolean,
 }
 
 // Recration du type drawCureType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus

@@ -60,14 +60,15 @@ export const SankeyPlusDrawLabels = (
       })
         .append('text')
         .attr('id', d.idLabel + '_text')
-        .attr('x', d.x_label)
-        .attr('y', d.y_label)
+        .attr('x', pos_zdt_x(d))
+        .attr('y', pos_zdt_y(d))
         .style('text-anchor', 'middle')
         .style('font-weight', () => (d.font_weight) ? 'bold' : 'normal')
         .style('font-style', () => (d.font_style) ? 'italic' : 'normal')
         .style('font-size', () => d.font_size + 'px')
         .style('text-transform', () => (d.font_uppercase) ? 'uppercase' : 'none')
         .style('text-align', 'center')
+        .style('text-decoration',d.underline?'underline':'none')
         .text(d.name)
 
 
@@ -158,6 +159,28 @@ export const SankeyPlusDrawLabels = (
   add_labels()
 }
 
+const pos_zdt_x=(d:SankeyPlusLabel)=>{
+  switch(d.position_horiz){
+  case 'middle':
+    return d.label_width/2
+  case 'right':
+    return d.label_width-3
+  default:
+    return d.x_label
+  }
+}
+const pos_zdt_y=(d:SankeyPlusLabel)=>{
+  switch(d.position_vert){
+  case 'top':
+    return d.font_size + 3
+  case 'middle':
+    return d.label_height/2
+  case 'bottom':
+    return d.label_height-3
+  default:
+    return d.y_label
+  }
+}
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{

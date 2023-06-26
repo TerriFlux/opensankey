@@ -2,7 +2,7 @@ import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck,Button, ButtonGroup,OverlayTrigger,Tooltip } from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
+import { FaAngleDown, FaAngleUp, FaMinus, FaPlus,FaBold,FaItalic, FaUnderline} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
 import ReactQuill,{Quill} from 'react-quill'
@@ -213,36 +213,13 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     })
     return up
   }
+  const allLabelTextUnderlined = () => {
+    let und = false
 
-  const label_libre_align_vert=()=>{
-    multi_selected_label.current.map(d=>{
-      switch(d.position_vert){
-      case 'middle':
-        d.y_label=d.label_height/2
-        break
-      case 'bottom':
-        d.y_label=d.label_height-3
-        break
-      default:
-        d.y_label=d.label_height-3
-        break
-      }
+    multi_selected_label.current.map((d) => {
+      und = (d.underline) ? true : und
     })
-  }
-  const label_libre_align_horiz=()=>{
-    multi_selected_label.current.map(d=>{
-      switch(d.position_horiz){
-      case 'middle':
-        d.x_label=d.label_width/2
-        break
-      case 'right':
-        d.x_label=d.label_width-3
-        break
-      default:
-        d.x_label=d.label_width-3
-        break
-      }
-    })
+    return und
   }
 
   const isAllEditRaw = () => {
@@ -303,7 +280,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       }
     }
   />
-
+  const svg_upper=<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><g><path d="M22,8V9.026A4.948,4.948,0,0,0,19,8a5,5,0,0,0,0,10,4.948,4.948,0,0,0,3-1.026V18h2V8Zm-3,8a3,3,0,1,1,3-3A3,3,0,0,1,19,16Z"/><path d="M12,18h2.236L7.118,3.764,0,18H2.236l2-4H10ZM5.236,12,7.118,8.236,9,12Z"/></g></svg>
 
 
   return <Accordion.Item
@@ -353,7 +330,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                     y: 50,
                     x_label: 50,
                     y_label: 12,
-                    is_edit_raw:false
+                    is_edit_raw:false,
+                    underline:false
                   }
                   data.labels[new_label.idLabel] = new_label
                   multi_selected_label.current = [new_label]
@@ -449,7 +427,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                 value={allLabelHeight()}
                 onChange={evt => {
                   multi_selected_label.current.map(d => d.label_height = +evt.target.value)
-                  label_libre_align_vert()
                   set_data({ ...data })
                 }}
               />
@@ -468,7 +445,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                 value={allLabelWidth()}
                 onChange={evt => {
                   multi_selected_label.current.map(d => d.label_width = +evt.target.value)
-                  label_libre_align_horiz()
                   set_data({ ...data })
                 }}
               />
@@ -576,8 +552,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_vert = 'top'
-                      // d.x_label = d.label_width / 2
-                      d.y_label = d.font_size + 3
                     })
 
                     set_data({ ...data })
@@ -595,8 +569,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_vert = 'middle'
-                      // d.x_label = d.label_width / 2
-                      d.y_label = d.label_height / 2
                     })
                     set_data({ ...data })
                   }
@@ -614,8 +586,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_vert = 'bottom'
-                      
-                      d.y_label = d.label_height - 3
                     })
                     set_data({ ...data })
                   }
@@ -637,7 +607,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'left'
-                      d.x_label= 3
                     })
 
                     set_data({ ...data })
@@ -655,7 +624,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'centre'
-                      d.x_label=d.label_width/2
                     })
                     set_data({ ...data })
                   }
@@ -673,7 +641,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
                   () => {
                     multi_selected_label.current.map(d => {
                       d.position_horiz = 'right'
-                      d.x_label=d.label_width-3
                     })
                     set_data({ ...data })
                   }
@@ -702,51 +669,52 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             </Col>
           </Form.Group>
           <Form.Group as={Row} >
-            <Col>
+            <Col xs={4}>
               <FormLabel style={{color:(is_activated?!allLabelAsHTML():false)?'#555555':'#DADADA'}}  >{t('LL.labels')}</FormLabel>
             </Col>
-            <Col>
-              <FormCheck
+            <ButtonGroup as={Col} xs={8}>
+              <Button
                 disabled={is_activated?allLabelAsHTML():true}
-                type='checkbox'
-                label={t('LL.gras')}
-                checked={allLabelTextBold()}
-                onChange={
-                  evt => {
-                    multi_selected_label.current.map(d => d.font_weight = evt.target.checked)
+                variant={allLabelTextBold()?'dark':'outline-dark'}
+                onClick={
+                  () => {
+                    Object.values(data.labels).filter(l=>multi_selected_label.current.includes(l)).forEach(d => d.font_weight = !multi_selected_label.current[0].font_weight)
                     set_data({ ...data })
                   }
                 }
-              />
-            </Col>
-            <Col>
-              <FormCheck
+              ><FaBold/></Button>
+              <Button
                 disabled={is_activated?allLabelAsHTML():true}
-                type='checkbox'
-                label={t('LL.maj')}
-                checked={allLabelTextUpper()}
-                onChange={
-                  evt => {
-                    multi_selected_label.current.map(d => d.font_uppercase = evt.target.checked)
+                variant={allLabelTextUpper()?'dark':'outline-dark'}
+                onClick={
+                  () => {
+                    Object.values(data.labels).filter(l=>multi_selected_label.current.includes(l)).map(d => d.font_uppercase = !multi_selected_label.current[0].font_uppercase)
                     set_data({ ...data })
                   }
                 }
-              />
-            </Col>
-            <Col>
-              <FormCheck
+              >{svg_upper}</Button>
+              <Button
                 disabled={is_activated?allLabelAsHTML():true}
-                type='checkbox'
-                label={t('LL.ita')}
-                checked={allLabelTextItalic()}
-                onChange={
-                  evt => {
-                    multi_selected_label.current.map(d => d.font_style = evt.target.checked)
+                variant={allLabelTextItalic()?'dark':'outline-dark'}
+                onClick={
+                  () => {
+                    Object.values(data.labels).filter(l=>multi_selected_label.current.includes(l)).forEach(d => d.font_style = !multi_selected_label.current[0].font_style)
                     set_data({ ...data })
                   }
                 }
-              />
-            </Col>
+              ><FaItalic/></Button>
+              <Button
+                disabled={is_activated?allLabelAsHTML():true}
+                variant={allLabelTextUnderlined()?'dark':'outline-dark'}
+                onClick={
+                  () => {
+                    Object.values(data.labels).filter(l=>multi_selected_label.current.includes(l)).forEach(d => d.underline = !multi_selected_label.current[0].underline)
+                    set_data({ ...data })
+                  }
+                }
+              ><FaUnderline/></Button>
+            </ButtonGroup>
+            
           </Form.Group>
         </Form></OverlayTrigger>
     </Accordion.Body>
