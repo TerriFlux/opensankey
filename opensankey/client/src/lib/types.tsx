@@ -248,6 +248,7 @@ export const SankeyDrawCurvePropType={
 export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>
 export type drawCurveType = (
   data: SankeyData,
+  set_data:(d:SankeyData)=>void,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
   display_style: { filter: number; filter_label: number; },

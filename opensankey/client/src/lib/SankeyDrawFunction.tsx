@@ -1449,14 +1449,13 @@ const drawLinkText = (
 // Draw the center handle of each selected links
 const add_center_handle=(
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   link:SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   selected_tags: { [tag_group: string]: string[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
-
 )=>{
   d3.selectAll(' .opensankey #center_handle_' + link.idLink).remove()
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)  && !link.recycling ) {
@@ -1493,7 +1492,7 @@ const add_center_handle=(
       .attr('fill','black')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (link.orientation=='vv' ||link.orientation=='hh'))?'ew-resize':'pointer')
-      .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,set_data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
 
@@ -1546,6 +1545,7 @@ const center_handle_position=(data:SankeyData,link:SankeyLink,
 // Draw the shift handle of each selected links
 const add_shift_handle = (
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   link: SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   nodes: { [node_id: string]: SankeyNode },
@@ -1568,7 +1568,7 @@ const add_shift_handle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !data.static_sankey)?'ew-resize':'pointer')
-      .call(dragLinkShiftHandleEvent(multi_selected_links,link,data.static_sankey,nodes,links,display_style,selected_tags,position,data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .call(dragLinkShiftHandleEvent(multi_selected_links,link,data.static_sankey,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
 
@@ -1583,6 +1583,7 @@ export const update_scale = (user_scale: number) => {
 // Function that call add_shift_handle for the shift handle of each side of the links
 const add_shift_handles = (
   data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   link: SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   nodes: { [node_id: string]: SankeyNode },
@@ -1615,7 +1616,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      add_shift_handle(data,
+      add_shift_handle(data,set_data,
         link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],link_text,min_width_and_height,getLinkValue
       )
     }
@@ -1635,6 +1636,7 @@ const add_shift_handles = (
 // DRAW LINK
 const drawCurve = (
   data: SankeyData,
+  set_data:(d:SankeyData)=>void,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
   display_style: { node_font_size: number;  filter: number; filter_label: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
@@ -1684,10 +1686,10 @@ const drawCurve = (
   let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags,data,scale,inv_scale,getLinkValue)
   // handles_positions(links, link, xs, ys, xt, yt)
   if(link.orientation=='vv' ||link.orientation=='hh'){
-    add_shift_handles(data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
-    add_drag_link_zone(link,nodes,data,multi_selected_links,data.static_sankey,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_shift_handles(data,set_data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
+    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.static_sankey,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
   }
-  add_center_handle(data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
+  add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 
 
   if (link_value > display_style.filter_label || val.extension?.free_visible) {

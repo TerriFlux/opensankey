@@ -795,7 +795,7 @@ export const toolbar_builder = (
         }
       >
         <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
-                   <Col> ? </Col>
+          <Col> ? </Col>
         </Button>
       </OverlayTrigger> : <></>}
     </>
