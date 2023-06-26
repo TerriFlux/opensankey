@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePro
 import PropTypes, { InferProps } from 'prop-types'
 import { setSelectedTags,  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale} from './SankeyDrawFunction'
+import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 window.d3 = d3
@@ -497,11 +497,25 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     set_data({ ...data })
   } else if (e.key == 'Escape') {
     mode_selection.current = 's'
+    d3.select(' .opensankey #svg').attr('class','mode_selection')
+
+    // Visualy deselect nodes then deselect in the app data
+    multi_selected_nodes.current.forEach(d => {
+      deselect_visualy_nodes(d)
+    })
+    multi_selected_nodes.current=[]
+
+
+    multi_selected_links.current.forEach(l=>{
+      deselect_visualy_links(l)
+    })
+    multi_selected_links.current=[]
+
     set_show_nav(false)
     // set_mode_selection('s')
-    if ( button_ref && button_ref.current && accordion_ref ) {
-      button_ref.current.click()
-    }
+    // if ( button_ref && button_ref.current && accordion_ref ) {
+    //   button_ref.current.click()
+    // }
 
   } /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()

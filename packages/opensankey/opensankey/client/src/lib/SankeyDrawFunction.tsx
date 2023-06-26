@@ -350,8 +350,12 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   select_node:(n: SankeyNode) => void,
   static_sankey:boolean,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
+  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  mode_selection:{current:string}
+)=>{
   if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
+    mode_selection.current='s'
+    d3.select(' .opensankey #svg').attr('class','mode_selection')
     sankeyTooltip.style('opacity', 0)
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
       button_ref.current.click()
@@ -359,8 +363,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',0)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
+      deselect_visualy_nodes(d)
     } else {
       multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
@@ -383,8 +386,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',0)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','hidden')
+      deselect_visualy_nodes(d)
     } else {
       multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
@@ -2117,4 +2119,19 @@ export const value_selected_parameter = (data:SankeyData,
     return val
   }
 
+}
+
+export const deselect_visualy_links=(d:SankeyLink)=>{
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+  
+}
+
+export const deselect_visualy_nodes=(n:SankeyNode)=>{
+  d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
+  d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }

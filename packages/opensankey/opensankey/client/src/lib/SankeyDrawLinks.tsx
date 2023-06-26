@@ -3,7 +3,7 @@ import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyL
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  test_link_value,link_color,link_visible} from './SankeyUtils'
-import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height } from './SankeyDrawFunction'
+import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter} from './SankeyDrawFunction'
 
@@ -62,6 +62,7 @@ export const OpenSankeyDrawLinks = (
     select_link:(n: SankeyLink) => void,
     set_data:React.Dispatch<React.SetStateAction<SankeyData>>
   )=>{
+    mode_selection.current='s'
     if (!mode_visualisation) {
       sankeyTooltip.style('opacity', 0)
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -71,12 +72,7 @@ export const OpenSankeyDrawLinks = (
       
       if (multi_selected_links.current.includes(d)) {
         multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+        deselect_visualy_links(d)
       } else {
         multi_selected_links.current.push(d)
         set_display_link_opacity(String(multi_selected_links.current[0].opacity))
