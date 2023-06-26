@@ -1151,6 +1151,7 @@ export const keyHandler = (
   set_show_toast_new_view:React.Dispatch<React.SetStateAction<boolean>>,
   set_show_toast_updated_view:React.Dispatch<React.SetStateAction<boolean>>,
   mode_selection:{current : string},
+  set_show_nav:(b:boolean)=>void,
   OpenSankey_keyHandler:(
     e:KeyboardEvent,
     data:SankeyPlusData,
@@ -1159,6 +1160,7 @@ export const keyHandler = (
     set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
     accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+    set_show_nav:(b:boolean)=>void,
     mode_selection:{current : string})=>void,
   connected:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[],
@@ -1173,6 +1175,7 @@ export const keyHandler = (
     set_data,
     accordion_ref,
     button_ref,
+    set_show_nav,
     mode_selection)
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
@@ -1430,6 +1433,15 @@ export const keyHandler = (
       })
     }
     set_data({ ...data })
+  }
+  
+  // Add deselection of all selected zdt
+  if (e.key === 'Escape') {
+    multi_selected_labels.current.forEach(l=>{
+      console.log(d3.select('#'+l.idLabel))
+      d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
+    })
+    multi_selected_labels.current=[]
   }
 
   

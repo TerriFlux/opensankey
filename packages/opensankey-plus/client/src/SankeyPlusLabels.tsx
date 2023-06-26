@@ -166,7 +166,7 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
     }
-    d3.select(d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
+    d3.select('#'+d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
     if (multi_selected_label.current.includes(d)) {
       multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
     } else {
