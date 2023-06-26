@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePro
 import PropTypes, { InferProps } from 'prop-types'
 import { setSelectedTags,  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes} from './SankeyDrawFunction'
+import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 window.d3 = d3
@@ -175,6 +175,20 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (mode_selection.current=='ln') {
       d3.select(' .opensankey #svg').attr('class','mode_add_flux')
     }
+    // Disable zoom outside of the sankey draw zone
+    (d3.select('body') as d3.Selection<Element, unknown, HTMLElement, unknown>)
+      .call(d3.zoom()
+        .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
+          return (ev.ctrlKey || ev.metaKey) && ev.buttons == 0
+        })
+        .wheelDelta(ev => { // Permet de regler la vitesse du zoom
+          return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
+        })
+        .on('zoom', function (evt) {
+          null
+        }))
+      .on('dblclick.zoom', null);
+
 
     const svgSankey = d3.select(' .opensankey #svg')
   
@@ -202,7 +216,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_legend)+')')
           d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
-        
+          repositionne_sidebar() 
         }))
       .on('dblclick.zoom', null);
 
