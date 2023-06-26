@@ -2135,3 +2135,11 @@ export const deselect_visualy_nodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
+
+export const repositionne_sidebar=()=>{
+  const has_scrollbar_shift=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
+  const menu_open=d3.select('.offcanvas-body').node()
+  console.log(menu_open)
+  console.log((menu_open?540:0))
+  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?540:0))+'px')  
+}
