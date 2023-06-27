@@ -228,6 +228,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           key={'noeud.apparence.tooltips.6'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
           <FormControl
             min={0} max={100}
@@ -256,6 +257,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           key={'noeud.apparence.tooltips.7'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
           <FormControl
             min={0} max={100}

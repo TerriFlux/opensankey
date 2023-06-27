@@ -70,7 +70,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.5'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -89,7 +89,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.5'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -143,7 +143,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.4'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -164,7 +164,7 @@ export const addAllDropDownNode = (
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
-                  placement={'left'}
+                  placement={'bottom'}
                   delay={500}
                   overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
                   <FormCheck inline
@@ -198,7 +198,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.3'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -224,7 +224,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.3'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck

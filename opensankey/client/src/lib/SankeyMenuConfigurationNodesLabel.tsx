@@ -388,6 +388,7 @@ export const SankeyMenuConfigurationNodesLabel = (
             key={'noeud.labels.tooltips.9'}
             placement={'top'}
             delay={500}
+            rootClose
             overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
             <FormControl
               value={valueAllNodeLabelBox()}

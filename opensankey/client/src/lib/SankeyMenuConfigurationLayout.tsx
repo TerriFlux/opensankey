@@ -50,6 +50,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.BgC'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.BgC'}>{t('MEP.tooltips.BgC')} </Tooltip>}>
           <Form.Control
             type='color'
@@ -73,6 +74,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.TCG'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.TCG'}>{t('MEP.tooltips.TCG')} </Tooltip>}>
           <FormControl
             type="number"
@@ -92,6 +94,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.GV'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.GV'}>{t('MEP.tooltips.GV')} </Tooltip>}>
           <FormCheck
             inline
@@ -115,6 +118,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.Echelle'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.Echelle'}>{t('MEP.tooltips.Echelle')} </Tooltip>}>
           <FormControl
             type="text"
@@ -142,6 +146,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.MaxFlux'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
           <FormControl
             type="text"
@@ -166,6 +171,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.EEN_h'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.EEN_h')} </Tooltip>}>
           <FormControl
             type="text"
@@ -187,6 +193,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.EEN_v'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
           <FormControl
             type="text"
@@ -202,6 +209,7 @@ export const OpenSankeyMenuConfigurationLayout = (
       key={'MEP.tooltips.factExpH'}
       placement={'top'}
       delay={500}
+      rootClose
       overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
       <Form.Group as={Row}>
         <Col xs={7}>
@@ -234,6 +242,7 @@ export const OpenSankeyMenuConfigurationLayout = (
       key={'MEP.tooltips.factExpV'}
       placement={'top'}
       delay={500}
+      rootClose
       overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}>
         
       <Form.Group as={Row}>
@@ -271,6 +280,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.PA'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
           <Button
             size="sm"
@@ -288,6 +298,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           key={'MEP.tooltips.AN'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
           <Button
             size="sm"

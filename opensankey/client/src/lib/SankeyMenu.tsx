@@ -292,7 +292,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.5'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -311,7 +311,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.5'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -365,7 +365,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.4'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -386,7 +386,7 @@ export const addAllDropDownNode = (
               <Col xs={2}>
                 <OverlayTrigger
                   key={'Banner.ndd_chk.4'}
-                  placement={'left'}
+                  placement={'bottom'}
                   delay={500}
                   overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
                   <FormCheck inline
@@ -420,7 +420,7 @@ export const addAllDropDownNode = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.3'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -446,7 +446,7 @@ export const addAllDropDownNode = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.3'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -564,7 +564,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.1'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -582,7 +582,7 @@ export const addAllDropDownFlux = (
             <Col xs={2} >
               <OverlayTrigger
                 key={'Banner.ndd_chk.1'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -642,7 +642,7 @@ export const addAllDropDownFlux = (
           <Row>
             <OverlayTrigger
               key={'Banner.ndd_lst.2'}
-              placement={'left'}
+              placement={'bottom'}
               delay={500}
               overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
               <Col xs={10}>
@@ -670,7 +670,7 @@ export const addAllDropDownFlux = (
             <Col xs={2}>
               <OverlayTrigger
                 key={'Banner.ndd_chk.2'}
-                placement={'left'}
+                placement={'bottom'}
                 delay={500}
                 overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
                 <FormCheck
@@ -1723,13 +1723,13 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
   const content_licence=<>
     <Row>
-      <Col xs={3}><img src={logo_OS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col>{t('Menu.presentation_OS')}<Button>{t('desire_to_know_more')}</Button></Col>
+      <Col xs={3}><img src={logo_OS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OS')}<Button>{t('desire_to_know_more')}</Button></Col>
     </Row>
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
 
     <Row>
-      <Col>{t('Menu.presentation_OSP')}
+      <Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OSP')}
         <Button href="https://terriflux.com/downloads/open-sankey-plus/" target="_blank" rel="noopener noreferrer">
           {t('desire_to_know_more')}
         </Button></Col>
@@ -1739,7 +1739,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
 
     <Row>
-      <Col xs={3}><img src={logo_OSS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col>{t('Menu.presentation_OSS')}
+      <Col xs={3}><img src={logo_OSS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OSS')}
         <Button href="https://terriflux.com/downloads/sankey-suite/" target="_blank" rel="noopener noreferrer">
           {t('desire_to_know_more')}
         </Button></Col>

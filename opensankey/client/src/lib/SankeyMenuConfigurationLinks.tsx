@@ -305,6 +305,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       d.label_visible = style.label_visible
       d.text_color = style.text_color
       d.color = style.color
+      d.opacity=style.opacity
+      d.left_horiz_shift = style.left_horiz_shift
+      d.right_horiz_shift = style.right_horiz_shift
 
 
       d.curvature = style.curvature
