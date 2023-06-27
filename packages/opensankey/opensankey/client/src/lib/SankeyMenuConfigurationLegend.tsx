@@ -23,6 +23,7 @@ export const OpenSankeyMenuConfigurationLegend= (
           key={'Menu.tooltips.LegX'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegX'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
           <FormControl
             type="text"
@@ -45,6 +46,7 @@ export const OpenSankeyMenuConfigurationLegend= (
           key={'Menu.tooltips.LegY'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegY'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
           <FormControl
             type="text"
@@ -67,6 +69,7 @@ export const OpenSankeyMenuConfigurationLegend= (
           key={'Menu.tooltips.LegWidth'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegWidth'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
           <FormControl
             type="number"
@@ -106,6 +109,7 @@ export const OpenSankeyMenuConfigurationLegend= (
           key={'Menu.tooltips.fontSize'}
           placement={'top'}
           delay={500}
+          rootClose
           overlay={<Tooltip id={'Menu.tooltips.fontSize'}>{t('Menu.tooltips.fontSize')} </Tooltip>}>
           <FormControl
             type="number"

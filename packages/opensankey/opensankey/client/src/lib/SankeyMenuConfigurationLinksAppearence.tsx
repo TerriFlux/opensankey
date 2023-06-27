@@ -155,6 +155,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             key={'Flux.apparence.tooltips.1'}
             placement={'top'}
             delay={500}
+            rootClose
             overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.opacity')} </Tooltip>}><>
               <Form.Control
                 type="number"
@@ -310,6 +311,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             key={'flux.apparence.tooltips.7'}
             placement={'top'}
             delay={500}
+            rootClose
             overlay={<Tooltip id={'flux.apparence.tooltips.7'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
             <FormControl
               min={0} max={100}
@@ -347,6 +349,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             key={'flux.apparence.tooltips.8'}
             placement={'top'}
             delay={500}
+            rootClose
             overlay={<Tooltip id={'flux.apparence.tooltips.8'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
             <FormControl
               min={0} max={50}
@@ -454,6 +457,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             key={'flux.apparence.tooltips.12'}
             placement={'top'}
             delay={500}
+            rootClose
             overlay={<Tooltip id={'flux.apparence.tooltips.12'}>{t('Flux.apparence.tooltips.courbure')} </Tooltip>}>
             <FormControl
               min={0} max={1} step={0.01}
