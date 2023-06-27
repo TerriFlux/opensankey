@@ -2050,9 +2050,9 @@ export const node_value_posX=(n:SankeyNode)=>{
   if (n.display_style.label_horiz_valeur == 'middle') {
     return width / 2
   } else if (n.display_style.label_horiz_valeur == 'left') {
-    return -width / 2
+    return 0
   } else if (n.display_style.label_horiz_valeur == 'right') {
-    return width + width_text / 2
+    return width 
   } else {
     return 0
   }
@@ -2066,7 +2066,7 @@ export const node_value_posY=(n:SankeyNode)=>{
     // return height / 2 + height_text / 2
     return height / 2 + ((node_value_and_text_same_pos(n))?n.display_style.font_size:0)
   } else if (n.display_style.label_vert_valeur == 'top') {
-    return -n.display_style.font_size+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
+    return 0+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
   } else if (n.display_style.label_vert_valeur == 'bottom') {
     return height+((node_value_and_text_same_pos(n))?height_text*1.8:n.display_style.font_size)
   } else {
