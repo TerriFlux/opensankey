@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card,Alert} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink, SankeyNode} from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
@@ -17,7 +17,6 @@ import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileExport, faTrashCan, faFileInvoice, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { deselect_visualy_nodes } from './SankeyDrawFunction'
 
 declare const window: Window &
   typeof globalThis & {
@@ -175,9 +174,8 @@ export const clickSaveSVG = () => {
   post_process_export_svg()
 }
 
-const clickSavePDF = (data:SankeyData) => {
+const clickSavePDF = () => {
   const svg = pre_process_export_svg()
-  // svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -212,9 +210,8 @@ const clickSavePDF = (data:SankeyData) => {
     .then(showFile).then(cleanFile)
 }
 
-const clickSavePNG = (data:SankeyData) => {
+const clickSavePNG = () => {
   const svg = pre_process_export_svg()
-  // svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -1078,8 +1075,8 @@ export const OpenSankeyMenus = (
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faFileExport} /></Col><Col className='textIcon'>{t('Menu.exporter')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
           <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-          <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-          <Dropdown.Item onClick={()=>clickSavePNG(data)} >{t('Menu.exporter')} PNG</Dropdown.Item>
+          <Dropdown.Item onClick={()=>clickSavePDF()} >{t('Menu.exporter')} PDF</Dropdown.Item>
+          <Dropdown.Item onClick={()=>clickSavePNG()} >{t('Menu.exporter')} PNG</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
       <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>

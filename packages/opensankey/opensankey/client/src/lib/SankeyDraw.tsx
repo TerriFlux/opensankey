@@ -184,10 +184,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .wheelDelta(ev => { // Permet de regler la vitesse du zoom
           return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
         })
-        .on('zoom', function (evt) {
+        .on('zoom', function () {
           null
         }))
-      .on('dblclick.zoom', null);
+      .on('dblclick.zoom', null)
 
 
     const svgSankey = d3.select(' .opensankey #svg')
