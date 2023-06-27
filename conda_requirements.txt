@@ -6,3 +6,5 @@ flask_login
 flask_cors
 flask_sqlalchemy
 parameterized
+imgkit
+pdfkit
