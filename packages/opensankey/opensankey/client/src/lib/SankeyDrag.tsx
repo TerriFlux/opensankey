@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
-import {removeAnimate,compute_end_points, min_width_and_height} from './SankeyDrawFunction'
+import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows} from './SankeyDrawFunction'
 import {   link_visible,test_link_value } from './SankeyUtils'
 import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 /**
@@ -241,7 +241,12 @@ export const dragGNodeEvent=(
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   static_sankey:boolean,
-  set_data:(d:SankeyData)=>void
+  set_data:(d:SankeyData)=>void,
+  multi_selected_links:{current:SankeyLink[]},
+  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 )=>{
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object).on('drag', function (event,node) {
@@ -250,12 +255,12 @@ export const dragGNodeEvent=(
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
-            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label
+            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(
-            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label
+            display_nodes,this,event,multi_selected_nodes,data,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale
           )
         }
       }
@@ -315,10 +320,19 @@ export  const drag_nodes = (
   event: { dx: number; dy: number },
   multi_selected_nodes:{current: SankeyNode[] },
   data:SankeyData,
-  multi_selected_label:{current:SankeyPlusLabel[]}
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  set_data:(d:SankeyData)=>void,
+  multi_selected_links:{current: SankeyLink[] },
+  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  min_width_and_height:(d:SankeyData)=>number[],
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:drawArrowsType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+
 ) => {
   removeAnimate()
-  
+  let error_msg: { text: string | undefined } | undefined
 
   d3.selectAll('.ggg_nodes').filter((d)=>{
     const n=d as SankeyNode
@@ -339,6 +353,18 @@ export  const drag_nodes = (
     n.y+=event.dy
     return 'translate('+n.x+','+n.y+')'
   })
+  multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
+    drawArrows(n as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
+  ])
+  multi_selected_nodes.current.forEach(n=>{
+    Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
+      d3.select(' .opensankey #' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
+        data.nodes, data.links, data.display_style,
+        data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+      ))
+    })
+  })
+  
 
   // Drag zdt too
   multi_selected_label.current.map(l=>{
