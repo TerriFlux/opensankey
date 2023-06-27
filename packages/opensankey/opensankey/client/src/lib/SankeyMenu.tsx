@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card,Alert} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink, SankeyNode} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
@@ -17,6 +17,7 @@ import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileExport, faTrashCan, faFileInvoice, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { deselect_visualy_nodes } from './SankeyDrawFunction'
 
 declare const window: Window &
   typeof globalThis & {
@@ -117,15 +118,40 @@ const MenuPropTypes = {
 }
 
 const pre_process_export_svg=()=>{
-  // Create a copy of the svg so we can alter it before exporting it 
-  // without having to revert our changerment after the export
+  // Resize the svg scale to be the scale by default
   const svg =window.d3.select(' .opensankey#svg-container svg')
+  svg.attr('transform','scale(1)')
+  svg.select('#g_legend').style('transform','scale(1)')
+  
+  // Get size of g elements that contain visual content
+  const g_nodes=document.getElementById('g_nodes')
+  const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
+
+  const g_links=document.getElementById('g_links')
+  const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
+
+  const g_label=document.getElementById('g_label')
+  const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
+  
+  // Search the element that go to the most bottom right of the sankey
+  const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
+  // Resize the svg width and height with the minimum value it require to display the elements
+  svg.style('width',export_dim_unscaled[0]+'px')
+  svg.style('height',export_dim_unscaled[1]+'px')
+  
+  // Hidde non-essential visual elements
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.style('border','0px')
   svg.style('background-color','#fff')
   svg.select('#grid').style('opacity','0')
   svg.selectAll('.box_width_threshold').remove()
+  d3.selectAll('.gg_nodes rect').attr('stroke-width',0)
+  d3.selectAll(' .opensankey .gg_links rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_links .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_links .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+  d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
+
   return svg
 }
 const post_process_export_svg=()=>{
@@ -151,7 +177,7 @@ export const clickSaveSVG = () => {
 
 const clickSavePDF = (data:SankeyData) => {
   const svg = pre_process_export_svg()
-  svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+  // svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
@@ -188,7 +214,7 @@ const clickSavePDF = (data:SankeyData) => {
 
 const clickSavePNG = (data:SankeyData) => {
   const svg = pre_process_export_svg()
-  svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
+  // svg.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
