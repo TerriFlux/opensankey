@@ -395,7 +395,7 @@ export const OpenSankeyDrawNodes = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,static_sankey,set_data))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,static_sankey,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
