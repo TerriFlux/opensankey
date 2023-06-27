@@ -121,7 +121,7 @@ const pre_process_export_svg=()=>{
   const svg =window.d3.select(' .opensankey#svg-container svg')
   svg.attr('transform','scale(1)')
   svg.select('#g_legend').style('transform','scale(1)')
-  
+
   // Get size of g elements that contain visual content
   const g_nodes=document.getElementById('g_nodes')
   const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
@@ -131,13 +131,13 @@ const pre_process_export_svg=()=>{
 
   const g_label=document.getElementById('g_label')
   const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
-  
+
   // Search the element that go to the most bottom right of the sankey
   const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
   // Resize the svg width and height with the minimum value it require to display the elements
   svg.style('width',export_dim_unscaled[0]+'px')
   svg.style('height',export_dim_unscaled[1]+'px')
-  
+
   // Hidde non-essential visual elements
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
@@ -153,13 +153,12 @@ const pre_process_export_svg=()=>{
 
   return svg
 }
+
 const post_process_export_svg=()=>{
   window.d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
   window.d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
   window.d3.select(' .opensankey#svg-container svg').style('border','2px')
-
 }
-
 
 
 export const clickSaveSVG = () => {
@@ -167,23 +166,57 @@ export const clickSaveSVG = () => {
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .attr('xhtml', 'http://www.w3.org/1999/xhtml')
+    .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    .attr('xmlns:xhtml', 'http://www.w3.org/1999/xhtml')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
- 
+
   const blob = new Blob([html], { type: 'image/svg+xml' })
-  FileSaver.saveAs(blob, 'sankey_diagram.svg')
+  const form_data = new FormData()
+  form_data.append('svg', blob)
+
   post_process_export_svg()
+
+  const path = window.location.href
+  let url = path + '/opensankey/sankey/save_svg'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/svg' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.svg')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + '/opensankey/sankey/clean_svg'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
 }
 
-const clickSavePDF = () => {
+const clickSavePDF = (data:SankeyData) => {
   const svg = pre_process_export_svg()
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)
     .attr('xmlns', 'http://www.w3.org/2000/svg')
     .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-  post_process_export_svg()
+
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
-  form_data.append('svg', blob)
+  form_data.append('html', blob)
+  form_data.append('width', data.width.toString())
+  form_data.append('height', data.height.toString())
+
+  post_process_export_svg()
 
   const path = window.location.href
   let url = path + '/opensankey/sankey/save_pdf'
@@ -219,7 +252,8 @@ const clickSavePNG = () => {
 
   const blob = new Blob([html], { type: 'image/svg+xml' })
   const form_data = new FormData()
-  form_data.append('svg', blob)
+  form_data.append('html', blob)
+
   post_process_export_svg()
 
   const path = window.location.href
@@ -1004,7 +1038,7 @@ export const OpenSankeyMenus = (
 
 
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
- 
+
 
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
@@ -1075,7 +1109,7 @@ export const OpenSankeyMenus = (
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faFileExport} /></Col><Col className='textIcon'>{t('Menu.exporter')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
           <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-          <Dropdown.Item onClick={()=>clickSavePDF()} >{t('Menu.exporter')} PDF</Dropdown.Item>
+          <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
           <Dropdown.Item onClick={()=>clickSavePNG()} >{t('Menu.exporter')} PNG</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
@@ -1357,24 +1391,24 @@ const Menu: FunctionComponent<MenuTypes> = (
                 <Button variant='info'
                   onClick={() => {
 
-                              
+
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
-                              
+
                     SankeyUtils.uploadExemple(
                       'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,reinitialization
                     )
                     set_show_modale_tuto(false)
 
-                  } 
+                  }
                   }
                 >{t('useTutoExcel')}</Button>
                 :<></>}
-                  
+
             </ButtonGroup>
           </Card.Body>
         </Card>
       })}
-      
+
     </>
 
   })
@@ -1475,7 +1509,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           {menu_nav}
           {!window.SankeyToolsStatic ?<Nav>
             <Col>
-              <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>} 
+              <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>}
               <Button style={{'marginRight':'10px','marginLeft':'10px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
               {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
             </Col>
@@ -1516,7 +1550,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       >
         {menus['toolbar']}
         {!data.static_sankey ? (
-          <ToggleButton 
+          <ToggleButton
             ref={button_ref as Ref<HTMLLabelElement>}
             id="toggle-check"
             className='openMenu'
@@ -1529,7 +1563,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           </ToggleButton>
         ) : (<></>)}
       </ButtonGroup>
-      
+
 
       {
         processing ? (
@@ -1719,7 +1753,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   }
 
 
-  
+
 
   const content_licence=<>
     <Row>
