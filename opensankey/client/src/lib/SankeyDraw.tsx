@@ -17,7 +17,7 @@ typeof globalThis & {
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  animation:PropTypes.bool.isRequired, 
+  animation:PropTypes.bool.isRequired,
 
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
@@ -29,8 +29,8 @@ const SankeyDrawPropTypes = {
   set_first_selected_node:PropTypes.func.isRequired,
 
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
-  agregation_node:PropTypes.string.isRequired, 
-  is_agregation:PropTypes.bool.isRequired, 
+  agregation_node:PropTypes.string.isRequired,
+  is_agregation:PropTypes.bool.isRequired,
 
   set_alt_key_pressed:PropTypes.func.isRequired,
 
@@ -38,7 +38,7 @@ const SankeyDrawPropTypes = {
   getLinkValue:PropTypes.func.isRequired,
   token:PropTypes.bool.isRequired,
   set_show_toast_limit_node:PropTypes.func.isRequired
-  
+
 
 }
 
@@ -95,10 +95,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   setSelectedTags(data,getLinkValue,false)
- 
-  
+
+
   sankeyTooltip
- 
+
 
 
   window.focus()
@@ -129,7 +129,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   // const get_diff = () => {
   //   const diff = require('deep-diff')
   //   const old_data_str = LZString.decompress(localStorage.getItem('data') as string) as string
-  //   //Si data existe dans le localStorage 
+  //   //Si data existe dans le localStorage
   //   if (old_data_str != '') {
   //     //On le parse en JSON
   //     const old_data = JSON.parse(old_data_str)
@@ -171,7 +171,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
     }
-    
+
     if (mode_selection.current=='ln') {
       d3.select(' .opensankey #svg').attr('class','mode_add_flux')
     }
@@ -186,15 +186,16 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('zoom', function () {
           null
-        }))
+        })
+      )
       .on('dblclick.zoom', null)
 
 
     const svgSankey = d3.select(' .opensankey #svg')
-  
+
     svgSankey.attr('viewBox', null)
     svgSankey.style('width', data.width + 'px')
-    
+
     svgSankey.style('height', data.height + 'px');
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.zoom()
@@ -216,11 +217,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_legend)+')')
           d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
-          repositionne_sidebar() 
+          repositionne_sidebar()
         }))
       .on('dblclick.zoom', null);
 
-    
+
     // Fonction permettant de déplacer les éléments dans la zone de dessin, seulement quand on drag avec le boutons du milieu de la souris
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
       .call(d3.drag<Element, unknown, HTMLElement>()
@@ -228,7 +229,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .filter(evt=>{
           evt.stopPropagation()
           evt.preventDefault()
-        
+
           return d3.select(evt.target).attr('id')=='svg' && evt.which==2
         })
         .on('start',()=>{
@@ -255,9 +256,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             // Each path is splitted into small part of the path then depending on the small part :
             //  - If it's a letter then do nothing
             //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one, 
+            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
             //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-            // 
+            //
             // Then once the subpart of the path are modified, we join the array to reform the path
             const new_path=path.map((p,i)=>{
             // Case when it's a [x,y] coordinates
@@ -287,9 +288,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             // Each path is splitted into small part of the path then depending on the small part :
             //  - If it's a letter then do nothing
             //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one, 
+            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
             //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-            // 
+            //
             // Then once the subpart of the path are modified, we join the array to reform the path
             const new_path=path.map((p,i)=>{
             // Case when it's a [x,y] coordinates
@@ -316,9 +317,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         .on('end',()=>{
           set_data({...data})
         })
-  
+
       )
-    //Ajout des events sur les l'ajout des noeuds aux click 
+    //Ajout des events sur les l'ajout des noeuds aux click
     eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node)
 
     drawGrid(data)
@@ -331,10 +332,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
-    
-  
+
+
     // try {
-    //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+    //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur
     //   if (current) {
     //     get_diff()
     //     const cmp = LZString.compress(JSON.stringify(data))
@@ -360,7 +361,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   //   accordion_ref,button_ref,
   //   set_agregation_node,set_is_agregation,set_show_agregation,
   //   select_node,
-    
+
   //   alt_key_pressed,
   //   data.static_sankey,
   //   position,removeAnimate)
@@ -433,7 +434,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   mode_selection:{current : string}
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
-    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
     if (e.key == 'ArrowUp') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
@@ -444,9 +445,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        
+
         d.y = d.y - data.grid_square_size
-        
+
         let y_max = 0
         Object.values(data.nodes).map(d => {
           y_max = (d.y > y_max) ? d.y : y_max
@@ -465,9 +466,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        
+
         d.y = d.y + data.grid_square_size
-        
+
         //Augumente hauteur svg si le noeud est près du bord
         if (d.y > data.height - 100) {
           data.height += 100
@@ -482,9 +483,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        
+
         d.x = d.x - data.grid_square_size
-        
+
         //Diminue largeur svg si le noeud est près du bord
         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
           data.width -= 50
@@ -499,9 +500,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         if (d.position === 'relative') {
           return
         }
-        
+
         d.x = d.x + data.grid_square_size
-        
+
         //Augumente largeur svg si le noeud est près du bord
         if (d.x > data.width - 100) {
           data.width += 100
@@ -560,7 +561,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
       //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
       //A : Annule des moddification faites à des array
       //E : Annule des modifications faites à des propriétées de l'objet
-      //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé 
+      //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé
       // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
       difference.map(d => {
         let element_to_delete = dt
@@ -617,7 +618,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
       data = dt
       localStorage.setItem('diff', JSON.stringify(differences))
       try {
-        //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur 
+        //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur
         localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
       } catch (e) {
         localStorage.clear()
@@ -626,10 +627,10 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     } else {
       console.log('Aucune action en mémoire pour un retour en arrière')
     }
-  }*/ 
+  }*/
   else if(e.key=='Delete'){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
-    {   
+    {
       multi_selected_links.current.forEach(el=>{
         delete_link(data,el)
       })

@@ -15,6 +15,9 @@ import openpyxl
 import tempfile
 import os
 import json
+import imgkit
+import pdfkit
+import re
 
 try:
     import pythoncom
@@ -22,7 +25,6 @@ try:
 except Exception:
     pass
 
-from cairosvg import svg2png, svg2pdf
 from threading import Thread
 
 # Sankey modules imports
@@ -64,6 +66,42 @@ image_template_folder = os.path.join(
     'images')
 
 
+@opensankey.route('/sankey/save_svg', methods=['POST'])
+def save_svg():
+    '''
+    HTTP POST request to save current sankey as PNG
+
+    Input : Data as html (current page)
+
+    Output : Send png file
+    '''
+    # Launch conversion
+    filename = "tutu.svg"
+    try:
+        svg_str = request.files['svg'].read().decode('UTF-8')
+        svg_str = svg_str.replace('\n', '<br/>')
+        svg_str = svg_str.replace('<br>', '<br/>')
+        svg_str = svg_str.replace(';=""', '')
+        imgs_balises = re.findall('<img [a-zA-Z0-9=":/_.%-]+>', svg_str)
+        for _ in set(imgs_balises):
+            svg_str = svg_str.replace(_, _+'</img>')
+        for _ in \
+            ['div', 'b', 'i', 'p', 's', 'a',
+             'li', 'ul', 'ol'
+             'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+             'img', 'center']:
+            svg_str = svg_str.replace('<'+_+' ', '<xhtml:'+_+' ')
+            svg_str = svg_str.replace('<'+_+'>', '<xhtml:'+_+'>')
+            svg_str = svg_str.replace('</'+_+' ', '</xhtml:'+_+' ')
+            svg_str = svg_str.replace('</'+_+'>', '</xhtml:'+_+'>')
+        with open(filename, 'w') as f:
+            f.write(svg_str)
+    except Exception as e:
+        current_app.logger.error('SAVE_SVG | {0}'.format(e))
+        abort(500)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
+
+
 @opensankey.route('/sankey/save_png', methods=['POST'])
 def save_png():
     '''
@@ -73,18 +111,14 @@ def save_png():
 
     Output : Send png file
     '''
-    # Get current working directory
-    cwd = os.getcwd()
-    # Extract svg data
-    data_content = request.files['svg'].read().decode('UTF-8')
-    # Launch conversion with cairo
+    # Launch conversion
     filename = "tutu.png"
     try:
-        svg2png(bytestring=data_content, write_to=filename)
+        imgkit.from_string(request.files['html'].read().decode('UTF-8'), filename)
     except Exception as e:
         current_app.logger.error('SAVE_PNG | {0}'.format(e))
         abort(500)
-    return send_file(os.path.join(cwd, filename), as_attachment=True)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
 
 
 # Create opensanker app routes
@@ -97,18 +131,39 @@ def save_pdf():
 
     Output : Send pdf file
     '''
-    # Get current working directory
-    cwd = os.getcwd()
-    # Extract svg data
-    data_content = request.files['svg'].read().decode('UTF-8')
     # Launch conversion with cairo
     filename = "tutu.pdf"
     try:
-        svg2pdf(bytestring=data_content, write_to=filename)
+        options = {
+            'margin-top': '1cm',
+            'margin-right': '1cm',
+            'margin-bottom': '1cm',
+            'margin-left': '1cm',
+            'orientation': 'Landscape',
+            'disable-smart-shrinking': '',
+            'page-height': request.form['height']+'px',
+            'page-width': request.form['width']+'px'}
+        pdfkit.from_string(
+            '<meta charset="utf-8">' + request.files['html'].read().decode('UTF-8'),
+            filename, options=options)
     except Exception as e:
         current_app.logger.error('SAVE_PDF | {0}'.format(e))
         abort(500)
-    return send_file(os.path.join(cwd, filename), as_attachment=True)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
+
+
+@opensankey.route('/sankey/clean_svg', methods=['POST'])
+def clean_svg():
+    '''
+    HTTP POST request to remove remaining generated png image
+
+    Input : None
+
+    Output :
+        - Response 200 : OK
+        - Response 500 : Unknown exception
+    '''
+    return clean_file("tutu.svg", "CLEAN_SVG")
 
 
 @opensankey.route('/sankey/clean_png', methods=['POST'])
