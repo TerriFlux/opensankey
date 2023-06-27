@@ -62,7 +62,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('id', n => (n as SankeyNode).idNode + '_text_value')
       .attr('x', n =>node_value_posX(n as SankeyNode))
       .attr('y', n => node_value_posY(n as SankeyNode))
-      .attr('text-anchor', () => 'middle')
+      .attr('text-anchor', (n) => (n as SankeyNode).display_style.label_horiz_valeur.replace('left','end').replace('right','start'))
       .attr('visibility', n => (n as SankeyNode).node_visible && (n as SankeyNode).show_value ? 'visible' : 'hidden')
     // .style('text-align', 'center')
     // .style('font-weight', n => ((n as SankeyNode).display_style.bold) ? 'bold' : 'normal')
