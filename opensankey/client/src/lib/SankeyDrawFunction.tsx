@@ -2045,8 +2045,8 @@ export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
 }
 export const node_value_posX=(n:SankeyNode)=>{
   const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
-  const _text = document.getElementById(n.idNode + '_text')
-  const width_text = (_text) ? _text.getBoundingClientRect().width : 0
+  // const _text = document.getElementById(n.idNode + '_text')
+  // const width_text = (_text) ? _text.getBoundingClientRect().width : 0
   if (n.display_style.label_horiz_valeur == 'middle') {
     return width / 2
   } else if (n.display_style.label_horiz_valeur == 'left') {
