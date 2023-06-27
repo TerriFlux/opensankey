@@ -1444,8 +1444,8 @@ export const keyHandler = (
     multi_selected_labels.current=[]
   }
 
-  if(e.key=='Delete'){
-    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
+  if(e.key==='Delete'){
+    if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {   
 
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_labels.current.map(l => l.idLabel).includes(d[0])))     

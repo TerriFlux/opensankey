@@ -183,7 +183,9 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
   selected_style_link:string,
   set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
   editable:boolean,
-  additional_link_appearence_items:JSX.Element[]
+  additional_link_appearence_items:JSX.Element[],
+  display_link_opacity:string,
+  set_display_link_opacity:(s:string)=>void
 ) => {
 
   if(selected_style_link !== 'default' && !editable){
@@ -294,7 +296,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
 
-              {SankeyMenuConfigurationLinksAppearence(data,selected_link,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link)}
+              {SankeyMenuConfigurationLinksAppearence(data,selected_link,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity)}
               {SankeyMenuConfigurationLinksLabel(data,{current:[]},set_data,t,true,selected_style_link)}
 
             </Tabs>
