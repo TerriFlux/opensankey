@@ -632,6 +632,9 @@ export const drawArrows = (
     if (!link_visible(l, data,getLinkValue)) {
       continue
     }
+    if(!l.arrow){
+      continue
+    }
     let link_value = test_link_value(data,data.nodes, l, getLinkValue)
     if (link_value === undefined) {
       continue
