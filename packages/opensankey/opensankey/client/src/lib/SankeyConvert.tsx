@@ -2,6 +2,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,differenceType } from './types'
 import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 import colormap from 'colormap'
+import { default_sankey_data, default_node } from './SankeyUtils'
 
 interface SankeyPlusLabelToConvcert extends SankeyPlusLabel{
   transparent?:boolean
@@ -59,6 +60,7 @@ interface ConvertSankeyLink {
   subchain?: string
   mini?: number | number[]
   maxi?: number | number[]
+  dashed:number | boolean
 }
 interface ConvertSankeyData {
   units_names: string[]
@@ -596,13 +598,26 @@ export const convert_tags = (
       siblings:[]
     }
   }
+  // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
+  Object.values(data.nodeTags).forEach(t=>{
+    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.siblings=t.siblings?t.siblings:[]
+  })
+  Object.values(data.fluxTags).forEach(t=>{
+    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.siblings=t.siblings?t.siblings:[]
+  })
+  Object.values(data.dataTags).forEach(t=>{
+    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.siblings=t.siblings?t.siblings:[]
+  })
 }
 
 export const convert_nodes = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-
+  const default_n=default_node(data)
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
@@ -651,6 +666,9 @@ export const convert_nodes = (
       }
       if (n.display_style.font_family === undefined) {
         n.display_style.font_family = 'Arial,serif'
+      }
+      if(!isNaN(n.display_style.font_size)&& typeof(n.display_style.font_size)=='string'){
+        n.display_style.font_size=Number(n.display_style.font_size)
       }
       if (n.node_width === undefined) {
         if ( data_to_convert.node_width) {
@@ -795,6 +813,14 @@ export const convert_nodes = (
         (n as unknown as {FO_content:string}).FO_content=(n as unknown as {image:string}).image
 
       }
+      // Filter out variable in the node that are null or undefined so they can be attribued the default value
+      n=(Object.fromEntries(Object.entries(n).filter(kn=>kn[1]!==null && kn[1]!==undefined)) as SankeyNode)
+
+      // Fill missing variable from incoming node with default value so the node has the required structure 
+      n=Object.assign(JSON.parse(JSON.stringify(default_n)),n)
+      n.display_style=Object.assign(JSON.parse(JSON.stringify(default_n.display_style)),n.display_style)
+
+      data.nodes[n.idNode]=n
     }
   )
 }
@@ -890,6 +916,79 @@ export const convert_links = (
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
+  const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
+  const convert_display =(
+    dataTags: TagsGroup[],
+    v: SankeyLinkValue,
+    depth:number
+  ) => {
+    if (dataTags.length == 0 || depth === dataTags.length ) {
+      if (v.display_value === undefined) {
+        v.display_value = ''
+      } else if (v.display_value === 'default') {
+        v.display_value = ''
+      } else if (v.display_value.includes('[')) {
+        // Variables libres
+        let tmp
+        if (v.display_value.includes('-')) {
+          tmp = v.display_value.split('-')
+        } else if (v.display_value.includes(',')) {
+          tmp = v.display_value.split(',')
+        } else if (v.display_value.includes('...')) {
+          tmp = v.display_value.split('...')
+        } else if (v.display_value.includes('  ')) {
+          tmp = v.display_value.split('  ')
+        } else {
+          tmp = v.display_value.split(' ')
+        }
+        const free_mini = Number(tmp[0].substring(1))
+        const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
+        if (!v.extension) {
+          v.extension = {}
+        }
+        if (v.extension) {
+          v.extension.free_mini = free_mini as unknown as string
+          v.extension.free_maxi = free_maxi as unknown as string
+        }
+        v.display_value = ''
+      }
+      const col_tag = (v as unknown as ConvertSankeyValue).color_tag
+      if ( col_tag) {
+        v.tags = {...col_tag}
+        if ( Array.isArray(v.tags['Uncert']) ) {
+          v.tags['Uncert'] = v.tags['Uncert'][0]
+        }
+        delete (v as unknown as ConvertSankeyValue).color_tag
+      }
+      if (v.tags === undefined ) {
+        v.tags = {}
+      }
+      if ( !v.extension) {
+        v.extension = {}
+      }
+      if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
+        if ( v.extension.data_value ) {
+          v['tags']['flux_types'] = 'initial_data'
+        } else {
+          v['tags']['flux_types'] = 'computed_data'
+        }
+      }
+      return
+    }
+    const dataTag = Object.values(dataTags)[depth]
+    const listKey = Object.keys(dataTag.tags)
+
+    for (const i in listKey) {
+      if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
+        if ( v === undefined) {
+          //console.log(listKey[i] + ' not found in v')
+          break
+        }
+        convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1)
+      }
+    }
+  }
+
   Object.values(data.links).forEach(l => {
     if (((l  as unknown) as {source_name:string}).source_name) {
       const source_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name(((l  as unknown) as {source_name:string}).source_name))[0]
@@ -899,116 +998,127 @@ export const convert_links = (
       delete ((l  as unknown) as {source_name?:string}).source_name
       delete ((l  as unknown) as {target_name?:string}).target_name
     }
-  })
-  Object.values(data.links).forEach(
-    l => {
-      const l_convert = (l as unknown) as ConvertSankeyLink
-      if (l.colorParameter === undefined) {
-        l.colorParameter = 'groupTag'
-        l.colorTag = 'no_colormap'
-      }
-      if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
-        // if ( Array.isArray(l_convert.value) ) {
-        //   (l_convert.value as number[]).forEach(v => {
-        //     v = +v
-        //   })
-        // }
-        if ('tags' in l) {
-          delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
-        }
-      }
-      const source_node = data.nodes[l.idSource]
-      const target_node = data.nodes[l.idTarget]
-      if (!source_node || !target_node) {
-        return
-      }
-      if (!('orientation' in l)) {
-        (l as SankeyLink).orientation = 'hh'
-        if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-          (l as SankeyLink).orientation = 'vh'
-        } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-          (l as SankeyLink).orientation = 'hv'
-        }
-      }
-      if ('frozen' in l) {
-        delete l_convert.frozen
-      }
-      if ('link_reverse' in l) {
-        delete l_convert.link_reverse
-      }
 
-      if ('display_unit' in l_convert) {
-        l_convert.natural_unit = l_convert.display_unit
-        delete l_convert.display_unit
+    const l_convert = (l as unknown) as ConvertSankeyLink
+    if (l.colorParameter === undefined) {
+      l.colorParameter = 'groupTag'
+      l.colorTag = 'no_colormap'
+    }
+    if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
+      // if ( Array.isArray(l_convert.value) ) {
+      //   (l_convert.value as number[]).forEach(v => {
+      //     v = +v
+      //   })
+      // }
+      if ('tags' in l) {
+        delete (((l as unknown) as { tags : { Exchanges? : string } } ).tags)['Exchanges']
       }
-      if (('agregated_data_value' in l_convert)) {
-        l_convert.data_value = l_convert.agregated_data_value
-        delete l_convert.agregated_data_value
+    }
+    const source_node = data.nodes[l.idSource]
+    const target_node = data.nodes[l.idTarget]
+    if (!source_node || !target_node) {
+      return
+    }
+    if (!('orientation' in l)) {
+      (l as SankeyLink).orientation = 'hh'
+      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+        (l as SankeyLink).orientation = 'vh'
+      } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
+        (l as SankeyLink).orientation = 'hv'
       }
+    }
+    if ('frozen' in l) {
+      delete l_convert.frozen
+    }
+    if ('link_reverse' in l) {
+      delete l_convert.link_reverse
+    }
 
-      if (l_convert.type === 'short_link_arrow') {
-        l.curved = false
-        l.arrow = true
-      } else if (l_convert.type === 'bezier_link_arrow') {
-        l.curved = true
-        l.arrow = true
-      } else if (l_convert.type === 'bezier_link_classic') {
-        l.curved = true
-        l.arrow = false
-      }
-      const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
-      for (const attr in attributes_to_remove) {
-        if (attributes_to_remove[attr] in l) {
-          delete ((l as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
-        }
-      }
+    if ('display_unit' in l_convert) {
+      l_convert.natural_unit = l_convert.display_unit
+      delete l_convert.display_unit
+    }
+    if (('agregated_data_value' in l_convert)) {
+      l_convert.data_value = l_convert.agregated_data_value
+      delete l_convert.agregated_data_value
+    }
 
-      if (data.version === '0.1') {
-        const unit_index = l_convert.natural_unit ? data_to_convert.units_names.indexOf(l_convert.natural_unit) : -1
-        if (l_convert.conv && unit_index !== -1) {
-          const natural_conv = l_convert.conv[unit_index]
-          l_convert.conv.splice(1, 0, natural_conv)
-        }
-        l.curved = true
-        l.curvature = 1
-        if (l_convert.text_same_color === true) {
-          l.text_color = l.color
-        } else {
-          l.text_color = 'white'
-        }
-        delete l_convert.text_same_color
-        if (target_node.x < source_node.x) {
-          l.recycling = true
-        }
-      } else if (!('curvature' in l)) {
-        (l as SankeyLink).curvature = 0.5
+    if (l_convert.type === 'short_link_arrow') {
+      l.curved = false
+      l.arrow = true
+    } else if (l_convert.type === 'bezier_link_arrow') {
+      l.curved = true
+      l.arrow = true
+    } else if (l_convert.type === 'bezier_link_classic') {
+      l.curved = true
+      l.arrow = false
+    }
+    const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
+    for (const attr in attributes_to_remove) {
+      if (attributes_to_remove[attr] in l) {
+        delete ((l as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
       }
-      if (data.version === '0.2') {
-        if (target_node.x < source_node.x) {
-          l.recycling = true
-        }
+    }
+
+    if (data.version === '0.1') {
+      const unit_index = l_convert.natural_unit ? data_to_convert.units_names.indexOf(l_convert.natural_unit) : -1
+      if (l_convert.conv && unit_index !== -1) {
+        const natural_conv = l_convert.conv[unit_index]
+        l_convert.conv.splice(1, 0, natural_conv)
       }
-      if (data.version === '0.1' || data.version === '0.2') {
-        if (l_convert.natural_unit) {
-          if (l_convert.natural_unit.includes('tonne')) {
-            l_convert.natural_unit = l_convert.natural_unit.replace('tonne', 't')
-            if (l_convert.natural_unit === 'k t') {
-              l_convert.natural_unit = 'kt'
-            }
-          }
-        }
-        delete l.tooltip_text
-      }
-      if (!('text_color' in l) || l_convert.text_same_color === false) {
-        l.text_color = 'black'
-      } else if (l_convert.text_same_color === true) {
+      l.curved = true
+      l.curvature = 1
+      if (l_convert.text_same_color === true) {
         l.text_color = l.color
-      } else if (l_convert.text_same_color === 'same_color') {
-        l.text_color = l.color
+      } else {
+        l.text_color = 'white'
       }
       delete l_convert.text_same_color
+      if (target_node.x < source_node.x) {
+        l.recycling = true
+      }
+    } else if (!('curvature' in l)) {
+      (l as SankeyLink).curvature = 0.5
     }
-  )
+    if (data.version === '0.2') {
+      if (target_node.x < source_node.x) {
+        l.recycling = true
+      }
+    }
+    if (data.version === '0.1' || data.version === '0.2') {
+      if (l_convert.natural_unit) {
+        if (l_convert.natural_unit.includes('tonne')) {
+          l_convert.natural_unit = l_convert.natural_unit.replace('tonne', 't')
+          if (l_convert.natural_unit === 'k t') {
+            l_convert.natural_unit = 'kt'
+          }
+        }
+      }
+      delete l.tooltip_text
+    }
+    if (!('text_color' in l) || l_convert.text_same_color === false) {
+      l.text_color = 'black'
+    } else if (l_convert.text_same_color === true) {
+      l.text_color = l.color
+    } else if (l_convert.text_same_color === 'same_color') {
+      l.text_color = l.color
+    }
+    delete l_convert.text_same_color
+
+    convert_display(dataTagsArray,l.value as SankeyLinkValue,0)
+    if(!l.opacity){
+      l.opacity=0.85
+    }
+
+    if(l_convert.dashed===0){
+      l.dashed=false
+    }else if(l_convert.dashed==1){
+      l.dashed=true
+    }
+
+    // Assign missing variable
+  })
+
   if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
     const links_no_type = data.links as unknown as {[key:string]:ConvertSankeyLink & SankeyLink}
     Object.values(links_no_type).forEach(
@@ -1168,87 +1278,8 @@ export const convert_links = (
       }
     )
   }
-  const convert_display =(
-    dataTags: TagsGroup[],
-    v: SankeyLinkValue,
-    depth:number
-  ) => {
-    if (dataTags.length == 0 || depth === dataTags.length ) {
-      if (v.display_value === undefined) {
-        v.display_value = ''
-      } else if (v.display_value === 'default') {
-        v.display_value = ''
-      } else if (v.display_value.includes('[')) {
-        // Variables libres
-        let tmp
-        if (v.display_value.includes('-')) {
-          tmp = v.display_value.split('-')
-        } else if (v.display_value.includes(',')) {
-          tmp = v.display_value.split(',')
-        } else if (v.display_value.includes('...')) {
-          tmp = v.display_value.split('...')
-        } else if (v.display_value.includes('  ')) {
-          tmp = v.display_value.split('  ')
-        } else {
-          tmp = v.display_value.split(' ')
-        }
-        const free_mini = Number(tmp[0].substring(1))
-        const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
-        if (!v.extension) {
-          v.extension = {}
-        }
-        if (v.extension) {
-          v.extension.free_mini = free_mini as unknown as string
-          v.extension.free_maxi = free_maxi as unknown as string
-        }
-        v.display_value = ''
-      }
-      const col_tag = (v as unknown as ConvertSankeyValue).color_tag
-      if ( col_tag) {
-        v.tags = {...col_tag}
-        if ( Array.isArray(v.tags['Uncert']) ) {
-          v.tags['Uncert'] = v.tags['Uncert'][0]
-        }
-        delete (v as unknown as ConvertSankeyValue).color_tag
-      }
-      if (v.tags === undefined ) {
-        v.tags = {}
-      }
-      if ( !v.extension) {
-        v.extension = {}
-      }
-      if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
-        if ( v.extension.data_value ) {
-          v['tags']['flux_types'] = 'initial_data'
-        } else {
-          v['tags']['flux_types'] = 'computed_data'
-        }
-      }
-      return
-    }
-    const dataTag = Object.values(dataTags)[depth]
-    const listKey = Object.keys(dataTag.tags)
+  
 
-    for (const i in listKey) {
-      if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
-        if ( v === undefined) {
-          //console.log(listKey[i] + ' not found in v')
-          break
-        }
-        convert_display(dataTags,(v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]],depth+1)
-      }
-    }
-  }
-
-  const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
-  Object.values(data.links).forEach(
-    l=> {
-      convert_display(dataTagsArray,l.value as SankeyLinkValue,0)
-      if(!l.opacity){
-        l.opacity=0.85
-      }
-    }
-  )
 }
 
 export const convert_data = (
@@ -1293,6 +1324,18 @@ export const convert_data = (
   if ((data_to_convert.display_style.unit as unknown) as number === 1) {
     data_to_convert.display_style.unit = true
   }
+  // Assign default value to missing variable
+  const defaut_data=default_sankey_data()
+  Object.entries(data.style_link).forEach(s=>{
+    s[1]=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])),s[1])
+    data.style_link[s[0]]=s[1]
+  })
+  Object.entries(data.style_node).forEach(s=>{
+    s[1]=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'])),s[1])
+    s[1].display_style=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'].display_style)),s[1].display_style)
+    data.style_node[s[0]]=s[1]
+  })
+
   const attributes_to_remove = ['agregated_level','show_data','trade_close','sankey_type','previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
   for (const attr in attributes_to_remove) {
     if (attributes_to_remove[attr] in data) {

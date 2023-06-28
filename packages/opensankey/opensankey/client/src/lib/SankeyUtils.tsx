@@ -3,6 +3,7 @@ import FileSaver from 'file-saver'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
 import { agregation, compute_auto_sankey, desagregation, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
 import * as d3 from 'd3'
+import colormap from 'colormap'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1526,4 +1527,57 @@ export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
 
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   FileSaver.saveAs(blob, name+'.json')
+}
+
+export const add_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=>{
+  const elementTagName = type_tag_name
+  // Méthode pour incrementer idElement
+  const listId: number[] = []
+  Object.keys(data[elementTagName][tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
+  const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+  data[elementTagName][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
+  const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
+  const colors = colormap({
+    colormap: data[elementTagName][tags_group_key].color_map,
+    nshades: Math.max(11, nb_tags),
+    format: 'hex',
+    alpha: 1
+  })
+  let step = 1
+  if (nb_tags < 11) {
+    step = Math.round(11 / nb_tags)
+  }
+  Object.keys(data[elementTagName][tags_group_key].tags).forEach(
+    (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
+  )
+} 
+
+export const add_grp_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,elementNameProp:string)=>{
+  const elementTagName = type_tag_name
+  const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
+  // Méthode pour incrementer idGroup
+  const idGroup = Object.keys(data[elementTagName]).length+1
+  //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
+  const k='tag_group_' + String(new Date().getTime())
+  data[elementTagName][k] = {
+    group_name: 'Étiquette Group ' + idGroup,
+    show_legend: false,
+    color_map: 'jet',
+    tags: {},
+    banner: 'multi',
+    activated: true,
+    siblings: []
+  }
+  if (elementName === 'nodes' ) {
+    Object.values(data[elementName]).forEach(n => n.tags[k] = [])
+  }
+  if (Object.keys(data[elementTagName]).length === 1) {
+    Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
+  }
+    
+  // Add an element to the group newly created
+  // Méthode pour incrementer idElement
+    
+  add_tag(data,type_tag_name,k)
+  return k
 }
