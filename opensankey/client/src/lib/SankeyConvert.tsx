@@ -600,15 +600,15 @@ export const convert_tags = (
   }
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t=>{
-    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
     t.siblings=t.siblings?t.siblings:[]
   })
   Object.values(data.fluxTags).forEach(t=>{
-    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
     t.siblings=t.siblings?t.siblings:[]
   })
   Object.values(data.dataTags).forEach(t=>{
-    t.show_legend=isNaN(((t.show_legend as unknown) as number))?t.show_legend:(((t.show_legend as unknown) as number | boolean)===1?true:false)
+    t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
     t.siblings=t.siblings?t.siblings:[]
   })
 }
