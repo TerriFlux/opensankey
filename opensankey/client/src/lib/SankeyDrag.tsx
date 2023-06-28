@@ -353,17 +353,30 @@ export  const drag_nodes = (
     n.y+=event.dy
     return 'translate('+n.x+','+n.y+')'
   })
-  multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
-    drawArrows(n as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
-  ])
-  multi_selected_nodes.current.forEach(n=>{
-    Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
+  if(multi_selected_nodes.current.length>0){
+    multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
+      drawArrows(n as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
+    ])
+    multi_selected_nodes.current.forEach(n=>{
+      Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
+        d3.select(' .opensankey #' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
+          data.nodes, data.links, data.display_style,
+          data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+        ))
+      })
+    })
+  }else{
+    const idNode = dragged.id.substring(4)
+    const node=nodes[idNode]
+    drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
+    Object.values(data.links).filter(l=>node.outputLinksId.includes(l.idLink)||node.inputLinksId.includes(l.idLink)).forEach(l=>{
       d3.select(' .opensankey #' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
         data.nodes, data.links, data.display_style,
         data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
       ))
     })
-  })
+  }
+  
   
 
   // Drag zdt too
