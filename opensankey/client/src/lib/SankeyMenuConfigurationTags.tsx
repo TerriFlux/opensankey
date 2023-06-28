@@ -5,6 +5,7 @@ import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
+import { add_tag,add_grp_tag } from './SankeyUtils'
 
 
 const SankeySettingsEditionTagsPropTypes = {
@@ -53,26 +54,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
-    const elementTagName = type_tag_name
-    // Méthode pour incrementer idElement
-    const listId: number[] = []
-    Object.keys(data[elementTagName][tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
-    const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
-    data[elementTagName][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
-    const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
-    const colors = colormap({
-      colormap: data[elementTagName][tags_group_key].color_map,
-      nshades: Math.max(11, nb_tags),
-      format: 'hex',
-      alpha: 1
-    })
-    let step = 1
-    if (nb_tags < 11) {
-      step = Math.round(11 / nb_tags)
-    }
-    Object.keys(data[elementTagName][tags_group_key].tags).forEach(
-      (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
-    )
+    add_tag(data,type_tag_name,tags_group_key)
     // if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
     //   Object.values(data.nodes).forEach(node=>node.dimensions[tags_group_key] = {parent_name : undefined})
     // }
@@ -81,27 +63,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   //add a groupTag
   const handleAddTagGrpButton = () => {
-    const elementTagName = type_tag_name
-    const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
-    // Méthode pour incrementer idGroup
-    const idGroup = Object.keys(data[elementTagName]).length+1
-    //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
-    const k='tag_group_' + String(new Date().getTime())
-    data[elementTagName][k] = {
-      group_name: 'Étiquette Group ' + idGroup,
-      show_legend: false,
-      color_map: 'jet',
-      tags: {},
-      banner: 'multi',
-      activated: true,
-      siblings: []
-    }
-    if (elementName === 'nodes' ) {
-      Object.values(data[elementName]).forEach(n => n.tags[k] = [])
-    }
-    if (Object.keys(data[elementTagName]).length === 1) {
-      Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
-    }
+    const k=add_grp_tag(data,type_tag_name,tags_group_key,elementNameProp)
     set_tags_group_key(k)
     set_data({ ...data })
   }
