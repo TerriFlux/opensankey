@@ -27,12 +27,12 @@ export const OpenSankeyDrawLegend = (
     }
 
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
-
-    const transform_svg=d3.select('.opensankey #svg').attr('transform')
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-
-    const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-
+    let scale_for_legend=1
+    if(d3.select('.opensankey #svg').nodes().length>0){
+      const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+      const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+      scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+    }
     const legend = d3.select(' .opensankey #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_for_legend)+')').append('g')
 
     const wrap = textwrap()
