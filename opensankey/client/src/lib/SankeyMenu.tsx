@@ -113,6 +113,8 @@ const MenuPropTypes = {
   reinitialization:PropTypes.func.isRequired,
   set_show_modale_tuto:PropTypes.func.isRequired,
   show_modale_tuto:PropTypes.bool.isRequired,
+  show_modale_support:PropTypes.bool.isRequired,
+  set_show_modale_support:PropTypes.func.isRequired
 
 }
 
@@ -767,6 +769,7 @@ export const OpenSankeyMenus = (
   set_data:(d:SankeyData)=>void,
   url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
+  set_show_modale_support:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   externale_save_item:JSX.Element[],
 ) => {
@@ -1146,7 +1149,8 @@ export const OpenSankeyMenus = (
       localStorage.setItem('dontSeeAggainWelcome','0')
     }}>
       {t('DisplayWelcome')}</Button>
-    <Button size='sm' variant='light' onClick={() => goToUserDoc()} >{t('Menu.doc')}</Button></>
+    <Button size='sm' variant='light' onClick={() => goToUserDoc()} >{t('Menu.doc')}</Button>
+    <Button size='sm' variant='light' onClick={() => set_show_modale_support(true)} >{t('Menu.support')}</Button></>
 
   }
 
@@ -1221,7 +1225,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     loginOut,
     unsetTokens,
     min_width_and_height,
-    name_user,formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto
+    name_user,formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
+    show_modale_support,set_show_modale_support
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1468,7 +1473,13 @@ const Menu: FunctionComponent<MenuTypes> = (
   </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
 
-
+  const modal_support= <Modal size={'lg'} show={show_modale_support} onHide={() => set_show_modale_support(false)}>
+    <Modal.Header closeButton><h2>{t('Menu.c_support')}</h2></Modal.Header>
+    <Modal.Body>
+      <h3>{t('Menu.rth_support')} :</h3>
+      <p>{t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{t('Menu.support_explication').split('[]')[1]}</p>
+    </Modal.Body>
+  </Modal>
 
 
   return (
@@ -1521,12 +1532,13 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Container className='sankeyFooter' >
 
           <span style={{display:'inline'}}>
-        ©<a  href="https://terriflux.com/" ><img width={75} src={logo_terriflux} /></a> - Tous droits réservés
+        ©<a  href="https://terriflux.com/" ><img width={75} src={logo_terriflux} /></a> - {t('tdr')}
           </span>
           <span style={{display:'inline'}}>
             {app_name}
           </span>
-          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>Mention légales</a></span>
+          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a></span>
+          <span style={{display:'inline'}}><a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a></span>
           <span style={{display:'inline'}}>
           9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)6 21 83 56 76
           </span>
@@ -1625,6 +1637,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Modal>
       }
       {modal_tuto}
+      {modal_support}
 
     </>
   )

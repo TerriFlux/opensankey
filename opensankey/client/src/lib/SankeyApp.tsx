@@ -81,6 +81,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const multi_selected_label = useRef([])
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
+  const [show_modale_support,set_show_modale_support]=useState(false)
 
 
   // For SankeyDraw
@@ -258,7 +259,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,[],[]
+    set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,set_show_modale_support,[],[]
   )
   // sankey_menus['formation']=<DropdownButton title={t('Menu.Formations')} id="formation" >
   //   <ExempleItem
@@ -498,6 +499,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           reinitialization={reinitialization}
           set_show_modale_tuto={set_show_modale_tuto}
           show_modale_tuto={show_modale_tuto}
+          show_modale_support={show_modale_support}
+          set_show_modale_support={set_show_modale_support}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
