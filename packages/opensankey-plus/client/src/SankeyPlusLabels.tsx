@@ -20,9 +20,7 @@ export const SankeyPlusDrawLabels = (
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-    const transform_svg=d3.select('.opensankey #svg').attr('transform')
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-    const scale_for_label= (scale_svg<1?(1/scale_svg):1)
+
 
     Object.values(data.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
@@ -36,7 +34,7 @@ export const SankeyPlusDrawLabels = (
         .style('fill-opacity', +(d.opacity/100))
         .attr('stroke', d.color_border)
         .attr('stroke-opacity', (d.transparent_border && !multi_selected_label.current.includes(d)) ? 0 : 1)
-        .attr('stroke-width', ((multi_selected_label.current.includes(d))?(3*scale_for_label):1))
+        .attr('stroke-width', ((multi_selected_label.current.includes(d))?3:1))
         .attr('rx', 5)
 
 
@@ -139,7 +137,7 @@ export const SankeyPlusDrawLabels = (
         .style('fill-opacity', 0)
         .attr('stroke', d.color_border)
         .attr('stroke-opacity', 0)
-        .attr('stroke-width', (2*scale_for_label))
+        .attr('stroke-width', (3))
         .attr('rx', 5)
         .attr('cursor','all-scroll')
         .call(dragLabelWidthHeightEvent(d,data,set_data))
