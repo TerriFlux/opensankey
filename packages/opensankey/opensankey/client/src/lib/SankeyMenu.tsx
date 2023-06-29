@@ -1634,57 +1634,57 @@ Menu.propTypes = MenuPropTypes
 
 export default Menu
 
-export //Modal for shortcut
-const OpenSankeyModalShortcut = (t:TFunction,
-  showShortcut:boolean,
-  setshowShortcut:React.Dispatch<React.SetStateAction<boolean>>,
-  additional_shortcut_item:JSX.Element[]
-)=>{
-  return <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
-    <Modal.Header closeButton>
-      <Modal.Title>{t('Menu.rc')}</Modal.Title>
-    </Modal.Header>
-    <Modal.Body >
-      <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
+// export //Modal for shortcut
+// const OpenSankeyModalShortcut = (t:TFunction,
+//   showShortcut:boolean,
+//   setshowShortcut:React.Dispatch<React.SetStateAction<boolean>>,
+//   additional_shortcut_item:JSX.Element[]
+// )=>{
+//   return <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
+//     <Modal.Header closeButton>
+//       <Modal.Title>{t('Menu.rc')}</Modal.Title>
+//     </Modal.Header>
+//     <Modal.Body >
+//       <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
 
-      <h5>Avec la souris en mode sélection :</h5>
-      <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
-      <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
-      <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
-      <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
-      <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
-      <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
-      <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
-      <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
-      <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
-      <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
+//       <h5>{t('Menu.rcc_titre_select')}:</h5>
+//       <p>{t('Menu.rcc_cn')}</p>
+//       <p>{t('Menu.rcc_ctrl_')}</p>
+//       <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
+//       <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
+//       <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
+//       <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
+//       <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
+//       <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
+//       <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
+//       <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
 
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+//       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-      <h5>Avec la souris en mode édition :</h5>
-      <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
-      <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
-      <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
+//       <h5>Avec la souris en mode édition :</h5>
+//       <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
+//       <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
+//       <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
 
-      <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+//       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-      <h5>Autres raccourcis :</h5>
-      <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
-      <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
-      <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
+//       <h5>Autres raccourcis :</h5>
+//       <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
+//       <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
+//       <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
 
-      <p><b>Echap :</b> Ferme le Menu si il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
+//       <p><b>Echap :</b> Ferme le Menu si il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
 
-      {additional_shortcut_item}
+//       {additional_shortcut_item}
 
-    </Modal.Body>
-    <Modal.Footer>
-      <Button variant="secondary" onClick={() => setshowShortcut(false)}>
-        Close
-      </Button>
-    </Modal.Footer>
-  </Modal>
-}
+//     </Modal.Body>
+//     <Modal.Footer>
+//       <Button variant="secondary" onClick={() => setshowShortcut(false)}>
+//         Close
+//       </Button>
+//     </Modal.Footer>
+//   </Modal>
+// }
 
 export const OpenSankeyModalWelcome=(t:TFunction,
   active_page:string,
@@ -1707,33 +1707,36 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
 
   const content_rc=<>
-    <h4 style={{textAlign:'center'}}>Raccourcis de l'application OpenSankey</h4>
+    <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
 
-    <h5>Avec la souris en mode sélection :</h5>
-    <p><b>Click (noeuds) :</b> Sélectionne le noeud cliqué</p>
-    <p><b>CTRL + Click (noeuds) :</b> Sélectionne le noeud cliqué et ouvre l'onglet "<b>Noeuds</b>" du menu</p>
-    <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
-    <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
-    <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
-    <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
-    <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
-    <p><b>Alt Drag (label noeuds) :</b>  Déplace le label</p>
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-    <h5>Avec la souris en mode édition :</h5>
-    <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
-    <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux à partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin</p>
-    <p><b>Drag (à partir d'un noeud) :</b> Créer un flux à partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit un noeud que l'on crée à l'endroit où l'on drop sur la zone de dessin  </p>
+    <h5>{t('Menu.rcc_titre_select')}:</h5>
+    <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
+    <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
+    <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
+    <p><b>{t('Menu.rcc_ctrl_cf_bold')}</b>{t('Menu.rcc_ctrl_cf')}</p>
+    <p><b>{t('Menu.rcc_cs_bold')}</b>{t('Menu.rcc_cs')}</p>
+    <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
+    <p><b>{t('Menu.rcc_acdn_bold')}</b>{t('Menu.rcc_acdn')}</p>
+    <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-    <h5>Autres raccourcis :</h5>
-    <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
-    <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
-    <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
+    <h5>{t('Menu.rcc_titre_edi')} :</h5>
 
-    <p><b>Echap :</b> Ferme le Menu quand il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
+    <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
+    <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
+    <p><b>{t('Menu.rcc_e_dn_bold')}</b>{t('Menu.rcc_e_dn')}</p>
+
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+
+    <h5>{t('Menu.rcc_titre_autre')} :</h5>
+
+    <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
+    <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
+    <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
+    <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
+    
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
     {additional_shortcut_item}
 
